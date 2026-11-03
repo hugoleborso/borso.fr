@@ -23,17 +23,17 @@ Agents logged under their labels.
 | 05 | implementation | The main session could not run the full pragma app and checked the menu on a copied DOM | archive 07:39 `main` | merge into 06 |
 | 06 | implementation | `pnpm dev` does run the full app here; the session assumed it could not until the operator asked, and the operator wants the full app runnable | archive 07:40 `main`; this session ran `pnpm dev`, signed in as `hugo` with `pragma-preview`, HTTP 200 | fixed: CLAUDE.md *Checking a screen* says `pnpm dev` runs site, API and a seeded Postgres, and to reproduce there |
 | 07 | implementation | The session reached for `pkill` or `killall` and the hook refused it | pasted line `hook:no-broad-kill`; 17 of 56 archived logs carry this refusal (measured) | fixed: the refusal now names `TaskStop`, which freed pragma's ports 5174 and 3001 and left no child (measured) |
-| 08 | implementation | `git push` or `git commit` piped into another command, twice; this sweep did it once too | archive 07:04 and 07:27 `hook:no-swallowed-push`; this session's log | no-op: refused before anything ran; the message names the fix, and PR #235 and #238's sweeps found the same one-call cost |
+| 08 | implementation | `git push` or `git commit` piped into another command, twice; this sweep did it once too | archive 07:04 and 07:27 `hook:no-swallowed-push`; this session's log | no-op, after two eradications were tried and rejected. The hook fired 112 times in 31 of 57 archived logs (measured). Rewriting the command with `updatedInput` needs `allow`, which skips the permission check on every push, or `ask`, which prompts a person each time (hooks docs, read). `pipefail` for every shell would make harmless pipes such as `cmd \| head` exit 141 (inferred). The refusal stays the guard |
 | 09 | plan | The plan named `ensureQueryData` and `prefetchQuery`, deprecated in TanStack Query 5.102.8 | archive 07:20 `implement`; the `@deprecated` tags read this session | merge into 10 |
 | 10 | plan | `PersistQueryClientProvider` awaits `onSuccess` before it stops restoring, so the planned prefetch would block the first screen | archive 07:20 `implement`; provider source read this session | knowledge: `persist-query-client-provider-awaits-on-success` |
 | 11 | validation | The fix-sized spec had no Q.O.D., Use cases, Test strategy or Files to change, and the validator built categories A and D from Behaviour | archive 07:31 `technical-validator`; 6 reports since 2026-09 note it (measured) | fixed: `technical-validator.md` maps a fix-sized spec's sections onto A and D |
 | 12 | validation | Round 1 FAIL on E02, a drag on a restored order before the refetch | `technical-validation-2026-11-03-0725.md` | no-op: the validator caught it and round 2 passed, as designed |
-| 13 | implementation | B15 was dismissed on a false claim (a pure module cannot import the API client type), then fixed | commits "let a setlist be reordered…" and "derive the offline manifest type…" in `e4c42859` | no-op: caught before merge; CLAUDE.md *Verify before asserting* and `a-validator-can-name-a-cause-it-never-probed.md` cover it |
+| 13 | implementation | B15 was dismissed on a false claim (a pure module cannot import the API client type), then fixed | commits "let a setlist be reordered…" and "derive the offline manifest type…" in `e4c42859` | fixed: in round 2 the technical validator re-runs the check behind each dismissal and fails it when the claim does not hold |
 | 14 | validation | B12 dismissed, the order page styles two paragraphs inline | `technical-validation-2026-11-03-0810.md` | no-op: a reasoned dismissal |
 | 15 | ci | Mutation gate: dropping `?.` in `closeOnBackdropTap` survived, no test made React's null detach call | commit `96c72318` | fixed: the `ref-callback-browser-api` blueprint says its test makes the null call |
-| 16 | ci | Mutation gate: removing `.trim()` in the dantotsu heading reader survived | last commit of `e4c42859` | no-op: CI caught it, one test added; `writing-a-small-function-the-hundred-percent-gates-accept.md` covers it |
+| 16 | ci | Mutation gate: removing `.trim()` in the dantotsu heading reader survived | last commit of `e4c42859` | fixed: the technical validator runs `scripts/mutate-changed.sh <base>` on changed gated files and blocks on a survivor; 8 merged PRs since 2026-10-15 found theirs only in CI (measured), and the script runs locally (measured, 1 file) |
 | 17 | pr-description | #247 shipped two sessions' work: the earlier session's dantotsu skill rewrite and connector rule rode with the fix | PR #247 *Notable*; 8 commits from `session_01K69KnBD6VQ779wocFdaa8R` | no-op: the operator chose to ship them together; the body says so |
-| 18 | pr-description | #247's ADR link points at the head branch, which breaks when the branch is deleted | PR #247 body | no-op: the branch still exists; the ADR is reachable on `main` and indexed in `docs/adr/README.md` |
+| 18 | pr-description | #247's ADR link points at the head branch, which breaks when the branch is deleted | PR #247 body | no-op: the remote keeps merged branches, 190 heads of which 176 are `claude/` (measured), so a branch link outlives the merge |
 | 19 | post-merge | ADR `202611011313` was still `proposed` after the merge | `docs/adr/README.md` | fixed: stamped `accepted` |
 | 20 | post-merge | `get_session` does not find `session_01K69KnBD6VQ779wocFdaa8R`, so #247's cost is partial | this session | no-op: the cost row says so |
 | 21 | pr-description | The kaizen's ADR picked its own criteria, after the options; the operator named the two that mattered, changes to the app and coverage | operator reply on PR #249 | dantotsu: `an-adr-that-picked-its-own-criteria` |
@@ -42,5 +42,5 @@ Agents logged under their labels.
 
 ## Counts
 
-23 rows: 2 dantotsus, 1 knowledge, 7 fixed, 5 merged into another row,
-8 no-op.
+23 rows: 2 dantotsus, 1 knowledge, 9 fixed, 5 merged into another row,
+6 no-op.

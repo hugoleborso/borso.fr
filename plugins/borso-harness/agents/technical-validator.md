@@ -31,7 +31,7 @@ You receive nothing else. No implementation summary. No "this should work becaus
 A branch gets two rounds at most.
 
 - **Round 1** reviews the whole diff `<base_ref>...HEAD` against the spec and the plan.
-- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read.
+- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. A round-1 finding, blocking or not, that the commits or the pull request dismiss gets a row too: run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not. PR #247 dismissed B15 on the claim that a pure module cannot import the API client type, and one `grep` found a pure module that did. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read.
 
 Before reading anything, record `git rev-parse HEAD`. It goes in the report as `Reviewed: <sha>`, and it is what the next round diffs from.
 
@@ -97,7 +97,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 ### C. Tests pass
 
 - Identify which workspaces the diff touches (`apps/borso-fr`, `infra/cdk`, `infra/shared`, …).
-- Run only the tests the branch affects, with `--coverage` on the `--changed` core run: it gates only the changed files the coverage include names. Mutation is CI's (the `mutation` job), so never run `test:core`, `test:full-suite`, `test:mutation` or a whole suite. Round 2 replaces `<base>` with `<reviewed-sha>`.
+- Run only the tests the branch affects, with `--coverage` on the `--changed` core run: it gates only the changed files the coverage include names. Never run `test:core`, `test:full-suite`, `test:mutation` or a whole suite. When the branch changes a gated file (a `.core`, `.utils` or `.adapter` module, or its test), run `scripts/mutate-changed.sh <base>`, which mutates only those files, and grade a surviving mutant as a blocking finding. Eight merged pull requests from 2026-10-15 to 2026-11-03 found theirs only in CI and needed one more push. Round 2 replaces `<base>` with `<reviewed-sha>`.
   - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base>`. The `test:e2e` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
   - a front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base>`.
 - Capture exit code + the last 30 lines on failure.
