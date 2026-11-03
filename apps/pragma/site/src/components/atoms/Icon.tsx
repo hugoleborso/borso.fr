@@ -80,7 +80,6 @@ const ICONS = {
       <path d="M12 10v5M12 18.5v.1" />
     </>
   ),
-  cloud: <path d="M7 18a5 5 0 1 1 0-10 6 6 0 0 1 11.5 1.5A4.5 4.5 0 1 1 17 18H7z" />,
   cloudOff: (
     <>
       <path d="M3 3l18 18" />
@@ -110,6 +109,9 @@ const ICONS = {
     </>
   ),
   text: <path d="M5 5h14M9 5v14M5 12h8" />,
+  comment: (
+    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+  ),
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
   edit: <path d="M14 4l6 6L8 22H2v-6L14 4z" />,
   play: <path d="M6 4l14 8-14 8V4z" />,
@@ -186,7 +188,6 @@ const ICONS = {
     </>
   ),
   bolt: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />,
-  star: <path d="M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" />,
   calendar: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2" />

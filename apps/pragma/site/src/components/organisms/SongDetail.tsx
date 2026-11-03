@@ -16,13 +16,17 @@ import type {
   LineupMember,
   SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
+import type { SongViewTab } from '../../routes/catalog/song-view-tab.core';
+import { MASTERY_BAR_COUNT } from '../../routes/catalog/song-lineup.core';
 import { BottomActions } from '../atoms/BottomActions';
+import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { LineupEditor, type LineupRecord } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { ListenRow } from '../molecules/ListenRow';
+import { SongViewTabs } from '../molecules/SongViewTabs';
 import { MasteryProgressChart } from './MasteryProgressChart';
 import { RecordingSheetDialogs } from './RecordingSheet';
 import { useRecordingSheet } from './recording-sheet.hook';
@@ -43,6 +47,8 @@ export interface SongDetailProps {
   readonly hasSideLoadFailed: boolean;
   readonly selectedTakeId: string | null;
   readonly onSelectTake: (takeId: string | null) => void;
+  readonly tab: SongViewTab;
+  readonly onTabChange: (tab: SongViewTab) => void;
 }
 
 const NO_SETLISTS: readonly never[] = [];
@@ -88,14 +94,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
         ]}
       />
 
-      <ListenRow links={listenLinks} />
-
-      <p className="m-0 flex items-center gap-2 text-meta text-ink-soft">
-        <Icon name="setlist" size="sm" />
-        {t(setlistsLine.messageKey, { names: setlistsLine.names })}
-      </p>
-
-      <SongRoundActions songId={song.id} defaultLineup={song.defaultLineup} notes={song} />
+      <SongViewTabs value={props.tab} onChange={props.onTabChange} />
 
       {props.hasSideLoadFailed ? (
         <p className="text-danger text-meta" role="alert">
@@ -117,24 +116,58 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
         </p>
       ) : null}
 
-      <SongYourPart row={memberRow} />
-
-      <SongChartPreviews chart={song.chart} />
-
-      <SongTakes
-        songId={song.id}
-        songTitle={song.title}
-        selectedTakeId={props.selectedTakeId}
-        onSelectTake={props.onSelectTake}
-      />
-
-      <SongDetailSidebar lineupRows={props.lineupRows} baseEnergy={song.baseEnergy} />
-
-      <SongNotesCard song={song} />
-
-      <SongLinksCard links={song.links} />
-
-      <MasteryProgressChart songId={song.id} members={members} instruments={instruments} />
+      <div role="tabpanel" className="flex flex-col gap-5">
+        {
+          {
+            info: (
+              <>
+                <ListenRow links={listenLinks} />
+                <p className="m-0 flex items-center gap-2 text-meta text-ink-soft">
+                  <Icon name="setlist" size="sm" />
+                  {t(setlistsLine.messageKey, { names: setlistsLine.names })}
+                </p>
+                <SongRoundActions
+                  songId={song.id}
+                  defaultLineup={song.defaultLineup}
+                  notes={song}
+                />
+                <SongYourPart row={memberRow} />
+                {song.baseEnergy === null ? null : (
+                  <Card variant="flat" className="bg-sunk border-0">
+                    <div className="mb-1.5 text-label tracking-wider uppercase text-ink-soft font-medium">
+                      {t('catalog.baseEnergy')}
+                    </div>
+                    <div className="font-mono text-meta text-ink">
+                      {song.baseEnergy}/{MASTERY_BAR_COUNT}
+                    </div>
+                  </Card>
+                )}
+                <SongNotesCard song={song} />
+                <SongLinksCard links={song.links} />
+              </>
+            ),
+            lineup: (
+              <>
+                <SongDetailSidebar lineupRows={props.lineupRows} />
+                <MasteryProgressChart
+                  songId={song.id}
+                  members={members}
+                  instruments={instruments}
+                />
+              </>
+            ),
+            chords: <SongChartPreviews chart={song.chart} />,
+            takes: (
+              <SongTakes
+                songId={song.id}
+                songTitle={song.title}
+                selectedTakeId={props.selectedTakeId}
+                onSelectTake={props.onSelectTake}
+              />
+            ),
+          }[props.tab]
+        }
+      </div>
 
       <LineupEditor
         open={lineupEditorOpen}

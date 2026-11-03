@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongDetail } from '../../components/organisms/SongDetail';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
@@ -13,6 +13,7 @@ import { useMembersList } from '../../lib/queries/members.queries';
 import { useSong } from '../../lib/queries/songs.queries';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
+import { readSongViewTab, SONG_VIEW_TAB_PARAM, type SongViewTab } from './song-view-tab.core';
 import { useTakeSelection } from './take-selection.hook';
 
 const NO_ROWS: readonly never[] = [];
@@ -27,6 +28,18 @@ export function SongDetailPage(): JSX.Element {
   const masteryQuery = useMasteryDefaults();
   const songOverridesQuery = useMasteryOverridesOfSong(songId ?? '', songId !== undefined);
   const { selectedTakeId, selectTake } = useTakeSelection();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = readSongViewTab(searchParams.get(SONG_VIEW_TAB_PARAM), selectedTakeId !== null);
+  const showTab = (next: SongViewTab): void => {
+    setSearchParams(
+      (current) => {
+        const nextParams = new URLSearchParams(current);
+        nextParams.set(SONG_VIEW_TAB_PARAM, next);
+        return nextParams;
+      },
+      { replace: true },
+    );
+  };
 
   const song = songQuery.data?.song ?? null;
   const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
@@ -85,6 +98,8 @@ export function SongDetailPage(): JSX.Element {
       hasSideLoadFailed={hasSideLoadFailed}
       selectedTakeId={selectedTakeId}
       onSelectTake={selectTake}
+      tab={tab}
+      onTabChange={showTab}
     />
   );
 }

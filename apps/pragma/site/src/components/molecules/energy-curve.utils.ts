@@ -3,13 +3,7 @@
 import { ENERGY_MAX } from '@domain/input-limits.core';
 import { isEnergyStored, resolveEnergyLevel } from './setlist-entry-energy.core';
 
-const LEVELS_PER_METER_STEP = 2;
 const AVERAGE_DECIMALS_FACTOR = 10;
-
-export const ENERGY_METER_STEPS: readonly number[] = Array.from(
-  { length: Math.ceil(ENERGY_MAX / LEVELS_PER_METER_STEP) },
-  (_unused, index) => index + 1,
-);
 
 export interface EnergyCurveEntry {
   readonly id: string;
@@ -42,10 +36,6 @@ export function averageEnergy(bars: readonly EnergyBar[]): number | null {
   if (bars.length === 0) return null;
   const total = bars.reduce((sum, bar) => sum + bar.level, 0);
   return Math.round((total / bars.length) * AVERAGE_DECIMALS_FACTOR) / AVERAGE_DECIMALS_FACTOR;
-}
-
-export function selectMeterStep(level: number): number {
-  return Math.ceil(level / LEVELS_PER_METER_STEP);
 }
 
 export function projectOrder(
