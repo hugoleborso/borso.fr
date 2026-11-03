@@ -65,13 +65,6 @@ export async function deleteBreakWithin(
   return selectDeletionOutcome(deleted.length);
 }
 
-export async function deleteBreaksOfSetlistWithin(
-  executor: DatabaseExecutor,
-  setlistId: string,
-): Promise<void> {
-  await executor.delete(setlistBreakTable).where(eq(setlistBreakTable.setlistId, setlistId));
-}
-
 export async function setBreakPositionWithin(
   executor: DatabaseExecutor,
   breakId: string,
