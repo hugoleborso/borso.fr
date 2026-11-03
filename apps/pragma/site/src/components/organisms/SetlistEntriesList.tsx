@@ -15,12 +15,15 @@ import {
   tonalityLabelFor,
 } from './setlist-editor.utils';
 import { buildLineupColumn, type SlotInstrument } from '../molecules/lineup-slots.core';
+import { SetlistBreakRow } from './SetlistBreakRow';
+import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.core';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
 const NO_CHANGE: readonly SetlistEntryLineupChange[] = [];
+const NO_BREAK: readonly PlacedBreak[] = [];
 const SONG_ID_FALLBACK_LENGTH = 8;
 const POSITION_DIGITS = 2;
 
@@ -47,13 +50,32 @@ export interface SetlistEntriesListProps {
   readonly onOpen: (entryId: string) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
+  readonly breaks?: readonly PlacedBreak[];
+  readonly onAddBreakAfter?: (entryId: string) => void;
+  readonly onRenameBreak?: (breakId: string, label: string) => void;
+  readonly onRemoveBreak?: (breakId: string) => void;
 }
 
 // @FollowsBlueprint organism-presentational
 export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element {
   const { t } = useTranslation();
+  const breaksBySongsBefore = groupBreaksBySongsBefore(
+    props.inFilteredMode ? NO_BREAK : (props.breaks ?? NO_BREAK),
+  );
+  const renderBreaks = (songsBefore: number): JSX.Element[] =>
+    (breaksBySongsBefore.get(songsBefore) ?? NO_BREAK).map((setlistBreak) => (
+      <SetlistBreakRow
+        key={setlistBreak.id}
+        label={setlistBreak.label}
+        onRename={(label) => props.onRenameBreak?.(setlistBreak.id, label)}
+        onRemove={() => props.onRemoveBreak?.(setlistBreak.id)}
+      />
+    ));
+  const trailingBreakCounts = [...breaksBySongsBefore.keys()].filter(
+    (songsBefore) => songsBefore >= props.entries.length,
+  );
   const renderTransitionBefore = (fullIndex: number): JSX.Element | null => {
-    if (props.inFilteredMode) return null;
+    if (props.inFilteredMode || breaksBySongsBefore.has(fullIndex)) return null;
     const view = props.transitionViews[fullIndex - 1];
     const leftEntry = props.entries[fullIndex - 1];
     const rightEntry = props.entries[fullIndex];
@@ -81,7 +103,8 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
           lineup: compactLineup(lineupRaw),
           members: props.lineupMembers,
         });
-        return (
+        return [
+          ...renderBreaks(fullIndex),
           <SetlistEntryRow
             key={entry.id}
             position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
@@ -99,9 +122,11 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             transitionBefore={renderTransitionBefore(fullIndex)}
             onOpen={() => props.onOpen(entry.id)}
             onRemove={props.onRemove}
-          />
-        );
+            onAddBreakAfter={props.inFilteredMode ? undefined : props.onAddBreakAfter}
+          />,
+        ];
       })}
+      {trailingBreakCounts.flatMap(renderBreaks)}
       {props.onAddSongs === undefined || props.inFilteredMode ? null : (
         <li>
           <ListRow

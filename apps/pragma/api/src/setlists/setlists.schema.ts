@@ -10,6 +10,7 @@ import {
   ENERGY_MAX,
   ENERGY_MIN,
   KEY_OVERRIDE_MAX_LENGTH,
+  SETLIST_BREAK_LABEL_MAX_LENGTH,
   SETLIST_ENTRY_NOTES_MAX_LENGTH,
   SETLIST_NAME_MAX_LENGTH,
 } from '@domain/input-limits.core';
@@ -67,6 +68,27 @@ export const setlistEntryTable = pgTable('setlist_entry', {
   keyOverride: text('key_override'),
   capo: integer('capo'),
   notes: text('notes').notNull().default(''),
+});
+
+export const setlistBreakTable = pgTable('setlist_break', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  setlistId: uuid('setlist_id').notNull(),
+  position: integer('position').notNull(),
+  label: text('label').notNull().default(''),
+});
+
+const setlistBreakLabelSchema = z.string().trim().max(SETLIST_BREAK_LABEL_MAX_LENGTH);
+
+export const setlistBreakCreateSchema = z.object({
+  afterEntryId: z.string().uuid(),
+  label: setlistBreakLabelSchema.default(''),
+});
+
+export const setlistBreakUpdateSchema = z.object({ label: setlistBreakLabelSchema });
+
+export const setlistBreakIdParamSchema = z.object({
+  id: z.string().uuid(),
+  breakId: z.string().uuid(),
 });
 
 export const lineupOverrideSchema = z
@@ -183,4 +205,11 @@ export const setlistReorderReferencesToolInputSchema = z.object({
     .object({ entry: referenceSchema, position: z.number().int().min(1).max(POSITION_MAX) })
     .optional(),
   swap: z.array(referenceSchema).length(SWAPPED_ENTRY_COUNT).optional(),
+});
+export const setlistBreakSaveToolInputSchema = z.object({
+  ...setlistReferenceShape,
+  break: z.string().uuid().optional(),
+  after: referenceSchema.optional(),
+  label: setlistBreakLabelSchema.optional(),
+  remove: z.boolean().optional(),
 });

@@ -561,7 +561,8 @@
       "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie.",
       "openVote": "Le vote n’a pas été ouvert. Vérifiez la connexion et réessayez.",
       "addSongs": "Les morceaux n’ont pas été ajoutés. Vérifie la connexion et réessaie.",
-      "restore": "Le morceau n’a pas été remis. Vérifie la connexion et ajoute-le à nouveau."
+      "restore": "Le morceau n’a pas été remis. Vérifie la connexion et ajoute-le à nouveau.",
+      "break": "La pause n'a pas été enregistrée. Vérifie la connexion et réessaie."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
     "key": "Ton",
@@ -640,7 +641,15 @@
     "energyStep": "Énergie {{step}} sur 5",
     "orderEmpty": "Aucun morceau à ordonner pour l’instant.",
     "removed": "« {{title}} » retiré de la setlist",
-    "undoRemove": "Annuler"
+    "undoRemove": "Annuler",
+    "break": {
+      "addAfter": "Ajouter une pause après",
+      "label": "Nom de la pause",
+      "placeholder": "Pause",
+      "actions": "Plus pour cette pause",
+      "remove": "Retirer la pause",
+      "orderTitle": "Pause"
+    }
   },
   "shell": {
     "meVersion": "Pragma · v0.1"

@@ -40,6 +40,7 @@ import {
   sumKnownDurations,
 } from '../molecules/song-duration.utils';
 import { joinSummaryItems } from '../molecules/summary-line.utils';
+import { isBreakLine } from './setlist-breaks.core';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
@@ -52,6 +53,7 @@ const TOTAL_DURATION_KEY = {
 
 export interface OrderRow {
   readonly id: string;
+  readonly kind: 'song' | 'break';
   readonly title: string;
   readonly durationSeconds: number | null;
   readonly entryEnergy: number | null;
@@ -80,10 +82,11 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
   );
 
   const rowIds = rows.map((row) => row.id);
+  const songRows = rows.filter((row) => !isBreakLine(row));
   const curveIds = lift === null ? rowIds : projectOrder(rowIds, lift.liftedId, lift.targetId);
-  const bars = buildEnergyBars(arrangeByIds(rows, curveIds));
+  const bars = buildEnergyBars(arrangeByIds(songRows, curveIds));
   const average = averageEnergy(bars);
-  const totalSeconds = sumKnownDurations(rows.map((row) => row.durationSeconds));
+  const totalSeconds = sumKnownDurations(songRows.map((row) => row.durationSeconds));
   const total = totalSeconds === null ? null : describeTotalDuration(totalSeconds);
   const summary = joinSummaryItems([
     average === null ? null : t('setlist.averageEnergy', { value: average }),
@@ -128,11 +131,11 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
       >
         <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
           <ol className="m-0 flex list-none flex-col p-0">
-            {rows.map((row, index) => (
+            {rows.map((row) => (
               <SortableOrderRow
                 key={row.id}
                 row={row}
-                position={index + 1}
+                position={songRows.indexOf(row) + 1}
                 isLifted={lift?.liftedId === row.id}
               />
             ))}
@@ -156,6 +159,7 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
   });
   const [bar] = buildEnergyBars([row]);
   const step = selectMeterStep(bar?.level ?? 0);
+  const isBreak = isBreakLine(row);
   return (
     <li
       ref={setNodeRef}
@@ -163,6 +167,7 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
       data-order-row
       className={composeClassName(
         'flex h-11 items-center gap-2 border-b border-rule',
+        isBreak && 'border-dashed border-rule-strong bg-sunk',
         isLifted && 'relative z-10 bg-raised shadow-cover',
       )}
     >
@@ -173,6 +178,32 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
         {...attributes}
         {...listeners}
       />
+      {isBreak ? (
+        <>
+          <span className="flex w-5 shrink-0 justify-end text-ink-soft">
+            <Icon name="pause" />
+          </span>
+          <span className="min-w-0 flex-1 truncate font-display text-body tracking-wide text-ink-soft uppercase">
+            {row.title}
+          </span>
+        </>
+      ) : (
+        <SongOrderCells row={row} position={position} step={step} />
+      )}
+    </li>
+  );
+}
+
+interface SongOrderCellsProps {
+  readonly row: OrderRow;
+  readonly position: number;
+  readonly step: number;
+}
+
+function SongOrderCells({ row, position, step }: SongOrderCellsProps): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <>
       <span className="w-5 shrink-0 text-right font-mono text-label text-ink-faint">
         {String(position).padStart(POSITION_DIGITS, '0')}
       </span>
@@ -195,6 +226,6 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
       <span className="w-10 shrink-0 text-right font-mono text-meta text-ink-soft tabular-nums">
         {row.durationSeconds === null ? '' : formatDuration(row.durationSeconds)}
       </span>
-    </li>
+    </>
   );
 }

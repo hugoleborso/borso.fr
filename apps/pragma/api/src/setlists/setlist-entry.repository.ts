@@ -158,16 +158,14 @@ export async function setEntryPositionWithin(
     .where(eq(setlistEntryTable.id, entryId));
 }
 
-export async function listEntryIdsInOrderWithin(
+export async function listEntryPositionsWithin(
   executor: DatabaseExecutor,
   setlistId: string,
-): Promise<string[]> {
-  const rows = await executor
-    .select({ id: setlistEntryTable.id })
+): Promise<Pick<SetlistEntryRawRow, 'id' | 'position'>[]> {
+  return await executor
+    .select({ id: setlistEntryTable.id, position: setlistEntryTable.position })
     .from(setlistEntryTable)
-    .where(eq(setlistEntryTable.setlistId, setlistId))
-    .orderBy(asc(setlistEntryTable.position));
-  return rows.map((row) => row.id);
+    .where(eq(setlistEntryTable.setlistId, setlistId));
 }
 
 export async function insertEntryWithin(
@@ -180,15 +178,4 @@ export async function insertEntryWithin(
     .returning(ENTRY_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToEntry(row);
-}
-
-export async function countEntriesWithin(
-  executor: DatabaseExecutor,
-  setlistId: string,
-): Promise<number> {
-  const rows = await executor
-    .select({ id: setlistEntryTable.id })
-    .from(setlistEntryTable)
-    .where(eq(setlistEntryTable.setlistId, setlistId));
-  return rows.length;
 }

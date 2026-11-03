@@ -7,7 +7,7 @@ import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
 import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
-import { Menu } from '../molecules/Menu';
+import { Menu, type MenuItem } from '../molecules/Menu';
 
 const POSITION_DIGITS = 2;
 const TITLE_CLASS = 'block truncate font-display text-title text-ink';
@@ -36,6 +36,7 @@ export interface SetlistEntryRowProps {
   readonly transitionBefore: ReactNode;
   readonly onOpen: () => void;
   readonly onRemove: (entryId: string) => void;
+  readonly onAddBreakAfter?: (entryId: string) => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -52,6 +53,18 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         : `${change.firstName}: ${change.heldInstrumentNames.join(', ')}`,
     )
     .join(CHANGE_SEPARATOR);
+  const { onAddBreakAfter } = props;
+  const addBreakItems: MenuItem[] =
+    onAddBreakAfter === undefined
+      ? []
+      : [
+          {
+            label: t('setlist.break.addAfter'),
+            icon: 'pause',
+            tone: 'default',
+            onSelect: () => onAddBreakAfter(props.entryId),
+          },
+        ];
   return (
     <li className="flex flex-col">
       {props.transitionBefore}
@@ -107,6 +120,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         <Menu
           label={t('setlist.entryActions', { title: props.title })}
           items={[
+            ...addBreakItems,
             {
               label: t('setlist.removeFromSetlist'),
               icon: 'trash',

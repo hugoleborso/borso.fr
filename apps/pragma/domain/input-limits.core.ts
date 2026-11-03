@@ -21,6 +21,7 @@ export const CAPO_MIN = 0;
 export const CAPO_MAX = 11;
 export const KEY_OVERRIDE_MAX_LENGTH = 16;
 export const SETLIST_ENTRY_NOTES_MAX_LENGTH = 2_048;
+export const SETLIST_BREAK_LABEL_MAX_LENGTH = 80;
 
 export const CONCERT_VENUE_MAX_LENGTH = 256;
 export const CONCERT_CAPACITY_MAX = 100_000;
