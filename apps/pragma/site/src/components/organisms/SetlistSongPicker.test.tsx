@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { reportSetlistBatchAddFailed } from '../../observability/error-reporting.adapter';
 import { recordProductEvent } from '../../observability/product-event.adapter';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistSongPicker, type SetlistSongPickerProps } from './SetlistSongPicker';
 
 interface MutateOptions {
@@ -83,7 +82,6 @@ function checkbox(title: string): HTMLElement {
 describe('the Add songs sheet', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-    stubSheetDialog();
   });
 
   afterEach(() => {

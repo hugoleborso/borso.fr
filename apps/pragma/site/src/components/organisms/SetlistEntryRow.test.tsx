@@ -4,7 +4,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistEntryRow, type SetlistEntryRowProps } from './SetlistEntryRow';
 
 class StillResizeObserver implements ResizeObserver {
@@ -65,7 +64,6 @@ function renderRow(props: SetlistEntryRowProps): void {
 describe('a setlist row', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubSheetDialog();
   });
 
   afterEach(() => {
@@ -108,9 +106,10 @@ describe('a setlist row', () => {
   it('removes the entry from its more menu with no confirmation sheet', () => {
     const onRemove = vi.fn();
     renderRow(buildProps({ onRemove }));
-    fireEvent.click(screen.getByRole('button', { name: 'Remove from the setlist', hidden: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Remove from the setlist' }));
     expect(onRemove).toHaveBeenCalledExactlyOnceWith('entry-1');
-    expect(screen.queryByRole('dialog')).toBe(null);
+    expect(screen.queryByRole('menu')).toBe(null);
   });
 
   it('shows the instruments of the chosen member in place of the band lineup', () => {

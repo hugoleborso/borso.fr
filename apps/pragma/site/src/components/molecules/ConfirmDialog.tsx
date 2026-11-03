@@ -21,6 +21,7 @@ export function ConfirmDialog({
   return (
     <Sheet
       size="confirm"
+      role="alertdialog"
       title={confirmLabel}
       label={confirmLabel}
       onClose={onCancel}

@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { ToggleButton } from 'react-aria-components';
 import { Link } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 
@@ -24,7 +25,7 @@ const ACTION_CLASS =
   'focus-visible:outline-3 focus-visible:outline-focus';
 const DISC_CLASS =
   'inline-flex size-13 items-center justify-center rounded-pill bg-glass text-accent ' +
-  'transition-[background-color,transform] duration-150 group-hover:bg-hover group-active:scale-[0.97] ' +
+  'transition-[background-color,transform] duration-150 group-hover:bg-hover group-active:scale-[0.97] group-data-pressed:scale-[0.97] ' +
   'group-aria-pressed:bg-ink group-aria-pressed:text-paper group-disabled:text-ink-faint';
 
 // @FollowsBlueprint atom-plain
@@ -44,15 +45,26 @@ export function RoundAction(props: RoundActionProps): JSX.Element {
       </Link>
     );
   }
+  if (props.isPressed === undefined) {
+    return (
+      <button
+        type="button"
+        disabled={props.isDisabled ?? false}
+        onClick={props.onPress}
+        className={ACTION_CLASS}
+      >
+        {content}
+      </button>
+    );
+  }
   return (
-    <button
-      type="button"
-      aria-pressed={props.isPressed}
-      disabled={props.isDisabled ?? false}
-      onClick={props.onPress}
+    <ToggleButton
+      isSelected={props.isPressed}
+      onChange={props.onPress}
+      isDisabled={props.isDisabled ?? false}
       className={ACTION_CLASS}
     >
       {content}
-    </button>
+    </ToggleButton>
   );
 }

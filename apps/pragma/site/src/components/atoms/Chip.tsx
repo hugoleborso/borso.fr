@@ -1,4 +1,5 @@
 import type { HTMLAttributes, JSX } from 'react';
+import { ToggleButton } from 'react-aria-components';
 import { type ChipVariantProps, chipVariants } from './chip.variants';
 import { composeClassName } from './class-name.utils';
 
@@ -21,17 +22,30 @@ export function Chip({
   if (onPress === undefined) {
     return <span className={composeClassName(chipVariants({ tone, size }), className)} {...rest} />;
   }
+  const choiceClassName = composeClassName(
+    chipVariants({ tone: tone ?? 'choice', size: size ?? 'md' }),
+    className,
+  );
+  if (pressed === undefined) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onPress}
+        className={choiceClassName}
+        {...rest}
+      />
+    );
+  }
   return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      disabled={disabled}
-      onClick={onPress}
-      className={composeClassName(
-        chipVariants({ tone: tone ?? 'choice', size: size ?? 'md' }),
-        className,
-      )}
-      {...rest}
-    />
+    <ToggleButton
+      isSelected={pressed}
+      onChange={onPress}
+      isDisabled={disabled}
+      className={choiceClassName}
+      render={(toggleProps) => <button {...rest} {...toggleProps} />}
+    >
+      {rest.children}
+    </ToggleButton>
   );
 }

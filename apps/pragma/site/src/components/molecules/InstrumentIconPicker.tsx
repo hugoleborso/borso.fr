@@ -2,6 +2,7 @@
 
 import { INSTRUMENT_ICONS, type InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
+import { type Key, ToggleButton, ToggleButtonGroup } from 'react-aria-components';
 import { IconButton } from '../atoms/IconButton';
 import { INSTRUMENT_ICON_GLYPH } from './lineup-slots.core';
 
@@ -17,18 +18,32 @@ export function InstrumentIconPicker({
   labelOf,
   onPick,
 }: InstrumentIconPickerProps): JSX.Element {
+  const pick = (keys: ReadonlySet<Key>): void => {
+    const picked = INSTRUMENT_ICONS.find((icon) => keys.has(icon));
+    if (picked !== undefined) onPick(picked);
+  };
   return (
-    <div className="flex flex-wrap gap-1.5" role="group">
+    <ToggleButtonGroup
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={[value]}
+      onSelectionChange={pick}
+      className="flex flex-wrap gap-1.5"
+    >
       {INSTRUMENT_ICONS.map((icon) => (
-        <IconButton
+        <ToggleButton
           key={icon}
-          variant="secondary"
-          icon={INSTRUMENT_ICON_GLYPH[icon]}
-          label={labelOf(icon)}
-          aria-pressed={value === icon}
-          onClick={() => onPick(icon)}
+          id={icon}
+          render={({ children: _selectionState, className: _ariaClassName, ...toggleProps }) => (
+            <IconButton
+              {...toggleProps}
+              variant="secondary"
+              icon={INSTRUMENT_ICON_GLYPH[icon]}
+              label={labelOf(icon)}
+            />
+          )}
         />
       ))}
-    </div>
+    </ToggleButtonGroup>
   );
 }

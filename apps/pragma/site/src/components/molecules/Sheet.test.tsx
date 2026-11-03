@@ -6,7 +6,7 @@ import '../../i18n/i18n.setup';
 import { Button } from '../atoms/Button';
 import { Sheet } from './Sheet';
 import { SWIPE_CLOSE_DISTANCE_PX } from './sheet-swipe.utils';
-import { stubSheetDialog } from './sheet.test-utils';
+import { pressEscapeInSheet, tapSheetScrim } from './sheet.test-utils';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -22,6 +22,16 @@ function renderSheet(root: Root, node: ReactNode): void {
   });
 }
 
+function swipeGrabber(fromY: number, toY: number): void {
+  const grabber = document.querySelector<HTMLElement>('[data-sheet-grab]');
+  if (grabber === null) throw new Error('no grabber');
+  act(() => {
+    fireEvent.touchStart(grabber, { touches: [{ clientY: fromY }] });
+    fireEvent.touchMove(grabber, { touches: [{ clientY: toY }] });
+    fireEvent.touchEnd(grabber, { touches: [] });
+  });
+}
+
 /**
  * @Blueprint test-component-render
  * @BlueprintName Component Render Test
@@ -33,7 +43,6 @@ describe('Sheet', () => {
   let root: Root;
 
   beforeEach(() => {
-    stubSheetDialog();
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
@@ -56,15 +65,14 @@ describe('Sheet', () => {
         <p>Body</p>
       </Sheet>,
     );
-    const dialog = container.querySelector('dialog');
-    expect(dialog?.hasAttribute('open')).toBe(true);
+    const dialog = document.querySelector('[role=dialog]');
     expect(dialog?.getAttribute('aria-label')).toBe(TITLE);
-    expect(container.querySelector('h2')?.textContent).toBe(TITLE);
-    expect(container.querySelector('[data-sheet-close]')?.getAttribute('aria-label')).toBe(
+    expect(document.querySelector('h2')?.textContent).toBe(TITLE);
+    expect(document.querySelector('[data-sheet-close]')?.getAttribute('aria-label')).toBe(
       CLOSE_LABEL_EN,
     );
-    expect(container.querySelectorAll('[data-sheet-body]')).toHaveLength(1);
-    expect(container.querySelector('footer')?.textContent).toBe('Save');
+    expect(document.querySelectorAll('[data-sheet-body]')).toHaveLength(1);
+    expect(document.querySelector('footer')?.textContent).toBe('Save');
   });
 
   it('keeps a subheader outside the scroll body, so it stays in view', () => {
@@ -74,11 +82,11 @@ describe('Sheet', () => {
         <p>Body</p>
       </Sheet>,
     );
-    const subheader = Array.from(container.querySelectorAll('p')).find(
+    const subheader = Array.from(document.querySelectorAll('p')).find(
       (paragraph) => paragraph.textContent === 'Key and capo',
     );
     expect(subheader?.closest('[data-sheet-body]')).toBeNull();
-    expect(subheader?.closest('dialog')).not.toBeNull();
+    expect(subheader?.closest('[role=dialog]')).not.toBeNull();
   });
 
   it('puts the focus in the first field rather than on Close', () => {
@@ -99,7 +107,7 @@ describe('Sheet', () => {
         <p>Body</p>
       </Sheet>,
     );
-    act(() => container.querySelector<HTMLButtonElement>('[data-sheet-close]')?.click());
+    act(() => document.querySelector<HTMLButtonElement>('[data-sheet-close]')?.click());
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -121,7 +129,7 @@ describe('Sheet', () => {
         <input aria-label="Name" />
       </Sheet>,
     );
-    const form = container.querySelector('form');
+    const form = document.querySelector('form');
     expect(form?.querySelector('[data-sheet-body]')).not.toBeNull();
     expect(form?.querySelector('footer')).not.toBeNull();
     act(() => form?.querySelector<HTMLButtonElement>('button[type=submit]')?.click());
@@ -135,25 +143,15 @@ describe('Sheet', () => {
         <p>Body</p>
       </Sheet>,
     );
-    expect(container.querySelector('h2')?.className).toContain('font-display');
+    expect(document.querySelector('h2')?.className).toContain('font-display');
     renderSheet(
       root,
       <Sheet title={TITLE} label={TITLE} onClose={vi.fn()}>
         <p>Body</p>
       </Sheet>,
     );
-    expect(container.querySelector('h2')?.className).toContain('font-sans');
+    expect(document.querySelector('h2')?.className).toContain('font-sans');
   });
-
-  function swipeGrabber(fromY: number, toY: number): void {
-    const grabber = container.querySelector<HTMLElement>('[data-sheet-grab]');
-    if (grabber === null) throw new Error('no grabber');
-    act(() => {
-      fireEvent.touchStart(grabber, { touches: [{ clientY: fromY }] });
-      fireEvent.touchMove(grabber, { touches: [{ clientY: toY }] });
-      fireEvent.touchEnd(grabber, { touches: [] });
-    });
-  }
 
   it('closes when the grabber is swiped down past the threshold', () => {
     const onClose = vi.fn();
@@ -165,7 +163,7 @@ describe('Sheet', () => {
     );
     swipeGrabber(100, 100 + SWIPE_CLOSE_DISTANCE_PX);
     expect(onClose).toHaveBeenCalledOnce();
-    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    expect(document.querySelector<HTMLElement>('[data-sheet]')?.style.transform).toBe('');
   });
 
   it('springs back to its place on a short swipe', () => {
@@ -178,7 +176,7 @@ describe('Sheet', () => {
     );
     swipeGrabber(100, 100 + SWIPE_CLOSE_DISTANCE_PX - 1);
     expect(onClose).not.toHaveBeenCalled();
-    expect(container.querySelector('dialog')?.style.transform).toBe('');
+    expect(document.querySelector<HTMLElement>('[data-sheet]')?.style.transform).toBe('');
   });
 
   it('shows no grabber and ignores a swipe on a sheet that cannot be dismissed', () => {
@@ -189,8 +187,63 @@ describe('Sheet', () => {
         <p>Body</p>
       </Sheet>,
     );
-    expect(container.querySelector('[data-sheet-grabber]')).toBeNull();
+    expect(document.querySelector('[data-sheet-grabber]')).toBeNull();
     swipeGrabber(100, 400);
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('dims the page behind it and closes when that shadow is tapped', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    expect(document.querySelector('[data-sheet]')?.parentElement?.className).toContain('bg-scrim');
+    tapSheetScrim();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('stays open when the shadow of a sheet that cannot be dismissed is tapped', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose} isDismissible={false}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    tapSheetScrim();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('closes on Escape, unless closing is disabled while it works', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose} isDismissible={false} isCloseDisabled>
+        <p>Body</p>
+      </Sheet>,
+    );
+    pressEscapeInSheet();
+    expect(onClose).not.toHaveBeenCalled();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose} isDismissible={false}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    pressEscapeInSheet();
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('reads as an alert when it asks to confirm', () => {
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={vi.fn()} role="alertdialog">
+        <p>Body</p>
+      </Sheet>,
+    );
+    expect(document.querySelector('[role=alertdialog]')?.getAttribute('aria-label')).toBe(TITLE);
   });
 });

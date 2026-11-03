@@ -1,18 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SongNotesSheet } from './SongNotesSheet';
 
 const NO_NOTES = { structureNotes: '', gimmickNotes: '', notes: ' ' };
 
 // @FollowsBlueprint test-component-render
 describe('SongNotesSheet', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });

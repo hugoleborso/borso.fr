@@ -1,7 +1,6 @@
 /** @Feature uploads */
 
 import {
-  ALLOWED_UPLOAD_CONTENT_TYPES,
   CHART_IMAGE_CONTENT_TYPES,
   CHART_PDF_CONTENT_TYPE,
   type AllowedUploadContentType,
@@ -34,8 +33,6 @@ export function validateChartFile(file: File): FileValidationResult {
   }
   return { ok: false, reason: 'unsupported-type' };
 }
-
-export const FILE_DROP_ACCEPT_ATTRIBUTE = ALLOWED_UPLOAD_CONTENT_TYPES.join(',');
 
 const REJECTION_MESSAGE_KEY: Readonly<Record<FileRejectionReason, ParseKeys>> = {
   'too-large': 'catalog.uploadTooLarge',

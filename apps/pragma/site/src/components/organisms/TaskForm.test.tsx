@@ -1,7 +1,7 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
+import { pressEscapeInSheet, tapSheetScrim } from '../molecules/sheet.test-utils';
 import { TaskForm, type TaskFormValues } from './TaskForm';
 
 const BLANK: TaskFormValues = {
@@ -48,18 +48,11 @@ function readTitle(): string {
 }
 
 function closeByEscape(): void {
-  const dialog = screen.getByRole('dialog');
-  act(() => {
-    if (dialog instanceof HTMLDialogElement) dialog.close();
-  });
+  pressEscapeInSheet();
 }
 
 // @FollowsBlueprint test-component-render
 describe('the task sheet links', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });
@@ -80,10 +73,6 @@ describe('the task sheet links', () => {
 });
 
 describe('a task sheet draft', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });
@@ -101,7 +90,7 @@ describe('a task sheet draft', () => {
   it('is kept after a click on the backdrop', () => {
     const first = renderTaskForm('task-backdrop');
     typeTitle(TYPED_TITLE);
-    fireEvent.click(screen.getByRole('dialog'));
+    tapSheetScrim();
     expect(first.onClose).toHaveBeenCalled();
     first.unmount();
     renderTaskForm('task-backdrop');

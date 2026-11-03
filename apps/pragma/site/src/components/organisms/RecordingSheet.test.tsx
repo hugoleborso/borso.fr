@@ -6,7 +6,6 @@ import '../../i18n/i18n.setup';
 import { createIsolatedQueryClient } from '../../lib/queries/queries.test-utils';
 import type { RecordingOutcome, RecordingStart } from '../../lib/recorder.core';
 import { RecordingSheet } from './RecordingSheet';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const recorder = vi.hoisted(() => ({
   startRecording: vi.fn(),
@@ -16,8 +15,6 @@ const queue = vi.hoisted(() => ({ queueTake: vi.fn() }));
 
 vi.mock('../../lib/recorder.adapter', () => recorder);
 vi.mock('../../lib/take-queue.setup', () => queue);
-
-stubSheetDialog();
 
 const STARTED_AT = Date.parse('2026-10-23T18:00:00.000Z');
 const RECORDED: RecordingOutcome = {

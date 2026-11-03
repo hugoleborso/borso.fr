@@ -45,7 +45,7 @@ export const iconButtonVariants = cva(
   'relative inline-flex shrink-0 items-center justify-center rounded-pill border-0 p-0 ' +
     'cursor-pointer transition-[background-color,transform] duration-150 active:scale-[0.97] ' +
     'disabled:cursor-not-allowed disabled:text-ink-faint focus-visible:outline-3 focus-visible:outline-focus ' +
-    'aria-pressed:bg-ink aria-pressed:text-paper',
+    'aria-pressed:bg-ink aria-pressed:text-paper data-selected:bg-ink data-selected:text-paper',
   {
     variants: {
       variant: {

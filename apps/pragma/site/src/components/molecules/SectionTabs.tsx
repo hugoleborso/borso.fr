@@ -1,4 +1,5 @@
 import { type JSX, useState } from 'react';
+import { type Key, Tab, TabList, Tabs } from 'react-aria-components';
 import { revealTabInItsRow } from '../../lib/tab-reveal.adapter';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
@@ -24,7 +25,7 @@ export type SectionTabsLayout = 'inline' | 'stacked';
 
 const TAB_CLASS =
   'inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 border-0 border-b-2 border-transparent ' +
-  'bg-transparent px-3 text-meta font-medium text-ink-soft hover:text-ink ' +
+  'bg-transparent px-3 text-center text-meta font-medium text-ink-soft hover:text-ink ' +
   'aria-selected:border-ink aria-selected:text-ink focus-visible:outline-3 focus-visible:outline-focus';
 const TAB_CLASS_BY_LAYOUT = {
   inline: TAB_CLASS,
@@ -62,31 +63,36 @@ export function SectionTabs<Value extends string>({
   const overflow = useTabRowOverflow(row);
   const isStartCueShown = isHidingTabsAtStart(overflow);
   const isEndCueShown = isHidingTabsAtEnd(overflow);
+  const selectTab = (key: Key): void => {
+    const chosen = tabs.find((tab) => tab.value === key);
+    if (chosen !== undefined) onChange(chosen.value);
+  };
   return (
-    <div className={composeClassName('relative flex lg:w-fit lg:max-w-full', className)}>
-      <div
+    <Tabs
+      selectedKey={value}
+      onSelectionChange={selectTab}
+      keyboardActivation="manual"
+      className={composeClassName('relative flex lg:w-fit lg:max-w-full', className)}
+    >
+      <TabList
         ref={setRow}
-        role="tablist"
         aria-label={label}
         className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto border-b border-rule [scrollbar-width:none]"
       >
         {tabs.map((tab) => (
-          <button
+          <Tab
             key={tab.value}
+            id={tab.value}
             ref={tab.value === value ? revealTabInItsRow : undefined}
-            type="button"
-            role="tab"
-            aria-selected={tab.value === value}
-            onClick={() => onChange(tab.value)}
             className={TAB_CLASS_BY_LAYOUT[layout]}
           >
             <Icon name={tab.icon} />
             {tab.label}
-          </button>
+          </Tab>
         ))}
-      </div>
+      </TabList>
       {isStartCueShown ? <OverflowCue edge="start" /> : null}
       {isEndCueShown ? <OverflowCue edge="end" /> : null}
-    </div>
+    </Tabs>
   );
 }

@@ -26,8 +26,20 @@ createRuleTester().run('no-flex-one-in-auto-height-dialog', rule, {
     'const row = <dialog className="flex flex-col"><div className="flex items-center"><span className="flex-1 truncate">{name}</span></div></dialog>;',
     'const page = <section className="flex flex-col"><div className="flex-1 overflow-y-auto" /></section>;',
     'const modal = <dialog className={DIALOG_CLASS}><div className="flex-1" /></dialog>;',
+    'const panel = <Motion.div className="flex flex-col"><div className="flex-1" /></Motion.div>;',
+    'const modal = <dialog className><div className="flex-1" /></dialog>;',
+    'const modal = <dialog {...props} xlink:title="x"><div className="flex-1" /></dialog>;',
+    'const sheet = <Modal className="flex flex-col">{body}<div className={BODY_CLASS} /></Modal>;',
   ],
   invalid: [
+    {
+      code: 'const sheet = <Modal className="flex flex-col"><div className="flex-1 overflow-y-auto" /></Modal>;',
+      errors: [{ messageId: 'zeroBasisChild' }],
+    },
+    {
+      code: 'const sheet = <Dialog className="flex flex-col"><div className="flex-1 overflow-y-auto" /></Dialog>;',
+      errors: [{ messageId: 'zeroBasisChild' }],
+    },
     {
       code: COLLAPSING,
       errors: [{ messageId: 'zeroBasisChild' }, { messageId: 'zeroBasisChild' }],

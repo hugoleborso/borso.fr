@@ -157,11 +157,6 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
             minimum={MASTERY_SCORE_MIN}
             maximum={MASTERY_SCORE_MAX}
             label={`${member.firstName} ${row.original.instrument.name}`}
-            onStep={(step) => {
-              const next = clampScore((value ?? MASTERY_SCORE_MIN) + step);
-              if (next === value) return;
-              writeScore(member.id, instrumentId, next);
-            }}
             onEdit={(rawValue) => {
               const applyByIntent = {
                 clear: (): void => clearScore(member.id, instrumentId),

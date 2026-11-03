@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -57,7 +56,6 @@ describe('finding a slot', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerApi(request)));
   });
 

@@ -3,7 +3,6 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -112,7 +111,6 @@ describe('practice mode', () => {
 
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubSheetDialog();
     localStorage.clear();
     answered.setlists = [SETLIST];
     answered.entries = ENTRIES;
@@ -157,13 +155,11 @@ describe('practice mode', () => {
     renderPracticeMode();
     fireEvent.click(await screen.findByRole('button', { name: 'Next song' }));
     await screen.findByRole('heading', { name: 'Valerie' });
-    const [menuItem, stripPill] = screen.getAllByRole('button', {
-      name: 'End the practice',
-      hidden: true,
-    });
-    expect(menuItem).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Practice actions' }));
+    expect(screen.getByRole('menuitem', { name: 'End the practice' })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
     expect(screen.queryByRole('button', { name: 'Next song' })).toBeNull();
-    if (stripPill !== undefined) fireEvent.click(stripPill);
+    fireEvent.click(screen.getByRole('button', { name: 'End the practice' }));
     expect(await screen.findByText('Session page')).toBeTruthy();
     expect(localStorage.getItem(PRACTICE_STORAGE_KEY)).toBeNull();
     expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('practice_mode_ended', {

@@ -10,7 +10,6 @@ import {
   type MountedTree,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import { VotePage } from './VotePage';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -137,7 +136,6 @@ describe('the public vote page', () => {
   });
 
   it('keeps its header fixed and asks for another song from a sheet, not below the list', async () => {
-    stubSheetDialog();
     await renderVotePage((request) => {
       if (request.url.includes('/ballot')) {
         return Promise.resolve(jsonResponse({ ballotToken: A_BALLOT }, 201));
@@ -150,7 +148,7 @@ describe('the public vote page', () => {
     expect(container.querySelector('input[type=search]')).toBeNull();
     findButtonByText(header ?? container, 'Ask for something else')?.click();
     await flushMicrotasks();
-    expect(document.querySelector('dialog input[type=search]')).not.toBeNull();
+    expect(document.querySelector('[role=dialog] input[type=search]')).not.toBeNull();
   });
 
   it('casts a vote on the first tap and retracts it on the second', async () => {

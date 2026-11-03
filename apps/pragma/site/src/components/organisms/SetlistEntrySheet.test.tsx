@@ -1,10 +1,9 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
 import { recordProductEvent } from '../../observability/product-event.adapter';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistEntrySheet, type SetlistEntrySheetProps } from './SetlistEntrySheet';
 
 vi.mock('../../observability/error-reporting.adapter', () => ({
@@ -67,10 +66,6 @@ function renderSheet(props: SetlistEntrySheetProps): void {
 
 // @FollowsBlueprint test-component-render
 describe('the entry sheet', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
     vi.useRealTimers();

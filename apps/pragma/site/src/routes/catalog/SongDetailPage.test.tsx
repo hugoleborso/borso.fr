@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -107,7 +106,6 @@ describe('song page', () => {
 
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerSongApi(request)));
   });
 

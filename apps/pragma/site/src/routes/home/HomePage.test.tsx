@@ -1,9 +1,8 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -131,10 +130,6 @@ function renderHomePage(queryClient: QueryClient = createIsolatedQueryClient()):
 // @FollowsBlueprint test-component-render
 describe('the home page', () => {
   let stub: FetchStub | null = null;
-
-  beforeEach(() => {
-    stubSheetDialog();
-  });
 
   afterEach(() => {
     cleanup();

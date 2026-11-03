@@ -8,7 +8,6 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { PasskeysCard } from './PasskeysCard';
 
 const IPHONE_AGENT =
@@ -47,7 +46,6 @@ describe('PasskeysCard', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    stubSheetDialog();
     passkeyBrowser.isPasskeySupported.mockReturnValue(true);
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE_AGENT);
     stub = stubFetch((request) => Promise.resolve(answerPasskeysApi(request)));

@@ -73,7 +73,7 @@ describe('the field that asks for a song the band does not have', () => {
       );
     });
     await user.type(screen.getByRole('searchbox'), 'get lucky');
-    const pickedHit = await screen.findByRole('button', { name: /Get Lucky/ });
+    const pickedHit = await screen.findByRole('option', { name: /Get Lucky/ });
     await user.click(pickedHit);
     await waitFor(() => {
       expect(fetchStub?.calls.some((call) => call.method === 'POST')).toBe(true);

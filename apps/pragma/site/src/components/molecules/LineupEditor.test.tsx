@@ -8,7 +8,6 @@ import {
   type LineupEditorMember,
   type LineupRecord,
 } from './LineupEditor';
-import { stubSheetDialog } from './sheet.test-utils';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -31,30 +30,26 @@ function renderEditor(root: Root, node: ReactNode): void {
   });
 }
 
-function findOverrideBadge(container: HTMLElement): HTMLElement | null {
-  const spans = Array.from(container.querySelectorAll('span'));
+function findOverrideBadge(): HTMLElement | null {
+  const spans = Array.from(document.querySelectorAll('span'));
   return spans.find((span) => span.textContent.trim() === OVERRIDE_BADGE_TEXT_EN) ?? null;
 }
 
-function findButtonByText(container: HTMLElement, label: string): HTMLButtonElement | null {
-  const buttons = Array.from(container.querySelectorAll('button'));
+function findButtonByText(label: string): HTMLButtonElement | null {
+  const buttons = Array.from(document.querySelectorAll('button'));
   return buttons.find((button) => button.textContent.trim() === label) ?? null;
 }
 
-function listInstrumentToggles(container: HTMLElement, memberName: string): HTMLButtonElement[] {
-  const group = container.querySelector(`[aria-label="${memberName} — Instruments"]`);
+function listInstrumentToggles(memberName: string): HTMLButtonElement[] {
+  const group = document.querySelector(`[aria-label="${memberName} — Instruments"]`);
   if (!(group instanceof HTMLElement)) {
     throw new TypeError(`no instrument group found for ${memberName}`);
   }
   return Array.from(group.querySelectorAll('button'));
 }
 
-function getInstrumentToggle(
-  container: HTMLElement,
-  memberName: string,
-  instrumentName: string,
-): HTMLButtonElement {
-  const toggle = listInstrumentToggles(container, memberName).find(
+function getInstrumentToggle(memberName: string, instrumentName: string): HTMLButtonElement {
+  const toggle = listInstrumentToggles(memberName).find(
     (button) => button.textContent.trim() === instrumentName,
   );
   if (toggle === undefined) {
@@ -63,8 +58,8 @@ function getInstrumentToggle(
   return toggle;
 }
 
-function heldInstrumentNames(container: HTMLElement, memberName: string): string[] {
-  return listInstrumentToggles(container, memberName)
+function heldInstrumentNames(memberName: string): string[] {
+  return listInstrumentToggles(memberName)
     .filter((button) => button.getAttribute('aria-pressed') === 'true')
     .map((button) => button.textContent.trim());
 }
@@ -75,7 +70,6 @@ describe('LineupEditor', () => {
   let root: Root;
 
   beforeEach(() => {
-    stubSheetDialog();
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
@@ -99,10 +93,10 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(container.querySelector('dialog')).toBeNull();
+    expect(document.querySelector('[role=dialog]')).toBeNull();
   });
 
-  it('opens a native <dialog> with the modal flag when open=true', () => {
+  it('opens a modal dialog when open=true', () => {
     renderEditor(
       root,
       <LineupEditor
@@ -115,8 +109,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const dialog = container.querySelector('dialog');
-    expect(dialog?.hasAttribute('open')).toBe(true);
+    expect(document.querySelector('[role=dialog]')?.closest('[data-sheet]')).not.toBeNull();
   });
 
   it('shows each member holding what the supplied lineup gives them', () => {
@@ -133,8 +126,8 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name]);
-    expect(heldInstrumentNames(container, PAULINE.name)).toEqual([BASS.name]);
+    expect(heldInstrumentNames(HUGO.name)).toEqual([GUITAR.name]);
+    expect(heldInstrumentNames(PAULINE.name)).toEqual([BASS.name]);
   });
 
   it('shows a member holding two instruments at once', () => {
@@ -150,7 +143,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name, DRUMS.name]);
+    expect(heldInstrumentNames(HUGO.name)).toEqual([GUITAR.name, DRUMS.name]);
   });
 
   it('offers every instrument as a toggle, none of them held to begin with', () => {
@@ -166,11 +159,9 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const toggleNames = listInstrumentToggles(container, HUGO.name).map((button) =>
-      button.textContent.trim(),
-    );
+    const toggleNames = listInstrumentToggles(HUGO.name).map((button) => button.textContent.trim());
     expect(toggleNames).toEqual([GUITAR.name, BASS.name, DRUMS.name]);
-    expect(heldInstrumentNames(container, HUGO.name)).toEqual([]);
+    expect(heldInstrumentNames(HUGO.name)).toEqual([]);
   });
 
   it('passes the edited lineup to onSave (wasReset=false) and closes the modal', async () => {
@@ -189,10 +180,10 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      getInstrumentToggle(container, HUGO.name, GUITAR.name).click();
+      getInstrumentToggle(HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
-      const form = container.querySelector('form');
+      const form = document.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: [GUITAR.id], [PAULINE.id]: [] }, false);
@@ -214,10 +205,10 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      getInstrumentToggle(container, HUGO.name, GUITAR.name).click();
+      getInstrumentToggle(HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
-      const form = container.querySelector('form');
+      const form = document.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(onSave).toHaveBeenCalledWith(null, false);
@@ -239,18 +230,18 @@ describe('LineupEditor', () => {
         onClose={onClose}
       />,
     );
-    expect(heldInstrumentNames(container, HUGO.name)).toEqual([BASS.name]);
-    const resetButton = findButtonByText(container, RESET_BUTTON_TEXT_EN);
+    expect(heldInstrumentNames(HUGO.name)).toEqual([BASS.name]);
+    const resetButton = findButtonByText(RESET_BUTTON_TEXT_EN);
     expect(resetButton).not.toBeNull();
     await act(async () => {
       resetButton?.click();
     });
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
-    expect(heldInstrumentNames(container, HUGO.name)).toEqual([GUITAR.name]);
-    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+    expect(heldInstrumentNames(HUGO.name)).toEqual([GUITAR.name]);
+    expect(document.querySelector('[role=dialog]')).not.toBeNull();
     await act(async () => {
-      const form = container.querySelector('form');
+      const form = document.querySelector('form');
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: [GUITAR.id] }, true);
@@ -275,10 +266,10 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      getInstrumentToggle(container, PAULINE.name, BASS.name).click();
+      getInstrumentToggle(PAULINE.name, BASS.name).click();
     });
     await act(async () => {
-      findButtonByText(container, SAVE_AS_DEFAULT_BUTTON_TEXT_EN)?.click();
+      findButtonByText(SAVE_AS_DEFAULT_BUTTON_TEXT_EN)?.click();
     });
     expect(onSaveAsSongDefault).toHaveBeenCalledWith({ [HUGO.id]: [], [PAULINE.id]: [BASS.id] });
     expect(onSave).not.toHaveBeenCalled();
@@ -298,7 +289,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(findButtonByText(container, SAVE_AS_DEFAULT_BUTTON_TEXT_EN)).toBeNull();
+    expect(findButtonByText(SAVE_AS_DEFAULT_BUTTON_TEXT_EN)).toBeNull();
   });
 
   it('omits the Reset button when defaultLineup is not supplied (song surface)', () => {
@@ -314,7 +305,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(findButtonByText(container, RESET_BUTTON_TEXT_EN)).toBeNull();
+    expect(findButtonByText(RESET_BUTTON_TEXT_EN)).toBeNull();
   });
 
   it('marks the entry as overriding the song default, so the tint is not the only signal', () => {
@@ -332,7 +323,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const badge = findOverrideBadge(container);
+    const badge = findOverrideBadge();
     expect(badge).not.toBeNull();
     expect(badge?.className).toContain('bg-highlight');
   });
@@ -352,7 +343,7 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(findOverrideBadge(container)).toBeNull();
+    expect(findOverrideBadge()).toBeNull();
   });
 
   it('closes without saving when the sheet is closed', () => {
@@ -370,7 +361,7 @@ describe('LineupEditor', () => {
         onClose={onClose}
       />,
     );
-    const closeButton = container.querySelector<HTMLButtonElement>('[data-sheet-close]');
+    const closeButton = document.querySelector<HTMLButtonElement>('[data-sheet-close]');
     act(() => closeButton?.click());
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);

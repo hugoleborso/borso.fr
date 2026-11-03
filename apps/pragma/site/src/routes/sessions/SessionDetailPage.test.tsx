@@ -9,7 +9,6 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import { SessionDetailPage } from './SessionDetailPage';
 
 const CONCERT = {
@@ -72,7 +71,6 @@ describe('the concert page', () => {
 
   beforeEach(() => {
     sessionSetlists.current = [];
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerSessionApi(request)));
   });
 
@@ -234,7 +232,6 @@ describe('the practice page', () => {
 
   beforeEach(() => {
     writes = [];
-    stubSheetDialog();
     stub = stubFetch(answerPracticeApi(writes));
   });
 
@@ -258,7 +255,7 @@ describe('the practice page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
     const concerts = screen.getByRole('dialog', { name: 'Concerts to prepare' });
     const rows = await within(concerts).findAllByRole('checkbox');
-    expect(rows.map((row) => row.textContent)).toEqual([
+    expect(rows.map((row) => row.closest('label')?.textContent)).toEqual([
       expect.stringContaining('La Cigale'),
       expect.stringContaining('Le Petit Bain'),
     ]);
@@ -268,7 +265,7 @@ describe('the practice page', () => {
 
     const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
     const songRows = within(songs).getAllByRole('checkbox');
-    expect(songRows.map((row) => row.textContent)).toEqual([
+    expect(songRows.map((row) => row.closest('label')?.textContent)).toEqual([
       expect.stringContaining('Song s2'),
       expect.stringContaining('Song s3'),
     ]);

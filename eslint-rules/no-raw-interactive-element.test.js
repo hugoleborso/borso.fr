@@ -12,8 +12,20 @@ createRuleTester().run('no-raw-interactive-element', rule, {
       filename: 'apps/pragma/site/src/components/atoms/Button.tsx',
     },
     {
-      code: 'export function Sheet(props) { return <dialog ref={open}>{props.children}</dialog>; }',
+      code: "import { Dialog, Modal, ModalOverlay } from 'react-aria-components';",
       filename: 'apps/pragma/site/src/components/molecules/Sheet.tsx',
+    },
+    {
+      code: "import { MenuTrigger, Popover } from 'react-aria-components';",
+      filename: 'apps/pragma/site/src/components/molecules/Menu.tsx',
+    },
+    "import { Checkbox, ToggleButton } from 'react-aria-components';",
+    "import { Dialog } from './Dialog';",
+    "import * as Aria from 'react-aria-components';",
+    {
+      code: "import { Popover } from 'react-aria-components';",
+      filename: 'apps/pragma/site/src/components/molecules/Picker.tsx',
+      options: [{ overlayFiles: ['Picker.tsx'] }],
     },
     'const mark = <span aria-hidden="true" className="dot" />;',
     'const item = <Menu.Item onClick={open}>{title}</Menu.Item>;',
@@ -42,6 +54,26 @@ createRuleTester().run('no-raw-interactive-element', rule, {
     {
       code: 'const overlay = <dialog ref={open} onClose={close}>{body}</dialog>;',
       errors: [{ messageId: 'rawDialog' }],
+    },
+    {
+      code: 'export function Sheet(props) { return <dialog ref={open}>{props.children}</dialog>; }',
+      filename: 'apps/pragma/site/src/components/molecules/Sheet.tsx',
+      errors: [{ messageId: 'rawDialog' }],
+    },
+    {
+      code: "import { Button, Modal, ModalOverlay } from 'react-aria-components';",
+      filename: 'apps/pragma/site/src/components/organisms/PickerSheet.tsx',
+      errors: [{ messageId: 'libraryOverlay' }, { messageId: 'libraryOverlay' }],
+    },
+    {
+      code: "import { Popover as Floating } from 'react-aria-components';",
+      errors: [{ messageId: 'libraryOverlay' }],
+    },
+    {
+      code: "import { Dialog } from 'react-aria-components';",
+      filename: 'apps/pragma/site/src/components/molecules/Menu.tsx',
+      options: [{ overlayFiles: ['Sheet.tsx'] }],
+      errors: [{ messageId: 'libraryOverlay' }],
     },
     {
       code: 'const overlay = <dialog ref={open}>{body}</dialog>;',

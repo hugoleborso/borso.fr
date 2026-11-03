@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -68,7 +67,6 @@ describe('the tasks page', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerBandApi(request)));
   });
 

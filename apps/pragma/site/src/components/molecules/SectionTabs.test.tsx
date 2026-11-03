@@ -57,4 +57,24 @@ describe('SectionTabs', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Two' }));
     expect(onChange).toHaveBeenCalledWith('two');
   });
+
+  it('moves between tabs with the arrow keys and opens one only on Enter', () => {
+    const onChange = vi.fn();
+    render(<SectionTabs label="Views" tabs={TABS} value="one" onChange={onChange} />);
+    const first = screen.getByRole('tab', { name: 'One' });
+    act(() => {
+      first.focus();
+    });
+    fireEvent.keyDown(first, { key: 'ArrowRight' });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Two' }));
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Two' }), { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledExactlyOnceWith('two');
+  });
+
+  it('marks the current tab as selected', () => {
+    renderTabs();
+    expect(screen.getByRole('tab', { name: 'One' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'Two' }).getAttribute('aria-selected')).toBe('false');
+  });
 });
