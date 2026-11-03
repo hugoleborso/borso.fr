@@ -4,10 +4,10 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: none (the service worker came in commit fec7d61e, before pull requests carried numbers here)
-fix-pr: none (the operator has not chosen the countermeasure yet)
-fix-commits: none (proposal under review)
-eradication-level: 5
-eradication-paths: []
+fix-pr: none (the pull request is opened after this entry is committed)
+fix-commits: [self]
+eradication-level: 1
+eradication-paths: [apps/pragma/site/public/sw.js, apps/pragma/site/src/sw/service-worker.test.ts, apps/pragma/site/src/lib/query-client.setup.ts, eslint-rules/optimistic-mutation-declares-scope.js]
 time-to-detect: months
 tags: [react, tanstack-query, service-worker, optimistic-updates, pragma]
 zone: apps/pragma/site/public/sw.js
@@ -15,9 +15,6 @@ weak-point: optimistic-write-undone
 recurs: [optimistic-reorder-reverted-by-stale-dsql-read, the-blueprint-that-mandated-the-refetch-that-undid-it]
 blueprints: [query-optimistic-mutation]
 ---
-
-> Status: proposal. Nothing below is merged. The operator chooses the
-> countermeasure after reading this entry.
 
 # The offline cache that answered first, online
 
@@ -115,36 +112,61 @@ are two caches, and only one of them is updated.
 
 ## Countermeasure
 
-Proposed, not applied. A and B fix the cause. C and D fix the second, smaller
-defect.
+The operator chose option E of
+[ADR-202611011313](../adr/202611011313-pragma-offline-reads-through-the-query-cache.md),
+which removes the second cache instead of keeping it in step.
 
-| Option | What changes | Cost |
-| --- | --- | --- |
-| A. API reads go network first, the copy only when offline | Online, every read is fresh. Offline behaviour is unchanged | A slower read when the network is slow, since the copy no longer answers first |
-| B. Keep stale-while-revalidate, and drop the cached copy on every write to the same resource | Reads stay instant | Each write path must map to the reads it affects, and a missed mapping brings the bug back |
-| C. Block a drag while a reorder is pending (the operator's idea) | No two reorders in flight | The list freezes until the server answers. 240 ms to 1.65 s per drag in prod |
-| D. One `scope` on the setlist entry mutations | Requests queue, the screen stays responsive | A failed request's rollback can also drop the drags queued after it |
+- The worker caches the app shell, the fingerprinted assets and push, and
+  no `/api/` read. `activate` deletes the old `pragma-v4-data` cache on
+  every phone at the next start.
+- The TanStack Query cache, which every optimistic write already updates,
+  is saved to `localStorage` and restored at start-up, so offline reading
+  shows the last order the member saved.
+- Once signed in, the app loads the catalog, every song, the next session,
+  its setlists and their entries into that cache, which is what the worker
+  pre-cached from `/api/offline-manifest`.
+- Every setlist entry write declares one `scope`, so two drags never travel
+  at once and the older one cannot commit last.
 
-Recommendation: A, plus D or C. A matches what the worker was added for,
-which is offline use.
+Verified by unit tests (measured): the worker test below, the persist
+round trip, the session-end purge, the sign-in prefetch and the core suite
+of the site (726 tests in `site/src/lib`, all passing).
 
 ## Eradication
 
-Proposed, level 4 (detection) or level 1 (structural), not shipped.
+**Type:** structural impossibility (level 1)
 
-- **Structural (level 1)**: with A, the worker has no online answer from a
-  copy, so a write cannot be hidden by it. The remaining copy is reached only
-  when the network fails.
-- **Detection (level 4)**: a test that loads `sw.js` with a mocked `caches`
-  and `fetch`, and asserts that an online read of every cached API path
-  returns the network answer. Planted defect: the current
-  `staleWhileRevalidate`, which the test must refuse.
-- **Similar instances:** every path in `isReadableApiPath` (`sw.js:80-91`)
-  has the same exposure: songs, sessions, setlists by session, entries,
-  instruments, members and the offline manifest. Each has optimistic writes
-  that the worker never sees (inferred from the list, not reproduced one by
-  one).
-- **For the overlapping `PUT`s:** the rule `borso/optimistic-mutation-declares-scope`
-  on the branch refuses an optimistic mutation without a `scope`. It fails on
-  a planted defect (measured). It flags 51 call sites in three apps, so it is
-  a separate decision.
+**Reference:** commit `[self]` on this entry's pull request
+
+```diff
+-  if (url.pathname.startsWith('/api/') && isReadableApiPath(url.pathname)) {
+-    event.respondWith(staleWhileRevalidate(request));
+-    return;
+-  }
+```
+
+The worker holds no copy of any API read, so no copy can answer before the
+network. The only read cache left is the one the writes update.
+
+**Detection kept beside it:** `service-worker.test.ts` seeds an old copy of
+`GET /api/setlists/setlist-1/entries` in every cache, answers the network
+with the newer order, and asserts the page receives the network body.
+
+**Proof it can fail:** with the previous `sw.js` restored, the test refused
+it (measured):
+
+```
+× sends an API read to the network even when a cache holds an older copy, so a saved setlist order is never answered from before the drags
+AssertionError: expected '{"entries":[{"id":"a"},{"id":"b"}]}' to be '{"entries":[{"id":"b"},{"id":"a"}]}'
+```
+
+**For the overlapping `PUT`s (level 2):** `borso/optimistic-mutation-declares-scope`
+refuses an optimistic mutation without a `scope`. Its rule test refuses the
+planted cases (9 tests passing, measured), and `oxlint --type-aware` over
+pragma, talos and last-loop-lepin reports it nowhere (measured).
+
+**Similar instances:** every path the worker listed in `isReadableApiPath`
+(songs, sessions, setlists by session, entries, instruments, members, the
+offline manifest) had the same exposure. Deleting the data cache removes
+all of them at once. `grep -rn "caches.open" apps/*/site/public` finds no
+other worker that caches API reads.
