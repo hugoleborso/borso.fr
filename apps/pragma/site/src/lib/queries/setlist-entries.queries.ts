@@ -40,9 +40,7 @@ const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 const ENTRY_WRITE_SCOPE = { id: 'setlist-entry-writes' } as const;
 
 async function fetchSetlistEntries(setlistId: string) {
-  const response = await api.api.setlists[':id'].entries.$get({
-    param: { id: setlistId },
-  });
+  const response = await api.api.setlists[':id'].entries.$get({ param: { id: setlistId } });
   if (!response.ok) throw new ApiError(response.status, `entries ${response.status}`, null);
   return response.json();
 }
@@ -56,6 +54,10 @@ export function setlistEntriesQueryOptions(setlistId: string) {
 
 export function useSetlistEntries(setlistId: string, isEnabled = true) {
   return useQuery({ ...setlistEntriesQueryOptions(setlistId), enabled: isEnabled });
+}
+
+export function useSetlistEntriesToReorder(setlistId: string) {
+  return useQuery({ ...setlistEntriesQueryOptions(setlistId), refetchOnMount: 'always' });
 }
 
 export function useEntriesOfSetlists(setlistIds: readonly string[]) {

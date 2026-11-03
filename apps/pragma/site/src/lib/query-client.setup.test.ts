@@ -121,7 +121,8 @@ describe('the query cache saved on the phone', () => {
     queryClient.clear();
     await persistQueryClientRestore({ queryClient, ...queryCachePersistOptions });
 
-    expect(localStorage.getItem(PERSISTED_CACHE_KEY)).toContain(queryCachePersistOptions.buster);
+    const saved: unknown = JSON.parse(localStorage.getItem(PERSISTED_CACHE_KEY) ?? 'null');
+    expect(saved).toMatchObject({ buster: queryCachePersistOptions.buster });
     expect(queryClient.getQueryData(songKeys.list())).toStrictEqual({ songs: [{ id: 'song-1' }] });
     expect(queryClient.getMutationCache().getAll()).toEqual([]);
   });
