@@ -16,3 +16,4 @@ This file is gitignored. Before the pull request opens, run
 
 Session: 96144670-751b-5c5c-b79a-ed089b954cf4
 
+- [2026-11-03 14:40] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
