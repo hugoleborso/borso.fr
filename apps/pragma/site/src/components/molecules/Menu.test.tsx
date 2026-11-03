@@ -12,12 +12,29 @@ const ITEMS: readonly MenuItem[] = [
   { label: 'Rename', icon: 'edit', tone: 'default', onSelect: vi.fn() },
 ];
 
+// @FollowsBlueprint test-jsdom-gap-stub
+function stubModalDialogMissingFromJsdom(): void {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+    configurable: true,
+    value: function showModalStub(this: HTMLDialogElement): void {
+      this.setAttribute('open', '');
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+    configurable: true,
+    value: function closeStub(this: HTMLDialogElement): void {
+      this.removeAttribute('open');
+    },
+  });
+}
+
 // @FollowsBlueprint test-component-render
 describe('Menu', () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
+    stubModalDialogMissingFromJsdom();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -31,26 +48,39 @@ describe('Menu', () => {
     container.remove();
   });
 
-  function readList(): HTMLUListElement {
-    const list = container.querySelector('ul');
-    if (list === null) throw new Error('Menu renders no list');
-    return list;
+  function openMenu(): HTMLDialogElement {
+    const menu = container.querySelector('dialog');
+    if (menu === null) throw new Error('Menu renders no dialog');
+    act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Actions"]')?.click());
+    expect(menu.open).toBe(true);
+    return menu;
   }
 
-  it('is a light-dismiss popover, so the browser closes it on a tap outside and on Escape', () => {
-    expect(readList().getAttribute('popover')).toBe('auto');
+  it('opens as a modal dialog, so the page under its shadow cannot be tapped', () => {
+    expect(container.querySelector('dialog')?.className).toContain('backdrop:bg-scrim');
+    openMenu();
   });
 
-  it('opens from its button, which the browser gives focus back to', () => {
-    const button = container.querySelector('button[aria-label="Actions"]');
-    expect(button?.getAttribute('popovertarget')).toBe(readList().id);
+  it('closes when the shadow around it is tapped', () => {
+    const menu = openMenu();
+    act(() => {
+      menu.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(menu.open).toBe(false);
+  });
+
+  it('stays open when a tap lands inside the list', () => {
+    const menu = openMenu();
+    act(() => {
+      menu.querySelector('ul')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(menu.open).toBe(true);
   });
 
   it('closes when an item is chosen, then runs it', () => {
-    const renameButton = container.querySelector<HTMLButtonElement>('li button');
-    expect(renameButton?.getAttribute('popovertarget')).toBe(readList().id);
-    expect(renameButton?.getAttribute('popovertargetaction')).toBe('hide');
-    act(() => renameButton?.click());
+    const menu = openMenu();
+    act(() => menu.querySelector<HTMLButtonElement>('li button')?.click());
+    expect(menu.open).toBe(false);
     expect(ITEMS[0]?.onSelect).toHaveBeenCalledOnce();
   });
 });

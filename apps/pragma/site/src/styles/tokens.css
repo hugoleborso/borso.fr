@@ -125,12 +125,12 @@
     overflow: hidden;
   }
 
-  [popover][data-anchored-menu] {
+  dialog[data-anchored-menu] {
     margin: auto;
   }
 
   @supports (position-area: bottom) {
-    [popover][data-anchored-menu] {
+    dialog[data-anchored-menu] {
       inset: auto;
       margin: 0.25rem 0;
       position-area: bottom span-left;

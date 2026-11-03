@@ -83,36 +83,35 @@ no React state and no `useEffect`, which the standards ban.
 
 ## Countermeasure
 
-`Menu` is now a native popover, `popover="auto"`. Its button opens it with
-`popoverTarget`, and each item closes it with `popoverTargetAction="hide"`
-before running. The browser closes it on a tap outside and on Escape, gives
-focus back to the button, and draws it above every other layer.
+`Menu` is now a modal `<dialog>`, like `Sheet`. Opening it dims the page
+with the same `backdrop:bg-scrim`. A tap on that shadow only closes the
+menu, through the `closeOnBackdropTap` ref callback that `Sheet` now shares
+from `modal-dialog.adapter.ts`. The browser closes it on Escape and gives
+focus back to the button. Each item closes the menu, then runs.
 
 Placement under the button uses CSS anchor positioning inside
 `@supports (position-area: bottom)` in `tokens.css`. A browser without it
-shows the popover centred on screen, because the same file restores the
-`margin: auto` that Tailwind's preflight removes.
+shows the menu centred, because the same file restores the `margin: auto`
+that Tailwind's preflight removes.
 
-A first version hand-wrote the dismissal with a transparent backdrop. The
-operator asked why it did not reuse the platform popover. Checking the
-running app then showed that backdrop's own defect: the bottom bar (`z30`)
-and the tab bar (`z40`) sat above it and stayed tappable with a menu open.
+Two earlier versions were replaced on operator review:
+
+- A hand-written transparent backdrop. The bottom bar (`z30`) and the tab
+  bar (`z40`) sat above it and stayed tappable with a menu open.
+- A native `popover="auto"`. With no shadow, the tap that closed it also
+  reached what was under it, and opened the song sheet in one tap
+  (measured, also on bare HTML with no app code). The operator wanted the
+  shadow and a tap that only closes, as on the transition sheet.
 
 Checked on the real app (`pnpm dev`, Chromium, 375 px, measured):
 
 | Check | Result |
 | --- | --- |
-| Tap on the button | open, list top 4 px under the button, right edges aligned |
-| Tap outside | closed |
+| Tap on the button | open, shadow on, list 4 px under the button, right edges aligned |
+| One tap on a song row | menu closed, shadow gone, nothing else opened |
 | Escape | closed, focus back on the button |
-| Last menu on the page | list fits under its button inside the viewport |
 | Item tap | closed, item ran |
 | `@supports` rule removed, as in a browser without anchor positioning | list centred on screen |
-
-One behaviour differs from the backdrop: the tap that closes the menu also
-reaches what is under it. A tap on a song row closes the menu and opens
-the song sheet (measured). This is how a light-dismiss popover works in
-Chromium.
 
 ## Eradication
 
@@ -123,15 +122,15 @@ Chromium.
 ```diff
 -    <details className="relative">
 -      <summary aria-label={label} …>
-+      <button type="button" popoverTarget={popoverId} aria-label={label} …>
++      <button type="button" aria-haspopup="menu" onClick={openMenuOfButton} …>
 -      <ul className="absolute top-full right-0 z-30 …">
-+      <ul id={popoverId} popover="auto" data-anchored-menu …>
++      <dialog ref={closeOnBackdropTap} data-anchored-menu className="… backdrop:bg-scrim">
 ```
 
-Dismissal is no longer code in this repository. The browser owns it for
-every caller of `Menu`, so no future menu can forget a dismissal path.
-`Menu.test.tsx` pins the wiring: the list is `popover="auto"`, the button
-targets it, and each item hides it before running.
+The menu and the sheet now dismiss through the same dialog primitive and
+the same backdrop callback, so no menu can be written without a way out.
+`Menu.test.tsx` taps the shadow and expects the menu closed. That test
+failed with the backdrop callback removed (measured).
 
 **Similar instances:** `grep -rn "<details" apps/*/site/src` finds five
 (measured). `Menu` is the only popup. The four in talos (`SourceView`,
