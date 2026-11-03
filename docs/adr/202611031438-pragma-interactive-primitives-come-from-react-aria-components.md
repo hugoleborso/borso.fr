@@ -113,3 +113,11 @@ Constraints that close doors: React 19, Tailwind with pragma's own Notebook toke
 ## Index update
 
 Listed in `docs/adr/README.md`.
+
+## Revisions
+
+### Revision 2026-11-03 — measured after the migration
+
+What changed: 14 primitives moved and 8 stayed hand-written, with the reasons in `docs/standards/05-frontend-architecture.md`. The main bundle went from 408 KB to 510 KB gzipped (measured, `pnpm build`).
+Why: `EnergyMeter` stays, because React Aria's slider sets the value on pointerdown, the defect in its dantotsu. `TransposeStepper`, `PickableSongRow`, `TaskRow` and `Input` stay, because React Aria would change their look or their focus. `EnumSelectField` and `UndoSnackbar` stay, as decided above.
+Implication for the original decision: still valid.
