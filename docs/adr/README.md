@@ -103,7 +103,7 @@ No:
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
 | [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
 | [202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | accepted | 2026-11-01 |
-| [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | proposed | 2026-11-03 |
+| [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
 
 ### Data layer
 
