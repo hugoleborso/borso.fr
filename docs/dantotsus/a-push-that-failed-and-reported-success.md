@@ -92,9 +92,10 @@ would have been refused by its own hook without it.
 **DevX check, level 2.** The shape cannot be run; the agent is told the two
 correct spellings at the moment it would have written the wrong one.
 
-Level 1 is not reachable from here. Nothing in the harness can turn on
-`pipefail` for a command the model composes, and the pipeline is legitimate
-whenever the status is genuinely not the point.
+Level 1 was believed out of reach here, and was not. A PreToolUse hook can
+return `updatedInput`, and since PR #250's sweep this hook puts
+`set -o pipefail;` in front of the command instead of refusing it. See
+[`a-guard-that-refused-what-it-could-repair`](./a-guard-that-refused-what-it-could-repair.md).
 
 Verified, all seven cases, by feeding the hook the tool-input JSON directly:
 
