@@ -81,7 +81,7 @@ describe('songFromApi', () => {
       status: 'rehearsed',
       tonalityStart: 'Am',
       tonalityEnd: 'C',
-      baseEnergy: '6',
+      baseEnergy: 6,
       chartKind: 'chordpro',
       chordproText: '[C]Hello',
       pdfS3Key: '',
@@ -121,7 +121,7 @@ describe('songFromApi', () => {
     expect(draft).toMatchObject({
       tonalityStart: '',
       tonalityEnd: '',
-      baseEnergy: '',
+      baseEnergy: null,
       chartKind: 'none',
       album: '',
     });
@@ -167,7 +167,7 @@ describe('payloadFromDraft', () => {
     status: 'wip',
     tonalityStart: ' Am ',
     tonalityEnd: ' C ',
-    baseEnergy: ' 7 ',
+    baseEnergy: 7,
     album: '  Embers ',
   };
 
@@ -175,7 +175,7 @@ describe('payloadFromDraft', () => {
     expect(payloadFromDraft({ ...filled, title: '   ' })).toBeNull();
   });
 
-  it('trims every text field and parses the energy', () => {
+  it('trims every text field and keeps the energy', () => {
     expect(payloadFromDraft(filled)).toEqual({
       title: 'Slow Burn',
       artist: 'The Embers',
@@ -206,9 +206,8 @@ describe('payloadFromDraft', () => {
         ...filled,
         tonalityStart: '   ',
         tonalityEnd: '   ',
-        baseEnergy: '   ',
       }),
-    ).toMatchObject({ tonalityStart: null, tonalityEnd: null, baseEnergy: null });
+    ).toMatchObject({ tonalityStart: null, tonalityEnd: null });
   });
 
   it('maps every blank optional field to null', () => {

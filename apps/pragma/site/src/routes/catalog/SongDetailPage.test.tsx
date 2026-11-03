@@ -183,6 +183,21 @@ describe('song page', () => {
     expect(within(sheet).getByText('Count in four.')).toBeTruthy();
   });
 
+  it('saves the base energy the member sets on the Info tab', async () => {
+    renderSongPage();
+    const meter = await screen.findByRole('slider', { name: 'Base energy (1-10)' });
+    expect(meter.getAttribute('aria-valuetext')).toBe('Not set, showing 5');
+
+    fireEvent.keyDown(meter, { key: 'ArrowRight' });
+
+    await waitFor(() => {
+      expect(stub?.calls.some((request) => request.method === 'PUT')).toBe(true);
+    });
+    const songWrite = stub?.calls.find((request) => request.method === 'PUT');
+    expect(new URL(songWrite?.url ?? '').pathname).toBe(`/api/songs/${SONG.id}`);
+    expect(await songWrite?.json()).toEqual({ baseEnergy: 6 });
+  });
+
   it('opens on the Info tab and moves between the same tabs as the setlist sheet', async () => {
     renderSongPage();
     await screen.findByRole('heading', { name: 'Get Lucky' });
