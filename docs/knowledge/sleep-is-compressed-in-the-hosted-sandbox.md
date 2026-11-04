@@ -1,5 +1,5 @@
 ---
-summary: '`sleep` returns early in the hosted sandbox, so polls read as a long hang; check `date -u` before diagnosing a remote hang.'
+summary: 'Foreground `sleep` is blocked and background `sleep` returns early in the hosted sandbox. To wait for CI, end the turn and let the PR event wake you; check `date -u` before diagnosing a remote hang.'
 triggers:
   commands:
     - '\bsleep\s+\d'
@@ -27,16 +27,18 @@ Foreground `sleep` is blocked outright by the harness; the background
 form is accepted and then compressed. The GitHub API is fine — it was
 reporting the job honestly the whole time. The clock was the liar.
 
-**What to use instead.** Python's sleep is not compressed:
+**What to do instead.** Do not wait in a command at all.
 
-```bash
-python3 -c "import time; time.sleep(180)"; date -u
-```
+- Waiting on CI, a review or a merge: subscribe to the pull request and end
+  the turn. The PR event wakes the session (CLAUDE.md, *No recurring job,
+  scheduled check-in or polling loop*).
+- Waiting on a local process: start it with `run_in_background` and let its
+  exit re-invoke you, or watch it with `Monitor`.
 
-```
-Thu Aug 20 13:46:15 UTC 2026
-Thu Aug 20 13:48:15 UTC 2026      # a real two minutes
-```
+This entry used to recommend `python3 -c "import time; time.sleep(180)"`,
+because Python's sleep is not compressed. That is a polling loop by another
+name, and it routes around the block the harness put on `sleep`. The sweep of
+PR #251 still reached for `sleep 60; cat …` and was blocked.
 
 **Why it matters beyond the annoyance.** The failure mode is not "my
 wait was short", it is "I concluded the wrong thing about a remote
