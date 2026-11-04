@@ -38,6 +38,11 @@ a context that did not do the work it audits.
 If you are the session that shipped the PR, do not run the sweep.
 Spawn the task instead.
 
+**First call: `mcp__github__pull_request_read method: get`.** If `merged` is
+not `true`, say so and stop. The prompt for PR #253's sweep said "merged"
+while the pull request was open with CI running, and its archive was not on
+`main` yet.
+
 ## When NOT to invoke
 
 - During the PR (use `/dantotsu` per defect instead, in real time).
@@ -93,6 +98,12 @@ Sources to walk in order, capturing each friction event as one row:
   entry into a gate. Entries written as `main` from a task that spawned
   agents mean the agents were never told their label; note it, because
   the sweep is then blind to whatever they hit.
+- **Open kaizen pull requests.** `mcp__github__list_pull_requests` with
+  `state: open`, then read each `kaizen`-labelled one's `inventory.md`. A row
+  another open sweep already eradicates is `merge into PR #<n>`, not a second
+  fix. The sweeps of PR #251 and PR #252 ran at once, both eradicated the
+  same Prettier run, and the later one dropped its work after a merge
+  conflict.
 - **The pull request's conversation and review threads.** This
   session never saw the merged session's chat, so the PR is the record
   of it. Read the threads with `mcp__github__pull_request_read`. Every
