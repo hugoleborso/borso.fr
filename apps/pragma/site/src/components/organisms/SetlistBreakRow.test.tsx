@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistBreakRow } from './SetlistBreakRow';
 
 function renderBreak(label: string, onRename = vi.fn(), onRemove = vi.fn()): HTMLInputElement {
@@ -17,10 +16,6 @@ function renderBreak(label: string, onRename = vi.fn(), onRemove = vi.fn()): HTM
 
 // @FollowsBlueprint test-component-render
 describe('a setlist break', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });
@@ -45,7 +40,8 @@ describe('a setlist break', () => {
   it('removes the break from its more menu', () => {
     const onRemove = vi.fn();
     renderBreak('', vi.fn(), onRemove);
-    fireEvent.click(screen.getByRole('button', { name: 'Remove the break', hidden: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for this break' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Remove the break' }));
     expect(onRemove).toHaveBeenCalledOnce();
   });
 });

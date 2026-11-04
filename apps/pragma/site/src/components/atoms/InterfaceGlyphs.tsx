@@ -1,6 +1,5 @@
 export const INTERFACE_GLYPHS = {
   catalog: <path d="M4 5h16M4 12h16M4 19h10" />,
-  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   song: (
     <>

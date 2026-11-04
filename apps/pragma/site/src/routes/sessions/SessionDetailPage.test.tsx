@@ -65,6 +65,11 @@ function renderSessionPage(): void {
   );
 }
 
+function readCheckboxLabel(checkbox: HTMLElement): string {
+  if (!(checkbox instanceof HTMLInputElement)) return checkbox.textContent;
+  return checkbox.labels?.[0]?.textContent ?? '';
+}
+
 // @FollowsBlueprint test-component-render
 describe('the concert page', () => {
   let stub: FetchStub | null = null;
@@ -301,11 +306,7 @@ describe('the practice page', () => {
     fireEvent.click(within(sources).getByRole('tab', { name: /Setlists/ }));
     expect(within(sources).getByRole('tab', { name: /Concerts \(1\)/ })).toBeTruthy();
     await waitFor(() =>
-      expect(
-        within(sources)
-          .getAllByRole('checkbox')
-          .map((row) => row.textContent),
-      ).toEqual([
+      expect(within(sources).getAllByRole('checkbox').map(readCheckboxLabel)).toEqual([
         expect.stringContaining('Encores'),
         expect.stringContaining('Recent'),
         expect.stringContaining('Old'),
@@ -317,7 +318,7 @@ describe('the practice page', () => {
 
     const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
     const songRows = within(songs).getAllByRole('checkbox');
-    expect(songRows.map((row) => row.textContent)).toEqual([
+    expect(songRows.map(readCheckboxLabel)).toEqual([
       expect.stringContaining('Song s2'),
       expect.stringContaining('Song s3'),
       expect.stringContaining('Song s1'),
