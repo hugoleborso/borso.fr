@@ -7,6 +7,7 @@ import {
   AUDIENCE_CHOICE_SETLIST_KIND,
   AUDIENCE_CHOICE_SETLIST_NAME,
   sessionSetlistTable,
+  setlistBreakTable,
   setlistEntryTable,
   type SetlistKind,
   setlistTable,
@@ -148,6 +149,7 @@ export async function deleteSetlistWithEntries(setlistId: string): Promise<Delet
       .where(eq(setlistTable.id, setlistId))
       .returning({ id: setlistTable.id });
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction.delete(setlistBreakTable).where(eq(setlistBreakTable.setlistId, setlistId));
     await transaction
       .delete(sessionSetlistTable)
       .where(eq(sessionSetlistTable.setlistId, setlistId));

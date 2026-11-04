@@ -112,6 +112,16 @@ describe('a setlist row', () => {
     expect(screen.queryByRole('menu')).toBe(null);
   });
 
+  it('offers to add a break after the song only when the list can take one', () => {
+    const onAddBreakAfter = vi.fn();
+    renderRow(buildProps({ onAddBreakAfter }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a break after', hidden: true }));
+    expect(onAddBreakAfter).toHaveBeenCalledExactlyOnceWith('entry-1');
+    cleanup();
+    renderRow(buildProps());
+    expect(screen.queryByRole('button', { name: 'Add a break after', hidden: true })).toBeNull();
+  });
+
   it('shows the instruments of the chosen member in place of the band lineup', () => {
     renderRow(buildProps({ isMemberView: true, memberPart: [BASS_PART, LEAD_VOCALS_PART] }));
     expect(screen.getByRole('img', { name: 'Bass' })).toBeTruthy();

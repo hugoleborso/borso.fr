@@ -7,6 +7,8 @@ import {
 } from '../helpers/reference/reference.core';
 import { type LineupNames, nameLineup } from '../instruments/lineup-names.core';
 import type { FieldIssue } from '../mcp/tool-refusal.core';
+import type { z } from 'zod';
+import type { setlistBreakSaveToolInputSchema } from './setlists.schema';
 
 export interface CatalogueSong {
   readonly id: string;
@@ -70,11 +72,11 @@ export function projectEntriesForTool(
 ): EntryToolView[] {
   return entries
     .toSorted((left, right) => left.position - right.position)
-    .map((entry) => {
+    .map((entry, songIndex) => {
       const defaultLineup = songs.find((song) => song.id === entry.songId)?.defaultLineup ?? {};
       return {
         entryId: entry.id,
-        position: entry.position + FIRST_POSITION,
+        position: songIndex + FIRST_POSITION,
         songId: entry.songId,
         title: titleOf(songs, entry.songId),
         energy: entry.energy,
@@ -107,12 +109,12 @@ export function projectSetlistsWithEntries(
   }));
 }
 
-function describeEntry(entry: OrderedEntry, songs: readonly CatalogueSong[]): ReferenceCandidate {
-  return {
-    id: entry.id,
-    label: titleOf(songs, entry.songId),
-    hint: `#${String(entry.position + FIRST_POSITION)}`,
-  };
+function describeEntry(
+  entry: OrderedEntry,
+  songNumber: number,
+  songs: readonly CatalogueSong[],
+): ReferenceCandidate {
+  return { id: entry.id, label: titleOf(songs, entry.songId), hint: `#${String(songNumber)}` };
 }
 
 // @FollowsBlueprint core-decision
@@ -121,14 +123,20 @@ export function matchEntryReference(
   songs: readonly CatalogueSong[],
   reference: string,
 ): ReferenceMatch {
-  const candidates = entries.map((entry) => describeEntry(entry, songs));
-  const [onlyOfSong, ...othersOfSong] = entries.filter((entry) => entry.songId === reference);
+  const numbered = entries
+    .toSorted((left, right) => left.position - right.position)
+    .map((entry, songIndex) => ({
+      songId: entry.songId,
+      candidate: describeEntry(entry, songIndex + FIRST_POSITION, songs),
+    }));
+  const candidates = numbered.map((row) => row.candidate);
+  const candidatesOfSong = numbered
+    .filter((row) => row.songId === reference)
+    .map((row) => row.candidate);
+  const [onlyOfSong, ...othersOfSong] = candidatesOfSong;
   if (onlyOfSong === undefined) return matchReference(candidates, reference);
   if (othersOfSong.length === 0) return { kind: 'found', id: onlyOfSong.id };
-  return {
-    kind: 'ambiguous',
-    candidates: [onlyOfSong, ...othersOfSong].map((entry) => describeEntry(entry, songs)),
-  };
+  return { kind: 'ambiguous', candidates: candidatesOfSong };
 }
 
 function clampPosition(position: number, count: number): number {
@@ -196,4 +204,25 @@ export function listCreationOnlyIssues(fields: CreationOnlyFields): FieldIssue[]
   return Object.entries(fields)
     .filter(([, value]) => value !== undefined)
     .map(([field]) => ({ path: [field], message: CREATION_ONLY_PROBLEM }));
+}
+
+export type BreakToolRequest = Omit<z.infer<typeof setlistBreakSaveToolInputSchema>, 'setlist'>;
+
+export type BreakToolAction =
+  | { readonly kind: 'add'; readonly after: string; readonly label: string }
+  | { readonly kind: 'rename'; readonly breakId: string; readonly label: string }
+  | { readonly kind: 'remove'; readonly breakId: string }
+  | { readonly kind: 'invalid' };
+
+// @FollowsBlueprint core-decision
+export function selectBreakToolAction(request: BreakToolRequest): BreakToolAction {
+  const { break: breakId, after, label, remove } = request;
+  if (breakId === undefined) {
+    if (after === undefined || remove === true) return { kind: 'invalid' };
+    return { kind: 'add', after, label: label ?? '' };
+  }
+  if (after !== undefined) return { kind: 'invalid' };
+  if (remove === true) return { kind: 'remove', breakId };
+  if (label === undefined) return { kind: 'invalid' };
+  return { kind: 'rename', breakId, label };
 }

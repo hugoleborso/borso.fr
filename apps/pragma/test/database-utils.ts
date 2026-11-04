@@ -29,6 +29,7 @@ const ALL_TABLES: readonly string[] = [
   'vapid_key_pair',
   'task',
   'transition_comment',
+  'setlist_break',
   'setlist_entry',
   'session_setlist',
   'setlist_sheet',

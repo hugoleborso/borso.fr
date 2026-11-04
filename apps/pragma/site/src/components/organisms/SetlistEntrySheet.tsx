@@ -4,6 +4,8 @@ import type { Lineup } from '@domain/lineup.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { SongViewTab } from '../../routes/catalog/song-view-tab.core';
+import type { SongRecord } from '../../lib/queries/songs.queries';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
 import { recordProductEvent } from '../../observability/product-event.adapter';
@@ -23,15 +25,18 @@ import { SetlistEntryKeyCapoFields } from '../molecules/SetlistEntryKeyCapoField
 import { SetlistEntryNotesField } from '../molecules/SetlistEntryNotesField';
 import { useSetlistEntryForm } from '../molecules/setlist-entry-form.hook';
 import { Sheet } from '../molecules/Sheet';
+import { SongViewTabs } from '../molecules/SongViewTabs';
 import { formatDuration } from '../molecules/song-duration.utils';
 import { TextSaveStatus } from '../molecules/TextSaveStatus';
+import { SongChartPreviews } from './SongChartPreviews';
+import { SongTakes } from './SongTakes';
 import {
   describeEntryLineup,
   type EntryLineupMember,
   toggleTonightInstrument,
 } from './entry-lineup-change.core';
 
-export type EntrySheetFocus = 'note' | 'lineup';
+export type EntrySheetFocus = 'info' | 'lineup';
 
 export interface EntrySheetEntry {
   readonly id: string;
@@ -50,6 +55,7 @@ export interface EntrySheetSong {
   readonly durationSeconds: number | null;
   readonly baseEnergy: number | null;
   readonly defaultLineup: Lineup;
+  readonly chart: SongRecord['chart'];
 }
 
 export interface EntrySheetInstrument extends InlineLineupInstrument {
@@ -77,6 +83,8 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
   const { t } = useTranslation();
   const { entry, song } = props;
   const [hasTypedNote, setHasTypedNote] = useState(false);
+  const [tab, setTab] = useState<SongViewTab>(props.focus);
+  const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
   const form = useSetlistEntryForm({
     keyOverride: entry.keyOverride ?? '',
     capo: entry.capo === null ? '' : String(entry.capo),
@@ -151,13 +159,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
       }
       label={song.title}
       isTitleARecordName
-      subheader={
-        <SetlistEntryKeyCapoFields
-          form={form}
-          onKeyType={keySave.type}
-          onCapoType={capoSave.type}
-        />
-      }
+      subheader={<SongViewTabs value={tab} onChange={setTab} />}
       onClose={close}
       footer={
         <>
@@ -170,37 +172,66 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
         </>
       }
     >
-      <div className="flex flex-col gap-4">
-        <InlineLineupEditor
-          rows={lineupRows}
-          instruments={props.instruments}
-          isOverridingSong={lineupRows.some((row) => row.isChangedTonight)}
-          isFocusedOnOpen={props.focus === 'lineup'}
-          onToggle={toggleInstrument}
-          onUseSongLineup={() => props.onUpdate(entry.id, { lineupOverride: null })}
-        />
-        <div className="flex min-h-11 items-center gap-3">
-          <span className="text-meta text-ink-soft">{t('setlist.energy')}</span>
-          <SetlistEntryEnergyField
-            entryEnergy={entry.energy}
-            songEnergy={song.baseEnergy}
-            onPublish={(level) => props.onUpdate(entry.id, { energy: level })}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <SetlistEntryNotesField
-            form={form}
-            isFocusedOnOpen={props.focus === 'note'}
-            onType={(text) => {
-              setHasTypedNote(true);
-              notesSave.type(text);
-            }}
-          />
-          <TextSaveStatus
-            display={selectTextSaveDisplay(notesSave.status, hasTypedNote)}
-            onRetry={notesSave.flush}
-          />
-        </div>
+      <div
+        role="tabpanel"
+        tabIndex={-1}
+        data-sheet-focus={props.focus === 'lineup' ? undefined : true}
+        className="flex flex-col gap-4 outline-hidden"
+      >
+        {
+          {
+            info: (
+              <>
+                <SetlistEntryKeyCapoFields
+                  form={form}
+                  onKeyType={keySave.type}
+                  onCapoType={capoSave.type}
+                />
+                <div className="flex min-h-11 items-center gap-3">
+                  <span className="text-meta text-ink-soft">{t('setlist.energy')}</span>
+                  <SetlistEntryEnergyField
+                    entryEnergy={entry.energy}
+                    songEnergy={song.baseEnergy}
+                    onPublish={(level) => props.onUpdate(entry.id, { energy: level })}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <SetlistEntryNotesField
+                    form={form}
+                    isFocusedOnOpen={false}
+                    onType={(text) => {
+                      setHasTypedNote(true);
+                      notesSave.type(text);
+                    }}
+                  />
+                  <TextSaveStatus
+                    display={selectTextSaveDisplay(notesSave.status, hasTypedNote)}
+                    onRetry={notesSave.flush}
+                  />
+                </div>
+              </>
+            ),
+            lineup: (
+              <InlineLineupEditor
+                rows={lineupRows}
+                instruments={props.instruments}
+                isOverridingSong={lineupRows.some((row) => row.isChangedTonight)}
+                isFocusedOnOpen={props.focus === 'lineup'}
+                onToggle={toggleInstrument}
+                onUseSongLineup={() => props.onUpdate(entry.id, { lineupOverride: null })}
+              />
+            ),
+            chords: <SongChartPreviews chart={song.chart} />,
+            takes: (
+              <SongTakes
+                songId={entry.songId}
+                songTitle={song.title}
+                selectedTakeId={selectedTakeId}
+                onSelectTake={setSelectedTakeId}
+              />
+            ),
+          }[tab]
+        }
       </div>
     </Sheet>
   );

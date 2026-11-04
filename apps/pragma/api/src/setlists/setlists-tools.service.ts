@@ -4,7 +4,12 @@ import {
   readLineupNames,
   resolveNamedLineupOrRefuse,
 } from '../instruments/instruments.service';
-import { refuseTool, refuseUnresolvedReference, resolveReference } from '../mcp/mcp.service';
+import {
+  refuseTool,
+  refuseUnresolvedReference,
+  resolveReference,
+  type ToolAnswer,
+} from '../mcp/mcp.service';
 import { describeInvalidFields } from '../mcp/tool-refusal.core';
 import { getTransitionComments } from '../transitions/transitions.service';
 import type { WriteActor } from '../notifications/notifications.service';
@@ -15,13 +20,12 @@ import {
 } from '../sessions/sessions.service';
 import { getSongs } from '../songs/songs.service';
 import {
-  countEntriesWithin,
   deleteEntryWithin,
   insertEntryWithin,
   listEntries,
   listEntriesOfSetlists,
-  listEntryIdsInOrderWithin,
 } from './setlist-entry.repository';
+import { compactItemsWithin, nextItemPositionWithin } from './setlist-position.service';
 import {
   attachTransitionComments,
   type CreationOnlyFields,
@@ -35,6 +39,8 @@ import {
   projectEntriesForTool,
   projectSetlistsWithEntries,
   type ReorderRequest,
+  type BreakToolRequest,
+  selectBreakToolAction,
 } from './setlist-tool.core';
 import type { SetlistSummary } from './setlists.core';
 import {
@@ -52,11 +58,14 @@ import {
   notifySetlistChangedById,
   unlinkSetlistFromSession,
 } from './setlists.service';
+import { getBreaks } from './setlist-break.service';
 import {
-  reorderEntries,
-  type ReorderResult,
-  writeEntryPositionsWithin,
-} from './setlist-entry.service';
+  addBreakForTool,
+  BREAK_UNCLEAR,
+  removeBreakForTool,
+  renameBreakForTool,
+} from './setlist-break-tools.service';
+import { reorderEntries, type ReorderResult } from './setlist-entry.service';
 import type { SetlistEntryPersistedUpdate } from './setlists.schema';
 
 export { resolveSessionId } from '../sessions/sessions.service';
@@ -77,18 +86,26 @@ export async function getSetlistsForTool(
   return await getSetlistsOfSession(await resolveSessionId(sessionReference, now));
 }
 
+export interface BreakToolView {
+  readonly breakId: string;
+  readonly label: string;
+  readonly afterSongCount: number;
+}
+
 export interface SetlistToolView {
   readonly setlist: ReturnType<typeof describeSetlist>;
   readonly entries: readonly EntryWithTransitionView[];
+  readonly breaks: readonly BreakToolView[];
 }
 
 export async function readSetlistForTool(setlistId: string): Promise<SetlistToolView | null> {
-  const [setlist, entries, songs, names, transitionComments] = await Promise.all([
+  const [setlist, entries, songs, names, transitionComments, breaks] = await Promise.all([
     findSetlistById(setlistId),
     listEntries(setlistId),
     getSongs(),
     readLineupNames(),
     getTransitionComments(),
+    getBreaks(setlistId),
   ]);
   if (setlist === null) return null;
   return {
@@ -97,6 +114,11 @@ export async function readSetlistForTool(setlistId: string): Promise<SetlistTool
       projectEntriesForTool(entries, songs, names),
       transitionComments,
     ),
+    breaks: breaks.map((setlistBreak) => ({
+      breakId: setlistBreak.id,
+      label: setlistBreak.label,
+      afterSongCount: setlistBreak.songsBefore,
+    })),
   };
 }
 
@@ -202,7 +224,7 @@ export async function appendSongs(
   const entryIds = await runInOneSetlistTransaction(async (executor) => {
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return null;
-    const firstPosition = await countEntriesWithin(executor, setlistId);
+    const firstPosition = await nextItemPositionWithin(executor, setlistId);
     const written: string[] = [];
     for (const [offset, songId] of songIds.entries()) {
       const entry = await insertEntryWithin(executor, {
@@ -233,7 +255,7 @@ export async function removeEntriesAndCompact(
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return 'not-found';
     for (const entryId of entryIds) await deleteEntryWithin(executor, setlistId, entryId);
-    await writeEntryPositionsWithin(executor, await listEntryIdsInOrderWithin(executor, setlistId));
+    await compactItemsWithin(executor, setlistId);
     return 'deleted';
   });
   if (outcome === 'not-found') return outcome;
@@ -270,4 +292,17 @@ export async function setSessionLink(
     return { kind: 'ok' };
   }
   return await linkSetlistToSession(setlistId, sessionId, actor);
+}
+
+export async function saveBreakForTool(
+  setlistId: string,
+  request: BreakToolRequest,
+  actor: WriteActor,
+): Promise<ToolAnswer> {
+  const action = selectBreakToolAction(request);
+  if (action.kind === 'invalid') return BREAK_UNCLEAR;
+  if (action.kind === 'remove') return await removeBreakForTool(setlistId, action, actor);
+  if (action.kind === 'rename') return await renameBreakForTool(setlistId, action, actor);
+  const afterEntryId = await resolveEntryId(setlistId, action.after);
+  return await addBreakForTool(setlistId, { afterEntryId, label: action.label }, actor);
 }

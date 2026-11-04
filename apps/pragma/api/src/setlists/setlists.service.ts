@@ -10,8 +10,8 @@ import {
   type SetlistSummary,
   tallySongsPerSetlist,
 } from './setlists.core';
+import { nextItemPositionWithin } from './setlist-position.service';
 import {
-  countEntriesWithin,
   insertEntryWithin,
   listEntries,
   listEntriesOfSetlists,
@@ -168,7 +168,7 @@ export async function appendSongToClaimedSetlistWithin(
   setlistId: string,
   songId: string,
 ): Promise<void> {
-  const position = await countEntriesWithin(executor, setlistId);
+  const position = await nextItemPositionWithin(executor, setlistId);
   await insertEntryWithin(executor, {
     setlistId,
     songId,

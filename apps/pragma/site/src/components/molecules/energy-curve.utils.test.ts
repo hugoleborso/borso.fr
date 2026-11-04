@@ -3,10 +3,8 @@ import {
   arrangeByIds,
   averageEnergy,
   buildEnergyBars,
-  ENERGY_METER_STEPS,
   projectOrder,
   selectEnergyBarClass,
-  selectMeterStep,
 } from './energy-curve.utils';
 
 // @FollowsBlueprint test-pure-unit
@@ -37,14 +35,6 @@ describe('averageEnergy', () => {
   });
 });
 
-describe('selectMeterStep', () => {
-  it('spreads the ten levels over five steps, two levels each', () => {
-    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(selectMeterStep)).toEqual([
-      1, 1, 2, 2, 3, 3, 4, 4, 5, 5,
-    ]);
-  });
-});
-
 describe('projectOrder', () => {
   const ids = ['a', 'b', 'c', 'd'];
 
@@ -69,12 +59,6 @@ describe('arrangeByIds', () => {
       'a',
       'b',
     ]);
-  });
-});
-
-describe('ENERGY_METER_STEPS', () => {
-  it('lists the five steps of the meter', () => {
-    expect(ENERGY_METER_STEPS).toEqual([1, 2, 3, 4, 5]);
   });
 });
 

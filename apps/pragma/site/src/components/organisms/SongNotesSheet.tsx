@@ -19,12 +19,12 @@ export function SongNotesSheet({ songId, notes, onClose }: SongNotesSheetProps):
   const { t } = useTranslation();
   const hasNotes = selectSongNoteSections(notes).length > 0;
   return (
-    <Sheet title={t('catalog.notesTitle')} label={t('catalog.notesTitle')} onClose={onClose}>
+    <Sheet title={t('catalog.commentsTitle')} label={t('catalog.commentsTitle')} onClose={onClose}>
       {hasNotes ? (
         <SongNotes song={notes} />
       ) : (
         <EmptyState
-          icon="text"
+          icon="comment"
           action={
             <ButtonLink
               to={`/catalog/${songId}/edit?section=notes`}

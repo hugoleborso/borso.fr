@@ -33,6 +33,7 @@ const TRACKED_TABLES = [
   'notification_dispatch',
   'task',
   'transition_comment',
+  'setlist_break',
   'setlist_entry',
   'session_setlist',
   'setlist_sheet',

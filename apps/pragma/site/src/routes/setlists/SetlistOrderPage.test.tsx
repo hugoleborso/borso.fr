@@ -15,6 +15,7 @@ const order = vi.hoisted(() => ({
     isError: false,
     isFetchedAfterMount: false,
   },
+  updateEntry: vi.fn<(variables: unknown, options: { onError: () => void }) => void>(),
 }));
 
 vi.mock('../../lib/queries/setlists.queries', () => ({
@@ -24,6 +25,12 @@ vi.mock('../../lib/queries/setlists.queries', () => ({
 vi.mock('../../lib/queries/setlist-entries.queries', () => ({
   useSetlistEntriesToReorder: () => order.entries,
   useReorderSetlist: () => ({ mutate: vi.fn() }),
+  useUpdateSetlistEntry: () => ({ mutate: order.updateEntry }),
+}));
+
+vi.mock('../../lib/queries/setlist-breaks.queries', () => ({
+  useSetlistBreaks: () => ({ data: { breaks: [] } }),
+  useBreaksFollowingEntries: () => ({ followReorder: () => vi.fn() }),
 }));
 
 vi.mock('../../lib/queries/songs.queries', () => ({
@@ -53,6 +60,7 @@ describe('SetlistOrderPage', () => {
     container.remove();
     order.entries.isError = false;
     order.entries.isFetchedAfterMount = false;
+    order.updateEntry.mockReset();
   });
 
   function renderPage(): void {
@@ -83,5 +91,26 @@ describe('SetlistOrderPage', () => {
     renderPage();
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(container.querySelectorAll('li')).toHaveLength(0);
+  });
+
+  it('saves the energy changed on a row, and says so when the save fails', () => {
+    order.entries.isFetchedAfterMount = true;
+    renderPage();
+    const meter = container.querySelector('[role="slider"]');
+    act(() => {
+      meter?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    });
+    expect(order.updateEntry).toHaveBeenCalledExactlyOnceWith(
+      { setlistId: 'set-1', entryId: 'entry-1', energy: 6 },
+      expect.objectContaining({ onError: expect.any(Function) }),
+    );
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    const [, options] = order.updateEntry.mock.calls[0] ?? [];
+    act(() => {
+      options?.onError();
+    });
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+      'The change was not saved. Check the connection and try again.',
+    );
   });
 });

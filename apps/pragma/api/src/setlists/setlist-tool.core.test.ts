@@ -11,6 +11,7 @@ import {
   planEntryOrder,
   projectEntriesForTool,
   projectSetlistsWithEntries,
+  selectBreakToolAction,
 } from './setlist-tool.core';
 
 const NAMES = {
@@ -105,6 +106,12 @@ describe('projectEntriesForTool', () => {
     ]);
   });
 
+  it('numbers the songs one after another when a break leaves a gap in the positions', () => {
+    const afterBreak = { ...ARMY_ENTRY, position: 2 };
+    const projected = projectEntriesForTool([afterBreak, CREEP_ENTRY], SONGS, NAMES);
+    expect(projected.map((entry) => entry.position)).toEqual([1, 2]);
+  });
+
   it('keeps the id of a song that is no longer in the catalogue', () => {
     const [entry] = projectEntriesForTool([buildEntry({ songId: 'song-gone' })], SONGS, NAMES);
     expect(entry).toMatchObject({ title: 'song-gone', lineup: {} });
@@ -153,11 +160,22 @@ describe('matchEntryReference', () => {
     expect(matchEntryReference(setlistEntries, SONGS, 'Karma')).toEqual({ kind: 'missing' });
   });
 
+  it('numbers the candidates by song order, whatever the stored positions and their gaps', () => {
+    const encore = buildEntry({ id: 'entry-9', position: 4 });
+    expect(matchEntryReference([encore, CREEP_ENTRY], SONGS, 'Creep')).toEqual({
+      kind: 'ambiguous',
+      candidates: [
+        { id: 'entry-1', label: 'Creep', hint: '#1' },
+        { id: 'entry-9', label: 'Creep', hint: '#2' },
+      ],
+    });
+  });
+
   it('lists both entries of a song played twice', () => {
     const encore = buildEntry({ id: 'entry-9', position: 4 });
     const candidates = [
       { id: 'entry-1', label: 'Creep', hint: '#1' },
-      { id: 'entry-9', label: 'Creep', hint: '#5' },
+      { id: 'entry-9', label: 'Creep', hint: '#2' },
     ];
     expect(matchEntryReference([CREEP_ENTRY, encore], SONGS, 'song-creep')).toEqual({
       kind: 'ambiguous',
@@ -260,5 +278,47 @@ describe('listCreationOnlyIssues', () => {
 
   it('finds nothing when neither field is given', () => {
     expect(listCreationOnlyIssues({})).toEqual([]);
+  });
+});
+
+describe('selectBreakToolAction', () => {
+  it('adds a break after the named entry, unnamed unless a label is given', () => {
+    expect(selectBreakToolAction({ after: 'Creep' })).toEqual({
+      kind: 'add',
+      after: 'Creep',
+      label: '',
+    });
+    expect(selectBreakToolAction({ after: 'Creep', label: 'Intermission' })).toEqual({
+      kind: 'add',
+      after: 'Creep',
+      label: 'Intermission',
+    });
+  });
+
+  it('renames or removes the break it names', () => {
+    expect(selectBreakToolAction({ break: 'b', label: 'Beer' })).toEqual({
+      kind: 'rename',
+      breakId: 'b',
+      label: 'Beer',
+    });
+    expect(selectBreakToolAction({ break: 'b', remove: true })).toEqual({
+      kind: 'remove',
+      breakId: 'b',
+    });
+    expect(selectBreakToolAction({ break: 'b', remove: true, label: 'x' })).toEqual({
+      kind: 'remove',
+      breakId: 'b',
+    });
+  });
+
+  it('refuses a request that names nothing to do or two things at once', () => {
+    expect(selectBreakToolAction({})).toEqual({ kind: 'invalid' });
+    expect(selectBreakToolAction({ after: 'Creep', remove: true })).toEqual({ kind: 'invalid' });
+    expect(selectBreakToolAction({ break: 'b', after: 'Creep' })).toEqual({ kind: 'invalid' });
+    expect(selectBreakToolAction({ break: 'b', after: 'Creep', label: 'x' })).toEqual({
+      kind: 'invalid',
+    });
+    expect(selectBreakToolAction({ break: 'b' })).toEqual({ kind: 'invalid' });
+    expect(selectBreakToolAction({ break: 'b', remove: false })).toEqual({ kind: 'invalid' });
   });
 });

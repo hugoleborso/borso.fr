@@ -30,16 +30,16 @@ import {
   arrangeByIds,
   averageEnergy,
   buildEnergyBars,
-  ENERGY_METER_STEPS,
   projectOrder,
-  selectMeterStep,
 } from '../molecules/energy-curve.utils';
+import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import {
   describeTotalDuration,
   formatDuration,
   sumKnownDurations,
 } from '../molecules/song-duration.utils';
 import { joinSummaryItems } from '../molecules/summary-line.utils';
+import { isBreakLine } from './setlist-breaks.core';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
@@ -52,6 +52,7 @@ const TOTAL_DURATION_KEY = {
 
 export interface OrderRow {
   readonly id: string;
+  readonly kind: 'song' | 'break';
   readonly title: string;
   readonly durationSeconds: number | null;
   readonly entryEnergy: number | null;
@@ -61,6 +62,7 @@ export interface OrderRow {
 export interface SetlistOrderListProps {
   readonly rows: readonly OrderRow[];
   readonly onReorder: (orderedIds: readonly string[]) => void;
+  readonly onEnergyChange: (rowId: string, level: number) => void;
 }
 
 interface Lift {
@@ -69,7 +71,11 @@ interface Lift {
 }
 
 // @FollowsBlueprint organism-presentational
-export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JSX.Element {
+export function SetlistOrderList({
+  rows,
+  onReorder,
+  onEnergyChange,
+}: SetlistOrderListProps): JSX.Element {
   const { t } = useTranslation();
   const [isCurveShown, setIsCurveShown] = useState(true);
   const [lift, setLift] = useState<Lift | null>(null);
@@ -80,10 +86,11 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
   );
 
   const rowIds = rows.map((row) => row.id);
+  const songRows = rows.filter((row) => !isBreakLine(row));
   const curveIds = lift === null ? rowIds : projectOrder(rowIds, lift.liftedId, lift.targetId);
-  const bars = buildEnergyBars(arrangeByIds(rows, curveIds));
+  const bars = buildEnergyBars(arrangeByIds(songRows, curveIds));
   const average = averageEnergy(bars);
-  const totalSeconds = sumKnownDurations(rows.map((row) => row.durationSeconds));
+  const totalSeconds = sumKnownDurations(songRows.map((row) => row.durationSeconds));
   const total = totalSeconds === null ? null : describeTotalDuration(totalSeconds);
   const summary = joinSummaryItems([
     average === null ? null : t('setlist.averageEnergy', { value: average }),
@@ -128,12 +135,13 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
       >
         <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
           <ol className="m-0 flex list-none flex-col p-0">
-            {rows.map((row, index) => (
+            {rows.map((row) => (
               <SortableOrderRow
                 key={row.id}
                 row={row}
-                position={index + 1}
+                position={songRows.indexOf(row) + 1}
                 isLifted={lift?.liftedId === row.id}
+                onEnergyChange={(level) => onEnergyChange(row.id, level)}
               />
             ))}
           </ol>
@@ -147,15 +155,20 @@ interface SortableOrderRowProps {
   readonly row: OrderRow;
   readonly position: number;
   readonly isLifted: boolean;
+  readonly onEnergyChange: (level: number) => void;
 }
 
-function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): JSX.Element {
+function SortableOrderRow({
+  row,
+  position,
+  isLifted,
+  onEnergyChange,
+}: SortableOrderRowProps): JSX.Element {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: row.id,
   });
-  const [bar] = buildEnergyBars([row]);
-  const step = selectMeterStep(bar?.level ?? 0);
+  const isBreak = isBreakLine(row);
   return (
     <li
       ref={setNodeRef}
@@ -163,6 +176,7 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
       data-order-row
       className={composeClassName(
         'flex h-11 items-center gap-2 border-b border-rule',
+        isBreak && 'border-dashed border-rule-strong bg-sunk',
         isLifted && 'relative z-10 bg-raised shadow-cover',
       )}
     >
@@ -173,28 +187,43 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
         {...attributes}
         {...listeners}
       />
+      {isBreak ? (
+        <>
+          <span className="flex w-5 shrink-0 justify-end text-ink-soft">
+            <Icon name="pause" />
+          </span>
+          <span className="min-w-0 flex-1 truncate font-display text-body tracking-wide text-ink-soft uppercase">
+            {row.title}
+          </span>
+        </>
+      ) : (
+        <SongOrderCells row={row} position={position} onEnergyChange={onEnergyChange} />
+      )}
+    </li>
+  );
+}
+
+interface SongOrderCellsProps {
+  readonly row: OrderRow;
+  readonly position: number;
+  readonly onEnergyChange: (level: number) => void;
+}
+
+function SongOrderCells({ row, position, onEnergyChange }: SongOrderCellsProps): JSX.Element {
+  return (
+    <>
       <span className="w-5 shrink-0 text-right font-mono text-label text-ink-faint">
         {String(position).padStart(POSITION_DIGITS, '0')}
       </span>
       <span className="min-w-0 flex-1 truncate font-display text-body text-ink">{row.title}</span>
-      <span
-        role="img"
-        aria-label={t('setlist.energyStep', { step })}
-        className="flex h-3 shrink-0 items-end gap-0.5"
-      >
-        {ENERGY_METER_STEPS.map((meterStep) => (
-          <span
-            key={meterStep}
-            className={composeClassName(
-              'w-1 rounded-sm',
-              meterStep <= step ? 'h-3 bg-ink-soft' : 'h-1.5 bg-rule-strong',
-            )}
-          />
-        ))}
-      </span>
+      <SetlistEntryEnergyField
+        entryEnergy={row.entryEnergy}
+        songEnergy={row.songEnergy}
+        onPublish={onEnergyChange}
+      />
       <span className="w-10 shrink-0 text-right font-mono text-meta text-ink-soft tabular-nums">
         {row.durationSeconds === null ? '' : formatDuration(row.durationSeconds)}
       </span>
-    </li>
+    </>
   );
 }

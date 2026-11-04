@@ -42,6 +42,7 @@ const SERVED_TOOLS = [
   'add_setlist_entries',
   'update_setlist_entry',
   'remove_setlist_entries',
+  'save_setlist_break',
   'reorder_setlist',
   'find_songs',
   'get_song',
