@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { reportRenderFailure } from '../../observability/error-reporting.adapter';
 import { BananaIcon } from '../atoms/BananaIcon';
 
 export interface AppErrorBoundaryProps {
@@ -23,6 +24,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   override componentDidCatch(failure: Error, info: ErrorInfo): void {
     console.error('banana-rush crashed', failure, info.componentStack);
+    reportRenderFailure(failure, info.componentStack);
   }
 
   override render(): ReactNode {

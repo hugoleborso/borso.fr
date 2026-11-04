@@ -1,0 +1,6 @@
+import type { ErrorReportingInputs } from '@domain/error-reporting.core';
+
+// @FollowsBlueprint environment-reader
+export function readErrorReportingInputs(): ErrorReportingInputs {
+  return { dsn: import.meta.env.VITE_SENTRY_DSN, stage: import.meta.env.VITE_STAGE };
+}

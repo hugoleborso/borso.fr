@@ -18,6 +18,7 @@ const WEBSOCKET_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.websocket.
 const MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
 const PROD_DOMAIN = 'banana-rush.borso.fr';
+const PROD_ERROR_REPORTING_DSN = 'https://public-key@o1.ingest.de.sentry.io/2';
 
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
@@ -55,6 +56,7 @@ function buildAppStackTemplate(stage: 'prod' | 'preview'): Template {
     websocketEntry: WEBSOCKET_ENTRY,
     migrationsPath: MIGRATIONS_DIR,
     cluster: clusterStack.cluster,
+    ...(stage === 'prod' ? { errorReportingDsn: PROD_ERROR_REPORTING_DSN } : {}),
   });
   return Template.fromStack(stack);
 }
@@ -207,6 +209,20 @@ describe('banana-rush app stack', () => {
       );
       expect(variables).toHaveProperty('DSQL_ENDPOINT');
       expect(variables.DSQL_SCHEMA).toBe(stage === 'prod' ? 'prod' : 'pr_1');
+    }
+  });
+
+  it('hands both handlers the error reporting DSN when one is configured, and none otherwise', () => {
+    for (const fragment of [
+      API_FUNCTION_LOGICAL_ID_FRAGMENT,
+      WEBSOCKET_FUNCTION_LOGICAL_ID_FRAGMENT,
+    ]) {
+      expect(readFunctionEnvVars(synthAppStack('prod'), fragment).SENTRY_DSN).toBe(
+        PROD_ERROR_REPORTING_DSN,
+      );
+      expect(readFunctionEnvVars(synthAppStack('preview'), fragment)).not.toHaveProperty(
+        'SENTRY_DSN',
+      );
     }
   });
 
