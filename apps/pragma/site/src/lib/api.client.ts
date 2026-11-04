@@ -1,5 +1,7 @@
 import type { AppRouter } from '@api/app';
+import { REALTIME_CLIENT_HEADER } from '@domain/stale-scope.core';
 import { hc } from 'hono/client';
+import { isWriteMethod } from './live-invalidation.core';
 import { isEndedSessionBody, canAnswerEndedSession } from './session-end.core';
 
 const RAW_API_BASE: unknown = import.meta.env.VITE_API_BASE;
@@ -37,11 +39,21 @@ export async function readErrorBody(response: { json: () => Promise<unknown> }):
   return await readJsonOrNull(response);
 }
 
+export const REALTIME_CLIENT_ID: string = crypto.randomUUID();
+
+function signWrite(init: RequestInit | undefined): RequestInit | undefined {
+  const isWrite = isWriteMethod(init?.method);
+  if (!isWrite) return init;
+  const headers = new Headers(init?.headers);
+  headers.set(REALTIME_CLIENT_HEADER, REALTIME_CLIENT_ID);
+  return { ...init, headers };
+}
+
 export async function fetchWatchingSessionEnd(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
-  const response = await fetch(input, init);
+  const response = await fetch(input, signWrite(init));
   if (!canAnswerEndedSession(response.status)) return response;
   if (!isEndedSessionBody(await readJsonOrNull(response.clone()))) return response;
   sessionEndListeners.forEach((listener) => listener());

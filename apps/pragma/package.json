@@ -29,6 +29,7 @@
     "task-metrics": "scripts/task-metrics/run-task-metrics.sh"
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "catalog:",
     "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/client-ssm": "catalog:",
     "@aws-sdk/dsql-signer": "catalog:",
@@ -83,6 +84,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/web-push": "catalog:",
+    "@types/ws": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "aws-cdk": "catalog:",
@@ -95,6 +97,7 @@
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "ws": "catalog:"
   }
 }

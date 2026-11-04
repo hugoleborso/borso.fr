@@ -55,7 +55,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/ws": "8.5.14",
+    "@types/ws": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "aws-cdk": "catalog:",
@@ -68,6 +68,6 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
-    "ws": "8.18.3"
+    "ws": "catalog:"
   }
 }

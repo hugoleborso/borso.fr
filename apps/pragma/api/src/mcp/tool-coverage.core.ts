@@ -36,6 +36,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
     'The secret address of the calendar of the member is a credential to a third-party service.',
   '* /api/notifications/subscriptions': 'A push subscription belongs to one browser.',
   'GET /api/notifications/vapid-public-key': 'Read by a browser to subscribe to push.',
+  'GET /api/realtime/ticket':
+    'A pass for the live socket of one browser tab; an assistant hears nothing on it.',
   '* /mcp': 'The transport the tools are served through.',
   '* /oauth/*': 'The authorization server an assistant connects with.',
   '* /.well-known/*': 'The discovery documents an assistant reads before connecting.',

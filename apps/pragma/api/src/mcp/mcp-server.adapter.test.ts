@@ -54,12 +54,16 @@ const THROWING_TOOL: ToolDefinition = {
 
 const toolEventSchema = z.object({ event: z.literal('mcp_tool_called'), tool: z.string() });
 
-function buildServerApp(reportFailure: (failure: TaggedFailure) => void): Hono {
+function buildServerApp(
+  reportFailure: (failure: TaggedFailure) => void,
+  onToolRan?: (tool: ToolDefinition) => void,
+): Hono {
   return new Hono().post('/mcp', async (context) =>
     answerMcpRequest(context, {
       tools: [ECHO_TOOL, REFUSING_TOOL, THROWN_REFUSAL_TOOL, THROWING_TOOL],
       actor: ACTOR,
       reportFailure,
+      ...(onToolRan === undefined ? {} : { onToolRan }),
     }),
   );
 }
@@ -178,6 +182,23 @@ describe('answerMcpRequest', () => {
     expect(readToolEvents(write)).toEqual([
       { event: 'mcp_tool_called', tool: 'explode', outcome: 'failed' },
     ]);
+  });
+
+  it('tells the caller which tool ran, whether it answered, refused or threw', async () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const ranTools: string[] = [];
+    const client = await connectClient(
+      buildServerApp(vi.fn(), (tool) => {
+        ranTools.push(tool.name);
+      }),
+    );
+
+    await client.callTool({ name: 'echo_title', arguments: { title: 'Creep' } });
+    await client.callTool({ name: 'refuse', arguments: {} });
+    await client.callTool({ name: 'explode', arguments: {} });
+    await client.listTools();
+
+    expect(ranTools).toStrictEqual(['echo_title', 'refuse', 'explode']);
   });
 
   it('answers an argument the schema refuses with an error naming the field', async () => {

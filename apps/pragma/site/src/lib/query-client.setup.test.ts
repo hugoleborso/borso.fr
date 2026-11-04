@@ -174,9 +174,9 @@ describe('how long a read stays fresh', () => {
     expect(queryClient.defaultQueryOptions({ queryKey: songKeys.list() }).staleTime).toBe(300_000);
   });
 
-  it('keeps a setlist thirty seconds, because members edit one together', () => {
+  it('keeps a setlist five minutes too, because a change another member makes now arrives as an invalidation', () => {
     expect(
       queryClient.defaultQueryOptions({ queryKey: setlistKeys.entriesOf('setlist-1') }).staleTime,
-    ).toBe(30_000);
+    ).toBe(300_000);
   });
 });

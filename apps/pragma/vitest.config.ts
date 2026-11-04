@@ -13,6 +13,7 @@ const PURE_TEST_FILES = [
   'api/src/**/*.adapter.test.ts',
   'api/src/**/*.schema.test.ts',
   'api/src/mcp/tool-coverage.test.ts',
+  'api/src/realtime/stale-scope-coverage.test.ts',
 ];
 
 const ASSISTANT_TEST_FILES = [
@@ -77,6 +78,7 @@ export default defineConfig({
             'api/src/**/*.adapter.test.ts',
             'api/src/**/*.schema.test.ts',
             'api/src/mcp/tool-coverage.test.ts',
+            'api/src/realtime/stale-scope-coverage.test.ts',
             'cdk/test/**/*.test.ts',
             'site/src/**/*.test.{ts,tsx}',
             'scripts/**/*.core.test.ts',

@@ -716,6 +716,52 @@ Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one 
 Held by: `api/src/notifications/notifications.controller.test.ts` › deletes a subscription its push service says is gone, and the write still succeeds
 Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
 
+## Realtime connection
+
+One open WebSocket from one browser tab of a signed-in member, used only to
+hear that band data went stale (live invalidation, ADR-0021's channel).
+
+Lives in: `api/src/realtime/` (`realtime_connection`)
+
+- `client_id` is the random id the tab drew once. Every write from that tab
+  carries it in `X-Pragma-Client`, so the write's own tab is never told.
+- Opened only with a **realtime ticket**; `$connect` refuses a missing,
+  expired or forged one. `$disconnect` and a gone (410) answer delete the
+  row. A frame the tab sends changes nothing.
+- Kept out of every preview's copy of production and out of the read-only
+  reader's reach.
+
+Held by: `api/src/realtime/realtime.controller.test.ts` › posts the scope of the write to every tab but the writer’s own
+Held by: `api/src/realtime/realtime.controller.test.ts` › refuses a forged ticket
+Held by: `api/src/realtime/realtime.controller.test.ts` › forgets a connection API Gateway reports gone
+
+Not to be confused with: a **sign-in session**, which proves who the member
+is; the connection only listens.
+
+## Realtime ticket
+
+A signed, sixty-second pass that lets a tab open a **realtime connection**.
+
+Lives in: `api/src/realtime/realtime-ticket.utils.ts`
+
+- Signed with the same HMAC key as the session cookie, over a purpose
+  prefix the cookie never carries, so neither verifies as the other.
+
+Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a session cookie open a socket
+Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a ticket pass as a session cookie
+
+## Stale scope
+
+The query key root a write made stale (`setlists`, `tasks`…), or `all`.
+
+Lives in: `domain/stale-scope.core.ts`, `api/src/realtime/stale-scope.core.ts`
+
+- Read off the path of a 2xx write by a fixed table; every write route must
+  appear in it. A write through an assistant **tool** that writes sends `all`.
+
+Held by: `api/src/realtime/stale-scope-coverage.test.ts` › decides every write route, so a new slice cannot ship without saying what it makes stale
+Held by: `site/src/lib/queries/query-key-roots.test.ts` › names only roots the site really keys its queries under, so an invalidation always lands
+
 ## VAPID key pair
 
 The key pair a stage signs every push with, and whose public half a device
@@ -1694,7 +1740,7 @@ to.
   **instruments**, none ranked above the others.
 - **ticket**, **issue**, **feature request**, **bug**: what the band wants
   changed in this application is an **improvement**, and its votes are
-  **improvement votes**.
+  **improvement votes**. **ticket** names only the **realtime ticket**.
 - **prospect**, **contact** as an entity: a **bar** with status `lead`.
 - **chord sheet**, **tab**, and **score** in its sheet-music sense: the
   attached music is a **chord chart**, and its inline form is

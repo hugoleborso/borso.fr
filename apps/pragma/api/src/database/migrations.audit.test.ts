@@ -8,6 +8,7 @@ const MIGRATIONS_DIR = resolve(HERE, 'migrations');
 
 const AUDIT_COLUMNS_WITH_DEFAULT_NOW: ReadonlySet<string> = new Set([
   'app_config.rotated_at',
+  'realtime_connection.connected_at',
   'song.created_at',
   'transition_comment.updated_at',
 ]);
