@@ -67,7 +67,7 @@ export const DERIVED_READ_ROOTS: Readonly<Partial<Record<ApiRoot, readonly ApiRo
   instruments: ['members'],
   mastery: ['instruments', 'members', 'songs'],
   me: ['members'],
-  members: ['instruments', 'me'],
+  members: ['instruments'],
   notifications: ['members'],
   oauth: ['members'],
   'offline-manifest': ['instruments', 'sessions', 'songs'],

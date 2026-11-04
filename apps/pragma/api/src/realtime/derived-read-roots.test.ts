@@ -44,10 +44,13 @@ const SLICES_HOLDING_NO_BAND_DATA = new Set([
 
 const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
   instruments: ['setlists', 'songs'],
-  me: ['members'],
   members: ['bars', 'calendar-feeds', 'mastery', 'oauth', 'setlists', 'songs', 'studies', 'tasks'],
   sessions: ['setlists', 'takes', 'tasks'],
   songs: ['mastery', 'setlists', 'studies', 'takes', 'tasks'],
+};
+
+const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {
+  me: ['members'],
 };
 
 const TOOL_ONLY_IMPORTS: Readonly<Record<string, readonly string[]>> = {
@@ -127,7 +130,12 @@ describe('the derived reads the API aggregates from other slices', () => {
 
   it('lists in a slice’s row every slice its services and repositories read', () => {
     const unlisted = listDataImports()
-      .filter((link) => !isExempt(WRITES_INTO, link) && !isExempt(TOOL_ONLY_IMPORTS, link))
+      .filter(
+        (link) =>
+          !isExempt(WRITES_INTO, link) &&
+          !isExempt(CONTACT_ONLY_WRITES, link) &&
+          !isExempt(TOOL_ONLY_IMPORTS, link),
+      )
       .filter((link) => !isListedRead(link.slice, link.imported))
       .map((link) => `${link.slice} reads ${link.imported}`);
     expect([...new Set(unlisted)]).toStrictEqual([]);
@@ -144,14 +152,16 @@ describe('the derived reads the API aggregates from other slices', () => {
 
   it('keeps no exemption that matches no import', () => {
     const imports = listDataImports();
-    const unused = [...Object.entries(WRITES_INTO), ...Object.entries(TOOL_ONLY_IMPORTS)].flatMap(
-      ([slice, importedSlices]) =>
-        importedSlices
-          .filter(
-            (imported) =>
-              !imports.some((link) => link.slice === slice && link.imported === imported),
-          )
-          .map((imported) => `${slice} > ${imported}`),
+    const unused = [
+      ...Object.entries(WRITES_INTO),
+      ...Object.entries(CONTACT_ONLY_WRITES),
+      ...Object.entries(TOOL_ONLY_IMPORTS),
+    ].flatMap(([slice, importedSlices]) =>
+      importedSlices
+        .filter(
+          (imported) => !imports.some((link) => link.slice === slice && link.imported === imported),
+        )
+        .map((imported) => `${slice} > ${imported}`),
     );
     expect(unused).toStrictEqual([]);
   });

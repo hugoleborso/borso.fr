@@ -42,4 +42,8 @@ describe('selectStaleQueryRoots', () => {
     expect(selectStaleQueryRoots(['mastery'])).toStrictEqual(['mastery', 'streaks', 'studies']);
     expect(selectStaleQueryRoots(['outreach'])).toStrictEqual(['outreach']);
   });
+
+  it('refreshes only the profile, the members list and free slots after a contact or calendar write', () => {
+    expect(selectStaleQueryRoots(['me'])).toStrictEqual(['free-slots', 'me', 'members']);
+  });
 });

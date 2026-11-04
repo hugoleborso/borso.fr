@@ -15,7 +15,7 @@ export const QUERY_READ_ROOTS: Readonly<Record<string, readonly ApiRoot[]>> = {
   instruments: ['instruments'],
   mastery: ['mastery'],
   me: ['me'],
-  members: ['members'],
+  members: ['members', 'me'],
   notifications: ['notifications'],
   'offline-manifest': ['offline-manifest'],
   outreach: ['outreach'],
