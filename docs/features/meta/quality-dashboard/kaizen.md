@@ -25,3 +25,6 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [2026-11-04 02:29] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
 - [2026-11-04 02:29] `pragma-kind-2` CLAUDE.md says Prettier is the only formatter and pre-commit runs prettier --check, but a hook refuses prettier because the repo now formats with oxfmt
 - [2026-11-04 02:35] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
+- [2026-11-04 02:51] `sentry-static` Adding a catalog dependency to one app rewrites the shared pnpm-lock.yaml, which parallel agents also rewrite, so the lockfile diff cannot be scoped to one agent's paths.
+- [2026-11-04 02:54] `sentry-banana` Adding a catalog dependency to one app rewrites the shared root pnpm-lock.yaml, which parallel agents adding the same packages to other apps also edit, so the 'touch only apps/<slug>/**' brief cannot hold for a dependency change.
+- [2026-11-04 02:57] `sentry-talos` check-frontend-env-vars.sh compares VITE_ names across all apps and workflows, so it passes for talos's VITE_SENTRY_DSN because pragma sets it, and cannot tell whether talos's own deploy job sets it.
