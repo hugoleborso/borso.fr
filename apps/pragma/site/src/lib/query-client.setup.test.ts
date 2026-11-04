@@ -6,6 +6,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from './api.client';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
+import { setlistKeys } from './queries/setlists.queries';
 import { songKeys } from './queries/songs.queries';
 import { queryCachePersistOptions, queryClient } from './query-client.setup';
 import { hasSessionMarker, rememberSessionMarker } from './session-marker.adapter';
@@ -165,5 +166,17 @@ describe('a member who signs in', () => {
     await Promise.resolve();
 
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('how long a read stays fresh', () => {
+  it('keeps band data five minutes, so returning to the app refetches nothing', () => {
+    expect(queryClient.defaultQueryOptions({ queryKey: songKeys.list() }).staleTime).toBe(300_000);
+  });
+
+  it('keeps a setlist thirty seconds, because members edit one together', () => {
+    expect(
+      queryClient.defaultQueryOptions({ queryKey: setlistKeys.entriesOf('setlist-1') }).staleTime,
+    ).toBe(30_000);
   });
 });

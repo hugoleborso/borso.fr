@@ -13,9 +13,11 @@ import { onSessionEnded } from './api.client';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
 import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.queries';
 import { isSignInUpdate } from './queries/offline-reading.utils';
+import { setlistKeys } from './queries/setlists.queries';
 import { forgetSessionMarker } from './session-marker.adapter';
 
 const DEFAULT_STALE_TIME_MS = 300_000;
+const SHARED_EDITING_STALE_TIME_MS = 30_000;
 const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const PERSISTED_CACHE_KEY = 'pragma.query-cache';
 const PERSISTED_CACHE_SHAPE_VERSION = '1';
@@ -37,6 +39,8 @@ export const queryClient = new QueryClient({
     mutations: { retry: 0 },
   },
 });
+
+queryClient.setQueryDefaults(setlistKeys.all, { staleTime: SHARED_EDITING_STALE_TIME_MS });
 
 const queryCachePersister = createAsyncStoragePersister({
   storage: window.localStorage,
