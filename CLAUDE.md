@@ -12,7 +12,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 - **No invented numbers.** State an unknown price, latency or limit as unknown, or look it up.
 - **Never estimate durations.** Size work by what it touches and what needs deciding (`/route`).
 - **Fix the failures you find**, whoever caused them. "Preexisting" is not a reason to walk past.
-- **Find the cause before adding resources.** Throttling, timeouts and memory errors are symptoms. Explain why the load is what it is (a retry loop, a burst, a slow query, a missing cache) and fix that. Raising a concurrency cap, a timeout, memory or a quota is a last resort, and the operator decides it.
+- **Lower the water, do not raise the boat.** A limit that trips (throttling, a timeout, memory, a quota) is an andon showing a rock. Adding capacity is adding inventory: it raises the water and hides the rock until it sinks the next change. Go and see the real requests and logs, ask why until you reach the cause (a retry loop, a burst, a slow query, a missing cache), and remove it. Raising a limit is a last resort, and the operator decides it.
 - **No follow-up issues.** Do the work in this PR, or ask one question. Only product and architecture decisions go to the operator. Decide the rest.
 - **A repeated correction is a missing hook, skill or doc.** Propose it.
 
