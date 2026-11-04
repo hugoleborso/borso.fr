@@ -73,7 +73,7 @@ describe('LambdaApi', () => {
     tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
 
-  it('allows the ballot-token and trace headers through the credentialed CORS preflight', () => {
+  it('allows the ballot-token, pragma client and trace headers through the credentialed CORS preflight', () => {
     const tpl = synth({ allowedOrigins: ['https://pragma-pr-42.preview.borso.fr'] });
     tpl.hasResourceProperties('AWS::ApiGatewayV2::Api', {
       CorsConfiguration: Match.objectLike({
@@ -83,6 +83,7 @@ describe('LambdaApi', () => {
           'content-type',
           'authorization',
           'x-ballot-token',
+          'x-pragma-client',
           'sentry-trace',
           'baggage',
         ],

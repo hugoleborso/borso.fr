@@ -9,7 +9,14 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { REALTIME_CLIENT_HEADER } from '@domain/stale-scope.core';
 import { buildPragmaAppStack } from '../lib/stack.js';
+
+const corsHeadersSchema = z.object({
+  Properties: z.object({
+    CorsConfiguration: z.object({ AllowHeaders: z.array(z.string()) }).optional(),
+  }),
+});
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
@@ -265,6 +272,15 @@ describe('pragma app stack', () => {
         }),
       }),
     );
+  });
+
+  it('lets the realtime client header through the API preflight a preview site sends', () => {
+    const httpApis = synthAppStack('preview').findResources('AWS::ApiGatewayV2::Api');
+    const allowedHeaders = Object.values(httpApis).flatMap(
+      (httpApi) =>
+        corsHeadersSchema.parse(httpApi).Properties.CorsConfiguration?.AllowHeaders ?? [],
+    );
+    expect(allowedHeaders).toContain(REALTIME_CLIENT_HEADER.toLowerCase());
   });
 
   it('mounts the test-seed flag only on non-prod stacks', () => {
