@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#252'
-fix-pr: none (the kaizen pull request of PR #252, number unknown when this was written)
+fix-pr: '#255'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.husky/pre-push]
@@ -68,7 +68,7 @@ gate run, and it does not land.
 
 **Type:** DevX check (level 2)
 
-**Reference:** commit [self] on `claude/lessons-from-pr-252`
+**Reference:** commit [self] in [PR #255](https://github.com/hugoleborso/borso.fr/pull/255)
 
 ```diff
  git fetch --quiet origin main 2>/dev/null || true

@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: linter
 severity: low
 related-pr: '#252'
-fix-pr: none (the kaizen pull request of PR #252, number unknown when this was written)
+fix-pr: '#255'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/components/atoms/InterfaceGlyphs.tsx, apps/pragma/site/src/components/atoms/Icon.test.tsx, .oxlintrc.json]
@@ -73,7 +73,7 @@ name appears in none of them.
 **Type:** structural impossibility (level 1) for the limit, with a test for dead
 glyphs
 
-**Reference:** commit [self] on `claude/lessons-from-pr-252`
+**Reference:** commit [self] in [PR #255](https://github.com/hugoleborso/borso.fr/pull/255)
 
 ```diff
 -const ICONS = {

@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#252'
-fix-pr: none (the kaizen pull request of PR #252, number unknown when this was written)
+fix-pr: '#255'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [plugins/borso-harness/hooks/pretool-no-prettier.sh, plugins/borso-harness/hooks/hooks.json]
@@ -65,7 +65,7 @@ pipes, was considered and dropped. Prettier's `--cache`, `--ignore-unknown` and
 
 **Type:** DevX check (level 2)
 
-**Reference:** commit [self] on `claude/lessons-from-pr-252`
+**Reference:** commit [self] in [PR #255](https://github.com/hugoleborso/borso.fr/pull/255)
 
 ```diff
 +RUNNER='(npx|bunx|exec|dlx|pnpm|yarn)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*'
