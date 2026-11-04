@@ -89,6 +89,15 @@
             "statusMessage": "Matching the call against the knowledge triggers"
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__merge_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-merge-strands-no-work.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -146,6 +155,17 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/knowledge-triggers.sh",
             "statusMessage": "Matching the failure against the knowledge triggers"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/stop-screens-shown-not-described.py",
+            "statusMessage": "Checking that compared screens were shown"
           }
         ]
       }

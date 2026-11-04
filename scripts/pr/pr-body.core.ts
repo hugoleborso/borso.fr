@@ -84,6 +84,8 @@ const CLOSED_SLANTED_SHAPE = /^\[[/\\].*[/\\]\]$/;
 const SEPARATOR_CELL = /^:?-{2,}:?$/;
 const SUMMARY_TAG = /<summary>.*<\/summary>/;
 const SUMMARY_TAGS = /<\/?summary>/g;
+const LONG_LINK_TARGET_LENGTH = 150;
+const MARKDOWN_LINK_TARGET = /(?<=\]\()[^) ]+(?=\))/g;
 const PREVIEW_SITE_HOST_API_ADDRESS =
   /https:\/\/[a-z0-9-]+-pr-\d+\.preview\.borso\.fr\/(?:mcp\b|api\/|oauth\/|\.well-known\/)[^\s)`'"]*/g;
 
@@ -246,6 +248,12 @@ export function readDeletedPlaceholders(source: string): readonly string[] {
 
 export function readSiteHostApiAddresses(source: string): readonly string[] {
   return [...source.matchAll(PREVIEW_SITE_HOST_API_ADDRESS)].map(([address]) => address);
+}
+
+export function readLongLinkTargets(source: string): readonly string[] {
+  return [...source.matchAll(MARKDOWN_LINK_TARGET)]
+    .map(([target]) => target)
+    .filter((target) => target.length >= LONG_LINK_TARGET_LENGTH);
 }
 
 export function countableLines(lines: readonly string[]): number {
@@ -429,6 +437,12 @@ export function validateBody(source: string): readonly Violation[] {
     violations.push({
       where: 'Body',
       problem: `${address} names the preview's site host, which answers an API path with the app's index.html; the API is on the -api host`,
+    });
+  }
+  for (const target of readLongLinkTargets(source)) {
+    violations.push({
+      where: 'Body',
+      problem: `a link target of ${String(target.length)} characters comes back wrapped in backticks; link through /blob/main/ or write the bare URL`,
     });
   }
   return violations;
