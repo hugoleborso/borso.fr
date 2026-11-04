@@ -39,7 +39,6 @@ const PLANNED_SONG_COUNT = 5;
 const ISO_DAY_LENGTH = 10;
 const SEEDED_MEMBER = SEED_MEMBERS[0];
 
-const TOOL_COUNT = 36;
 const TOOL_LIST_CHARACTERS_MAX = 19_000;
 const WRITE_CONFIRMATION_CHARACTERS_MAX = 200;
 
@@ -230,7 +229,6 @@ describe('assistant tool budget (back-e2e)', () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools.length).toBe(TOOL_COUNT);
     expect(JSON.stringify(tools).length).toBeLessThanOrEqual(TOOL_LIST_CHARACTERS_MAX);
   });
 

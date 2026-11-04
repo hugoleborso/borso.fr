@@ -5,13 +5,14 @@ import { useReorderSetlist } from '../../lib/queries/setlist-entries.queries';
 import { setlistKeys } from '../../lib/queries/setlists.queries';
 import type { EntriesCache } from '../../lib/queries/setlists.utils';
 import {
+  type SetlistBreak,
   useBreaksFollowingEntries,
   useDeleteSetlistBreak,
   useInsertSetlistBreak,
   useRenameSetlistBreak,
   useSetlistBreaks,
 } from '../../lib/queries/setlist-breaks.queries';
-import { listItemIds, type PlacedBreak } from './setlist-breaks.core';
+import { listItemIds, type PlacedBreak, restoreBreakPlacement } from './setlist-breaks.core';
 
 const NO_BREAK: readonly PlacedBreak[] = [];
 
@@ -25,7 +26,7 @@ export interface SetlistBreakListProps {
 export interface SetlistBreakActions {
   readonly listProps: SetlistBreakListProps;
   readonly withdrawSong: (songIndex: number, onFailure: () => void) => () => void;
-  readonly rememberPlacement: () => () => void;
+  readonly rememberPlacement: (songIndex: number) => () => void;
 }
 
 export function useSetlistBreakActions(
@@ -40,11 +41,18 @@ export function useSetlistBreakActions(
   const queryClient = useQueryClient();
   const reorder = useReorderSetlist();
   const breaks = breaksQuery.data?.breaks ?? NO_BREAK;
-  const putBreaksBackTo = (placed: readonly PlacedBreak[]) => (): void => {
+  const putBreaksBackTo = (placed: readonly PlacedBreak[], songIndex: number) => (): void => {
     if (placed.length === 0) return;
     const cached = queryClient.getQueryData<EntriesCache>(setlistKeys.entriesOf(setlistId));
     const entryIds = (cached?.entries ?? []).map((entry) => entry.id);
-    const orderedIds = listItemIds(entryIds, placed);
+    const currentBreaks =
+      queryClient.getQueryData<{ readonly breaks: readonly SetlistBreak[] }>(
+        setlistKeys.breaksOf(setlistId),
+      )?.breaks ?? placed;
+    const orderedIds = listItemIds(
+      entryIds,
+      restoreBreakPlacement(currentBreaks, placed, songIndex),
+    );
     const failReorder = following.followReorder(setlistId, orderedIds, onFailure);
     reorder.mutate({ setlistId, entryIds: orderedIds }, { onError: failReorder });
   };
@@ -60,6 +68,6 @@ export function useSetlistBreakActions(
     },
     withdrawSong: (songIndex, onRemoveFailed) =>
       following.withdrawSong(setlistId, songIndex, onRemoveFailed),
-    rememberPlacement: () => putBreaksBackTo(breaks),
+    rememberPlacement: (songIndex) => putBreaksBackTo(breaks, songIndex),
   };
 }
