@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { improvementTable } from './improvements.schema';
 
 const improvementSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   details: z.string(),
   status: z.string(),
+  kind: z.string(),
   authorMemberId: z.string().uuid(),
   createdAt: z.string(),
   voteCount: z.number(),
@@ -52,8 +54,58 @@ describe('improvements controller (back-e2e)', () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const created = await createImprovement(app, cookieHeader, { title: 'Offline setlists' });
     expect(created.improvement.status).toBe('idea');
+    expect(created.improvement.kind).toBe('idea');
     expect(created.improvement.authorMemberId).toBe(memberId);
     expect(created.improvement.voteCount).toBe(0);
+  });
+
+  it('files a bug report, lists it as one and turns it back into an idea', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const created = await createImprovement(app, cookieHeader, {
+      title: 'The setlist page crashes on reload',
+      kind: 'bug',
+    });
+    expect(created.improvement.kind).toBe('bug');
+    const list = await readJson(
+      await jsonRequest(app, '/api/improvements', { cookieHeader }),
+      listEnvelope,
+    );
+    expect(list.improvements.map((row) => row.kind)).toEqual(['bug']);
+    const updated = await readJson(
+      await jsonRequest(app, `/api/improvements/${created.improvement.id}`, {
+        method: 'PUT',
+        body: { kind: 'idea' },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(updated.improvement.kind).toBe('idea');
+    expect(updated.improvement.title).toBe('The setlist page crashes on reload');
+  });
+
+  it('reads a row filed before the kind column existed as an idea', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    await testDatabase().insert(improvementTable).values({
+      title: 'Filed before kinds',
+      status: 'idea',
+      authorMemberId: memberId,
+      createdAt: new Date(),
+    });
+    const list = await readJson(
+      await jsonRequest(app, '/api/improvements', { cookieHeader }),
+      listEnvelope,
+    );
+    expect(list.improvements.map((row) => row.kind)).toEqual(['idea']);
+  });
+
+  it('refuses a kind the backlog does not declare', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const response = await jsonRequest(app, '/api/improvements', {
+      method: 'POST',
+      body: { title: 'Feature', kind: 'feature' },
+      cookieHeader,
+    });
+    expect(response.status).toBe(400);
   });
 
   it('moves an improvement along its statuses and keeps the untouched fields', async () => {

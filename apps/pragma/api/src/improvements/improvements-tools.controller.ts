@@ -16,7 +16,8 @@ import {
 export const IMPROVEMENT_TOOLS = [
   defineTool({
     name: 'list_improvements',
-    description: "List the band's improvement ideas, ranked by votes, with whether you voted.",
+    description:
+      "List the band's improvements, ranked by votes, each with its kind (`idea` or `bug`), when it was filed, and whether you voted.",
     routes: ['GET /api/improvements'],
     inputSchema: z.object({}),
     run: async (_input, actor) => ({
@@ -27,7 +28,7 @@ export const IMPROVEMENT_TOOLS = [
   defineTool({
     name: 'save_improvement',
     description:
-      'Propose an improvement as you (`title` required), or, with `improvement` (title or id), change only the fields given.',
+      'Propose an improvement as you (`title` required, `kind` is `idea` unless you say `bug`), or, with `improvement` (title or id), change only the fields given.',
     routes: ['POST /api/improvements', 'PUT /api/improvements/:id'],
     inputSchema: improvementSaveToolInputSchema,
     run: async ({ improvement, ...fields }, actor) => {

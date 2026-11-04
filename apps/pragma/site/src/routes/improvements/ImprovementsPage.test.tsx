@@ -16,10 +16,18 @@ const DARK_MODE = {
   title: 'Dark mode on stage',
   details: '',
   status: 'idea',
+  kind: 'idea',
   voteCount: 2,
   votedByViewer: false,
   createdAt: '2026-10-01T00:00:00.000Z',
   updatedAt: '2026-10-01T00:00:00.000Z',
+};
+const CRASH_ON_RELOAD = {
+  ...DARK_MODE,
+  id: 'improvement-crash',
+  title: 'Setlist crashes on reload',
+  kind: 'bug',
+  voteCount: 1,
 };
 
 function answerApi(request: Request): Response {
@@ -27,7 +35,8 @@ function answerApi(request: Request): Response {
   if (pathname === '/api/improvements' && request.method === 'POST') {
     return jsonResponse({ improvement: { ...DARK_MODE, id: 'improvement-new' } }, 201);
   }
-  if (pathname === '/api/improvements') return jsonResponse({ improvements: [DARK_MODE] });
+  if (pathname === '/api/improvements')
+    return jsonResponse({ improvements: [DARK_MODE, CRASH_ON_RELOAD] });
   return new Response(null, { status: 404 });
 }
 
@@ -84,5 +93,28 @@ describe('the improvements page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Dark mode on stage' }));
     const sheet = screen.getByRole('dialog', { name: 'Edit improvement' });
     expect(within(sheet).getByLabelText('Title')).toHaveProperty('value', 'Dark mode on stage');
+  });
+
+  it('marks a bug report in the list and leaves an idea unmarked', async () => {
+    renderImprovementsPage();
+    const bugRow = (await screen.findByText('Setlist crashes on reload')).closest('li');
+    const ideaRow = screen.getByText('Dark mode on stage').closest('li');
+    expect(bugRow === null ? null : within(bugRow).queryByText('Bug')).not.toBeNull();
+    expect(ideaRow === null ? null : within(ideaRow).queryByText('Bug')).toBeNull();
+  });
+
+  it('files an idea by default and a bug report when Bug is chosen', async () => {
+    renderImprovementsPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'New improvement' }));
+    const sheet = screen.getByRole('dialog', { name: 'New improvement' });
+    const kindGroup = within(sheet).getByRole('radiogroup', { name: 'Kind' });
+    expect(within(kindGroup).getByRole('radio', { name: 'Idea' })).toHaveProperty('checked', true);
+    fireEvent.click(within(kindGroup).getByRole('radio', { name: 'Bug' }));
+    fireEvent.change(within(sheet).getByLabelText('Title'), { target: { value: 'Crash' } });
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Add' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const creation = stub?.calls.find((request) => request.method === 'POST');
+    expect(await creation?.clone().json()).toMatchObject({ title: 'Crash', kind: 'bug' });
   });
 });

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  IMPROVEMENT_KINDS,
   IMPROVEMENT_STATUSES,
   filterByStatus,
   readStatus,
   selectErrorMessageKey,
   selectImprovementDeletionEffect,
+  selectKindBadgeKey,
+  selectKindLabelKey,
   selectStatusLabelKey,
 } from './improvements-page.core';
 
@@ -14,6 +17,22 @@ describe('selectStatusLabelKey', () => {
     const keys = IMPROVEMENT_STATUSES.map(selectStatusLabelKey);
     expect(new Set(keys).size).toBe(IMPROVEMENT_STATUSES.length);
     expect(selectStatusLabelKey('idea')).toBe('improvements.statusIdea');
+  });
+});
+
+describe('selectKindLabelKey', () => {
+  it('names one catalogue key per kind', () => {
+    expect(IMPROVEMENT_KINDS.map(selectKindLabelKey)).toEqual([
+      'improvements.kindIdea',
+      'improvements.kindBug',
+    ]);
+  });
+});
+
+describe('selectKindBadgeKey', () => {
+  it('marks a bug report and leaves an idea unmarked', () => {
+    expect(selectKindBadgeKey('bug')).toBe('improvements.kindBug');
+    expect(selectKindBadgeKey('idea')).toBeNull();
   });
 });
 
