@@ -2,7 +2,7 @@ import { composeClassName } from './class-name.utils';
 
 const PULSE_ANIMATION = 'offline-banner-pulse 2s infinite';
 
-const TONE_CLASS = { warn: 'bg-warn', danger: 'bg-danger' } as const;
+const TONE_CLASS = { warn: 'bg-warn', danger: 'bg-danger', accent: 'bg-accent' } as const;
 
 interface PulsingDotProps {
   readonly tone: keyof typeof TONE_CLASS;

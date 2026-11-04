@@ -4,7 +4,8 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   isSongNewSinceLastScore,
-  judgeTap,
+  judgeStep,
+  type PointStep,
   readGivenPoints,
   readIntentPoints,
   type ReleaseIntent,
@@ -32,7 +33,7 @@ export function VoteCatalog({
 }: VoteCatalogProps): JSX.Element {
   const { t } = useTranslation();
 
-  const applyTap: Readonly<
+  const applyStep: Readonly<
     Record<ReleaseIntent['kind'], (songId: string, points: number) => void>
   > = {
     refused: () => {
@@ -60,9 +61,9 @@ export function VoteCatalog({
             deezerAlbumId={song.deezerAlbumId}
             points={points}
             isNew={isSongNewSinceLastScore(song, lastScoredAt, points)}
-            onTap={() => {
-              const intent = judgeTap(points, remainingPoints);
-              applyTap[intent.kind](song.id, readIntentPoints(intent));
+            onStep={(step: PointStep) => {
+              const intent = judgeStep(points, remainingPoints, step);
+              applyStep[intent.kind](song.id, readIntentPoints(intent));
             }}
           />
         );

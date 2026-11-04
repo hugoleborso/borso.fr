@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { compareSongTallies, resolveSetlistStatus } from './setlist-vote.core';
+import { compareSongTallies, isSetlistVoting, resolveSetlistStatus } from './setlist-vote.core';
 
 // @FollowsBlueprint test-pure-unit
+describe('isSetlistVoting', () => {
+  it('is true only while the vote is open', () => {
+    expect(isSetlistVoting('voting')).toBe(true);
+    expect(isSetlistVoting('locked')).toBe(false);
+    expect(isSetlistVoting(null)).toBe(false);
+  });
+});
+
 describe('resolveSetlistStatus', () => {
   it('reads a setlist with no status as locked', () => {
     expect(resolveSetlistStatus(null)).toBe('locked');

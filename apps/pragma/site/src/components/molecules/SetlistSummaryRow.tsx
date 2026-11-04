@@ -4,6 +4,7 @@ import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
+import { Badge } from '../atoms/Badge';
 import { Icon } from '../atoms/Icon';
 
 interface SetlistSummaryRowProps {
@@ -32,11 +33,18 @@ export function SetlistSummaryRow({
       >
         <Icon name="setlist" size="md" className="text-ink-soft" />
         <div className="flex-1 min-w-0">
-          <div className="font-display text-title text-ink leading-tight truncate">
-            {selectSetlistDisplayName(name, t('setlist.untitled'))}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-display text-title text-ink leading-tight truncate">
+              {selectSetlistDisplayName(name, t('setlist.untitled'))}
+            </span>
+            {isVoting ? (
+              <Badge tone="accent" size="md" className="shrink-0">
+                {t('setlist.voting')}
+              </Badge>
+            ) : null}
           </div>
           <div className="text-meta text-ink-soft mt-0.5 truncate">
-            {isVoting ? t('setlist.voting') : t('setlist.songCount', { count: songCount })}
+            {t('setlist.songCount', { count: songCount })}
             {sessionsLabel === null ? null : ` · ${sessionsLabel}`}
           </div>
         </div>

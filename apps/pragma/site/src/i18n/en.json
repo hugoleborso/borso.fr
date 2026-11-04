@@ -690,7 +690,7 @@
   "voting": {
     "addToProposal": "Add a song",
     "applyTarget": "Apply",
-    "budgetExhausted": "No points left! Take points off another song to keep liking.",
+    "budgetExhausted": "No points left! Take a point off another song to give it here.",
     "budgetLabel": "Points left",
     "cardLabel": "Song to score",
     "closeAddLabel": "Songs left out",
@@ -714,13 +714,19 @@
     "statusVoting": "In a vote",
     "swipeHint": "Left to skip, right to give 1, 2 or 3",
     "tallyEmpty": "Nobody has scored a song yet.",
-    "tapToScore": "Score {{title}}",
     "targetSongCount": "How many songs?",
     "untitled": "Unnamed setlist",
     "backToVote": "Back to the vote",
     "pageTitle": "Vote on the songs",
     "howItRunsScore": "Each member spends points on the songs they want.",
-    "howItRunsClose": "Closing the vote keeps the top songs as this setlist."
+    "howItRunsClose": "Closing the vote keeps the top songs as this setlist.",
+    "removePoint": "Take a point off {{title}}",
+    "addPoint": "Give a point to {{title}}",
+    "pointsGiven_one": "{{count}} point given",
+    "pointsGiven_other": "{{count}} points given",
+    "votingNow": "Vote in progress",
+    "votingNowHint": "Spread your points on the songs you want to play.",
+    "goVote": "Vote"
   },
   "audience": {
     "pageCrumb": "Tonight",

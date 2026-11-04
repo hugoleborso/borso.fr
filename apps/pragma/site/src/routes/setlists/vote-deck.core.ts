@@ -112,27 +112,42 @@ export type ReleaseIntent =
   | { kind: 'refused' }
   | { kind: 'return' };
 
-export function judgeRelease(zone: DeckZone, remainingPoints: number): ReleaseIntent {
+export function judgeRelease(
+  zone: DeckZone,
+  remainingPoints: number,
+  currentPoints: number,
+): ReleaseIntent {
   if (zone === 'none') return { kind: 'return' };
   const points = selectPointsForZone(zone);
-  // Stryker disable next-line ConditionalExpression: equivalent mutant. A discard is the only zone worth zero, and zero is never above a budget that cannot go negative, so the refusal test below answers the same way when this guard is removed.
-  if (points === 0) return { kind: 'score', points: 0 };
-  if (points > remainingPoints) return { kind: 'refused' };
-  return { kind: 'score', points };
-}
-
-const POINT_STEPS = MAX_POINTS_PER_SONG + 1;
-
-export function cycleSongPoints(currentPoints: number): number {
-  return (currentPoints + 1) % POINT_STEPS;
-}
-
-export function judgeTap(currentPoints: number, remainingPoints: number): ReleaseIntent {
-  const points = cycleSongPoints(currentPoints);
   if (selectRemainingAfterScore(remainingPoints, currentPoints, points) < 0) {
     return { kind: 'refused' };
   }
   return { kind: 'score', points };
+}
+
+export type PointStep = 'up' | 'down';
+
+const POINT_DELTA_BY_STEP: Readonly<Record<PointStep, number>> = { up: 1, down: -1 };
+
+export function judgeStep(
+  currentPoints: number,
+  remainingPoints: number,
+  step: PointStep,
+): ReleaseIntent {
+  const points = currentPoints + POINT_DELTA_BY_STEP[step];
+  if (points < 0 || points > MAX_POINTS_PER_SONG) return { kind: 'return' };
+  if (selectRemainingAfterScore(remainingPoints, currentPoints, points) < 0) {
+    return { kind: 'refused' };
+  }
+  return { kind: 'score', points };
+}
+
+export function canStepUp(currentPoints: number): boolean {
+  return currentPoints < MAX_POINTS_PER_SONG;
+}
+
+export function canStepDown(currentPoints: number): boolean {
+  return currentPoints > 0;
 }
 
 export type VoteMode = 'list' | 'deck';
