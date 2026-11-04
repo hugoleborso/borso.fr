@@ -187,7 +187,7 @@ decision.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
 
 - [`pragma-calendar-fixtures-attach-only-on-a-preview.md`](./pragma-calendar-fixtures-attach-only-on-a-preview.md) — why `pnpm dev` seeds no calendar feed, and where calendar screens can be checked.
-- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, the `pragma.session-seen` marker a cookie alone lacks, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
+- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, ids that change on every seed, the `pragma.session-seen` marker a cookie alone lacks, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
 - [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — every talos screen but sign-in sits behind a passkey: the fictional memory `dev:db` seeds, a CDP virtual authenticator, and a wiped local database before each new browser context, or every screenshot is the login screen.
 
 ### Spec & metrics framing
