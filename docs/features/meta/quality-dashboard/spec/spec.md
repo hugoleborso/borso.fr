@@ -48,7 +48,8 @@ Edge cases:
 - A source the session cannot read is written as `{ "unavailable": "<why>" }` and shows in the banner. The rest of the page renders.
 - A malformed snapshot stops the render. A wrong number on the board is worse than no board.
 - Preview 5xx counts only previews still deployed, because an API Gateway API's name carries no pull request number.
-- An app with no API, no preview or no Sentry `app` tag says so in the cell, never zero.
+- An app with no API or no preview says so in the cell, never zero.
+- Production throttles are a Stability column. On 2026-11-05 they explained the 5xx: pragma's API is reserved 10 concurrent executions and was throttled 545 times in seven days, against 574 gateway 5xx (measured).
 - A Sentry week from before the `app` tag existed (before 2026-10-26) shows no data rather than zero.
 - The page is private, but Security still shows counts only, never a package name.
 - Stage mapping: A = `typing`, `linter`, `local`, `ci`; B = `review`; C = `qa`, `staging`; D = `production`, `operator-deploy`; E = a pragma improvement with `kind = 'bug'`, placed on pragma's row.
@@ -60,7 +61,7 @@ Edge cases:
 | Where does the page live? | Pages built in CI; private artifact; vendor console | Private artifact refreshed by a session (2026-11-04, replaces the 2026-10-13 Pages choice) |
 | Which CloudWatch error metric? | Lambda `Errors`; API Gateway `5xx` | API Gateway `5xx`. Hono turns a thrown error into a 500 response, so Lambda `Errors` stays at zero. |
 | Latency measure | mean; p50 + p95 | p50 + p95 from API Gateway `Latency`, the slower API when an app has two |
-| How are Sentry errors split by app? | one project per app; the `app` tag | The `app` tag. The organization has one project, `borsofr`, and only pragma sets the tag today. |
+| How are Sentry errors split by app? | one project per app; the `app` tag | The `app` tag. The organization has one project, `borsofr`, and every app sets the tag (2026-11-05). Previews run with Sentry off. |
 | Source of stage E | a dantotsu field; the `improvement` table | The `improvement` table, through the Pragma MCP, with a new `kind` column |
 | Targets | baseline first; zero everywhere | Baseline first, written in `docs/quality/targets.md` |
 

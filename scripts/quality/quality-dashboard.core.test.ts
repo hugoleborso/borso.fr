@@ -125,6 +125,18 @@ describe('buildMetricQueries', () => {
         },
       },
       {
+        Id: 'throttles_ab1',
+        MetricStat: {
+          Metric: {
+            Namespace: 'AWS/Lambda',
+            MetricName: 'Throttles',
+            Dimensions: [{ Name: 'FunctionName', Value: 'pragma-prod-api' }],
+          },
+          Period: 604_800,
+          Stat: 'Sum',
+        },
+      },
+      {
         Id: 'serverErrors_cd2',
         MetricStat: {
           Metric: {
@@ -185,6 +197,7 @@ describe('buildGatewayIndicators', () => {
         series('serverErrors_ab1', [['2026-10-06T09:00:00Z', 20]]),
         series('serverErrors_cd2', [['2026-10-06T09:00:00Z', 2]]),
         series('serverErrors_ef3', [['2026-10-06T09:00:00Z', 3]]),
+        series('throttles_ab1', [['2026-10-06T09:00:00Z', 545]]),
       ],
       weekly: [
         series('latencyP50_ab1', [
@@ -201,19 +214,22 @@ describe('buildGatewayIndicators', () => {
   const buildDefault = (): readonly Indicator[] =>
     buildGatewayIndicators(reading, ['pragma', 'talos', 'borso-fr'], NOW);
 
-  it('reports four indicators per application, in pillar order', () => {
+  it('reports five indicators per application, in pillar order', () => {
     const indicators = buildDefault();
     expect(indicators.map((indicator) => `${indicator.app}:${indicator.id}`)).toEqual([
       'pragma:errors-preview',
       'pragma:errors-prod',
+      'pragma:throttles-prod',
       'pragma:latency-p50',
       'pragma:latency-p95',
       'talos:errors-preview',
       'talos:errors-prod',
+      'talos:throttles-prod',
       'talos:latency-p50',
       'talos:latency-p95',
       'borso-fr:errors-preview',
       'borso-fr:errors-prod',
+      'borso-fr:throttles-prod',
       'borso-fr:latency-p50',
       'borso-fr:latency-p95',
     ]);
@@ -239,6 +255,16 @@ describe('buildGatewayIndicators', () => {
       current: 20,
     });
     expect(production?.weeks.at(7)).toEqual({ weekStart: '2026-10-12', value: 7 });
+  });
+
+  it('sums the throttled calls of production', () => {
+    const indicators = buildDefault();
+    expect(find(indicators, 'throttles-prod', 'pragma')).toMatchObject({
+      pillar: 'stability',
+      label: 'Throttled, production',
+      unit: 'count',
+      current: 545,
+    });
   });
 
   it('rounds latency to the millisecond and leaves a week with no data empty', () => {
@@ -334,7 +360,7 @@ describe('Sentry', () => {
   } as const;
 
   it('counts each application per environment, week by week', () => {
-    const indicators = buildSentryIndicators(reading, ['pragma', 'banana-rush'], NOW);
+    const indicators = buildSentryIndicators(reading, ['pragma', 'other-app'], NOW);
     expect(find(indicators, 'sentry-errors-prod', 'pragma')).toMatchObject({
       pillar: 'stability',
       label: 'Sentry, production',
@@ -350,15 +376,15 @@ describe('Sentry', () => {
       label: 'Sentry, previews',
       current: 4,
     });
-    expect(find(indicators, 'sentry-errors-preview', 'banana-rush')).toEqual({
+    expect(find(indicators, 'sentry-errors-preview', 'other-app')).toEqual({
       id: 'sentry-errors-preview',
       pillar: 'stability',
       label: 'Sentry, previews',
       unit: 'count',
-      app: 'banana-rush',
+      app: 'other-app',
       current: null,
       weeks: EMPTY_WEEKS,
-      status: { kind: 'not-applicable', reason: 'no Sentry app tag' },
+      status: { kind: 'not-applicable', reason: 'no Sentry' },
     });
   });
 

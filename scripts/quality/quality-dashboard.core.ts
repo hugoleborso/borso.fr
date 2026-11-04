@@ -84,7 +84,14 @@ export const FULL_STACK_APPS: readonly string[] = [
   'talos',
 ];
 export const FRONT_END_APPS: readonly string[] = ['borso-fr', 'borsouvertures'];
-export const SENTRY_APPS: readonly string[] = ['pragma'];
+export const SENTRY_APPS: readonly string[] = [
+  'pragma',
+  'last-loop-lepin',
+  'banana-rush',
+  'talos',
+  'borso-fr',
+  'borsouvertures',
+];
 export const BUG_REPORT_APP = 'pragma';
 export const REPOSITORY_ROW = 'repository';
 export const WEEKS_SHOWN = 8;
@@ -96,6 +103,7 @@ const ISO_DATE_LENGTH = 10;
 const API_NAME_PATTERN = /^(.+)-(prod|preview)-api$/;
 const HTTP_PROTOCOL = 'HTTP';
 const GATEWAY_NAMESPACE = 'AWS/ApiGateway';
+const FUNCTION_NAMESPACE = 'AWS/Lambda';
 const CLOSED_IMPROVEMENT_STATUSES: ReadonlySet<string> = new Set(['shipped', 'declined']);
 const BUG_REPORT_ZONE = 'apps/pragma';
 const BUG_KIND = 'bug';
@@ -104,18 +112,31 @@ const TARGET_ROW_PATTERN = /^\|\s*`([a-z0-9-]+)`\s*\|\s*([a-z0-9-]+)\s*\|\s*([0-
 const NO_API_REASON = 'no API';
 const NO_PREVIEW_REASON = 'no preview deployed';
 const NO_PRODUCTION_API_REASON = 'no production API deployed';
-const NO_SENTRY_REASON = 'no Sentry app tag';
+const NO_SENTRY_REASON = 'no Sentry';
 const NO_BUG_REPORTS_REASON = 'pragma only';
 
-export const METRIC_KINDS = ['latencyP50', 'latencyP95', 'serverErrors'] as const;
+export const METRIC_KINDS = ['latencyP50', 'latencyP95', 'serverErrors', 'throttles'] as const;
 type MetricKind = (typeof METRIC_KINDS)[number];
+const SUMMED_KINDS: ReadonlySet<MetricKind> = new Set(['serverErrors', 'throttles']);
+const PREVIEW_KINDS: ReadonlySet<MetricKind> = new Set(['serverErrors']);
 const METRIC_DEFINITIONS: Readonly<
-  Record<MetricKind, { readonly name: string; readonly stat: string }>
+  Record<MetricKind, { readonly namespace: string; readonly name: string; readonly stat: string }>
 > = {
-  latencyP50: { name: 'Latency', stat: 'p50' },
-  latencyP95: { name: 'Latency', stat: 'p95' },
-  serverErrors: { name: '5xx', stat: 'Sum' },
+  latencyP50: { namespace: GATEWAY_NAMESPACE, name: 'Latency', stat: 'p50' },
+  latencyP95: { namespace: GATEWAY_NAMESPACE, name: 'Latency', stat: 'p95' },
+  serverErrors: { namespace: GATEWAY_NAMESPACE, name: '5xx', stat: 'Sum' },
+  throttles: { namespace: FUNCTION_NAMESPACE, name: 'Throttles', stat: 'Sum' },
 };
+
+function selectDimension(
+  api: HttpApi,
+  kind: MetricKind,
+): { readonly Name: string; readonly Value: string } {
+  if (METRIC_DEFINITIONS[kind].namespace === FUNCTION_NAMESPACE) {
+    return { Name: 'FunctionName', Value: `${api.app}-${api.stage}-api` };
+  }
+  return { Name: 'ApiId', Value: api.apiId };
+}
 
 function isoDateOf(milliseconds: number): string {
   return new Date(milliseconds).toISOString().slice(0, ISO_DATE_LENGTH);
@@ -146,15 +167,15 @@ export function metricQueryId(api: HttpApi, kind: MetricKind): string {
 
 export function buildMetricQueries(apis: readonly HttpApi[]): readonly MetricQuery[] {
   return apis.flatMap((api) =>
-    METRIC_KINDS.filter((kind) => api.stage === 'prod' || kind === 'serverErrors').map((kind) => {
+    METRIC_KINDS.filter((kind) => api.stage === 'prod' || PREVIEW_KINDS.has(kind)).map((kind) => {
       const definition = METRIC_DEFINITIONS[kind];
       return {
         Id: metricQueryId(api, kind),
         MetricStat: {
           Metric: {
-            Namespace: GATEWAY_NAMESPACE,
+            Namespace: definition.namespace,
             MetricName: definition.name,
-            Dimensions: [{ Name: 'ApiId', Value: api.apiId }],
+            Dimensions: [selectDimension(api, kind)],
           },
           Period: SECONDS_PER_WEEK,
           Stat: definition.stat,
@@ -194,7 +215,7 @@ function combinePoints(
       .filter((point) => isInWindow(point.timestamp))
       .map((point) => point.value),
   );
-  if (kind === 'serverErrors') return values.reduce((total, value) => total + value, 0);
+  if (SUMMED_KINDS.has(kind)) return values.reduce((total, value) => total + value, 0);
   if (values.length === 0) return null;
   return Math.round(Math.max(...values));
 }
@@ -282,6 +303,19 @@ export function buildGatewayIndicators(
         unit: 'count',
       },
       'serverErrors',
+      'prod',
+      app,
+      reading,
+      weekStarts,
+    ),
+    buildGatewayIndicator(
+      {
+        id: 'throttles-prod',
+        pillar: 'stability',
+        label: 'Throttled, production',
+        unit: 'count',
+      },
+      'throttles',
       'prod',
       app,
       reading,

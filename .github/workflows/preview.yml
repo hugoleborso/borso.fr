@@ -154,13 +154,16 @@ jobs:
       # Surfaces non-prod-only UI affordances (test fixture seeders, etc.).
       # Stage value also drives Sentry environment tagging.
       VITE_STAGE: preview
-      # Error reporting, for pragma only. The DSN, the org and the project are
+      # Error reporting, for every app. The DSN, the org and the project are
       # variables of the prod environment, which this job does not name, so
       # they read as empty here and previews run with Sentry off. The upload
-      # token is a secret and reaches no other application's build. The site
-      # and the API both treat an empty DSN as no project.
-      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
+      # token is a secret and reaches only pragma's build. Every site and API
+      # treats an empty DSN as no project.
+      VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN }}
       PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
+      LAST_LOOP_LEPIN_SENTRY_DSN: ${{ matrix.app == 'last-loop-lepin' && vars.SENTRY_DSN || '' }}
+      BANANA_RUSH_SENTRY_DSN: ${{ matrix.app == 'banana-rush' && vars.SENTRY_DSN || '' }}
+      TALOS_SENTRY_DSN: ${{ matrix.app == 'talos' && vars.SENTRY_DSN || '' }}
       SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}

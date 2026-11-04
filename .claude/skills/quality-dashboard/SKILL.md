@@ -13,7 +13,7 @@ Refresh only when the operator asks. Never schedule it.
 
 Write `<scratchpad>/quality-dashboard/snapshot.json`. Each of the four keys holds its data, or `{ "unavailable": "<why, one sentence>" }` when the source cannot be read. The renderer refuses a malformed file, so fix the file rather than the renderer.
 
-- **`sentry`**. Organization `borsofr`, region `https://de.sentry.io`, one project. Applications are told apart by the `app` tag, which only pragma sets today. Call `search_errors` with `fields: ["app", "environment", "count()"]`.
+- **`sentry`**. Organization `borsofr`, region `https://de.sentry.io`, one project. Applications are told apart by the `app` tag, which every app sets. Previews run with Sentry off, because the DSN is a prod-environment variable, so preview errors show only in the CloudWatch 5xx column. Call `search_errors` with `fields: ["app", "environment", "count()"]`.
   - `rolling` is the rows for `period: "7d"`.
   - `weekly` maps each Monday (ISO date) of the last eight weeks to the rows of that week, with `query: "timestamp:>=<monday>T00:00:00 timestamp:<<next monday>T00:00:00"`. Leave out a week from before the `app` tag existed (before 2026-10-26) rather than writing zero, so the bar shows no data.
   - Each row is `{ "app", "environment", "count" }`.
