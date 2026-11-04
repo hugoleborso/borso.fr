@@ -73,9 +73,17 @@ fi
 # checkout's HEAD. The checkout is shared with other local sessions, and when
 # PR #243 merged it sat on main, so the hook printed "none" for a merge that
 # deployed pragma. See docs/dantotsus/the-pull-request-hooks-read-the-checkout.md.
+#
+# The head is read over REST. `gh pr view` asks GraphQL, which the hosted
+# session's proxy answers with 403, so from PR #245 to PR #257 every merge from
+# a hosted session printed "unknown" here. See
+# docs/dantotsus/the-merge-hook-asked-the-one-api-the-proxy-refuses.md.
+OWNER=$(jq -r '.tool_input.owner // "{owner}"' <<<"$INPUT")
+REPO=$(jq -r '.tool_input.repo // "{repo}"' <<<"$INPUT")
+git -C "$REPO_ROOT" fetch -q origin "$BASE_BRANCH" 2>/dev/null || true
 COMPARED_HEAD=HEAD
 if [[ "$PR" =~ ^[0-9]+$ ]] && command -v gh >/dev/null 2>&1; then
-  PULL_REQUEST_HEAD=$(cd "$REPO_ROOT" && gh pr view "$PR" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+  PULL_REQUEST_HEAD=$(cd "$REPO_ROOT" && gh api "repos/$OWNER/$REPO/pulls/$PR" --jq .head.sha 2>/dev/null || true)
   if [ -n "$PULL_REQUEST_HEAD" ] && { git -C "$REPO_ROOT" cat-file -e "$PULL_REQUEST_HEAD^{commit}" 2>/dev/null \
     || git -C "$REPO_ROOT" fetch -q origin "pull/$PR/head" 2>/dev/null; }; then
     COMPARED_HEAD=$PULL_REQUEST_HEAD
@@ -102,6 +110,40 @@ else
   SHARED="no — the committed borso-shared template is unchanged in this diff"
 fi
 
+# A pull_request run tests the branch merged with main as main was when the run
+# started. A pull request merged into main after that start lands beside this
+# one untested, and GitHub only says `mergeable_state: unknown` while it
+# recomputes. PR #249 merged 16 seconds before PR #257, after #257's CI, and
+# both edited docs/knowledge/README.md and docs/quality/feature-cost.md. See
+# docs/dantotsus/two-merges-sixteen-seconds-apart-one-untested-main.md.
+MOVED_BASE=
+if [[ "$PR" =~ ^[0-9]+$ ]] && [ -n "$COMPARED_HEAD" ] && command -v gh >/dev/null 2>&1; then
+  CI_STARTED=$(cd "$REPO_ROOT" && gh api "repos/$OWNER/$REPO/commits/$COMPARED_HEAD/check-runs?per_page=100" \
+    --jq '[.check_runs[] | select(.app.slug == "github-actions") | .started_at] | min // empty' 2>/dev/null || true)
+  if [ -n "$CI_STARTED" ]; then
+    UNSEEN=$(cd "$REPO_ROOT" && git log --first-parent --since="$CI_STARTED" --format=%H "origin/$BASE_BRANCH" 2>/dev/null \
+      | while read -r COMMIT; do
+        git merge-base --is-ancestor "$COMMIT" "$COMPARED_HEAD" 2>/dev/null && continue
+        git log -1 --format=%s "$COMMIT" | grep -qF "(#$PR)" || printf '%s\n' "$COMMIT"
+      done)
+    if [ -n "$UNSEEN" ]; then
+      SUBJECTS=$(cd "$REPO_ROOT" && printf '%s\n' "$UNSEEN" | xargs git log --no-walk=unsorted --format='    %h %s' 2>/dev/null)
+      BOTH=$(cd "$REPO_ROOT" && comm -12 \
+        <(printf '%s\n' "$UNSEEN" | xargs -n1 git diff-tree --no-commit-id --name-only -r -m --first-parent 2>/dev/null | sort -u) \
+        <(git diff --name-only "origin/$BASE_BRANCH...$COMPARED_HEAD" 2>/dev/null | sort -u) | sed 's/^/    /')
+      MOVED_BASE="
+[merge-on-moved-base] $BASE_BRANCH moved after this pull request's CI started ($CI_STARTED).
+These merged since, and no run tested them beside this branch:
+$SUBJECTS
+Files both sides changed:
+${BOTH:-    none}
+A mergeable_state of unknown right after such a merge is GitHub recomputing,
+not a green light. Tell the operator before merging. To test the result first, merge
+$BASE_BRANCH into the branch, push, and wait for the check_suite event."
+    fi
+  fi
+fi
+
 NOTICE="[merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
 
 There is no approval step after this call. Pushing to $BASE_BRANCH runs
@@ -115,7 +157,7 @@ Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
 shared-deploy dispatch when the snapshot moved, and a kaizen for
 /after-task-kaizen in a new conversation, never in this one. Propose the
-kaizen; call spawn_task only once the operator approves it."
+kaizen; call spawn_task only once the operator approves it.$MOVED_BASE"
 
 jq -n --arg context "$NOTICE" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
