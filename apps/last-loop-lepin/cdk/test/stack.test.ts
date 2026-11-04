@@ -16,6 +16,7 @@ const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
+const PROD_ERROR_REPORTING = { dsn: 'https://public-key@o1.ingest.de.sentry.io/2' };
 
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
@@ -49,6 +50,7 @@ function buildAppStackTemplate(stage: 'prod' | 'preview'): Template {
     apiEntry: FAKE_API_ENTRY,
     migrationsPath: FAKE_MIGRATIONS_DIR,
     cluster: clusterStack.cluster,
+    ...(stage === 'prod' ? { errorReporting: PROD_ERROR_REPORTING } : {}),
   });
   return Template.fromStack(stack);
 }
@@ -62,6 +64,14 @@ function readEnvVars(resource: { readonly Properties?: unknown }): Record<string
   if (!('Variables' in environment)) return {};
   const variables = environment.Variables;
   return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+}
+
+function readApiVariables(stage: 'prod' | 'preview'): Record<string, unknown> {
+  const functions = synthAppStack(stage).findResources('AWS::Lambda::Function');
+  const apiFunction = Object.entries(functions).find(([logicalId]) =>
+    logicalId.includes('AppApiFn'),
+  )?.[1];
+  return apiFunction === undefined ? {} : readEnvVars(apiFunction);
 }
 
 function readSchemaReaderBlocklist(template: Template): unknown {
@@ -248,5 +258,14 @@ describe('last-loop-lepin app stack', () => {
       const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).toHaveProperty('PHOTOS_CDN_HOST');
     }
+  });
+
+  it('hands the error reporting project to the API only when one is configured', () => {
+    expect(readApiVariables('prod')).toMatchObject({
+      SENTRY_DSN: PROD_ERROR_REPORTING.dsn,
+      NODE_OPTIONS: '--enable-source-maps',
+    });
+    expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_DSN');
+    expect(readApiVariables('preview')).not.toHaveProperty('NODE_OPTIONS');
   });
 });

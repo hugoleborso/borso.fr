@@ -3,12 +3,16 @@ import { readSentryDsn, readStageName } from '../lib/environment';
 
 const UNKNOWN_STAGE = 'unknown';
 
+const SHARED_PROJECT_APP_TAGS = { app: 'last-loop-lepin' } as const;
+
 export function initSentry(): void {
   const dsn = readSentryDsn();
   if (dsn === undefined) return;
   Sentry.init({
     dsn,
     environment: readStageName() ?? UNKNOWN_STAGE,
+    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
+    sendDefaultPii: false,
     tracesSampleRate: 0,
   });
 }

@@ -32,6 +32,19 @@ function requirePreviewSuffix(prNumber: number | undefined): string {
   return `pr-${prNumber}`;
 }
 
+const SOURCE_MAPPED_STACK_TRACES = '--enable-source-maps';
+
+export interface ErrorReportingProject {
+  readonly dsn: string;
+}
+
+function buildErrorReportingEnvironment(
+  project: ErrorReportingProject | undefined,
+): Record<string, string> {
+  if (project === undefined) return {};
+  return { SENTRY_DSN: project.dsn, NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES };
+}
+
 export interface BuildLastLoopLepinAppStackProps {
   readonly scope: Construct;
   readonly stage: Stage;
@@ -41,6 +54,7 @@ export interface BuildLastLoopLepinAppStackProps {
   readonly apiEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
+  readonly errorReporting?: ErrorReportingProject;
 }
 
 // @FollowsBlueprint app-cdk-stack
@@ -92,6 +106,7 @@ export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProp
           { app: APP_SLUG, stage: props.stage, prNumber: props.prNumber },
           props.domainName,
         ),
+        ...buildErrorReportingEnvironment(props.errorReporting),
       },
     },
     database: {

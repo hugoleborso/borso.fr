@@ -1,0 +1,25 @@
+const REPORTING_STAGES = ['preview', 'integ', 'prod'] as const;
+
+export type ReportingStage = (typeof REPORTING_STAGES)[number];
+
+export interface ErrorReportingInputs {
+  readonly dsn: string | undefined;
+  readonly stage: string | undefined;
+}
+
+export interface ErrorReportingSettings {
+  readonly dsn: string;
+  readonly environment: ReportingStage;
+}
+
+function isReportingStage(stage: string | undefined): stage is ReportingStage {
+  return REPORTING_STAGES.some((reportingStage) => reportingStage === stage);
+}
+
+// @FollowsBlueprint core-decision
+export function selectErrorReportingSettings(
+  inputs: ErrorReportingInputs,
+): ErrorReportingSettings | undefined {
+  if (inputs.dsn === undefined || !isReportingStage(inputs.stage)) return undefined;
+  return { dsn: inputs.dsn, environment: inputs.stage };
+}
