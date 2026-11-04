@@ -1,3 +1,4 @@
+import '../../observability/error-reporting.setup';
 import '@fontsource/playfair-display/400.css';
 import '@fontsource/playfair-display/400-italic.css';
 import '@fontsource/playfair-display/500.css';
