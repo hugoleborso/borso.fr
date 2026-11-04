@@ -1,18 +1,18 @@
 /** @Feature songs */
 
-import { ENERGY_MAX, ENERGY_MIN } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '../atoms/Input';
-import { LabelledField } from '../atoms/LabelledField';
+import { FIELD_LABEL_CLASS, LabelledField } from '../atoms/LabelledField';
+import { SongEnergyField } from './SongEnergyField';
 
 export interface SongKeyEnergyFieldsProps {
   readonly tonalityStart: string;
   readonly tonalityEnd: string;
-  readonly baseEnergy: string;
+  readonly baseEnergy: number | null;
   readonly onTonalityStartChange: (value: string) => void;
   readonly onTonalityEndChange: (value: string) => void;
-  readonly onBaseEnergyChange: (value: string) => void;
+  readonly onBaseEnergyChange: (level: number) => void;
 }
 
 const TONALITY_MAX_LENGTH = 16;
@@ -42,18 +42,10 @@ export function SongKeyEnergyFields(props: SongKeyEnergyFieldsProps): JSX.Elemen
           />
         </LabelledField>
       </div>
-      <LabelledField id="song-base-energy" label={t('catalog.baseEnergy')}>
-        <Input
-          id="song-base-energy"
-          type="number"
-          inputMode="numeric"
-          min={ENERGY_MIN}
-          max={ENERGY_MAX}
-          value={props.baseEnergy}
-          onChange={(event) => props.onBaseEnergyChange(event.target.value)}
-          className="w-24"
-        />
-      </LabelledField>
+      <div className="flex flex-col gap-1.5">
+        <span className={FIELD_LABEL_CLASS}>{t('catalog.baseEnergy')}</span>
+        <SongEnergyField baseEnergy={props.baseEnergy} onChange={props.onBaseEnergyChange} />
+      </div>
     </>
   );
 }

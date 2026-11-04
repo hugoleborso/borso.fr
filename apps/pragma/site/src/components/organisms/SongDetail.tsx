@@ -17,7 +17,6 @@ import type {
   SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
 import type { SongViewTab } from '../../routes/catalog/song-view-tab.core';
-import { MASTERY_BAR_COUNT } from '../../routes/catalog/song-lineup.core';
 import { BottomActions } from '../atoms/BottomActions';
 import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
@@ -26,6 +25,7 @@ import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { LineupEditor, type LineupRecord } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { ListenRow } from '../molecules/ListenRow';
+import { SongEnergyField } from '../molecules/SongEnergyField';
 import { SongViewTabs } from '../molecules/SongViewTabs';
 import { MasteryProgressChart } from './MasteryProgressChart';
 import { RecordingSheetDialogs } from './RecordingSheet';
@@ -132,16 +132,15 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                   notes={song}
                 />
                 <SongYourPart row={memberRow} />
-                {song.baseEnergy === null ? null : (
-                  <Card variant="flat" className="bg-sunk border-0">
-                    <div className="mb-1.5 text-label tracking-wider uppercase text-ink-soft font-medium">
-                      {t('catalog.baseEnergy')}
-                    </div>
-                    <div className="font-mono text-meta text-ink">
-                      {song.baseEnergy}/{MASTERY_BAR_COUNT}
-                    </div>
-                  </Card>
-                )}
+                <Card variant="flat" className="flex flex-col gap-1 bg-sunk border-0">
+                  <div className="text-label tracking-wider uppercase text-ink-soft font-medium">
+                    {t('catalog.baseEnergy')}
+                  </div>
+                  <SongEnergyField
+                    baseEnergy={song.baseEnergy}
+                    onChange={(level) => updateSong.mutate({ id: song.id, baseEnergy: level })}
+                  />
+                </Card>
                 <SongNotesCard song={song} />
                 <SongLinksCard links={song.links} />
               </>
