@@ -1,6 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { memberTable } from '../members/members.schema';
 import type { CategoryPreference, NotificationCategory } from './notifications.core';
 import {
@@ -32,16 +31,13 @@ const PREFERENCE_PROJECTION = {
 
 // @FollowsBlueprint repository-idempotent-upsert
 export async function saveSubscription(values: PushSubscriptionInsertShape): Promise<void> {
-  await retryingConflictAborts(
-    async () =>
-      await getDatabase()
-        .insert(pushSubscriptionTable)
-        .values(values)
-        .onConflictDoUpdate({
-          target: pushSubscriptionTable.endpoint,
-          set: { memberId: values.memberId, p256dh: values.p256dh, auth: values.auth },
-        }),
-  );
+  await getDatabase()
+    .insert(pushSubscriptionTable)
+    .values(values)
+    .onConflictDoUpdate({
+      target: pushSubscriptionTable.endpoint,
+      set: { memberId: values.memberId, p256dh: values.p256dh, auth: values.auth },
+    });
 }
 
 export async function deleteSubscription(endpoint: string): Promise<void> {
@@ -78,16 +74,13 @@ export async function listPreferencesOfCategory(
 }
 
 export async function savePreference(preference: CategoryPreference): Promise<void> {
-  await retryingConflictAborts(
-    async () =>
-      await getDatabase()
-        .insert(notificationPreferenceTable)
-        .values(preference)
-        .onConflictDoUpdate({
-          target: [notificationPreferenceTable.memberId, notificationPreferenceTable.category],
-          set: { enabled: preference.enabled },
-        }),
-  );
+  await getDatabase()
+    .insert(notificationPreferenceTable)
+    .values(preference)
+    .onConflictDoUpdate({
+      target: [notificationPreferenceTable.memberId, notificationPreferenceTable.category],
+      set: { enabled: preference.enabled },
+    });
 }
 
 export async function findMemberFirstName(memberId: string): Promise<string | null> {
@@ -154,11 +147,8 @@ export async function findVapidKeyPair(): Promise<VapidKeyPairRow | null> {
 }
 
 export async function insertVapidKeyPairUnlessPresent(pair: VapidKeyPairRow): Promise<void> {
-  await retryingConflictAborts(
-    async () =>
-      await getDatabase()
-        .insert(vapidKeyPairTable)
-        .values({ id: VAPID_KEY_PAIR_ID, ...pair })
-        .onConflictDoNothing(),
-  );
+  await getDatabase()
+    .insert(vapidKeyPairTable)
+    .values({ id: VAPID_KEY_PAIR_ID, ...pair })
+    .onConflictDoNothing();
 }

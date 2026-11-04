@@ -22,6 +22,7 @@ import {
 } from '../../../test/database-utils';
 import { createApp } from '../app';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
+import { CONFLICTED_WRITE_MAX_ATTEMPTS } from '../helpers/persistence/conflict-abort.core';
 import { deleteMemberWithLinks } from '../members/members.repository';
 import {
   assistantAuthorizationCodeTable,
@@ -571,7 +572,7 @@ describe('oauth controller (back-e2e)', () => {
     const code = await obtainCode(app, clientId, member);
     const removeSimulatedConflict = await abortCommitsWritingTable(
       'assistant_authorization_code',
-      1,
+      CONFLICTED_WRITE_MAX_ATTEMPTS,
     );
     try {
       const response = await exchangeCode(app, clientId, code);
@@ -603,7 +604,10 @@ describe('oauth controller (back-e2e)', () => {
     const member = await signInMember(app, 'Hugo');
     const clientId = await registerClient(app);
     const tokens = await issueTokens(app, clientId, member);
-    const removeSimulatedConflict = await abortCommitsWritingTable('assistant_grant', 1);
+    const removeSimulatedConflict = await abortCommitsWritingTable(
+      'assistant_grant',
+      CONFLICTED_WRITE_MAX_ATTEMPTS,
+    );
     try {
       const response = await refresh(app, clientId, tokens.refresh_token);
 

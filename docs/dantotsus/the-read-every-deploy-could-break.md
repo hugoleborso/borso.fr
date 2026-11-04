@@ -86,7 +86,9 @@ Caused by: PostgresError: schema has been updated by another transaction (OC001)
       Tests  1 failed (1)
 ```
 
-**Similar instances:** found with the loop below, which counts `.transaction(` calls against retry calls per file. Nine repositories wrap their transaction in `retryingConflictAborts`. `voting.repository.ts` and `mastery.repository.ts` wrap nothing, and the client now covers both. The nine repositories' own wrappers are now redundant, and a conflict there can run up to nine attempts. That is harmless, because each attempt is immediate. Removing them is a cleanup that changes no behaviour.
+**Similar instances:** found with the loop below, which counts `.transaction(` calls against retry calls per file. Nine repositories wrapped their transaction in `retryingConflictAborts`. `voting.repository.ts` and `mastery.repository.ts` wrapped nothing. Every per-call wrapper is now removed, eleven files in all, because the client retries each one. Nested inside the client, they had stretched a conflict to nine attempts.
+
+A real race keeps its outcome. A retried conditional claim, such as the OAuth code claim or the refresh rotation, sees the winner's commit, touches no row and answers `invalid_grant`. It never revokes the grant, because the replay verdict was computed before the claim.
 
 ```bash
 for f in $(grep -rln "\.transaction(" apps/pragma/api/src --include=*.ts | grep -v test); do echo "$(grep -c '\.transaction(' $f) $(grep -c retryingConflictAborts $f) $f"; done

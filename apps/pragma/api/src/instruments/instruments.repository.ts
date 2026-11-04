@@ -10,7 +10,6 @@ import {
 } from '@domain/instrument.core';
 import { type InstrumentId, type Lineup, withoutInstrument } from '@domain/lineup.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { memberInstrumentTable, memberTable } from '../members/members.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
@@ -69,7 +68,7 @@ function rowToInstrument(row: InstrumentRawRow): InstrumentRow {
 export async function runInOneInstrumentTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 function encodeFamily(family: InstrumentFamily): { family: string; isHarmonic: boolean } {

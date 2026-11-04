@@ -1,6 +1,5 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
@@ -56,7 +55,7 @@ function encodeUpdate(updates: SessionPersistedUpdate): SessionUpdateEncoded {
 async function runInOneSessionTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 export async function listSessions(): Promise<SessionRow[]> {
