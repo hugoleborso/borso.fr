@@ -18,7 +18,7 @@ afterEach(cleanup);
 describe('SongEnergyField', () => {
   it('shows the level the song stores', () => {
     render(<SongEnergyField baseEnergy={STORED_LEVEL} onChange={vi.fn()} />);
-    const meter = screen.getByRole('slider', { name: 'Base energy (1-10)' });
+    const meter = screen.getByRole('slider', { name: 'Base energy' });
     expect(meter.getAttribute('aria-valuenow')).toBe(String(STORED_LEVEL));
     expect(meter.getAttribute('aria-valuetext')).toBeNull();
   });

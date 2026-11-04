@@ -185,7 +185,7 @@ describe('song page', () => {
 
   it('saves the base energy the member sets on the Info tab', async () => {
     renderSongPage();
-    const meter = await screen.findByRole('slider', { name: 'Base energy (1-10)' });
+    const meter = await screen.findByRole('slider', { name: 'Base energy' });
     expect(meter.getAttribute('aria-valuetext')).toBe('Not set, showing 5');
 
     fireEvent.keyDown(meter, { key: 'ArrowRight' });
