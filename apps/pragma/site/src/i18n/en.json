@@ -691,6 +691,7 @@
     "addToProposal": "Add a song",
     "applyTarget": "Apply",
     "budgetExhausted": "No points left! Take a point off another song to give it here.",
+    "budgetSpent": "All your points are given. Take one off a song to give it elsewhere.",
     "budgetLabel": "Points left",
     "cardLabel": "Song to score",
     "closeAddLabel": "Songs left out",

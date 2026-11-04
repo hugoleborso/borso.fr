@@ -142,8 +142,8 @@ export function judgeStep(
   return { kind: 'score', points };
 }
 
-export function canStepUp(currentPoints: number): boolean {
-  return currentPoints < MAX_POINTS_PER_SONG;
+export function canStepUp(currentPoints: number, remainingPoints: number): boolean {
+  return currentPoints < MAX_POINTS_PER_SONG && remainingPoints > 0;
 }
 
 export function canStepDown(currentPoints: number): boolean {
@@ -242,8 +242,11 @@ export function selectSpentShare(total: number, remaining: number): number {
   return Math.min(spentShare, PERCENT);
 }
 
-export function isBudgetExhausted(remaining: number): boolean {
-  return remaining <= 0;
+export type BudgetNotice = 'none' | 'spent' | 'refused';
+
+export function selectBudgetNotice(remaining: number, wasRefused: boolean): BudgetNotice {
+  if (wasRefused) return 'refused';
+  return remaining <= 0 ? 'spent' : 'none';
 }
 
 export function readIntentPoints(intent: ReleaseIntent): number {

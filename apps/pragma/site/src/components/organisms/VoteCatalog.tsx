@@ -60,6 +60,7 @@ export function VoteCatalog({
             artist={song.artist}
             deezerAlbumId={song.deezerAlbumId}
             points={points}
+            remainingPoints={remainingPoints}
             isNew={isSongNewSinceLastScore(song, lastScoredAt, points)}
             onStep={(step: PointStep) => {
               const intent = judgeStep(points, remainingPoints, step);

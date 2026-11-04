@@ -13,6 +13,7 @@ export interface VoteCatalogRowProps {
   readonly artist: string;
   readonly deezerAlbumId: string | null;
   readonly points: number;
+  readonly remainingPoints: number;
   readonly isNew: boolean;
   readonly onStep: (step: PointStep) => void;
 }
@@ -23,6 +24,7 @@ export function VoteCatalogRow({
   artist,
   deezerAlbumId,
   points,
+  remainingPoints,
   isNew,
   onStep,
 }: VoteCatalogRowProps): JSX.Element {
@@ -47,7 +49,7 @@ export function VoteCatalogRow({
       <IconButton
         icon="plus"
         label={t('voting.addPoint', { title })}
-        disabled={!canStepUp(points)}
+        disabled={!canStepUp(points, remainingPoints)}
         onClick={() => onStep('up')}
       />
     </li>

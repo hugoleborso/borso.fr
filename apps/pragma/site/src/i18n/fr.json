@@ -691,6 +691,7 @@
     "addToProposal": "Ajouter une chanson",
     "applyTarget": "Appliquer",
     "budgetExhausted": "Plus de points ! Enlève un point à une autre chanson pour le donner ici.",
+    "budgetSpent": "Tous tes points sont donnés. Enlève-en un pour le donner ailleurs.",
     "budgetLabel": "Points restants",
     "cardLabel": "Chanson à noter",
     "closeAddLabel": "Chansons écartées",

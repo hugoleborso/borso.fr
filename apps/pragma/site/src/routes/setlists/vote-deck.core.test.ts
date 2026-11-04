@@ -7,7 +7,7 @@ import {
   readIntentPoints,
   selectCardRotation,
   selectDiscardTint,
-  isBudgetExhausted,
+  selectBudgetNotice,
   selectScoringTint,
   selectCardTransitionClass,
   selectOffsetFromOrigin,
@@ -195,10 +195,18 @@ describe('a budget the member has overspent', () => {
     expect(selectSpentShare(6, -1)).toBe(100);
   });
 
-  it('reads as exhausted at zero and below', () => {
-    expect(isBudgetExhausted(1)).toBe(false);
-    expect(isBudgetExhausted(0)).toBe(true);
-    expect(isBudgetExhausted(-1)).toBe(true);
+  it('says nothing while points are left', () => {
+    expect(selectBudgetNotice(1, false)).toBe('none');
+  });
+
+  it('reads a spent budget as a hint, at zero and below', () => {
+    expect(selectBudgetNotice(0, false)).toBe('spent');
+    expect(selectBudgetNotice(-1, false)).toBe('spent');
+  });
+
+  it('reads a refused score as a warning, whatever is left', () => {
+    expect(selectBudgetNotice(0, true)).toBe('refused');
+    expect(selectBudgetNotice(2, true)).toBe('refused');
   });
 });
 
@@ -296,8 +304,9 @@ describe('a step on a song in the catalogue', () => {
   });
 
   it('offers each step only where the scale allows it', () => {
-    expect(canStepUp(2)).toBe(true);
-    expect(canStepUp(3)).toBe(false);
+    expect(canStepUp(2, 1)).toBe(true);
+    expect(canStepUp(3, 1)).toBe(false);
+    expect(canStepUp(1, 0)).toBe(false);
     expect(canStepDown(1)).toBe(true);
     expect(canStepDown(0)).toBe(false);
   });
