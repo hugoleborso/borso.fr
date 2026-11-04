@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectErrorResponse } from './error-response.core';
+import { isUnexpectedFailure, selectErrorResponse } from './error-response.core';
 import { TalosError } from './talos-error.types';
 
 describe('selectErrorResponse', () => {
@@ -45,4 +45,17 @@ describe('selectErrorResponse for a framework refusal', () => {
     expect(selectErrorResponse({ status: 399 }).status).toBe(500);
     expect(selectErrorResponse({ status: 400.5 }).status).toBe(500);
   });
+});
+
+describe('isUnexpectedFailure', () => {
+  it('flags the answer to a failure no refusal names, which is the one worth reporting', () => {
+    expect(isUnexpectedFailure(selectErrorResponse(new Error('boom')))).toBe(true);
+  });
+
+  it.each([new TalosError('todo-not-found'), { status: 400 }])(
+    'leaves a named or client refusal unflagged: %o',
+    (failure) => {
+      expect(isUnexpectedFailure(selectErrorResponse(failure))).toBe(false);
+    },
+  );
 });
