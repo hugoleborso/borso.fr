@@ -11,10 +11,10 @@ const COVER_LIGHTNESS_PERCENT = 62;
 const HASH_SEED = 5_381;
 const HASH_SHIFT = 5;
 
-export function buildCoverArtUrl(deezerAlbumId: string | null): string | null {
-  if (deezerAlbumId === null) return null;
-  if (deezerAlbumId.trim() === '') return null;
-  return `${DEEZER_ALBUM_IMAGE_ORIGIN}/${encodeURIComponent(deezerAlbumId)}/image?size=${THUMBNAIL_SIZE}`;
+export function buildCoverArtUrl(deezerAlbumId: string | null | undefined): string | null {
+  const albumId = deezerAlbumId?.trim() ?? '';
+  if (albumId === '') return null;
+  return `${DEEZER_ALBUM_IMAGE_ORIGIN}/${encodeURIComponent(albumId)}/image?size=${THUMBNAIL_SIZE}`;
 }
 
 export function selectCoverInitials(title: string): string {

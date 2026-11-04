@@ -91,7 +91,9 @@ connection once. The OC001 code on a postgres.js error is inferred from
 pragma's OC000 handling; the message match covers the case where it is not.
 
 **Sibling defects swept:** pragma's own `conflict-abort.core.ts` retries OC000
-and 40001 only. It runs DML, which cannot meet OC001.
+and 40001 only. It runs DML, which cannot meet OC001. *Corrected 2026-11-04:
+wrong, any statement can meet OC001, and pragma's reads did on every deploy.
+See [`the-read-every-deploy-could-break.md`](./the-read-every-deploy-could-break.md).*
 
 ## See also
 

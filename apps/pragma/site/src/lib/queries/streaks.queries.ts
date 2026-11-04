@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { reportStreaksReadFailed } from '../../observability/error-reporting.adapter';
-import { ApiError, api } from '../api.client';
+import { ApiError, api, readErrorBody } from '../api.client';
 
 export const streakKeys = {
   all: ['streaks'] as const,
@@ -17,7 +17,13 @@ export function useStreaks() {
     queryKey: streakKeys.all,
     queryFn: async (): Promise<StreaksView> => {
       const response = await api.api.streaks.$get();
-      if (!response.ok) throw new ApiError(response.status, `streaks ${response.status}`, null);
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          `streaks ${response.status}`,
+          await readErrorBody(response),
+        );
+      }
       return await response.json();
     },
     meta: { reportFailure: reportStreaksReadFailed },

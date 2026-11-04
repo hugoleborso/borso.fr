@@ -10,6 +10,7 @@ import {
   useLocation,
   useNavigationType,
 } from 'react-router-dom';
+import { ApiError } from '../lib/api.client';
 import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
@@ -92,8 +93,15 @@ export function reportSetlistBatchAddFailed(setlistId: string): void {
 
 const STREAKS_READ_FAILED = 'StreaksReadFailed';
 
+const UNAUTHORIZED_STATUS = 401;
+
 export function reportStreaksReadFailed(error: Error): void {
-  Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED } });
+  if (!(error instanceof ApiError)) {
+    Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED } });
+    return;
+  }
+  if (error.status === UNAUTHORIZED_STATUS) return;
+  Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED, body: error.body } });
 }
 
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';

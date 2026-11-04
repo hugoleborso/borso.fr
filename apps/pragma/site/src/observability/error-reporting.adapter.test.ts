@@ -9,6 +9,7 @@ import {
   reportTakeUploadFailed,
   startErrorReporting,
 } from './error-reporting.adapter';
+import { ApiError } from '../lib/api.client';
 
 const ROUTER_TRACING = { name: 'reactRouterBrowserTracing' };
 
@@ -157,5 +158,19 @@ describe('flame read failures', () => {
     expect(sentry.captureException).toHaveBeenCalledWith(failure, {
       extra: { name: 'StreaksReadFailed' },
     });
+  });
+
+  it('carries the body the API answered so the refusal can be told apart', () => {
+    const failure = new ApiError(503, 'streaks 503', { error: 'auth-not-bootstrapped' });
+    reportStreaksReadFailed(failure);
+    expect(sentry.captureException).toHaveBeenCalledWith(failure, {
+      extra: { name: 'StreaksReadFailed', body: { error: 'auth-not-bootstrapped' } },
+    });
+  });
+
+  it('leaves out an ended session, which the session gate already handles', () => {
+    sentry.captureException.mockClear();
+    reportStreaksReadFailed(new ApiError(401, 'streaks 401', { error: 'session-required' }));
+    expect(sentry.captureException).not.toHaveBeenCalled();
   });
 });

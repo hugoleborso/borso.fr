@@ -14,6 +14,7 @@ describe('the address a cover is fetched from', () => {
 
   it('has no address for a song that names no album', () => {
     expect(buildCoverArtUrl(null)).toBeNull();
+    expect(buildCoverArtUrl(undefined)).toBeNull();
     expect(buildCoverArtUrl('')).toBeNull();
     expect(buildCoverArtUrl('   ')).toBeNull();
   });
