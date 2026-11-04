@@ -116,7 +116,7 @@ describe('SongEditForm', () => {
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Identity',
       'Music',
-      'Notes',
+      'Comments',
       'Lineup',
     ]);
   });

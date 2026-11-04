@@ -18,6 +18,7 @@ import {
 import {
   useReorderSetlist,
   useSetlistEntriesToReorder,
+  useUpdateSetlistEntry,
 } from '../../lib/queries/setlist-entries.queries';
 import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
@@ -44,7 +45,9 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const breaksFollowing = useBreaksFollowingEntries();
   const songsQuery = useSongsList();
   const reorder = useReorderSetlist();
+  const updateEntry = useUpdateSetlistEntry();
   const [hasReorderFailed, setHasReorderFailed] = useState(false);
+  const [hasEnergyFailed, setHasEnergyFailed] = useState(false);
   const setlistEntries = entriesQuery.data?.entries ?? NO_ROWS;
   const songsById = useMemo(
     () => Object.fromEntries((songsQuery.data?.songs ?? NO_ROWS).map((song) => [song.id, song])),
@@ -101,6 +104,14 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
           {t('setlist.failure.reorder')}
         </p>
       ) : null}
+      {hasEnergyFailed ? (
+        <p
+          className="m-0 mb-2 rounded-md bg-danger-soft px-3 py-2 text-meta text-danger"
+          role="alert"
+        >
+          {t('setlist.failure.update')}
+        </p>
+      ) : null}
       {copyOrder.feedback === null ? null : (
         <p
           role={copyOrder.feedback === 'copied' ? 'status' : 'alert'}
@@ -122,6 +133,13 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
               setHasReorderFailed(true),
             );
             reorder.mutate({ setlistId, entryIds: [...orderedIds] }, { onError: failReorder });
+          }}
+          onEnergyChange={(entryId, level) => {
+            setHasEnergyFailed(false);
+            updateEntry.mutate(
+              { setlistId, entryId, energy: level },
+              { onError: () => setHasEnergyFailed(true) },
+            );
           }}
         />
       )}

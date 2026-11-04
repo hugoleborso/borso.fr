@@ -209,7 +209,7 @@ export function SetlistEditor({
       knownMemberIds={knownMemberIds}
       lineupChangesByEntryId={lineupChangesByEntryId}
       onAddSongs={() => setPickerOpen(true)}
-      onOpen={(entryId) => setOpenEntry({ entryId, focus: 'note' })}
+      onOpen={(entryId) => setOpenEntry({ entryId, focus: 'info' })}
       onRemove={removeSetlistEntry}
       onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
       {...breakActions.listProps}
@@ -285,6 +285,7 @@ export function SetlistEditor({
             durationSeconds: openedSong.durationSeconds ?? null,
             baseEnergy: openedSong.baseEnergy ?? null,
             defaultLineup: openedSong.defaultLineup,
+            chart: openedSong.chart,
           }}
           position={openedIndex + 1}
           songCount={setlistEntries.length}

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { type OrderRow, SetlistOrderList } from './SetlistOrderList';
 
@@ -30,8 +30,12 @@ const ROWS: readonly OrderRow[] = [
   },
 ];
 
-function renderList(): void {
-  render(<SetlistOrderList rows={ROWS} onReorder={() => undefined} />);
+function renderList(
+  onEnergyChange: (rowId: string, level: number) => void = () => undefined,
+): void {
+  render(
+    <SetlistOrderList rows={ROWS} onReorder={() => undefined} onEnergyChange={onEnergyChange} />,
+  );
 }
 
 // @FollowsBlueprint test-component-render
@@ -56,12 +60,24 @@ describe('the Order list', () => {
     expect(document.querySelector('[data-energy-curve]')).not.toBeNull();
   });
 
-  it('gives every row a drag handle, its number, its five-step energy and its length', () => {
+  it('gives every row a drag handle, its number, its energy and its length', () => {
     renderList();
     expect(screen.getAllByRole('button', { name: 'Drag to reorder' })).toHaveLength(ROWS.length);
-    expect(screen.getByRole('img', { name: 'Energy 5 of 5' })).toBeTruthy();
+    expect(
+      screen
+        .getAllByRole('slider', { name: 'Energy' })
+        .map((meter) => meter.getAttribute('aria-valuenow')),
+    ).toEqual(['4', '9', '5']);
     expect(screen.getByText('4:17')).toBeTruthy();
     expect(screen.getByText('03')).toBeTruthy();
+  });
+
+  it('changes the energy of a song from its row', () => {
+    const onEnergyChange = vi.fn();
+    renderList(onEnergyChange);
+    const [firstMeter] = screen.getAllByRole('slider', { name: 'Energy' });
+    fireEvent.keyDown(firstMeter ?? document.body, { key: 'ArrowRight' });
+    expect(onEnergyChange).toHaveBeenCalledExactlyOnceWith('a', 5);
   });
 
   it('shows a break as a draggable row with no number, kept out of the curve and the total', () => {
@@ -77,7 +93,13 @@ describe('the Order list', () => {
       },
       ...ROWS.slice(1),
     ];
-    render(<SetlistOrderList rows={withBreak} onReorder={() => undefined} />);
+    render(
+      <SetlistOrderList
+        rows={withBreak}
+        onReorder={() => undefined}
+        onEnergyChange={() => undefined}
+      />,
+    );
     expect(screen.getByText('Intermission')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Drag to reorder' })).toHaveLength(4);
     expect(document.querySelectorAll('[data-energy-curve] > span')).toHaveLength(ROWS.length);

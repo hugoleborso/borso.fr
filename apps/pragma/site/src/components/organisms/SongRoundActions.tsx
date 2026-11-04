@@ -61,8 +61,8 @@ export function SongRoundActions({
       />
       <RoundAction
         kind="button"
-        icon="text"
-        label={t('catalog.notesTitle')}
+        icon="comment"
+        label={t('catalog.commentsTitle')}
         onPress={() => setIsNotesOpen(true)}
       />
       <RoundAction

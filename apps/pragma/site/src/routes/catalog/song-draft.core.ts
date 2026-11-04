@@ -68,7 +68,7 @@ export interface SongDraftState {
   origin: SongOrigin;
   tonalityStart: string;
   tonalityEnd: string;
-  baseEnergy: string;
+  baseEnergy: number | null;
   chartKind: SongChartKind;
   chordproText: string;
   pdfS3Key: string;
@@ -94,7 +94,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   origin: DEFAULT_SONG_ORIGIN,
   tonalityStart: '',
   tonalityEnd: '',
-  baseEnergy: '',
+  baseEnergy: null,
   chartKind: 'none',
   chordproText: '',
   pdfS3Key: '',
@@ -121,7 +121,7 @@ export function songFromApi(song: Song): SongDraftState {
     origin: song.origin,
     tonalityStart: song.tonalityStart ?? '',
     tonalityEnd: song.tonalityEnd ?? '',
-    baseEnergy: song.baseEnergy === null ? '' : String(song.baseEnergy),
+    baseEnergy: song.baseEnergy,
     chartKind: song.chart === null ? 'none' : song.chart.kind,
     chordproText: song.chart?.kind === 'chordpro' ? song.chart.text : '',
     pdfS3Key: song.chart?.kind === 'pdf' ? song.chart.s3Key : '',
@@ -177,7 +177,6 @@ export interface SongSavePayload {
 export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null {
   const titleTrimmed = draft.title.trim();
   if (titleTrimmed.length === 0) return null;
-  const baseEnergyValue = draft.baseEnergy.trim().length === 0 ? null : Number(draft.baseEnergy);
   const albumTrimmed = draft.album.trim();
   return {
     title: titleTrimmed,
@@ -186,7 +185,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     origin: draft.origin,
     tonalityStart: draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
     tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
-    baseEnergy: baseEnergyValue,
+    baseEnergy: draft.baseEnergy,
     chart: chartFromDraft(draft),
     links: draft.links,
     deezerTrackId: draft.deezerTrackId,

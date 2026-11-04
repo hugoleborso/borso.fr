@@ -30,7 +30,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'catalog.editSectionLineup',
     readsTheSameBecause: '"lineup" is the word French musicians use here',
   },
-  { key: 'catalog.editSectionNotes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.linkPlaceholder', readsTheSameBecause: 'a URL placeholder, not prose' },
   { key: 'catalog.listenDeezer', readsTheSameBecause: 'Deezer, a proper noun' },
   { key: 'catalog.listenSpotify', readsTheSameBecause: 'Spotify, a proper noun' },
@@ -41,8 +40,12 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: '"gimmick" is the word French musicians use here',
   },
   { key: 'catalog.notesStructure', readsTheSameBecause: 'same word, same spelling' },
-  { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
+  { key: 'catalog.viewTabInfo', readsTheSameBecause: '"info" is the word French users read here' },
+  {
+    key: 'catalog.viewTabLineup',
+    readsTheSameBecause: '"lineup" is the word French musicians use here',
+  },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'compos.lineup',
@@ -67,7 +70,11 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },
-  { key: 'sessions.practiceSongs.back', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'sessions.practiceSongs.concerts', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'sessions.practiceSongs.setlists',
+    readsTheSameBecause: 'same word, and French pluralises it the same way',
+  },
   { key: 'sessions.section.sessions', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'sessions.section.setlists',

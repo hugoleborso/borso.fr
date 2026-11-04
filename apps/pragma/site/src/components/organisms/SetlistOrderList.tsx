@@ -30,10 +30,9 @@ import {
   arrangeByIds,
   averageEnergy,
   buildEnergyBars,
-  ENERGY_METER_STEPS,
   projectOrder,
-  selectMeterStep,
 } from '../molecules/energy-curve.utils';
+import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import {
   describeTotalDuration,
   formatDuration,
@@ -63,6 +62,7 @@ export interface OrderRow {
 export interface SetlistOrderListProps {
   readonly rows: readonly OrderRow[];
   readonly onReorder: (orderedIds: readonly string[]) => void;
+  readonly onEnergyChange: (rowId: string, level: number) => void;
 }
 
 interface Lift {
@@ -71,7 +71,11 @@ interface Lift {
 }
 
 // @FollowsBlueprint organism-presentational
-export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JSX.Element {
+export function SetlistOrderList({
+  rows,
+  onReorder,
+  onEnergyChange,
+}: SetlistOrderListProps): JSX.Element {
   const { t } = useTranslation();
   const [isCurveShown, setIsCurveShown] = useState(true);
   const [lift, setLift] = useState<Lift | null>(null);
@@ -137,6 +141,7 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
                 row={row}
                 position={songRows.indexOf(row) + 1}
                 isLifted={lift?.liftedId === row.id}
+                onEnergyChange={(level) => onEnergyChange(row.id, level)}
               />
             ))}
           </ol>
@@ -150,15 +155,19 @@ interface SortableOrderRowProps {
   readonly row: OrderRow;
   readonly position: number;
   readonly isLifted: boolean;
+  readonly onEnergyChange: (level: number) => void;
 }
 
-function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): JSX.Element {
+function SortableOrderRow({
+  row,
+  position,
+  isLifted,
+  onEnergyChange,
+}: SortableOrderRowProps): JSX.Element {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: row.id,
   });
-  const [bar] = buildEnergyBars([row]);
-  const step = selectMeterStep(bar?.level ?? 0);
   const isBreak = isBreakLine(row);
   return (
     <li
@@ -188,7 +197,7 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
           </span>
         </>
       ) : (
-        <SongOrderCells row={row} position={position} step={step} />
+        <SongOrderCells row={row} position={position} onEnergyChange={onEnergyChange} />
       )}
     </li>
   );
@@ -197,32 +206,21 @@ function SortableOrderRow({ row, position, isLifted }: SortableOrderRowProps): J
 interface SongOrderCellsProps {
   readonly row: OrderRow;
   readonly position: number;
-  readonly step: number;
+  readonly onEnergyChange: (level: number) => void;
 }
 
-function SongOrderCells({ row, position, step }: SongOrderCellsProps): JSX.Element {
-  const { t } = useTranslation();
+function SongOrderCells({ row, position, onEnergyChange }: SongOrderCellsProps): JSX.Element {
   return (
     <>
       <span className="w-5 shrink-0 text-right font-mono text-label text-ink-faint">
         {String(position).padStart(POSITION_DIGITS, '0')}
       </span>
       <span className="min-w-0 flex-1 truncate font-display text-body text-ink">{row.title}</span>
-      <span
-        role="img"
-        aria-label={t('setlist.energyStep', { step })}
-        className="flex h-3 shrink-0 items-end gap-0.5"
-      >
-        {ENERGY_METER_STEPS.map((meterStep) => (
-          <span
-            key={meterStep}
-            className={composeClassName(
-              'w-1 rounded-sm',
-              meterStep <= step ? 'h-3 bg-ink-soft' : 'h-1.5 bg-rule-strong',
-            )}
-          />
-        ))}
-      </span>
+      <SetlistEntryEnergyField
+        entryEnergy={row.entryEnergy}
+        songEnergy={row.songEnergy}
+        onPublish={onEnergyChange}
+      />
       <span className="w-10 shrink-0 text-right font-mono text-meta text-ink-soft tabular-nums">
         {row.durationSeconds === null ? '' : formatDuration(row.durationSeconds)}
       </span>

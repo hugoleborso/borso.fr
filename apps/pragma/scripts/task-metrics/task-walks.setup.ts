@@ -98,7 +98,7 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
   await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
   await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
   walk.note(
-    'The new practice has no songs, so its bottom strip offers Choose songs: tick the concerts it prepares, then the songs of their setlists to work on.',
+    'The new practice has no songs, so its bottom strip offers Choose songs: tick the concerts and setlists it prepares, then the songs to work on.',
   );
   await walk.tap(
     'Choose songs',

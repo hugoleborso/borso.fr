@@ -19,7 +19,6 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 
 interface SongDetailSidebarProps {
   readonly lineupRows: readonly SongLineupRow[];
-  readonly baseEnergy: number | null;
 }
 
 const MASTERY_BAR_INDEXES = Array.from({ length: MASTERY_BAR_COUNT }, (_unused, index) => index);
@@ -86,15 +85,6 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
           ))}
         </div>
       </Card>
-
-      {props.baseEnergy === null ? null : (
-        <Card variant="flat" className="bg-sunk border-0">
-          <div className={composeClassName(LABEL_CLASS, 'mb-1.5')}>{t('catalog.baseEnergy')}</div>
-          <div className="font-mono text-meta text-ink">
-            {props.baseEnergy}/{MASTERY_BAR_COUNT}
-          </div>
-        </Card>
-      )}
     </aside>
   );
 }

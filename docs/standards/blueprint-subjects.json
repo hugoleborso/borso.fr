@@ -3234,7 +3234,8 @@
     "SongChartFields": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SongChartPreviews.tsx": {
-    "SongChartPreviews": "organism-query-owning"
+    "ChartPreviewCards": "organism-query-owning",
+    "SongChartPreviews": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SongChordPreview.tsx": {
     "SongChordPreview": "organism-presentational"

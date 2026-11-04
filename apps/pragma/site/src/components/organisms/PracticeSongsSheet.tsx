@@ -3,21 +3,25 @@
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { buildSetlistIndexRows } from '../../lib/setlist-index.core';
+import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSavePracticeSongs } from '../../lib/queries/practice-songs.queries';
-import { useSetlistsList } from '../../lib/queries/setlists.queries';
+import { type SetlistSummary, useSetlistsList } from '../../lib/queries/setlists.queries';
 import {
   listPickableConcerts,
+  listPickableSetlists,
   listPickableSongIds,
   type PooledSetlist,
   planPracticeSongsSave,
-  poolConcertSongIds,
+  poolPickedSongIds,
   togglePickedId,
 } from '../../routes/sessions/practice-songs.core';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { Icon, type IconName } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { CheckableRow } from '../molecules/CheckableRow';
+import { SectionTabs } from '../molecules/SectionTabs';
 import { Sheet } from '../molecules/Sheet';
 import type { PracticeListedSong } from './PracticeSongList';
 import type { PracticeSongs } from './practice-songs.hook';
@@ -38,7 +42,24 @@ export interface PracticeSongsSheetProps {
   readonly onClose: () => void;
 }
 
-type PracticeSongsStep = 'concerts' | 'songs';
+type PracticeSongsStep = 'sources' | 'songs';
+
+type SourceTab = 'concerts' | 'setlists';
+
+interface SourceTabView {
+  readonly label: string;
+  readonly icon: IconName;
+  readonly pickedCount: number;
+  readonly search: string;
+  readonly empty: string;
+  readonly rows: readonly JSX.Element[];
+}
+
+const SOURCE_TABS: readonly SourceTab[] = ['concerts', 'setlists'];
+
+function labelWithPickedCount(label: string, pickedCount: number): string {
+  return pickedCount === 0 ? label : `${label} (${pickedCount})`;
+}
 
 const NO_ROWS: readonly never[] = [];
 
@@ -47,13 +68,15 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
   const { t, i18n } = useTranslation();
   const setlistsQuery = useSetlistsList();
   const saveSongs = useSavePracticeSongs();
-  const [step, setStep] = useState<PracticeSongsStep>('concerts');
+  const [step, setStep] = useState<PracticeSongsStep>('sources');
   const [query, setQuery] = useState('');
   const { songIds: practiceSongIds, songsById, entriesBySetlistId } = props.practiceSongs;
   const preparedConcertId = props.practice.preparedConcertId ?? null;
   const [pickedConcertIds, setPickedConcertIds] = useState<readonly string[]>(
     preparedConcertId === null ? NO_ROWS : [preparedConcertId],
   );
+  const [sourceTab, setSourceTab] = useState<SourceTab>('concerts');
+  const [pickedSetlistIds, setPickedSetlistIds] = useState<readonly string[]>(NO_ROWS);
   const [tickedSongIds, setTickedSongIds] = useState<readonly string[]>(practiceSongIds);
 
   const dateOf = (concert: PracticeSongsConcert): string =>
@@ -63,13 +86,27 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
     query,
     (concert) => `${concert.venue ?? ''} ${dateOf(concert)}`,
   );
-  const pooledSongIds = poolConcertSongIds(pickedConcertIds, setlistsQuery.data?.setlists ?? []);
+  const allSetlists = setlistsQuery.data?.setlists ?? NO_ROWS;
+  const labelOfSetlist = (setlist: SetlistSummary): string =>
+    selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
+  const setlistOrder = buildSetlistIndexRows(allSetlists, props.sessions).map((row) => row.id);
+  const setlists = listPickableSetlists(
+    allSetlists,
+    setlistOrder,
+    props.practice.id,
+    query,
+    labelOfSetlist,
+  );
+  const pooledSongIds = poolPickedSongIds(
+    { concertIds: pickedConcertIds, setlistIds: pickedSetlistIds },
+    allSetlists,
+  );
   const songIds = listPickableSongIds(pooledSongIds, practiceSongIds).filter(
     (songId) => songsById[songId] !== undefined,
   );
   const title = t(
-    step === 'concerts'
-      ? 'sessions.practiceSongs.concertsTitle'
+    step === 'sources'
+      ? 'sessions.practiceSongs.sourcesTitle'
       : 'sessions.practiceSongs.songsTitle',
   );
 
@@ -89,20 +126,77 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
     );
   };
 
-  const concertsStep = {
+  const sourceTabs = {
+    concerts: {
+      label: t('sessions.practiceSongs.concerts'),
+      icon: 'audience',
+      pickedCount: pickedConcertIds.length,
+      search: t('sessions.practiceSongs.searchConcerts'),
+      empty: t('sessions.practiceSongs.noConcert'),
+      rows: concerts.map((concert) => (
+        <li key={concert.id}>
+          <CheckableRow
+            title={concert.venue ?? dateOf(concert)}
+            detail={dateOf(concert)}
+            leading={<Icon name="audience" className="shrink-0 text-accent" />}
+            isChecked={pickedConcertIds.includes(concert.id)}
+            isDisabled={false}
+            onToggle={() => setPickedConcertIds((picked) => togglePickedId(picked, concert.id))}
+          />
+        </li>
+      )),
+    },
+    setlists: {
+      label: t('sessions.practiceSongs.setlists'),
+      icon: 'setlist',
+      pickedCount: pickedSetlistIds.length,
+      search: t('sessions.practiceSongs.searchSetlists'),
+      empty: t('sessions.practiceSongs.noSetlist'),
+      rows: setlists.map((setlist) => (
+        <li key={setlist.id}>
+          <CheckableRow
+            title={labelOfSetlist(setlist)}
+            detail={t('setlist.songCount', { count: setlist.songCount })}
+            leading={<Icon name="setlist" className="shrink-0 text-accent" />}
+            isChecked={pickedSetlistIds.includes(setlist.id)}
+            isDisabled={false}
+            onToggle={() => setPickedSetlistIds((picked) => togglePickedId(picked, setlist.id))}
+          />
+        </li>
+      )),
+    },
+  } as const satisfies Readonly<Record<SourceTab, SourceTabView>>;
+  const shownSource = sourceTabs[sourceTab];
+
+  const sourcesStep = {
     subheader: (
-      <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft">
-          <Icon name="search" />
-        </span>
-        <Input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('sessions.practiceSongs.search')}
-          aria-label={t('sessions.practiceSongs.search')}
-          className="pl-9"
+      <div className="flex flex-col gap-2">
+        <SectionTabs
+          label={title}
+          tabs={SOURCE_TABS.map((tab) => ({
+            value: tab,
+            icon: sourceTabs[tab].icon,
+            label: labelWithPickedCount(sourceTabs[tab].label, sourceTabs[tab].pickedCount),
+          }))}
+          value={sourceTab}
+          onChange={(tab) => {
+            setSourceTab(tab);
+            setQuery('');
+          }}
         />
+        <div className="relative">
+          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft">
+            <Icon name="search" />
+          </span>
+          <Input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={shownSource.search}
+            aria-label={shownSource.search}
+            className="pl-9"
+          />
+        </div>
       </div>
     ),
     footer: (
@@ -111,23 +205,10 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
       </Button>
     ),
     body: (
-      <ul aria-label={title} className="m-0 flex list-none flex-col p-0">
-        {concerts.map((concert) => (
-          <li key={concert.id}>
-            <CheckableRow
-              title={concert.venue ?? dateOf(concert)}
-              detail={dateOf(concert)}
-              leading={<Icon name="audience" className="shrink-0 text-accent" />}
-              isChecked={pickedConcertIds.includes(concert.id)}
-              isDisabled={false}
-              onToggle={() => setPickedConcertIds((picked) => togglePickedId(picked, concert.id))}
-            />
-          </li>
-        ))}
-        {concerts.length === 0 ? (
-          <li className="px-1 py-4 text-meta text-ink-soft">
-            {t('sessions.practiceSongs.noConcert')}
-          </li>
+      <ul aria-label={shownSource.label} className="m-0 flex list-none flex-col p-0">
+        {shownSource.rows}
+        {shownSource.rows.length === 0 ? (
+          <li className="px-1 py-4 text-meta text-ink-soft">{shownSource.empty}</li>
         ) : null}
       </ul>
     ),
@@ -137,7 +218,7 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
     subheader: undefined,
     footer: (
       <>
-        <Button variant="secondary" icon="chevL" onClick={() => setStep('concerts')}>
+        <Button variant="secondary" icon="chevL" onClick={() => setStep('sources')}>
           {t('sessions.practiceSongs.back')}
         </Button>
         <Button
@@ -176,7 +257,7 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
       </ul>
     ),
   };
-  const shown = step === 'concerts' ? concertsStep : songsStep;
+  const shown = step === 'sources' ? sourcesStep : songsStep;
 
   return (
     <Sheet

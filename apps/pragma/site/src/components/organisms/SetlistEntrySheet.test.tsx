@@ -36,6 +36,7 @@ function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEnt
       durationSeconds: 245,
       baseEnergy: 3,
       defaultLineup: { tom: ['bass'] },
+      chart: null,
     },
     position: 2,
     songCount: 20,
@@ -47,7 +48,7 @@ function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEnt
       { id: 'bass', name: 'Bass', icon: 'bass', position: 1 },
       { id: 'guitar', name: 'Guitar', icon: 'guitar', position: 2 },
     ],
-    focus: 'note',
+    focus: 'info',
     onSave: async () => ({}),
     onUpdate: () => undefined,
     onSaveSongLineup: () => undefined,
@@ -86,13 +87,28 @@ describe('the entry sheet', () => {
     );
   });
 
-  it('puts the focus in the note field, never on Close', () => {
+  it('opens on the Info tab without focusing a text field, so no keyboard opens', () => {
     renderSheet(buildProps());
-    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Notes' }));
+    expect(screen.getByRole('tab', { name: 'Info' }).getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(screen.getByRole('tabpanel'));
   });
 
-  it('puts the focus on the lineup when it was opened from the Lineup grid', () => {
+  it('shows the same tabs as the song page, with the chart and the takes', () => {
+    renderSheet(buildProps());
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Info',
+      'Lineup',
+      'Chords',
+      'Takes',
+    ]);
+    fireEvent.click(screen.getByRole('tab', { name: 'Chords' }));
+    expect(screen.getByText('No chord chart for this song yet.')).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: 'Notes' })).toBeNull();
+  });
+
+  it('opens on the Lineup tab, focused on the lineup, when opened from the Lineup grid', () => {
     renderSheet(buildProps({ focus: 'lineup' }));
+    expect(screen.getByRole('tab', { name: 'Lineup' }).getAttribute('aria-selected')).toBe('true');
     expect(document.activeElement?.textContent).toBe('Bass');
   });
 
@@ -157,7 +173,12 @@ describe('the entry sheet', () => {
 
   it('changes tonight’s lineup inline and resets it to the song’s lineup', () => {
     const onUpdate = vi.fn();
-    renderSheet(buildProps({ onUpdate }));
+    renderSheet(
+      buildProps({
+        focus: 'lineup',
+        onUpdate,
+      }),
+    );
     const leaChips = screen.getByRole('group', { name: 'Léa — Instruments' });
     fireEvent.click(Array.from(leaChips.querySelectorAll('button'))[1] ?? leaChips);
     expect(onUpdate).toHaveBeenCalledWith('entry-1', {
@@ -170,6 +191,7 @@ describe('the entry sheet', () => {
     const onUpdate = vi.fn();
     renderSheet(
       buildProps({
+        focus: 'lineup',
         onUpdate,
         entry: { ...buildProps().entry, lineupOverride: { tom: ['guitar'] } },
       }),
@@ -182,7 +204,11 @@ describe('the entry sheet', () => {
   it('gives a song with no lineup its first lineup as the song’s own', () => {
     const onSaveSongLineup = vi.fn();
     renderSheet(
-      buildProps({ onSaveSongLineup, song: { ...buildProps().song, defaultLineup: {} } }),
+      buildProps({
+        focus: 'lineup',
+        onSaveSongLineup,
+        song: { ...buildProps().song, defaultLineup: {} },
+      }),
     );
     const tomChips = screen.getByRole('group', { name: 'Tom — Instruments' });
     fireEvent.click(Array.from(tomChips.querySelectorAll('button'))[0] ?? tomChips);
@@ -191,7 +217,12 @@ describe('the entry sheet', () => {
 
   it('clears the override when the last instrument is taken off', () => {
     const onUpdate = vi.fn();
-    renderSheet(buildProps({ onUpdate }));
+    renderSheet(
+      buildProps({
+        focus: 'lineup',
+        onUpdate,
+      }),
+    );
     const tomChips = screen.getByRole('group', { name: 'Tom — Instruments' });
     fireEvent.click(Array.from(tomChips.querySelectorAll('button'))[0] ?? tomChips);
     expect(onUpdate).toHaveBeenCalledWith('entry-1', { lineupOverride: null });
@@ -210,7 +241,7 @@ describe('the entry sheet', () => {
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
   });
 
-  it('offers tonight’s energy level until the Order screen takes it', () => {
+  it('offers tonight’s energy level on the Info tab', () => {
     renderSheet(buildProps());
     expect(screen.getByRole('slider', { name: 'Energy' })).toBeTruthy();
   });
