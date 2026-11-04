@@ -72,6 +72,15 @@ if grep -qE '(^|[[:space:]])(HUSKY=0[[:space:]]+)?git[[:space:]]+(commit|push)([
 fi
 
 # A pipeline already made safe by an explicit `pipefail` keeps the real status.
+if grep -qE '(^|[|[:space:]])git[[:space:]]+(push|commit)([[:space:]][^|]*)?>[[:space:]]*/dev/null' <<<"$PIPELINES"; then
+  echo "[no-swallowed-push] git's errors and every pre-commit or pre-push refusal go to stderr, and" >&2
+  echo "[no-swallowed-push] /dev/null throws them away; a command after ; then sets the exit status too." >&2
+  echo "[no-swallowed-push] Keep the output where you can read it:" >&2
+  echo "[no-swallowed-push]   git push -u origin <branch> > push.log 2>&1; echo \"push=\$?\"; tail -20 push.log" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "sent git push or git commit errors to /dev/null"
+  exit 2
+fi
+
 if grep -qE 'set -[a-zA-Z]*o[[:space:]]+pipefail|set -o pipefail' <<<"$COMMAND_TO_RUN"; then
   exit 0
 fi

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   countable,
   readDeletedPlaceholders,
+  readLongLinkTargets,
   readSiteHostApiAddresses,
   isSeparatorRow,
   LIMITS,
@@ -190,6 +191,17 @@ describe('readDeletedPlaceholders', () => {
   });
 });
 
+describe('readLongLinkTargets', () => {
+  it('returns a link target of 150 characters or more', () => {
+    const target = `https://example.com/${'a'.repeat(130)}`;
+    expect(readLongLinkTargets(`see [x](${target})`)).toEqual([target]);
+  });
+
+  it('returns nothing for a target one character under the limit', () => {
+    expect(readLongLinkTargets(`see [x](https://e.co/${'a'.repeat(136)})`)).toEqual([]);
+  });
+});
+
 describe('readSiteHostApiAddresses', () => {
   it('finds the MCP address written on the preview site host', () => {
     expect(
@@ -229,6 +241,15 @@ describe('readSiteHostApiAddresses', () => {
 describe('validateBody', () => {
   it('passes a minimal draft', () => {
     expect(validateBody(MINIMAL)).toEqual([]);
+  });
+
+  it('flags a link target long enough to come back wrapped in backticks', () => {
+    const violations = validateBody(`${MINIMAL}\n\n[x](https://example.com/${'a'.repeat(140)})`);
+    expect(violations).toContainEqual({
+      where: 'Body',
+      problem:
+        'a link target of 160 characters comes back wrapped in backticks; link through /blob/main/ or write the bare URL',
+    });
   });
 
   it('refuses a draft with no title', () => {
