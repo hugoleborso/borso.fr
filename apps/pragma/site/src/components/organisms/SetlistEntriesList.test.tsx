@@ -1,7 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistEntriesList, type SetlistEntriesListProps } from './SetlistEntriesList';
 import type { TransitionView } from './transition-view.core';
 
@@ -60,7 +59,6 @@ function countTransitionStrips(): number {
 describe('the setlist entries list', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubSheetDialog();
   });
 
   afterEach(() => {

@@ -1,6 +1,6 @@
 /** @Feature takes */
 
-import { type SyntheticEvent, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { recordTakeBreadcrumb } from '../../observability/error-reporting.adapter';
 import { readBrowserRecorderEnvironment, startRecording } from '../../lib/recorder.adapter';
 import type { ActiveRecording, RecordingOutcome } from '../../lib/recorder.core';
@@ -29,7 +29,6 @@ export interface RecordingSheetController {
   readonly start: (subject: RecordingSubject) => Promise<void>;
   readonly stop: () => Promise<void>;
   readonly close: () => void;
-  readonly refuseCancelWhileBusy: (event: SyntheticEvent<HTMLDialogElement>) => void;
   readonly uploadInstead: () => void;
   readonly closeUpload: () => void;
 }
@@ -106,9 +105,6 @@ export function useRecordingSheet(): RecordingSheetController {
       const { download } = view;
       if (download !== null) URL.revokeObjectURL(download.url);
       setPhase(CLOSED);
-    },
-    refuseCancelWhileBusy: (event) => {
-      if (view.isBusy) event.preventDefault();
     },
     uploadInstead: () => {
       setPhase(CLOSED);

@@ -26,6 +26,14 @@ close some doors before the trade-off begins. Cite docs/spec.md and
 plan.md if the ADR was triggered by a planning row. No solution
 language in this section — just the question.}}
 
+## Criteria
+
+| Criterion | Raised by | Weight | Why it matters | How it is measured |
+|---|---|---|---|---|
+| Does it change the app for its users | operator | high \| medium \| low | {{what a user sees or does differently}} | {{the render, the run or the number that shows it}} |
+| {{criterion 2}} | operator \| author | high \| medium \| low | {{one-line tie to the framing}} | {{...}} |
+| {{criterion 3}} | operator \| author | high \| medium \| low | {{...}} | {{...}} |
+
 ## Decision
 
 **{{Chosen option name}}.** {{One paragraph. The chosen option's
@@ -73,14 +81,7 @@ below.}}
 - **Costs:** {{...}}
 - **Rejection rationale:** {{...}}
 
-## Evaluation rubric
-
-| Criterion | Weight | Why it matters |
-|---|---|---|
-| {{criterion 1}} | high \| medium \| low | {{one-line tie to the spec, the
-operational reality, or a prior ADR / Dantotsu}} |
-| {{criterion 2}} | high \| medium \| low | {{...}} |
-| {{criterion 3}} | high \| medium \| low | {{...}} |
+## Scores
 
 |             | Option A | Option B | Option C |
 |---|---|---|---|

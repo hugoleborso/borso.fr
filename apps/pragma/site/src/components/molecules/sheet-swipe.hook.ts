@@ -9,45 +9,46 @@ export interface SheetSwipeHandlers {
 }
 
 interface SwipeInProgress {
-  readonly dialog: HTMLDialogElement;
+  readonly sheet: HTMLElement;
   readonly startY: number;
   distancePx: number;
 }
 
 const TRANSITION_OFF = 'none';
+const SHEET_SELECTOR = '[data-sheet]';
 
-function releaseDialog(dialog: HTMLDialogElement): void {
-  dialog.style.removeProperty('transition');
-  dialog.style.removeProperty('transform');
+function releaseSheet(sheet: HTMLElement): void {
+  sheet.style.removeProperty('transition');
+  sheet.style.removeProperty('transform');
 }
 
 // @FollowsBlueprint hook-timer-owned-by-handlers
-export function useSheetSwipe(isClosable: boolean): SheetSwipeHandlers {
+export function useSheetSwipe(isClosable: boolean, onClose: () => void): SheetSwipeHandlers {
   const swipe = useRef<SwipeInProgress | null>(null);
 
   const endSwipe = (isClosingAllowed: boolean): void => {
     const ended = swipe.current;
     swipe.current = null;
     if (ended === null) return;
-    releaseDialog(ended.dialog);
+    releaseSheet(ended.sheet);
     const isClosing = isClosingAllowed && shouldCloseAfterSwipe(ended.distancePx);
-    if (isClosing) ended.dialog.close();
+    if (isClosing) onClose();
   };
 
   return {
     onTouchStart: (event) => {
       const touch = event.touches[0];
-      const dialog = event.currentTarget.closest('dialog');
-      if (!isClosable || touch === undefined || dialog === null) return;
-      dialog.style.setProperty('transition', TRANSITION_OFF);
-      swipe.current = { dialog, startY: touch.clientY, distancePx: 0 };
+      const sheet = event.currentTarget.closest<HTMLElement>(SHEET_SELECTOR);
+      if (!isClosable || touch === undefined || sheet === null) return;
+      sheet.style.setProperty('transition', TRANSITION_OFF);
+      swipe.current = { sheet, startY: touch.clientY, distancePx: 0 };
     },
     onTouchMove: (event) => {
       const touch = event.touches[0];
       const current = swipe.current;
       if (current === null || touch === undefined) return;
       current.distancePx = followSwipeDown(current.startY, touch.clientY);
-      current.dialog.style.setProperty('transform', `translateY(${current.distancePx}px)`);
+      current.sheet.style.setProperty('transform', `translateY(${current.distancePx}px)`);
     },
     onTouchEnd: () => endSwipe(true),
     onTouchCancel: () => endSwipe(false),

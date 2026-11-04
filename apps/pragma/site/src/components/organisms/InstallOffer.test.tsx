@@ -7,14 +7,11 @@ import {
   INSTALL_BANNER_DISMISSED_KEY,
 } from '../../lib/install-prompt.adapter';
 import { InstallOffer } from './InstallOffer';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
-stubSheetDialog();
 
 const IPHONE_SAFARI =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
@@ -94,21 +91,20 @@ describe('InstallOffer', () => {
     renderOffer();
     expect(container.textContent).toContain(BANNER_TEXT);
     act(() => findButton('Show me')?.click());
-    const dialog = container.querySelector('dialog');
-    expect(dialog?.hasAttribute('open')).toBe(true);
+    const dialog = document.querySelector('[role=dialog]');
     expect(dialog?.textContent).toContain('In Safari, tap Share.');
     expect(dialog?.textContent).toContain('Tap Add. pragma is now on your home screen.');
     expect(dialog?.textContent).not.toContain('open it in Safari');
     expect(findButton('Install')).toBeNull();
     act(() => findButton('Close')?.click());
-    expect(container.querySelector('dialog')).toBeNull();
+    expect(document.querySelector('[role=dialog]')).toBeNull();
   });
 
   it('starts another iOS browser with opening the page in Safari', () => {
     stubDevice(IPHONE_CHROME);
     renderOffer();
     act(() => findButton('Show me')?.click());
-    expect(container.querySelector('dialog')?.textContent).toContain('open it in Safari');
+    expect(document.querySelector('[role=dialog]')?.textContent).toContain('open it in Safari');
   });
 
   it('shows nothing on a desktop browser or in the installed app', () => {
@@ -146,7 +142,7 @@ describe('InstallOffer', () => {
     stubDevice(ANDROID_CHROME);
     renderOffer();
     act(() => findButton('Show me')?.click());
-    expect(container.querySelector('dialog')?.textContent).toContain('In Chrome, tap ⋮');
+    expect(document.querySelector('[role=dialog]')?.textContent).toContain('In Chrome, tap ⋮');
     expect(findButton('Install')).toBeNull();
     const deferred = new FakeInstallPromptEvent('accepted');
     act(() => {
@@ -172,7 +168,7 @@ describe('InstallOffer', () => {
       findButton('Install')?.click();
       await deferred.userChoice;
     });
-    expect(container.querySelector('dialog')).toBeNull();
+    expect(document.querySelector('[role=dialog]')).toBeNull();
     expect(container.textContent).toContain(BANNER_TEXT);
   });
 });

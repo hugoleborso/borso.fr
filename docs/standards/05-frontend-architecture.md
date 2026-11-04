@@ -152,6 +152,51 @@ with no visible affordance, a licence attribution, an error.
 </Button>
 ```
 
+## Interactive primitives come from React Aria
+
+pragma's interactive primitives wrap React Aria Components
+([ADR-202611031438](../adr/202611031438-pragma-interactive-primitives-come-from-react-aria-components.md)).
+The library owns the behaviour: dismissal, focus, keyboard and press handling.
+pragma's Tailwind classes own the look, set on each part through `className`,
+so a migrated primitive draws the same pixels as the one it replaced.
+
+| Primitive | React Aria parts |
+| --- | --- |
+| `Menu` | `MenuTrigger`, `Popover`, `Menu`, `MenuItem` |
+| `Sheet`, `ConfirmDialog` | `ModalOverlay`, `Modal`, `Dialog` (`alertdialog` for a confirmation) |
+| `SectionTabs` | `Tabs`, `TabList`, `Tab`, with manual activation |
+| `Chip` and `RoundAction` when they toggle | `ToggleButton` |
+| `FilterPillGroup`, `InstrumentIconPicker` | `ToggleButtonGroup` |
+| `CheckableRow` | `CheckboxField`, `CheckboxButton` |
+| `SegmentedChoice` | `RadioGroup`, `RadioField`, `RadioButton` |
+| `ScoreInput` | `NumberField` |
+| `BarPlaceSearch`, `SuggestSongField` | `Autocomplete`, `SearchField`, `ListBox` |
+| `FileDropZone` | `DropZone`, `FileTrigger` |
+
+These stay hand-written, because the library would change what the band sees
+or how a gesture behaves:
+
+- `EnumSelectField` keeps the native `<select>` and the phone's own picker.
+- `EnergyMeter` keeps its relative slide of 32 px per level. React Aria's
+  `Slider` maps the pointer to an absolute spot on the track and writes on
+  `pointerdown`, the defect of
+  [the energy bar dantotsu](../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md).
+- `PickableSongRow` keeps focus in the song search. React Aria's checkbox
+  focuses its own input on every press, which closes the phone keyboard.
+- `TaskRow` keeps the platform's native checkbox, which React Aria hides.
+- `TransposeStepper` keeps a plain readout between its two buttons.
+  `NumberField` makes the value an input that takes focus on a tap.
+- `Input` and `LabelledField` stay native. `TextField` changes the value and
+  change callback every caller passes, for the same pixels.
+- `UndoSnackbar` waits for React Aria's toast to leave `UNSTABLE_`.
+
+A React Aria `Button` drops `title`. A primitive that needs the tooltip passes
+`render` and returns its own `<button>`, which is why `Menu` and `Chip` stay on
+the raw-button list. Style a pressed, selected or focused state with React
+Aria's `data-pressed`, `data-selected` or `data-focus-visible`, not `:active`
+or `:focus-visible`: a press focuses a hidden input programmatically, and the
+browser then shows a keyboard ring after a tap.
+
 ## Enforced by
 
 - `oxlint:borso/atomic-design-import-direction` fails when an atom imports from
@@ -169,10 +214,13 @@ with no visible affordance, a licence attribution, an error.
 - `oxlint:borso/no-query-hooks-outside-organisms` rejects `useQuery` and
   `useMutation` in `atoms/` and `molecules/`.
 - `oxlint:borso/no-raw-interactive-element (pragma/site)` rejects a `<button>`
-  outside `Button`, `IconButton`, `Chip`, `ListRow`, `SectionTabs` and `Menu`,
-  and a `<dialog>` outside `Sheet`. A raw element draws a control the design
-  system does not know: no icon, no tap target, no variant, and a dialog with
-  its own close button, scroll area and focus.
+  outside `Button`, `IconButton`, `RoundAction`, `Chip`, `ListRow` and `Menu`,
+  any `<dialog>`, and an import of React Aria's `Dialog`, `Modal`,
+  `ModalOverlay`, `Popover` or `Sheet` parts outside `Sheet` and `Menu`. A raw
+  element draws a control the design system does not know: no icon, no tap
+  target, no variant, and a dialog with its own close button, scroll area and
+  focus. The two full-screen scene views keep a native `<dialog>` on a
+  line-level exception.
 - `script:scripts/check-pwa-assets.sh` fails a manifest naming an icon that does
   not ship, which otherwise installs a grey square while every other gate passes.
 - `reviewer` checks that a route composes organisms and owns no layout

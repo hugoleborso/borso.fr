@@ -14,7 +14,7 @@ import { TransitionCommentModal } from './TransitionCommentModal';
 vi.mock('../../observability/product-event.adapter', () => ({
   recordProductEvent: vi.fn(),
 }));
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
+import { tapSheetScrim } from '../molecules/sheet.test-utils';
 
 const SONG_A = 'superstition';
 const DRAFT = 'Enchainer sans pause';
@@ -41,7 +41,6 @@ describe('a transition comment draft', () => {
   const savedComments: string[] = [];
 
   beforeEach(() => {
-    stubSheetDialog();
     savedComments.length = 0;
     stub = stubFetch(async (request) => {
       if (request.method === 'PUT') {
@@ -68,7 +67,7 @@ describe('a transition comment draft', () => {
   it('is kept after a click on the backdrop and shown on reopening', async () => {
     const first = renderModal('valerie');
     fireEvent.change(await screen.findByRole('textbox'), { target: { value: DRAFT } });
-    fireEvent.click(screen.getByRole('dialog'));
+    tapSheetScrim();
     expect(first.onClose).toHaveBeenCalled();
     first.unmount();
     renderModal('valerie', first.queryClient);

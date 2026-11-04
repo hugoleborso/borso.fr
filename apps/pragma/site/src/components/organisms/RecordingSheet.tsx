@@ -90,7 +90,6 @@ export function RecordingSheetDialogs({
           isDismissible={false}
           isTitleARecordName
           isCloseDisabled={view.isBusy}
-          onCancel={controller.refuseCancelWhileBusy}
           onClose={controller.close}
           footer={
             <>

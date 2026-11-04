@@ -231,6 +231,7 @@ decision.
 - [`debug-client-state-reverts-in-the-browser-first.md`](./debug-client-state-reverts-in-the-browser-first.md) — when the server is right but the UI reverts, reproduce in a real browser and diff the write's request body against the next read's response *before* theorizing; don't ship a fix you never watched fail then pass.
 - [`a-debounce-that-outlives-its-test-file.md`](./a-debounce-that-outlives-its-test-file.md) — a debounce timer still pending when a jsdom test file ends fires after teardown and fails with `window is not defined`, only under the load of the full gate; fake `setTimeout` in that file and clear timers after each test.
 - [`invalidatequeries-only-refetches-mounted-queries.md`](./invalidatequeries-only-refetches-mounted-queries.md) — `invalidateQueries` refetches active queries only, so a probe component that mounts the mutation without the read issues no request and passes against the invalidation bug it was written to catch. Two tests did.
+- [`persist-query-client-provider-awaits-on-success.md`](./persist-query-client-provider-awaits-on-success.md) — `PersistQueryClientProvider` awaits a promise returned by `onSuccess` before it stops restoring, so fire a prefetch from it and return nothing. TanStack 5.102.8 also deprecates `ensureQueryData` and `prefetchQuery`.
 
 ### last-loop-lepin app domain
 

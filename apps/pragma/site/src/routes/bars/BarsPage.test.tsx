@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
   createIsolatedQueryClient,
   type FetchStub,
@@ -47,7 +46,6 @@ describe('the bars page', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    stubSheetDialog();
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: false,
       media: query,

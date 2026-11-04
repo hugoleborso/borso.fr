@@ -1,19 +1,16 @@
-import type { JSX, MouseEvent, WheelEvent } from 'react';
+import type { JSX, MouseEvent } from 'react';
+import { Input, NumberField } from 'react-aria-components';
+import { toScoreEditText } from './score-input.utils';
 
 const SCORE_INPUT_CLASS =
   'w-11 min-h-11 appearance-none text-center bg-raised border border-rule-strong rounded-sm text-body py-1 ' +
-  'outline-none focus:border-accent font-mono [&::-webkit-inner-spin-button]:appearance-none ' +
-  '[&::-webkit-outer-spin-button]:appearance-none';
-
-// @FollowsBlueprint component-lookup-table
-const STEP_BY_SCROLLED_UP: Readonly<Record<`${boolean}`, number>> = { true: 1, false: -1 };
+  'outline-none focus:border-accent font-mono';
 
 interface ScoreInputProps {
   readonly value: number | null;
   readonly minimum: number;
   readonly maximum: number;
   readonly label: string;
-  readonly onStep: (step: number) => void;
   readonly onEdit: (rawValue: string) => void;
   readonly onClear: () => void;
 }
@@ -24,33 +21,27 @@ export function ScoreInput({
   minimum,
   maximum,
   label,
-  onStep,
   onEdit,
   onClear,
 }: ScoreInputProps): JSX.Element {
-  function stepOnWheel(event: WheelEvent<HTMLInputElement>): void {
-    event.preventDefault();
-    onStep(STEP_BY_SCROLLED_UP[`${event.deltaY < 0}`]);
-  }
-
   function clearOnContextMenu(event: MouseEvent<HTMLInputElement>): void {
     event.preventDefault();
     onClear();
   }
 
+  function commit(committedScore: number): void {
+    onEdit(toScoreEditText(committedScore));
+  }
+
   return (
-    <input
-      type="number"
-      min={minimum}
-      max={maximum}
-      value={value ?? ''}
+    <NumberField
       aria-label={label}
-      className={SCORE_INPUT_CLASS}
-      onWheel={stepOnWheel}
-      onContextMenu={clearOnContextMenu}
-      onChange={(event) => {
-        onEdit(event.target.value);
-      }}
-    />
+      value={value ?? Number.NaN}
+      minValue={minimum}
+      maxValue={maximum}
+      onChange={commit}
+    >
+      <Input className={SCORE_INPUT_CLASS} onContextMenu={clearOnContextMenu} />
+    </NumberField>
   );
 }

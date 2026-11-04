@@ -41,7 +41,7 @@ What problem is being solved, what observable forces are pushing on it, what con
 
 ### 3. Decision
 
-**One paragraph.** The chosen option named, with the one-line "why this over the rest" summary. Detail lives in the *Alternatives* + *Evaluation rubric* sections — don't repeat it here.
+**One paragraph.** The chosen option named, with the one-line "why this over the rest" summary. Detail lives in the *Alternatives* + *Criteria* and *Scores* sections — don't repeat it here.
 
 ### 4. Consequences
 
@@ -80,16 +80,18 @@ answer was that the feature degrades to a search link and nothing breaks. Name
 the option, score it, and let it lose on the rubric if it loses. See
 [`docs/dantotsus/an-adr-that-never-listed-doing-nothing.md`](../../../../docs/dantotsus/an-adr-that-never-listed-doing-nothing.md).
 
-### 6. Evaluation rubric
+### 6. Criteria, then scores
 
-A table mapping each criterion to a weight and a justification.
+`## Criteria` comes right after *Context*, before *Decision* and before any option, because criteria listed after the choice justify it rather than test it. Each row names who raised it, `operator` or `author`. At least one row is the operator's, asked in round 2 of the skill, never guessed. One row is always *Does it change the app for its users*, measured with a render, a run or a number. For a library that replaces hand-written code, one row is its *coverage*: how many of the pieces it would replace it actually provides, counted from its exports. `scripts/check-adr-criteria.sh` refuses an ADR from 202611031438 on that lacks the section, the column or an operator row. ADR-202611031438 was first written with author-picked criteria at the bottom, and the operator named the two that mattered.
+
+The criteria table carries a weight, a justification and how each is measured. The *Scores* section, after *Alternatives considered*, holds the matrix.
 
 ```markdown
-| Criterion | Weight | Why it matters |
-|---|---|---|
-| Operational cost ($/month at PR scale) | high | The race runs once a year; idle cost dominates. |
-| Time-to-recovery on failure | medium | DSQL is regional only — outages are rare but long. |
-| Schema-tooling familiarity | low | The author already drives drizzle daily. |
+| Criterion | Raised by | Weight | Why it matters | How it is measured |
+|---|---|---|---|---|
+| Operational cost ($/month at PR scale) | operator | high | The race runs once a year; idle cost dominates. | AWS pricing page, read |
+| Time-to-recovery on failure | author | medium | DSQL is regional only — outages are rare but long. | vendor SLA |
+| Schema-tooling familiarity | author | low | The author already drives drizzle daily. | none needed |
 ```
 
 Then a comparison matrix:

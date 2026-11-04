@@ -323,6 +323,7 @@ run_check coupled-lists \
 run_check numbered-sequences '^. (apps/[^/]+/api/src/database/migrations/|docs/adr/)' \
   scripts/check-numbered-sequences.sh
 run_check adr-numbers-resolve '^. docs/adr/' scripts/check-adr-numbers-resolve.sh
+run_check adr-criteria '^. docs/adr/' scripts/check-adr-criteria.sh
 
 # No instruction surface tells an agent to run a command this repository does
 # not have, and no path one names is missing. Rung-2 eradications of

@@ -1,18 +1,13 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
 import { BAND_CALENDAR_ID, bandCalendarSubscribeAddress } from '../../lib/band-calendar.utils';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { BandCalendarSubscription } from './BandCalendarSubscription';
 
 const SUBSCRIBE_ADDRESS = bandCalendarSubscribeAddress(BAND_CALENDAR_ID);
 
 // @FollowsBlueprint test-component-render
 describe('BandCalendarSubscription', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });

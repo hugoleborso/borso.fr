@@ -63,7 +63,7 @@ describe('MasteryMatrix', () => {
     await waitFor(() => expect(screen.getByLabelText('Ada Bass')).toHaveProperty('value', '4'));
     const bassRow = screen.getByRole('rowheader', { name: /Bass/ }).closest('tr');
     expect(bassRow?.textContent).toContain('2.5');
-    expect(within(present(bassRow)).getAllByRole('spinbutton')).toHaveLength(MEMBERS.length);
+    expect(within(present(bassRow)).getAllByRole('textbox')).toHaveLength(MEMBERS.length);
   });
 
   it('closes on each member average in the footer', async () => {

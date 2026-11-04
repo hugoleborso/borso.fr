@@ -9,7 +9,6 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import { SessionDetailPage } from './SessionDetailPage';
 
 const CONCERT = {
@@ -66,13 +65,17 @@ function renderSessionPage(): void {
   );
 }
 
+function readCheckboxLabel(checkbox: HTMLElement): string {
+  if (!(checkbox instanceof HTMLInputElement)) return checkbox.textContent;
+  return checkbox.labels?.[0]?.textContent ?? '';
+}
+
 // @FollowsBlueprint test-component-render
 describe('the concert page', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
     sessionSetlists.current = [];
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerSessionApi(request)));
   });
 
@@ -242,7 +245,6 @@ describe('the practice page', () => {
 
   beforeEach(() => {
     writes = [];
-    stubSheetDialog();
     stub = stubFetch(answerPracticeApi(writes));
   });
 
@@ -266,7 +268,7 @@ describe('the practice page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
     const concerts = screen.getByRole('dialog', { name: 'Concerts and setlists to prepare' });
     const rows = await within(concerts).findAllByRole('checkbox');
-    expect(rows.map((row) => row.textContent)).toEqual([
+    expect(rows.map((row) => row.closest('label')?.textContent)).toEqual([
       expect.stringContaining('La Cigale'),
       expect.stringContaining('Le Petit Bain'),
     ]);
@@ -276,7 +278,7 @@ describe('the practice page', () => {
 
     const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
     const songRows = within(songs).getAllByRole('checkbox');
-    expect(songRows.map((row) => row.textContent)).toEqual([
+    expect(songRows.map((row) => row.closest('label')?.textContent)).toEqual([
       expect.stringContaining('Song s2'),
       expect.stringContaining('Song s3'),
     ]);
@@ -304,11 +306,7 @@ describe('the practice page', () => {
     fireEvent.click(within(sources).getByRole('tab', { name: /Setlists/ }));
     expect(within(sources).getByRole('tab', { name: /Concerts \(1\)/ })).toBeTruthy();
     await waitFor(() =>
-      expect(
-        within(sources)
-          .getAllByRole('checkbox')
-          .map((row) => row.textContent),
-      ).toEqual([
+      expect(within(sources).getAllByRole('checkbox').map(readCheckboxLabel)).toEqual([
         expect.stringContaining('Encores'),
         expect.stringContaining('Recent'),
         expect.stringContaining('Old'),
@@ -320,7 +318,7 @@ describe('the practice page', () => {
 
     const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
     const songRows = within(songs).getAllByRole('checkbox');
-    expect(songRows.map((row) => row.textContent)).toEqual([
+    expect(songRows.map(readCheckboxLabel)).toEqual([
       expect.stringContaining('Song s2'),
       expect.stringContaining('Song s3'),
       expect.stringContaining('Song s1'),

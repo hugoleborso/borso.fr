@@ -1,7 +1,6 @@
 import { CHART_IMAGE_CONTENT_TYPES, CHART_PDF_CONTENT_TYPE } from '@domain/chart-upload.core';
 import { describe, expect, it } from 'vitest';
 import {
-  FILE_DROP_ACCEPT_ATTRIBUTE,
   FILE_DROP_MAX_BYTES,
   FILE_DROP_MAX_MEBIBYTES,
   selectRejectionMessageKey,
@@ -58,14 +57,5 @@ describe('selectRejectionMessageKey', () => {
 describe('FILE_DROP_MAX_MEBIBYTES', () => {
   it('states the ceiling in the unit the message interpolates', () => {
     expect(FILE_DROP_MAX_MEBIBYTES).toBe(FILE_DROP_MAX_BYTES / (1024 * 1024));
-  });
-});
-
-describe('FILE_DROP_ACCEPT_ATTRIBUTE', () => {
-  it('lists pdf and every allowed image MIME', () => {
-    expect(FILE_DROP_ACCEPT_ATTRIBUTE).toContain(CHART_PDF_CONTENT_TYPE);
-    for (const mime of CHART_IMAGE_CONTENT_TYPES) {
-      expect(FILE_DROP_ACCEPT_ATTRIBUTE).toContain(mime);
-    }
   });
 });

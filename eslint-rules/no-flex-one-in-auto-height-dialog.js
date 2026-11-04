@@ -46,6 +46,8 @@ function collectZeroBasisColumnChildren(jsxElement, parentIsColumn, found) {
   return found;
 }
 
+const DIALOG_ELEMENTS = new Set(['dialog', 'Dialog', 'Modal']);
+
 // @FollowsBlueprint lint-rule
 /** @type {import('eslint').Rule.RuleModule} */
 export default {
@@ -60,7 +62,7 @@ export default {
   create(context) {
     return {
       JSXElement(node) {
-        if (readElementName(node) !== 'dialog') return;
+        if (!DIALOG_ELEMENTS.has(readElementName(node))) return;
         const classTokens = readClassTokens(node);
         if (declaresItsOwnHeight(classTokens)) return;
         const isColumn = classTokens.includes(COLUMN_CLASS);

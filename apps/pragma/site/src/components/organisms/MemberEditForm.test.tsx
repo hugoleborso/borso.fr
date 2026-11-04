@@ -1,9 +1,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { MEMBER_PALETTE } from '@domain/member-palette.core';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { MemberEditForm } from './MemberEditForm';
 import { type MemberFormValues } from '../../routes/members/members-page.core';
 
@@ -57,10 +56,6 @@ function readFirstNameField(): HTMLInputElement {
 
 // @FollowsBlueprint test-component-render
 describe('MemberEditForm', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });

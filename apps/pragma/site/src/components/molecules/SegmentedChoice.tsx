@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { RadioButton, RadioField, RadioGroup } from 'react-aria-components';
 import { composeClassName } from '../atoms/class-name.utils';
 
 export interface SegmentedOption<TValue extends string> {
@@ -20,32 +21,35 @@ export function SegmentedChoice<TValue extends string>({
   value,
   onChange,
 }: SegmentedChoiceProps<TValue>): JSX.Element {
+  const choose = (chosen: string): void => {
+    const option = options.find((candidate) => candidate.value === chosen);
+    if (option !== undefined) onChange(option.value);
+  };
   return (
-    <fieldset className="m-0 min-w-0 border-0 p-0">
-      <legend className="sr-only">{legend}</legend>
+    <RadioGroup
+      aria-label={legend}
+      value={value}
+      onChange={choose}
+      orientation="horizontal"
+      className="m-0 min-w-0 border-0 p-0"
+    >
       <div className="inline-flex rounded-pill bg-glass">
-        {options.map((option) => {
-          const isSelected = option.value === value;
-          return (
-            <label
-              key={option.value}
-              className={composeClassName(
-                'flex min-h-11 cursor-pointer items-center rounded-pill px-3 text-meta font-medium leading-none whitespace-nowrap',
-                'has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-focus',
-                isSelected ? 'bg-ink text-paper' : 'text-ink hover:bg-hover',
-              )}
+        {options.map((option) => (
+          <RadioField key={option.value} value={option.value}>
+            <RadioButton
+              className={({ isSelected }) =>
+                composeClassName(
+                  'flex min-h-11 cursor-pointer items-center rounded-pill px-3 text-meta font-medium leading-none whitespace-nowrap',
+                  'data-focus-visible:outline-3 data-focus-visible:outline-focus',
+                  isSelected ? 'bg-ink text-paper' : 'text-ink hover:bg-hover',
+                )
+              }
             >
-              <input
-                type="radio"
-                className="sr-only"
-                checked={isSelected}
-                onChange={() => onChange(option.value)}
-              />
               {option.label}
-            </label>
-          );
-        })}
+            </RadioButton>
+          </RadioField>
+        ))}
       </div>
-    </fieldset>
+    </RadioGroup>
   );
 }

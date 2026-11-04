@@ -1,8 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { StreakSheet } from './StreakSheet';
 
 const LEA = {
@@ -42,10 +41,6 @@ function renderSheet(view: typeof VIEW): HTMLElement {
 
 // @FollowsBlueprint test-component-render
 describe('StreakSheet', () => {
-  beforeEach(() => {
-    stubSheetDialog();
-  });
-
   afterEach(() => {
     cleanup();
   });
@@ -97,7 +92,7 @@ describe('StreakSheet', () => {
 
   it('draws my flame as a large blaze and the band as a bonfire that flickers once today counts', () => {
     const sheet = renderSheet(VIEW);
-    const marks = [...sheet.querySelectorAll('section svg[data-flame-mark]')];
+    const marks = [...sheet.querySelectorAll('[data-sheet-body] section svg[data-flame-mark]')];
     expect(marks.map((mark) => mark.getAttribute('data-flame-mark'))).toEqual(['blaze', 'bonfire']);
     expect(marks.map((mark) => mark.getAttribute('data-tone'))).toEqual(['open', 'counted']);
     expect(marks[0]?.getAttribute('width')).toBe('40');
