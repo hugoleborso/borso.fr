@@ -12,7 +12,9 @@
 # The hook reads the turn that is ending. When its text claims a visual
 # comparison and the turn neither published an Artifact, sent a file nor
 # embedded an image, the stop is blocked with the reason, once: a second stop
-# in a row passes, so the hook can never trap a turn.
+# in a row passes, so the hook can never trap a turn. Quoted text is skipped:
+# the sweep of PR #249 quoted the old report's "identical by eye" and was
+# blocked for a comparison it never made.
 #
 # Best-effort by contract: any error lets the turn end.
 #
@@ -26,6 +28,7 @@ VISUAL_CLAIM = re.compile(
     r"|visible differences?|screens? (match|are identical|look the same|unchanged))\b",
     re.IGNORECASE,
 )
+QUOTED_SPAN = re.compile(r'"[^"\n]*"|“[^”\n]*”|`[^`\n]*`')
 SHOWING_TOOLS = {"Artifact", "SendUserFile"}
 SHOWN_IN_TEXT = re.compile(r"!\[[^\]]*\]\(|claude\.ai/(code/)?artifact/")
 REASON = (
@@ -71,7 +74,8 @@ def must_show(turn):
             if block.get("type") == "text":
                 text_parts.append(block.get("text", ""))
     text = "\n".join(text_parts)
-    return bool(VISUAL_CLAIM.search(text)) and not SHOWN_IN_TEXT.search(text)
+    claims = QUOTED_SPAN.sub("", text)
+    return bool(VISUAL_CLAIM.search(claims)) and not SHOWN_IN_TEXT.search(text)
 
 
 def main():

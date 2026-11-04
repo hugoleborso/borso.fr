@@ -17,3 +17,4 @@ This file is gitignored. Before the pull request opens, run
 Session: 997ce402-4447-59b8-be28-e6944883e8b4
 
 - [2026-11-04 00:54] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
+- [2026-11-04 01:00] `main` the new screens-shown Stop hook blocked the sweep's own reply because it quoted the old report's words

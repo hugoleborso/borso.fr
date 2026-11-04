@@ -48,9 +48,10 @@ The operator sent 6 messages, and 3 of them corrected or redirected.
 | 30 | post-merge | `get_session` does not find PR #247's second session | transcript 14:32 | no-op: recorded in `lessons-from-pr-246-247` row 20 |
 | 31 | post-merge | Two lines were logged after the archive | the sweep prompt | no-op: the prompt pasted them, as the flow intends |
 | 32 | conception | The first prompt carried a French app string pasted mid-sentence | transcript 14:29:48 | no-op: a copy slip with no effect |
+| 34 | post-merge | The new screens-shown Stop hook blocked this sweep's reply, which quoted the old report's words and compared no screens | this session's Stop hook feedback | fixed: the hook skips quoted text; an unquoted claim still blocks (measured) |
 | 33 | post-merge | This sweep's own commit sent git errors to `/dev/null` and the new guard refused it | this session's log, `hook:no-swallowed-push` | no-op: the row 15 guard firing on its author |
 
 ## Counts
 
-33 rows: 3 dantotsus, 1 knowledge, 2 fixed, 8 merged into another row,
+34 rows: 3 dantotsus, 1 knowledge, 3 fixed, 8 merged into another row,
 19 no-op.
