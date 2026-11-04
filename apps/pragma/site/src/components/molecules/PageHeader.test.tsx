@@ -5,7 +5,7 @@ import { PageHeader } from './PageHeader';
 
 function renderHeader(element: JSX.Element): HTMLElement {
   render(<MemoryRouter>{element}</MemoryRouter>);
-  const header = screen.getByRole('banner', { hidden: true });
+  const header = screen.getByRole('banner', undefined);
   return header;
 }
 

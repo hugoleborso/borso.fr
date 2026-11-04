@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { SetlistEntriesList, type SetlistEntriesListProps } from './SetlistEntriesList';
@@ -84,6 +84,8 @@ describe('the setlist entries list', () => {
     render(<SetlistEntriesList {...buildProps({ inFilteredMode: true })} />);
 
     expect(document.querySelector('[data-setlist-break]')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Add a break after', hidden: true })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More for a' }));
+    expect(screen.getByRole('menuitem', { name: 'Remove from the setlist' })).toBeTruthy();
+    expect(screen.queryByRole('menuitem', { name: 'Add a break after' })).toBeNull();
   });
 });
