@@ -21,22 +21,22 @@ describe('listRejectionReasons', () => {
 
 describe('selectBroadcastFailure', () => {
   it('reports nothing for a broadcast that was delivered', () => {
-    expect(selectBroadcastFailure({ kind: 'delivered' }, 'setlists')).toBeNull();
+    expect(selectBroadcastFailure({ kind: 'delivered' }, ['setlists'])).toBeNull();
   });
 
-  it('reports a broadcast that ran out of budget, with its scope', () => {
-    expect(selectBroadcastFailure({ kind: 'late' }, 'setlists')).toStrictEqual({
+  it('reports a broadcast that ran out of budget, with the roots it carried', () => {
+    expect(selectBroadcastFailure({ kind: 'late' }, ['setlists', 'studies'])).toStrictEqual({
       name: 'RealtimeBroadcastLate',
-      tags: { 'realtime.scope': 'setlists' },
+      tags: { 'realtime.written': 'setlists,studies' },
     });
   });
 
-  it('reports a broadcast that failed, with its scope and the kind of error', () => {
+  it('reports a broadcast that failed, with the roots it carried and the kind of error', () => {
     expect(
-      selectBroadcastFailure({ kind: 'failed', error: new RangeError('down') }, 'all'),
+      selectBroadcastFailure({ kind: 'failed', error: new RangeError('down') }, ['all']),
     ).toStrictEqual({
       name: 'RealtimeBroadcastFailed',
-      tags: { 'realtime.scope': 'all', 'realtime.code': 'RangeError' },
+      tags: { 'realtime.written': 'all', 'realtime.code': 'RangeError' },
     });
   });
 });

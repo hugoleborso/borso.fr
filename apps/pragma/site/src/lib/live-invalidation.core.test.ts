@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addPendingScope,
+  addPendingWrittenRoots,
   advanceLiveConnection,
   buildSocketAddress,
   INITIAL_LIVE_CONNECTION,
@@ -8,8 +8,8 @@ import {
   type LiveConnectionEffects,
   type LiveConnectionEvent,
   type LiveConnectionState,
-  readStaleScope,
-  selectInvalidationFilter,
+  readStaleWrittenRoots,
+  selectInvalidationFilters,
   selectRetryDelay,
 } from './live-invalidation.core';
 
@@ -18,7 +18,7 @@ const NO_EFFECTS: LiveConnectionEffects = {
   socketToOpen: null,
   isStopping: false,
   retry: null,
-  scopesToInvalidate: [],
+  writtenRootsToInvalidate: [],
 };
 
 const GRANT = { url: 'wss://socket.example/prod', ticket: 'signed' };
@@ -124,14 +124,14 @@ describe('advanceLiveConnection, opening', () => {
     const reopening = replay([WANTED, answered(1), opened(1), UNWANTED, WANTED, answered(3)]);
     expect(advanceLiveConnection(reopening, opened(3))).toStrictEqual({
       state: { ...reopening, phase: 'open', failedAttempts: 0 },
-      effects: { ...NO_EFFECTS, scopesToInvalidate: ['all'] },
+      effects: { ...NO_EFFECTS, writtenRootsToInvalidate: ['all'] },
     });
   });
 
   it('holds the reopening invalidation while a write is pending', () => {
     const reopening = replay([WANTED, answered(1), opened(1), UNWANTED, WANTED, answered(3)]);
     expect(advanceLiveConnection(reopening, opened(3, true))).toStrictEqual({
-      state: { ...reopening, phase: 'open', pendingScopes: ['all'] },
+      state: { ...reopening, phase: 'open', pendingWrittenRoots: ['all'] },
       effects: NO_EFFECTS,
     });
   });
@@ -238,7 +238,7 @@ describe('advanceLiveConnection, closing and retrying', () => {
       },
     );
     expect(
-      advanceLiveConnection(reopened, message(1, '{"kind":"stale","scope":"setlists"}')),
+      advanceLiveConnection(reopened, message(1, '{"kind":"stale","written":["setlists"]}')),
     ).toStrictEqual({ state: reopened, effects: NO_EFFECTS });
   });
 
@@ -251,12 +251,12 @@ describe('advanceLiveConnection, closing and retrying', () => {
 });
 
 describe('advanceLiveConnection, messages', () => {
-  it('invalidates the scope a message names', () => {
+  it('invalidates the roots a message says were written', () => {
     expect(
-      advanceLiveConnection(OPEN, message(1, '{"kind":"stale","scope":"setlists"}')),
+      advanceLiveConnection(OPEN, message(1, '{"kind":"stale","written":["setlists"]}')),
     ).toStrictEqual({
       state: OPEN,
-      effects: { ...NO_EFFECTS, scopesToInvalidate: ['setlists'] },
+      effects: { ...NO_EFFECTS, writtenRootsToInvalidate: ['setlists'] },
     });
   });
 
@@ -270,17 +270,17 @@ describe('advanceLiveConnection, messages', () => {
   it('ignores a message from a socket the tab gave up on', () => {
     const hidden = advanceLiveConnection(OPEN, UNWANTED).state;
     expect(
-      advanceLiveConnection(hidden, message(1, '{"kind":"stale","scope":"setlists"}')),
+      advanceLiveConnection(hidden, message(1, '{"kind":"stale","written":["setlists"]}')),
     ).toStrictEqual({ state: hidden, effects: NO_EFFECTS });
   });
 
   it('holds a message while a write is pending, so an optimistic write is never undone', () => {
     const holding = advanceLiveConnection(
       OPEN,
-      message(1, '{"kind":"stale","scope":"tasks"}', true),
+      message(1, '{"kind":"stale","written":["tasks"]}', true),
     );
     expect(holding).toStrictEqual({
-      state: { ...OPEN, pendingScopes: ['tasks'] },
+      state: { ...OPEN, pendingWrittenRoots: ['tasks'] },
       effects: NO_EFFECTS,
     });
   });
@@ -290,8 +290,8 @@ describe('advanceLiveConnection, messages', () => {
       WANTED,
       answered(1),
       opened(1),
-      message(1, '{"kind":"stale","scope":"tasks"}', true),
-      message(1, '{"kind":"stale","scope":"bars"}', true),
+      message(1, '{"kind":"stale","written":["tasks"]}', true),
+      message(1, '{"kind":"stale","written":["bars"]}', true),
     ]);
     expect(
       advanceLiveConnection(holding, { kind: 'mutations-changed', isMutating: true }),
@@ -302,8 +302,8 @@ describe('advanceLiveConnection, messages', () => {
     expect(
       advanceLiveConnection(holding, { kind: 'mutations-changed', isMutating: false }),
     ).toStrictEqual({
-      state: { ...holding, pendingScopes: [] },
-      effects: { ...NO_EFFECTS, scopesToInvalidate: ['tasks', 'bars'] },
+      state: { ...holding, pendingWrittenRoots: [] },
+      effects: { ...NO_EFFECTS, writtenRootsToInvalidate: ['tasks', 'bars'] },
     });
   });
 
@@ -317,33 +317,44 @@ describe('advanceLiveConnection, messages', () => {
   });
 });
 
-describe('readStaleScope', () => {
-  it('reads the scope of a stale message', () => {
-    expect(readStaleScope('{"kind":"stale","scope":"all"}')).toBe('all');
+describe('readStaleWrittenRoots', () => {
+  it('reads the written roots of a stale message', () => {
+    expect(
+      readStaleWrittenRoots('{"kind":"stale","written":["setlists","mastery"]}'),
+    ).toStrictEqual(['setlists', 'mastery']);
+    expect(readStaleWrittenRoots('{"kind":"stale","written":["all"]}')).toStrictEqual(['all']);
+  });
+
+  it('reads a root this tab does not know as everything, so a newer API is never missed', () => {
+    expect(
+      readStaleWrittenRoots('{"kind":"stale","written":["tasks","rehearsals"]}'),
+    ).toStrictEqual(['tasks', 'all']);
   });
 
   it('refuses anything else', () => {
-    expect(readStaleScope(42)).toBeNull();
-    expect(readStaleScope(['{"kind":"stale","scope":"all"}'])).toBeNull();
-    expect(readStaleScope('{')).toBeNull();
-    expect(readStaleScope('null')).toBeNull();
-    expect(readStaleScope('"stale"')).toBeNull();
-    expect(readStaleScope('{"scope":"setlists"}')).toBeNull();
-    expect(readStaleScope('{"kind":"other","scope":"setlists"}')).toBeNull();
-    expect(readStaleScope('{"kind":"stale"}')).toBeNull();
-    expect(readStaleScope('{"kind":"stale","scope":"auth"}')).toBeNull();
+    expect(readStaleWrittenRoots(42)).toBeNull();
+    expect(readStaleWrittenRoots(['{"kind":"stale","written":["all"]}'])).toBeNull();
+    expect(readStaleWrittenRoots('{')).toBeNull();
+    expect(readStaleWrittenRoots('null')).toBeNull();
+    expect(readStaleWrittenRoots('"stale"')).toBeNull();
+    expect(readStaleWrittenRoots('{"written":["setlists"]}')).toBeNull();
+    expect(readStaleWrittenRoots('{"kind":"other","written":["setlists"]}')).toBeNull();
+    expect(readStaleWrittenRoots('{"kind":"stale"}')).toBeNull();
+    expect(readStaleWrittenRoots('{"kind":"stale","written":[]}')).toBeNull();
+    expect(readStaleWrittenRoots('{"kind":"stale","written":"setlists"}')).toBeNull();
+    expect(readStaleWrittenRoots('{"kind":"stale","scope":"setlists"}')).toBeNull();
   });
 });
 
-describe('addPendingScope', () => {
-  it('adds a scope once', () => {
-    expect(addPendingScope(['tasks'], 'bars')).toStrictEqual(['tasks', 'bars']);
-    expect(addPendingScope(['tasks'], 'tasks')).toStrictEqual(['tasks']);
+describe('addPendingWrittenRoots', () => {
+  it('adds each written root once', () => {
+    expect(addPendingWrittenRoots(['tasks'], ['bars', 'tasks'])).toStrictEqual(['tasks', 'bars']);
+    expect(addPendingWrittenRoots(['tasks'], ['tasks'])).toStrictEqual(['tasks']);
   });
 
-  it('collapses into every scope as soon as one of them is every scope', () => {
-    expect(addPendingScope(['tasks'], 'all')).toStrictEqual(['all']);
-    expect(addPendingScope(['all'], 'tasks')).toStrictEqual(['all']);
+  it('collapses into everything as soon as one written root is everything', () => {
+    expect(addPendingWrittenRoots(['tasks'], ['all'])).toStrictEqual(['all']);
+    expect(addPendingWrittenRoots(['all'], ['tasks'])).toStrictEqual(['all']);
   });
 });
 
@@ -360,9 +371,14 @@ describe('the small helpers', () => {
     ]);
   });
 
-  it('filters the queries under a scope, or every query', () => {
-    expect(selectInvalidationFilter('setlists')).toStrictEqual({ queryKey: ['setlists'] });
-    expect(selectInvalidationFilter('all')).toStrictEqual({});
+  it('filters the queries under every query root that reads a written root, or every query', () => {
+    expect(selectInvalidationFilters(['mastery'])).toStrictEqual([
+      { queryKey: ['mastery'] },
+      { queryKey: ['streaks'] },
+      { queryKey: ['studies'] },
+    ]);
+    expect(selectInvalidationFilters(['all'])).toStrictEqual([{}]);
+    expect(selectInvalidationFilters([])).toStrictEqual([]);
   });
 
   it('treats every method but a read as a write', () => {

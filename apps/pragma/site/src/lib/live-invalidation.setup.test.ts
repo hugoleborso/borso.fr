@@ -1,12 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
-import type { RealtimeTicketGrant } from './live-invalidation.core';
 import {
   createLiveInvalidation,
   type LiveInvalidationSettings,
   type LiveSocketListeners,
 } from './live-invalidation.setup';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
+import type { RealtimeTicketGrant } from './queries/realtime.queries';
 
 const GRANT: RealtimeTicketGrant = { url: 'wss://socket.example/prod', ticket: 'signed' };
 
@@ -99,9 +99,10 @@ describe('the live invalidation of one tab', () => {
     );
   });
 
-  it('invalidates the queries under the scope a message names, and only those', async () => {
+  it('invalidates the queries that read what a message says was written, and only those', async () => {
     const harness = buildHarness();
     harness.queryClient.setQueryData(['setlists', 'list'], []);
+    harness.queryClient.setQueryData(['studies', 'overview'], {});
     harness.queryClient.setQueryData(['songs', 'list'], []);
     harness.signIn();
     await vi.waitFor(() => {
@@ -109,8 +110,9 @@ describe('the live invalidation of one tab', () => {
     });
     const socket = lastSocket(harness.sockets);
     socket.listeners.onOpen();
-    socket.listeners.onMessage('{"kind":"stale","scope":"setlists"}');
+    socket.listeners.onMessage('{"kind":"stale","written":["setlists"]}');
     expect(isInvalidated(harness.queryClient, ['setlists', 'list'])).toBe(true);
+    expect(isInvalidated(harness.queryClient, ['studies', 'overview'])).toBe(true);
     expect(isInvalidated(harness.queryClient, ['songs', 'list'])).toBe(false);
   });
 
@@ -156,7 +158,7 @@ describe('the live invalidation of one tab', () => {
       .build(harness.queryClient, { mutationFn: () => pendingWrite });
     const writing = write.execute(undefined);
 
-    socket.listeners.onMessage('{"kind":"stale","scope":"setlists"}');
+    socket.listeners.onMessage('{"kind":"stale","written":["setlists"]}');
     expect(isInvalidated(harness.queryClient, ['setlists', 'list'])).toBe(false);
 
     settle.resolve();

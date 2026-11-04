@@ -1,4 +1,4 @@
-import { buildStaleMessage, type StaleScope } from '@domain/stale-scope.core';
+import { buildStaleMessage, type WrittenRoot } from '@domain/stale-scope.core';
 import { getAppConfig } from '../auth/auth.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { postToConnection } from './broadcast.adapter';
@@ -43,13 +43,13 @@ export async function issueRealtimeTicket(
 }
 
 async function deliverStaleMessage(
-  scope: StaleScope,
+  written: readonly WrittenRoot[],
   writerClientId: string | null,
 ): Promise<void> {
   const poster = resolveConnectionPoster();
   if (poster === null) return;
   const connections = await listConnectionsOutsideClient(writerClientId);
-  const message = buildStaleMessage(scope);
+  const message = buildStaleMessage(written);
   const deliveries = await Promise.allSettled(
     connections.map(async (connection) => {
       const delivery = await postToConnection(poster, connection.connectionId, message);
@@ -90,16 +90,16 @@ async function settleWithinBudget(
 }
 
 // @FollowsBlueprint service-orchestration
-export async function announceStaleScope(
-  scope: StaleScope,
+export async function announceWrittenRoots(
+  written: readonly WrittenRoot[],
   writerClientId: string | null,
   settings: StaleBroadcastSettings,
 ): Promise<void> {
   const outcome = await settleWithinBudget(
-    deliverStaleMessage(scope, writerClientId),
+    deliverStaleMessage(written, writerClientId),
     settings.budgetMilliseconds,
   );
-  const failure = selectBroadcastFailure(outcome, scope);
+  const failure = selectBroadcastFailure(outcome, written);
   if (failure !== null) settings.reportFailure(failure);
 }
 

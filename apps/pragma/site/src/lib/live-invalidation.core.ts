@@ -1,17 +1,19 @@
 import {
-  EVERY_STALE_SCOPE,
-  isStaleScope,
+  EVERY_WRITTEN_ROOT,
+  isReadMethod,
+  isWrittenRoot,
   STALE_MESSAGE_KIND,
-  type StaleScope,
+  type WrittenRoot,
 } from '@domain/stale-scope.core';
 import { z } from 'zod';
+import { selectStaleQueryRoots } from './queries/query-read-roots.core';
+import type { RealtimeTicketGrant } from './queries/realtime.queries';
 
 const FIRST_RETRY_DELAY_MS = 1_000;
 const LONGEST_RETRY_DELAY_MS = 30_000;
 const RETRY_GROWTH_FACTOR = 2;
 const TICKET_PARAMETER = 'ticket';
 const CLIENT_PARAMETER = 'client';
-const READ_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export type LiveConnectionPhase =
   | 'idle'
@@ -26,7 +28,7 @@ export interface LiveConnectionState {
   readonly generation: number;
   readonly failedAttempts: number;
   readonly hasOpenedBefore: boolean;
-  readonly pendingScopes: readonly StaleScope[];
+  readonly pendingWrittenRoots: readonly WrittenRoot[];
 }
 
 export const INITIAL_LIVE_CONNECTION: LiveConnectionState = {
@@ -34,13 +36,8 @@ export const INITIAL_LIVE_CONNECTION: LiveConnectionState = {
   generation: 0,
   failedAttempts: 0,
   hasOpenedBefore: false,
-  pendingScopes: [],
+  pendingWrittenRoots: [],
 };
-
-export interface RealtimeTicketGrant {
-  readonly url: string | null;
-  readonly ticket: string;
-}
 
 export type LiveConnectionEvent =
   | {
@@ -70,7 +67,7 @@ export interface LiveConnectionEffects {
   readonly socketToOpen: { readonly generation: number; readonly address: string } | null;
   readonly isStopping: boolean;
   readonly retry: { readonly generation: number; readonly delayMilliseconds: number } | null;
-  readonly scopesToInvalidate: readonly StaleScope[];
+  readonly writtenRootsToInvalidate: readonly WrittenRoot[];
 }
 
 export interface LiveConnectionStep {
@@ -83,7 +80,7 @@ const NO_EFFECTS: LiveConnectionEffects = {
   socketToOpen: null,
   isStopping: false,
   retry: null,
-  scopesToInvalidate: [],
+  writtenRootsToInvalidate: [],
 };
 
 export function buildSocketAddress(url: string, ticket: string, clientId: string): string {
@@ -100,7 +97,10 @@ export function selectRetryDelay(failedAttempts: number): number {
   );
 }
 
-const staleMessageSchema = z.object({ kind: z.literal(STALE_MESSAGE_KIND), scope: z.string() });
+const staleMessageSchema = z.object({
+  kind: z.literal(STALE_MESSAGE_KIND),
+  written: z.array(z.string()).min(1),
+});
 
 function parseJsonText(text: string): { readonly value: unknown } {
   try {
@@ -111,47 +111,52 @@ function parseJsonText(text: string): { readonly value: unknown } {
   }
 }
 
-export function readStaleScope(data: unknown): StaleScope | null {
+function readWrittenRoot(entry: string): WrittenRoot {
+  return isWrittenRoot(entry) ? entry : EVERY_WRITTEN_ROOT;
+}
+
+export function readStaleWrittenRoots(data: unknown): readonly WrittenRoot[] | null {
   if (typeof data !== 'string') return null;
   const staleMessage = staleMessageSchema.safeParse(parseJsonText(data).value);
   if (!staleMessage.success) return null;
-  const scope = staleMessage.data.scope;
-  return isStaleScope(scope) ? scope : null;
+  return staleMessage.data.written.map(readWrittenRoot);
 }
 
-export function addPendingScope(
-  pendingScopes: readonly StaleScope[],
-  scope: StaleScope,
-): readonly StaleScope[] {
-  const isEverythingPending =
-    scope === EVERY_STALE_SCOPE || pendingScopes.includes(EVERY_STALE_SCOPE);
-  if (isEverythingPending) return [EVERY_STALE_SCOPE];
-  if (pendingScopes.includes(scope)) return pendingScopes;
-  return [...pendingScopes, scope];
+export function addPendingWrittenRoots(
+  pendingWrittenRoots: readonly WrittenRoot[],
+  written: readonly WrittenRoot[],
+): readonly WrittenRoot[] {
+  const merged = [...new Set([...pendingWrittenRoots, ...written])];
+  return merged.includes(EVERY_WRITTEN_ROOT) ? [EVERY_WRITTEN_ROOT] : merged;
 }
 
-export function selectInvalidationFilter(scope: StaleScope): {
-  readonly queryKey?: readonly [string];
-} {
-  return scope === EVERY_STALE_SCOPE ? {} : { queryKey: [scope] };
+export function selectInvalidationFilters(
+  written: readonly WrittenRoot[],
+): readonly { readonly queryKey?: readonly [string] }[] {
+  const staleQueryRoots = selectStaleQueryRoots(written);
+  if (staleQueryRoots === EVERY_WRITTEN_ROOT) return [{}];
+  return staleQueryRoots.map((queryRoot) => ({ queryKey: [queryRoot] }));
 }
 
 export function isWriteMethod(method: string | undefined): boolean {
-  return method !== undefined && !READ_METHODS.has(method.toUpperCase());
+  return method !== undefined && !isReadMethod(method);
 }
 
-function receiveScope(
+function receiveWrittenRoots(
   state: LiveConnectionState,
-  scope: StaleScope,
+  written: readonly WrittenRoot[],
   isMutating: boolean,
 ): LiveConnectionStep {
   if (isMutating) {
     return {
-      state: { ...state, pendingScopes: addPendingScope(state.pendingScopes, scope) },
+      state: {
+        ...state,
+        pendingWrittenRoots: addPendingWrittenRoots(state.pendingWrittenRoots, written),
+      },
       effects: NO_EFFECTS,
     };
   }
-  return { state, effects: { ...NO_EFFECTS, scopesToInvalidate: [scope] } };
+  return { state, effects: { ...NO_EFFECTS, writtenRootsToInvalidate: written } };
 }
 
 function waitToRetry(state: LiveConnectionState): LiveConnectionStep {
@@ -211,14 +216,17 @@ function openSocket(state: LiveConnectionState, isMutating: boolean): LiveConnec
     hasOpenedBefore: true,
   };
   if (!state.hasOpenedBefore) return { state: opened, effects: NO_EFFECTS };
-  return receiveScope(opened, EVERY_STALE_SCOPE, isMutating);
+  return receiveWrittenRoots(opened, [EVERY_WRITTEN_ROOT], isMutating);
 }
 
-function flushPendingScopes(state: LiveConnectionState, isMutating: boolean): LiveConnectionStep {
+function flushPendingWrittenRoots(
+  state: LiveConnectionState,
+  isMutating: boolean,
+): LiveConnectionStep {
   if (isMutating) return { state, effects: NO_EFFECTS };
   return {
-    state: { ...state, pendingScopes: [] },
-    effects: { ...NO_EFFECTS, scopesToInvalidate: state.pendingScopes },
+    state: { ...state, pendingWrittenRoots: [] },
+    effects: { ...NO_EFFECTS, writtenRootsToInvalidate: state.pendingWrittenRoots },
   };
 }
 
@@ -227,9 +235,9 @@ function receiveMessage(
   data: unknown,
   isMutating: boolean,
 ): LiveConnectionStep {
-  const scope = readStaleScope(data);
-  if (scope === null) return { state, effects: NO_EFFECTS };
-  return receiveScope(state, scope, isMutating);
+  const written = readStaleWrittenRoots(data);
+  if (written === null) return { state, effects: NO_EFFECTS };
+  return receiveWrittenRoots(state, written, isMutating);
 }
 
 function isCurrentGeneration(state: LiveConnectionState, event: LiveConnectionEvent): boolean {
@@ -279,6 +287,6 @@ export function advanceLiveConnection(
     case 'message-received':
       return receiveMessage(state, event.data, event.isMutating);
     case 'mutations-changed':
-      return flushPendingScopes(state, event.isMutating);
+      return flushPendingWrittenRoots(state, event.isMutating);
   }
 }

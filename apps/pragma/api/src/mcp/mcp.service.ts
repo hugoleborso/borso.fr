@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
-import { selectToolStaleScope } from '../realtime/stale-scope.core';
-import { rememberStaleScope } from '../realtime/stale-scope.middleware';
+import { selectToolWrittenRoots } from '../realtime/stale-scope.core';
+import { rememberWrittenRoots } from '../realtime/stale-scope.middleware';
 import { type AnyZodObject, z, type ZodTypeAny } from 'zod';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import {
@@ -88,8 +88,8 @@ export async function resolveReference(
   return pickReference(noun, await listCandidates(), reference);
 }
 
-export function rememberToolStaleScope(context: Context, tool: ToolDefinition): void {
-  rememberStaleScope(context, selectToolStaleScope(tool));
+export function rememberToolWrittenRoots(context: Context, tool: ToolDefinition): void {
+  rememberWrittenRoots(context, selectToolWrittenRoots(tool));
 }
 
 export async function answerToolRequest(context: Context, session: McpSession): Promise<Response> {

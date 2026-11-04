@@ -1,7 +1,9 @@
 /** @Feature live-invalidation */
 
+import type { InferResponseType } from 'hono/client';
 import { api } from '../api.client';
-import type { RealtimeTicketGrant } from '../live-invalidation.core';
+
+export type RealtimeTicketGrant = InferResponseType<typeof api.api.realtime.ticket.$get, 200>;
 
 // @FollowsBlueprint query-module
 export async function requestRealtimeTicket(): Promise<RealtimeTicketGrant | null> {

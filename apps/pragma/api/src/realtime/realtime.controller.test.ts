@@ -179,7 +179,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     useConnectionPoster(null);
   });
 
-  it('posts the scope of the write to every tab but the writer’s own', async () => {
+  it('posts the root the write touched to every tab but the writer’s own', async () => {
     const posts = buildRecordingPoster(() => Promise.resolve({}));
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp();
@@ -189,7 +189,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
     expect(posts).toStrictEqual([
-      { connectionId: 'reader', data: { kind: 'stale', scope: 'tasks' } },
+      { connectionId: 'reader', data: { kind: 'stale', written: ['tasks'] } },
     ]);
     expect(reportFailure).not.toHaveBeenCalled();
   });
@@ -208,7 +208,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     });
 
     expect(posts.map((post) => post.connectionId).sort()).toStrictEqual(['reader', 'writer']);
-    expect(posts[0]?.data).toStrictEqual({ kind: 'stale', scope: 'setlists' });
+    expect(posts[0]?.data).toStrictEqual({ kind: 'stale', written: ['setlists'] });
   });
 
   it('posts nothing for a read or for a write the API refused', async () => {
@@ -258,7 +258,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
 
     expect(reportFailure).toHaveBeenCalledExactlyOnceWith({
       name: 'RealtimeBroadcastFailed',
-      tags: { 'realtime.scope': 'tasks', 'realtime.code': 'AggregateError' },
+      tags: { 'realtime.written': 'tasks', 'realtime.code': 'AggregateError' },
     });
     expect(await listConnectionIds()).toStrictEqual(['reader']);
     vi.restoreAllMocks();
@@ -274,7 +274,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
 
     expect(reportFailure).toHaveBeenCalledExactlyOnceWith({
       name: 'RealtimeBroadcastLate',
-      tags: { 'realtime.scope': 'tasks' },
+      tags: { 'realtime.written': 'tasks' },
     });
   });
 });

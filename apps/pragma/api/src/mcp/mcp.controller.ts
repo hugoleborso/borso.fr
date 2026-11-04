@@ -18,7 +18,7 @@ import { TAKE_DELETION, TAKE_TOOLS } from '../takes/takes-tools.controller';
 import {
   answerToolRequest,
   defineDeletionTool,
-  rememberToolStaleScope,
+  rememberToolWrittenRoots,
   reportToolFailureToErrorTracking,
   type ToolDefinition,
 } from './mcp.service';
@@ -74,7 +74,7 @@ export function buildMcpRouter(options: BuildMcpRouterOptions = {}) {
         actor: { memberId: readMemberId(context), now: clock() },
         reportFailure,
         onToolRan: (tool) => {
-          rememberToolStaleScope(context, tool);
+          rememberToolWrittenRoots(context, tool);
         },
       });
     })

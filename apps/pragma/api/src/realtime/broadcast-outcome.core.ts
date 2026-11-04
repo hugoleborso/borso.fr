@@ -1,8 +1,9 @@
-import type { StaleScope } from '@domain/stale-scope.core';
+import type { WrittenRoot } from '@domain/stale-scope.core';
 import { selectFailureCode } from '../mcp/tool-result.core';
 
 export const BROADCAST_FAILED = 'RealtimeBroadcastFailed';
 export const BROADCAST_LATE = 'RealtimeBroadcastLate';
+const WRITTEN_TAG_SEPARATOR = ',';
 
 export type BroadcastOutcome =
   | { readonly kind: 'delivered' }
@@ -27,12 +28,14 @@ export function listRejectionReasons(
 
 export function selectBroadcastFailure(
   outcome: BroadcastOutcome,
-  scope: StaleScope,
+  written: readonly WrittenRoot[],
 ): BroadcastFailure | null {
-  if (outcome.kind === 'late') return { name: BROADCAST_LATE, tags: { 'realtime.scope': scope } };
+  const writtenTag = written.join(WRITTEN_TAG_SEPARATOR);
+  if (outcome.kind === 'late')
+    return { name: BROADCAST_LATE, tags: { 'realtime.written': writtenTag } };
   if (outcome.kind === 'delivered') return null;
   return {
     name: BROADCAST_FAILED,
-    tags: { 'realtime.scope': scope, 'realtime.code': selectFailureCode(outcome.error) },
+    tags: { 'realtime.written': writtenTag, 'realtime.code': selectFailureCode(outcome.error) },
   };
 }

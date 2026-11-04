@@ -28,13 +28,13 @@ describe('an assistant write tells the open tabs (back-e2e)', () => {
     useConnectionPoster(null);
   });
 
-  it('sends everything stale after a tool that writes', async () => {
+  it('sends the roots a writing tool’s routes touch, not everything', async () => {
     const band = await prepareAssistantBand();
     const posts = await recordPostsToOneTab(band.lea.memberId);
 
     await callTool(band.assistant, 'save_task', { title: 'Book the van' });
 
-    expect(posts).toStrictEqual([{ kind: 'stale', scope: 'all' }]);
+    expect(posts).toStrictEqual([{ kind: 'stale', written: ['tasks'] }]);
   });
 
   it('sends nothing after a tool that only reads, nor for the listing of tools', async () => {

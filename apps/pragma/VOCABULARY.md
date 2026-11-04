@@ -731,7 +731,9 @@ Lives in: `api/src/realtime/` (`realtime_connection`)
 - Kept out of every preview's copy of production and out of the read-only
   reader's reach.
 
-Held by: `api/src/realtime/realtime.controller.test.ts` › posts the scope of the write to every tab but the writer’s own
+Held by: `api/src/realtime/realtime.controller.test.ts` › posts the root the write touched to every tab but the writer’s own
+Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address or a ballot token
+Held by: `cdk/test/stack.test.ts` › clones prod into a preview with its passwords and its takes, but no passkey, no avatar key, and no push subscription or key pair
 Held by: `api/src/realtime/realtime.controller.test.ts` › refuses a forged ticket
 Held by: `api/src/realtime/realtime.controller.test.ts` › forgets a connection API Gateway reports gone
 
@@ -750,17 +752,66 @@ Lives in: `api/src/realtime/realtime-ticket.utils.ts`
 Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a session cookie open a socket
 Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a ticket pass as a session cookie
 
-## Stale scope
+## Derived read root
 
-The query key root a write made stale (`setlists`, `tasks`…), or `all`.
+An API root whose read aggregates other slices, and the API roots it reads
+through them (`studies` reads `setlists`, `sessions`, `songs`, `mastery`…).
+
+Lives in: `domain/stale-scope.core.ts` (`DERIVED_READ_ROOTS`)
+
+- A slice's row lists every slice its services and repositories import,
+  except an import used only by an assistant **tool**. A write that cascades
+  into another slice, such as deleting a song, puts the writer in the row of
+  the slice it cascades into.
+- Expanded transitively, so a read hears what its own sources aggregate.
+
+Held by: `api/src/realtime/derived-read-roots.test.ts` › lists in a slice’s row every slice its services and repositories read
+Held by: `api/src/realtime/derived-read-roots.test.ts` › lists the writer in the row of every slice a write cascades into
+
+## Query read roots
+
+For each query key root the site caches under, the API roots its query
+functions read (`studies` reads `studies` and `mastery`, `voting` reads
+`setlists`).
+
+Lives in: `site/src/lib/queries/query-read-roots.core.ts` (`QUERY_READ_ROOTS`)
+
+- A **stale message** invalidates every query key root whose read roots,
+  expanded through the **derived read roots**, include a **written root**.
+  `all` invalidates every query.
+- Every API root a write can announce is read by some query.
+
+Held by: `site/src/lib/queries/query-key-roots.test.ts` › lists under each key root every API root its query module reads
+Held by: `site/src/lib/queries/query-key-roots.test.ts` › reads every root the API can announce from some query, or names it as read by none
+
+## Stale message
+
+The frame the API posts on a **realtime connection** after a write:
+`{ kind: 'stale', written }`, where `written` lists **written roots**.
+
+Lives in: `domain/stale-scope.core.ts`
+
+- Carries what was written, never which queries to refresh; the site decides
+  that from its **query read roots**.
+- A written root the tab does not know is read as `all`.
+
+Held by: `site/src/lib/live-invalidation.core.test.ts` › reads a root this tab does not know as everything, so a newer API is never missed
+
+## Written root
+
+The API root a write touched: the first path segment after `/api/`
+(`setlists`, `mastery`, `me`…), or `all`.
 
 Lives in: `domain/stale-scope.core.ts`, `api/src/realtime/stale-scope.core.ts`
 
-- Read off the path of a 2xx write by a fixed table; every write route must
-  appear in it. A write through an assistant **tool** that writes sends `all`.
+- Read off the path of a 2xx write. A write that changes no band data another
+  member reads (sign-in, passkeys, password, push, uploads) announces
+  nothing; every other write route must name a written root.
+- A write through an assistant **tool** announces the roots of the write
+  routes that tool declares.
 
-Held by: `api/src/realtime/stale-scope-coverage.test.ts` › decides every write route, so a new slice cannot ship without saying what it makes stale
-Held by: `site/src/lib/queries/query-key-roots.test.ts` › names only roots the site really keys its queries under, so an invalidation always lands
+Held by: `api/src/realtime/stale-scope-coverage.test.ts` › decides every write route, so a new slice cannot ship without saying what it writes
+Held by: `api/src/mcp/mcp-stale-scope.test.ts` › sends the roots a writing tool’s routes touch, not everything
 
 ## VAPID key pair
 

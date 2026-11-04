@@ -25,7 +25,7 @@ Three channels were open:
 
 ## Decision
 
-**pragma reuses the `WebSocketChannel` construct and sends only a stale scope, never data.** After a 2xx write, the API posts `{ kind: 'stale', scope }` to every open tab except the writer's own. Each tab invalidates that query root. A tab connects only while it is visible and signed in, using a 60 s ticket signed with the app's HMAC key under its own purpose. The spec is at `docs/features/pragma/live-invalidation/spec/spec.md`.
+**pragma reuses the `WebSocketChannel` construct and sends only what was written, never data.** After a 2xx write, the API posts `{ kind: 'stale', written }` to every open tab except the writer's own. `written` lists the API roots the write touched. Each tab invalidates every query root that reads one of them, directly or through a read the API derives from other slices. A tab connects only while it is visible and signed in, using a 60 s ticket signed with the app's HMAC key under its own purpose. The spec is at `docs/features/pragma/live-invalidation/spec/spec.md`.
 
 The design does not wait for, or carry, the changed rows. That rests on DSQL reads seeing a committed write from another connection. That was measured on the PR #261 preview: 0 stale reads out of 180 parallel reads on fresh connections, each started right after a reorder answered.
 
@@ -36,3 +36,5 @@ The design does not wait for, or carry, the changed rows. That rests on DSQL rea
 - `-` pragma gains `@aws-sdk/client-apigatewaymanagementapi`, plus `ws` and `@types/ws` for the local socket in `pnpm dev`. These are the versions banana-rush already uses.
 - `-` Every write waits for its broadcast, up to a 1500 ms budget. That budget is a choice, not a measurement. A failed or late send is reported, and it never fails the write.
 - `-` A second API and a `realtime_connection` table to keep clean. A 410 deletes a connection.
+
+> Changed on 2026-11-04 after technical validation (A13, D30). The message first carried one query key root chosen by the API, which missed queries reading the same data under another root. It now carries the written API roots, and the site holds the map from query roots to the API roots they read. Two tests hold both tables against the code.

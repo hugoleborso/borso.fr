@@ -20,7 +20,7 @@ import { buildNotificationsRouter } from './notifications/notifications.controll
 import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildRealtimeRouter } from './realtime/realtime.controller';
 import type { StaleBroadcastSettings } from './realtime/realtime.service';
-import { buildStaleScopeAnnouncer } from './realtime/stale-scope.middleware';
+import { buildWrittenRootsAnnouncer } from './realtime/stale-scope.middleware';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
@@ -63,7 +63,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .use('*', traceRequests)
     .use('*', logger())
     .use('*', cors())
-    .use('*', buildStaleScopeAnnouncer(readStaleBroadcastSettings(options.realtime)))
+    .use('*', buildWrittenRootsAnnouncer(readStaleBroadcastSettings(options.realtime)))
     .onError(answerUnhandledError)
     .get('/api/health', (context) => context.json({ ok: true }))
     .route('/api/auth', publicRouter)

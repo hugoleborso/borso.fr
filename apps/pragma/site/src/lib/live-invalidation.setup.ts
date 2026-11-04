@@ -8,11 +8,10 @@ import {
   INITIAL_LIVE_CONNECTION,
   type LiveConnectionEffects,
   type LiveConnectionEvent,
-  type RealtimeTicketGrant,
-  selectInvalidationFilter,
+  selectInvalidationFilters,
 } from './live-invalidation.core';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
-import { requestRealtimeTicket } from './queries/realtime.queries';
+import { type RealtimeTicketGrant, requestRealtimeTicket } from './queries/realtime.queries';
 import { queryClient } from './query-client.setup';
 
 const VISIBLE = 'visible';
@@ -101,8 +100,8 @@ export function createLiveInvalidation(settings: LiveInvalidationSettings): Live
     if (effects.retry !== null) {
       scheduleRetry(effects.retry.generation, effects.retry.delayMilliseconds);
     }
-    for (const scope of effects.scopesToInvalidate) {
-      void client.invalidateQueries(selectInvalidationFilter(scope));
+    for (const filter of selectInvalidationFilters(effects.writtenRootsToInvalidate)) {
+      void client.invalidateQueries(filter);
     }
   }
 
