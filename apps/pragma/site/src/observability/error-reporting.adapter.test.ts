@@ -154,10 +154,11 @@ describe('flame read failures', () => {
 
   it('reports the failed read with its name', () => {
     const failure = new Error('streaks 500');
+    sentry.captureException.mockClear();
     reportStreaksReadFailed(failure);
-    expect(sentry.captureException).toHaveBeenCalledWith(failure, {
-      extra: { name: 'StreaksReadFailed' },
-    });
+    expect(sentry.captureException.mock.calls).toStrictEqual([
+      [failure, { extra: { name: 'StreaksReadFailed' } }],
+    ]);
   });
 
   it('carries the body the API answered so the refusal can be told apart', () => {
