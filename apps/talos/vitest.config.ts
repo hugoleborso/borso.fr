@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
@@ -18,6 +20,7 @@ export default defineConfig({
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
     coverage: {
       provider: 'v8',
+      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: [
         'domain/**/*.core.ts',
         'api/src/**/*.core.ts',

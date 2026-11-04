@@ -6,6 +6,7 @@ import { compareRoutesWithTools, TOOL_EXCLUSIONS } from './tool-coverage.core';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const TEST_SEED_FLAG_ON = '1';
+const TOOL_COUNT = 36;
 const TOOL_NAME_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 function listPositionalItems(schema: unknown, path: string): string[] {
@@ -44,6 +45,10 @@ describe('route and tool coverage', () => {
 
   it('keeps no exclusion for a route that is no longer mounted', () => {
     expect(readCoverage().staleExclusions).toEqual([]);
+  });
+
+  it('serves the number of tools the budget was set for, so a new tool is a decision', () => {
+    expect(ASSISTANT_TOOLS.length).toBe(TOOL_COUNT);
   });
 
   it('names each tool in lowercase words joined by underscores, and no two tools alike', () => {

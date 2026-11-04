@@ -67,7 +67,7 @@ describe('useSetlistBreakActions', () => {
     const tree = mountWithClient(queryClient, <ProbeBreakActions sink={slot.sink} />);
     await flushMicrotasks();
 
-    const putBreaksBack = slot.read().rememberPlacement();
+    const putBreaksBack = slot.read().rememberPlacement(1);
     slot.read().withdrawSong(1, () => undefined);
     expect(readBreaks(queryClient)?.[0]?.songsBefore).toBe(1);
     queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
@@ -82,6 +82,46 @@ describe('useSetlistBreakActions', () => {
     tree.unmount();
   });
 
+  it('keeps a break added between the removal and the undo, so the reorder names every item', async () => {
+    const queryClient = createIsolatedQueryClient();
+    const addedAfterFirstSong = {
+      ...INTERMISSION,
+      id: 'y',
+      label: '',
+      position: 1,
+      songsBefore: 1,
+    };
+    queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
+      entries: [makeEntry('a', 0), makeEntry('b', 1), makeEntry('c', 3)],
+    });
+    queryClient.setQueryData(setlistKeys.breaksOf(SETLIST_ID), { breaks: [INTERMISSION] });
+    stub = stubFetch(async (request) =>
+      request.method === 'PUT'
+        ? jsonResponse({ id: SETLIST_ID, entryIds: [] })
+        : jsonResponse({ breaks: [INTERMISSION] }),
+    );
+    const slot = createMutateSlot<SetlistBreakActions>();
+    const tree = mountWithClient(queryClient, <ProbeBreakActions sink={slot.sink} />);
+    await flushMicrotasks();
+
+    const putBreaksBack = slot.read().rememberPlacement(1);
+    slot.read().withdrawSong(1, () => undefined);
+    queryClient.setQueryData(setlistKeys.breaksOf(SETLIST_ID), {
+      breaks: [addedAfterFirstSong, { ...INTERMISSION, songsBefore: 1 }],
+    });
+    queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
+      entries: [makeEntry('a', 0), makeEntry('restored', 1), makeEntry('c', 2)],
+    });
+    putBreaksBack();
+    await flushMicrotasks();
+
+    const reorder = stub.calls.find((request) => request.method === 'PUT');
+    expect(await reorder?.clone().json()).toEqual({
+      entryIds: ['a', 'y', 'restored', 'p', 'c'],
+    });
+    tree.unmount();
+  });
+
   it('sends no reorder when the setlist held no break', async () => {
     const queryClient = createIsolatedQueryClient();
     queryClient.setQueryData(setlistKeys.breaksOf(SETLIST_ID), { breaks: [] });
@@ -90,7 +130,7 @@ describe('useSetlistBreakActions', () => {
     const tree = mountWithClient(queryClient, <ProbeBreakActions sink={slot.sink} />);
     await flushMicrotasks();
 
-    slot.read().rememberPlacement()();
+    slot.read().rememberPlacement(0)();
     await flushMicrotasks();
 
     expect(stub.calls.some((request) => request.method === 'PUT')).toBe(false);

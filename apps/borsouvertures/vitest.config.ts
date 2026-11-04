@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
@@ -21,6 +23,7 @@ export default defineConfig({
     include: ['site/src/**/*.test.ts', 'site/src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
+      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: ['site/**/*.{core,utils,adapter,schema}.ts'],
       thresholds: {
         perFile: true,

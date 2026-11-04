@@ -1,40 +1,25 @@
 ---
-summary: 'Prettier errors rather than skips on a `.sql` in a changed-file list, and the rewriter mangles a `case … esac` in a loop; filter before piping and put control flow in a file.'
+summary: 'oxfmt, not prettier, formats this repository and skips a `.sql` in a changed-file list; the rewriter mangles a `case … esac` in a loop, so put control flow in a file.'
 triggers:
   output:
     - 'No parser could be inferred for file'
 ---
 
-# Two tool shapes that break a diff-driven check
+# Two tool shapes that break a one-off check
 
-Both of these cost a validator time in one task. Neither is a defect in this
-repository; both are worth knowing before reaching for the obvious command.
+Both of these cost an agent time. Neither is a defect in this repository's
+code; both are worth knowing before reaching for the obvious command.
 
-## `prettier --check` on a changed-file list dies on `.sql`
+## A changed-file list for the formatter
 
-A check built from `git diff --name-only` and piped into prettier fails as
-soon as the change includes a migration:
-
-```
-[error] No parser could be inferred for file: apps/pragma/api/src/database/migrations/0009_bar_owner.sql
-```
-
-Prettier treats an unknown extension as an error, not as a file to skip. The
-pre-commit hook does not hit this because it filters the staged list by
-extension first; a validator or a one-off script that feeds prettier the raw
-diff does.
-
-Filter before you pipe:
-
-```sh
-git diff --name-only --diff-filter=d origin/main...HEAD \
-  | grep -vE '\.(sql|snap)$' \
-  | xargs -r node_modules/.bin/prettier --check
-```
-
-Use `node_modules/.bin/prettier` rather than `pnpm exec prettier` — the agent
-harness rewrites the latter to a different version, which
-`scripts/check-coupled-lists.sh` refuses for that reason.
+The formatter is oxfmt, since
+[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md), and
+`pretool-no-prettier.sh` refuses a prettier run
+([prettier ran in an oxfmt repository](../dantotsus/prettier-ran-in-an-oxfmt-repository.md)).
+Feed a changed-file list to `pnpm format:check` or `node_modules/.bin/oxfmt
+--check`. oxfmt skips a `.sql` file in its arguments without an error
+(measured on a migration), so the `No parser could be inferred` failure
+prettier raised on the same list does not happen.
 
 ## The harness rewriter mangles `case … esac` inside a loop
 
@@ -50,5 +35,5 @@ control flow — and it is reviewable, unlike a one-liner.
 
 ## See also
 
-- [`../dantotsus/the-formatter-the-repository-told-me-to-run-was-not-its-own.md`](../dantotsus/the-formatter-the-repository-told-me-to-run-was-not-its-own.md) — where the prettier-invocation rule comes from.
+- [`../dantotsus/the-formatter-the-repository-told-me-to-run-was-not-its-own.md`](../dantotsus/the-formatter-the-repository-told-me-to-run-was-not-its-own.md) — the first time a prettier run disagreed with the pinned formatter.
 - [`../dantotsus/a-sed-delimiter-disarmed-the-mutation-gate.md`](../dantotsus/a-sed-delimiter-disarmed-the-mutation-gate.md) — another shell shape that silently changed meaning.

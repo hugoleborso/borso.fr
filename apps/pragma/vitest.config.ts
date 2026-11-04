@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
@@ -10,6 +12,7 @@ const PURE_TEST_FILES = [
   'api/src/**/*.utils.test.ts',
   'api/src/**/*.adapter.test.ts',
   'api/src/**/*.schema.test.ts',
+  'api/src/mcp/tool-coverage.test.ts',
 ];
 
 const ASSISTANT_TEST_FILES = [
@@ -46,6 +49,7 @@ export default defineConfig({
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
     coverage: {
       provider: 'v8',
+      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: [
         'domain/**/*.core.ts',
         'api/src/**/*.core.ts',
@@ -72,6 +76,7 @@ export default defineConfig({
             'api/src/**/*.utils.test.ts',
             'api/src/**/*.adapter.test.ts',
             'api/src/**/*.schema.test.ts',
+            'api/src/mcp/tool-coverage.test.ts',
             'cdk/test/**/*.test.ts',
             'site/src/**/*.test.{ts,tsx}',
             'scripts/**/*.core.test.ts',
