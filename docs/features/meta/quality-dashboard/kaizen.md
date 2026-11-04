@@ -22,3 +22,6 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [00:29] `pragma-kind` the spec and the task both wrote ADD COLUMN kind text NOT NULL DEFAULT 'idea', which DSQL refuses; nothing in the spec template checks a migration line against the DSQL-compat gate
 - [00:30] `main` The two worktree agents wrote their friction to their own worktree's KAIZEN.md, which archive never reads, so their entries had to be copied by hand.
 - [00:31] `main` Stryker's perTest coverage reported mutants as survived for code a test file ran at describe level, outside any it(), which read as missing assertions.
+- [2026-11-04 02:29] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
+- [2026-11-04 02:29] `pragma-kind-2` CLAUDE.md says Prettier is the only formatter and pre-commit runs prettier --check, but a hook refuses prettier because the repo now formats with oxfmt
+- [2026-11-04 02:35] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
