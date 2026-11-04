@@ -24,12 +24,14 @@ set -euo pipefail
 base="${1:?usage: scripts/mutate-changed.sh <base-ref>}"
 changed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
 failed=()
+runs=0
 incremental=(--incremental --incrementalFile reports/mutation/incremental.json)
 
 run_mutation() {
   local label="$1"
   shift
   echo "[mutate-changed] $label"
+  runs=$((runs + 1))
   "$@" || failed+=("$label")
 }
 
@@ -70,4 +72,8 @@ if [ "${#failed[@]}" -gt 0 ]; then
   echo "[mutate-changed] mutation failed for: ${failed[*]}" >&2
   exit 1
 fi
-echo "[mutate-changed] every changed gated file passed mutation, or none changed"
+if [ "$runs" -eq 0 ]; then
+  echo "[mutate-changed] no gated file changed between $base and HEAD, so nothing ran; commits only, uncommitted work is not read"
+  exit 0
+fi
+echo "[mutate-changed] every changed gated file passed mutation ($runs run(s))"
