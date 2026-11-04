@@ -23,6 +23,18 @@ export function isVotingPageState(
   return selectVotePageState({ hasBoard, status, isClosingOpen }) === 'voting';
 }
 
+export type VotePanel = 'ballot' | 'results';
+
+export const DEFAULT_VOTE_PANEL: VotePanel = 'ballot';
+
+export function isBallotShown(isVoting: boolean, panel: VotePanel): boolean {
+  return isVoting && panel === 'ballot';
+}
+
+export function isTallyShown(isVoting: boolean, panel: VotePanel): boolean {
+  return !isVoting || panel === 'results';
+}
+
 export type VoteHeaderAction = 'back-to-vote' | 'close-vote' | 'open-vote';
 
 const HEADER_ACTION_BY_STATE = {

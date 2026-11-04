@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   indexMembersById,
   indexSongsById,
+  isBallotShown,
+  isTallyShown,
   isVotingPageState,
   projectPointsBySongId,
   selectCloseIntent,
@@ -92,5 +94,19 @@ describe('selectVoteHeaderAction', () => {
     expect(selectVoteHeaderAction('closing')).toBe('back-to-vote');
     expect(selectVoteHeaderAction('locked')).toBe('open-vote');
     expect(selectVoteHeaderAction('loading')).toBe('open-vote');
+  });
+});
+
+describe('the vote and results panels', () => {
+  it('shows one panel at a time while the vote is open', () => {
+    expect(isBallotShown(true, 'ballot')).toBe(true);
+    expect(isTallyShown(true, 'ballot')).toBe(false);
+    expect(isBallotShown(true, 'results')).toBe(false);
+    expect(isTallyShown(true, 'results')).toBe(true);
+  });
+
+  it('shows only the results once the vote is not open', () => {
+    expect(isBallotShown(false, 'ballot')).toBe(false);
+    expect(isTallyShown(false, 'ballot')).toBe(true);
   });
 });
