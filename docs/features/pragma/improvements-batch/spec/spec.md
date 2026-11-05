@@ -4,7 +4,7 @@ The band filed these through Groupe > Améliorations. Each item is one user-visi
 
 ## Use cases
 
-1. **Rehearsal time.** "Affiche l'heure des répets". Wherever the Sessions list, the session detail header and the Home next-session card show a session date, they also show its start time in the band's time zone (Europe/Paris), 24-hour clock, for example `ven. 6 nov. 2026 · 21:00`.
+1. **Rehearsal time.** "Affiche l'heure des répets". Wherever the Sessions list, the session detail header and the Home next-session card show the session's own date, they also show its start time in the band's time zone (Europe/Paris), 24-hour clock, for example `ven. 6 nov. 2026 · 21:00`.
 2. **Sheets above the keyboard.** "Permettre aux améliorations de passer au dessus du clavier". On a phone, an open sheet (the improvement form and every other sheet) stays inside the area above the on-screen keyboard, so the focused field and the submit button stay visible.
 3. **Tab bar stays pinned.** On iPhone, after a sheet was opened and closed, the bottom tab bar and floating action button stay at the bottom of the screen and do not rise to mid-screen. Opening a sheet must not scroll the visual viewport to reveal its first field.
 4. **Empty lineup placeholder.** "Le placeholder lineup est vide". A song with no lineup shows "No lineup yet" / "Pas encore de lineup" with a warning icon in setlist rows, practice mode and the song's Lineup tab, instead of an empty gap or a dash.
