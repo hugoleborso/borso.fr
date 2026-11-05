@@ -5,14 +5,14 @@
     "slug": "open-in-two-calls"
   },
   "pilotedByTechLead": true,
-  "stage": "validate",
+  "stage": "ship",
   "retries": {
     "implement": 0,
     "validate": 0
   },
   "adrIndex": [202611050445],
   "bytesRead": 0,
-  "specChecksum": "25433b7d5ce739a3c9584a64f04c6bce41c1b6c07ff4614e0dbea6cf55e1df63",
+  "specChecksum": "767264d6ea4ceca98b045f9a611cdc90cb624dd2223471fbcefc56d2f6d6a042",
   "startedAt": "2026-11-05T04:04:58.000Z",
-  "updatedAt": "2026-11-05T07:20:22.000Z"
+  "updatedAt": "2026-11-05T12:04:56.000Z"
 }
