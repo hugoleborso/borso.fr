@@ -109,7 +109,8 @@ are computed post-hoc.
    category.
 
    For every confirmed candidate, invoke `/adr` (piloted mode — see [`adr/SKILL.md`](../adr/SKILL.md#mode-b--piloted-by-tech-lead-orchestrator)) with the slug
-   and trigger list. Append each new ADR number to `state.adrIndex`. ADRs
+   and trigger list. Copy the slug from the ADR link the spec already holds,
+   so the spec's link resolves to the file the ADR writes. Append each new ADR number to `state.adrIndex`. ADRs
    land before the plan because they **constrain** it: the plan must
    honour every accepted ADR.
 
@@ -125,9 +126,13 @@ are computed post-hoc.
    `runs/<run-id>/agents/implementation-<step>.md` per
    [`sub-agent-contract.md`](./sub-agent-contract.md). One implementer at
    a time — never parallel, and never a resumed one.
-5. **validate.** After the last slice, spawn `/technical-validation`
-   (round 1, whole branch). After it passes, spawn `/visual-validation`
-   once. Each writes its verdict YAML next to the implementation's.
+5. **validate.** After the last slice, load `/technical-validation` in
+   this session (round 1, whole branch). It dispatches the
+   `technical-validator` agent itself. After it passes, load
+   `/visual-validation` once, which dispatches `visual-validator`. Never
+   hand either skill to a subagent: a subagent has no Agent tool, and
+   `pretool-validation-runs-as-its-agent.sh` refuses the load. Each writes
+   its verdict YAML next to the implementation's.
    - If the feature has no UI surface, **skip silently** (decision
      Q-VIS-VAL): append a `visual_validation_skipped` event and proceed
      with only the technical verdict.

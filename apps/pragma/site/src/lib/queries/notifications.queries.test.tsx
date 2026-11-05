@@ -97,7 +97,7 @@ describe('notifications queries', () => {
   });
 
   it('fails the preferences read on a refused answer', async () => {
-    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'nope' }, 500)));
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'nope' }, 403)));
     const queryClient = createIsolatedQueryClient();
     const tree = mountWithClient(queryClient, <ProbeReads isSupported={false} />);
     await flushTasks();

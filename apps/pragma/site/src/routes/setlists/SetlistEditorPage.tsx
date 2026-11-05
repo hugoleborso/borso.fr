@@ -30,6 +30,7 @@ import {
   selectSetlistView,
   type SetlistView,
 } from './setlist-view.core';
+import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 
 const NO_ROWS: readonly never[] = [];
 const LINE_SEPARATOR = ' · ';
@@ -97,7 +98,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   if (setlist === null) {
     return (
       <NotFoundNotice
-        message={t('setlist.notFound')}
+        message={t(selectMissingSetlistMessageKey(setlistQuery.error))}
         backTo="/setlists"
         backLabel={t('setlist.title')}
       />

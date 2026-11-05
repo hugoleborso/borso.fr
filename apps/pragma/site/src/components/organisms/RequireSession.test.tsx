@@ -26,7 +26,7 @@ const LOADING_EN = 'Tuning up…';
 const FAILED_EN = "pragma could not reach the band's data.";
 const RETRY_EN = 'Try again';
 const UNAUTHORISED = 401;
-const SERVER_ERROR = 500;
+const REFUSED = 403;
 
 async function countSongs(): Promise<number> {
   const response = await api.api.songs.$get();
@@ -197,7 +197,7 @@ describe('RequireSession', () => {
     rememberSessionMarker();
     let isApiUp = false;
     fetchStub = stubFetch(() =>
-      Promise.resolve(isApiUp ? jsonResponse(['Creep']) : jsonResponse({}, SERVER_ERROR)),
+      Promise.resolve(isApiUp ? jsonResponse(['Creep']) : jsonResponse({}, REFUSED)),
     );
     const raw = recordRawRequests();
     tree = mountWithClient(queryClient, <GatedApp />);

@@ -138,7 +138,7 @@ describe('NotificationSettings', () => {
   });
 
   it('says enabling failed, before asking the browser, when the key route fails', async () => {
-    api = answerApi(500);
+    api = answerApi(403);
     renderSettings();
     await userEvent.click(await screen.findByRole('button', { name: ENABLE_LABEL }));
     expect(await readAlertText()).toBe('Could not be enabled.');

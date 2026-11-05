@@ -3,6 +3,18 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
+import { ApiError } from '../../lib/api.client';
+
+interface SetlistReadStub {
+  readonly data: undefined;
+  readonly isLoading: boolean;
+  readonly error: unknown;
+}
+
+const setlistReads = vi.hoisted(() => {
+  const reads: SetlistReadStub[] = [];
+  return reads;
+});
 
 const scene = vi.hoisted(() => ({
   setlist: { id: 'set-1', name: 'Les Disquaires' },
@@ -31,7 +43,8 @@ function song(id: string, title: string) {
 const SONGS = [song('song-1', 'Take Five'), song('song-2', 'Helpless'), song('song-3', 'So What')];
 
 vi.mock('../../lib/queries/setlists.queries', () => ({
-  useSetlist: () => ({ data: { setlist: scene.setlist }, isLoading: false, error: null }),
+  useSetlist: () =>
+    setlistReads[0] ?? { data: { setlist: scene.setlist }, isLoading: false, error: null },
 }));
 
 vi.mock('../../lib/queries/setlist-entries.queries', () => ({
@@ -225,5 +238,51 @@ describe('SetlistScenePage with an empty set', () => {
   it('says the set carries no song and offers no transport', () => {
     expect(container.textContent).toContain('No song in this set yet.');
     expect(container.querySelector('nav')).toBeNull();
+  });
+});
+
+describe('SetlistScenePage with no setlist in hand', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  function renderScene(read: SetlistReadStub): void {
+    setlistReads.push(read);
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/setlists/set-1/scene']}>
+          <Routes>
+            <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+  }
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    setlistReads.length = 0;
+  });
+
+  it('says the page cannot be loaded, not that the setlist is gone, when the read is paused offline', () => {
+    renderScene({ data: undefined, isLoading: false, error: null });
+
+    expect(container.querySelector('[role=alert]')?.textContent).toBe(
+      'This page could not be loaded. Check the connection, then try again.',
+    );
+    expect(container.textContent).not.toContain('This setlist no longer exists.');
+  });
+
+  it('says the setlist is gone when the API answered 404', () => {
+    renderScene({
+      data: undefined,
+      isLoading: false,
+      error: new ApiError(404, 'setlist 404', null),
+    });
+
+    expect(container.textContent).toContain('This setlist no longer exists.');
   });
 });

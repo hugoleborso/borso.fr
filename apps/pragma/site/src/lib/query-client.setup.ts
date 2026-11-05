@@ -28,7 +28,7 @@ export const queryClient = new QueryClient({
     onError: (error, query) => query.meta?.reportFailure?.(error),
   }),
   defaultOptions: {
-    queries: { staleTime: DEFAULT_STALE_TIME_MS, gcTime: PERSISTED_CACHE_MAX_AGE_MS, retry: 1 },
+    queries: { staleTime: DEFAULT_STALE_TIME_MS, gcTime: PERSISTED_CACHE_MAX_AGE_MS, retry: 0 },
     mutations: { retry: 0 },
   },
 });

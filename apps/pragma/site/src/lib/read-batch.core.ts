@@ -24,6 +24,8 @@ const NULL_BODY_STATUSES: ReadonlySet<number> = new Set([
   NOT_MODIFIED_STATUS,
 ]);
 const ANSWERED_BATCH_STATUS = 200;
+const TOO_MANY_REQUESTS_STATUS = 429;
+const FIRST_SERVER_ERROR_STATUS = 500;
 const ABORT_ERROR_NAME = 'AbortError';
 const KEY_SEPARATOR = '\n';
 
@@ -87,30 +89,21 @@ export function mergeIdenticalReads<Caller>(
   return [...byIdentity.values()];
 }
 
-export type FailedCallers = ReadonlyMap<string, number>;
-
-export function rememberFailedCallers<Caller>(
-  failed: FailedCallers,
-  batch: readonly MergedRead<Caller>[],
-): FailedCallers {
-  const counted = new Map(failed);
-  batch.forEach((entry) => {
-    const identity = readIdentity(entry.read);
-    counted.set(identity, (counted.get(identity) ?? 0) + entry.callers.length);
-  });
-  return counted;
+export interface RetriedCaller {
+  readonly hasRetried: boolean;
 }
 
-export function takeFailedCaller(
-  failed: FailedCallers,
-  identity: string,
-): { readonly isRetry: boolean; readonly failed: FailedCallers } {
-  const remaining = failed.get(identity) ?? 0;
-  if (remaining === 0) return { isRetry: false, failed };
-  const counted = new Map(failed);
-  if (remaining === 1) counted.delete(identity);
-  else counted.set(identity, remaining - 1);
-  return { isRetry: true, failed: counted };
+export function splitForRetry<Caller extends RetriedCaller>(
+  entry: MergedRead<Caller>,
+  isRetryable: boolean,
+): { readonly retries: WaitingRead<Caller>[]; readonly settling: Caller[] } {
+  if (!isRetryable) return { retries: [], settling: [...entry.callers] };
+  return {
+    retries: entry.callers
+      .filter((caller) => !caller.hasRetried)
+      .map((caller) => ({ read: entry.read, caller: { ...caller, hasRetried: true } })),
+    settling: entry.callers.filter((caller) => caller.hasRetried),
+  };
 }
 
 export function keepCallers<Caller>(
@@ -197,6 +190,10 @@ export function readContentType(response: Response): string | null {
 
 export function isRefusedBatch(status: number): boolean {
   return status !== ANSWERED_BATCH_STATUS;
+}
+
+export function isRetryableStatus(status: number): boolean {
+  return status === TOO_MANY_REQUESTS_STATUS || status >= FIRST_SERVER_ERROR_STATUS;
 }
 
 export function toAbortError(reason: unknown): Error {

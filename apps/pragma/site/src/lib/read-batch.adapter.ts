@@ -1,13 +1,12 @@
 import { MOST_READS_IN_FLIGHT, READ_BATCH_PATH } from '@domain/read-batch.core';
 import {
   isRefusedBatch,
+  isRetryableStatus,
   keepCallers,
   mergeIdenticalReads,
-  readIdentity,
   pairAnswersWithReads,
-  rememberFailedCallers,
-  takeFailedCaller,
   readContentType,
+  splitForRetry,
   takeNextBatch,
   toBatchedRead,
   toCallerResponse,
@@ -15,7 +14,6 @@ import {
   toLoneReadInit,
   toLoneRead,
   toAbortError,
-  type FailedCallers,
   type MergedRead,
   type WaitingRead,
 } from './read-batch.core';
@@ -30,7 +28,7 @@ export interface ReadBatchFailure {
 export interface ReadTransportOptions {
   readonly apiBase: string;
   readonly closeGroup?: (close: () => void) => void;
-  readonly waitForStragglers?: (release: () => void) => void;
+  readonly waitBeforeRetry?: (retry: () => void) => void;
   readonly fetchResponse?: FetchResponse;
   readonly reportBatchFailure: (failure: ReadBatchFailure) => void;
 }
@@ -44,15 +42,11 @@ interface Caller {
   readonly signal: AbortSignal | null | undefined;
   readonly resolve: (response: Response) => void;
   readonly reject: (reason: unknown) => void;
-}
-
-interface RetryGathering {
-  awaited: FailedCallers;
-  readonly gathered: WaitingRead<Caller>[];
+  readonly hasRetried: boolean;
 }
 
 const MALFORMED_BATCH_ANSWER = 'read-batch-malformed';
-const RETRY_STRAGGLER_WAIT_MS = 100;
+const RETRY_DELAY_MS = 1000;
 
 function fetchFromPlatform(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   return globalThis.fetch(input, init);
@@ -66,12 +60,18 @@ function closeAtEndOfTask(close: () => void): void {
   setTimeout(close);
 }
 
-function waitForRetryStragglers(release: () => void): void {
-  setTimeout(release, RETRY_STRAGGLER_WAIT_MS);
+function waitRetryDelay(retry: () => void): void {
+  setTimeout(retry, RETRY_DELAY_MS);
 }
 
-function callersOf(batch: readonly MergedRead<Caller>[]): Caller[] {
-  return batch.flatMap((entry) => entry.callers);
+function answerOrRetry(
+  entry: MergedRead<Caller>,
+  isRetryable: boolean,
+  settle: (caller: Caller) => void,
+): WaitingRead<Caller>[] {
+  const { retries, settling } = splitForRetry(entry, isRetryable);
+  settling.forEach(settle);
+  return retries;
 }
 
 // @FollowsBlueprint adapter-direct-upload
@@ -79,15 +79,24 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   const {
     apiBase,
     closeGroup = closeAtEndOfTask,
-    waitForStragglers = waitForRetryStragglers,
+    waitBeforeRetry = waitRetryDelay,
     fetchResponse = fetchFromPlatform,
     reportBatchFailure,
   } = options;
   let openGroup: WaitingRead<Caller>[] = [];
-  let gatherings: RetryGathering[] = [];
   let waiting: MergedRead<Caller>[] = [];
   let readsInFlight = 0;
   let lane: object = {};
+
+  function retryOnce(retries: readonly WaitingRead<Caller>[]): void {
+    if (retries.length === 0) return;
+    const startedIn = lane;
+    waitBeforeRetry(() => {
+      if (startedIn !== lane) return;
+      waiting = mergeIdenticalReads(waiting, retries);
+      drain();
+    });
+  }
 
   async function sendAlone(entry: MergedRead<Caller>): Promise<void> {
     try {
@@ -100,17 +109,14 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
         contentType: readContentType(response),
         body: await response.text(),
       };
-      entry.callers.forEach((caller) => caller.resolve(toCallerResponse(answer)));
+      retryOnce(
+        answerOrRetry(entry, isRetryableStatus(answer.status), (caller) =>
+          caller.resolve(toCallerResponse(answer)),
+        ),
+      );
     } catch (error) {
-      entry.callers.forEach((caller) => caller.reject(error));
+      retryOnce(answerOrRetry(entry, true, (caller) => caller.reject(error)));
     }
-  }
-
-  function rememberFailedBatch(batch: readonly MergedRead<Caller>[]): void {
-    gatherings = [
-      ...gatherings,
-      { awaited: rememberFailedCallers(new Map(), batch), gathered: [] },
-    ];
   }
 
   async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
@@ -123,24 +129,35 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
       const isRefused = isRefusedBatch(response.status);
       if (isRefused) {
         reportBatchFailure({ status: response.status, size });
-        rememberFailedBatch(batch);
         const failure = {
           status: response.status,
           contentType: readContentType(response),
           body: await response.text(),
         };
-        callersOf(batch).forEach((caller) => caller.resolve(toCallerResponse(failure)));
+        const isRetryable = isRetryableStatus(failure.status);
+        retryOnce(
+          batch.flatMap((entry) =>
+            answerOrRetry(entry, isRetryable, (caller) =>
+              caller.resolve(toCallerResponse(failure)),
+            ),
+          ),
+        );
         return;
       }
       const pairs = pairAnswersWithReads(batch, await response.json());
       if (pairs === null) throw new Error(MALFORMED_BATCH_ANSWER);
-      pairs.forEach(([entry, answer]) =>
-        entry.callers.forEach((caller) => caller.resolve(toCallerResponse(answer))),
+      retryOnce(
+        pairs.flatMap(([entry, answer]) =>
+          answerOrRetry(entry, isRetryableStatus(answer.status), (caller) =>
+            caller.resolve(toCallerResponse(answer)),
+          ),
+        ),
       );
     } catch (error) {
       reportBatchFailure({ status: null, size });
-      rememberFailedBatch(batch);
-      callersOf(batch).forEach((caller) => caller.reject(error));
+      retryOnce(
+        batch.flatMap((entry) => answerOrRetry(entry, true, (caller) => caller.reject(error))),
+      );
     }
   }
 
@@ -176,34 +193,6 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
     openGroup.push(entry);
   }
 
-  function release(gathering: RetryGathering): void {
-    if (!gatherings.includes(gathering)) return;
-    gatherings = gatherings.filter((known) => known !== gathering);
-    gathering.gathered.forEach(joinOpenGroup);
-  }
-
-  function claimRetry(identity: string): RetryGathering | null {
-    for (const gathering of gatherings) {
-      const { isRetry, failed } = takeFailedCaller(gathering.awaited, identity);
-      if (isRetry) {
-        gathering.awaited = failed;
-        return gathering;
-      }
-    }
-    return null;
-  }
-
-  function joinGroup(entry: WaitingRead<Caller>): void {
-    const gathering = claimRetry(readIdentity(entry.read));
-    if (gathering === null) {
-      joinOpenGroup(entry);
-      return;
-    }
-    if (gathering.gathered.length === 0) waitForStragglers(() => release(gathering));
-    gathering.gathered.push(entry);
-    if (gathering.awaited.size === 0) release(gathering);
-  }
-
   function send(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     if (typeof input !== 'string') return fetchResponse(input, init);
     const read = toBatchedRead(input, init, apiBase);
@@ -216,7 +205,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
       signal?.addEventListener('abort', () => reject(toAbortError(signal.reason)), {
         signal: listening.signal,
       });
-      joinGroup({ read, caller: { signal, resolve, reject } });
+      joinOpenGroup({ read, caller: { signal, resolve, reject, hasRetried: false } });
     });
     void answer.then(stopListening, stopListening);
     return answer;
@@ -224,7 +213,6 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
 
   function reset(): void {
     openGroup = [];
-    gatherings = [];
     waiting = [];
     readsInFlight = 0;
     lane = {};

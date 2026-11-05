@@ -117,7 +117,7 @@ describe('useStreaks', () => {
   });
 
   it('fails with an ApiError on a non-OK answer', async () => {
-    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'boom' }, 500)));
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'boom' }, 403)));
     const queryClient = createIsolatedQueryClient();
     tree = mountWithClient(queryClient, <ProbeStreaks />);
     await flushTasks();

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   isRefusedBatch,
+  isRetryableStatus,
   keepCallers,
   mergeIdenticalReads,
   pairAnswersWithReads,
   readContentType,
   readIdentity,
-  rememberFailedCallers,
-  takeFailedCaller,
+  splitForRetry,
   takeNextBatch,
   toBatchedRead,
   toAbortError,
@@ -234,34 +234,37 @@ describe('a batch the API did not answer', () => {
   });
 });
 
-describe('the callers of failed batches', () => {
-  it('counts every caller of every failed batch, across batches that shared a read', () => {
-    const first = rememberFailedCallers(new Map(), [
-      { read: SONGS, callers: ['probe', 'list'] },
-      { read: BALLOT, callers: ['ballot'] },
-    ]);
-    const both = rememberFailedCallers(first, [{ read: SONGS, callers: ['home'] }]);
+describe('the callers of a failed read', () => {
+  const firstTry = { name: 'probe', hasRetried: false };
+  const secondTry = { name: 'list', hasRetried: true };
 
-    expect([...both]).toStrictEqual([
-      [readIdentity(SONGS), 3],
-      [readIdentity(BALLOT), 1],
-    ]);
-    expect([...first]).toStrictEqual([
-      [readIdentity(SONGS), 2],
-      [readIdentity(BALLOT), 1],
-    ]);
+  it('retries once every caller still on its first try, and settles the others now', () => {
+    const { retries, settling } = splitForRetry(
+      { read: SONGS, callers: [firstTry, secondTry] },
+      true,
+    );
+
+    expect(retries).toStrictEqual([{ read: SONGS, caller: { name: 'probe', hasRetried: true } }]);
+    expect(settling).toStrictEqual([secondTry]);
+    expect(firstTry.hasRetried).toBe(false);
   });
 
-  it('takes one retry per failed caller, then forgets the read', () => {
-    const failed = rememberFailedCallers(new Map(), [{ read: SONGS, callers: ['probe', 'list'] }]);
+  it('settles every caller when the answer is not worth a retry', () => {
+    const { retries, settling } = splitForRetry({ read: SONGS, callers: [firstTry] }, false);
 
-    const first = takeFailedCaller(failed, readIdentity(SONGS));
-    const second = takeFailedCaller(first.failed, readIdentity(SONGS));
-    const third = takeFailedCaller(second.failed, readIdentity(SONGS));
+    expect(retries).toStrictEqual([]);
+    expect(settling).toStrictEqual([firstTry]);
+  });
 
-    expect(first).toStrictEqual({ isRetry: true, failed: new Map([[readIdentity(SONGS), 1]]) });
-    expect(second).toStrictEqual({ isRetry: true, failed: new Map() });
-    expect(third).toStrictEqual({ isRetry: false, failed: new Map() });
-    expect([...failed]).toStrictEqual([[readIdentity(SONGS), 2]]);
+  it.each([
+    [429, true],
+    [500, true],
+    [503, true],
+    [499, false],
+    [404, false],
+    [401, false],
+    [200, false],
+  ])('treats a %i as worth a retry: %s', (status, isRetryable) => {
+    expect(isRetryableStatus(status)).toBe(isRetryable);
   });
 });
