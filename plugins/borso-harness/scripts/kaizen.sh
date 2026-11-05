@@ -59,7 +59,18 @@ set -euo pipefail
 
 HARNESS_PATH="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/harness-path.sh"
 REPO_ROOT="$("$HARNESS_PATH" --root)"
-KAIZEN_FILE="$REPO_ROOT/$("$HARNESS_PATH" kaizenFile)"
+
+# An agent given its own worktree runs from a second checkout, and a log kept
+# there is one `archive` never reads: PR 263 lost two agents' lines that way.
+# The main checkout is the parent of the common git directory every worktree
+# shares, so every writer appends to the one file the session archives.
+main_checkout() {
+  local common
+  common="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+    { printf '%s' "$REPO_ROOT"; return; }
+  printf '%s' "$(dirname "$common")"
+}
+KAIZEN_FILE="$(main_checkout)/$("$HARNESS_PATH" kaizenFile)"
 FEATURES_DIRECTORY="$("$HARNESS_PATH" features)"
 
 # The command the log tells its readers to run, written as they can type it
