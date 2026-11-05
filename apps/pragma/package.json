@@ -70,7 +70,7 @@
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
     "web-push": "catalog:",
-    "zod": "catalog:zod3"
+    "zod": "catalog:zod4"
   },
   "devDependencies": {
     "@hono/node-server": "catalog:",
