@@ -14,6 +14,13 @@ describe('the lineup side of a song', () => {
     expect(screen.getByText('No lineup yet')).toBeTruthy();
   });
 
+  it('marks the missing lineup with the warning icon, as the setlist rows do', () => {
+    render(<SongDetailSidebar lineupRows={[]} />);
+    const notice = screen.getByText('No lineup yet');
+    expect(notice.querySelector('svg')).not.toBeNull();
+    expect(notice.className).toContain('text-warn');
+  });
+
   it('lists who plays what once the song has a lineup', () => {
     render(
       <SongDetailSidebar

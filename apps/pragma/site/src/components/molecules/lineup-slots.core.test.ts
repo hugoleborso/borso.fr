@@ -6,6 +6,7 @@ import {
   type LineupColumnView,
   naturalColumnWidth,
   OVERFLOW_COUNTER_WIDTH_PX,
+  selectLineupColumnKind,
   sliceColumnToWidth,
   type SlotInstrument,
   slotsFittingWidth,
@@ -160,6 +161,16 @@ describe('sliceColumnToWidth', () => {
     );
     expect(view.slots).toHaveLength(4);
     expect(view.hasOverflow).toBe(false);
+  });
+});
+
+describe('selectLineupColumnKind', () => {
+  it('calls a column nobody holds an instrument in empty', () => {
+    expect(selectLineupColumnKind({ slots: [] })).toBe('empty');
+  });
+
+  it('calls a column with one held instrument filled', () => {
+    expect(selectLineupColumnKind(columnOf('Voice'))).toBe('filled');
   });
 });
 

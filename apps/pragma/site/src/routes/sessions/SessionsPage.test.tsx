@@ -30,6 +30,10 @@ const FAR_CONCERT = sessionAt('far-concert', 'concert', 20, 'La Cigale');
 const NEAR_PRACTICE = sessionAt('near-practice', 'practice', 2, null);
 const RECENT_PRACTICE = sessionAt('recent-practice', 'practice', -2, null);
 const OLD_CONCERT = sessionAt('old-concert', 'concert', -30, 'Le Petit Bain');
+const EVENING_PRACTICE = {
+  ...sessionAt('evening-practice', 'practice', 0, 'Studio Bleu'),
+  date: '2099-11-12T19:00:00.000Z',
+};
 
 function renderSessionsPage(address = '/sessions'): void {
   render(
@@ -78,6 +82,18 @@ describe('the sessions list', () => {
       `/sessions/${NEAR_PRACTICE.id}`,
       `/sessions/${FAR_CONCERT.id}`,
     ]);
+  });
+
+  it('gives each session its start time on the band clock in Paris', async () => {
+    stub = stubFetch((request) =>
+      Promise.resolve(
+        new URL(request.url).pathname === '/api/sessions'
+          ? jsonResponse({ sessions: [EVENING_PRACTICE] })
+          : new Response(null, { status: 404 }),
+      ),
+    );
+    renderSessionsPage();
+    expect(await screen.findByText('Thu, Nov 12, 2099 · 20:00')).toBeTruthy();
   });
 
   it('lists only the past sessions, newest first, once Past is chosen', async () => {

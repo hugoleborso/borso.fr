@@ -9,7 +9,6 @@ import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { buildSetlistPreview } from '../../routes/sessions/session-page.core';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { Icon } from '../atoms/Icon';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { buildLineupColumn } from '../molecules/lineup-slots.core';
 import { Menu, type MenuItem } from '../molecules/Menu';
@@ -75,16 +74,9 @@ export function SessionSetlistPreview({
               <AlbumCover title={row.title} deezerAlbumId={row.deezerAlbumId} size="sm" />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate font-display text-body text-ink">{row.title}</span>
-                {row.hasNoLineup ? (
-                  <span className="flex items-center gap-1 text-label text-warn">
-                    <Icon name="warn" />
-                    {t('sessions.noLineup')}
-                  </span>
-                ) : (
-                  <LineupSlots
-                    column={buildLineupColumn({ instruments, lineup: row.lineup, members })}
-                  />
-                )}
+                <LineupSlots
+                  column={buildLineupColumn({ instruments, lineup: row.lineup, members })}
+                />
               </span>
             </li>
           ))}

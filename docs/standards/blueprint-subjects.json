@@ -2726,7 +2726,7 @@
     "LineupMemberRow": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/LineupSlots.tsx": {
-    "LineupSlots": "molecule-presentational"
+    "LineupSlots": "molecule-view-selector"
   },
   "apps/pragma/site/src/components/molecules/ListRow.tsx": {
     "ListRow": "molecule-presentational"

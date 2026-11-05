@@ -28,7 +28,6 @@ export interface SetlistPreviewRow {
   readonly title: string;
   readonly deezerAlbumId: string | null;
   readonly lineup: Readonly<Record<string, readonly string[]>>;
-  readonly hasNoLineup: boolean;
 }
 
 export interface SetlistPreview {
@@ -56,7 +55,6 @@ export function buildSetlistPreview(
       title: song?.title ?? '',
       deezerAlbumId: song?.deezerAlbumId ?? null,
       lineup,
-      hasNoLineup: Object.keys(lineup).length === 0,
     };
   });
   return {

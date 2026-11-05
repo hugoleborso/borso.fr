@@ -112,11 +112,10 @@ describe('buildSetlistPreview', () => {
       title: 'Title song-a',
       deezerAlbumId: '42',
       lineup: { 'member-1': ['bass'] },
-      hasNoLineup: false,
     });
   });
 
-  it('flags a song nobody plays, and reads tonight’s lineup before the song’s', () => {
+  it('empties the lineup of a song nobody plays, and reads tonight’s lineup before the song’s', () => {
     const preview = buildSetlistPreview(
       [
         entry('entry-b', 'song-b', 1),
@@ -124,7 +123,7 @@ describe('buildSetlistPreview', () => {
       ],
       SONGS_BY_ID,
     );
-    expect(preview.rows.map((row) => row.hasNoLineup)).toEqual([true, true]);
+    expect(preview.rows.map((row) => row.lineup)).toEqual([{}, {}]);
   });
 
   it('holds no total for an empty setlist, and an empty title for a song not loaded yet', () => {
@@ -136,7 +135,7 @@ describe('buildSetlistPreview', () => {
     expect(buildSetlistPreview([entry('entry-x', 'song-x', 1)], {}).rows[0]).toMatchObject({
       title: '',
       deezerAlbumId: null,
-      hasNoLineup: true,
+      lineup: {},
     });
   });
 });

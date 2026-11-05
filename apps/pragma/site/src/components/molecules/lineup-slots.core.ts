@@ -51,6 +51,8 @@ export interface LineupColumnView {
   readonly slots: readonly LineupSlot[];
 }
 
+export type LineupColumnKind = 'empty' | 'filled';
+
 export interface LineupSlotsView {
   readonly slots: readonly LineupSlot[];
   readonly overflowCount: number;
@@ -82,6 +84,10 @@ export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnVi
       })),
   );
   return { slots };
+}
+
+export function selectLineupColumnKind(column: LineupColumnView): LineupColumnKind {
+  return column.slots.length === 0 ? 'empty' : 'filled';
 }
 
 export function naturalColumnWidth(column: LineupColumnView): number | 'auto' {

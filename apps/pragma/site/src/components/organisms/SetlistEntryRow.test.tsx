@@ -83,6 +83,13 @@ describe('a setlist row', () => {
     expect(screen.getByText('No lineup yet')).toBeTruthy();
   });
 
+  it('marks a song with no lineup yet with the warning icon', () => {
+    renderRow(buildProps({ lineupColumn: { slots: [] } }));
+    const notice = screen.getByText('No lineup yet');
+    expect(notice.querySelector('svg')).not.toBeNull();
+    expect(notice.className).toContain('text-warn');
+  });
+
   it('shows the note written for tonight and tonight’s lineup change', () => {
     renderRow(
       buildProps({

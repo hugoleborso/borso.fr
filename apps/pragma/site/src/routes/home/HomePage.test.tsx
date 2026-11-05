@@ -32,6 +32,10 @@ const PRACTICE_TODAY = {
   date: new Date().toISOString(),
   venue: null,
 };
+const EVENING_PRACTICE = {
+  ...NEXT_PRACTICE,
+  date: '2099-11-12T19:00:00.000Z',
+};
 const LATER_CONCERT = {
   id: 'session-later',
   kind: 'concert',
@@ -145,6 +149,14 @@ describe('the home page', () => {
     expect(within(card).getByText(NEXT_PRACTICE.venue)).toBeTruthy();
     expect(await within(card).findByText(SETLIST.name)).toBeTruthy();
     expect(await within(card).findByText('2 songs · 48 min')).toBeTruthy();
+  });
+
+  it('gives the next session its start time on the band clock in Paris', async () => {
+    const answer = answerHomeApi([EVENING_PRACTICE]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    const card = await screen.findByRole('region', { name: 'Next session' });
+    expect(within(card).getByRole('link', { name: 'Thu, Nov 12, 2099 · 20:00' })).toBeTruthy();
   });
 
   it('names the next concert on the card when the next session is a practice', async () => {

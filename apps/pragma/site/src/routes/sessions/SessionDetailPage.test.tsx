@@ -134,6 +134,11 @@ describe('the concert page', () => {
     expect(screen.queryByText(/No setlist on this session yet/)).toBeNull();
   });
 
+  it('gives the session its start time on the band clock in Paris, under its title', async () => {
+    renderSessionPage();
+    expect(await screen.findByText(/^Sun, Nov 1, 2026 · 20:00/)).toBeTruthy();
+  });
+
   it('opens the details when Edit is tapped', async () => {
     renderSessionPage();
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
