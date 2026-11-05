@@ -41,6 +41,7 @@ export interface PreviewableAppProps {
     readonly timeoutSeconds?: number;
     readonly environment?: Readonly<Record<string, string>>;
     readonly extraPathPatterns?: readonly string[];
+    readonly requestHeaders?: readonly string[];
   };
   readonly database?: {
     readonly migrationsPath: string;
@@ -126,6 +127,7 @@ export class PreviewableApp extends Construct {
         ],
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
+        appRequestHeaders: props.api.requestHeaders,
         environment: {
           ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,
