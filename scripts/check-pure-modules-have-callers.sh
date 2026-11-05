@@ -45,6 +45,18 @@ declare -A ALLOWED_TEST_ONLY=(
   [apps/pragma/api/src/mcp/tool-coverage.core.ts]="test-only by design: mcp/tool-coverage.test.ts asserts every mounted route has an MCP tool or a written exclusion"
 )
 
+# The index, minus the files deleted from the working tree and not yet staged,
+# as check-stylesheet-contents.sh reads it. A subagent that must not stage
+# deleted a module and its callers, and the index alone reported the module as
+# uncalled (PR #278, `impl-1`). Untracked files stay out, so pre-commit still
+# judges what the commit holds.
+list_working_tree_files() {
+  git ls-files -z --cached --deduplicate -- "$@" |
+    while IFS= read -r -d '' file; do
+      if [ -f "$file" ]; then printf '%s\0' "$file"; fi
+    done
+}
+
 failed=0
 
 # Every import specifier that ends in a pure module's basename, read in one pass
@@ -57,7 +69,7 @@ failed=0
 # optional `.js` is not optional in `infra/`, whose ESM imports carry the
 # emitted extension.
 references=$(
-  git ls-files -z -- ':(glob)apps/**/*.ts' ':(glob)apps/**/*.tsx' ':(glob)infra/**/*.ts' |
+  list_working_tree_files ':(glob)apps/**/*.ts' ':(glob)apps/**/*.tsx' ':(glob)infra/**/*.ts' |
     xargs -0 --no-run-if-empty grep -oHE "/[A-Za-z0-9_.-]+\.(core|utils)(\.js)?'" 2>/dev/null |
     { grep -v -E '\.test\.tsx?:' || true; } |
     sed -E "s|:/(.*)(\.js)?'\$|\t\1|; s|\.js\$||" |
@@ -65,7 +77,8 @@ references=$(
 )
 
 modules=$(
-  git ls-files -- ':(glob)apps/**/*.core.ts' ':(glob)apps/**/*.utils.ts' ':(glob)infra/**/*.utils.ts' |
+  list_working_tree_files ':(glob)apps/**/*.core.ts' ':(glob)apps/**/*.utils.ts' ':(glob)infra/**/*.utils.ts' |
+    tr '\0' '\n' |
     { grep -v -E '\.test\.ts$' || true; }
 )
 
