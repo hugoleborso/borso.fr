@@ -867,6 +867,31 @@ Lives in: `site/src/lib/queries/offline-reading.queries.ts`
 Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › preloads a session that started earlier today, as home shows it
 Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes the session itself, so a start with no probe answer sends nothing
 
+## Read batch
+
+Up to ten API reads sent as one `POST /api/read-batch`, so one tab never
+needs more of the API's ten seats than it has batches in flight
+(ADR-202611050445).
+
+Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`
+
+- Holds 1 to 10 reads (`MOST_READS_PER_BATCH`, the database pool's default
+  size). Each read is a path under `/api/` and the headers of
+  `PRAGMA_REQUEST_HEADERS` it needs. A batch never holds itself, a path that
+  climbs out of `/api/`, or a write.
+- Each read runs through the whole app as a `GET` with the batch's cookie,
+  so the session gate, validation and controllers answer it as they answer
+  a lone read.
+- Answers `200` with one status, content type and body per read, in order.
+  One read that fails or throws fails only its own answer.
+- A malformed batch answers `400` `read-batch-invalid` and runs nothing.
+
+Held by: `api/src/read-batch/read-batch.controller.test.ts` › fails only the gated read when the batch carries no cookie
+Held by: `api/src/read-batch/read-batch.controller.test.ts` › answers 500 for a read that throws while the others answer 200
+
+Not to be confused with: a **written root**, which a write announces; the
+batch writes nothing and announces nothing.
+
 ## Order screen
 
 The setlist's screen for putting its entries in order with the energy curve

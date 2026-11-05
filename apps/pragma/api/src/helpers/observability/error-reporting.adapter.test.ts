@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   flushErrorReports,
+  recordReadBatchSize,
   reportTaggedFailure,
   reportUnhandledError,
   startErrorReporting,
@@ -22,6 +23,7 @@ const sentry = vi.hoisted(() => ({
     callback(requestSpan),
   ),
   updateSpanName: vi.fn(),
+  getActiveSpan: vi.fn((): typeof requestSpan | undefined => requestSpan),
   setHttpStatus: vi.fn(),
   nativeNodeFetchIntegration: vi.fn((options: unknown) => ({ name: 'NodeFetch', options })),
 }));
@@ -108,6 +110,26 @@ describe('reportTaggedFailure', () => {
       level: 'error',
       tags: { 'push.host': 'web.push.apple.com', 'push.status': '500' },
     });
+  });
+});
+
+describe('recordReadBatchSize', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sets the number of reads on the span of the batch request', () => {
+    recordReadBatchSize(7);
+
+    expect(requestSpan.setAttribute).toHaveBeenCalledWith('read_batch.size', 7);
+  });
+
+  it('records nothing when no span is active', () => {
+    sentry.getActiveSpan.mockReturnValueOnce(undefined);
+
+    recordReadBatchSize(7);
+
+    expect(requestSpan.setAttribute).not.toHaveBeenCalled();
   });
 });
 

@@ -38,6 +38,7 @@ const SLICES_HOLDING_NO_BAND_DATA = new Set([
   'helpers',
   'mcp',
   'notifications',
+  'read-batch',
   'realtime',
   'uploads',
 ]);
