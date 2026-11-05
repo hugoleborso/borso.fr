@@ -10,13 +10,14 @@ const FIRST_FIELD_SELECTOR =
   '[data-sheet-body] input:not([type=hidden]):not([type=checkbox]):not([type=radio]), [data-sheet-body] textarea, [data-sheet-body] select';
 const CLOSE_BUTTON_SELECTOR = '[data-sheet-close]';
 const CHOSEN_FOCUS_SELECTOR = '[data-sheet-focus]';
+const FOCUS_WITHOUT_SCROLLING: FocusOptions = { preventScroll: true };
 
 export function focusFirstField(dialog: HTMLElement | null): void {
   const target =
     dialog?.querySelector<HTMLElement>(CHOSEN_FOCUS_SELECTOR) ??
     dialog?.querySelector<HTMLElement>(FIRST_FIELD_SELECTOR) ??
     dialog?.querySelector<HTMLElement>(CLOSE_BUTTON_SELECTOR);
-  target?.focus();
+  target?.focus(FOCUS_WITHOUT_SCROLLING);
 }
 
 export function openDialogOnAttach(dialog: HTMLDialogElement | null): void {
