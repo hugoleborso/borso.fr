@@ -1,10 +1,11 @@
 ---
-summary: 'agent-browser traps: ignored `--user-agent` and silent relaunch, no `resize`, a shared `eval` scope, a session wedging after about forty drives, clicks and fills that do nothing, no `display-mode`, `chrome-error://` on a dead loopback, a routed mock with no CORS headers, and offline emulation that keeps an open WebSocket.'
+summary: 'agent-browser traps: launch flags (`--user-agent`, `--init-script`) ignored by a running daemon, no `resize`, a shared `eval` scope, a session wedging after about forty drives, clicks and fills that do nothing, `record start` without the cookie, a mocked route with no CORS headers, offline emulation that keeps a WebSocket, and a resource timing buffer full under Vite.'
 triggers:
   commands:
     - '\bagent-browser\b'
     - 'AGENT_BROWSER_(USER_AGENT|ARGS)'
     - '\baddinitscript\b'
+    - '\brecord\s+start\b'
     - 'datetime-local'
   output:
     - 'chrome-error://chromewebdata'
@@ -256,6 +257,32 @@ Logged by the same agent. `Network.emulateNetworkConditions` with
 WebSocket open and delivering. It cannot simulate a phone losing its socket.
 Close the socket from the page (an init script that keeps a handle on each
 `WebSocket`) or hide the tab, if the app closes its socket when hidden.
+
+## `--init-script` against a running daemon is ignored, and relaunching drops the sign-in
+
+_Logged by `impl-5` and `fix-3` on PR #278 (2026-11-05)._ `--init-script` is
+a launch setting, like the ones in section 1, and against a running daemon it
+does nothing, with no warning. Closing the session to relaunch with the script
+also drops the session cookie, so a gated app lands on its sign-in page. Pass
+`--init-script` on the call that opens the session, before signing in.
+
+## `record start <path> <url>` opens the url without the session's cookie
+
+_Logged by `vis-val` on PR #278._ The recording opens `<url>` in a fresh
+context, so a gated screen recorded that way is the sign-in page. Open the
+screen in the session first and record from there.
+
+## Under `pnpm dev`, the resource timing buffer is full before the first API call
+
+_Logged by `impl-4` and `vis-val` on PR #278._ Vite serves each source module
+as its own request, and Chromium keeps 250 resource timing entries by default.
+`performance.getEntriesByType('resource')` then holds no `/api/` entry and a
+request count reads 0. Raise the buffer before the app loads, from the init
+script the session opens with:
+
+```js
+performance.setResourceTimingBufferSize(5000);
+```
 
 ## Related
 

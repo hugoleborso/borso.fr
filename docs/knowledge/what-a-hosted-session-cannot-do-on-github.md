@@ -1,5 +1,5 @@
 ---
-summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow or reach GraphQL (`gh pr view`), and the `merged` field and `get_diff` size mislead.'
+summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow, reach GraphQL (`gh pr view`) or read Dependabot alerts, and the `merged` field and `get_diff` size mislead.'
 triggers:
   commands:
     - 'workflow_dispatch|actions_run_trigger'
@@ -7,6 +7,7 @@ triggers:
   output:
     - 'The token in GH_TOKEN is invalid'
     - 'GitHub GraphQL is not available'
+    - 'Resource not accessible by integration'
 ---
 
 # What a hosted session cannot do on GitHub
@@ -88,3 +89,11 @@ will change; it cannot press the button.
   git fetch origin "$branch:refs/remotes/origin/$branch"
   git diff origin/main...origin/$branch -- pnpm-workspace.yaml '*package.json'
   ```
+
+## Dependabot alerts answer 403 even once enabled
+
+_2026-11-05, PR #278._ The repository had Dependabot alerts disabled. Once the
+operator enabled them, the alerts API answered
+`403 Resource not accessible by integration`, because the session's GitHub
+token carries no Dependabot alerts permission. The operator decided that
+`pnpm audit` is the vulnerability source a session reads.

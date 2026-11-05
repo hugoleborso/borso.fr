@@ -22,7 +22,7 @@ docs/features/<app>/<slug>/
   runs/<run-id>/state.json                           # state per standard.md#statejson-schema
   runs/<run-id>/journal.md.jsonl                     # one JournalEvent per line
   runs/<run-id>/journal.md                           # human-readable render
-  runs/<run-id>/agents/<agent>-<step>.md             # sub-agent verdict + body
+  runs/<run-id>/agents/<skill>-<step>.md             # sub-agent verdict + body
   runs/<run-id>/errors.log                           # only present if something threw
   validation/technical-validation-<ts>.md            # /technical-validation output
   validation/visual-validation-<ts>.md               # /visual-validation output (if any)
