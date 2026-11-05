@@ -7,7 +7,7 @@ related-pr: '#243'
 fix-pr: none (opened by the kaizen pull request for #243)
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-shared-checkout-switch.sh, plugins/borso-harness/hooks/pretool-gh-pr-create.sh, .claude/hooks/pretool-merge-deploys-prod.sh]
+eradication-paths: [.claude/hooks/pretool-no-shared-checkout-switch.sh, .claude/hooks/pretool-gh-pr-create.sh, .claude/hooks/pretool-merge-deploys-prod.sh]
 time-to-detect: minutes
 tags: [hooks, harness, git, agents]
 zone: .claude/hooks/pretool-merge-deploys-prod.sh

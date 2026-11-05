@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [skills, harness, workflow]
-zone: plugins/borso-harness/skills
+zone: .claude/skills
 ---
 
 # Feature-flow skills do not auto-trigger; the human becomes the loop
@@ -90,5 +90,5 @@ Both reminders are non-blocking — they do not auto-invoke the next skill. The 
 
 ## See also
 
-- [`plugins/borso-harness/skills/after-task-kaizen/SKILL.md`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
+- [`.claude/skills/after-task-kaizen/SKILL.md`](../../.claude/skills/after-task-kaizen/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
 - CLAUDE.md *Self-improvement loop* section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.

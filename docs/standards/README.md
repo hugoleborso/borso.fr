@@ -40,9 +40,9 @@ code cannot, whether a name is the one the domain uses, whether a repository is
 projecting when it should be returning rows. No rule can ask those.
 
 Every `reviewer` bullet in the numbered standards is what the
-[`technical-validator`](../../plugins/borso-harness/agents/technical-validator.md)
+[`technical-validator`](../../.claude/agents/technical-validator.md)
 agent checks besides the spec, during
-[`/technical-validation`](../../plugins/borso-harness/skills/technical-validation/SKILL.md).
+[`/technical-validation`](../../.claude/skills/technical-validation/SKILL.md).
 It never repeats what lint already did, and widening what it checks means
 writing a `reviewer` bullet in a standard rather than editing the agent.
 
@@ -86,7 +86,7 @@ Every blueprint is listed in
 [`.claude/skills/blueprint/blueprint-index.md`](../../.claude/skills/blueprint/blueprint-index.md),
 along with how many places carry a `// @FollowsBlueprint` marker pointing at it,
 so the index shows which patterns have actually been adopted rather than which
-ones we intended. The [`/blueprint`](../../plugins/borso-harness/skills/blueprint/SKILL.md)
+ones we intended. The [`/blueprint`](../../.claude/skills/blueprint/SKILL.md)
 skill creates, indexes, and validates them.
 
 A blueprint's follower count answers how widely a pattern was copied, and read
@@ -121,7 +121,7 @@ author never sees it.
 
 ## Applying the standards
 
-The [`code-standards`](../../plugins/borso-harness/skills/code-standards/SKILL.md) skill
+The [`code-standards`](../../.claude/skills/code-standards/SKILL.md) skill
 walks an agent through the standards that apply to a change, and the
 `/implementation` and `/technical-validation` skills both defer to the same
 documents, so there is one source of truth.

@@ -120,11 +120,11 @@ not a row
 
 describe('selectStation', () => {
   it.each([
-    ['plugins/borso-harness/skills/specification', 'spec'],
-    ['plugins/borso-harness/skills/technical-conception', 'plan'],
+    ['.claude/skills/specification', 'spec'],
+    ['.claude/skills/technical-conception', 'plan'],
     ['docs/adr', 'plan'],
-    ['plugins/borso-harness/skills/implementation', 'implementation'],
-    ['plugins/borso-harness/agents/technical-validator.md', 'validation'],
+    ['.claude/skills/implementation', 'implementation'],
+    ['.claude/agents/technical-validator.md', 'validation'],
     ['scripts/phone.sh', 'validation'],
     ['.github/workflows/deploy.yml', 'deploy'],
     ['scripts/preflight-cloudfront-aliases.sh', 'deploy'],
@@ -132,8 +132,8 @@ describe('selectStation', () => {
     ['.husky/pre-push', 'gates'],
     ['eslint-rules/no-comments.js', 'gates'],
     ['stryker.shared.js', 'gates'],
-    ['plugins/borso-harness/hooks/pretool-no-broad-kill.sh', 'hooks'],
-    ['plugins/borso-harness/skills/open-pr', 'skills'],
+    ['.claude/hooks/pretool-no-broad-kill.sh', 'hooks'],
+    ['.claude/skills/open-pr', 'skills'],
     ['CLAUDE.md', 'harness'],
   ])('puts %s on the %s station', (zone, station) => {
     expect(selectStation(zone)).toBe(station);

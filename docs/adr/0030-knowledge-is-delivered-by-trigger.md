@@ -17,7 +17,7 @@ The operator's position going in: knowledge is useless except when a hook delive
 
 ## Decision
 
-**Every knowledge entry declares `triggers:` in its front matter, a hook delivers it when one matches, and a gate refuses an entry without one.** The triggers are path globs matched against a Write or Edit target, regular expressions matched against a Bash command with its quoted strings and heredocs removed, and regular expressions matched against what a Bash or MCP call printed or failed with. `plugins/borso-harness/hooks/knowledge-triggers.sh` runs on `PreToolUse`, `PostToolUse` and `PostToolUseFailure`. It matches with jq against a lookup compiled from the front matter, which it rebuilds itself when an entry is newer, and answers with `additionalContext`, once per entry per session. `scripts/check-knowledge-triggers.sh` runs in pre-commit and CI and fails an entry with no `summary:`, no trigger, or a pattern jq cannot compile.
+**Every knowledge entry declares `triggers:` in its front matter, a hook delivers it when one matches, and a gate refuses an entry without one.** The triggers are path globs matched against a Write or Edit target, regular expressions matched against a Bash command with its quoted strings and heredocs removed, and regular expressions matched against what a Bash or MCP call printed or failed with. `.claude/hooks/knowledge-triggers.sh` runs on `PreToolUse`, `PostToolUse` and `PostToolUseFailure`. It matches with jq against a lookup compiled from the front matter, which it rebuilds itself when an entry is newer, and answers with `additionalContext`, once per entry per session. `scripts/check-knowledge-triggers.sh` runs in pre-commit and CI and fails an entry with no `summary:`, no trigger, or a pattern jq cannot compile.
 
 Applying the rule to the corpus deleted 8 entries and merged 8 others into related entries, leaving 107. A triggered entry is now the floor rung of the dantotsu eradication ladder, replacing "a knowledge entry".
 
@@ -79,8 +79,8 @@ Applying the rule to the corpus deleted 8 entries and merged 8 others into relat
 
 ## Implementation pointers
 
-- Hook: `plugins/borso-harness/hooks/knowledge-triggers.sh`
-- Compiler and gate: `plugins/borso-harness/scripts/knowledge-triggers.py`, `scripts/check-knowledge-triggers.sh`
+- Hook: `.claude/hooks/knowledge-triggers.sh`
+- Compiler and gate: `scripts/knowledge-triggers.py`, `scripts/check-knowledge-triggers.sh`
 - Front-matter format: `docs/knowledge/README.md`
-- Ladder: `plugins/borso-harness/skills/dantotsu/SKILL.md`, step 6, rung 5
+- Ladder: `.claude/skills/dantotsu/SKILL.md`, step 6, rung 5
 - Related ADRs: ADR-0014 (generated files are not committed), ADR-0026 (the harness ships as a plugin)

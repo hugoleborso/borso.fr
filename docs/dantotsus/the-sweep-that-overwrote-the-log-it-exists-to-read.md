@@ -7,10 +7,10 @@ related-pr: '#105'
 fix-pr: '#106'
 fix-commits: [24eaf9b2d2]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh]
 time-to-detect: hours
 tags: [meta, self-improvement-loop, agents, shell, gates, claude-md]
-zone: plugins/borso-harness/scripts/kaizen.sh
+zone: scripts/kaizen.sh
 ---
 
 # The sweep that overwrote the log it exists to read

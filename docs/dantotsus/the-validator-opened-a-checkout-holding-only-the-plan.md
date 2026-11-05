@@ -7,10 +7,10 @@ related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/commands/feature-pipeline.md]
+eradication-paths: [.claude/commands/feature-pipeline.md]
 time-to-detect: hours
 tags: [orchestrator, agents, harness, validation, git]
-zone: plugins/borso-harness/commands/feature-pipeline.md
+zone: .claude/commands/feature-pipeline.md
 recurs: [parallel-agents-share-one-index-and-every-generator]
 ---
 

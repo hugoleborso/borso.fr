@@ -7,10 +7,10 @@ related-pr: '#199'
 fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-gh-pr-create.sh, .gitignore]
+eradication-paths: [.claude/hooks/pretool-gh-pr-create.sh, .gitignore]
 time-to-detect: 2 days
 tags: [self-improvement-loop, harness, hooks, agents, meta]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 weak-point: prose-stands-in-for-a-check
 recurs: [a-knowledge-entry-did-not-stop-the-second-hit]
 ---

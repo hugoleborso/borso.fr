@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours (mid-implementation)
 tags: [orchestrator, skill, adr, state-machine, conception-pivot]
-zone: plugins/borso-harness/skills/tech-lead-orchestrator
+zone: .claude/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator was going to mine ADRs *out of* the plan. ADRs constrain the plan.
@@ -130,8 +130,8 @@ populated and each entry is referenced in the plan)
 **The actual fix:**
 
 ```diff
---- a/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
-+++ b/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
+--- a/.claude/skills/tech-lead-orchestrator/standard.md
++++ b/.claude/skills/tech-lead-orchestrator/standard.md
 @@ -<line>,4 +<line>,4 @@
  The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
  `arbitrate`, `ship`, `escalated`. **ADRs come before the plan** — they

@@ -23,7 +23,7 @@
 #   * A script one shell script calls by path. PR #224 deleted the argent wrapper
 #     under scripts/ while pragma's task-metrics runner still started it, and nothing said so
 #     until an agent tried a run days later. A call is resolved from the
-#     repository root, from the app or plugin that holds the caller, or from the
+#     repository root, from the app that holds the caller, or from the
 #     caller's own folder, because a script often runs from one of those.
 #
 # Three surfaces, one question, one gate — deliberately. This repository shipped
@@ -49,7 +49,7 @@ cd "$(dirname "$0")/.."
 # files cost 490 ms of CPU against a 300 ms budget. Without
 # it, every file is read, which is how CI calls it; that is about two seconds.
 SUBJECTS=()
-SURFACES=('scripts/*' '.husky/*' '.github/*' 'plugins/*' 'CLAUDE.md' '.claude/*' 'apps/*/scripts/*')
+SURFACES=('scripts/*' '.husky/*' '.github/*' 'CLAUDE.md' '.claude/*' 'apps/*/scripts/*')
 if [ "${1:-}" = '--staged' ]; then
   STAGED=1
   while IFS= read -r staged; do
@@ -100,7 +100,7 @@ report() {
 
 # 1. `docs/….md` written anywhere in a script, hook or workflow.
 documents="$(
-  list_subject_files 'scripts/*' '.husky/*' '.github/*' 'plugins/*.sh' 'plugins/*.py' |
+  list_subject_files 'scripts/*' '.husky/*' '.github/*' |
     { grep -vE '\.test\.(ts|tsx|js)$' || true; } |
     { xargs --no-run-if-empty grep -HonE 'docs/[A-Za-z0-9/._-]+\.md' 2>/dev/null || true; } |
     sort -u
@@ -119,17 +119,13 @@ done <<<"$documents"
 
 # 2. A backticked repository path in an instruction surface — CLAUDE.md, a
 #    skill, an agent brief, a command. These are read by a model that will open
-#    what it is told to open. The plugin's own files name each other through
-#    `${CLAUDE_PLUGIN_ROOT}`, which Claude Code substitutes with the plugin's
-#    directory, so that prefix is read as `plugins/borso-harness/`.
-PLUGIN_DIRECTORY=plugins/borso-harness
+#    what it is told to open.
 # The vendored impeccable references and agents are upstream's text, kept
 # verbatim (ADR-0032); they name paths of a project that installs its hook.
 paths="$(
-  list_subject_files 'CLAUDE.md' '.claude/*' 'plugins/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
+  list_subject_files 'CLAUDE.md' '.claude/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
     { grep -E '\.md$' || true; } |
-    { xargs --no-run-if-empty grep -HonE '`(\.claude|scripts|apps|infra|docs|eslint-rules|\$\{CLAUDE_PLUGIN_ROOT\})/[A-Za-z0-9/._*<>-]+`' 2>/dev/null || true; } |
-    sed -E "s|\\$\\{CLAUDE_PLUGIN_ROOT\\}/|${PLUGIN_DIRECTORY}/|" |
+    { xargs --no-run-if-empty grep -HonE '`(\.claude|scripts|apps|infra|docs|eslint-rules)/[A-Za-z0-9/._*<>-]+`' 2>/dev/null || true; } |
     sort -u
 )"
 
@@ -146,21 +142,21 @@ done <<<"$paths"
 
 # 3. A script that a shell script or a workflow calls by its path.
 calls="$(
-  list_subject_files 'scripts/*.sh' '.husky/*' '.github/*' 'plugins/*.sh' 'apps/*/scripts/*.sh' |
+  list_subject_files 'scripts/*.sh' '.husky/*' '.github/*' 'apps/*/scripts/*.sh' |
     { grep -vE '\.test\.(ts|tsx|js)$' || true; } |
     { xargs --no-run-if-empty grep -HonE '(^|[^A-Za-z0-9_./${}-]|\./)scripts/[A-Za-z0-9/._-]+\.(sh|ts|mjs|js|py)' 2>/dev/null || true; } |
     sed -E 's|^([^:]+:[0-9]+:)[^s]*|\1|' |
     sort -u
 )"
 
-# The folders a call may be relative to: the repository root, the app or plugin
+# The folders a call may be relative to: the repository root, the app
 # holding the caller, and the caller's own folder.
 call_resolves() {
   local caller="$1" called="$2"
   [ -e "$called" ] && return 0
   [ -e "$(dirname "$caller")/$called" ] && return 0
   case "$caller" in
-    apps/*/* | plugins/*/*)
+    apps/*/*)
       local owner
       owner="$(cut -d/ -f1-2 <<<"$caller")"
       [ -e "$owner/$called" ] && return 0

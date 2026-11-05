@@ -89,7 +89,7 @@ lives"*.
 **The actual fix:**
 
 The instance is closed by the create action itself. The class is closed
-in `plugins/borso-harness/skills/visual-validation/standard.md`, which now walks the
+in `.claude/skills/visual-validation/standard.md`, which now walks the
 write a listing surface implies whether or not the spec names it:
 
 ```diff

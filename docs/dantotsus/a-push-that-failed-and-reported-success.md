@@ -7,10 +7,10 @@ related-pr: '#55'
 fix-pr: '#73'
 fix-commits: [50545c5bc1]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-swallowed-push.sh]
+eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh]
 time-to-detect: hours
 tags: [bash, git, hooks, gates, meta]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 ---
 
 # A push rejected by the pre-push gate read as a successful one for two hours
@@ -68,7 +68,7 @@ anything at all discards the only thing you were checking.
 
 ## Countermeasure
 
-`plugins/borso-harness/hooks/pretool-no-swallowed-push.sh`, a `PreToolUse` hook on `Bash`
+`.claude/hooks/pretool-no-swallowed-push.sh`, a `PreToolUse` hook on `Bash`
 that refuses `git push` or `git commit` appearing anywhere in a pipeline, and
 says what to write instead:
 

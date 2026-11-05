@@ -7,10 +7,10 @@ related-pr: '#218'
 fix-pr: '#220'
 fix-commits: [self]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/skills/adr/SKILL.md, plugins/borso-harness/skills/adr/template.md]
+eradication-paths: [.claude/skills/adr/SKILL.md, .claude/skills/adr/template.md]
 time-to-detect: 1 day
 tags: [meta, adr, skills, harness]
-zone: plugins/borso-harness/skills/adr
+zone: .claude/skills/adr
 weak-point: prose-stands-in-for-a-check
 recurs: none (the first entry about an operator preference the procedure did not collect)
 ---

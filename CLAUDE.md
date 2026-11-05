@@ -20,7 +20,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 - `apps/<slug>/` holds one app, openable on its own with `pnpm dev`. No cross-app imports. `borso-fr` and `borsouvertures` have only `site/`. `pragma`, `last-loop-lepin`, `banana-rush` and `talos` add `api/` (Hono on Lambda), `cdk/`, and `domain/` for rules both sides read (`@domain/*`).
 - `infra/cdk/` holds the shared CDK constructs, gated at 100% coverage. `infra/shared/` holds account-level singletons.
-- `plugins/borso-harness/` holds the skills, agents and hooks. Edit files there, never the symlinks in `.claude/`.
+- `.claude/` holds the skills, agents, commands and hooks, as plain files.
 - `docs/features/<app|meta>/<slug>/` holds a feature's spec, plan, validation and archived friction log.
 
 ## Feature flow
@@ -108,6 +108,6 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 ## Deeper references
 
-- `plugins/borso-harness/commands/feature-pipeline.md` describes the feature pipeline.
+- `.claude/commands/feature-pipeline.md` describes the feature pipeline.
 - Maps `docs/architecture/README.md`, AWS setup `docs/aws-setup.md`, root-cause analyses `docs/dantotsus/` (`/dantotsu`).
 - `docs/knowledge/` entries are printed by a hook when they apply. Read them when printed.

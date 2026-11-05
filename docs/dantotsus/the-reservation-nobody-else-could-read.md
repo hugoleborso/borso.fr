@@ -7,7 +7,7 @@ related-pr: '#118, #163, #167'
 fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/skills/adr/SKILL.md, scripts/check-numbered-sequences.sh]
+eradication-paths: [.claude/skills/adr/SKILL.md, scripts/check-numbered-sequences.sh]
 time-to-detect: hours
 tags: [adr, git, agents, orchestrator, meta]
 zone: docs/adr

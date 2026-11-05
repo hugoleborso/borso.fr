@@ -8,4 +8,4 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-exec python3 plugins/borso-harness/scripts/knowledge-triggers.py check
+exec python3 scripts/knowledge-triggers.py check

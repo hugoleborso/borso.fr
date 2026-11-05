@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [skill, standards, gates, harness, meta]
-zone: plugins/borso-harness/skills/technical-validation
+zone: .claude/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 ---
 
@@ -83,7 +83,7 @@ expressible is removed)
 **Reference:** [PR #64](https://github.com/hugoleborso/borso.fr/pull/64) — the
 kaizen branch commits below.
 
-`plugins/borso-harness/skills/standards-review/SKILL.md` now says plainly that the brief
+`.claude/skills/standards-review/SKILL.md` now says plainly that the brief
 carries the three fields and no file list, names the failure, and says what to
 put there instead: what changed, so the agent can aim, and nothing that claims
 to be the set of files.

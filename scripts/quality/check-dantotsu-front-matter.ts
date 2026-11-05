@@ -68,7 +68,7 @@ function main(): void {
       'The fields above are what the weak-point map and the recurrence list read, ' +
       'and a commit that does not resolve on main, a placeholder, or a level the ' +
       'eradication paths do not support is a record nobody can check. ' +
-      'The contract is in plugins/borso-harness/skills/dantotsu/standard.md.\n',
+      'The contract is in .claude/skills/dantotsu/standard.md.\n',
   );
   process.exitCode = 1;
 }

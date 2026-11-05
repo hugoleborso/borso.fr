@@ -12,7 +12,7 @@
 # section before `## Decision`, no `Raised by` column, or no row raised by
 # the operator. Older records keep their shape.
 #
-# See plugins/borso-harness/skills/adr/standard.md, section 6.
+# See .claude/skills/adr/standard.md, section 6.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -42,7 +42,7 @@ done
 
 if [[ "$failures" -gt 0 ]]; then
   echo "[check-adr-criteria] Criteria come before the options, and the operator names at least one." >&2
-  echo "[check-adr-criteria] See plugins/borso-harness/skills/adr/standard.md, section 6." >&2
+  echo "[check-adr-criteria] See .claude/skills/adr/standard.md, section 6." >&2
   exit 1
 fi
 echo "[check-adr-criteria] every ADR from ${FIRST_CHECKED_ID} lists its criteria first, with the operator's"

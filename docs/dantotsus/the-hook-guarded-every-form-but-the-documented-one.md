@@ -7,10 +7,10 @@ related-pr: '#83'
 fix-pr: '#86'
 fix-commits: [a7f4378899]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-github-pr-body.sh, scripts/check-hook-decisions.sh]
+eradication-paths: [.claude/hooks/pretool-github-pr-body.sh, scripts/check-hook-decisions.sh]
 time-to-detect: days
 tags: [hooks, github, harness, meta, self-improvement-loop]
-zone: plugins/borso-harness/hooks/pretool-github-pr-body.sh
+zone: .claude/hooks/pretool-github-pr-body.sh
 weak-point: gate-measures-nothing
 recurs: [two-guard-hooks-that-never-guarded]
 ---
@@ -82,7 +82,7 @@ directly. Level 3 is a vendor patch to a server that is not ours.
 
 **Reference:** PR #86 · commit [`a7f4378`](https://github.com/hugoleborso/borso.fr/commit/a7f4378)
 
-**The actual fix:** a fifth rule in `plugins/borso-harness/hooks/pretool-github-pr-body.sh`,
+**The actual fix:** a fifth rule in `.claude/hooks/pretool-github-pr-body.sh`,
 and it reads the raw body rather than the rendered one:
 
 ```bash

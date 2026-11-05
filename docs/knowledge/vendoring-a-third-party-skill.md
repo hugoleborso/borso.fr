@@ -3,7 +3,7 @@ summary: 'A third-party skill copied verbatim trips four gates that read .claude
 triggers:
   paths:
     - '.claude/skills/*/PROVENANCE.md'
-    - 'plugins/borso-harness/skills/*/PROVENANCE.md'
+    - '.claude/skills/*/PROVENANCE.md'
 ---
 
 # Vendoring a third-party skill

@@ -7,10 +7,10 @@ related-pr: '#84'
 fix-pr: '#85'
 fix-commits: [77473535c1, 2672da66f9]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
+eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
 time-to-detect: hours
 tags: [standards, review, seals, meta]
-zone: plugins/borso-harness/skills/technical-validation
+zone: .claude/skills/technical-validation
 ---
 
 # Ten review rounds on a two-file bug fix
@@ -87,7 +87,7 @@ it stops being ad hoc.
 **Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`7747353`](https://github.com/hugoleborso/borso.fr/commit/7747353), [`2672da6`](https://github.com/hugoleborso/borso.fr/commit/2672da6)
 
 **The actual fix — the report contract.** Every finding now carries two
-required lines, in `plugins/borso-harness/agents/standards-reviewer.md`:
+required lines, in `.claude/agents/standards-reviewer.md`:
 
 ```diff
  <Why it fails the bullet, in one or two sentences. What would satisfy it.>

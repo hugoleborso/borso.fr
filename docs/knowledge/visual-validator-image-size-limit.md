@@ -64,7 +64,7 @@ told to stay under the cap.
   screenshots and would confuse a future Dantotsu.
 - If both runs crash, the validation gap is genuine; surface it in the PR
   description and consider whether `/visual-validation`'s default brief in
-  `plugins/borso-harness/skills/visual-validation/SKILL.md` should bake the constraints in.
+  `.claude/skills/visual-validation/SKILL.md` should bake the constraints in.
 
 ## Reference
 

@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: days
 tags: [adr, process, secrets, pragma]
-zone: plugins/borso-harness/skills/adr
+zone: .claude/skills/adr
 ---
 
 # An ADR that never listed doing nothing

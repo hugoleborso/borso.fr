@@ -61,7 +61,7 @@ to the shape that was not used.
   it names.
 - **CI (tests / build):** `check-hook-decisions.sh` holds each refusing hook to
   both halves of its contract, and had a second loop for hooks that inform —
-  but both loops walked `plugins/borso-harness/hooks/` only. This hook lives in
+  but both loops walked `.claude/hooks/` only. This hook lives in
   `.claude/hooks/`, outside every loop, with no row of its own.
 - **Code review:** the body's "deploys pragma, last-loop-lepin and banana-rush"
   reads as a fact about the diff, and checking it means knowing `deploy.yml`'s
