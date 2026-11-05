@@ -43,7 +43,8 @@ COMMAND_TO_RUN="$(printf '%s' "$COMMAND" |
 block() {
   echo "[no-broad-kill] $1" >&2
   echo "[no-broad-kill] This machine is shared with other agents and with long-running measurements." >&2
-  echo "[no-broad-kill] Started it with run_in_background? Stop it with TaskStop and its task id." >&2
+  echo "[no-broad-kill] Main session, started it with run_in_background? Stop it with TaskStop and its task id." >&2
+  echo "[no-broad-kill] A subagent has no TaskStop: kill the PID it started, as below." >&2
   echo "[no-broad-kill]   On pnpm dev in apps/pragma it freed the site and API ports and left no child." >&2
   echo "[no-broad-kill] Otherwise kill a PID you own, not a name pattern:" >&2
   echo "[no-broad-kill]   pnpm dev & pid=\$!   …   kill \"\$pid\"" >&2
