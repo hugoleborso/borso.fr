@@ -1,5 +1,7 @@
 import { createPresignedUpload, type PresignedUpload } from './media.adapter';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 // @FollowsBlueprint service-facade-reexport
 export { MediaConfigError, MediaContentTypeError } from './media.adapter';
 

@@ -9,6 +9,7 @@ import {
   login,
   logout,
   readClientAddress,
+  answerInvalidInput,
 } from './auth.service';
 
 const SECONDS_PER_MINUTE = 60;
@@ -18,7 +19,7 @@ const ADMIN_COOKIE_TTL_SECONDS = ADMIN_COOKIE_TTL_HOURS * MINUTES_PER_HOUR * SEC
 
 // @FollowsBlueprint controller-public-router
 const authRouter = new Hono()
-  .post('/login', zValidator('json', loginInputSchema), async (context) => {
+  .post('/login', zValidator('json', loginInputSchema, answerInvalidInput), async (context) => {
     const ipAddress = readClientAddress(context);
     try {
       const attempt = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
