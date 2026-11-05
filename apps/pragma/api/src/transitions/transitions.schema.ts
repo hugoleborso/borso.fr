@@ -16,8 +16,8 @@ export const transitionCommentTable = pgTable(
 );
 
 export const transitionPairParamSchema = z.object({
-  a: z.string().uuid(),
-  b: z.string().uuid(),
+  a: z.guid(),
+  b: z.guid(),
 });
 
 export const transitionCommentBodySchema = z.object({

@@ -13,7 +13,7 @@ import { studyTable } from './studies.schema';
 
 type TestApp = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
+const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 const overviewSchema = z.object({
   today: z.string(),

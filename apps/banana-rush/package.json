@@ -48,7 +48,7 @@
     "react-i18next": "catalog:",
     "react-router-dom": "catalog:",
     "tailwindcss": "catalog:",
-    "zod": "catalog:zod3"
+    "zod": "catalog:zod4"
   },
   "devDependencies": {
     "@hono/node-server": "catalog:",

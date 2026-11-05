@@ -1,7 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { selfPunchInputSchema } from './punch.schema';
-import { PunchConflictError, PunchRejectedError, registerSelfPunch } from './punch.service';
+import {
+  PunchConflictError,
+  PunchRejectedError,
+  registerSelfPunch,
+  answerInvalidInput,
+} from './punch.service';
 
 const USER_AGENT_HEADER = 'user-agent';
 
@@ -13,7 +18,7 @@ const USER_AGENT_HEADER = 'user-agent';
  */
 const selfPunchRouter = new Hono().post(
   '/self-punches',
-  zValidator('json', selfPunchInputSchema),
+  zValidator('json', selfPunchInputSchema, answerInvalidInput),
   async (context) => {
     const input = context.req.valid('json');
     const userAgent = context.req.header(USER_AGENT_HEADER) ?? null;

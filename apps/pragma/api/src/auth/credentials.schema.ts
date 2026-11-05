@@ -80,4 +80,4 @@ export const passkeyAuthenticationSchema = z.object({
   response: z.unknown(),
 });
 
-export const passkeyIdParamSchema = z.object({ passkeyId: z.string().uuid() });
+export const passkeyIdParamSchema = z.object({ passkeyId: z.guid() });

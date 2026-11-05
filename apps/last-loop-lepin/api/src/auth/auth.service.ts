@@ -17,6 +17,8 @@ import {
   purgeExpiredSessions,
 } from './auth.repository';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 // @FollowsBlueprint service-facade-reexport
 export { httpStatusForAuthDenial } from './auth.core';
 export { readClientAddress } from '../helpers/client-address/client-address.environment';

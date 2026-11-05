@@ -36,7 +36,12 @@ export const colorSchema = z
 export const avatarS3KeySchema = z.string().min(1).max(AVATAR_S3_KEY_MAX).nullable();
 
 export const phoneSchema = z.string().trim().max(MEMBER_PHONE_MAX_LENGTH).nullable();
-export const emailSchema = z.string().trim().email().max(MEMBER_EMAIL_MAX_LENGTH).nullable();
+export const emailSchema = z
+  .string()
+  .trim()
+  .regex(z.regexes.email, { error: 'Invalid email address' })
+  .max(MEMBER_EMAIL_MAX_LENGTH)
+  .nullable();
 
 export const memberContactSchema = z.object({
   phone: phoneSchema.optional(),
@@ -60,10 +65,10 @@ export const updateMemberSchema = z.object({
 });
 
 export const memberInstrumentAssignmentSchema = z.object({
-  instrumentIds: z.array(z.string().uuid()),
+  instrumentIds: z.array(z.guid()),
 });
 
-export const memberIdParamSchema = z.object({ id: z.string().uuid() });
+export const memberIdParamSchema = z.object({ id: z.guid() });
 export const memberReferenceToolInputSchema = z.object({ member: referenceSchema });
 export const memberInstrumentAssignmentToolInputSchema = memberReferenceToolInputSchema.extend({
   instruments: z.array(referenceSchema),

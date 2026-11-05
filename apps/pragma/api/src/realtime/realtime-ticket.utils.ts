@@ -10,7 +10,7 @@ const TICKET_SEPARATOR = '.';
 const realtimeTicketPayloadSchema = z
   .object({
     purpose: z.literal(TICKET_PURPOSE),
-    memberId: z.string().uuid(),
+    memberId: z.guid(),
     expiresAt: z.number(),
   })
   .strict();

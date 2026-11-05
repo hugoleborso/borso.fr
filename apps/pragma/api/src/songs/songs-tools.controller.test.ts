@@ -15,9 +15,9 @@ import { songTable } from './songs.schema';
 
 const OVERRIDE_SCORE = 9;
 
-const createdSchema = z.object({ id: z.string().uuid(), title: z.string() });
+const createdSchema = z.object({ id: z.guid(), title: z.string() });
 const songBodySchema = z.object({
-  song: z.object({ id: z.string().uuid(), title: z.string(), status: z.string() }).passthrough(),
+  song: z.object({ id: z.guid(), title: z.string(), status: z.string() }).loose(),
 });
 const songsBodySchema = z.object({
   songs: z.array(z.object({ title: z.string() })),
@@ -146,7 +146,12 @@ describe('songs tools (back-e2e)', () => {
     });
     expect(missingField).toEqual({
       isError: true,
-      body: { error: 'invalid-input', fields: { status: 'Required' } },
+      body: {
+        error: 'invalid-input',
+        fields: {
+          status: 'Invalid option: expected one of "idea"|"wip"|"rehearsed"|"concert_ready"',
+        },
+      },
     });
     expect(duplicate).toEqual({
       isError: true,

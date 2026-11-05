@@ -18,7 +18,7 @@ const listenSongSchema = z
     spotifyTrackId: z.string().nullable().optional(),
     links: z.array(z.object({ url: z.string() })).optional(),
   })
-  .passthrough();
+  .loose();
 
 function countSongLinks(song: z.infer<typeof listenSongSchema>): number {
   const addresses = new Set((song.links ?? []).map((link) => link.url));

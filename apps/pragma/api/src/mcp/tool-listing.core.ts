@@ -5,15 +5,28 @@ export interface ListedInputSchema {
 
 const SCHEMA_DIALECT_FIELD = '$schema';
 const CLOSED_OBJECT_FIELD = 'additionalProperties';
+const PATTERN_FIELD = 'pattern';
+const FORMAT_FIELD = 'format';
+const SAFE_INTEGER_BOUNDS: ReadonlyMap<string, number> = new Map([
+  ['minimum', Number.MIN_SAFE_INTEGER],
+  ['maximum', Number.MAX_SAFE_INTEGER],
+]);
 
-function isNoiseField(field: string, value: unknown): boolean {
-  return field === SCHEMA_DIALECT_FIELD || (field === CLOSED_OBJECT_FIELD && value === false);
+function isNoiseField(field: string, value: unknown, hasFormat: boolean): boolean {
+  if (field === SCHEMA_DIALECT_FIELD) return true;
+  if (field === CLOSED_OBJECT_FIELD) return value === false;
+  if (field === PATTERN_FIELD) return hasFormat;
+  return SAFE_INTEGER_BOUNDS.get(field) === value;
 }
 
 function compactObject(value: object): Record<string, unknown> {
+  const fields = Object.entries(value);
+  const hasFormat = fields.some(
+    ([field, nested]) => field === FORMAT_FIELD && typeof nested === 'string',
+  );
   const kept: Record<string, unknown> = {};
-  for (const [field, nested] of Object.entries(value)) {
-    if (!isNoiseField(field, nested)) kept[field] = dropNoiseFields(nested);
+  for (const [field, nested] of fields) {
+    if (!isNoiseField(field, nested, hasFormat)) kept[field] = dropNoiseFields(nested);
   }
   return kept;
 }

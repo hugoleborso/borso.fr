@@ -1,4 +1,4 @@
-import type { AnyZodObject, z } from 'zod';
+import type { z } from 'zod';
 
 export interface ToolActor {
   readonly memberId: string;
@@ -16,7 +16,7 @@ export type ToolAnswer =
 
 export type ToolOutcome = 'ok' | 'refused' | 'failed';
 
-export interface ToolDefinition<Schema extends AnyZodObject = AnyZodObject> {
+export interface ToolDefinition<Schema extends z.ZodObject = z.ZodObject> {
   readonly name: string;
   readonly description: string;
   readonly routes: readonly [string, ...string[]];

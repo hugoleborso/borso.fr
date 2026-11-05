@@ -64,7 +64,7 @@ export const createPunchInputSchema = z.object({
 });
 
 export const correctPunchInputSchema = z.object({
-  finishedAt: z.string().datetime({ offset: true }),
+  finishedAt: z.iso.datetime({ offset: true }),
 });
 
 const MAX_LATITUDE_DEGREES = 90;

@@ -15,7 +15,7 @@ export const signUploadInputSchema = z.object({
     .string()
     .regex(/^[a-f0-9]{64}$/)
     .optional(),
-  songId: z.string().uuid().optional(),
+  songId: z.guid().optional(),
 });
 
 const OBJECT_KEY_MAX = 512;

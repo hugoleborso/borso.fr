@@ -74,7 +74,7 @@ const PROJECTION = {
   createdAt: songTable.createdAt,
 } as const;
 
-function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): T[] {
+function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodType<T[]>): T[] {
   if (raw === null) return [];
   const storedValue: unknown = JSON.parse(raw);
   return schema.parse(storedValue);

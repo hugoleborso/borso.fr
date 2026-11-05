@@ -118,4 +118,4 @@ export const revocationRequestSchema = z.object({
   client_id: z.string().max(CLIENT_ID_MAX_LENGTH).optional(),
 });
 
-export const assistantGrantIdParamSchema = z.object({ grantId: z.string().uuid() });
+export const assistantGrantIdParamSchema = z.object({ grantId: z.guid() });

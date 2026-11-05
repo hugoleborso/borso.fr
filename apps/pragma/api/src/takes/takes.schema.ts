@@ -46,8 +46,8 @@ const takeContentTypeSchema = z.enum(TAKE_CONTENT_TYPES);
 
 export const takeSignSchema = z
   .object({
-    takeId: z.string().uuid(),
-    songId: z.string().uuid(),
+    takeId: z.guid(),
+    songId: z.guid(),
     contentType: takeContentTypeSchema,
     contentLength: z.number().int().positive().max(TAKE_MAX_BYTES),
   })
@@ -55,11 +55,11 @@ export const takeSignSchema = z
 
 export const takeCreateSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.guid(),
     objectKey: z.string().min(1).max(OBJECT_KEY_MAX_LENGTH),
-    songId: z.string().uuid(),
-    sessionId: z.string().uuid().nullable().default(null),
-    recordedAt: z.string().datetime(),
+    songId: z.guid(),
+    sessionId: z.guid().nullable().default(null),
+    recordedAt: z.iso.datetime(),
     durationSeconds: z.number().int().min(0).max(TAKE_DURATION_MAX_SECONDS),
     contentType: takeContentTypeSchema,
     source: z.enum(TAKE_SOURCES),
@@ -69,14 +69,14 @@ export const takeCreateSchema = z
   .strict();
 
 export const takeListQuerySchema = z
-  .object({ songId: z.string().uuid().optional(), sessionId: z.string().uuid().optional() })
+  .object({ songId: z.guid().optional(), sessionId: z.guid().optional() })
   .refine(isExactlyOneTakeFilterNamed, { message: 'one-of-song-or-session' });
 
-export const takePathSchema = z.object({ id: z.string().uuid() });
+export const takePathSchema = z.object({ id: z.guid() });
 
 export const takeCommentPathSchema = z.object({
-  id: z.string().uuid(),
-  commentId: z.string().uuid(),
+  id: z.guid(),
+  commentId: z.guid(),
 });
 
 const commentBodySchema = z.string().trim().min(1).max(TAKE_COMMENT_MAX_LENGTH);
@@ -98,14 +98,14 @@ export const takeCommentUpdateSchema = takeCommentChangesSchema.refine(
 );
 
 const takeChoiceShape = {
-  take: z.string().uuid().optional(),
+  take: z.guid().optional(),
   song: referenceSchema.optional(),
 };
 
 export const takeListToolInputSchema = z.object({ song: referenceSchema, ...pageInputShape });
 export const takeReadToolInputSchema = z.object(takeChoiceShape);
 export const takeSignToolInputSchema = z.object({
-  takeId: z.string().uuid(),
+  takeId: z.guid(),
   song: referenceSchema,
   contentType: takeContentTypeSchema,
   contentLength: z.number().int().positive().max(TAKE_MAX_BYTES),

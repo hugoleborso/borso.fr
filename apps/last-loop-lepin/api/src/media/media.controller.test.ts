@@ -4,7 +4,7 @@ import { adminSessionCookie } from '../../../test/database-utils';
 import { createApp } from '../app';
 
 const presignResponseSchema = z.object({
-  uploadUrl: z.string().url(),
+  uploadUrl: z.url(),
   objectKey: z.string(),
   expiresAt: z.string(),
 });

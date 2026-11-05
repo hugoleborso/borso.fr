@@ -10,6 +10,8 @@ import {
 import { listRunners, seedRunner } from '../runner/runner.service';
 import { planSeedFixture, type SeedEditionWindow, type SeedFixtureName } from './test-seed.core';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 const EDITION_SLUG = 'lepin-2026';
 const EDITION_NAME = 'Last Loop Lépin 2026';
 const LOOP_INTERVAL_MINUTES = 60;

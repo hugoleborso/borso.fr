@@ -22,7 +22,7 @@ const songSchema = z
     chart: z.unknown().optional(),
     defaultLineup: z.unknown().optional(),
   })
-  .passthrough();
+  .loose();
 const sessionSchema = z
   .object({
     id: z.string(),
@@ -31,7 +31,7 @@ const sessionSchema = z
     startsAt: z.string().optional(),
     venue: z.string().nullable().optional(),
   })
-  .passthrough();
+  .loose();
 const entrySchema = z.object({
   songId: z.string(),
   position: z.number(),
@@ -87,12 +87,8 @@ export class BandSessionDriver {
     return this.session.evaluate(POST_JSON, { path, body });
   }
 
-  async listFrom<Output>(
-    path: string,
-    key: string,
-    schema: z.ZodType<Output, z.ZodTypeDef, unknown>,
-  ): Promise<Output[]> {
-    const body = z.record(z.unknown()).parse(await this.fetchJson(path));
+  async listFrom<Output>(path: string, key: string, schema: z.ZodType<Output>): Promise<Output[]> {
+    const body = z.record(z.string(), z.unknown()).parse(await this.fetchJson(path));
     const list = body[key];
     return Array.isArray(list) ? list.map((item) => schema.parse(item)) : [];
   }

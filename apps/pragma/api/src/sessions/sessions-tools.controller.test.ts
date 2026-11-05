@@ -15,9 +15,9 @@ import { sessionTable } from './sessions.schema';
 const PRACTICE_DATE = '2026-11-03T19:00:00.000Z';
 const MOVED_PRACTICE_DATE = '2026-11-04T19:30:00.000Z';
 
-const createdSchema = z.object({ id: z.string().uuid(), kind: z.string(), date: z.string() });
+const createdSchema = z.object({ id: z.guid(), kind: z.string(), date: z.string() });
 const sessionBodySchema = z.object({
-  session: z.object({ id: z.string().uuid(), kind: z.string(), date: z.string() }).passthrough(),
+  session: z.object({ id: z.guid(), kind: z.string(), date: z.string() }).loose(),
 });
 
 async function readSessionRow(id: string) {
@@ -98,7 +98,10 @@ describe('sessions tools (back-e2e)', () => {
     expect(stored?.capacity).toBe(500);
     expect(missingVenue).toEqual({
       isError: true,
-      body: { error: 'invalid-input', fields: { venue: 'Required' } },
+      body: {
+        error: 'invalid-input',
+        fields: { venue: 'Invalid input: expected string, received undefined' },
+      },
     });
   });
 

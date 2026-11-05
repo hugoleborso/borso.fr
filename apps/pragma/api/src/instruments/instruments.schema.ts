@@ -37,7 +37,7 @@ export const updateInstrumentSchema = z.object({
 });
 
 export const instrumentOrderSchema = z.object({
-  instrumentIds: z.array(z.string().uuid()),
+  instrumentIds: z.array(z.guid()),
 });
 
-export const instrumentIdParamSchema = z.object({ id: z.string().uuid() });
+export const instrumentIdParamSchema = z.object({ id: z.guid() });

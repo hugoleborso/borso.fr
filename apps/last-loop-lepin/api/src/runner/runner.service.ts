@@ -12,6 +12,8 @@ import {
 } from './runner.repository';
 import type { Runner } from './runner.types';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 // @FollowsBlueprint named-domain-error
 export class RunnerAlreadyExistsError extends Error {
   override readonly name = 'RunnerAlreadyExistsError';
