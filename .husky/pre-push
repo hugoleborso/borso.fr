@@ -76,7 +76,7 @@ if git rev-parse --verify --quiet origin/main >/dev/null; then
     echo "[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it." >&2
     echo "  Merge main in, resolve, then push again:" >&2
     echo "    git merge origin/main" >&2
-    plugins/borso-harness/hooks/kaizen-refusal.sh pre-push-conflict "pre-push refused a branch that conflicts with origin/main"
+    .claude/hooks/kaizen-refusal.sh pre-push-conflict "pre-push refused a branch that conflicts with origin/main"
     exit 1
   fi
 fi

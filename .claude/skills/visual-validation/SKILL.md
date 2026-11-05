@@ -1,0 +1,152 @@
+---
+name: visual-validation
+description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus screenshot evidence that is published to the previews CDN or, for a FAIL row, committed beside the report, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
+---
+
+# Visual-validation skill
+
+A spec is a list of assertions about what the user will see and how the app will behave. A visual validation **opens the app and checks each assertion**, one by one, in a real browser, by clicking, typing, resizing, navigating. It is the only gate that catches *"the code compiles and the types check, but the feature doesn't actually work"* — the most common failure mode of LLM-shipped UI code.
+
+The canonical standard this skill enforces lives at [`standard.md`](./standard.md).
+
+## The standalone-agent rule
+
+The validation agent runs in **a fresh `Agent` invocation** with no chat context. This is non-negotiable. The implementer (the main session) has already convinced themselves the feature works; running validation in their context inherits that bias.
+
+Use the dedicated `visual-validator` agent defined at `.claude/agents/visual-validator.md`. Do **not** dispatch `general-purpose` for this — the dedicated agent's brief is the structural mitigation, and a generic agent would inherit the main session's optimism through whatever prompt you write.
+
+```
+Agent({
+  subagent_type: "visual-validator",
+  description: "Visual validation against spec",
+  prompt: <self-contained brief — see template.md>,
+})
+```
+
+The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
+
+## Tooling: `agent-browser`
+
+The validator drives the browser with [`agent-browser`](https://github.com/vercel-labs/agent-browser), the LLM-oriented CLI with reference-based snapshots, clicks and screenshots. It is called directly and needs no setup in this sandbox: it finds the image's Chromium and reaches https and localhost on its own. Real touch goes through `scripts/phone.sh`, which taps an `agent-browser` session with `Input.dispatchTouchEvent`.
+
+```bash
+agent-browser open http://localhost:5173/
+agent-browser snapshot -i --json
+agent-browser screenshot ./evidence/01-catalog.png
+agent-browser errors
+```
+
+**A behaviour that only shows in motion is recorded, then converted to GIF.** A drag, an animation or a transition is evidence a still cannot carry. agent-browser records WebM only, and GitHub plays no video from an outside URL, while it does play an animated GIF inline in the pull request's *Screenshots* comment. So record, convert, and keep the GIF as the evidence file:
+
+```bash
+agent-browser record start ./evidence/04-drag.webm
+# drive the interaction
+agent-browser record stop
+ffmpeg -loglevel error -y -i ./evidence/04-drag.webm \
+  -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
+  -loop 0 ./evidence/04-drag.gif && rm ./evidence/04-drag.webm
+```
+
+Keep a recording to the few seconds the assertion needs; ten frames a second at 800 px wide is enough to read and keeps the file small. `ffmpeg` is in the sandbox image (`command -v ffmpeg`); never install one. If it is missing, keep the WebM: the comment then shows it as a link line instead of inline, and the report says why.
+
+Never run `agent-browser install`; the image already ships Chromium. If `agent-browser` itself fails, that is a "Tooling unavailable" FAIL row, and the validator exits without falling back to another tool.
+
+## When to invoke
+
+Invoke when:
+- A feature has shipped to a local dev server (or a preview URL) and `spec.md` is present at `docs/features/<app>/<slug>/spec/spec.md`.
+- The user asks for `/visual-validation`, "validate the spec", "check it works".
+- The `/technical-conception` plan reaches gate 5 (UI work).
+
+Do **not** invoke when:
+- There is no spec at the expected path.
+- The feature is purely backend / infra (no visible result).
+- The dev server isn't running and the workspace has no `dev` script.
+
+## How this phase works (skill, in the main session)
+
+1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path itself — it's the segment after `docs/features/`.
+2. **Discover the workspace.** `app_pkg = "@borso-app/<app>"` (the workspace conventions live in CLAUDE.md). Confirm `apps/<app>/package.json` exists.
+3. **Probe the dev server** at `http://localhost:5173/` (or the port from `apps/<app>/vite.config.ts`). If 200, reuse it. If not, spawn `pnpm --filter <app_pkg> dev` in the background with the Bash tool's `timeout: 7200000` and poll until 200. The default background limit is 30 minutes, and on PR #234 it stopped the server in the middle of a validation run.
+4. **Build the run folder paths.**
+   ```
+   timestamp        = <YYYY-MM-DD-HHmm>
+   validation_dir   = docs/features/<app>/<slug>/validation
+   report_path      = <validation_dir>/visual-validation-<timestamp>.md
+   evidence_dir     = <validation_dir>/visual-validation-<timestamp>/
+   ```
+   `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in.
+5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path. **Leave the served code alone until the report is back.** The dev server reloads on every save, so an edit made while the agent runs changes the app under rows it has already recorded, and the report then describes two builds at once.
+6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
+7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
+8. **Split the evidence by verdict.** Per [ADR-0023](../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
+
+   ```bash
+   pending_dir="$validation_dir/.pending-upload/$timestamp"
+   mkdir -p "$pending_dir"
+   mv "$evidence_dir"<each-png-or-gif-no-FAIL-row-cites> "$pending_dir/"
+   rmdir "$evidence_dir" 2>/dev/null
+   ```
+
+   `.pending-upload/` is gitignored, so a `git add` between here and the pull request cannot commit what is waiting to be published. **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
+
+   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal, and it stays literal: the report is a dated record that `scripts/check-dated-records-are-append-only.sh` refuses to see edited, so the pull request's *Screenshots* comment and its folder link are where the number is filled in. A file that stays in `evidence_dir` keeps its relative path.
+
+9. **Stage the report and the surviving evidence for commit.** They live under `docs/features/<app>/<slug>/validation/`, which is *not* gitignored. The report is always committed; the screenshots beside it are the ones a FAIL row references.
+
+## Deliverable
+
+Two artefacts at `docs/features/<app>/<slug>/validation/`:
+
+- `visual-validation-<timestamp>.md` — the markdown verdict report, always committed.
+- `visual-validation-<timestamp>/` — present only when a FAIL row references a screenshot, or when the upload was denied. Everything else lives at `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/` and expires after 60 days.
+
+Do not gitignore either path. A FAIL report gets contested without its screenshot, which is why that half stays permanent; see the standard's *Where evidence lives*.
+
+The skill's textual return to the user is one of:
+- `Verdict: PASS — see <report_path>` — mergeable.
+- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure (see *What the pull request has to carry*).
+- `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix the implementation and re-run.
+
+## Verdict acceptance rules
+
+- **FAIL is never accepted.** Failing rows are real defects — the implementation, the spec, or both have to change. The operator does not open a PR while the most recent validation report is FAIL. There is no "disclose-and-merge" path for FAIL.
+- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when every UNVERIFIABLE row is a tool gap (something the validator could not exercise — see `docs/knowledge/` for the catalog) or a spec-deferred row (handled by another validator), not a "we couldn't test it because we couldn't think how" sidestep. The bar for accepting an UNVERIFIABLE row is that closing it would require either a vendor change or a workspace-scope refactor.
+- **PASS is mergeable** with no further disclosure.
+
+## What the pull request has to carry
+
+A reviewer reads the PR description without opening the report, so two things from this skill have to reach it. **Where** they go is `/open-pr`'s to decide — its *Validation* step and `scripts/pr/check-pr-body.ts` own the body's shape, and this document does not name a heading.
+
+- **Every UNVERIFIABLE row, on a `PASS_EXCEPT_UNVERIFIABLE` verdict**: the row number, the assertion verbatim, the one-line reason from the report's Notes (a tool gap points at `docs/knowledge/`, a deferred row at the other validator's report), and the report path. A verdict that ships without this is a Dantotsu candidate against this skill: the gate exists so tool-side limits do not slip into main silently. A PASS needs only the report path.
+- **The screenshots, on any verdict.** A published screenshot reaches the reviewer through the *Screenshots* comment that `.github/workflows/screenshots.yml` posts once `/open-pr` has uploaded it, with the folder link in the body as the fallback. A committed one renders in the pull request's *Files changed* tab. Do not embed either as a markdown image in the body or in a comment you post: the GitHub MCP server defuses those without failing, and `pretool-github-pr-body.sh` refuses the call. See [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md).
+
+This section used to prescribe a `## Validation gaps` and a `## Visual evidence` section with inline images. The checker refuses both headings and the server strips the images, so following it produced a body that could not be posted; see [`docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md`](../../../docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md).
+
+## Failure modes to avoid
+
+- **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec path and the URL; nothing else. The whole point is unbiased eyes.
+- **Falling back to Playwright when agent-browser is missing.** The structural mitigation (LLM-shaped tool) goes away. Surface the install command and stop.
+- **Dispatching `general-purpose` instead of `visual-validator`.** A generic agent has none of the dedicated agent's structural rules — it can ask the user questions, drift into implementation reasoning, etc.
+- **Flaky-animation pseudo-failures.** Animations driving rAF produce different pixels every frame. The agent waits for `networkidle` plus a 600 ms settle before screenshotting; deterministic seeds (e.g. `?seed=DEADBEEF`) when the spec supports them.
+- **"Looks right" without evidence.** Every PASS must reference a captured screenshot or a deterministic check (selector found, attribute equal, URL matches). "Looks right" alone is not a PASS.
+- **PASS on DOM presence without checking rendered pixels.** The most insidious failure mode: the `<img>` tag is in the DOM, the parent component rendered, the layout is right — and the user sees broken alt-text where icons / sprites / glyphs should be (CDN 403, hotlink block, missing asset). The standard's *Pixel-content checks* section is mandatory per screenshot, not a recommendation. The brief template in `template.md` carries the canonical broken-image-scan `eval` so the agent runs it as a first-class step of every row that captured a screenshot.
+- **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never "the implementer probably meant…".
+- **Skipping edge cases because they're hard.** The validator must resize, emulate dark mode, emulate touch device, emulate reduced motion. These are exactly the cases users hit; they're not optional.
+- **Treating UNVERIFIABLE as PASS.** PASS_EXCEPT_UNVERIFIABLE is its own verdict — same as PASS for mergeability if and only if the operator copies the UNVERIFIABLE rows into the PR description.
+- **Gitignoring the validation folder.** The evidence is part of the report. Commit both.
+
+## Repo-specific notes
+
+- Workspaces live under `apps/<app>/`. Dev server: `pnpm --filter @borso-app/<app> dev`.
+- Default dev port is 5173; check `apps/<app>/vite.config.ts` to override.
+- Reports + evidence go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/` and `plan/`).
+- The validator only writes inside `evidence_dir` and `report_path`. It does not modify code, the spec, or anything else.
+- When the verdict is FAIL, the user is shown the failing rows verbatim — they are not asked to interpret the report themselves.
+
+## Verdict émis (when piloted by `/tech-lead-orchestrator`)
+
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/visual-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter mirrors `/technical-validation`'s *Verdict émis* table.
+
+**No UI surface.** When the feature has no visible UI, `/visual-validation` should not be invoked at all. The orchestrator owns the skip (decision Q-VIS-VAL): it emits a `tech_lead_visual_validation_skipped` journal event and does not call this skill. No verdict file is written.
+

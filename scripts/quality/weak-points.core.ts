@@ -75,14 +75,14 @@ export const FACTORY_STATIONS: readonly string[] = [
 ];
 
 const STATION_BY_PATH_PREFIX: readonly (readonly [string, string])[] = [
-  ['plugins/borso-harness/skills/specification', 'spec'],
-  ['plugins/borso-harness/skills/technical-conception', 'plan'],
-  ['plugins/borso-harness/skills/adr', 'plan'],
+  ['.claude/skills/specification', 'spec'],
+  ['.claude/skills/technical-conception', 'plan'],
+  ['.claude/skills/adr', 'plan'],
   ['docs/adr', 'plan'],
-  ['plugins/borso-harness/skills/implementation', 'implementation'],
-  ['plugins/borso-harness/skills/technical-validation', 'validation'],
-  ['plugins/borso-harness/skills/visual-validation', 'validation'],
-  ['plugins/borso-harness/agents', 'validation'],
+  ['.claude/skills/implementation', 'implementation'],
+  ['.claude/skills/technical-validation', 'validation'],
+  ['.claude/skills/visual-validation', 'validation'],
+  ['.claude/agents', 'validation'],
   ['scripts/phone.sh', 'validation'],
   ['.github/workflows/deploy.yml', 'deploy'],
   ['.github/workflows/preview.yml', 'deploy'],
@@ -101,11 +101,10 @@ const STATION_BY_PATH_PREFIX: readonly (readonly [string, string])[] = [
   ['.oxfmtrc.json', 'gates'],
   ['knip.json', 'gates'],
   ['tsconfig.json', 'gates'],
-  ['plugins/borso-harness/hooks', 'hooks'],
   ['.claude/hooks', 'hooks'],
   ['.claude/settings.json', 'hooks'],
-  ['plugins/borso-harness/skills', 'skills'],
-  ['plugins/borso-harness/commands', 'skills'],
+  ['.claude/skills', 'skills'],
+  ['.claude/commands', 'skills'],
 ];
 const DEFAULT_STATION = 'harness';
 const PRODUCT_PATH_PATTERN = /^(apps|infra)\/([^/]+)\/?([^/]*)/;

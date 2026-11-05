@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
 time-to-detect: hours
 tags: [pnpm, gates, pre-commit, agents, spec]
-zone: plugins/borso-harness/skills
+zone: .claude/skills
 recurs: [the-skill-that-named-the-linter-the-repository-deleted]
 ---
 

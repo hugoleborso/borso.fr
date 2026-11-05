@@ -7,9 +7,9 @@ written before 2026-11-01 use the older Symptom and Root-cause chain
 headings. The Eradication section links the commit hash, PR, and a diff
 snippet showing the fix.
 
-Standard at [`plugins/borso-harness/skills/dantotsu/standard.md`](../../plugins/borso-harness/skills/dantotsu/standard.md).
+Standard at [`.claude/skills/dantotsu/standard.md`](../../.claude/skills/dantotsu/standard.md).
 Template at [`_template.md`](./_template.md). Skill at
-[`plugins/borso-harness/skills/dantotsu/SKILL.md`](../../plugins/borso-harness/skills/dantotsu/SKILL.md).
+[`.claude/skills/dantotsu/SKILL.md`](../../.claude/skills/dantotsu/SKILL.md).
 
 ## Eradication ladder
 
@@ -40,7 +40,7 @@ metadata pulled from each entry's frontmatter, run the helper
 shipped with the dantotsu skill:
 
 ```bash
-plugins/borso-harness/skills/dantotsu/scripts/list.sh
+.claude/skills/dantotsu/scripts/list.sh
 ```
 
 Outputs a markdown table with file, date, severity, level, tags,
@@ -67,7 +67,7 @@ Patterns to watch as the corpus grows:
 
 ## Adding a new entry
 
-The [`/dantotsu`](../../plugins/borso-harness/skills/dantotsu/SKILL.md) skill walks
+The [`/dantotsu`](../../.claude/skills/dantotsu/SKILL.md) skill walks
 the seven steps and produces a complete entry that matches
 [`_template.md`](./_template.md). After-task sweep: see
-[`/after-task-kaizen`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md).
+[`/after-task-kaizen`](../../.claude/skills/after-task-kaizen/SKILL.md).

@@ -7,10 +7,10 @@ related-pr: '#206'
 fix-pr: none (the kaizen pull request for PR #206 that adds this file)
 fix-commits: [self]
 eradication-level: 4
-eradication-paths: [plugins/borso-harness/hooks/posttool-empty-checks-means-conflict.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
+eradication-paths: [.claude/hooks/posttool-empty-checks-means-conflict.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
 time-to-detect: minutes
 tags: [ci, github-actions, orchestrator, agents, hooks]
-zone: plugins/borso-harness/hooks/posttool-empty-checks-means-conflict.sh
+zone: .claude/hooks/posttool-empty-checks-means-conflict.sh
 weak-point: prose-stands-in-for-a-check
 recurs: [one-sample-could-not-tell-the-hook-from-the-runner]
 ---

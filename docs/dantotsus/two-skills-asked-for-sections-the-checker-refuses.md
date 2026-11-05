@@ -10,7 +10,7 @@ eradication-level: 1
 eradication-paths: [scripts/pr/check-pr-body.ts]
 time-to-detect: weeks
 tags: [skill, pr-body, process, meta]
-zone: plugins/borso-harness/skills/open-pr
+zone: .claude/skills/open-pr
 weak-point: prose-stands-in-for-a-check
 ---
 

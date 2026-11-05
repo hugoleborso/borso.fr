@@ -12,7 +12,7 @@ Spec: [`../spec/spec.md`](../spec/spec.md).
 | 4. Weak-points generator | `scripts/quality/weak-points.core.ts` (placement, weekly count, recurrence groups), `scripts/quality/weak-points-page.core.ts` (the page), `scripts/quality/weak-points.ts`; `scripts/reports.sh`, `.github/workflows/pages.yml`, `.gitignore` |
 | 5. Engaged weak points | `docs/quality/weak-points.md` |
 | 6. Working-conditions board | `docs/quality/working-conditions.md` declares the walls; `scripts/quality/working-conditions.core.ts`, `scripts/quality/working-conditions-page.core.ts`, `scripts/quality/working-conditions.ts` |
-| 7. Skills | `docs/dantotsus/_template.md`, `plugins/borso-harness/skills/dantotsu/SKILL.md`, `plugins/borso-harness/skills/dantotsu/standard.md`, `plugins/borso-harness/skills/after-task-dantotsus/SKILL.md` |
+| 7. Skills | `docs/dantotsus/_template.md`, `.claude/skills/dantotsu/SKILL.md`, `.claude/skills/dantotsu/standard.md`, `.claude/skills/after-task-dantotsus/SKILL.md` |
 | 8. ADR | `docs/adr/0029-weak-point-management-from-the-dantotsu-record.md` and its index line |
 
 The two page renderers share `scripts/quality/quality-page.core.ts`, and

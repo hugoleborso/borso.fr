@@ -7,10 +7,10 @@ related-pr: '#260'
 fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/hooks/session-env.sh]
+eradication-paths: [.claude/hooks/session-env.sh]
 time-to-detect: minutes
 tags: [harness, hooks, tooling]
-zone: plugins/borso-harness/hooks/session-env.sh
+zone: .claude/hooks/session-env.sh
 recurs: none (the first entry on the session's shell environment, not on a command's shape)
 ---
 

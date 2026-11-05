@@ -211,8 +211,8 @@ queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yam
 
 # The template a PR body is drafted from fits the budget the same script
 # enforces on the body.
-queue_node_check pr-body-template '^. (plugins/borso-harness/skills/open-pr/template\.md|scripts/pr/)' \
-  scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
+queue_node_check pr-body-template '^. (\.claude/skills/open-pr/template\.md|scripts/pr/)' \
+  scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
 
 # A document that links a file which is not there. `--staged` reads the staged
 # documents and every document naming a path the commit removes; a link to a
@@ -307,10 +307,6 @@ run_check non-module-scripts '^. apps/[^/]+/site/.*\.html$' scripts/check-non-mo
 # A directory walk piped into `head` or `grep -q` is a race under pipefail.
 run_check_on_files no-racy-pipelines '(\.sh$|^\.husky/)' scripts/check-no-racy-pipelines.sh
 
-# The harness lives once, in plugins/borso-harness/, and reaches a session only
-# through the links in .claude/ and the hook entries in .claude/settings.json.
-run_check harness-links '^. (plugins/borso-harness/|\.claude/)' scripts/check-harness-links.sh
-
 # Two lists that have to say the same thing. Rung-2 eradication of
 # docs/dantotsus/two-copies-that-had-to-agree-and-nothing-made-them.md.
 run_check coupled-lists \
@@ -330,9 +326,9 @@ run_check adr-criteria '^. docs/adr/' scripts/check-adr-criteria.sh
 # docs/dantotsus/the-skill-that-named-the-linter-the-repository-deleted.md and
 # docs/dantotsus/the-link-checker-skipped-the-folder-it-was-trusted-for.md.
 run_check_on_files instructions-name-installed-tools \
-  '^(\.claude/|plugins/|docs/standards/|docs/features/[^/]+/[^/]+/(plan|spec)/).*\.(md|sh)$' \
+  '^(\.claude/|docs/standards/|docs/features/[^/]+/[^/]+/(plan|spec)/).*\.(md|sh)$' \
   scripts/check-instructions-name-installed-tools.sh
-if is_in_scope '^. (scripts/|\.husky/|\.github/|plugins/|\.claude/|CLAUDE\.md$)|^D '; then
+if is_in_scope '^. (scripts/|\.husky/|\.github/|\.claude/|CLAUDE\.md$)|^D '; then
   run_with_files named-paths-exist '.' scripts/check-named-paths-exist.sh --staged
 fi
 

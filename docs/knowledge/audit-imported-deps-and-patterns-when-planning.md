@@ -71,9 +71,9 @@ question about a trade-off.
 
 ## Where this is enforced
 
-- [`plugins/borso-harness/skills/technical-conception/standard.md`](../../plugins/borso-harness/skills/technical-conception/standard.md#common-mistakes)
+- [`.claude/skills/technical-conception/standard.md`](../../.claude/skills/technical-conception/standard.md#common-mistakes)
   — common-mistake row pointing back here.
-- [`plugins/borso-harness/skills/technical-conception/SKILL.md`](../../plugins/borso-harness/skills/technical-conception/SKILL.md#failure-modes-to-avoid)
+- [`.claude/skills/technical-conception/SKILL.md`](../../.claude/skills/technical-conception/SKILL.md#failure-modes-to-avoid)
   — failure-mode row referencing this file.
 
 ## Related

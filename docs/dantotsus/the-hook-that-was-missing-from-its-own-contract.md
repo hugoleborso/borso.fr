@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-hook-decisions.sh]
 time-to-detect: weeks
 tags: [hooks, harness, gates, pre-commit]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 recurs: [the-hook-that-refused-the-page-explaining-it]
 ---
 

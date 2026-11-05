@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: minutes (user asked)
 tags: [orchestrator, skill, pr-description, github]
-zone: plugins/borso-harness/skills/tech-lead-orchestrator
+zone: .claude/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator shipped a feature, then went silent while the PR's description still said something else
@@ -102,7 +102,7 @@ evidence, Test plan — before issuing the deploy reminder. When the
 branch has no open PR, the step is skipped (the orchestrator never
 opens PRs on its own).
 
-- **Code:** commit `<sha>` — `plugins/borso-harness/skills/tech-lead-orchestrator/
+- **Code:** commit `<sha>` — `.claude/skills/tech-lead-orchestrator/
   standard.md` gains a *PR description maintenance (stage `ship`)*
   section, plus the `ship` row in the stage-transition table now
   reads "Push successful, deploy reminder issued, **PR description
@@ -118,8 +118,8 @@ checklist the agent can't compress past)
 **The actual fix:**
 
 ```diff
---- a/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
-+++ b/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
+--- a/.claude/skills/tech-lead-orchestrator/standard.md
++++ b/.claude/skills/tech-lead-orchestrator/standard.md
 @@ -22,2 +22,2 @@
  | arbitrate | ship | All verdicts PASS. |
 -| ship | (end) | Push successful, deploy reminder issued. |

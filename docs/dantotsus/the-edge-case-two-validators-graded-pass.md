@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [agents, validation, testing, spec]
-zone: plugins/borso-harness/agents/technical-validator.md
+zone: .claude/agents/technical-validator.md
 ---
 
 # The edge case two validators graded PASS
@@ -62,7 +62,7 @@ inherits whatever the author forgot.
 
 **Reference:** commit `aea99b0`
 
-**The actual fix:** category D of `plugins/borso-harness/agents/technical-validator.md`
+**The actual fix:** category D of `.claude/agents/technical-validator.md`
 now requires walking *Use cases / edge cases* bullet by bullet, splitting
 a bullet that makes two claims, and never substituting the *Test strategy*
 list; each row quotes the assertion that would fail if the claim were

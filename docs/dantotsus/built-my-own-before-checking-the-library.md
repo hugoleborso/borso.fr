@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [implementation, skills, deps, react-chessboard]
-zone: plugins/borso-harness/skills/implementation
+zone: .claude/skills/implementation
 ---
 
 # Started writing my own L-arrow util before checking the library
@@ -97,7 +97,7 @@ this kaizen PR.
 **The actual fix:**
 
 ```diff
- # plugins/borso-harness/skills/implementation/SKILL.md
+ # .claude/skills/implementation/SKILL.md
    "Failure modes to avoid" section
 + - **Reinventing what the library already does.** Before writing a new
 +   utility / component that overlaps a vendor's domain (board renderer,

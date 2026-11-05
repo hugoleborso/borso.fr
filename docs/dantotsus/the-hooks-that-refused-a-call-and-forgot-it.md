@@ -7,10 +7,10 @@ related-pr: '#100'
 fix-pr: '#103'
 fix-commits: [948204d50a]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/kaizen-refusal.sh]
+eradication-paths: [.claude/hooks/kaizen-refusal.sh]
 time-to-detect: days
 tags: [meta, hooks, self-improvement-loop, harness, process]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 ---
 
 # The hooks refused five calls and the friction log heard about none of them
@@ -87,7 +87,7 @@ friction is the hook that just refused a call, and it was silent.
 The five hooks that block a call now record what they refused, in the
 same run that refuses it.
 
-- **Code:** `plugins/borso-harness/hooks/kaizen-refusal.sh`, called from each
+- **Code:** `.claude/hooks/kaizen-refusal.sh`, called from each
   blocking branch of the five `pretool-*` hooks.
 
 ## Eradication (mandatory — code-level)
@@ -95,7 +95,7 @@ same run that refuses it.
 **Type:** DevX check (level 2 — devx check)
 
 **Reference:** PR #102 · commits on this branch adding
-`plugins/borso-harness/hooks/kaizen-refusal.sh` and wiring the five hooks
+`.claude/hooks/kaizen-refusal.sh` and wiring the five hooks
 
 **The actual fix:**
 

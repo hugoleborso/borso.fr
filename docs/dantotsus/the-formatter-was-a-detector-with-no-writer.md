@@ -7,10 +7,10 @@ related-pr: '#36'
 fix-pr: '#45'
 fix-commits: [ebabfe7650]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/posttool-format-write.sh]
+eradication-paths: [.claude/hooks/posttool-format-write.sh]
 time-to-detect: minutes
 tags: [prettier, formatter, hooks, pre-commit, self-improvement-loop]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 recurs: [biome-formatter-was-not-gated]
 ---
 
@@ -87,7 +87,7 @@ commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7)
 +        "hooks": [
 +          {
 +            "type": "command",
-+            "command": "plugins/borso-harness/hooks/posttool-format-write.sh",
++            "command": ".claude/hooks/posttool-format-write.sh",
 +            "statusMessage": "Formatting with Prettier"
 +          }
 +        ]

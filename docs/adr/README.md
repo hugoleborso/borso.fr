@@ -10,9 +10,9 @@ decision becomes code` table ("where it lands"). A plan row that says
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
-Conventions live in [`plugins/borso-harness/skills/adr/standard.md`](../../plugins/borso-harness/skills/adr/standard.md).
+Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
 Drafting is `/adr` — the skill has two entry modes (see
-[`plugins/borso-harness/skills/adr/SKILL.md`](../../plugins/borso-harness/skills/adr/SKILL.md)):
+[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)):
 the interactive decision-support walk when a human invokes it, or a
 piloted mode that takes a pre-built payload when
 `/tech-lead-orchestrator` calls it.
@@ -77,7 +77,7 @@ No:
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
 | [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | accepted | 2026-09-21 |
-| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | accepted | 2026-10-05 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | superseded by [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | 2026-10-05 |
 | [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | accepted | 2026-10-06 |
 | [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
 | [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | accepted | 2026-10-10 |
@@ -105,6 +105,7 @@ No:
 | [202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | accepted | 2026-11-01 |
 | [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
+| [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | proposed | 2026-11-05 |
 
 ### Data layer
 
@@ -149,7 +150,8 @@ No:
 
 ### Harness
 
-- 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+- 0026, superseded by 202611050106 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+- 202611050106 — the harness lives in `.claude/` as plain files and the `borso-harness` plugin is deleted, because talos moved into `apps/` and the plugin had no other consumer; a repository outside borso.fr can no longer install it.
 - 0030 — every knowledge entry declares `triggers:` (paths, commands, output), `knowledge-triggers.sh` prints the matching entry into the agent's context at that moment, and a gate refuses an entry without one, because entries were read only when a hook printed them.
 - 0032 — the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
 
@@ -179,5 +181,5 @@ referenced in the diff. The ADR's *Decision* paragraph sits at level 1
 (always visible); its *Alternatives considered* + *Evaluation rubric*
 sit at level 2 (`<details>`); its *Implementation pointers* sit at
 level 3 (nested `<details>`). The skill at
-[`plugins/borso-harness/skills/open-pr/SKILL.md`](../../plugins/borso-harness/skills/open-pr/SKILL.md) carries the
+[`.claude/skills/open-pr/SKILL.md`](../../.claude/skills/open-pr/SKILL.md) carries the
 exact mapping.

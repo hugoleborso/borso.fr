@@ -7,10 +7,10 @@ related-pr: '#236'
 fix-pr: none (the kaizen pull request for PR #236 carries it)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/scripts/kaizen.sh, scripts/install-repo-deps.sh]
+eradication-paths: [scripts/kaizen.sh, scripts/install-repo-deps.sh]
 time-to-detect: minutes (seen when the archive was read before committing)
 tags: [meta, harness, kaizen, session-start]
-zone: plugins/borso-harness/scripts
+zone: scripts
 recurs: [the-friction-log-that-arrived-twice]
 ---
 

@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: ~50 minutes (spec → implement)
 tags: [spec, technical-conception, skill, orchestrator, imported-briefs, adr]
-zone: plugins/borso-harness/skills/specification
+zone: .claude/skills/specification
 weak-point: prose-stands-in-for-a-check
 ---
 
@@ -73,7 +73,7 @@ Two work items.
 
 **The actual fix:**
 
-`plugins/borso-harness/skills/specification/standard.md` — operating-mode step 5 gains a hard sub-rule on live-workspace cross-check, and a new common-mistakes row drives it home with a back-link to this dantotsu.
+`.claude/skills/specification/standard.md` — operating-mode step 5 gains a hard sub-rule on live-workspace cross-check, and a new common-mistakes row drives it home with a back-link to this dantotsu.
 
 ```diff
 - | 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + existing blueprints | Reduces "test & learn" |
@@ -84,7 +84,7 @@ Two work items.
 + | I trust the imported brief about the workspace's toolchain | The spec inherits a stale picture of `apps/<slug>/` from a hand-off README or design-bundle README; a Q.O.D. row about *build pipeline / framework / test runner / deploy mechanism* gets ratified on a wrong premise, and an ADR built on top is invalidated in code review. The brief documents *intent*; `apps/<slug>/package.json` documents *reality*. Cat the live `package.json` before locking any toolchain-shaped Q.O.D. row. See [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md). |
 ```
 
-`plugins/borso-harness/skills/technical-conception/standard.md` — operating-mode step 2 gains the parallel rule (the plan also inventories from the live workspace, not from the spec), and a common-mistakes row.
+`.claude/skills/technical-conception/standard.md` — operating-mode step 2 gains the parallel rule (the plan also inventories from the live workspace, not from the spec), and a common-mistakes row.
 
 ```diff
 - | 2 | Inventory the technical surface | list of frameworks, pipelines, data stores |

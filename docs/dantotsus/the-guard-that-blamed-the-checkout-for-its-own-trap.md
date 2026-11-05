@@ -7,10 +7,10 @@ related-pr: '#216'
 fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-discarding-reset.sh]
+eradication-paths: [.claude/hooks/pretool-no-discarding-reset.sh]
 time-to-detect: days
 tags: [hooks, harness, git, agents]
-zone: plugins/borso-harness/hooks/pretool-no-discarding-reset.sh
+zone: .claude/hooks/pretool-no-discarding-reset.sh
 recurs: none (the hook refused for the reason it exists; only its message was wrong)
 ---
 

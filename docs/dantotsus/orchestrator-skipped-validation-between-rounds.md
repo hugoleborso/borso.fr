@@ -9,7 +9,7 @@ fix-commits: [0618e8b839]
 eradication-level: 5
 eradication-paths: []
 tags: [orchestrator, skill, state-machine, technical-validation, self-improvement-loop]
-zone: plugins/borso-harness/skills/tech-lead-orchestrator
+zone: .claude/skills/tech-lead-orchestrator
 recurs: [orchestrator-agency-overcorrected-on-product-decisions]
 ---
 
@@ -76,7 +76,7 @@ the implementer's own `done` is not evidence.
 
 **Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator must validate every implement round`
 
-**The actual fix:** added to `plugins/borso-harness/skills/tech-lead-orchestrator/standard.md`
+**The actual fix:** added to `.claude/skills/tech-lead-orchestrator/standard.md`
 a hard precondition on the `implement → validate/ship` transition —
 every `status: done` implementation verdict triggers a
 `/technical-validation` dispatch on the current SHA, and the run may not

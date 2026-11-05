@@ -7,10 +7,10 @@ related-pr: '#118'
 fix-pr: '#181'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/knowledge-triggers.sh, plugins/borso-harness/scripts/check-hook-decisions.sh, scripts/check-numbered-sequences.sh]
+eradication-paths: [.claude/hooks/knowledge-triggers.sh, plugins/borso-harness/scripts/check-hook-decisions.sh, scripts/check-numbered-sequences.sh]
 time-to-detect: days
 tags: [hooks, harness, dsql, pragma]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 recurs: [lectured-without-reading-the-code]
 ---
 

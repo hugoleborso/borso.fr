@@ -40,7 +40,7 @@ the failure mode the *Self-improvement loop* rule exists to
 prevent.
 
 The matching gap is the *library-search* habit codified in
-[`/after-task-kaizen`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md)
+[`/after-task-kaizen`](../../.claude/skills/after-task-kaizen/SKILL.md)
 step 2c (added in commit `a0b7f27`): the rule exists, but the
 kaizen skill itself only fires when the operator invokes it.
 The "next layer" of automation — *the harness proposes the right

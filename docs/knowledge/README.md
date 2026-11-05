@@ -50,7 +50,7 @@ triggers:
 - `output` are regular expressions searched in what a Bash or MCP call printed
   or failed with.
 
-[`knowledge-triggers.sh`](../../plugins/borso-harness/hooks/knowledge-triggers.sh)
+[`knowledge-triggers.sh`](../../.claude/hooks/knowledge-triggers.sh)
 does the matching and prints the summary and the path, once per entry per
 session. [`check-knowledge-triggers.sh`](../../scripts/check-knowledge-triggers.sh)
 fails an entry with no summary or no trigger, in pre-commit and in CI. If you
@@ -126,7 +126,7 @@ decision.
 
 - [`the-worktree-guard-reads-shell-text.md`](./the-worktree-guard-reads-shell-text.md) — a worktree-isolated agent's guard refuses any loop, heredoc or interpreter whose text mentions git; run git as one plain command and put multi-step work in a script file.
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
-- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
+- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `.claude/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
 - [`git-push-internal-server-error-while-fetch-works.md`](./git-push-internal-server-error-while-fetch-works.md) — a push the remote rejects with *Internal Server Error* while fetch works; push through `mcp__github__push_files`, then `git reset --keep` onto the remote branch, and know what that drops.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.

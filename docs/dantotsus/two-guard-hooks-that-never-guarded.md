@@ -7,10 +7,10 @@ related-pr: '#60'
 fix-pr: '#62'
 fix-commits: [195b354e2d]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/strip-heredocs.py]
+eradication-paths: [.claude/hooks/strip-heredocs.py]
 time-to-detect: 3 months
 tags: [harness, hooks, gates, meta, self-improvement-loop]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 weak-point: gate-measures-nothing
 recurs: [three-green-gates-on-code-that-ran-nowhere]
 ---
@@ -105,7 +105,7 @@ refused and the hook's message is returned to the agent.
 both — each matched a *mention* as readily as an *invocation*, so the
 first version of the fix commit was refused twice for quoting the
 commands in its own message. Both hooks now read the command with its
-heredoc bodies stripped, via `plugins/borso-harness/hooks/strip-heredocs.py`, and the
+heredoc bodies stripped, via `.claude/hooks/strip-heredocs.py`, and the
 open-pr matcher additionally requires the command at the head of a shell
 segment. Five cases per hook cover both directions.
 

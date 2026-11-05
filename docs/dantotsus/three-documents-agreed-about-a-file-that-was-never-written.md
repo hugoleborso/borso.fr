@@ -18,8 +18,8 @@ weak-point: prose-stands-in-for-a-check
 
 ## Symptom
 
-`CLAUDE.md`, the [`/feature-pipeline` contract](../../plugins/borso-harness/commands/feature-pipeline.md)
-and the [orchestrator standard](../../plugins/borso-harness/skills/tech-lead-orchestrator/standard.md)
+`CLAUDE.md`, the [`/feature-pipeline` contract](../../.claude/commands/feature-pipeline.md)
+and the [orchestrator standard](../../.claude/skills/tech-lead-orchestrator/standard.md)
 each stated, in the present tense, that the feature pipeline's Dynamic Workflow
 lives at `.claude/workflows/feature-pipeline.js`.
 

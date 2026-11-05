@@ -7,10 +7,10 @@ related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-discarding-reset.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
+eradication-paths: [.claude/hooks/pretool-no-discarding-reset.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
 time-to-detect: weeks
 tags: [hooks, harness, git, gates]
-zone: plugins/borso-harness/hooks/pretool-no-discarding-reset.sh
+zone: .claude/hooks/pretool-no-discarding-reset.sh
 recurs: [the-hook-that-was-missing-from-its-own-contract]
 ---
 

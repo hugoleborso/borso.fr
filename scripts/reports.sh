@@ -57,7 +57,7 @@ output_of() {
 
 INDEX_GENERATORS=(
   .claude/skills/blueprint/blueprint-indexing.ts
-  plugins/borso-harness/scripts/knowledge-triggers.py
+  scripts/knowledge-triggers.py
 )
 
 BLUEPRINT_GENERATORS=(

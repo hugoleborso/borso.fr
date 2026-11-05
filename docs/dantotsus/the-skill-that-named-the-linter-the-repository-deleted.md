@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
 time-to-detect: days
 tags: [agents, skills, eslint, biome, tooling, gates, meta, documentation]
-zone: plugins/borso-harness/skills
+zone: .claude/skills
 weak-point: prose-stands-in-for-a-check
 ---
 
@@ -18,7 +18,7 @@ weak-point: prose-stands-in-for-a-check
 
 ## Symptom
 
-`plugins/borso-harness/agents/technical-validator.md` is the brief the code-review agent
+`.claude/agents/technical-validator.md` is the brief the code-review agent
 runs from. Its verdict table held this row:
 
 ```
@@ -107,7 +107,7 @@ the instruction surface is the one surface with no compiler.
 Every invocation swept, and every instruction rewritten to name what actually
 runs rather than deleted and left vague:
 
-- **`plugins/borso-harness/agents/technical-validator.md`** — `biome.jsonc` becomes
+- **`.claude/agents/technical-validator.md`** — `biome.jsonc` becomes
   `eslint.config.js` and `eslint-rules/`; row B02 becomes ESLint with
   `--no-warn-ignored --max-warnings 0`, because ESLint exits 0 on a warning
   and a warning nobody has to clear is a rule that is off.

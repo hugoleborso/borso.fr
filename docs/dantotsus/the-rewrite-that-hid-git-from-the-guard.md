@@ -86,7 +86,7 @@ became `rtk ls -la`; in the main checkout `git status` still became
 
 The change removes an automatic approval rather than adding one: an
 unrewritten command goes through the normal permission flow, and the guards
-in `plugins/borso-harness/hooks/` see the same text as before, so
+in `.claude/hooks/` see the same text as before, so
 `scripts/check-hook-decisions.sh` is unaffected.
 
 What remains is the guard's own reading of shell text: a heredoc or a loop

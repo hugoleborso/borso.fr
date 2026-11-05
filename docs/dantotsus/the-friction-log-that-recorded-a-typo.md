@@ -7,10 +7,10 @@ related-pr: '#230'
 fix-pr: none (opened by this kaizen sweep, number not known when written)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh]
 time-to-detect: one turn
 tags: [harness, tooling, process]
-zone: plugins/borso-harness/scripts/kaizen.sh
+zone: scripts/kaizen.sh
 recurs: [the-wrapper-that-hid-the-subcommand]
 ---
 
@@ -76,7 +76,7 @@ $ scripts/kaizen.sh "a real sentence for the proof"
 [kaizen] logged as main: a real sentence for the proof
 ```
 
-**Sibling defects swept:** the hook caller `plugins/borso-harness/hooks/kaizen-refusal.sh` always passes a multi-word summary, so the refusal does not reach it.
+**Sibling defects swept:** the hook caller `.claude/hooks/kaizen-refusal.sh` always passes a multi-word summary, so the refusal does not reach it.
 
 ## See also
 

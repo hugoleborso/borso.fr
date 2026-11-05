@@ -7,10 +7,10 @@ related-pr: '#55'
 fix-pr: '#73'
 fix-commits: [50545c5bc1]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-discarding-reset.sh]
+eradication-paths: [.claude/hooks/pretool-no-discarding-reset.sh]
 time-to-detect: minutes
 tags: [git, hooks, meta, self-improvement-loop]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 weak-point: prose-stands-in-for-a-check
 ---
 
@@ -73,7 +73,7 @@ reviewer bullet that kept producing the same finding became the
 
 ## Countermeasure
 
-`plugins/borso-harness/hooks/pretool-no-discarding-reset.sh`, a `PreToolUse` hook on `Bash`
+`.claude/hooks/pretool-no-discarding-reset.sh`, a `PreToolUse` hook on `Bash`
 that refuses `git reset --hard|--merge|--keep`, `git checkout -- <path>` and
 `git restore <path>` **while tracked modifications exist**, lists the files at
 stake, and names the two ways through:

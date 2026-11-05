@@ -7,10 +7,10 @@ related-pr: '#171'
 fix-pr: none (the kaizen pull request that adds this file)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/hooks/posttool-format-write.sh]
+eradication-paths: [.claude/hooks/posttool-format-write.sh]
 time-to-detect: minutes
 tags: [hooks, harness, agents, tooling]
-zone: plugins/borso-harness/hooks/posttool-format-write.sh
+zone: .claude/hooks/posttool-format-write.sh
 recurs: none (the-formatter-was-a-detector-with-no-writer added this hook; this is its scope, not a missing writer)
 ---
 

@@ -7,10 +7,10 @@ related-pr: '#40'
 fix-pr: '#40'
 fix-commits: [cac22f1e9b]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-broad-kill.sh]
+eradication-paths: [.claude/hooks/pretool-no-broad-kill.sh]
 time-to-detect: minutes
 tags: [agents, sandbox, processes, hooks, tooling]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 ---
 
 # A broad `pkill` killed another agent's twenty-minute measurement
@@ -70,7 +70,7 @@ matched all three Stryker processes on the machine.
 
 ## Countermeasure
 
-A `PreToolUse(Bash)` hook, `plugins/borso-harness/hooks/pretool-no-broad-kill.sh`, refuses
+A `PreToolUse(Bash)` hook, `.claude/hooks/pretool-no-broad-kill.sh`, refuses
 `pkill`, `killall`, `killall5`, and `pgrep … | xargs kill`. The rejection
 message names the two safe alternatives rather than only stating the ban:
 
