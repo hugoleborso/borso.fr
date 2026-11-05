@@ -32,6 +32,6 @@ judgement here is the least independent of any sweep.
 | 20 | merge | Push and commit output sent to `/dev/null` | post-archive line, `no-swallowed-push` | no-op: the hook refused it and named the safe shape |
 | 21 | merge | `main` gained new zod 3 code (`z.string().uuid()` in the realtime ticket) while the PR was open | merge commit `1c167dcb8` | no-op: `no-deprecated` caught it on the merge |
 | 22 | post-merge | The merge hook said "tell the operator before merging" in a notice read after the merge ran | transcript of the merge call | dantotsu: a-warning-that-arrives-with-the-merge |
-| 23 | process | No `/technical-validation` ran on a 102-file change | `docs/quality/feature-cost.md` row for #274 | no-op: the operator declined a gate on 2026-11-05, because validation on every API change is too slow; do not propose it again |
+| 23 | process | No `/technical-validation` ran on a 102-file change | `docs/quality/feature-cost.md` row for #274 | fixed: 3c7240803 (the operator scoped the gate to API changes, since a review of every change is too slow; `pretool-api-change-needs-validation.sh`) |
 | 24 | process | The new middleware file carries no `@FollowsBlueprint` | `apps/last-loop-lepin/api/src/helpers/validation/invalid-input.middleware.ts` | no-op: no blueprint exists for the middleware layer, and `unhandled-error.middleware.ts` carries none either |
 | 25 | post-merge | The sweep ran in the shipping session | operator's "just do it here" | no-op: the operator's call, stated at the top of this file |
