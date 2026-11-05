@@ -1,6 +1,5 @@
 import { and, asc, count, eq } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { memberTable } from '../members/members.schema';
 import type { CalendarFeedSummary, StoredCalendarFeed } from './calendar-feeds.types';
 import { calendarFeedTable } from './calendar-feeds.schema';
@@ -26,37 +25,34 @@ async function didClaimMemberRow(executor: DatabaseExecutor, memberId: string): 
 
 // @FollowsBlueprint repository-query
 export async function upsertCalendarFeed(feed: NewCalendarFeed): Promise<AddCalendarFeedOutcome> {
-  return await retryingConflictAborts(
-    async () =>
-      await getDatabase().transaction(async (transaction) => {
-        const isMemberClaimed = await didClaimMemberRow(transaction, feed.memberId);
-        if (!isMemberClaimed) return 'member-gone';
-        const [existing] = await transaction
-          .select({ total: count() })
-          .from(calendarFeedTable)
-          .where(eq(calendarFeedTable.memberId, feed.memberId));
-        const updated = await transaction
-          .update(calendarFeedTable)
-          .set({ name: feed.name, updatedAt: feed.now })
-          .where(
-            and(
-              eq(calendarFeedTable.memberId, feed.memberId),
-              eq(calendarFeedTable.address, feed.address),
-            ),
-          )
-          .returning({ id: calendarFeedTable.id });
-        if (updated.length > 0) return 'saved';
-        const hasRoom = hasRoomForAnotherFeed(existing?.total ?? 0);
-        if (!hasRoom) return 'too-many';
-        await transaction.insert(calendarFeedTable).values({
-          memberId: feed.memberId,
-          address: feed.address,
-          name: feed.name,
-          updatedAt: feed.now,
-        });
-        return 'saved';
-      }),
-  );
+  return await getDatabase().transaction(async (transaction) => {
+    const isMemberClaimed = await didClaimMemberRow(transaction, feed.memberId);
+    if (!isMemberClaimed) return 'member-gone';
+    const [existing] = await transaction
+      .select({ total: count() })
+      .from(calendarFeedTable)
+      .where(eq(calendarFeedTable.memberId, feed.memberId));
+    const updated = await transaction
+      .update(calendarFeedTable)
+      .set({ name: feed.name, updatedAt: feed.now })
+      .where(
+        and(
+          eq(calendarFeedTable.memberId, feed.memberId),
+          eq(calendarFeedTable.address, feed.address),
+        ),
+      )
+      .returning({ id: calendarFeedTable.id });
+    if (updated.length > 0) return 'saved';
+    const hasRoom = hasRoomForAnotherFeed(existing?.total ?? 0);
+    if (!hasRoom) return 'too-many';
+    await transaction.insert(calendarFeedTable).values({
+      memberId: feed.memberId,
+      address: feed.address,
+      name: feed.name,
+      updatedAt: feed.now,
+    });
+    return 'saved';
+  });
 }
 
 // @FollowsBlueprint repository-query

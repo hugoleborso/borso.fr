@@ -11,6 +11,7 @@ import { AppErrorBoundary } from './components/organisms/AppErrorBoundary';
 import './i18n/i18n.setup';
 import './styles/tokens.css';
 import { captureInstallPrompt } from './lib/install-prompt.adapter';
+import { startLiveInvalidation } from './lib/live-invalidation.setup';
 import {
   queryCachePersistOptions,
   queryClient,
@@ -22,6 +23,7 @@ import { registerServiceWorker } from './sw/service-worker.setup';
 registerServiceWorker();
 startTakeQueue();
 captureInstallPrompt();
+startLiveInvalidation();
 
 /**
  * @Blueprint site-entrypoint

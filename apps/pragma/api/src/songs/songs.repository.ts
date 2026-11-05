@@ -1,7 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
@@ -177,7 +176,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
 async function runInOneSongTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 export async function listSongsNewestFirst(): Promise<SongRow[]> {
@@ -215,23 +214,20 @@ export async function findSongByDeezerTrackId(deezerTrackId: string): Promise<So
 }
 
 export async function insertSong(values: SongInsertShape): Promise<SongRow> {
-  const [row] = await retryingConflictAborts(
-    async () =>
-      await getDatabase().insert(songTable).values(encodeInsert(values)).returning(PROJECTION),
-  );
+  const [row] = await getDatabase()
+    .insert(songTable)
+    .values(encodeInsert(values))
+    .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSong(row);
 }
 
 export async function updateSong(id: string, updates: SongPersistedShape): Promise<SongRow | null> {
-  const [row] = await retryingConflictAborts(
-    async () =>
-      await getDatabase()
-        .update(songTable)
-        .set(encodeUpdate(updates))
-        .where(eq(songTable.id, id))
-        .returning(PROJECTION),
-  );
+  const [row] = await getDatabase()
+    .update(songTable)
+    .set(encodeUpdate(updates))
+    .where(eq(songTable.id, id))
+    .returning(PROJECTION);
   return row === undefined ? null : rowToSong(row);
 }
 

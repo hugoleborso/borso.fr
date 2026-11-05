@@ -19,6 +19,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT_RELATIVE = path.resolve(HERE, '..', '..');
 const ASSETS_PATH = path.join(REPO_ROOT_RELATIVE, 'dist');
 const API_ENTRY = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'main.ts');
+const WEBSOCKET_ENTRY = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'main.websocket.ts');
 const MIGRATIONS_PATH = path.join(REPO_ROOT_RELATIVE, 'api', 'src', 'database', 'migrations');
 
 /**
@@ -60,6 +61,7 @@ buildPragmaAppStack({
   domainName: stage === 'prod' ? PROD_DOMAIN : undefined,
   assetsPath: ASSETS_PATH,
   apiEntry: API_ENTRY,
+  websocketEntry: WEBSOCKET_ENTRY,
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
   ...(errorReportingDsn === undefined

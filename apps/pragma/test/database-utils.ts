@@ -24,6 +24,7 @@ const ALL_TABLES: readonly string[] = [
   'take_comment',
   'take',
   'push_subscription',
+  'realtime_connection',
   'notification_preference',
   'notification_dispatch',
   'vapid_key_pair',

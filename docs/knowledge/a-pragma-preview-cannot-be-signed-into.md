@@ -16,9 +16,14 @@ does not hold. This is deliberate ([ADR-0009](../adr/0009-pragma-previews-clone-
 1. **The preview clones production.** `preview.yml` skips the seed for pragma,
    because the fixture seed wipes before it writes and would throw the clone
    away. See [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md).
-2. **`app_config` and `member_credential` are cloned and replaced on every
-   deploy**, so the group password and each member's own password are
-   production's.
+2. **`app_config` and `member_credential` are cloned and replaced each time
+   the schema custom resource runs**, so the group password and each member's
+   own password are production's. That resource runs on the preview's first
+   deploy and when a migration file changes, not on every deploy: its payload
+   carries a digest of the migrations (`infra/cdk/src/constructs/dsql-schema.ts`).
+   A seed therefore stays until the next migration change. After a seed,
+   production's passwords no longer sign in on that preview, only the fixture's
+   (measured on PR #261, 2026-11-04).
 3. **Passkeys are not cloned.** A passkey is bound to production's
    relying-party id and cannot sign into a preview host.
 

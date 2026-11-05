@@ -6,6 +6,7 @@ import {
   isProductionStage,
   PreviewableApp,
   type Stage,
+  WebSocketChannel,
 } from '@borso/infra';
 import { Duration, RemovalPolicy, Stack, TimeZone } from 'aws-cdk-lib';
 import { Schedule, ScheduleExpression, ScheduleTargetInput } from 'aws-cdk-lib/aws-scheduler';
@@ -36,6 +37,7 @@ const SECRET_TABLES_BLOCKED_ON_PREVIEW = [
   'member_calendar_feed',
   'member_passkey',
   'push_subscription',
+  'realtime_connection',
   'vapid_key_pair',
   'webauthn_challenge',
 ];
@@ -63,6 +65,13 @@ const STREAK_REMINDER_MINUTE = '0';
 const STREAK_REMINDER_MAX_EVENT_AGE = Duration.hours(1);
 const STREAK_REMINDER_RETRY_ATTEMPTS = 2;
 
+const REALTIME_CONSTRUCT_ID = 'Realtime';
+const WEBSOCKET_CALLBACK_URL_VARIABLE = 'WEBSOCKET_CALLBACK_URL';
+const WEBSOCKET_CLIENT_URL_VARIABLE = 'WEBSOCKET_CLIENT_URL';
+const DSQL_ENDPOINT_VARIABLE = 'DSQL_ENDPOINT';
+const DSQL_SCHEMA_VARIABLE = 'DSQL_SCHEMA';
+const DSQL_ROLE_VARIABLE = 'DSQL_ROLE';
+
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
@@ -78,6 +87,7 @@ export interface BuildPragmaAppStackProps {
   readonly domainName: string | undefined;
   readonly assetsPath: string;
   readonly apiEntry: string;
+  readonly websocketEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
   readonly errorReporting?: ErrorReportingProject;
@@ -120,6 +130,28 @@ function nameUploadsBucket(stage: Stage, prNumber: number | undefined): string {
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
   const origin = frontendOrigin(readNameContext(props), props.domainName);
   return { origin, hostname: new URL(origin).hostname };
+}
+
+function addRealtimeChannel(props: BuildPragmaAppStackProps, previewableApp: PreviewableApp): void {
+  const database = previewableApp.database;
+  const channel = new WebSocketChannel(props.scope, REALTIME_CONSTRUCT_ID, {
+    ...readNameContext(props),
+    entry: props.websocketEntry,
+    ...(database === undefined
+      ? {}
+      : {
+          environment: {
+            [DSQL_ENDPOINT_VARIABLE]: database.clusterEndpoint,
+            [DSQL_SCHEMA_VARIABLE]: database.schemaName,
+            [DSQL_ROLE_VARIABLE]: database.apiRoleName,
+          },
+        }),
+  });
+  database?.grantConnect(channel.handler);
+  if (previewableApp.api === undefined) return;
+  previewableApp.api.handler.addEnvironment(WEBSOCKET_CALLBACK_URL_VARIABLE, channel.callbackUrl);
+  previewableApp.api.handler.addEnvironment(WEBSOCKET_CLIENT_URL_VARIABLE, channel.clientUrl);
+  channel.grantManageConnections(previewableApp.api.handler);
 }
 
 function scheduleStreakReminder(scope: Construct, apiHandler: IFunction): void {
@@ -216,6 +248,8 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
           }),
     },
   });
+
+  addRealtimeChannel(props, previewableApp);
 
   if (previewableApp.api !== undefined) {
     uploadsBucket.grantPut(previewableApp.api.handler);

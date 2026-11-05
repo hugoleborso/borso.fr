@@ -1,6 +1,5 @@
 import { and, asc, eq, isNull, max, ne, or, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { selectAudienceChoiceSetlistId, selectNextLinkPosition } from './setlists.core';
 import {
@@ -28,7 +27,7 @@ const SETLIST_PROJECTION = {
 export async function runInOneSetlistTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 export async function listSetlists(): Promise<SetlistRow[]> {

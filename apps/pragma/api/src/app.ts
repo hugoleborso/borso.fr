@@ -6,6 +6,7 @@ import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
+import { reportTaggedFailure } from './helpers/observability/error-reporting.adapter';
 import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 import { buildImprovementsRouter } from './improvements/improvements.controller';
@@ -17,6 +18,9 @@ import { buildMembersRouter } from './members/members.controller';
 import { type BuildOAuthRoutersOptions, buildOAuthRouters } from './oauth/oauth.controller';
 import { buildNotificationsRouter } from './notifications/notifications.controller';
 import { buildOutreachRouter } from './outreach/outreach.controller';
+import { buildRealtimeRouter } from './realtime/realtime.controller';
+import type { StaleBroadcastSettings } from './realtime/realtime.service';
+import { buildWrittenRootsAnnouncer } from './realtime/stale-scope.middleware';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
@@ -31,6 +35,18 @@ export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
   readonly oauth?: BuildOAuthRoutersOptions;
   readonly mcp?: BuildMcpRouterOptions;
+  readonly realtime?: Partial<StaleBroadcastSettings>;
+}
+
+const STALE_BROADCAST_BUDGET_MILLISECONDS = 1_500;
+
+function readStaleBroadcastSettings(
+  overrides: Partial<StaleBroadcastSettings> = {},
+): StaleBroadcastSettings {
+  return {
+    budgetMilliseconds: overrides.budgetMilliseconds ?? STALE_BROADCAST_BUDGET_MILLISECONDS,
+    reportFailure: overrides.reportFailure ?? reportTaggedFailure,
+  };
 }
 
 /**
@@ -47,6 +63,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .use('*', traceRequests)
     .use('*', logger())
     .use('*', cors())
+    .use('*', buildWrittenRootsAnnouncer(readStaleBroadcastSettings(options.realtime)))
     .onError(answerUnhandledError)
     .get('/api/health', (context) => context.json({ ok: true }))
     .route('/api/auth', publicRouter)
@@ -71,6 +88,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/takes', buildTakesRouter())
     .route('/api/notifications', buildNotificationsRouter())
+    .route('/api/realtime', buildRealtimeRouter())
     .route('/api/audience', audience.publicRouter)
     .route('/api/audience', audience.gatedRouter)
     .route('/api/oauth', oauth.consentRouter)

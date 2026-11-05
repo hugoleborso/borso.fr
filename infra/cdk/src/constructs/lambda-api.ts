@@ -32,6 +32,7 @@ const CORS_ALLOWED_REQUEST_HEADERS = [
   'content-type',
   'authorization',
   'x-ballot-token',
+  'x-pragma-client',
   'sentry-trace',
   'baggage',
 ];

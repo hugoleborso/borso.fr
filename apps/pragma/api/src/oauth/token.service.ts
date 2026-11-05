@@ -2,10 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { readCredentialOfMember } from '../auth/credentials.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
-import {
-  isConflictAbort,
-  retryingConflictAborts,
-} from '../helpers/persistence/conflict-abort.core';
+import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import { readOAuthOrigins } from './oauth.environment';
 import {
   claimAuthorizationCode,
@@ -131,9 +128,7 @@ async function exchangeRefreshToken(exchange: RefreshExchange): Promise<TokenOut
   if (verdict === 'unknown') return INVALID_GRANT;
   const isReplayed = verdict === 'replayed';
   if (isReplayed) {
-    await retryingConflictAborts(async () => {
-      await deleteGrant(grant.id);
-    });
+    await deleteGrant(grant.id);
     exchange.reportFailure({
       name: TOKEN_REPLAY_FAILURE,
       tags: { 'oauth.client': grant.clientId },
@@ -143,9 +138,7 @@ async function exchangeRefreshToken(exchange: RefreshExchange): Promise<TokenOut
   }
   const isRevoked = verdict === 'revoke';
   if (isRevoked) {
-    await retryingConflictAborts(async () => {
-      await deleteGrant(grant.id);
-    });
+    await deleteGrant(grant.id);
     return INVALID_GRANT;
   }
   const minted = mintTokens(refreshFamily);

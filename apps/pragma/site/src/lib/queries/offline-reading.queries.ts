@@ -8,7 +8,7 @@ import { type OfflineManifestUrls, selectOfflineReadingTargets } from './offline
 import { sessionQueryOptions } from './sessions.queries';
 import { setlistEntriesQueryOptions } from './setlist-entries.queries';
 import { setlistsOfSessionQueryOptions } from './setlists.queries';
-import { songQueryOptions, songsListQueryOptions } from './songs.queries';
+import { songKeys, songQueryOptions, songsListQueryOptions } from './songs.queries';
 
 const NEVER_STALE = 'static';
 
@@ -41,16 +41,34 @@ async function loadNextSession(queryClient: QueryClient, sessionId: string): Pro
   );
 }
 
+async function loadSongDetails(
+  queryClient: QueryClient,
+  songIds: readonly string[],
+): Promise<void> {
+  const list = await queryClient
+    .query({ ...songsListQueryOptions(), staleTime: NEVER_STALE })
+    .catch(() => undefined);
+  const listedSongs = new Map((list?.songs ?? []).map((song) => [song.id, song]));
+  await Promise.allSettled(
+    songIds.map(async (songId) => {
+      const listedSong = listedSongs.get(songId);
+      const isHeld = queryClient.getQueryData(songKeys.byId(songId)) !== undefined;
+      if (listedSong !== undefined && !isHeld) {
+        queryClient.setQueryData(songKeys.byId(songId), { song: listedSong });
+        return;
+      }
+      await queryClient.query({ ...songQueryOptions(songId), staleTime: NEVER_STALE });
+    }),
+  );
+}
+
 async function loadOfflineReading(
   queryClient: QueryClient,
   manifest: OfflineManifestUrls,
 ): Promise<void> {
   const targets = selectOfflineReadingTargets(manifest);
   await Promise.allSettled([
-    queryClient.query({ ...songsListQueryOptions(), staleTime: NEVER_STALE }),
-    ...targets.songIds.map((songId) =>
-      queryClient.query({ ...songQueryOptions(songId), staleTime: NEVER_STALE }),
-    ),
+    loadSongDetails(queryClient, targets.songIds),
     ...targets.sessionIds.map((sessionId) => loadNextSession(queryClient, sessionId)),
   ]);
 }

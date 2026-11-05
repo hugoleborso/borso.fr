@@ -15,7 +15,7 @@ import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.querie
 import { isSignInUpdate } from './queries/offline-reading.utils';
 import { forgetSessionMarker } from './session-marker.adapter';
 
-const DEFAULT_STALE_TIME_MS = 30_000;
+const DEFAULT_STALE_TIME_MS = 300_000;
 const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const PERSISTED_CACHE_KEY = 'pragma.query-cache';
 const PERSISTED_CACHE_SHAPE_VERSION = '1';

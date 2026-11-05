@@ -32,6 +32,7 @@ export {
   assistantGrantTable,
 } from '../oauth/oauth.schema';
 export { outreachTemplateTable } from '../outreach/outreach.schema';
+export { realtimeConnectionTable } from '../realtime/realtime.schema';
 export { sessionTable } from '../sessions/sessions.schema';
 export {
   sessionSetlistTable,

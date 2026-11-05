@@ -1,6 +1,5 @@
 import { and, eq, gte } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import type { CalendarDay } from '@domain/paris-day.core';
 import { studyTable } from './studies.schema';
 import type { StudyRow } from './studies.types';
@@ -17,7 +16,7 @@ const STUDY_PROJECTION = {
 export async function runInOneStudyTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 // @FollowsBlueprint repository-idempotent-upsert
