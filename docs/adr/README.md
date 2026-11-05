@@ -104,7 +104,8 @@ No:
 | [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
 | [202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | accepted | 2026-11-01 |
 | [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
-| [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | proposed | 2026-11-04 |
+| [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
+| [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 
 ### Data layer
 
@@ -154,6 +155,8 @@ No:
 - 0032 — the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
 
 ### Observability
+
+- 202611041200 — the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
 
 - 0031 — pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 

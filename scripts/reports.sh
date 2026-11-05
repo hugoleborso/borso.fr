@@ -28,6 +28,13 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# A fresh worktree has no node_modules, and `pnpm exec tsx` then exits 254 with
+# nothing on stderr once its output goes to /dev/null below (PR 263).
+if [ ! -x node_modules/.bin/tsx ]; then
+  echo "[reports] node_modules/.bin/tsx is missing in $PWD. Run pnpm install here first." >&2
+  exit 1
+fi
+
 # The file each generator writes, used by --missing-only to decide whether to
 # run it. One sentinel per generator is enough: a generator that wrote half its
 # outputs is a bug in the generator, not a state this flag has to model.

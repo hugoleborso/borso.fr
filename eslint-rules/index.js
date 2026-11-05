@@ -24,6 +24,7 @@ import noFlatComponentsFolder from './no-flat-components-folder.js';
 import noFlexOneInAutoHeightDialog from './no-flex-one-in-auto-height-dialog.js';
 import noScrollContainerOnMain from './no-scroll-container-on-main.js';
 import noFrenchIdentifiers from './no-french-identifiers.js';
+import noHiddenRoleQuery from './no-hidden-role-query.js';
 import noHorizontalFoldersInApi from './no-horizontal-folders-in-api.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
 import noInlineRefCallback from './no-inline-ref-callback.js';
@@ -75,6 +76,7 @@ export const borsoPlugin = {
     'no-flex-one-in-auto-height-dialog': noFlexOneInAutoHeightDialog,
     'no-scroll-container-on-main': noScrollContainerOnMain,
     'no-french-identifiers': noFrenchIdentifiers,
+    'no-hidden-role-query': noHiddenRoleQuery,
     'no-horizontal-folders-in-api': noHorizontalFoldersInApi,
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
     'no-inline-ref-callback': noInlineRefCallback,

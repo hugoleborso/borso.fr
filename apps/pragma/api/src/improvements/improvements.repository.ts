@@ -1,4 +1,10 @@
-import { IMPROVEMENT_STATUSES, type ImprovementStatus } from '@domain/improvement.core';
+import {
+  DEFAULT_IMPROVEMENT_KIND,
+  IMPROVEMENT_STATUSES,
+  type ImprovementKind,
+  type ImprovementStatus,
+  resolveImprovementKind,
+} from '@domain/improvement.core';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
@@ -13,6 +19,7 @@ export interface ImprovementRow {
   title: string;
   details: string;
   status: ImprovementStatus;
+  kind: ImprovementKind;
   authorMemberId: string;
   createdAt: Date;
 }
@@ -21,6 +28,7 @@ export interface ImprovementPersistedShape {
   title?: string;
   details?: string;
   status?: ImprovementStatus;
+  kind?: ImprovementKind;
 }
 
 interface ImprovementInsertShape extends ImprovementPersistedShape {
@@ -34,6 +42,7 @@ const PROJECTION = {
   title: improvementTable.title,
   details: improvementTable.details,
   status: improvementTable.status,
+  kind: improvementTable.kind,
   authorMemberId: improvementTable.authorMemberId,
   createdAt: improvementTable.createdAt,
 } as const;
@@ -43,10 +52,15 @@ function toImprovementRow(row: {
   title: string;
   details: string;
   status: string;
+  kind: string | null;
   authorMemberId: string;
   createdAt: Date;
 }): ImprovementRow {
-  return { ...row, status: improvementStatusSchema.parse(row.status) };
+  return {
+    ...row,
+    status: improvementStatusSchema.parse(row.status),
+    kind: resolveImprovementKind(row.kind),
+  };
 }
 
 const DEFAULT_STATUS: ImprovementStatus = 'idea';
@@ -75,6 +89,7 @@ export async function insertImprovement(values: ImprovementInsertShape): Promise
       title: values.title ?? '',
       details: values.details ?? '',
       status: values.status ?? DEFAULT_STATUS,
+      kind: values.kind ?? DEFAULT_IMPROVEMENT_KIND,
       authorMemberId: values.authorMemberId,
       createdAt: values.createdAt,
     })

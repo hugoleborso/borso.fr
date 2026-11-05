@@ -1,3 +1,4 @@
+import './observability/error-reporting.setup';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Galaxy } from './components/organisms/Galaxy';

@@ -1,5 +1,5 @@
 ---
-summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, and dead code to delete.'
+summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, dead code to delete, and a call made at `describe` level that per-test coverage credits to no test.'
 triggers:
   output:
     - '#\d+\.\s*\[Survived\]'
@@ -135,3 +135,13 @@ all passed, and every one was killed once the call moved inside the tests.
 The tell: a whole file's mutants survive at once, including ones that would
 obviously change the output. Look for work done at `describe` level before
 writing a single new assertion.
+
+## A call made at `describe` level is covered by no test
+
+`stryker.shared.js` sets `coverageAnalysis: 'perTest'`, so Stryker runs only
+the tests that covered a mutant. Code a test file calls in the `describe`
+body, outside any `it`, runs at collection time and is credited to no test.
+Every mutant in it then reports as survived, which reads as missing
+assertions. On PR #263, 29 mutants in `buildGatewayIndicators` survived for
+this reason while the assertions on its result were all there (measured).
+Move the call into each `it`, or into a helper each `it` calls.

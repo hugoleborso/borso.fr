@@ -39,3 +39,7 @@ export function selectErrorResponse(failure: unknown): ErrorResponse {
     }
   );
 }
+
+export function isUnexpectedFailure(answer: ErrorResponse): boolean {
+  return answer.status === UNEXPECTED_FAILURE_STATUS;
+}

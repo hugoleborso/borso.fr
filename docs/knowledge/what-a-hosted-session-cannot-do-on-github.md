@@ -1,11 +1,12 @@
 ---
-summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow, and the `merged` field and `get_diff` size mislead.'
+summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow or reach GraphQL (`gh pr view`), and the `merged` field and `get_diff` size mislead.'
 triggers:
   commands:
     - 'workflow_dispatch|actions_run_trigger'
     - 'gh auth status'
   output:
     - 'The token in GH_TOKEN is invalid'
+    - 'GitHub GraphQL is not available'
 ---
 
 # What a hosted session cannot do on GitHub
@@ -52,6 +53,13 @@ is installed, `gh auth status` prints `The token in GH_TOKEN is invalid`, and
 `gh api repos/hugoleborso/borso.fr/pulls/224` still answers, because the agent
 proxy authenticates the request. Probe the one `gh api` call you need instead
 of reading the status line. PR #224's `ci-metrics` agent lost time to it.
+
+**GraphQL.** Measured 2026-11-04: every `gh` command that asks GraphQL,
+such as `gh pr view` and `gh pr checks`, answers `HTTP 403: GitHub GraphQL is
+not available from Claude Code sessions`. Ask REST instead, for example
+`gh api repos/{owner}/{repo}/pulls/<n> --jq .head.sha`. A hook that hid the 403
+behind `2>/dev/null` printed `unknown` on every hosted merge for a week; see
+[`the-merge-hook-asked-the-one-api-the-proxy-refuses`](../dantotsus/the-merge-hook-asked-the-one-api-the-proxy-refuses.md).
 
 **Queue a merge for when CI goes green.** `mcp__github__enable_pr_auto_merge`
 answers `Auto-merge is not enabled for this repository`, measured on PR #153 on

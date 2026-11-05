@@ -1,6 +1,7 @@
 # ADR-202611040227: pragma pushes stale scopes over the WebSocket channel
 
-- **Status:** proposed
+- **Status:** accepted
+- **Ratified:** by the operator on PR #261 on 2026-11-05 ("merge")
 - **Date:** 2026-11-04
 - **Deciders:** Hugo
 - **Tags:** pragma, realtime, cdk, dependencies, cost

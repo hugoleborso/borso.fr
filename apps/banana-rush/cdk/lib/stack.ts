@@ -16,6 +16,7 @@ const WEBSOCKET_CLIENT_URL_VARIABLE = 'WEBSOCKET_CLIENT_URL';
 const DSQL_ENDPOINT_VARIABLE = 'DSQL_ENDPOINT';
 const DSQL_SCHEMA_VARIABLE = 'DSQL_SCHEMA';
 const DSQL_ROLE_VARIABLE = 'DSQL_ROLE';
+const ERROR_REPORTING_DSN_VARIABLE = 'SENTRY_DSN';
 
 export interface BuildBananaRushAppStackProps {
   readonly scope: Construct;
@@ -27,18 +28,24 @@ export interface BuildBananaRushAppStackProps {
   readonly websocketEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
+  readonly errorReportingDsn?: string;
+}
+
+function buildErrorReportingEnvironment(dsn: string | undefined): Record<string, string> {
+  return dsn === undefined ? {} : { [ERROR_REPORTING_DSN_VARIABLE]: dsn };
 }
 
 // @FollowsBlueprint app-cdk-stack
 export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): void {
   const isProduction = isProductionStage(props.stage);
+  const errorReportingEnvironment = buildErrorReportingEnvironment(props.errorReportingDsn);
   const previewableApp = new PreviewableApp(props.scope, APP_CONSTRUCT_ID, {
     app: APP_SLUG,
     stage: props.stage,
     ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
     ...(props.domainName === undefined ? {} : { domainName: props.domainName }),
     frontend: { distPath: props.assetsPath },
-    api: { entry: props.apiEntry },
+    api: { entry: props.apiEntry, environment: errorReportingEnvironment },
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
@@ -52,15 +59,16 @@ export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): vo
     stage: props.stage,
     ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
     entry: props.websocketEntry,
-    ...(database === undefined
-      ? {}
-      : {
-          environment: {
+    environment: {
+      ...errorReportingEnvironment,
+      ...(database === undefined
+        ? {}
+        : {
             [DSQL_ENDPOINT_VARIABLE]: database.clusterEndpoint,
             [DSQL_SCHEMA_VARIABLE]: database.schemaName,
             [DSQL_ROLE_VARIABLE]: database.apiRoleName,
-          },
-        }),
+          }),
+    },
   });
   database?.grantConnect(channel.handler);
 

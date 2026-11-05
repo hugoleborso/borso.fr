@@ -12,6 +12,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 - **No invented numbers.** State an unknown price, latency or limit as unknown, or look it up.
 - **Never estimate durations.** Size work by what it touches and what needs deciding (`/route`).
 - **Fix the failures you find**, whoever caused them. "Preexisting" is not a reason to walk past.
+- **Lower the water, do not raise the boat.** A limit that trips (throttling, a timeout, memory, a quota) is an andon showing a rock. Adding capacity is adding inventory: it raises the water and hides the rock until it sinks the next change. Go and see the real requests and logs, ask why until you reach the cause (a retry loop, a burst, a slow query, a missing cache), and remove it. Raising a limit is a last resort, and the operator decides it.
 - **No follow-up issues.** Do the work in this PR, or ask one question. Only product and architecture decisions go to the operator. Decide the rest.
 - **A repeated correction is a missing hook, skill or doc.** Propose it.
 
@@ -73,7 +74,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Parallel agents
 
-- Agents share one git index. Subagents never commit, and while one runs you stage explicit paths, never `git add -A`.
+- Agents share one git index. Subagents never commit, and while one runs you stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
 - Run `scripts/reports.sh` once, after every agent has finished.
 - Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> "<the problem, one sentence>"`. Put that line in every brief.
 

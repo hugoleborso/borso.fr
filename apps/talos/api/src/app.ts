@@ -7,7 +7,8 @@ import { buildCommitmentsRouter } from './commitments/commitments.controller';
 import { buildDraftsRouter } from './drafts/drafts.controller';
 import { buildFocusRouter } from './focus/focus.controller';
 import { buildGraphRouter } from './graph/graph.controller';
-import { selectErrorResponse } from './helpers/errors/error-response.core';
+import { isUnexpectedFailure, selectErrorResponse } from './helpers/errors/error-response.core';
+import { reportUnhandledError } from './helpers/observability/error-reporting.adapter';
 import { buildHistoryRouter } from './history/history.controller';
 import { buildMessagesRouter } from './messages/messages.controller';
 import { buildNotifyRouter } from './notify/notify.controller';
@@ -28,8 +29,10 @@ function buildAppRouter(options: CreateAppOptions = {}) {
   const { sessionRouter, ceremonyRouter, passkeysRouter } = buildAuthRouter(options.auth);
   return new Hono()
     .use('*', logger())
-    .onError((failure, context) => {
+    .onError(async (failure, context) => {
       const answer = selectErrorResponse(failure);
+      const isWorthReporting = isUnexpectedFailure(answer);
+      if (isWorthReporting) await reportUnhandledError(failure);
       return context.json(answer.body, answer.status);
     })
     .get('/api/health', (context) => context.json({ ok: true }))

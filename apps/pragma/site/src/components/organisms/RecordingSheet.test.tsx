@@ -62,7 +62,7 @@ describe('RecordingSheet', () => {
     await user.click(screen.getByRole('button', { name: 'Stop' }));
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { hidden: true })).toBeNull();
+      expect(screen.queryByRole('dialog', undefined)).toBeNull();
     });
     expect(queue.queueTake).toHaveBeenCalledWith(
       {

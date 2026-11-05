@@ -32,6 +32,7 @@ function valuesFromUpdate(input: ImprovementUpdateInput): ImprovementPersistedSh
   if (input.title !== undefined) out.title = input.title;
   if (input.details !== undefined) out.details = input.details;
   if (input.status !== undefined) out.status = input.status;
+  if (input.kind !== undefined) out.kind = input.kind;
   return out;
 }
 
@@ -50,6 +51,7 @@ export async function createImprovement(
     title: input.title,
     details: input.details,
     status: input.status,
+    kind: input.kind,
     authorMemberId,
     createdAt: now,
   });

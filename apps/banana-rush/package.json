@@ -32,6 +32,8 @@
     "@borso/infra": "workspace:*",
     "@fontsource-variable/nunito": "5.2.5",
     "@hono/zod-validator": "catalog:",
+    "@sentry/aws-serverless": "catalog:",
+    "@sentry/react": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",

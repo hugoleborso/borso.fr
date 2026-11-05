@@ -58,7 +58,12 @@ on the status code and the response body, and not on internal calls.
 
 Test a component through what a user sees, using Testing Library queries by
 role and by label, and never by class name or test identifier when a role
-exists.
+exists. Reach an element the way a person does. Open the menu, sheet or dialog
+before querying what is inside it, and never pass `hidden: true` to a role
+query. A test that reached a closed menu's items that way broke when pragma's
+menu moved to React Aria, and its negative twin kept passing with the guard it
+was written for deleted
+([dantotsu](../dantotsus/a-test-that-could-see-inside-a-closed-menu.md)).
 
 ## Test naming
 
@@ -209,6 +214,8 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   `infra/cdk`. The last two carried the coverage gate and no mutation
   configuration at all, and scored 77.40 and 80.84 the first time one was
   pointed at them.
+- `oxlint:borso/no-hidden-role-query` fails on a `*ByRole` query passed
+  `hidden: true` in a front-end file.
 - `oxlint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
 - `reviewer` checks that a test name states the behaviour and the condition,

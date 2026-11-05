@@ -5,21 +5,26 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  IMPROVEMENT_KINDS,
   IMPROVEMENT_STATUSES,
+  type ImprovementKind,
   type ImprovementStatus,
   readStatus,
+  selectKindLabelKey,
   selectStatusLabelKey,
 } from '../../routes/improvements/improvements-page.core';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { SegmentedChoice } from '../molecules/SegmentedChoice';
 import { Sheet } from '../molecules/Sheet';
 
 export interface ImprovementFormValues {
   readonly title: string;
   readonly details: string;
   readonly status: ImprovementStatus;
+  readonly kind: ImprovementKind;
 }
 
 export interface ImprovementFormSheetProps {
@@ -98,6 +103,22 @@ export function ImprovementFormSheet({
                 onChange={(event) => field.handleChange(event.target.value)}
               />
             </label>
+          )}
+        </form.Field>
+        <form.Field name="kind">
+          {(field) => (
+            <div className={FIELD_CLASS}>
+              <span aria-hidden="true">{t('improvements.kindField')}</span>
+              <SegmentedChoice
+                legend={t('improvements.kindField')}
+                options={IMPROVEMENT_KINDS.map((kind) => ({
+                  value: kind,
+                  label: t(selectKindLabelKey(kind)),
+                }))}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
+            </div>
           )}
         </form.Field>
         <form.Field name="status">

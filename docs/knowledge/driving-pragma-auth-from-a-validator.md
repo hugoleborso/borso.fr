@@ -1,10 +1,11 @@
 ---
-summary: 'Driving pragma sign-in from a validator: the seeded logins, the `pragma.session-seen` localStorage marker a cookie alone lacks, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
+summary: 'Driving pragma from a validator: the seeded logins, ids that change on every seed, the `pragma.session-seen` localStorage marker a cookie alone lacks, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
 triggers:
   paths:
     - 'docs/features/pragma/*/validation/**'
   commands:
     - 'localhost:\d+/api/auth'
+    - 'localhost:\d+/(setlists|catalog|sessions|songs)/[0-9a-f]{8}-'
   output:
     - '"error":\s*"rate-limited"'
 ---
@@ -30,6 +31,13 @@ The fixture route, if you need to reseed mid-run, is
 `POST /api/__test/seed`, not `/api/test/seed`. Each `pnpm dev` wipes and
 reseeds, so a run that changes passwords leaves nothing behind for the
 next one.
+
+The fixture draws every id with `randomUUID()`, so an id copied from one
+run is a 404 in the next. PR #249's migration brief listed routes such as
+`/setlists/cb929e7b-…` from an earlier run, and the subagent lost a round
+finding that out. Resolve each route through the API after signing in, for
+example the first setlist from `GET /api/setlists`, and never paste an id
+into a brief.
 
 ## A cookie alone still lands on /login
 

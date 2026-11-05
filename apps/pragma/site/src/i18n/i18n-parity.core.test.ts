@@ -56,6 +56,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: 'a duration written with the h unit both languages share',
   },
   { key: 'home.totalMinutes', readsTheSameBecause: 'min is the minute abbreviation in both' },
+  { key: 'improvements.kindBug', readsTheSameBecause: '"un bug" is the word French users say' },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.bars', readsTheSameBecause: '"un bar" is the same word in French' },

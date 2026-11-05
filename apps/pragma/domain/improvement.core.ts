@@ -4,6 +4,21 @@ export type ImprovementStatus = (typeof IMPROVEMENT_STATUSES)[number];
 
 export const DEFAULT_IMPROVEMENT_STATUS: ImprovementStatus = 'idea';
 
+export const IMPROVEMENT_KINDS = ['idea', 'bug'] as const;
+
+export type ImprovementKind = (typeof IMPROVEMENT_KINDS)[number];
+
+export const DEFAULT_IMPROVEMENT_KIND: ImprovementKind = 'idea';
+
+export function isImprovementKind(candidate: string | null): candidate is ImprovementKind {
+  return IMPROVEMENT_KINDS.some((kind) => kind === candidate);
+}
+
+// @FollowsBlueprint core-projection
+export function resolveImprovementKind(storedKind: string | null): ImprovementKind {
+  return isImprovementKind(storedKind) ? storedKind : DEFAULT_IMPROVEMENT_KIND;
+}
+
 // @FollowsBlueprint core-lookup-table
 const STATUS_RANK = {
   idea: 0,

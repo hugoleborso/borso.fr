@@ -91,7 +91,7 @@ describe('TakeUploadForm', () => {
     const file = buildRecordedFile();
 
     await user.upload(screen.getByLabelText('Audio file'), file);
-    await user.click(screen.getByRole('button', { name: 'Save', hidden: true }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
       expect(onClose).toHaveBeenCalledTimes(1);

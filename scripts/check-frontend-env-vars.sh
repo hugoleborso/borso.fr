@@ -23,42 +23,49 @@ declare -A ALLOWED_UNSET=()
 
 readonly VARIABLE_PATTERN='VITE_[A-Z0-9_]*'
 
-list_read_variables() {
+list_read_pairs() {
   # The git index rather than a filesystem walk, for the same reason
   # check-single-stylesheet.sh reads it: `coverage/` and `.stryker-tmp/` are
   # gitignored and full of copies that would each match. Listing the files
   # first also keeps this correct across both site layouts — `site/src/` in
   # pragma and last-loop-lepin, `site/` directly in borso-fr and
-  # borsouvertures — which a `site/src` glob silently misses.
+  # borsouvertures — which a `site/src` glob silently misses. Each line is
+  # `<app> <variable>`.
   git ls-files -- ':(glob)apps/*/site/**' |
     { grep -E '\.tsx?$' || true; } |
     tr '\n' '\0' |
-    xargs -0 --no-run-if-empty grep -ho "$VARIABLE_PATTERN" |
-    grep -E "^VITE_[A-Z0-9_]+$" |
+    xargs -0 --no-run-if-empty grep -Ho "$VARIABLE_PATTERN" |
+    sed -nE 's#^apps/([^/]+)/[^:]*:(VITE_[A-Z0-9_]+)$#\1 \2#p' |
     sort -u
 }
 
-list_set_variables() {
-  # `VITE_` on its own appears in prose inside workflow comments, so the
-  # trailing-character class keeps the bare prefix out of the comparison.
-  grep -rho "$VARIABLE_PATTERN" .github/workflows/ 2>/dev/null |
-    grep -E "^VITE_[A-Z0-9_]+$" |
+list_set_pairs() {
+  # A value written `${{ matrix.app == 'x' && vars.Y || '' }}` is set for
+  # `x` alone, so it is recorded as `x <variable>`; any other value is set for
+  # every app and recorded as `* <variable>`. Reading only the names, as this
+  # check once did, let last-loop-lepin read VITE_SENTRY_DSN for weeks while
+  # the workflow set it for pragma only (PR 263).
+  grep -rhoE "^ *VITE_[A-Z0-9_]+: .*" .github/workflows/ 2>/dev/null |
+    sed -E "s/^ *(VITE_[A-Z0-9_]+): .*matrix\.app == '([a-z0-9-]+)'.*/\2 \1/; t; s/^ *(VITE_[A-Z0-9_]+): .*/* \1/" |
     sort -u
 }
 
-unset_variables=$(comm -23 <(list_read_variables) <(list_set_variables))
+set_pairs="$(list_set_pairs)"
 
 failed=0
-while read -r variable; do
+while read -r app variable; do
   [ -z "$variable" ] && continue
+  if grep -qxF -e "* $variable" -e "$app $variable" <<<"$set_pairs"; then
+    continue
+  fi
   if [ -n "${ALLOWED_UNSET[$variable]+set}" ]; then
     echo "  $variable is read and deliberately unset: ${ALLOWED_UNSET[$variable]}"
     continue
   fi
-  echo "  $variable is read by a site and set by no workflow, so the code behind it never runs." >&2
+  echo "  $variable is read by $app's site and no workflow sets it for $app, so the code behind it never runs there." >&2
   echo "    Set it in .github/workflows/{deploy,preview}.yml, or add it to ALLOWED_UNSET in $0 with a reason." >&2
   failed=1
-done <<<"$unset_variables"
+done < <(list_read_pairs)
 
 if [ "$failed" -ne 0 ]; then
   exit 1
