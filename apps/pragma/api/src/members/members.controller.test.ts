@@ -14,7 +14,7 @@ import { instrumentTable } from '../instruments/instruments.schema';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
 const memberSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   firstName: z.string(),
   color: z.string(),
   avatarS3Key: z.string().nullable(),
@@ -23,7 +23,7 @@ const singleMemberEnvelope = z.object({ member: memberSchema });
 const memberListEnvelope = z.object({ members: z.array(memberSchema) });
 
 const instrumentSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   name: z.string(),
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
   icon: z.enum(INSTRUMENT_ICONS),
@@ -32,8 +32,8 @@ const instrumentSchema = z.object({
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
 const assignmentResponseSchema = z.object({
-  id: z.string().uuid(),
-  instrumentIds: z.array(z.string().uuid()),
+  id: z.guid(),
+  instrumentIds: z.array(z.guid()),
 });
 
 const holdEveryReadOfInstruments: LockHold = async (transaction) =>
@@ -270,9 +270,8 @@ describe('members controller (back-e2e)', () => {
       },
       cookieHeader,
     });
-    const songId = (
-      await readJson(songResponse, z.object({ song: z.object({ id: z.string().uuid() }) }))
-    ).song.id;
+    const songId = (await readJson(songResponse, z.object({ song: z.object({ id: z.guid() }) })))
+      .song.id;
 
     const sessionResponse = await jsonRequest(app, '/api/sessions', {
       method: 'POST',
@@ -280,7 +279,7 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     const sessionId = (
-      await readJson(sessionResponse, z.object({ session: z.object({ id: z.string().uuid() }) }))
+      await readJson(sessionResponse, z.object({ session: z.object({ id: z.guid() }) }))
     ).session.id;
 
     const setlistResponse = await jsonRequest(app, '/api/setlists', {
@@ -289,7 +288,7 @@ describe('members controller (back-e2e)', () => {
       cookieHeader,
     });
     const setlistId = (
-      await readJson(setlistResponse, z.object({ setlist: z.object({ id: z.string().uuid() }) }))
+      await readJson(setlistResponse, z.object({ setlist: z.object({ id: z.guid() }) }))
     ).setlist.id;
 
     const entryResponse = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
@@ -300,9 +299,8 @@ describe('members controller (back-e2e)', () => {
       },
       cookieHeader,
     });
-    const entryId = (
-      await readJson(entryResponse, z.object({ entry: z.object({ id: z.string().uuid() }) }))
-    ).entry.id;
+    const entryId = (await readJson(entryResponse, z.object({ entry: z.object({ id: z.guid() }) })))
+      .entry.id;
 
     const deletion = await jsonRequest(app, `/api/members/${targetMemberId}`, {
       method: 'DELETE',
@@ -314,7 +312,7 @@ describe('members controller (back-e2e)', () => {
       await jsonRequest(app, `/api/songs/${songId}`, { cookieHeader }),
       z.object({
         song: z.object({
-          id: z.string().uuid(),
+          id: z.guid(),
           defaultLineup: z.record(z.string(), z.array(z.string())),
         }),
       }),
@@ -326,7 +324,7 @@ describe('members controller (back-e2e)', () => {
       z.object({
         entries: z.array(
           z.object({
-            id: z.string().uuid(),
+            id: z.guid(),
             lineupOverride: z.record(z.string(), z.array(z.string())).nullable(),
           }),
         ),

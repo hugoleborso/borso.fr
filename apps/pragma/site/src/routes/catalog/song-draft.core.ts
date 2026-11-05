@@ -28,7 +28,7 @@ export const linkSchema = z.object({
 });
 
 export const songSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   artist: z.string(),
   status: z.enum(songStatuses),

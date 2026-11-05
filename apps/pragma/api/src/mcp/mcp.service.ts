@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { type AnyZodObject, z, type ZodTypeAny } from 'zod';
+import { z } from 'zod';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import {
   isIdentifierReference,
@@ -30,7 +30,7 @@ export { pickReference } from './tool-refusal.core';
 export const reportToolFailureToErrorTracking: McpSession['reportFailure'] = reportTaggedFailure;
 
 // @FollowsBlueprint service-passthrough
-export function defineTool<Schema extends AnyZodObject>(
+export function defineTool<Schema extends z.ZodObject>(
   definition: ToolDefinition<Schema>,
 ): ToolDefinition<Schema> {
   return definition;
@@ -90,13 +90,11 @@ export async function answerToolRequest(context: Context, session: McpSession): 
   return await answerMcpRequest(context, session);
 }
 
-export function parseToolFields<Schema extends ZodTypeAny>(
+export function parseToolFields<Schema extends z.ZodType>(
   schema: Schema,
   fields: unknown,
 ): z.output<Schema> {
-  const checkedFields: z.SafeParseReturnType<z.input<Schema>, z.output<Schema>> = schema.safeParse(
-    fields,
-  );
+  const checkedFields: z.ZodSafeParseResult<z.output<Schema>> = schema.safeParse(fields);
   if (checkedFields.success) return checkedFields.data;
   return refuseTool(describeInvalidFields(checkedFields.error.issues));
 }

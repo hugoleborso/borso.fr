@@ -27,7 +27,7 @@ const SECOND_ENTRY_PATTERN = '^02 ';
 const CLOSE_THE_VOTE = ['Close the vote'];
 
 const storedLineupSchema = z
-  .record(z.union([z.string(), z.array(z.string()), z.null()]))
+  .record(z.string(), z.union([z.string(), z.array(z.string()), z.null()]))
   .nullable()
   .transform((stored) => (stored === null ? null : normalizeLineup(stored)));
 const entrySchema = z.object({
@@ -67,7 +67,7 @@ const gridSchema = z.object({
 });
 const firstScreenSchema = z
   .object({ firstRowTop: z.number().nullable(), stickyElements: z.number() })
-  .passthrough();
+  .loose();
 const primaryActionSchema = z.array(z.object({ name: z.string(), centreFraction: z.number() }));
 const stripPositionSchema = z.object({ top: z.number(), isOnScreen: z.boolean() }).nullable();
 
@@ -81,9 +81,9 @@ async function listOf<Row>(
   driver: BandSessionDriver,
   path: string,
   key: string,
-  schema: z.ZodType<Row, z.ZodTypeDef, unknown>,
+  schema: z.ZodType<Row>,
 ): Promise<Row[]> {
-  const body = z.record(z.unknown()).parse(await driver.fetchJson(path));
+  const body = z.record(z.string(), z.unknown()).parse(await driver.fetchJson(path));
   return z.array(schema).parse(body[key]);
 }
 

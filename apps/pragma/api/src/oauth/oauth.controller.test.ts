@@ -62,7 +62,7 @@ const VIBE_REGISTRATION = {
 };
 
 const registeredClientSchema = z.object({
-  client_id: z.string().uuid(),
+  client_id: z.guid(),
   client_id_issued_at: z.number().int(),
   client_name: z.string(),
   redirect_uris: z.array(z.string()),
@@ -76,19 +76,19 @@ const tokenSchema = z.object({
   scope: z.literal('pragma'),
 });
 const errorSchema = z.object({ error: z.string() });
-const redirectToSchema = z.object({ redirectTo: z.string().url() });
+const redirectToSchema = z.object({ redirectTo: z.url() });
 const consentDescriptionSchema = z.object({ clientName: z.string(), memberFirstName: z.string() });
 const grantsSchema = z.object({
   grants: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.guid(),
       clientName: z.string(),
       createdAt: z.string(),
       lastUsedAt: z.string().nullable(),
     }),
   ),
 });
-const productEventSchema = z.object({ event: z.string() }).passthrough();
+const productEventSchema = z.object({ event: z.string() }).loose();
 
 interface SignedInMember {
   readonly memberId: string;

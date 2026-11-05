@@ -22,14 +22,14 @@ export const studyTable = pgTable(
 
 export const studyLogSchema = z
   .object({
-    songId: z.string().uuid(),
-    instrumentId: z.string().uuid(),
+    songId: z.guid(),
+    instrumentId: z.guid(),
   })
   .strict();
 
 export const studyPathSchema = z.object({
-  songId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
+  songId: z.guid(),
+  instrumentId: z.guid(),
 });
 
 export const studyToolInputSchema = z.object({

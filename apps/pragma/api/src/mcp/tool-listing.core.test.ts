@@ -36,6 +36,36 @@ describe('compactInputSchema', () => {
     });
   });
 
+  it('drops a pattern that restates its format, and integer bounds that only restate the safe range', () => {
+    expect(
+      compactInputSchema({
+        properties: {
+          id: { type: 'string', format: 'uuid', pattern: '^[0-9a-f-]{36}$' },
+          code: { type: 'string', pattern: '^[A-G]$' },
+          count: {
+            type: 'integer',
+            minimum: Number.MIN_SAFE_INTEGER,
+            maximum: Number.MAX_SAFE_INTEGER,
+          },
+          energy: { type: 'integer', minimum: 1, maximum: 5 },
+        },
+      }),
+    ).toEqual({
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        code: { type: 'string', pattern: '^[A-G]$' },
+        count: { type: 'integer' },
+        energy: { type: 'integer', minimum: 1, maximum: 5 },
+      },
+    });
+  });
+
+  it('keeps a field named pattern beside a field named format', () => {
+    const properties = { format: { type: 'string' }, pattern: { type: 'string' } };
+    expect(compactInputSchema({ properties })).toEqual({ type: 'object', properties });
+  });
+
   it('always answers an object schema', () => {
     expect(compactInputSchema({})).toEqual({ type: 'object' });
   });

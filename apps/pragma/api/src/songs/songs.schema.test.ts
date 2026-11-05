@@ -126,6 +126,10 @@ describe('songCreateInputSchema', () => {
 });
 
 describe('songUpdateInputSchema', () => {
+  it('leaves out every field the patch does not name, defaults included', () => {
+    expect(songUpdateInputSchema.parse({ title: 'Creep' })).toEqual({ title: 'Creep' });
+  });
+
   it('accepts a patch with nothing in it, and still checks what is there', () => {
     expect(songUpdateInputSchema.safeParse({}).success).toBe(true);
     expect(songUpdateInputSchema.safeParse({ status: 'retired' }).success).toBe(false);

@@ -16,7 +16,7 @@ import { availableSupportSchema, concertMoodSchema } from './bar-support.core';
  * @Blueprint schema-table-and-input
  * @BlueprintName Schema With Table And Input
  * @BlueprintUsage Use for a slice that owns a table, so its Drizzle definition and its Zod input schemas live in one file.
- * @BlueprintDescription Declares the table, the status list, and the create schema, then derives the update schema with `.partial()` so a new field cannot be added to one and forgotten in the other. `BarStatus` is derived from the same status list the enum reads, which turns an unknown status into a type error rather than a runtime surprise.
+ * @BlueprintDescription Declares the table, the status list, and the create schema, declares the fields once without defaults, then derives the create schema by adding the defaults and the update schema with `.partial()`, so a new field cannot be added to one and forgotten in the other. Zod 4 applies a `.default()` even inside `.partial()`, so a default in the shared fields would rewrite every field a patch leaves out. `BarStatus` is derived from the same status list the enum reads, which turns an unknown status into a type error rather than a runtime surprise.
  */
 export const barTable = pgTable('bar', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -34,28 +34,41 @@ export const barTable = pgTable('bar', {
   availableSupport: text('available_support'),
 });
 
-export const barCreateSchema = z.object({
+const barFieldShape = {
   name: z.string().trim().min(1).max(BAR_NAME_MAX_LENGTH),
   status: z.enum(BAR_STATUSES),
-  notes: z.string().max(BAR_NOTES_MAX_LENGTH).default(''),
-  city: z.string().max(BAR_CITY_MAX_LENGTH).nullable().default(null),
-  capacity: z.number().int().min(0).max(BAR_CAPACITY_MAX).nullable().default(null),
-  contactName: z.string().max(BAR_CONTACT_NAME_MAX_LENGTH).nullable().default(null),
-  contactEmail: z.string().email().nullable().default(null),
-  contactPhone: z.string().max(BAR_CONTACT_PHONE_MAX_LENGTH).nullable().default(null),
-  ownerMemberId: z.string().uuid().nullable().default(null),
-  concertMood: concertMoodSchema.nullable().default(null),
-  availableSupport: availableSupportSchema.default([]),
+  notes: z.string().max(BAR_NOTES_MAX_LENGTH),
+  city: z.string().max(BAR_CITY_MAX_LENGTH).nullable(),
+  capacity: z.number().int().min(0).max(BAR_CAPACITY_MAX).nullable(),
+  contactName: z.string().max(BAR_CONTACT_NAME_MAX_LENGTH).nullable(),
+  contactEmail: z.email().nullable(),
+  contactPhone: z.string().max(BAR_CONTACT_PHONE_MAX_LENGTH).nullable(),
+  ownerMemberId: z.guid().nullable(),
+  concertMood: concertMoodSchema.nullable(),
+  availableSupport: availableSupportSchema,
+};
+
+export const barCreateSchema = z.object({
+  ...barFieldShape,
+  notes: barFieldShape.notes.default(''),
+  city: barFieldShape.city.default(null),
+  capacity: barFieldShape.capacity.default(null),
+  contactName: barFieldShape.contactName.default(null),
+  contactEmail: barFieldShape.contactEmail.default(null),
+  contactPhone: barFieldShape.contactPhone.default(null),
+  ownerMemberId: barFieldShape.ownerMemberId.default(null),
+  concertMood: barFieldShape.concertMood.default(null),
+  availableSupport: barFieldShape.availableSupport.default([]),
 });
 
-export const barUpdateSchema = barCreateSchema.partial();
+export const barUpdateSchema = z.object(barFieldShape).partial();
 const SEARCH_QUERY_MAX = 256;
 
 export const barSearchQuerySchema = z.object({
   query: z.string().trim().min(1).max(SEARCH_QUERY_MAX),
 });
 
-export const barIdParamSchema = z.object({ id: z.string().uuid() });
+export const barIdParamSchema = z.object({ id: z.guid() });
 export const barReferenceToolInputSchema = z.object({ bar: referenceSchema });
 export const barListToolInputSchema = z.object({
   query: z.string().max(SEARCH_QUERY_MAX).optional(),
@@ -63,4 +76,4 @@ export const barListToolInputSchema = z.object({
 });
 export const barSaveToolInputSchema = z
   .object({ bar: referenceSchema.optional() })
-  .merge(barUpdateSchema);
+  .extend(barUpdateSchema.shape);

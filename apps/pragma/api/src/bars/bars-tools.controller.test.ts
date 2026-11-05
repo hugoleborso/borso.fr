@@ -11,13 +11,13 @@ import {
 const SERVICE_UNAVAILABLE_STATUS = 503;
 
 const barSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   name: z.string(),
   status: z.string(),
   city: z.string().nullable(),
 });
 const barBodySchema = z.object({ bar: barSchema });
-const createdSchema = z.object({ id: z.string().uuid(), name: z.string() });
+const createdSchema = z.object({ id: z.guid(), name: z.string() });
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -78,7 +78,12 @@ describe('bars tools (back-e2e)', () => {
     });
     expect(await callTool(band.assistant, 'save_bar', { name: 'Le Zinc' })).toEqual({
       isError: true,
-      body: { error: 'invalid-input', fields: { status: 'Required' } },
+      body: {
+        error: 'invalid-input',
+        fields: {
+          status: 'Invalid option: expected one of "lead"|"contacted"|"booked"|"played"|"cold"',
+        },
+      },
     });
   });
 

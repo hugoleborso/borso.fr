@@ -15,13 +15,13 @@ const SETTLEMENT_TEST_TIMEOUT_MS = 90_000;
 const SIMULTANEOUS_SUGGESTION_COUNT = 2;
 
 const roundSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   openedAt: z.string(),
   closesAt: z.string(),
   remainingSeconds: z.number(),
   isOpen: z.boolean(),
   isSettled: z.boolean(),
-  winningSongId: z.string().uuid().nullable(),
+  winningSongId: z.guid().nullable(),
 });
 const roundEnvelope = z.object({ round: roundSchema });
 const historyEnvelope = z.object({
@@ -32,21 +32,21 @@ const stateEnvelope = z.object({
     round: roundSchema.nullable(),
     pool: z.array(
       z.object({
-        songId: z.string().uuid(),
+        songId: z.guid(),
         title: z.string(),
         status: z.string(),
         voteCount: z.number(),
         isSuggestion: z.boolean(),
       }),
     ),
-    ownVotes: z.array(z.string().uuid()),
+    ownVotes: z.array(z.guid()),
     ballotCount: z.number(),
     capacity: z.number().nullable(),
   }),
 });
 const suggestedSongEnvelope = z.object({
   song: z.object({
-    id: z.string().uuid(),
+    id: z.guid(),
     title: z.string(),
     artist: z.string(),
     status: z.string(),
@@ -58,7 +58,7 @@ const suggestedSongEnvelope = z.object({
   }),
 });
 const setlistsEnvelope = z.object({
-  setlists: z.array(z.object({ id: z.string().uuid(), kind: z.string(), songCount: z.number() })),
+  setlists: z.array(z.object({ id: z.guid(), kind: z.string(), songCount: z.number() })),
 });
 
 function ballotHeaders(ballotToken: string): Readonly<Record<string, string>> {
@@ -77,7 +77,7 @@ async function createConcert(app: Hono, cookieHeader: string): Promise<string> {
       gear: '',
     },
   });
-  const body = await readJson(created, z.object({ session: z.object({ id: z.string().uuid() }) }));
+  const body = await readJson(created, z.object({ session: z.object({ id: z.guid() }) }));
   return body.session.id;
 }
 
@@ -87,7 +87,7 @@ async function createSongRow(
   body: Readonly<Record<string, unknown>>,
 ): Promise<string> {
   const created = await jsonRequest(app, '/api/songs', { method: 'POST', cookieHeader, body });
-  const newSong = await readJson(created, z.object({ song: z.object({ id: z.string().uuid() }) }));
+  const newSong = await readJson(created, z.object({ song: z.object({ id: z.guid() }) }));
   return newSong.song.id;
 }
 
@@ -123,10 +123,7 @@ async function createManualSetlistHolding(
     cookieHeader,
     body: { name: 'Tonight', sessionId },
   });
-  const newSetlist = await readJson(
-    created,
-    z.object({ setlist: z.object({ id: z.string().uuid() }) }),
-  );
+  const newSetlist = await readJson(created, z.object({ setlist: z.object({ id: z.guid() }) }));
   await appendSongToSetlist(app, cookieHeader, newSetlist.setlist.id, songId);
   return newSetlist.setlist.id;
 }
@@ -141,7 +138,7 @@ async function readSetlistsOfSession(app: Hono, cookieHeader: string, sessionId:
 async function countCatalogSongs(app: Hono, cookieHeader: string): Promise<number> {
   const listed = await readJson(
     await jsonRequest(app, '/api/songs', { cookieHeader }),
-    z.object({ songs: z.array(z.object({ id: z.string().uuid() })) }),
+    z.object({ songs: z.array(z.object({ id: z.guid() })) }),
   );
   return listed.songs.length;
 }
@@ -334,10 +331,7 @@ describe('audience controller (back-e2e)', () => {
       cookieHeader,
       body: { kind: 'practice', date: new Date().toISOString() },
     });
-    const body = await readJson(
-      practice,
-      z.object({ session: z.object({ id: z.string().uuid() }) }),
-    );
+    const body = await readJson(practice, z.object({ session: z.object({ id: z.guid() }) }));
     const before = await countCatalogSongs(app, cookieHeader);
     stubProviders(UNKNOWN_SONG_TRACK);
 
@@ -391,10 +385,7 @@ describe('audience controller (back-e2e)', () => {
       cookieHeader,
       body: { kind: 'practice', date: new Date().toISOString() },
     });
-    const body = await readJson(
-      practice,
-      z.object({ session: z.object({ id: z.string().uuid() }) }),
-    );
+    const body = await readJson(practice, z.object({ session: z.object({ id: z.guid() }) }));
     const opened = await jsonRequest(app, `/api/audience/concerts/${body.session.id}/rounds`, {
       method: 'POST',
       cookieHeader,
@@ -523,7 +514,7 @@ describe('audience controller (back-e2e)', () => {
   it('resolves the short address to the concert with an open round, and to nothing otherwise', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
-    const liveEnvelope = z.object({ sessionId: z.string().uuid().nullable() });
+    const liveEnvelope = z.object({ sessionId: z.guid().nullable() });
     const atRest = await readJson(await jsonRequest(app, '/api/audience/live'), liveEnvelope);
     expect(atRest.sessionId).toBe(null);
 

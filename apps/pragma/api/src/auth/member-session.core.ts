@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parseJsonOrNull } from '../helpers/json/json.core';
 
 export const memberSessionPayloadSchema = z.object({
-  memberId: z.string().uuid(),
+  memberId: z.guid(),
   epoch: z.number().int().nonnegative(),
   issuedAt: z.number(),
   expiresAt: z.number(),

@@ -81,7 +81,7 @@ const INITIALIZE_MESSAGE = {
 };
 
 const errorSchema = z.object({ error: z.string() });
-const grantsSchema = z.object({ grants: z.array(z.object({ id: z.string().uuid() })) });
+const grantsSchema = z.object({ grants: z.array(z.object({ id: z.guid() })) });
 const songsSchema = z.object({ songs: z.array(z.object({ title: z.string() })) });
 
 async function signInOwner(harness: AssistantHarness): Promise<AuthenticatedApp> {

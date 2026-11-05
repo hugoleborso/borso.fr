@@ -36,25 +36,25 @@ export const masteryScoreChangeTable = pgTable('mastery_score_change', {
 export const masteryScoreSchema = z.number().int().min(MASTERY_SCORE_MIN).max(MASTERY_SCORE_MAX);
 
 export const masteryDefaultRowSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
+  memberId: z.guid(),
+  instrumentId: z.guid(),
   score: masteryScoreSchema,
 });
 
 export const masteryOverrideRowSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
-  songId: z.string().uuid(),
+  memberId: z.guid(),
+  instrumentId: z.guid(),
+  songId: z.guid(),
   score: masteryScoreSchema,
 });
 
 export const masteryDefaultPathSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
+  memberId: z.guid(),
+  instrumentId: z.guid(),
 });
 
 export const masteryOverridePathSchema = masteryDefaultPathSchema.extend({
-  songId: z.string().uuid(),
+  songId: z.guid(),
 });
 
-export const masterySongIdParamSchema = z.object({ songId: z.string().uuid() });
+export const masterySongIdParamSchema = z.object({ songId: z.guid() });

@@ -103,7 +103,7 @@ const openSheetSchema = z
     isFocusOnCancelOrClose: z.boolean(),
     innerVerticalScrollAreas: z.number(),
   })
-  .passthrough();
+  .loose();
 const pausedRequestSchema = z.object({
   requestId: z.string(),
   request: z.object({ method: z.string() }),
@@ -262,7 +262,7 @@ async function measureNoteRace(driver: BandSessionDriver): Promise<Record<string
     runs.push(
       z
         .object({ stored: z.string().nullable(), shown: z.string().nullable() })
-        .passthrough()
+        .loose()
         .parse(await runNoteRace(driver, FIRST_SEED + run)),
     );
   }

@@ -80,31 +80,40 @@ export const setlistBreakTable = pgTable('setlist_break', {
 const setlistBreakLabelSchema = z.string().trim().max(SETLIST_BREAK_LABEL_MAX_LENGTH);
 
 export const setlistBreakCreateSchema = z.object({
-  afterEntryId: z.string().uuid(),
+  afterEntryId: z.guid(),
   label: setlistBreakLabelSchema.default(''),
 });
 
 export const setlistBreakUpdateSchema = z.object({ label: setlistBreakLabelSchema });
 
 export const setlistBreakIdParamSchema = z.object({
-  id: z.string().uuid(),
-  breakId: z.string().uuid(),
+  id: z.guid(),
+  breakId: z.guid(),
 });
 
 export const lineupOverrideSchema = z
-  .record(z.string().uuid(), z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]))
+  .record(z.guid(), z.union([z.array(z.guid()), z.guid(), z.null()]))
   .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
 
+const setlistEntryFieldShape = {
+  songId: z.guid(),
+  energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable(),
+  lineupOverride: lineupOverrideSchema.nullable(),
+  keyOverride: z.string().max(KEY_OVERRIDE_MAX_LENGTH).nullable(),
+  capo: z.number().int().min(CAPO_MIN).max(CAPO_MAX).nullable(),
+  notes: z.string().max(SETLIST_ENTRY_NOTES_MAX_LENGTH),
+};
+
 export const setlistEntryCreateSchema = z.object({
-  songId: z.string().uuid(),
-  energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
-  lineupOverride: lineupOverrideSchema.nullable().default(null),
-  keyOverride: z.string().max(KEY_OVERRIDE_MAX_LENGTH).nullable().default(null),
-  capo: z.number().int().min(CAPO_MIN).max(CAPO_MAX).nullable().default(null),
-  notes: z.string().max(SETLIST_ENTRY_NOTES_MAX_LENGTH).default(''),
+  ...setlistEntryFieldShape,
+  energy: setlistEntryFieldShape.energy.default(null),
+  lineupOverride: setlistEntryFieldShape.lineupOverride.default(null),
+  keyOverride: setlistEntryFieldShape.keyOverride.default(null),
+  capo: setlistEntryFieldShape.capo.default(null),
+  notes: setlistEntryFieldShape.notes.default(''),
 });
 
-export const setlistEntryUpdateSchema = setlistEntryCreateSchema.partial();
+export const setlistEntryUpdateSchema = z.object(setlistEntryFieldShape).partial();
 
 export const SETLIST_BATCH_ADD_MAX = 200;
 
@@ -113,25 +122,25 @@ function hasNoDuplicate(songIds: readonly string[]): boolean {
 }
 
 export const setlistEntryBatchCreateSchema = z.object({
-  songIds: z.array(z.string().uuid()).min(1).max(SETLIST_BATCH_ADD_MAX).refine(hasNoDuplicate),
+  songIds: z.array(z.guid()).min(1).max(SETLIST_BATCH_ADD_MAX).refine(hasNoDuplicate),
 });
 
 export type SetlistEntryPersistedUpdate = z.infer<typeof setlistEntryUpdateSchema>;
 
 export const setlistReorderSchema = z.object({
-  entryIds: z.array(z.string().uuid()).min(1),
+  entryIds: z.array(z.guid()).min(1),
 });
 
 export const setlistCreateSchema = z.object({
   name: z.string().trim().max(SETLIST_NAME_MAX_LENGTH).default(''),
-  sessionId: z.string().uuid().nullable().default(null),
+  sessionId: z.guid().nullable().default(null),
 });
 
 export const setlistRenameSchema = z.object({
   name: z.string().trim().max(SETLIST_NAME_MAX_LENGTH),
 });
 
-export const setlistLinkSchema = z.object({ sessionId: z.string().uuid() });
+export const setlistLinkSchema = z.object({ sessionId: z.guid() });
 
 export const setlistVoteStatusSchema = z.object({
   status: z.enum(SETLIST_STATUSES),
@@ -149,24 +158,24 @@ export const setlistVoteScoreSchema = z.object({
 });
 
 export const setlistCloseSchema = z.object({
-  songIds: z.array(z.string().uuid()).min(1),
+  songIds: z.array(z.guid()).min(1),
 });
 
 export const setlistSongParamSchema = z.object({
-  id: z.string().uuid(),
-  songId: z.string().uuid(),
+  id: z.guid(),
+  songId: z.guid(),
 });
 
-export const setlistIdParamSchema = z.object({ id: z.string().uuid() });
+export const setlistIdParamSchema = z.object({ id: z.guid() });
 export const setlistEntryIdParamSchema = z.object({
-  id: z.string().uuid(),
-  entryId: z.string().uuid(),
+  id: z.guid(),
+  entryId: z.guid(),
 });
 export const setlistSessionParamSchema = z.object({
-  id: z.string().uuid(),
-  sessionId: z.string().uuid(),
+  id: z.guid(),
+  sessionId: z.guid(),
 });
-export const setlistBySessionParamSchema = z.object({ sessionId: z.string().uuid() });
+export const setlistBySessionParamSchema = z.object({ sessionId: z.guid() });
 
 const setlistReferenceShape = { setlist: referenceSchema };
 const POSITION_MAX = 500;
@@ -196,7 +205,7 @@ export const setlistEntriesRemoveToolInputSchema = z.object({
 });
 export const setlistEntryChangeToolInputSchema = z
   .object({ ...setlistReferenceShape, entry: referenceSchema })
-  .merge(setlistEntryUpdateSchema.omit({ songId: true, lineupOverride: true }))
+  .extend(setlistEntryUpdateSchema.omit({ songId: true, lineupOverride: true }).shape)
   .extend({ lineupOverride: namedLineupSchema.nullable().optional() });
 export const setlistReorderReferencesToolInputSchema = z.object({
   ...setlistReferenceShape,
@@ -208,7 +217,7 @@ export const setlistReorderReferencesToolInputSchema = z.object({
 });
 export const setlistBreakSaveToolInputSchema = z.object({
   ...setlistReferenceShape,
-  break: z.string().uuid().optional(),
+  break: z.guid().optional(),
   after: referenceSchema.optional(),
   label: setlistBreakLabelSchema.optional(),
   remove: z.boolean().optional(),

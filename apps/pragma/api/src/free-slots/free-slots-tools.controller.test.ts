@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { callTool, prepareAssistantBand, useAssistantToolSuite } from '../../../test/mcp-utils';
 
 const freeSlotsBodySchema = z.object({
-  slots: z.array(z.object({ start: z.string().datetime(), end: z.string().datetime() })),
+  slots: z.array(z.object({ start: z.iso.datetime(), end: z.iso.datetime() })),
   excludedMembers: z.array(z.object({ memberId: z.string(), reason: z.string() })),
 });
 

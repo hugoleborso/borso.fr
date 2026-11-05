@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-const friendsCountShape = z.record(z.string().uuid(), z.number());
+const friendsCountShape = z.record(z.guid(), z.number());
 
 const NO_SHARE_PERCENT = 0;
 const WHOLE_AS_PERCENT = 100;

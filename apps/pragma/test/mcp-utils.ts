@@ -28,7 +28,7 @@ const OAUTH_VARIABLES = {
 };
 
 const registeredClientSchema = z.object({ client_id: z.string() });
-const redirectToSchema = z.object({ redirectTo: z.string().url() });
+const redirectToSchema = z.object({ redirectTo: z.url() });
 const tokenSchema = z.object({ access_token: z.string(), refresh_token: z.string() });
 const MILLISECONDS_PER_MINUTE = 60_000;
 const textContentSchema = z.array(z.object({ type: z.literal('text'), text: z.string() }));
@@ -213,7 +213,7 @@ export function refusal(error: string): ToolReply {
   return { isError: true, body: { error } };
 }
 
-const seededInstrumentSchema = z.object({ instrument: z.object({ id: z.string().uuid() }) });
+const seededInstrumentSchema = z.object({ instrument: z.object({ id: z.guid() }) });
 
 export async function seedInstrument(
   member: AuthenticatedApp,

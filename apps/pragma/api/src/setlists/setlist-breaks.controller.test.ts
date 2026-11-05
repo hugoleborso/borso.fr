@@ -8,8 +8,8 @@ import { setlistBreakTable } from './setlists.schema';
 type App = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
 const breakSchema = z.object({
-  id: z.string().uuid(),
-  setlistId: z.string().uuid(),
+  id: z.guid(),
+  setlistId: z.guid(),
   position: z.number().int(),
   label: z.string(),
 });
@@ -20,10 +20,10 @@ const singleBreakEnvelope = z.object({
 });
 const breakListEnvelope = z.object({ breaks: z.array(breakViewSchema) });
 const entryListEnvelope = z.object({
-  entries: z.array(z.object({ id: z.string().uuid(), position: z.number().int() })),
+  entries: z.array(z.object({ id: z.guid(), position: z.number().int() })),
 });
 const idEnvelope = (key: 'setlist' | 'song' | 'entry') =>
-  z.object({ [key]: z.object({ id: z.string().uuid() }) });
+  z.object({ [key]: z.object({ id: z.guid() }) });
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 

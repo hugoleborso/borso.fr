@@ -13,24 +13,24 @@ import {
 import { instrumentTable } from './instruments.schema';
 
 const instrumentSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   name: z.string(),
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
   icon: z.enum(INSTRUMENT_ICONS),
   position: z.number().int(),
-  players: z.array(z.object({ memberId: z.string().uuid() })),
+  players: z.array(z.object({ memberId: z.guid() })),
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
 const lineupSchema = z.record(z.string(), z.array(z.string()));
 const songLineupEnvelope = z.object({
-  song: z.object({ id: z.string().uuid(), defaultLineup: lineupSchema }),
+  song: z.object({ id: z.guid(), defaultLineup: lineupSchema }),
 });
 const entryLineupEnvelope = z.object({
-  entry: z.object({ id: z.string().uuid(), lineupOverride: lineupSchema.nullable() }),
+  entry: z.object({ id: z.guid(), lineupOverride: lineupSchema.nullable() }),
 });
 const entryLineupListEnvelope = z.object({ entries: z.array(entryLineupEnvelope.shape.entry) });
-const setlistIdEnvelope = z.object({ setlist: z.object({ id: z.string().uuid() }) });
+const setlistIdEnvelope = z.object({ setlist: z.object({ id: z.guid() }) });
 
 async function createInstrument(
   app: Parameters<typeof jsonRequest>[0],

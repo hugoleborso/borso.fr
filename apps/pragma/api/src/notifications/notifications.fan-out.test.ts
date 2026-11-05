@@ -22,7 +22,7 @@ import { buildTakeObjectKey } from '../takes/takes.core';
 const ELEVEN_MINUTES_MILLISECONDS = 11 * 60 * 1000;
 const SESSION_DATE = '2026-10-30T18:00:00.000Z';
 
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
+const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 interface FanOutContext {
   readonly hugo: AuthenticatedApp;

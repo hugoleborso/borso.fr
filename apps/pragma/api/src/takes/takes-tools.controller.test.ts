@@ -26,17 +26,17 @@ const DURATION_SECONDS = 232;
 const MOMENT_SECONDS = 42;
 const RECORDED_AT = '2026-10-18T20:00:00.000Z';
 
-const idBodySchema = z.object({ id: z.string().uuid() });
+const idBodySchema = z.object({ id: z.guid() });
 const uploadBodySchema = z.object({
-  uploadUrl: z.string().url(),
+  uploadUrl: z.url(),
   objectKey: z.string(),
   expiresAt: z.string(),
 });
 const takesBodySchema = z.object({
-  takes: z.array(z.object({ id: z.string().uuid(), by: z.string(), comments: z.number() })),
+  takes: z.array(z.object({ id: z.guid(), by: z.string(), comments: z.number() })),
   total: z.number(),
 });
-const commentBodySchema = z.object({ comment: z.object({ id: z.string().uuid() }) });
+const commentBodySchema = z.object({ comment: z.object({ id: z.guid() }) });
 
 async function createSong(band: AssistantBand): Promise<string> {
   const reply = await callTool(band.assistant, 'save_song', { title: 'Creep', status: 'idea' });

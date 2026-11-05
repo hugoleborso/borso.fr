@@ -8,9 +8,7 @@ import {
 } from '../../../test/mcp-utils';
 
 const instrumentsBodySchema = z.object({
-  instruments: z.array(
-    z.object({ id: z.string().uuid(), name: z.string(), players: z.array(z.string()) }),
-  ),
+  instruments: z.array(z.object({ id: z.guid(), name: z.string(), players: z.array(z.string()) })),
 });
 
 /**

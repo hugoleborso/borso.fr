@@ -4,7 +4,7 @@ import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const songSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   artist: z.string(),
   status: z.string(),
@@ -15,7 +15,7 @@ const songSchema = z.object({
   isrcs: z.array(z.string()),
 });
 
-const singleEnvelope = z.object({ song: songSchema.passthrough() });
+const singleEnvelope = z.object({ song: songSchema.loose() });
 
 // @FollowsBlueprint test-back-e2e
 describe('songs controller — Deezer enrichment columns (back-e2e)', () => {

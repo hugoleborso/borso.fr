@@ -29,15 +29,22 @@ export const improvementVoteTable = pgTable(
 
 const DETAILS_MAX = 8_192;
 
-export const improvementCreateSchema = z.object({
+const improvementFieldShape = {
   title: z.string().trim().min(1).max(IMPROVEMENT_TITLE_MAX_LENGTH),
-  details: z.string().max(DETAILS_MAX).default(''),
-  status: z.enum(IMPROVEMENT_STATUSES).default('idea'),
-  kind: z.enum(IMPROVEMENT_KINDS).default(DEFAULT_IMPROVEMENT_KIND),
+  details: z.string().max(DETAILS_MAX),
+  status: z.enum(IMPROVEMENT_STATUSES),
+  kind: z.enum(IMPROVEMENT_KINDS),
+};
+
+export const improvementCreateSchema = z.object({
+  ...improvementFieldShape,
+  details: improvementFieldShape.details.default(''),
+  status: improvementFieldShape.status.default('idea'),
+  kind: improvementFieldShape.kind.default(DEFAULT_IMPROVEMENT_KIND),
 });
 
-export const improvementUpdateSchema = improvementCreateSchema.partial();
-export const improvementIdParamSchema = z.object({ id: z.string().uuid() });
+export const improvementUpdateSchema = z.object(improvementFieldShape).partial();
+export const improvementIdParamSchema = z.object({ id: z.guid() });
 export const improvementSaveToolInputSchema = z
   .object({ improvement: referenceSchema.optional() })
-  .merge(improvementUpdateSchema);
+  .extend(improvementUpdateSchema.shape);

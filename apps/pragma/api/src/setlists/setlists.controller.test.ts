@@ -14,9 +14,9 @@ import { sessionTable } from '../sessions/sessions.schema';
 import { sessionSetlistTable, setlistEntryTable, setlistTable } from './setlists.schema';
 
 const entrySchema = z.object({
-  id: z.string().uuid(),
-  setlistId: z.string().uuid(),
-  songId: z.string().uuid(),
+  id: z.guid(),
+  setlistId: z.guid(),
+  songId: z.guid(),
   position: z.number().int(),
   lineupOverride: z.record(z.string(), z.array(z.string())).nullable(),
   energy: z.number().int().nullable(),
@@ -25,23 +25,23 @@ const entrySchema = z.object({
   notes: z.string(),
 });
 const setlistEnvelope = z.object({
-  setlist: z.object({ id: z.string().uuid(), name: z.string() }),
+  setlist: z.object({ id: z.guid(), name: z.string() }),
 });
 const setlistSummaryListEnvelope = z.object({
   setlists: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.guid(),
       name: z.string(),
       songCount: z.number().int(),
-      songIds: z.array(z.string().uuid()),
-      sessionIds: z.array(z.string().uuid()),
+      songIds: z.array(z.guid()),
+      sessionIds: z.array(z.guid()),
     }),
   ),
 });
 const singleEntryEnvelope = z.object({ entry: entrySchema });
 const entryListEnvelope = z.object({ entries: z.array(entrySchema) });
-const sessionEnvelope = z.object({ session: z.object({ id: z.string().uuid() }) });
-const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+const sessionEnvelope = z.object({ session: z.object({ id: z.guid() }) });
+const songEnvelope = z.object({ song: z.object({ id: z.guid() }) });
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 

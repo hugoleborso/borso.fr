@@ -37,7 +37,7 @@ const preferencesEnvelope = z.object({
   preferences: z.array(z.object({ category: z.string(), enabled: z.boolean() })),
 });
 const vapidKeyEnvelope = z.object({ key: z.string().min(1) });
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
+const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 interface Band {
   readonly hugo: AuthenticatedApp;

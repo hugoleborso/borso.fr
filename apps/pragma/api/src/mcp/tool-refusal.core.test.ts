@@ -90,6 +90,12 @@ describe('describeInvalidFields', () => {
     });
   });
 
+  it('names a field keyed by a symbol by its description', () => {
+    expect(
+      describeInvalidFields([{ path: ['meta', Symbol('tag')], message: 'Invalid input' }]),
+    ).toEqual({ error: 'invalid-input', fields: { 'meta.Symbol(tag)': 'Invalid input' } });
+  });
+
   it('names the whole input when the problem has no field', () => {
     expect(describeInvalidFields([{ path: [], message: 'Invalid input' }])).toEqual({
       error: 'invalid-input',

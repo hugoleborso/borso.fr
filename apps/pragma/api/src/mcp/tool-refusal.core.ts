@@ -11,7 +11,7 @@ const WHOLE_INPUT_FIELD = 'input';
 const FIELD_PATH_SEPARATOR = '.';
 
 export interface FieldIssue {
-  readonly path: readonly (string | number)[];
+  readonly path: readonly PropertyKey[];
   readonly message: string;
 }
 
@@ -59,7 +59,7 @@ export function pickReference(
 export function describeInvalidFields(issues: readonly FieldIssue[]): ToolRefusal {
   const fields: Record<string, string> = {};
   for (const issue of issues) {
-    const field = issue.path.join(FIELD_PATH_SEPARATOR) || WHOLE_INPUT_FIELD;
+    const field = issue.path.map(String).join(FIELD_PATH_SEPARATOR) || WHOLE_INPUT_FIELD;
     fields[field] ??= issue.message;
   }
   return { error: INVALID_INPUT_ERROR, fields };

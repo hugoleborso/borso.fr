@@ -40,16 +40,16 @@ export const audienceSuggestionTable = pgTable('audience_suggestion', {
 const TRACK_ID_MAX = 64;
 const SEARCH_QUERY_MAX = 256;
 
-export const concertParamSchema = z.object({ sessionId: z.string().uuid() });
+export const concertParamSchema = z.object({ sessionId: z.guid() });
 
-export const roundParamSchema = z.object({ roundId: z.string().uuid() });
+export const roundParamSchema = z.object({ roundId: z.guid() });
 
 export const roundVoteParamSchema = z.object({
-  roundId: z.string().uuid(),
-  songId: z.string().uuid(),
+  roundId: z.guid(),
+  songId: z.guid(),
 });
 
-export const voteCreateSchema = z.object({ songId: z.string().uuid() }).strict();
+export const voteCreateSchema = z.object({ songId: z.guid() }).strict();
 
 export const suggestionCreateSchema = z
   .object({ trackId: z.string().trim().min(1).max(TRACK_ID_MAX) })

@@ -56,6 +56,10 @@ describe('barCreateSchema', () => {
 });
 
 describe('barUpdateSchema', () => {
+  it('leaves out every field the patch does not name, defaults included', () => {
+    expect(barUpdateSchema.parse({ name: 'Le Baron' })).toEqual({ name: 'Le Baron' });
+  });
+
   it('accepts a patch with nothing in it', () => {
     expect(barUpdateSchema.safeParse({}).success).toBe(true);
   });

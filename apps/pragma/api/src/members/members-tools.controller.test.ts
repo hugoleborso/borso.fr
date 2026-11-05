@@ -12,7 +12,7 @@ import {
 const membersBodySchema = z.object({
   members: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.guid(),
       firstName: z.string(),
       instruments: z.array(z.string()),
     }),

@@ -11,13 +11,13 @@ const PRESIGNER_ENV = {
 } as const;
 
 const signResponseSchema = z.object({
-  uploadUrl: z.string().url(),
+  uploadUrl: z.url(),
   objectKey: z.string(),
   expiresAt: z.string(),
 });
 
 const getResponseSchema = z.object({
-  getUrl: z.string().url(),
+  getUrl: z.url(),
   expiresAt: z.string(),
 });
 

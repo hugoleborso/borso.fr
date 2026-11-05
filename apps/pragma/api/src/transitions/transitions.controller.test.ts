@@ -4,14 +4,14 @@ import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const commentSchema = z.object({
-  songAId: z.string().uuid(),
-  songBId: z.string().uuid(),
+  songAId: z.guid(),
+  songBId: z.guid(),
   comment: z.string(),
   updatedAt: z.string(),
 });
 const singleEnvelope = z.object({ comment: commentSchema });
 const listEnvelope = z.object({ comments: z.array(commentSchema) });
-const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+const songEnvelope = z.object({ song: z.object({ id: z.guid() }) });
 
 async function seedTwoSongs(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],

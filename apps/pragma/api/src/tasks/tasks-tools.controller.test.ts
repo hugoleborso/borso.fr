@@ -12,7 +12,7 @@ import {
 import { readSentNotifications } from '../../../test/push-utils';
 import { taskTable } from './tasks.schema';
 
-const createdSchema = z.object({ id: z.string().uuid() });
+const createdSchema = z.object({ id: z.guid() });
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -86,7 +86,10 @@ describe('tasks tools (back-e2e)', () => {
     );
     expect(await callTool(band.assistant, 'save_task', { notes: 'x' })).toEqual({
       isError: true,
-      body: { error: 'invalid-input', fields: { title: 'Required' } },
+      body: {
+        error: 'invalid-input',
+        fields: { title: 'Invalid input: expected string, received undefined' },
+      },
     });
   });
 });
