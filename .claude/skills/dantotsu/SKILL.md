@@ -127,6 +127,11 @@ by `## Eradication`.
   check, paste its refusal here, revert.
 - Subtract first: a mechanism whose removal makes the defect impossible
   beats a new check.
+- Do not shy away from the largest option. A new endpoint, a reshaped API or
+  a migration often stops the whole class for good. It also speeds up every
+  change that follows. Weigh each option by what it removes, not by its size,
+  and recommend the large one when it eradicates and the smaller ones only
+  detect.
 - Similar instances were searched for and listed, with the command that
   found them.
 - Says "eradicated" only when no defect of the same class can recur, not
