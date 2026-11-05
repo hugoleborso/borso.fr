@@ -2,7 +2,7 @@
 
 Every sub-skill invoked by `/tech-lead-orchestrator` ends its run by
 writing a single markdown file with **YAML front-matter** to
-`docs/features/<app>/<slug>/runs/<run-id>/agents/<agent>-<step>.md`. The
+`docs/features/<app>/<slug>/runs/<run-id>/agents/<skill>-<step>.md`. The
 orchestrator reads **only** the front-matter (the block between the
 leading `---` delimiters), via `Read` with `limit:` of ~15 lines. The
 body is for human readers and post-mortems.
@@ -56,14 +56,14 @@ The `<why>` values:
 ## File naming
 
 ```
-runs/<run-id>/agents/<agent>-<step>.md
+runs/<run-id>/agents/<skill>-<step>.md
 ```
 
-- `<agent>` ∈ { `specification`, `technical-conception`, `adr`,
-  `implementation`, `technical-validator`, `visual-validator` }.
-- `<step>` is a zero-padded integer starting at `01`, incrementing each
-  time the same sub-agent is re-invoked in the same run (retry, replan,
-  answer-needed → re-run).
+The brief names the file, and the sub-agent writes it under that name. No
+tool parses the name, so a sub-agent never renames a file or logs a
+mismatch with this section. `<skill>` is the skill the sub-agent runs
+(`technical-validation`, not `technical-validator`), and `<step>` counts
+the re-invocations of that skill in the run.
 
 ## Body (free-form, ignored by the orchestrator)
 
