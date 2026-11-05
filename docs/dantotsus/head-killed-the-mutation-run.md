@@ -7,10 +7,10 @@ related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-swallowed-push.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
+eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
 time-to-detect: minutes
 tags: [hooks, harness, stryker, mutation, gates]
-zone: plugins/borso-harness/hooks/pretool-no-swallowed-push.sh
+zone: .claude/hooks/pretool-no-swallowed-push.sh
 recurs: [a-push-that-failed-and-reported-success]
 ---
 

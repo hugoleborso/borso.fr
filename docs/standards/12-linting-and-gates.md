@@ -466,12 +466,6 @@ review.
   Of 123 entries only the few a hook or a gate printed ever stopped a repeat,
   and nine dantotsus record an entry that existed and was not read
   ([ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md)).
-- `script:scripts/check-harness-links.sh` fails a skill, agent or command of
-  the harness plugin that has no link in `.claude/`, a link that points
-  somewhere else, and a plugin hook that `.claude/settings.json` does not
-  declare. Claude Code reads the harness only through those links and entries,
-  because a cloud session skips a plugin shipped under `.claude/skills/` as
-  untrusted ([ADR-0026](../adr/0026-the-harness-ships-as-a-plugin-linked-into-claude.md)).
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.

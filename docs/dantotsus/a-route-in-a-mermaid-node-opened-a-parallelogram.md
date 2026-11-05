@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/pr/pr-body.core.ts]
 time-to-detect: hours
 tags: [pr-body, mermaid, gates, documentation]
-zone: plugins/borso-harness/skills/open-pr
+zone: .claude/skills/open-pr
 ---
 
 # A route in a mermaid node opened a parallelogram

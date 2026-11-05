@@ -7,10 +7,10 @@ related-pr: '#63'
 fix-pr: '#71'
 fix-commits: [957846c4d2]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
+eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
 time-to-detect: 3 hours
 tags: [standards, documentation, tooling, ci]
-zone: plugins/borso-harness/skills/technical-validation
+zone: .claude/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 recurs: [an-approval-gate-that-only-existed-in-a-comment]
 ---

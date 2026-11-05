@@ -7,10 +7,10 @@ related-pr: '#252'
 fix-pr: '#255'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-prettier.sh, plugins/borso-harness/hooks/hooks.json]
+eradication-paths: [.claude/hooks/pretool-no-prettier.sh, .claude/settings.json]
 time-to-detect: minutes
 tags: [tooling, hooks, harness, agents]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 weak-point: none
 recurs: none (no earlier entry covers a second formatter; the-formatter-reached-outside-the-repository is about where oxfmt runs, not which formatter)
 ---

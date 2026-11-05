@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: minutes
 tags: [spec, skill, perspectives]
-zone: plugins/borso-harness/skills/specification
+zone: .claude/skills/specification
 ---
 
 # `/specification` skill let the agent fill in client + designer perspectives without asking

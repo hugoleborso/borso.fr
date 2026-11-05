@@ -45,7 +45,7 @@ INPUT=$(cat)
 REPO_ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 BASE_BRANCH=main
 SHARED_SNAPSHOT=infra/shared/test/unit/__snapshots__/borso-shared.template.json
-STRIP_HEREDOCS="$REPO_ROOT/plugins/borso-harness/hooks/strip-heredocs.py"
+STRIP_HEREDOCS="$REPO_ROOT/.claude/hooks/strip-heredocs.py"
 FANOUT="$REPO_ROOT/scripts/pr/deploy-fanout.ts"
 TSX="$REPO_ROOT/node_modules/.bin/tsx"
 

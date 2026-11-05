@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-spec-test-strategy.sh]
 time-to-detect: hours
 tags: [validation, agents, spec, process, meta]
-zone: plugins/borso-harness/skills/specification
+zone: .claude/skills/specification
 ---
 
 # A spec that never said who checks what

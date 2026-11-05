@@ -7,10 +7,10 @@ related-pr: '#263'
 fix-pr: none (shipped by the lessons-from-pr-263 kaizen pull request, numbered once it opens)
 fix-commits: [self]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/skills/specification/template.md]
+eradication-paths: [.claude/skills/specification/template.md]
 time-to-detect: days
 tags: [meta, process, skill]
-zone: plugins/borso-harness/skills/specification/template.md
+zone: .claude/skills/specification/template.md
 recurs: none (no earlier entry records a design that published data the operator had not chosen to publish)
 ---
 
@@ -35,7 +35,7 @@ The operator stopped it in one sentence on 2026-11-04 ("pas sûr qu'on veuille l
 
 *Thought a report goes where the repository's other reports go, actually where it goes is decided by who may read it.*
 
-`plugins/borso-harness/skills/specification/template.md` asked for "the final, visible result" and nothing about its audience.
+`.claude/skills/specification/template.md` asked for "the final, visible result" and nothing about its audience.
 
 ## Detection failure causes
 

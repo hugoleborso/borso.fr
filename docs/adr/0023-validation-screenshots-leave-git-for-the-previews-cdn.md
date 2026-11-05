@@ -9,7 +9,7 @@
 
 `/visual-validation` writes a verdict report and a folder of PNG screenshots under
 `docs/features/<app>/<slug>/validation/`, and
-[`plugins/borso-harness/skills/visual-validation/standard.md`](../../plugins/borso-harness/skills/visual-validation/standard.md)
+[`.claude/skills/visual-validation/standard.md`](../../.claude/skills/visual-validation/standard.md)
 requires both to be committed, on the grounds that a report without its screenshots cannot be
 contested. That rule was written when the repository was young and its cost was assumed to be
 negligible. It is no longer negligible.
@@ -137,10 +137,10 @@ Existing history is left alone. The decision stops the growth; it does not try t
 
 - Prerequisite: [`docs/aws-setup.md` §12.6](../aws-setup.md) — the `Explicit-write-deny`
   carve-out and the `Screenshots-publish` allow policy.
-- Skill contract: [`plugins/borso-harness/skills/visual-validation/standard.md`](../../plugins/borso-harness/skills/visual-validation/standard.md)
+- Skill contract: [`.claude/skills/visual-validation/standard.md`](../../.claude/skills/visual-validation/standard.md)
   § *Where evidence lives*.
-- Skill steps: [`plugins/borso-harness/skills/visual-validation/SKILL.md`](../../plugins/borso-harness/skills/visual-validation/SKILL.md)
-  steps 8 and 9, and [`plugins/borso-harness/skills/open-pr/SKILL.md`](../../plugins/borso-harness/skills/open-pr/SKILL.md)
+- Skill steps: [`.claude/skills/visual-validation/SKILL.md`](../../.claude/skills/visual-validation/SKILL.md)
+  steps 8 and 9, and [`.claude/skills/open-pr/SKILL.md`](../../.claude/skills/open-pr/SKILL.md)
   step 5b, which runs the upload and writes the folder link.
 - Commit: {{SHA — stamped by /after-task-kaizen on merge}}
 - Related ADRs: ADR-0014 (generated files are not committed) — the same input/output split,

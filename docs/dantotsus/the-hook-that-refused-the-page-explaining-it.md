@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-hook-decisions.sh]
 time-to-detect: 12 days
 tags: [hooks, agent-harness, meta]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 ---
 
 # The hook that refused the page explaining it

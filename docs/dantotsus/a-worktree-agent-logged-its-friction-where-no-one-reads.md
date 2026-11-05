@@ -7,10 +7,10 @@ related-pr: '#263'
 fix-pr: none (shipped by the lessons-from-pr-263 kaizen pull request, numbered once it opens)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh]
 time-to-detect: hours
 tags: [self-improvement-loop, harness, agents, git]
-zone: plugins/borso-harness/scripts/kaizen.sh
+zone: scripts/kaizen.sh
 recurs: none (the earlier loss of agent friction was agents never told to log, not agents logging to the wrong file)
 ---
 

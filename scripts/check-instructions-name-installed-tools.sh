@@ -40,7 +40,7 @@ fi
 # The vendored impeccable skill is upstream's text, kept verbatim so an update
 # is a file copy (ADR-0032). It tells its reader to `npx impeccable`, which
 # here means its own launcher; PROVENANCE.md beside it says so.
-INSTRUCTION_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' ':!.claude/skills/impeccable/*')
+INSTRUCTION_SURFACES=('.claude/*' 'docs/standards/*' ':!.claude/skills/impeccable/*')
 
 # With paths as arguments, only the surface files among them are read;
 # pre-commit passes the staged files. With none, every surface file. A renamed
@@ -85,7 +85,7 @@ done <<<"$invocations"
 # `@borso-app/pragma`. A plan and a spec are instructions too — a validator runs
 # their gates — so they are read here beside the skills. pnpm also matches a
 # name without its scope, so `last-loop-lepin` resolves and is accepted.
-FILTER_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' 'docs/features/*/*/plan/*' 'docs/features/*/*/spec/*')
+FILTER_SURFACES=('.claude/*' 'docs/standards/*' 'docs/features/*/*/plan/*' 'docs/features/*/*/spec/*')
 
 workspace_names="$(
   git ls-files 'apps/*/package.json' 'infra/*/package.json' |

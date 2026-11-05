@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [visual-validation, agent-browser, screenshots, react]
-zone: plugins/borso-harness/skills/visual-validation
+zone: .claude/skills/visual-validation
 ---
 
 # Described the screenshot, never looked at the pixels
@@ -108,7 +108,7 @@ this kaizen PR's commits.
    (e.g. a placeholder).
 
    ```diff
-    # plugins/borso-harness/skills/visual-validation/standard.md
+    # .claude/skills/visual-validation/standard.md
    + ### Pixel-content checks (every screenshot)
    +
    + Before declaring a row PASS the validator runs the broken-image scan:
@@ -127,7 +127,7 @@ this kaizen PR's commits.
 
 2. **Implementation skill requires per-PR self-screenshot of UI work**
    before declaring the validator-gate clean. The rule lands as a new bullet
-   in `plugins/borso-harness/skills/implementation/SKILL.md` "Load-bearing rules":
+   in `.claude/skills/implementation/SKILL.md` "Load-bearing rules":
 
    ```diff
    + - **Self-screenshot UI work before declaring green.** When the touched

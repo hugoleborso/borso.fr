@@ -117,7 +117,7 @@ rejected `action` clauses.
 
 ### Library search (before reaching for a custom check)
 
-Per [`/after-task-kaizen`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md)'s
+Per [`/after-task-kaizen`](../../.claude/skills/after-task-kaizen/SKILL.md)'s
 library-search pass, the question asked first was: *does an
 existing tool already know that DSQL rejects these DDL forms?*
 

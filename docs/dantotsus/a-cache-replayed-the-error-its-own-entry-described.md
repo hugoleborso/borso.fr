@@ -7,7 +7,7 @@ related-pr: '#95'
 fix-pr: '#97'
 fix-commits: [5d140956dd]
 eradication-level: 4
-eradication-paths: [plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh]
+eradication-paths: [.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh]
 time-to-detect: minutes
 tags: [eslint, cache, typescript, deps, hooks, harness, knowledge-corpus, self-improvement-loop]
 zone: .husky/pre-commit
@@ -106,7 +106,7 @@ surface — no lint rule can see another tool's cache.
 
 So the sentence moves to where the wrong conclusion is formed, exactly as the
 empty-checks hook did for conflicted pull requests.
-`plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh` fires only when
+`.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh` fires only when
 a lint command reports an error from one of ten type-aware rules **and**
 `.eslintcache` exists **and** the command did not already clear it.
 

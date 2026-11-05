@@ -7,10 +7,10 @@ related-pr: '#249'
 fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/stop-screens-shown-not-described.py, plugins/borso-harness/hooks/hooks.json]
+eradication-paths: [.claude/hooks/stop-screens-shown-not-described.py, .claude/settings.json]
 time-to-detect: hours
 tags: [harness, hooks, agents, visual-validation, screenshots]
-zone: plugins/borso-harness/hooks/hooks.json
+zone: .claude/settings.json
 recurs: [described-screenshot-without-checking-pixels]
 ---
 

@@ -7,10 +7,10 @@ related-pr: '#60'
 fix-pr: '#62'
 fix-commits: [0f55859e99]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/strip-markdown-code.py, plugins/borso-harness/hooks/pretool-github-pr-body.sh]
+eradication-paths: [.claude/hooks/strip-markdown-code.py, .claude/hooks/pretool-github-pr-body.sh]
 time-to-detect: 3 days
 tags: [github, harness, hooks, gates, meta, open-pr]
-zone: plugins/borso-harness/skills/open-pr
+zone: .claude/skills/open-pr
 ---
 
 # A pull request body the server quietly emptied
@@ -122,7 +122,7 @@ instance of the same mention-versus-use confusion found in one sitting,
 after both guard hooks in
 [`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md).
 It now reads the body with its code spans and fenced blocks removed, via
-`plugins/borso-harness/hooks/strip-markdown-code.py`, because prose about a tag quotes
+`.claude/hooks/strip-markdown-code.py`, because prose about a tag quotes
 the tag. Seven cases cover both directions. The pattern is worth naming
 for the next hook anyone writes here: **a text-matching gate needs to
 know which parts of its input are quoted**, and in this repository the

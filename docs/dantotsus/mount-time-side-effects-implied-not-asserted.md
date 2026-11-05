@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [react, spec, validators, url-state]
-zone: plugins/borso-harness/skills/specification
+zone: .claude/skills/specification
 ---
 
 # Mount-time side-effects must be asserted in the spec, not implied
@@ -77,7 +77,7 @@ The misconception (*"the on-mount mirror is implied by the user-driven assertion
 + - <subsystem>: <state> mirrored via <call> on mount with <push|replace|other>.
 ```
 
-`plugins/borso-harness/skills/specification/template.md` and `plugins/borso-harness/skills/specification/SKILL.md` updated.
+`.claude/skills/specification/template.md` and `.claude/skills/specification/SKILL.md` updated.
 
 **Sibling defects swept:** the same shape exists at any future feature where state lives in a non-React store. The template change applies prospectively.
 

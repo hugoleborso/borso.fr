@@ -7,7 +7,7 @@ related-pr: '#249'
 fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-merge-strands-no-work.sh, plugins/borso-harness/hooks/hooks.json]
+eradication-paths: [.claude/hooks/pretool-merge-strands-no-work.sh, .claude/settings.json]
 time-to-detect: minutes
 tags: [agents, git, hooks, harness, pragma]
 zone: CLAUDE.md

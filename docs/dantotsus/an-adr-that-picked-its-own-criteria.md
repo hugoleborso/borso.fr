@@ -7,10 +7,10 @@ related-pr: '#249'
 fix-pr: '#249'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [scripts/check-adr-criteria.sh, .husky/pre-commit, plugins/borso-harness/skills/adr/template.md]
+eradication-paths: [scripts/check-adr-criteria.sh, .husky/pre-commit, .claude/skills/adr/template.md]
 time-to-detect: hours
 tags: [adr, harness, gates, pre-commit]
-zone: plugins/borso-harness/skills/adr/template.md
+zone: .claude/skills/adr/template.md
 recurs: [an-adr-that-never-listed-doing-nothing]
 ---
 

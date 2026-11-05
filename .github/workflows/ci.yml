@@ -93,9 +93,6 @@ jobs:
       # And that a document a script, hook or workflow cites is there. The
       # markdown link check does not read them, so their citations went unread.
       - run: ./scripts/check-named-paths-exist.sh
-      # And that every harness skill, agent and hook in plugins/borso-harness/
-      # is linked into .claude/, which is the only place a session reads it.
-      - run: ./scripts/check-harness-links.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh
@@ -156,7 +153,7 @@ jobs:
       - run: ./scripts/check-no-comments-in-styles-and-markup.sh
       - run: ./scripts/check-tailwind-arbitrary-variants.sh
       - run: ./scripts/check-package-scripts-are-commands.sh
-      - run: pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
+      - run: pnpm exec tsx scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
       # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish`
       # are pnpm built-ins: without `run`, pnpm shadows the package's scripts
       # entry and silently does the wrong thing. Mirrors the pre-commit hook,

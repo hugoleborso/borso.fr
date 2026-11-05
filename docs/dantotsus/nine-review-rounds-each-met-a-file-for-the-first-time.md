@@ -7,10 +7,10 @@ related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 5
-eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
+eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
 time-to-detect: hours
 tags: [standards, review, seals, agents, harness, meta]
-zone: plugins/borso-harness/skills/technical-validation
+zone: .claude/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 recurs: [ten-review-rounds-on-a-two-file-bug-fix]
 ---

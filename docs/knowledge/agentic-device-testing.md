@@ -9,7 +9,7 @@ triggers:
 
 # Testing on a phone from an agent session
 
-[`/visual-validation`](../../plugins/borso-harness/skills/visual-validation/SKILL.md)
+[`/visual-validation`](../../.claude/skills/visual-validation/SKILL.md)
 drives `agent-browser`, a desktop Chromium. Use it for the layout at 375 px, and
 use `scripts/phone.sh touch` when the question is about touch, because a
 viewport resize is not a device.

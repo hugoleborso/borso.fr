@@ -60,4 +60,4 @@ each without the pipe and 0 with it.
 ## See also
 
 - [`docs/dantotsus/a-stale-ref-priced-a-one-line-push-at-fifty-minutes.md`](../dantotsus/a-stale-ref-priced-a-one-line-push-at-fifty-minutes.md)
-- `plugins/borso-harness/hooks/pretool-no-swallowed-push.sh` — the git-shaped half, refused at the tool call.
+- `.claude/hooks/pretool-no-swallowed-push.sh` — the git-shaped half, refused at the tool call.

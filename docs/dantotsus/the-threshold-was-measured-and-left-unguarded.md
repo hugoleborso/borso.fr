@@ -7,10 +7,10 @@ related-pr: '#100'
 fix-pr: '#103'
 fix-commits: [948204d50a]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/hooks/pretool-github-pr-body.sh]
+eradication-paths: [.claude/hooks/pretool-github-pr-body.sh]
 time-to-detect: minutes
 tags: [github, hooks, gates, meta, tooling]
-zone: plugins/borso-harness/hooks/pretool-github-pr-body.sh
+zone: .claude/hooks/pretool-github-pr-body.sh
 weak-point: gate-measures-nothing
 recurs: [the-hook-guarded-every-form-but-the-documented-one]
 ---
@@ -83,7 +83,7 @@ the link was replaced by a sentence naming the file in words.
 **Type:** DevX check (level 2 — devx check)
 
 **Reference:** PR #102 · commit on this branch extending
-`plugins/borso-harness/hooks/pretool-github-pr-body.sh`
+`.claude/hooks/pretool-github-pr-body.sh`
 
 **The actual fix:**
 

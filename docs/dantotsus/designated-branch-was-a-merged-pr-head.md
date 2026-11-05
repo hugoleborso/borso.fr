@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-branch-context.sh]
 time-to-detect: hours
 tags: [harness, orchestrator, conception, hooks]
-zone: plugins/borso-harness/skills/tech-lead-orchestrator
+zone: .claude/skills/tech-lead-orchestrator
 ---
 
 # Orchestrator routed me to a branch that was already merged

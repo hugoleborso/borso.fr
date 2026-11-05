@@ -7,10 +7,10 @@ related-pr: '#250'
 fix-pr: none (the kaizen pull request of PR #250, number unknown when this was written)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [plugins/borso-harness/hooks/pretool-no-swallowed-push.sh]
+eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh]
 time-to-detect: days
 tags: [bash, git, hooks, meta]
-zone: plugins/borso-harness/hooks
+zone: .claude/hooks
 weak-point: none
 recurs: [a-push-that-failed-and-reported-success]
 ---
