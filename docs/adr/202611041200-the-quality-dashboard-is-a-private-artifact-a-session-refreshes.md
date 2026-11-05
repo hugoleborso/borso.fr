@@ -1,6 +1,6 @@
 # ADR-202611041200: The quality dashboard is a private artifact a session refreshes
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-04
 - **Deciders:** Hugo Borsoni
 - **Tags:** quality-dashboard, observability
