@@ -32,9 +32,12 @@
 # the blast radius, and the session merged PR #202 without ever seeing it. A
 # hook that runs and is inaudible is the same defect as a hook that never runs.
 #
-# Best-effort by contract: it ALWAYS exits 0. It never blocks a merge — the
-# operator's instruction is the gate, and a gate that guesses would be the
-# confirmation step CLAUDE.md says not to add.
+# Best-effort by contract: it exits 0 and never asks for a confirmation — the
+# operator's instruction is the gate. The one refusal is not a confirmation:
+# when main moved after CI started and both sides changed a file, it exits 2
+# and names a reversible step (merge main in, wait for CI) the session takes
+# on its own, because a notice in additionalContext is read only after the
+# merge has run.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0
@@ -131,15 +134,31 @@ if [[ "$PR" =~ ^[0-9]+$ ]] && [ -n "$COMPARED_HEAD" ] && command -v gh >/dev/nul
       BOTH=$(cd "$REPO_ROOT" && comm -12 \
         <(printf '%s\n' "$UNSEEN" | xargs -n1 git diff-tree --no-commit-id --name-only -r -m --first-parent 2>/dev/null | sort -u) \
         <(git diff --name-only "origin/$BASE_BRANCH...$COMPARED_HEAD" 2>/dev/null | sort -u) | sed 's/^/    /')
+      # additionalContext reaches the session beside the tool's result, so
+      # by the time it is read the merge has already run. "Tell the operator
+      # before merging" could not be followed: PR #274 merged on it. When
+      # both sides changed a file, the untested combination is a real risk,
+      # so the call is refused and the reversible step is named instead.
+      # See docs/dantotsus/a-warning-that-arrives-with-the-merge.md.
+      if [ -n "$BOTH" ]; then
+        {
+          echo "[merge-on-moved-base] refused: $BASE_BRANCH moved after this pull request's CI started ($CI_STARTED),"
+          echo "[merge-on-moved-base] and these commits change files this branch also changes:"
+          printf '%s\n' "$SUBJECTS"
+          echo "[merge-on-moved-base] Files both sides changed:"
+          printf '%s\n' "$BOTH"
+          echo "[merge-on-moved-base] Merge $BASE_BRANCH into the branch, push, wait for the check_suite event, then merge."
+        } >&2
+        "$(dirname "$0")/kaizen-refusal.sh" merge-on-moved-base "tried to merge a pull request beside base commits no CI run tested with it"
+        exit 2
+      fi
       MOVED_BASE="
 [merge-on-moved-base] $BASE_BRANCH moved after this pull request's CI started ($CI_STARTED).
 These merged since, and no run tested them beside this branch:
 $SUBJECTS
-Files both sides changed:
-${BOTH:-    none}
-A mergeable_state of unknown right after such a merge is GitHub recomputing,
-not a green light. Tell the operator before merging. To test the result first, merge
-$BASE_BRANCH into the branch, push, and wait for the check_suite event."
+No file changed on both sides, so the merge was let through. It has already
+run by the time you read this. Tell the operator once, and read $BASE_BRANCH's
+own CI run, which is the first test of the combination."
     fi
   fi
 fi
