@@ -180,6 +180,15 @@ describe('selectLineupColumnKind', () => {
     expect(selectLineupColumnKind(column)).toBe('filled');
   });
 
+  it('keeps a lineup filled when one member holds an instrument and another none', () => {
+    const column = buildLineupColumn({
+      instruments: [],
+      lineup: { [ANA.id]: ['instrument-voice'], bob: [] },
+      members: [],
+    });
+    expect(selectLineupColumnKind(column)).toBe('filled');
+  });
+
   it('calls a lineup whose members hold no instrument empty', () => {
     const column = buildLineupColumn({ instruments: [], lineup: { [ANA.id]: [] }, members: [] });
     expect(selectLineupColumnKind(column)).toBe('empty');
