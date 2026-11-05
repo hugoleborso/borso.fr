@@ -33,7 +33,9 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
       <Card>
         <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('catalog.defaultLineup')}</div>
         <div className="flex flex-col gap-1.5">
-          {hasLineup ? null : <span className="text-meta text-ink-soft italic">—</span>}
+          {hasLineup ? null : (
+            <span className="text-meta text-ink-soft italic">{t('lineup.noLineup')}</span>
+          )}
           {props.lineupRows.map((row) => (
             <div
               key={row.memberId}

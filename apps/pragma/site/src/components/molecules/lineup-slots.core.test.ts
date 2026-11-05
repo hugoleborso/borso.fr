@@ -167,4 +167,8 @@ describe('naturalColumnWidth', () => {
   it('asks for one slot width per slot', () => {
     expect(naturalColumnWidth(columnOf('Voice', 'Guitar'))).toBe(2 * LINEUP_SLOT_WIDTH_PX);
   });
+
+  it('lets an empty column size itself to its no-lineup label', () => {
+    expect(naturalColumnWidth({ slots: [] })).toBe('auto');
+  });
 });

@@ -84,7 +84,8 @@ export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnVi
   return { slots };
 }
 
-export function naturalColumnWidth(column: LineupColumnView): number {
+export function naturalColumnWidth(column: LineupColumnView): number | 'auto' {
+  if (column.slots.length === 0) return 'auto';
   return column.slots.length * LINEUP_SLOT_WIDTH_PX;
 }
 

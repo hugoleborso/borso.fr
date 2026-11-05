@@ -78,6 +78,11 @@ describe('a setlist row', () => {
     expect(screen.queryAllByTitle('Drums').length).toBeGreaterThan(0);
   });
 
+  it('says the song has no lineup yet instead of leaving its lineup empty', () => {
+    renderRow(buildProps({ lineupColumn: { slots: [] } }));
+    expect(screen.getByText('No lineup yet')).toBeTruthy();
+  });
+
   it('shows the note written for tonight and tonight’s lineup change', () => {
     renderRow(
       buildProps({

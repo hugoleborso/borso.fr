@@ -343,6 +343,7 @@
         "setlistEntry": "Lineup for this entry"
       }
     },
+    "noLineup": "No lineup yet",
     "notPlaying": "— not playing —",
     "override": "Override",
     "resetToDefault": "Reset to song default",
