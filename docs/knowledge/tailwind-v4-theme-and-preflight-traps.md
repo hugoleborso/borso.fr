@@ -114,10 +114,14 @@ a longhand, where an inline style beats the class's shorthand:
 element.style.setProperty('animation-duration', `${streak.durationMilliseconds}ms`);
 ```
 
-There is a legitimate use of the same syntax — a `var()` in an `@theme` entry is
-correct when the referenced property really is global — so this is not
-mechanically checkable and stays knowledge. The tell is intent: if the value is
-meant to differ per element, it cannot come through the theme.
+A `var()` in an `@theme` entry is correct when the referenced property is
+global. _2026-11-05_: PR #278 hit the trap again on pragma's opening screen,
+whose per-key delays all collapsed to 0, and fixed it with `@theme inline`,
+which writes the `var()` into the utility so it resolves on the element. A
+property that no `@theme` or `:root` rule declares can only be meant per
+element, so `scripts/check-stylesheet-contents.sh` now refuses a `var()` of
+one inside a static `@theme`
+([dantotsu](../dantotsus/a-per-key-delay-that-every-key-read-from-root.md)).
 
 A related pattern that *is* worth copying: when a CSS duration and a JavaScript
 timer have to agree, publish the number once from the module that owns it and
