@@ -4,10 +4,10 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: none (the per-song preload predates pull requests, from d7be0d9ac on 2026-05-25, and moved into the query cache in #247)
-fix-pr: none (proposal under review)
-fix-commits: none (proposal under review)
-eradication-level: 5
-eradication-paths: []
+fix-pr: none (the pull request of branch claude/wizardly-mendel-0nq8qs, not opened when this was written)
+fix-commits: [self]
+eradication-level: 1
+eradication-paths: [apps/pragma/site/src/lib/read-batch.adapter.ts, apps/pragma/site/src/lib/read-batch.core.ts, apps/pragma/api/src/read-batch/read-batch.controller.ts, eslint-rules/no-request-fan-out-in-site.js]
 time-to-detect: 17 days
 tags: [pragma, lambda, concurrency, api-gateway, offline, tanstack-query, monitoring]
 zone: apps/pragma/site/src/lib/queries/offline-reading.queries.ts
@@ -16,9 +16,9 @@ recurs: none (rate-limits-keyed-on-a-header-the-client-writes shares lambda and 
 
 # Forty requests at a ten seat function
 
-> Status: proposal. #261 already removed the burst measured here. The
-> eradication below is a set of options awaiting the operator's choice, and a
-> scheduled check reads the result on 2026-11-12.
+> Status: shipped on branch claude/wizardly-mendel-0nq8qs. The operator
+> chose options A and B, and A grew into a generic read batch
+> (ADR 202611050445). A scheduled check reads production on 2026-11-12.
 
 ## User impact
 
@@ -120,7 +120,29 @@ and CLAUDE.md says to lower the water, not raise the boat.
 
 ## Eradication
 
-**Type:** proposal (level 5 until one option ships)
+**Type:** structural impossibility (level 1), with a DevX check (level 2)
+
+**Shipped.** The operator chose A and B on 2026-11-05, and every route had to
+meet the target. A became a generic read batch,
+[ADR 202611050445](../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md).
+The site's Hono client sends every GET issued in one task as one
+`POST /api/read-batch`, at most 10 reads, at most 2 requests in flight.
+One client therefore holds at most 2 of the 10 seats, whatever a screen
+asks for. B is `eslint-rules/no-request-fan-out-in-site.js`, which refuses
+a request per item in `.map`, `.forEach` and the like, and a read inside a
+loop, in every site. It protects the apps that have no batch.
+
+**Measured after,** in `pnpm dev`: at most 2 requests in flight on all 29
+routes, cold and warm, and 3 requests for a cold `/`
+(docs/features/pragma/open-in-two-calls/runs/2026-11-05-0410-ttc/agents/implementation-08.md).
+
+**Proof it can fail:** a planted `Promise.allSettled(ids.map((id) =>
+queryClient.query(...)))` in a pragma site file was refused by the pragma
+lint, recorded in
+docs/features/pragma/open-in-two-calls/runs/2026-11-05-0410-ttc/agents/implementation-02.md
+and implementation-06.md.
+
+The options as they were proposed:
 
 Options, each removing the class "one client sends more than the API's
 ceiling at once":
@@ -139,8 +161,6 @@ time, in a fresh session (`trig_01QYrGgWCXFZPYZy47qkL89S`). It reads
 `Throttles`, `5xx` and `ConcurrentExecutions` for `pragma-prod-api` since
 the #261 deploy, against the baseline of 738 throttles a week. It names the
 paths of any remaining burst from the logs, and asks which option to ship.
-
-**Proof it can fail:** not applicable until an option ships.
 
 **Similar instances:**
 `grep -rn -E "Promise\.(all|allSettled)\(" apps/*/site/src --include=*.ts --include=*.tsx | grep -v "\.test\."`
