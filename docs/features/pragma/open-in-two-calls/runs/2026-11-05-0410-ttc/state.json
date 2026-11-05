@@ -1,0 +1,12 @@
+{
+  "runId": "2026-11-05-0410-ttc",
+  "feature": { "app": "pragma", "slug": "open-in-two-calls" },
+  "pilotedByTechLead": true,
+  "stage": "spec",
+  "retries": { "implement": 0, "validate": 0 },
+  "adrIndex": [],
+  "bytesRead": 0,
+  "specChecksum": null,
+  "startedAt": "2026-11-05T04:04:58.000Z",
+  "updatedAt": "2026-11-05T04:04:58.000Z"
+}
