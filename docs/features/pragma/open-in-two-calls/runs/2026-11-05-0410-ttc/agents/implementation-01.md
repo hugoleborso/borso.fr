@@ -61,7 +61,21 @@ The `refactor:` commit body should name the property the manifest had and the ne
 
 ## Gates
 
-GATES_PLACEHOLDER
+All of these were measured this session, after the last edit.
+
+| Gate | Command | Result |
+|---|---|---|
+| 1.1 | `pnpm --filter @borso-app/pragma lint` | exit 0, after the `max-lines` fix |
+| 1.2 | `pnpm run format:check` | exit 0 |
+| 1.3 | `pnpm --filter @borso-app/pragma typecheck` | exit 0 |
+| 1.4 | `pnpm --filter @borso-app/pragma exec vitest run --project core --coverage` | 394 files, 3787 tests passed, no threshold failure |
+| 1.5 | `pnpm --filter @borso-app/pragma build` | exit 0 |
+| 1.6 | `pnpm knip` | exit 0 |
+| 1.7 | `pnpm --filter @borso-app/pragma run test:e2e ... api/src/sessions` | 2 files, 11 tests passed |
+| 1.8 | `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check` | exit 0 |
+| 1.9 | `scripts/check-vocabulary-paths.sh` | exit 0 |
+| 1.9 | `scripts/check-pure-modules-have-callers.sh`, against an index copy without the two deleted files | exit 0 |
+| 1.10 | `stryker run --mutate` on the five files the plan names | 229 mutants, 0 survived, score 100 |
 
 ## Friction logged
 
