@@ -1,12 +1,18 @@
 {
   "runId": "2026-11-05-0410-ttc",
-  "feature": { "app": "pragma", "slug": "open-in-two-calls" },
+  "feature": {
+    "app": "pragma",
+    "slug": "open-in-two-calls"
+  },
   "pilotedByTechLead": true,
-  "stage": "spec",
-  "retries": { "implement": 0, "validate": 0 },
+  "stage": "adrs",
+  "retries": {
+    "implement": 0,
+    "validate": 0
+  },
   "adrIndex": [],
   "bytesRead": 0,
-  "specChecksum": null,
+  "specChecksum": "25433b7d5ce739a3c9584a64f04c6bce41c1b6c07ff4614e0dbea6cf55e1df63",
   "startedAt": "2026-11-05T04:04:58.000Z",
-  "updatedAt": "2026-11-05T04:04:58.000Z"
+  "updatedAt": "2026-11-05T04:45:11.000Z"
 }
