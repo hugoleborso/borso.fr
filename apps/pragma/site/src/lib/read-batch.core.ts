@@ -87,6 +87,32 @@ export function mergeIdenticalReads<Caller>(
   return [...byIdentity.values()];
 }
 
+export type FailedCallers = ReadonlyMap<string, number>;
+
+export function rememberFailedCallers<Caller>(
+  failed: FailedCallers,
+  batch: readonly MergedRead<Caller>[],
+): FailedCallers {
+  const counted = new Map(failed);
+  batch.forEach((entry) => {
+    const identity = readIdentity(entry.read);
+    counted.set(identity, (counted.get(identity) ?? 0) + entry.callers.length);
+  });
+  return counted;
+}
+
+export function takeFailedCaller(
+  failed: FailedCallers,
+  identity: string,
+): { readonly isRetry: boolean; readonly failed: FailedCallers } {
+  const remaining = failed.get(identity) ?? 0;
+  if (remaining === 0) return { isRetry: false, failed };
+  const counted = new Map(failed);
+  if (remaining === 1) counted.delete(identity);
+  else counted.set(identity, remaining - 1);
+  return { isRetry: true, failed: counted };
+}
+
 export function keepCallers<Caller>(
   merged: readonly MergedRead<Caller>[],
   isKept: (caller: Caller) => boolean,

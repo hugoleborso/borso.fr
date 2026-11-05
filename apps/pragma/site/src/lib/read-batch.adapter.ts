@@ -5,6 +5,8 @@ import {
   mergeIdenticalReads,
   readIdentity,
   pairAnswersWithReads,
+  rememberFailedCallers,
+  takeFailedCaller,
   readContentType,
   takeNextBatch,
   toBatchedRead,
@@ -13,6 +15,7 @@ import {
   toLoneReadInit,
   toLoneRead,
   toAbortError,
+  type FailedCallers,
   type MergedRead,
   type WaitingRead,
 } from './read-batch.core';
@@ -72,7 +75,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   } = options;
   let openGroup: WaitingRead<Caller>[] = [];
   let retryGroup: WaitingRead<Caller>[] = [];
-  let failedReads = new Set<string>();
+  let failedCallers: FailedCallers = new Map();
   let waiting: MergedRead<Caller>[] = [];
   let readsInFlight = 0;
   let lane: object = {};
@@ -95,7 +98,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   }
 
   function rememberFailedBatch(batch: readonly MergedRead<Caller>[]): void {
-    batch.forEach((entry) => failedReads.add(readIdentity(entry.read)));
+    failedCallers = rememberFailedCallers(failedCallers, batch);
   }
 
   async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
@@ -159,12 +162,12 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   function closeOpenRetryGroup(): void {
     waiting = mergeIdenticalReads(waiting, retryGroup);
     retryGroup = [];
-    failedReads = new Set();
     drain();
   }
 
   function joinGroup(entry: WaitingRead<Caller>): void {
-    const isRetry = failedReads.has(readIdentity(entry.read));
+    const { isRetry, failed } = takeFailedCaller(failedCallers, readIdentity(entry.read));
+    failedCallers = failed;
     if (isRetry) {
       if (retryGroup.length === 0) closeRetryGroup(closeOpenRetryGroup);
       retryGroup.push(entry);
@@ -195,7 +198,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   function reset(): void {
     openGroup = [];
     retryGroup = [];
-    failedReads = new Set();
+    failedCallers = new Map();
     waiting = [];
     readsInFlight = 0;
     lane = {};

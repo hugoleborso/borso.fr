@@ -216,3 +216,57 @@ describe('a batch the API refused, under retry: 1', () => {
     expect(sent).toStrictEqual(['POST /api/read-batch', 'POST /api/read-batch']);
   });
 });
+
+const BATCH_ANSWER_GAP_MS = 50;
+
+async function sendRetriedSongs(songCount: number): Promise<string[]> {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const sent: string[] = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: string, init?: RequestInit) => {
+      const answerDelay = sent.length * BATCH_ANSWER_GAP_MS;
+      sent.push(`${init?.method ?? 'GET'} ${new URL(input, 'http://pragma.test').pathname}`);
+      return new Promise<Response>((resolve) => {
+        setTimeout(() => resolve(new Response('{}', { status: SERVICE_UNAVAILABLE })), answerDelay);
+      });
+    }),
+  );
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
+  const songIds = Array.from({ length: songCount }, (_, index) => `song-${String(index)}`);
+  const fetched = songIds.map((songId) =>
+    queryClient
+      .query({
+        queryKey: ['songs', songId],
+        queryFn: async () => {
+          const response = await api.api.songs[':id'].$get({ param: { id: songId } });
+          if (!response.ok) throw new Error(String(response.status));
+          return await response.json();
+        },
+      })
+      .catch((error: unknown) => error),
+  );
+  await vi.runAllTimersAsync();
+  await Promise.all(fetched);
+  return sent;
+}
+
+describe('batches the API refused at different times, under retry: 1', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    readTransport.reset();
+  });
+
+  it('resend each batch of 13 reads as one batch, though they failed 50 ms apart', async () => {
+    const sent = await sendRetriedSongs(13);
+
+    expect(sent).toStrictEqual(Array.from({ length: 4 }, () => 'POST /api/read-batch'));
+  });
+
+  it('resend each batch of 23 reads as one batch, though three failed apart', async () => {
+    const sent = await sendRetriedSongs(23);
+
+    expect(sent).toStrictEqual(Array.from({ length: 6 }, () => 'POST /api/read-batch'));
+  });
+});

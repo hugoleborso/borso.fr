@@ -451,7 +451,7 @@ describe('the reads of a failed batch, retried', () => {
     expect(tab.request(1).input).toBe(`${API_BASE}/api/streaks`);
   });
 
-  it('forget the failed reads once the retry group left', async () => {
+  it('forget a failed read once its retry joined a group', async () => {
     const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
     void tab.read('/api/songs');
     tab.closeRetries();
@@ -491,6 +491,34 @@ describe('the reads of a failed batch, retried', () => {
       reads: [
         { path: '/api/songs', headers: {} },
         { path: '/api/me', headers: {} },
+      ],
+    });
+  });
+
+  it('gather the retries of a second failed batch on their own, though it shared a read with the first', async () => {
+    const tab = harness();
+    const firstBatch = [tab.read('/api/songs'), tab.read('/api/me')];
+    tab.closeTick();
+    const secondBatch = [tab.read('/api/songs'), tab.read('/api/tasks')];
+    tab.closeTick();
+    tab.request(0).answer(new Response('{}', { status: 503 }));
+    tab.request(1).answer(new Response('{}', { status: 503 }));
+    await Promise.all([...firstBatch, ...secondBatch]);
+    await settle();
+
+    void tab.read('/api/songs');
+    void tab.read('/api/me');
+    tab.closeRetries();
+    void tab.read('/api/songs');
+    tab.closeTick();
+    void tab.read('/api/tasks');
+    tab.closeTick();
+    tab.closeRetries();
+
+    expect(batchBody(tab.request(3))).toStrictEqual({
+      reads: [
+        { path: '/api/songs', headers: {} },
+        { path: '/api/tasks', headers: {} },
       ],
     });
   });

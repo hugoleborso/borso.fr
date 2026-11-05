@@ -6,6 +6,8 @@ import {
   pairAnswersWithReads,
   readContentType,
   readIdentity,
+  rememberFailedCallers,
+  takeFailedCaller,
   takeNextBatch,
   toBatchedRead,
   toAbortError,
@@ -229,5 +231,37 @@ describe('a batch the API did not answer', () => {
     expect(error).toBeInstanceOf(DOMException);
     expect(error.name).toBe('AbortError');
     expect(error.message).toBe('left the screen');
+  });
+});
+
+describe('the callers of failed batches', () => {
+  it('counts every caller of every failed batch, across batches that shared a read', () => {
+    const first = rememberFailedCallers(new Map(), [
+      { read: SONGS, callers: ['probe', 'list'] },
+      { read: BALLOT, callers: ['ballot'] },
+    ]);
+    const both = rememberFailedCallers(first, [{ read: SONGS, callers: ['home'] }]);
+
+    expect([...both]).toStrictEqual([
+      [readIdentity(SONGS), 3],
+      [readIdentity(BALLOT), 1],
+    ]);
+    expect([...first]).toStrictEqual([
+      [readIdentity(SONGS), 2],
+      [readIdentity(BALLOT), 1],
+    ]);
+  });
+
+  it('takes one retry per failed caller, then forgets the read', () => {
+    const failed = rememberFailedCallers(new Map(), [{ read: SONGS, callers: ['probe', 'list'] }]);
+
+    const first = takeFailedCaller(failed, readIdentity(SONGS));
+    const second = takeFailedCaller(first.failed, readIdentity(SONGS));
+    const third = takeFailedCaller(second.failed, readIdentity(SONGS));
+
+    expect(first).toStrictEqual({ isRetry: true, failed: new Map([[readIdentity(SONGS), 1]]) });
+    expect(second).toStrictEqual({ isRetry: true, failed: new Map() });
+    expect(third).toStrictEqual({ isRetry: false, failed: new Map() });
+    expect([...failed]).toStrictEqual([[readIdentity(SONGS), 2]]);
   });
 });
