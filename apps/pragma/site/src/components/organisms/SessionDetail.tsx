@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
-import { formatSessionDate } from '../../lib/formatters.utils';
+import { formatSessionDateTime } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import type { ListedMember } from '../../lib/queries/members.queries';
 import {
@@ -189,7 +189,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     addSongsToNewSetlist();
   };
 
-  const formattedDate = formatSessionDate(session.date, i18n.language);
+  const formattedDate = formatSessionDateTime(session.date, i18n.language);
   const sessionFacts = selectSessionFacts({
     isConcert,
     capacity: session.capacity,
