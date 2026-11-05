@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import postgres from 'postgres';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -10,8 +9,6 @@ const MIGRATIONS_DIR = join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migration
 
 const MIGRATION_FILE_PATTERN = /^\d+_[A-Za-z0-9_-]+\.sql$/;
 const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
-
-let container: StartedPostgreSqlContainer | null = null;
 
 function readMigrationStatements(): readonly string[] {
   const files = readdirSync(MIGRATIONS_DIR)
@@ -55,27 +52,16 @@ function setProcessEnv(databaseUrl: string): void {
 /**
  * @Blueprint test-global-setup
  * @BlueprintName Test Global Setup
- * @BlueprintUsage Use for the vitest `globalSetup` of a suite that needs a real database, with a paired teardown that releases whatever the setup started.
- * @BlueprintDescription Takes an already configured `DATABASE_URL` when the environment provides one and boots a container only otherwise, then applies the migration files off disk rather than the Drizzle objects, so the suite runs against the artefact the deploy applies. `teardown` stops the container only when this module started it.
+ * @BlueprintUsage Use for the vitest `globalSetup` of a suite that needs a real database, which takes its database from the environment.
+ * @BlueprintDescription Requires the `DATABASE_URL` that `test:e2e` and CI provide and refuses to start without one, then applies the migration files off disk rather than the Drizzle objects, so the suite runs against the artefact the deploy applies. It boots nothing, so there is no teardown: a container fallback here ran in neither CI nor `test:e2e`, and its library carried five of the advisories PR #274 cleared.
  */
 export async function setup(): Promise<void> {
   const externalUrl = process.env.DATABASE_URL;
-  if (externalUrl !== undefined && externalUrl.length > 0) {
-    await applyMigrations(externalUrl);
-    setProcessEnv(externalUrl);
-    return;
+  if (externalUrl === undefined || externalUrl.length === 0) {
+    throw new Error(
+      'last-loop-lepin back-e2e: DATABASE_URL must be set. Run via `pnpm --filter @borso-app/last-loop-lepin run test:e2e`, which boots the sandbox Postgres.',
+    );
   }
-
-  container = await new PostgreSqlContainer('postgres:16-alpine')
-    .withDatabase('lastloop')
-    .withUsername('lastloop')
-    .withPassword('lastloop')
-    .start();
-  const url = container.getConnectionUri();
-  await applyMigrations(url);
-  setProcessEnv(url);
-}
-
-export async function teardown(): Promise<void> {
-  await container?.stop();
+  await applyMigrations(externalUrl);
+  setProcessEnv(externalUrl);
 }

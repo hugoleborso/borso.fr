@@ -18,10 +18,11 @@ triggers:
 
 ## Symptom
 
-Testcontainers (`@testcontainers/postgresql`) throws
-`failed to connect to the docker API at unix:///var/run/docker.sock` on
-hosts that have the `docker` binary installed but no daemon running. The
-back-e2e gate then fails before a single test executes.
+A Docker-based Postgres (the testcontainers fallback last-loop-lepin used
+to carry) throws `failed to connect to the docker API at
+unix:///var/run/docker.sock` on hosts that have the `docker` binary
+installed but no daemon running. The back-e2e gate then fails before a
+single test executes.
 
 `sudo dockerd` may not be available either; on rootless Ubuntu sandboxes
 `dockerd` exists at `/usr/bin/dockerd` but `systemctl` is missing.
@@ -53,20 +54,19 @@ Behaviour:
 
 ## Wiring a new app
 
-1. **Vitest globalSetup** — make it honour an existing `DATABASE_URL`
-   before falling back to testcontainers:
+1. **Vitest globalSetup** — require `DATABASE_URL` and refuse to start
+   without it. No app boots a container any more: last-loop-lepin's
+   testcontainers fallback ran in neither CI nor `test:e2e`, and was
+   removed after PR #274.
 
    ```ts
    // test/setup-postgres.ts
    export async function setup(): Promise<void> {
      const externalUrl = process.env.DATABASE_URL;
-     if (externalUrl !== undefined && externalUrl.length > 0) {
-       await applyMigrations(externalUrl);
-       setProcessEnv(externalUrl);
-       return;
+     if (externalUrl === undefined || externalUrl.length === 0) {
+       throw new Error('back-e2e: DATABASE_URL must be set. Run `pnpm run test:e2e`.');
      }
-     container = await new PostgreSqlContainer('postgres:16-alpine').start();
-     // …testcontainers branch…
+     await applyMigrations(externalUrl);
    }
    ```
 
@@ -94,9 +94,8 @@ Behaviour:
    that prod's `DsqlSchema` construct will execute, so push-vs-migrate
    drift would invalidate the gate.
 
-4. **CI fallback** — keep the testcontainers branch as the CI path. The
-   `services: postgres: 16` block in `.github/workflows/<app>.yml` (or
-   `DATABASE_URL` injected by the runner) trips the same shortcut.
+4. **CI** — the `services: postgres: 16` block in `.github/workflows/ci.yml`
+   injects `DATABASE_URL`, so CI takes the same path as a sandbox.
 
 ## When NOT to use this pattern
 

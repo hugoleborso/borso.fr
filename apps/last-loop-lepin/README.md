@@ -22,4 +22,4 @@ CI runs `test:core` with coverage and the whole `test:e2e` suite. Locally, run o
 - `site/` — Vite + React frontend.
 - `api/` — Hono on Lambda, Drizzle ORM over Aurora DSQL.
 - `cdk/` — CDK app composing `PreviewableApp` + `DsqlClusterStack`.
-- `test/` — shared setup (testcontainers Postgres) + race-scenario suites.
+- `test/` — shared setup (the Postgres `DATABASE_URL` names) + race-scenario suites.
