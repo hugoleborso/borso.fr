@@ -14,6 +14,7 @@ import { buildTalosAppStack } from '../lib/stack.js';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
+const ERROR_REPORTING_DSN = 'https://public-key@o1.ingest.de.sentry.io/2';
 
 const synthesizedTemplates = new Map<'prod', Template>();
 
@@ -39,6 +40,7 @@ function buildAppStackTemplate(): Template {
     exportEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.export.ts'),
     migrationsPath: path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations'),
     cluster: clusterStack.cluster,
+    errorReportingDsn: ERROR_REPORTING_DSN,
   });
   return Template.fromStack(stack);
 }
@@ -68,6 +70,10 @@ describe('talos app stack', () => {
       TALOS_SSM_PREFIX: '/talos/',
       TALOS_RP_ID: 'talos.borso.fr',
     });
+  });
+
+  it('hands the error reporting project to the api', () => {
+    expect(readApiEnvironment(synthAppStack())).toMatchObject({ SENTRY_DSN: ERROR_REPORTING_DSN });
   });
 
   it('names the site bucket after the account, because talos-prod is unavailable in S3', () => {

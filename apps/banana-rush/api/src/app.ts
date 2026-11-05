@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { buildConfigRouter } from './config/config.controller';
 import { buildGamesRouter } from './games/games.controller';
 import { selectErrorResponse } from './helpers/errors/error-response.core';
+import { reportUnexpectedFailure } from './helpers/observability/error-reporting.adapter';
 
 /**
  * @Blueprint api-composition-root-with-one-error-translation
@@ -16,6 +17,7 @@ function buildAppRouter() {
     .use('*', logger())
     .use('*', cors())
     .onError((failure, context) => {
+      reportUnexpectedFailure(failure);
       const answer = selectErrorResponse(failure);
       return context.json(answer.body, answer.status);
     })

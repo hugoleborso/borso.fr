@@ -33,6 +33,8 @@
     "@aws-sdk/dsql-signer": "catalog:",
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "catalog:",
+    "@sentry/aws-serverless": "catalog:",
+    "@sentry/react": "catalog:",
     "@simplewebauthn/browser": "catalog:",
     "@simplewebauthn/server": "catalog:",
     "@tailwindcss/vite": "catalog:",

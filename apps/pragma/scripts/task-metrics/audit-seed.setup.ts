@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { DEFAULT_IMPROVEMENT_KIND } from '@domain/improvement.core';
 import { getDatabase } from '../../api/src/database/client';
 import { createImprovement } from '../../api/src/improvements/improvements.service';
 import {
@@ -774,7 +775,7 @@ async function main(): Promise<void> {
     ['Accords plus faciles à coller depuis un site', '', 'planned'],
     ["Voir qui joue quoi sur toute la setlist d'un coup", '', 'idea'],
   ] as const) {
-    await createImprovement({ title, details, status }, lea, now);
+    await createImprovement({ title, details, status, kind: DEFAULT_IMPROVEMENT_KIND }, lea, now);
   }
 
   for (const member of members) {

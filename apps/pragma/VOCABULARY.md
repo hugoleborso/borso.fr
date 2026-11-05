@@ -439,6 +439,16 @@ Lives in: `api/src/improvements/`
   again in `improvements.schema.ts`), and the backlog is ranked in that
   order, then by vote count, then oldest first (`rankImprovements` in
   `domain/improvement.core.ts`).
+- `kind` is one of `idea` and `bug` (`IMPROVEMENT_KINDS` in
+  `domain/improvement.core.ts`), and a new improvement is an `idea` unless
+  the member says otherwise. An **idea** asks for something the
+  application does not do yet; a **bug report** is an improvement with
+  `kind = 'bug'`, saying something the application already does is
+  broken. The column is nullable because DSQL cannot add a column with a
+  default, and a null, which only a row filed before the column existed
+  carries, reads as an idea (`resolveImprovementKind`). The quality
+  dashboard counts bug reports, so a reader outside the application
+  filters on `kind = 'bug'` and a null never matches it.
 - `authorMemberId` is the member who filed it, taken from the session
   rather than from the request body, and `createdAt` is written by the
   application.
@@ -450,6 +460,10 @@ Held by: `api/src/improvements/improvements.controller.test.ts` › deletes an i
 
 Not to be confused with: a song's notes (`structureNotes`, `gimmickNotes`,
 `notes`), which are about the music rather than about the tool that tracks it.
+
+Nor is the kind `idea` the status `idea`: the kind says what the improvement
+is and never changes on its own, the status says how far the band has got
+with it. A bug report starts in the status `idea` too.
 
 ## Improvement vote
 
@@ -1692,9 +1706,12 @@ to.
   **instrument**, and the whole map is a **lineup**.
 - **main instrument**, **primary instrument**: a member plays a set of
   **instruments**, none ranked above the others.
-- **ticket**, **issue**, **feature request**, **bug**: what the band wants
+- **ticket**, **issue**, **feature request**: what the band wants
   changed in this application is an **improvement**, and its votes are
-  **improvement votes**.
+  **improvement votes**. **bug** on its own is only the value of `kind`;
+  the thing is a **bug report**, and never a **defect** or an
+  **incident**, which are words of the quality dashboard and the
+  dantotsus.
 - **prospect**, **contact** as an entity: a **bar** with status `lead`.
 - **chord sheet**, **tab**, and **score** in its sheet-music sense: the
   attached music is a **chord chart**, and its inline form is

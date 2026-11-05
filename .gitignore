@@ -81,6 +81,7 @@ docs/standards/temporal-coupling.md
 docs/standards/enforcement-ledger.md
 docs/quality/weak-points.html
 docs/quality/working-conditions.html
+docs/quality/dashboard.html
 
 # A passing validation's screenshots wait here between /visual-validation and
 # /open-pr, which uploads them to the previews CDN once the pull request number

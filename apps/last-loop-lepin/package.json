@@ -32,6 +32,7 @@
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "catalog:",
+    "@sentry/aws-serverless": "catalog:",
     "@sentry/react": "catalog:sentry8",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "catalog:",

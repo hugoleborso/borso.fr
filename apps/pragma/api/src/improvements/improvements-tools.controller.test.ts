@@ -18,6 +18,10 @@ const improvementSchema = z.object({
 });
 const createdSchema = z.object({ id: z.string().uuid() });
 const improvementsBodySchema = z.object({ improvements: z.array(improvementSchema) });
+const toolListSchema = z.object({
+  improvements: z.array(z.object({ title: z.string(), kind: z.string() })),
+});
+const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -48,6 +52,8 @@ describe('improvements tools (back-e2e)', () => {
           id: improvement.id,
           title: 'Click track on stage',
           status: 'idea',
+          kind: 'idea',
+          createdAt: expect.stringMatching(ISO_TIMESTAMP),
           votes: 1,
           mine: false,
         },
@@ -56,6 +62,28 @@ describe('improvements tools (back-e2e)', () => {
     expect(seenByLea.improvements.map((seen) => [seen.voteCount, seen.votedByViewer])).toEqual([
       [1, true],
     ]);
+  });
+
+  it('files a bug report, lists its kind, and turns it into an idea', async () => {
+    const band = await prepareAssistantBand();
+    const created = await callTool(band.assistant, 'save_improvement', {
+      title: 'Setlist crashes on reload',
+      kind: 'bug',
+    });
+    const improvement = createdSchema.parse(created.body);
+    const listKinds = async (): Promise<string[]> =>
+      toolListSchema
+        .parse((await callTool(band.assistant, 'list_improvements')).body)
+        .improvements.map((listed) => listed.kind);
+
+    expect(await listKinds()).toEqual(['bug']);
+    expect(
+      await callTool(band.assistant, 'save_improvement', {
+        improvement: improvement.id,
+        kind: 'idea',
+      }),
+    ).toEqual({ isError: false, body: { id: improvement.id, updated: ['kind'] } });
+    expect(await listKinds()).toEqual(['idea']);
   });
 
   it('updates and deletes an improvement, and answers the refusal codes the routes answer', async () => {

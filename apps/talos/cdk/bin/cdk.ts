@@ -20,6 +20,13 @@ if (requireDeployStage() !== 'prod') {
   throw new Error('talos: only the prod stage exists, a preview would publish private data.');
 }
 
+function readOptionalSetting(name: string): string | undefined {
+  const value = process.env[name];
+  return value === undefined || value === '' ? undefined : value;
+}
+
+const errorReportingDsn = readOptionalSetting('TALOS_SENTRY_DSN');
+
 const app = new App();
 const env = { account, region: REGION };
 
@@ -48,4 +55,5 @@ buildTalosAppStack({
   exportEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.export.ts'),
   migrationsPath: path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations'),
   cluster: clusterStack.cluster,
+  ...(errorReportingDsn === undefined ? {} : { errorReportingDsn }),
 });

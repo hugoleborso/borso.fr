@@ -116,13 +116,16 @@ jobs:
       # Front reads this at build time (Sentry tagging + gating non-prod-only
       # affordances like the test-fixture panel in admin).
       VITE_STAGE: prod
-      # Error reporting, for pragma only. The DSN, the org and the project are
+      # Error reporting, for every app. The DSN, the org and the project are
       # variables of the prod environment; the upload token is a secret and
-      # reaches no other application's build. One Sentry project serves the
-      # monorepo (ADR-0031). Unset values leave Sentry off: the site and the
-      # API both treat an empty DSN as no project.
-      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
+      # reaches only pragma's build. One Sentry project serves the monorepo
+      # (ADR-0031), and each app tags its events with `app`. Unset values
+      # leave Sentry off: every site and API treats an empty DSN as no project.
+      VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN }}
       PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
+      LAST_LOOP_LEPIN_SENTRY_DSN: ${{ matrix.app == 'last-loop-lepin' && vars.SENTRY_DSN || '' }}
+      BANANA_RUSH_SENTRY_DSN: ${{ matrix.app == 'banana-rush' && vars.SENTRY_DSN || '' }}
+      TALOS_SENTRY_DSN: ${{ matrix.app == 'talos' && vars.SENTRY_DSN || '' }}
       SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
@@ -131,11 +134,10 @@ jobs:
       # DSN is the designed off switch, so pragma ran in prod with Sentry off
       # for 17 days after #163 and nothing said so. ADR-0031 has it on in prod.
       # See docs/dantotsus/the-variable-the-workflow-set-to-nothing.md.
-      - name: Refuse to deploy pragma with Sentry off
-        if: matrix.app == 'pragma'
+      - name: Refuse to deploy with Sentry off
         run: |
           if [ -z "$VITE_SENTRY_DSN" ]; then
-            echo "::error::vars.SENTRY_DSN is empty in the prod environment, so pragma would deploy with Sentry off. Set it, or delete this step and say why in the commit."
+            echo "::error::vars.SENTRY_DSN is empty in the prod environment, so ${{ matrix.app }} would deploy with Sentry off. Set it, or delete this step and say why in the commit."
             exit 1
           fi
       - uses: actions/checkout@v7

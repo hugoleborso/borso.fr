@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@borso/infra": "workspace:*",
+    "@sentry/react": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "chess.js": "^1.0.0",
     "i18next": "catalog:",

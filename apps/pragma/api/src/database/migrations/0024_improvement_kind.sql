@@ -1,0 +1,11 @@
+-- An improvement is either an idea or a bug report, so a reader outside the
+-- application can count what members reported as broken.
+--
+-- Aurora DSQL accepts `ADD COLUMN column_name data_type` and no constraint
+-- clause at all: no NOT NULL, no DEFAULT, and no ALTER COLUMN afterwards to
+-- add either (DSQL §10, and docs/dantotsus/dsql-alter-table-only-add-column).
+-- `kind` is therefore nullable with no default. The application writes it on
+-- every insert, and reads a null, which only a row filed before this migration
+-- carries, as an idea through `resolveImprovementKind`. A reader counting bug
+-- reports filters on `kind = 'bug'`, which a null never matches.
+ALTER TABLE "improvement" ADD COLUMN IF NOT EXISTS "kind" text;

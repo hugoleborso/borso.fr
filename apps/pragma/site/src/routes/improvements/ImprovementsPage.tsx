@@ -9,6 +9,7 @@ import { Button } from '../../components/atoms/Button';
 import { Chip } from '../../components/atoms/Chip';
 import { Icon, type IconName } from '../../components/atoms/Icon';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
+import { ImprovementKindBadge } from '../../components/molecules/ImprovementKindBadge';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
 import { ListRow } from '../../components/molecules/ListRow';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -27,6 +28,7 @@ import {
 } from '../../lib/queries/improvements.queries';
 import { selectVoteIntent } from '../../lib/queries/improvements.utils';
 import {
+  DEFAULT_IMPROVEMENT_KIND,
   IMPROVEMENT_STATUSES,
   type ImprovementStatus,
   type StatusFilter,
@@ -47,7 +49,7 @@ const DEFAULT_STATUS: ImprovementStatus = 'idea';
 const ALL_STATUSES: StatusFilter = 'all';
 const NEW_IMPROVEMENT: EditedImprovement = {
   improvementId: null,
-  values: { title: '', details: '', status: DEFAULT_STATUS },
+  values: { title: '', details: '', status: DEFAULT_STATUS, kind: DEFAULT_IMPROVEMENT_KIND },
 };
 const IMPROVEMENT_STATUS_ICON = {
   idea: 'bulb',
@@ -81,7 +83,12 @@ export function ImprovementsPage(): JSX.Element {
   const editImprovement = (row: ImprovementRow): void => {
     setEdited({
       improvementId: row.id,
-      values: { title: row.title, details: row.details, status: readStatus(row.status) },
+      values: {
+        title: row.title,
+        details: row.details,
+        status: readStatus(row.status),
+        kind: row.kind,
+      },
     });
   };
 
@@ -156,6 +163,7 @@ export function ImprovementsPage(): JSX.Element {
                 <ListRow onClick={() => editImprovement(row)} className="w-auto text-meta">
                   {row.title}
                 </ListRow>
+                <ImprovementKindBadge kind={row.kind} />
                 <Badge tone={row.status === 'shipped' ? 'accent' : 'default'}>
                   {t(selectStatusLabelKey(readStatus(row.status)))}
                 </Badge>
