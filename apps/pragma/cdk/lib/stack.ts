@@ -21,6 +21,7 @@ import {
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import type { IFunction } from 'aws-cdk-lib/aws-lambda';
 import type { Construct } from 'constructs';
+import { PRAGMA_REQUEST_HEADER_NAMES } from '../../domain/request-headers.core.js';
 import { STREAK_REMINDER_JOB } from '../../domain/scheduled-job.core.js';
 
 const API_TIMEOUT_SECONDS = 20;
@@ -217,6 +218,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       entry: props.apiEntry,
       timeoutSeconds: API_TIMEOUT_SECONDS,
       extraPathPatterns: ASSISTANT_PATH_PATTERNS,
+      requestHeaders: PRAGMA_REQUEST_HEADER_NAMES,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
