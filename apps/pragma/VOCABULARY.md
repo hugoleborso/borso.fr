@@ -896,6 +896,31 @@ Held by: `site/src/lib/read-batch.adapter.test.ts` › hold a third group until 
 Not to be confused with: a **written root**, which a write announces; the
 batch writes nothing and announces nothing.
 
+## Opening screen
+
+The pragma mark and its "Tuning up…" caption, shown over a gated route
+while the cache holds no band data, until the first band data lands.
+
+Lives in: `site/src/components/organisms/session-gate.core.ts`, `site/src/components/organisms/OpeningScreen.tsx`, `site/src/components/atoms/PragmaMark.tsx`
+
+- Shows only when no band query holds data: a first open, a cache older
+  than 7 days, or the open right after sign-in. A warm open renders the
+  cached screen at once.
+- The route mounts beneath it, inert and hidden, so the session probe and
+  the route's reads leave in one read batch.
+- Ends when one band query holds data. When nothing is in flight and a
+  read failed or paused offline, it shows the failure and a retry that
+  refetches every active query in one batch.
+- The mark plays "the downbeat" (keys pressed in an arpeggio, the notes
+  swinging in), and stays still under reduced motion and on failure.
+
+Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a read paused offline as failed, so an offline cold open never waits forever
+Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
+Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
+
+Not to be confused with: the offline banner, which a signed in
+member sees over cached screens while the browser is offline.
+
 ## Order screen
 
 The setlist's screen for putting its entries in order with the energy curve

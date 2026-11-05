@@ -942,5 +942,11 @@
     "question": "{{clientName}} wants to act on pragma as {{memberFirstName}}.",
     "scope": "It will be able to read and change the band's songs, sessions, setlists, takes, bars and tasks, as you.",
     "title": "Allow an assistant"
+  },
+  "opening": {
+    "loading": "Tuning up…",
+    "failed": "pragma could not reach the band's data.",
+    "offline": "You are offline.",
+    "retry": "Try again"
   }
 }

@@ -1,14 +1,9 @@
 /** @DependsOnExternal browser-local-storage */
 
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import {
-  hashKey,
-  partialMatchKey,
-  type Query,
-  QueryCache,
-  QueryClient,
-} from '@tanstack/react-query';
+import { hashKey, type Query, QueryCache, QueryClient } from '@tanstack/react-query';
 import type { PersistQueryClientProviderProps } from '@tanstack/react-query-persist-client';
+import { isBandDataQuery } from '../components/organisms/session-gate.core';
 import { onSessionEnded } from './api.client';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
 import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.queries';
@@ -73,13 +68,13 @@ queryClient.getQueryCache().subscribe((event) => {
   if (isSignIn) startOfflineReading();
 });
 
-function isBandDataQuery(query: Query): boolean {
-  return !partialMatchKey(query.queryKey, authKeys.all);
+function isBandDataInCache(query: Query): boolean {
+  return isBandDataQuery(query.queryKey);
 }
 
 onSessionEnded(() => {
   forgetSessionMarker();
-  queryClient.removeQueries({ predicate: isBandDataQuery });
+  queryClient.removeQueries({ predicate: isBandDataInCache });
   queryClient.setQueryData<SessionProbeResult>(authKeys.session(), ENDED_SESSION);
   void queryCachePersister.removeClient();
 });
