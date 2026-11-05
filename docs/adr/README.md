@@ -107,6 +107,7 @@ No:
 | [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 | [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | proposed | 2026-11-05 |
+| [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | proposed | 2026-11-05 |
 
 ### Data layer
 
@@ -142,6 +143,7 @@ No:
 - 0048 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 0051 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
 - 202611011313 — pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
+- 202611050445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
 
 ### CDK / infra
 
