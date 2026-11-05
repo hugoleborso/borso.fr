@@ -5,7 +5,7 @@
     "slug": "open-in-two-calls"
   },
   "pilotedByTechLead": true,
-  "stage": "plan",
+  "stage": "implement",
   "retries": {
     "implement": 0,
     "validate": 0
@@ -14,5 +14,5 @@
   "bytesRead": 0,
   "specChecksum": "25433b7d5ce739a3c9584a64f04c6bce41c1b6c07ff4614e0dbea6cf55e1df63",
   "startedAt": "2026-11-05T04:04:58.000Z",
-  "updatedAt": "2026-11-05T04:48:41.000Z"
+  "updatedAt": "2026-11-05T05:01:53.000Z"
 }
