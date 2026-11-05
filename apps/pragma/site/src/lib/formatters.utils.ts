@@ -1,3 +1,5 @@
+import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
+
 const THIN_SPACE = ' ';
 
 // @FollowsBlueprint utils-formatter
@@ -11,6 +13,27 @@ export function formatSessionDate(iso: string, locale: string): string {
     year: 'numeric',
   });
   return formatter.format(date);
+}
+
+const DATE_TIME_SEPARATOR = ' · ';
+
+export function formatSessionDateTime(iso: string, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const dayFormatter = new Intl.DateTimeFormat(locale, {
+    timeZone: BAND_TIME_ZONE,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const hourFormatter = new Intl.DateTimeFormat(locale, {
+    timeZone: BAND_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  });
+  return `${dayFormatter.format(date)}${DATE_TIME_SEPARATOR}${hourFormatter.format(date)}`;
 }
 
 export function formatClockTime(iso: string, locale: string): string {

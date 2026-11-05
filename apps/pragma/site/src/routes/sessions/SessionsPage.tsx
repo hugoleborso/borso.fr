@@ -19,7 +19,7 @@ import { SegmentedChoice } from '../../components/molecules/SegmentedChoice';
 import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
-import { formatSessionDate } from '../../lib/formatters.utils';
+import { formatSessionDateTime } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
 
@@ -171,7 +171,7 @@ export function SessionsPage(): JSX.Element {
                     {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
                   </div>
                   <div className="font-display text-title text-ink leading-tight">
-                    {formatSessionDate(session.date, i18n.language)}
+                    {formatSessionDateTime(session.date, i18n.language)}
                   </div>
                   {session.venue === null ? null : (
                     <div className="text-meta text-ink-soft mt-0.5">{session.venue}</div>

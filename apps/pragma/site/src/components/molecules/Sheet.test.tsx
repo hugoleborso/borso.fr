@@ -15,6 +15,9 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const TITLE = 'Lineup (this set)';
 const CLOSE_LABEL_EN = 'Close';
+const IPHONE_PLATFORM = 'iPhone';
+const IPHONE_USER_AGENT =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
 
 function renderSheet(root: Root, node: ReactNode): void {
   act(() => {
@@ -97,6 +100,42 @@ describe('Sheet', () => {
       </Sheet>,
     );
     expect(document.activeElement?.tagName).toBe('TEXTAREA');
+  });
+
+  it('focuses its first field on an iPhone without asking the page to scroll it into view', () => {
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue(IPHONE_PLATFORM);
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE_USER_AGENT);
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    try {
+      renderSheet(
+        root,
+        <Sheet title={TITLE} label={TITLE} onClose={vi.fn()}>
+          <textarea aria-label="Notes" />
+        </Sheet>,
+      );
+      const textarea = document.querySelector('textarea');
+      const fieldFocusOptions = focus.mock.contexts
+        .map((context, index) => ({ context, options: focus.mock.calls[index]?.[0] }))
+        .filter((call) => call.context === textarea)
+        .map((call) => call.options?.preventScroll);
+      expect(fieldFocusOptions.length).toBeGreaterThan(0);
+      expect(fieldFocusOptions.every((preventScroll) => preventScroll === true)).toBe(true);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('sizes its shadow to the visual viewport, so the keyboard cannot cover the sheet', () => {
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={vi.fn()}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    const scrim = document.querySelector('[data-sheet]')?.parentElement;
+    expect(scrim?.style.getPropertyValue('--visual-viewport-height')).not.toBe('');
+    expect(scrim?.className).toContain('h-(--visual-viewport-height)');
+    expect(scrim?.className).not.toContain('inset-0');
   });
 
   it('calls onClose from the Close button', () => {

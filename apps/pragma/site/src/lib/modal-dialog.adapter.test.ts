@@ -74,6 +74,16 @@ describe('focusFirstField', () => {
     dialog.remove();
   });
 
+  it('focuses without scrolling the page, so iOS leaves the visual viewport where it is', () => {
+    const dialog = sheetWith('<input id="title" />');
+    const field = dialog.querySelector<HTMLInputElement>('#title');
+    if (field === null) throw new Error('no field');
+    const focus = vi.spyOn(field, 'focus');
+    focusFirstField(dialog);
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    dialog.remove();
+  });
+
   it('does nothing on the detach call React makes with null', () => {
     expect(() => {
       focusFirstField(null);

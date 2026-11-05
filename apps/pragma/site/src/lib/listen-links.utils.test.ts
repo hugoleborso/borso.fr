@@ -107,6 +107,27 @@ describe('selectSongListenLinks', () => {
     ]);
   });
 
+  it('opens the Deezer track in the Deezer app on an iPhone, once, beside the web links', () => {
+    expect(selectSongListenLinks(song, { isIos: true })).toEqual([
+      { provider: 'deezer', address: 'deezer://www.deezer.com/track/67238735' },
+      { provider: 'spotify', address: 'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky' },
+      { provider: 'youtube', address: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I' },
+    ]);
+  });
+
+  it('keeps a Deezer search on the web on an iPhone, since the app has no search address', () => {
+    const stored = {
+      url: 'https://www.deezer.com/search/Get%20Lucky',
+      provider: 'deezer' as const,
+    };
+    expect(
+      selectSongListenLinks({ ...song, deezerTrackId: null, links: [stored] }, { isIos: true }),
+    ).toEqual([
+      { provider: 'spotify', address: 'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky' },
+      { provider: 'deezer', address: 'https://www.deezer.com/search/Get%20Lucky' },
+    ]);
+  });
+
   it('points Spotify at the stored track rather than at a search', () => {
     expect(
       selectSongListenLinks({ ...song, spotifyTrackId: '2Foc5Q5nqNiosCNqttzHof', links: [] }),

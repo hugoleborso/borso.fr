@@ -41,3 +41,9 @@ export function readCalendarPlatform(
 ): CalendarPlatform {
   return selectCalendarPlatform(device.userAgent, device.maxTouchPoints);
 }
+
+export function isDeviceIos(
+  device: Pick<DisplayEnvironment, 'userAgent' | 'maxTouchPoints'> = navigator,
+): boolean {
+  return isIosDevice(device.userAgent, device.maxTouchPoints);
+}

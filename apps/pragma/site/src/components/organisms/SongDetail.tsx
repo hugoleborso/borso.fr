@@ -2,6 +2,7 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isDeviceIos } from '../../lib/display-mode.adapter';
 import { selectSongListenLinks } from '../../lib/listen-links.utils';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistsList } from '../../lib/queries/setlists.queries';
@@ -72,7 +73,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
     () => instruments.map((instrument) => ({ id: instrument.id, name: instrument.name })),
     [instruments],
   );
-  const listenLinks = useMemo(() => selectSongListenLinks(song), [song]);
+  const listenLinks = useMemo(() => selectSongListenLinks(song, { isIos: isDeviceIos() }), [song]);
   const setlistsLine = describeSetlistsOfSong(setlistsQuery.data?.setlists ?? NO_SETLISTS, song.id);
   const memberRow = selectMemberLineupRow(props.lineupRows, memberQuery.data?.memberId ?? null);
 

@@ -13,6 +13,7 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { MemberMark } from '../atoms/MemberMark';
 import { MEMBER_LOADING_COLOR } from '../atoms/member-palette.utils';
 import { MemberChip } from '../molecules/MemberChip';
+import { NoLineupNotice } from '../molecules/NoLineupNotice';
 
 const MASTERY_BAR_CLASS = 'h-3.5 min-h-0 w-1.5 min-w-0 rounded-cover px-0';
 const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
@@ -33,7 +34,7 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
       <Card>
         <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('catalog.defaultLineup')}</div>
         <div className="flex flex-col gap-1.5">
-          {hasLineup ? null : <span className="text-meta text-ink-soft italic">—</span>}
+          {hasLineup ? null : <NoLineupNotice />}
           {props.lineupRows.map((row) => (
             <div
               key={row.memberId}

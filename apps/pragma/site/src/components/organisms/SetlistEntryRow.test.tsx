@@ -37,6 +37,7 @@ function buildProps(overrides: Partial<SetlistEntryRowProps> = {}): SetlistEntry
     notes: '',
     lineupColumn: {
       slots: [{ slotKey: 'drums', instrumentName: 'Drums', glyph: 'drum', holderColor: '#000' }],
+      isUnassigned: false,
     },
     lineupChanges: [],
     memberPart: [],
@@ -76,6 +77,18 @@ describe('a setlist row', () => {
     expect(screen.getByText('02')).toBeTruthy();
     expect(screen.getByText('· Am · capo 2')).toBeTruthy();
     expect(screen.queryAllByTitle('Drums').length).toBeGreaterThan(0);
+  });
+
+  it('says the song has no lineup yet instead of leaving its lineup empty', () => {
+    renderRow(buildProps({ lineupColumn: { slots: [], isUnassigned: true } }));
+    expect(screen.getByText('No lineup yet')).toBeTruthy();
+  });
+
+  it('marks a song with no lineup yet with the warning icon', () => {
+    renderRow(buildProps({ lineupColumn: { slots: [], isUnassigned: true } }));
+    const notice = screen.getByText('No lineup yet');
+    expect(notice.querySelector('svg')).not.toBeNull();
+    expect(notice.className).toContain('text-warn');
   });
 
   it('shows the note written for tonight and tonight’s lineup change', () => {

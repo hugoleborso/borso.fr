@@ -3,6 +3,7 @@ import {
   type DisplayEnvironment,
   readCalendarPlatform,
   readInstallContext,
+  isDeviceIos,
 } from './display-mode.adapter';
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)';
@@ -27,6 +28,11 @@ describe('display-mode.adapter', () => {
   it('names the calendar platform of the device it reads', () => {
     expect(readCalendarPlatform({ ...BROWSER_TAB_ON_LINUX, userAgent: IPHONE })).toBe('iphone');
     expect(readCalendarPlatform(BROWSER_TAB_ON_LINUX)).toBe('computer');
+  });
+
+  it('tells an iPhone from a computer', () => {
+    expect(isDeviceIos({ ...BROWSER_TAB_ON_LINUX, userAgent: IPHONE })).toBe(true);
+    expect(isDeviceIos(BROWSER_TAB_ON_LINUX)).toBe(false);
   });
 
   it('reads an iPhone browser tab as iOS and not installed', () => {

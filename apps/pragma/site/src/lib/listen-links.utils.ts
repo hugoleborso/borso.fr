@@ -7,6 +7,8 @@
 
 const DEEZER_TRACK_ORIGIN = 'https://www.deezer.com/track';
 const DEEZER_SEARCH_ORIGIN = 'https://www.deezer.com/search';
+const WEB_SCHEME = 'https://';
+const DEEZER_APP_SCHEME = 'deezer://';
 const SPOTIFY_TRACK_ORIGIN = 'https://open.spotify.com/track';
 const SPOTIFY_SEARCH_ORIGIN = 'https://open.spotify.com/search';
 
@@ -89,15 +91,31 @@ function toListenLink(target: ListenTarget): SongListenLink {
   return { provider: target.provider, address: target.address };
 }
 
-export function selectSongListenLinks(song: SongListenSource): readonly SongListenLink[] {
+export interface ListenDevice {
+  readonly isIos: boolean;
+}
+
+const WEB_DEVICE: ListenDevice = { isIos: false };
+
+function addressedToDeezerApp(link: SongListenLink, deezerTrackAddress: string): SongListenLink {
+  if (link.address !== deezerTrackAddress) return link;
+  return { ...link, address: link.address.replace(WEB_SCHEME, DEEZER_APP_SCHEME) };
+}
+
+export function selectSongListenLinks(
+  song: SongListenSource,
+  device: ListenDevice = WEB_DEVICE,
+): readonly SongListenLink[] {
   const deezer = buildDeezerTarget(song);
   const spotify = buildSpotifyTarget(song);
   const storedLinks = song.links.map((link) => ({ provider: link.provider, address: link.url }));
   const hasStoredSpotifyLink = storedLinks.some((link) => link.provider === 'spotify');
   const isSpotifyLinkShown = spotify.isExact || !hasStoredSpotifyLink;
-  return collectDistinctLinks([
+  const webLinks = collectDistinctLinks([
     ...(deezer.isExact ? [toListenLink(deezer)] : []),
     ...(isSpotifyLinkShown ? [toListenLink(spotify)] : []),
     ...storedLinks,
   ]);
+  if (!device.isIos || !deezer.isExact) return webLinks;
+  return webLinks.map((link) => addressedToDeezerApp(link, deezer.address));
 }

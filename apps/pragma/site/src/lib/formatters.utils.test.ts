@@ -5,6 +5,7 @@ import {
   formatDueDate,
   formatTimeAgo,
   formatSessionDate,
+  formatSessionDateTime,
   isDueDatePast,
 } from './formatters.utils';
 
@@ -79,6 +80,33 @@ describe('isDueDatePast', () => {
   it('is false for a task with no date, and for text that is not one', () => {
     expect(isDueDatePast(null, NOW)).toBe(false);
     expect(isDueDatePast('soon', NOW)).toBe(false);
+  });
+});
+
+describe('formatSessionDateTime', () => {
+  it('reads the day and the hour on the band clock in Paris, whatever the reader zone', () => {
+    expect(formatSessionDateTime('2026-11-12T19:00:00.000Z', 'fr')).toBe(
+      'jeu. 12 nov. 2026 · 20:00',
+    );
+  });
+
+  it('keeps a 24-hour clock in english, as the free slots do', () => {
+    expect(formatSessionDateTime('2026-11-12T19:00:00.000Z', 'en-GB')).toBe(
+      'Thu, 12 Nov 2026 · 20:00',
+    );
+    expect(formatSessionDateTime('2026-11-12T19:00:00.000Z', 'en')).toBe(
+      'Thu, Nov 12, 2026 · 20:00',
+    );
+  });
+
+  it('names the Paris day when the hour crosses midnight there', () => {
+    expect(formatSessionDateTime('2026-11-12T23:30:00.000Z', 'en-GB')).toBe(
+      'Fri, 13 Nov 2026 · 00:30',
+    );
+  });
+
+  it('hands back what it was given when the text is not a date', () => {
+    expect(formatSessionDateTime('not a date', 'en-GB')).toBe('not a date');
   });
 });
 

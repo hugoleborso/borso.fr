@@ -26,7 +26,7 @@ import { TaskList } from '../../components/organisms/TaskList';
 import { TaskSheetHost } from '../../components/organisms/TaskSheetHost';
 import { useTaskRowLabels, useTaskSheet } from '../../components/organisms/task-sheet.hook';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
-import { formatSessionDate } from '../../lib/formatters.utils';
+import { formatSessionDate, formatSessionDateTime } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { buildMemberPartPath } from '../../lib/next-concert.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
@@ -219,7 +219,7 @@ export function HomePage(): JSX.Element {
       {nextSession === null ? null : (
         <NextSessionCard
           isConcert={nextSession.kind === 'concert'}
-          dateLabel={formatSessionDate(nextSession.date, i18n.language)}
+          dateLabel={formatSessionDateTime(nextSession.date, i18n.language)}
           sessionPath={`/sessions/${nextSession.id}`}
           venue={nextSession.venue}
           setlistName={setlist?.name ?? null}

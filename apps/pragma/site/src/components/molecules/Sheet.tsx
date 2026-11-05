@@ -25,7 +25,9 @@ export interface SheetProps extends SheetVariantProps {
 const FOOTER_CLASS =
   'flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-rule px-4 pt-3 ' +
   'pb-[max(16px,env(safe-area-inset-bottom))]';
-const SCRIM_CLASS = 'fixed inset-0 z-50 flex flex-col bg-scrim';
+const SCRIM_CLASS =
+  'fixed inset-x-0 top-0 z-50 flex h-(--visual-viewport-height) flex-col bg-scrim ' +
+  'pt-[env(safe-area-inset-top)]';
 const TITLE_CLASS_BY_KIND = {
   record: 'font-display text-title text-ink',
   tool: 'font-sans text-heading text-ink',

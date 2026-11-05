@@ -6,6 +6,7 @@ import {
   type LineupColumnView,
   naturalColumnWidth,
   OVERFLOW_COUNTER_WIDTH_PX,
+  selectLineupColumnKind,
   sliceColumnToWidth,
   type SlotInstrument,
   slotsFittingWidth,
@@ -107,6 +108,7 @@ function columnOf(...names: readonly string[]): LineupColumnView {
       glyph: INSTRUMENT_ICON_GLYPH.music,
       holderColor: ANA.color,
     })),
+    isUnassigned: names.length === 0,
   };
 }
 
@@ -163,8 +165,46 @@ describe('sliceColumnToWidth', () => {
   });
 });
 
+describe('selectLineupColumnKind', () => {
+  it('calls a column nobody holds an instrument in empty', () => {
+    expect(selectLineupColumnKind({ slots: [], isUnassigned: true })).toBe('empty');
+  });
+
+  it('keeps a held lineup filled while its members and instruments are still loading', () => {
+    const column = buildLineupColumn({
+      instruments: [],
+      lineup: { [ANA.id]: ['instrument-voice'] },
+      members: [],
+    });
+    expect(column.slots).toHaveLength(0);
+    expect(selectLineupColumnKind(column)).toBe('filled');
+  });
+
+  it('keeps a lineup filled when one member holds an instrument and another none', () => {
+    const column = buildLineupColumn({
+      instruments: [],
+      lineup: { [ANA.id]: ['instrument-voice'], bob: [] },
+      members: [],
+    });
+    expect(selectLineupColumnKind(column)).toBe('filled');
+  });
+
+  it('calls a lineup whose members hold no instrument empty', () => {
+    const column = buildLineupColumn({ instruments: [], lineup: { [ANA.id]: [] }, members: [] });
+    expect(selectLineupColumnKind(column)).toBe('empty');
+  });
+
+  it('calls a column with one held instrument filled', () => {
+    expect(selectLineupColumnKind(columnOf('Voice'))).toBe('filled');
+  });
+});
+
 describe('naturalColumnWidth', () => {
   it('asks for one slot width per slot', () => {
     expect(naturalColumnWidth(columnOf('Voice', 'Guitar'))).toBe(2 * LINEUP_SLOT_WIDTH_PX);
+  });
+
+  it('lets an empty column size itself to its no-lineup label', () => {
+    expect(naturalColumnWidth({ slots: [], isUnassigned: true })).toBe('auto');
   });
 });

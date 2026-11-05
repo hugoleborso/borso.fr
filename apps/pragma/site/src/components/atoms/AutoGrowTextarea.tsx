@@ -5,10 +5,19 @@ import { type InputVariantProps, inputVariants } from './input.variants';
 export interface AutoGrowTextareaProps
   extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'>, InputVariantProps {}
 
-function fitToContent(element: HTMLTextAreaElement | null): void {
-  if (element === null) return;
+function fitToContent(element: HTMLTextAreaElement): void {
   element.style.setProperty('height', 'auto');
-  element.style.setProperty('height', `${String(element.scrollHeight)}px`);
+  const borderHeight = element.offsetHeight - element.clientHeight;
+  element.style.setProperty('height', `${String(element.scrollHeight + borderHeight)}px`);
+}
+
+function fitNowAndOnceFontsLoad(element: HTMLTextAreaElement | null): void {
+  if (element === null) return;
+  fitToContent(element);
+  if (!('fonts' in element.ownerDocument)) return;
+  void element.ownerDocument.fonts.ready.then(() => {
+    fitToContent(element);
+  });
 }
 
 // @FollowsBlueprint atom-variant
@@ -20,7 +29,7 @@ export function AutoGrowTextarea({
 }: AutoGrowTextareaProps): JSX.Element {
   return (
     <textarea
-      ref={fitToContent}
+      ref={fitNowAndOnceFontsLoad}
       onChange={(event) => {
         onChange?.(event);
         fitToContent(event.currentTarget);
