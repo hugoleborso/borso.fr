@@ -1,6 +1,6 @@
 # ADR-202611050445: pragma's reads go out as one batch per tick
 
-- **Status:** proposed
+- **Status:** accepted
 - **Ratified:** by the operator on 2026-11-05, in the session that ran `/tech-lead-orchestrator` on `open-in-two-calls` (spec D1)
 - **Date:** 2026-11-05
 - **Deciders:** Hugo
