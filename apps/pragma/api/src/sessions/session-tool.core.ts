@@ -64,7 +64,12 @@ function nameFriendsCounts(
   return named;
 }
 
-// @FollowsBlueprint core-projection
+/**
+ * @Blueprint core-projection
+ * @BlueprintName Core Projection
+ * @BlueprintUsage Use for a read model that turns rows into the exact payload the caller sends.
+ * @BlueprintDescription Turns a session row and the band's members into the view an assistant tool answers with. It reuses the shared summary, keeps the detail columns, and names each member in the friends counts, keeping the identifier of a member who left the band. Pure, so the test pins counts that are not an object and a departed member without a database.
+ */
 export function projectSessionForTool(session: SessionDetail, members: readonly NamedEntity[]) {
   return {
     ...summarizeSession(session),

@@ -942,5 +942,11 @@
     "question": "{{clientName}} veut agir sur pragma en tant que {{memberFirstName}}.",
     "scope": "Il pourra lire et modifier les morceaux, sessions, setlists, prises, bars et tâches du groupe, en ton nom.",
     "title": "Autoriser un assistant"
+  },
+  "opening": {
+    "loading": "On s'accorde…",
+    "failed": "pragma n'a pas pu joindre les données du groupe.",
+    "offline": "Vous êtes hors ligne.",
+    "retry": "Réessayer"
   }
 }

@@ -1,11 +1,6 @@
 import { orderSessionsForListing } from '@domain/session-schedule.core';
 import type { z } from 'zod';
-import { getSongs } from '../songs/songs.service';
 import { buildSessionInsertShape } from './sessions.core';
-import {
-  buildNextSessionOfflineManifest,
-  type OfflineManifestPayload,
-} from './offline-manifest.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import {
@@ -129,10 +124,4 @@ export async function readSessionForTool(id: string): Promise<SessionToolView | 
 
 export async function removeSession(id: string): Promise<DeletionOutcome> {
   return await deleteSessionWithCascade(id);
-}
-
-// @FollowsBlueprint service-read-model
-export async function getNextSessionOfflineManifest(now: Date): Promise<OfflineManifestPayload> {
-  const [sessions, songs] = await Promise.all([getSessions(now), getSongs()]);
-  return buildNextSessionOfflineManifest(sessions, songs, now);
 }

@@ -850,22 +850,76 @@ Held by: `api/src/notifications/notifications.controller.test.ts` › stores the
 Not to be confused with: a **push subscription**, which is the device's own
 key and address rather than the stage's.
 
-## Offline manifest
+## Offline reading
 
-The list of URLs whose reads the app loads into its saved query cache once
-signed in, so the band can read the catalogue and the next setlist with no
-signal (`loadOfflineReadingWhenSignedIn`). The service worker caches no API
-read.
+What the app loads into its saved query cache once signed in, so the band can
+read the catalogue and the next setlist with no signal
+(`loadOfflineReadingWhenSignedIn`). The service worker caches no API read.
 
-Lives in: `api/src/sessions/`
+Lives in: `site/src/lib/queries/offline-reading.queries.ts`
 
-- Carries the catalogue list URL, one detail URL per song, and the next
-  session's URL with its setlist URL.
-- The next session is the earliest one strictly after now, with ties
-  broken on the identifier (`buildNextSessionOfflineManifest`).
+- Reads the songs list and the sessions list, seeds each song's detail from
+  the songs list, then reads the next session, its setlists and their entries.
+- The next session is the one home shows (`selectNextSession`), so a session
+  that started earlier today still counts.
+- Starts only from a probe answer already in the cache, and never probes.
 
-Held by: `api/src/sessions/offline-manifest.core.test.ts` › treats a session starting exactly now as past, not upcoming
-Held by: `api/src/sessions/offline-manifest.core.test.ts` › breaks a date tie on the identifier so the choice is stable
+Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › preloads a session that started earlier today, as home shows it
+Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes the session itself, so a start with no probe answer sends nothing
+
+## Read batch
+
+Up to ten API reads sent as one `POST /api/read-batch`, so one tab never
+needs more of the API's ten seats than it has batches in flight
+(ADR-202611050445).
+
+Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read-batch.adapter.ts`
+
+- Holds 1 to 10 reads (`MOST_READS_PER_BATCH`, the database pool's default
+  size). Each read is a path under `/api/` and the headers of
+  `PRAGMA_REQUEST_HEADERS` it needs. A batch never holds itself, a path that
+  climbs out of `/api/`, or a write.
+- Each read runs through the whole app as a `GET` with the batch's cookie,
+  so the session gate, validation and controllers answer it as they answer
+  a lone read.
+- Answers `200` with one status, content type and body per read, in order.
+  One read that fails or throws fails only its own answer.
+- A malformed batch answers `400` `read-batch-invalid` and runs nothing.
+- In the tab, the reads of one task form one group. A group of one leaves
+  as a plain `GET`, and at most two read requests are in flight
+  (`MOST_READS_IN_FLIGHT`). Writes never join a group.
+
+Held by: `api/src/read-batch/read-batch.controller.test.ts` › fails only the gated read when the batch carries no cookie
+Held by: `api/src/read-batch/read-batch.controller.test.ts` › answers 500 for a read that throws while the others answer 200
+Held by: `site/src/lib/read-batch.adapter.test.ts` › hold a third group until one of the two answers
+
+Not to be confused with: a **written root**, which a write announces; the
+batch writes nothing and announces nothing.
+
+## Opening screen
+
+The pragma mark and its "Tuning up…" caption, shown over a gated route
+while the cache holds no band data, until the first band data lands.
+
+Lives in: `site/src/components/organisms/session-gate.core.ts`, `site/src/components/organisms/OpeningScreen.tsx`, `site/src/components/atoms/PragmaMark.tsx`
+
+- Shows only when no band query holds data: a first open, a cache older
+  than 7 days, or the open right after sign-in. A warm open renders the
+  cached screen at once.
+- The route mounts beneath it, inert and hidden, so the session probe and
+  the route's reads leave in one read batch.
+- Ends when one band query holds data. When nothing is in flight and a
+  read failed or paused offline, it shows the failure and a retry that
+  refetches every active query in one batch.
+- The mark plays "the downbeat" (keys pressed in an arpeggio, the notes
+  swinging in), and stays still under reduced motion and on failure.
+
+Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a read paused offline as failed, so an offline cold open never waits forever
+Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
+Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
+
+Not to be confused with: the offline banner, which a signed in
+member sees over cached screens while the browser is offline.
 
 ## Order screen
 

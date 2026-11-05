@@ -106,6 +106,26 @@
   --animate-flame-flicker: flame-flicker 2.6s ease-in-out infinite;
 }
 
+@theme inline {
+  --animate-downbeat-enter-left: downbeat-enter-left 500ms cubic-bezier(0.16, 1, 0.3, 1)
+    var(--downbeat-lag, 0ms) both;
+  --animate-downbeat-enter-right: downbeat-enter-right 500ms cubic-bezier(0.16, 1, 0.3, 1)
+    var(--downbeat-lag, 0ms) both;
+  --animate-downbeat-key-rise: downbeat-key-rise 500ms cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--downbeat-key-offset, 0ms) / 2) both;
+  --animate-downbeat-key-press: downbeat-key-press 1.6s linear
+    calc(500ms + var(--downbeat-key-offset, 0ms)) infinite;
+  --animate-downbeat-key-deepen: downbeat-key-deepen 1.6s linear
+    calc(500ms + var(--downbeat-key-offset, 0ms)) infinite;
+  --animate-downbeat-note-swing-left: downbeat-note-swing-left 1.6s linear
+    calc(500ms + var(--downbeat-lag, 0ms)) infinite;
+  --animate-downbeat-note-swing-right: downbeat-note-swing-right 1.6s linear
+    calc(500ms + var(--downbeat-lag, 0ms)) infinite;
+  --animate-downbeat-halo: downbeat-halo 1.6s linear 500ms infinite;
+  --animate-downbeat-caption: downbeat-caption 400ms ease-out 300ms both;
+  --animate-downbeat-exit: downbeat-exit 200ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
 @layer base {
   :root {
     color-scheme: light dark;
@@ -186,5 +206,141 @@
   50% {
     transform: scale(1.04, 1.07);
     filter: drop-shadow(0 0 6px var(--color-flame-glow));
+  }
+}
+
+@keyframes downbeat-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-120px);
+  }
+}
+
+@keyframes downbeat-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(120px);
+  }
+}
+
+@keyframes downbeat-key-rise {
+  from {
+    opacity: 0;
+    transform: translateY(90px);
+  }
+}
+
+@keyframes downbeat-key-press {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);
+  }
+  6%,
+  12% {
+    transform: translateY(20px);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  28%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes downbeat-key-deepen {
+  0% {
+    opacity: 0;
+    animation-timing-function: ease-in;
+  }
+  6%,
+  12% {
+    opacity: 1;
+    animation-timing-function: ease-out;
+  }
+  28%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes downbeat-note-swing-left {
+  0%,
+  20% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  }
+  28% {
+    transform: rotate(8deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  40% {
+    transform: rotate(-2.5deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  50% {
+    transform: rotate(1deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  58%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes downbeat-note-swing-right {
+  0%,
+  20% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  }
+  28% {
+    transform: rotate(-8deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  40% {
+    transform: rotate(2.5deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  50% {
+    transform: rotate(-1deg);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  58%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes downbeat-halo {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scale(0.9);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  30% {
+    opacity: 0.35;
+    transform: scale(1);
+    animation-timing-function: ease-out;
+  }
+  60% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes downbeat-caption {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes downbeat-exit {
+  to {
+    opacity: 0;
+    transform: scale(1.08);
   }
 }

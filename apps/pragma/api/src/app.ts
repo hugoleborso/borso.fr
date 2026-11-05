@@ -18,10 +18,12 @@ import { buildMembersRouter } from './members/members.controller';
 import { type BuildOAuthRoutersOptions, buildOAuthRouters } from './oauth/oauth.controller';
 import { buildNotificationsRouter } from './notifications/notifications.controller';
 import { buildOutreachRouter } from './outreach/outreach.controller';
+import { buildReadBatchRouter } from './read-batch/read-batch.controller';
 import { buildRealtimeRouter } from './realtime/realtime.controller';
 import type { StaleBroadcastSettings } from './realtime/realtime.service';
 import { buildWrittenRootsAnnouncer } from './realtime/stale-scope.middleware';
-import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
+import { READ_BATCH_PATH } from '@domain/read-batch.core';
+import { buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildStreaksRouter } from './streaks/streaks.controller';
@@ -77,7 +79,6 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/mastery', buildMasteryRouter())
     .route('/api/sessions', buildSessionsRouter())
     .route('/api/free-slots', buildFreeSlotsRouter())
-    .route('/api/offline-manifest', buildOfflineManifestRouter())
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
@@ -105,6 +106,10 @@ const TEST_SEED_FLAG_ON = '1';
 
 export function createApp(options: CreateAppOptions = {}): Hono {
   const app = buildAppRouter(options);
+  app.route(
+    READ_BATCH_PATH,
+    buildReadBatchRouter((request, environment) => app.fetch(request, environment)),
+  );
   const isTestSeedEnabled = process.env[TEST_SEED_FLAG] === TEST_SEED_FLAG_ON;
   if (isTestSeedEnabled) {
     app.route('/api/__test', buildTestSeedRouter());

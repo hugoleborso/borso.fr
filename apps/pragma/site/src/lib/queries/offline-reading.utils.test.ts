@@ -1,23 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSignInUpdate, selectOfflineReadingTargets } from './offline-reading.utils';
-
-// @FollowsBlueprint test-pure-unit
-describe('selectOfflineReadingTargets', () => {
-  it('reads every song identifier and the next session identifier off the manifest URLs', () => {
-    expect(
-      selectOfflineReadingTargets({
-        songDetailUrls: ['/api/songs/song-1', '/api/songs/song-2'],
-        nextSessionUrl: '/api/sessions/session-9',
-      }),
-    ).toStrictEqual({ songIds: ['song-1', 'song-2'], sessionIds: ['session-9'] });
-  });
-
-  it('names no session when the band has none planned', () => {
-    expect(selectOfflineReadingTargets({ songDetailUrls: [], nextSessionUrl: null })).toStrictEqual(
-      { songIds: [], sessionIds: [] },
-    );
-  });
-});
+import { isSignInUpdate } from './offline-reading.utils';
 
 const SESSION_HASH = '["auth","session"]';
 const SIGN_IN = {

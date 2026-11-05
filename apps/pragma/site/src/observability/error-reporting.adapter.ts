@@ -11,6 +11,7 @@ import {
   useNavigationType,
 } from 'react-router-dom';
 import { ApiError } from '../lib/api.client';
+import type { ReadBatchFailure } from '../lib/read-batch.adapter';
 import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
@@ -102,6 +103,18 @@ export function reportStreaksReadFailed(error: Error): void {
   }
   if (error.status === UNAUTHORIZED_STATUS) return;
   Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED, body: error.body } });
+}
+
+const READ_BATCH_FAILED = 'read-batch-failed';
+
+export function reportReadBatchFailed(failure: ReadBatchFailure): void {
+  Sentry.captureMessage(READ_BATCH_FAILED, {
+    level: 'error',
+    tags: {
+      'read_batch.status': String(failure.status ?? NO_STATUS),
+      'read_batch.size': String(failure.size),
+    },
+  });
 }
 
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';

@@ -11,6 +11,7 @@ import {
   createMutateSlot,
   deferred,
   flushMicrotasks,
+  flushTasks,
   jsonResponse,
   mountWithClient,
   stubFetch,
@@ -144,7 +145,7 @@ describe('instruments mutations — optimistic updates', () => {
 
     const slot = createMutateSlot<ReturnType<typeof useDeleteInstrument>['mutateAsync']>();
     const tree = mountWithClient(queryClient, <ProbeDeleteOnTheListScreen sink={slot.sink} />);
-    await flushMicrotasks();
+    await flushTasks();
     const callsBeforeTheDelete = stub.calls.length;
 
     await slot.read()({ id: 'instr-a' });

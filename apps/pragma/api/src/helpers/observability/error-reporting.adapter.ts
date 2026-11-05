@@ -61,6 +61,12 @@ export async function flushErrorReports(): Promise<void> {
   await Sentry.flush(FLUSH_TIMEOUT_MILLISECONDS);
 }
 
+const READ_BATCH_SIZE_ATTRIBUTE = 'read_batch.size';
+
+export function recordReadBatchSize(size: number): void {
+  Sentry.getActiveSpan()?.setAttribute(READ_BATCH_SIZE_ATTRIBUTE, size);
+}
+
 export interface TaggedFailure {
   readonly name: string;
   readonly tags: Readonly<Record<string, string>>;

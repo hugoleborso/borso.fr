@@ -1,0 +1,14 @@
+{"kind":"run_started","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:04:58.000Z","app":"pragma","slug":"open-in-two-calls"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:04:58.000Z","category":"guidance"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:32:41.000Z","category":"answer"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:32:41.000Z","category":"answer"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:32:41.000Z","category":"answer"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:32:41.000Z","category":"answer"}
+{"kind":"stage_changed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:45:11.000Z","from":"spec","to":"adrs"}
+{"kind":"adr_written","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:48:41.000Z","number":202611050445,"trigger":"multiple-alternatives"}
+{"kind":"stage_changed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T04:48:41.000Z","from":"adrs","to":"plan"}
+{"kind":"stage_changed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T05:01:53.000Z","from":"plan","to":"implement"}
+{"kind":"stage_changed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T07:20:22.000Z","from":"implement","to":"validate"}
+{"kind":"human_message_received","runId":"2026-11-05-0410-ttc","at":"2026-11-05T12:04:56.000Z","category":"answer"}
+{"kind":"stage_changed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T12:04:56.000Z","from":"validate","to":"ship"}
+{"kind":"run_completed","runId":"2026-11-05-0410-ttc","at":"2026-11-05T12:07:44.000Z","finalStage":"ship"}

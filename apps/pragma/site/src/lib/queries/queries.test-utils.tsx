@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { READ_BATCH_PATH, type BatchedAnswer, type BatchedRead } from '@domain/read-batch.core';
+import { readTransport } from '../api.client';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -47,6 +49,38 @@ export interface FetchStub {
 const STUB_BASE_URL = 'http://localhost.test';
 const MICROTASK_FLUSH_TURNS = 10;
 
+function isBatchedRead(value: unknown): value is BatchedRead {
+  return (
+    typeof value === 'object' && value !== null && typeof Reflect.get(value, 'path') === 'string'
+  );
+}
+
+function readBatchedReads(body: unknown): readonly BatchedRead[] {
+  if (typeof body !== 'object' || body === null) return [];
+  const reads: unknown = Reflect.get(body, 'reads');
+  const listed: readonly unknown[] = Array.isArray(reads) ? reads : [];
+  return listed.filter(isBatchedRead);
+}
+
+function isReadBatchRequest(request: Request): boolean {
+  return request.method === 'POST' && new URL(request.url).pathname === READ_BATCH_PATH;
+}
+
+async function answerOneRead(
+  read: BatchedRead,
+  calls: Request[],
+  handler: (request: Request) => Promise<Response>,
+): Promise<BatchedAnswer> {
+  const readRequest = new Request(`${STUB_BASE_URL}${read.path}`, { headers: { ...read.headers } });
+  calls.push(readRequest);
+  const response = await handler(readRequest);
+  return {
+    status: response.status,
+    contentType: response.headers.get('content-type'),
+    body: await response.text(),
+  };
+}
+
 export function stubFetch(handler: (request: Request) => Promise<Response>): FetchStub {
   const original = globalThis.fetch;
   const calls: Request[] = [];
@@ -58,12 +92,18 @@ export function stubFetch(handler: (request: Request) => Promise<Response>): Fet
             typeof input === 'string' && input.startsWith('/') ? `${STUB_BASE_URL}${input}` : input,
             init,
           );
-    calls.push(absolute);
-    return await handler(absolute);
+    if (!isReadBatchRequest(absolute)) {
+      calls.push(absolute);
+      return await handler(absolute);
+    }
+    const reads = readBatchedReads(await absolute.json());
+    const pending = reads.map(async (read) => await answerOneRead(read, calls, handler));
+    return jsonResponse({ answers: await Promise.all(pending) });
   };
   return {
     restore: () => {
       globalThis.fetch = original;
+      readTransport.reset();
     },
     calls,
   };

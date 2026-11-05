@@ -8,7 +8,7 @@ import { api } from './api.client';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
 import { setlistKeys } from './queries/setlists.queries';
 import { songKeys } from './queries/songs.queries';
-import { queryCachePersistOptions, queryClient } from './query-client.setup';
+import { queryCachePersistOptions, queryClient, startOfflineReading } from './query-client.setup';
 import { hasSessionMarker, rememberSessionMarker } from './session-marker.adapter';
 
 function answerWith(status: number, body: unknown): void {
@@ -138,12 +138,7 @@ describe('a member who signs in', () => {
 
   it('starts loading the offline reading at once, without waiting for the next start of the app', async () => {
     rememberSessionMarker();
-    answerWith(200, {
-      catalogListUrl: '/api/songs',
-      songDetailUrls: [],
-      nextSessionUrl: null,
-      nextSetlistUrl: null,
-    });
+    answerWith(200, { songs: [], sessions: [] });
 
     queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });
 
@@ -151,11 +146,26 @@ describe('a member who signs in', () => {
       expect(
         vi
           .mocked(fetch)
-          .mock.calls.map(([request]) =>
-            request instanceof Request ? request.url : JSON.stringify(request),
+          .mock.calls.map(([request, init]) =>
+            [
+              request instanceof Request ? request.url : JSON.stringify(request),
+              typeof init?.body === 'string' ? init.body : '',
+            ].join(' '),
           ),
-      ).toContainEqual(expect.stringContaining('/api/offline-manifest'));
+      ).toContainEqual(expect.stringContaining('/api/sessions'));
     });
+  });
+
+  it('loads nothing on a restore that holds no probe answer, and never probes for one', async () => {
+    rememberSessionMarker();
+    answerWith(200, { songs: [], sessions: [] });
+
+    startOfflineReading();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('loads nothing when the probe says the session is gone', async () => {

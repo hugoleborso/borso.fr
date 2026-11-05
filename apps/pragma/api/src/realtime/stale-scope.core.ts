@@ -18,6 +18,7 @@ export const SILENT_WRITE_PATHS: readonly (readonly string[])[] = [
   ['api', 'me', 'password'],
   ['api', 'notifications'],
   ['api', 'oauth'],
+  ['api', 'read-batch'],
   ['api', 'takes', 'sign'],
   ['api', 'uploads'],
   ['api', '__test'],

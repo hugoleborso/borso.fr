@@ -24,7 +24,6 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   '* /api/audience/*': 'The ballot of the concert audience, used by the public and not by members.',
   '* /api/uploads/*':
     'Presigned addresses the upload flow of the app uses; takes have request_take_upload.',
-  'GET /api/offline-manifest': 'The list a browser caches for offline use, bound to that browser.',
   '* /api/oauth/*':
     'The consent page, which the member answers in the browser, never an assistant.',
   '* /api/assistant-grants/*':
@@ -36,6 +35,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
     'The secret address of the calendar of the member is a credential to a third-party service.',
   '* /api/notifications/subscriptions': 'A push subscription belongs to one browser.',
   'GET /api/notifications/vapid-public-key': 'Read by a browser to subscribe to push.',
+  'POST /api/read-batch':
+    'The transport a browser tab folds its reads into; an assistant calls each tool.',
   'GET /api/realtime/ticket':
     'A pass for the live socket of one browser tab; an assistant hears nothing on it.',
   '* /mcp': 'The transport the tools are served through.',

@@ -1,32 +1,41 @@
 /** @Feature shell */
 
-import { type QueryClient, queryOptions } from '@tanstack/react-query';
-import { ApiError, api } from '../api.client';
+import { selectNextSession } from '@domain/session-schedule.core';
+import type { QueryClient } from '@tanstack/react-query';
 import { hasSessionMarker } from '../session-marker.adapter';
-import { sessionProbeQueryOptions } from './auth.queries';
-import { type OfflineManifestUrls, selectOfflineReadingTargets } from './offline-reading.utils';
-import { sessionQueryOptions } from './sessions.queries';
-import { setlistEntriesQueryOptions } from './setlist-entries.queries';
-import { setlistsOfSessionQueryOptions } from './setlists.queries';
-import { songKeys, songQueryOptions, songsListQueryOptions } from './songs.queries';
+import { authKeys, type SessionProbeResult } from './auth.queries';
+import {
+  type ListedSession,
+  sessionQueryOptions,
+  sessionsListQueryOptions,
+} from './sessions.queries';
+import { mapEntriesOfSetlists } from './setlist-entries.queries';
+import { mapSetlists, setlistsOfSessionQueryOptions } from './setlists.queries';
+import { songKeys, songsListQueryOptions } from './songs.queries';
 
 const NEVER_STALE = 'static';
 
-export const offlineReadingKeys = {
-  manifest: () => ['offline-manifest'] as const,
-};
+function isSignedIn(queryClient: QueryClient): boolean {
+  return queryClient.getQueryData<SessionProbeResult>(authKeys.session())?.authenticated === true;
+}
 
-function offlineManifestQueryOptions() {
-  return queryOptions({
-    queryKey: offlineReadingKeys.manifest(),
-    queryFn: async () => {
-      const response = await api.api['offline-manifest'].$get();
-      if (!response.ok) {
-        throw new ApiError(response.status, `offline-manifest ${response.status}`, null);
-      }
-      return response.json();
-    },
-  });
+async function readSessionsList(queryClient: QueryClient): Promise<readonly ListedSession[]> {
+  const listOptions = sessionsListQueryOptions();
+  const list = await queryClient
+    .query(listOptions)
+    .catch(() => queryClient.getQueryData(listOptions.queryKey));
+  return list?.sessions ?? [];
+}
+
+async function seedSongDetails(queryClient: QueryClient): Promise<void> {
+  const list = await queryClient
+    .query({ ...songsListQueryOptions(), staleTime: NEVER_STALE })
+    .catch(() => undefined);
+  for (const song of list?.songs ?? []) {
+    if (queryClient.getQueryData(songKeys.byId(song.id)) === undefined) {
+      queryClient.setQueryData(songKeys.byId(song.id), { song });
+    }
+  }
 }
 
 async function loadNextSession(queryClient: QueryClient, sessionId: string): Promise<void> {
@@ -34,58 +43,25 @@ async function loadNextSession(queryClient: QueryClient, sessionId: string): Pro
     queryClient.query({ ...sessionQueryOptions(sessionId), staleTime: NEVER_STALE }),
     queryClient.query({ ...setlistsOfSessionQueryOptions(sessionId), staleTime: NEVER_STALE }),
   ]);
-  await Promise.all(
-    setlistsOfSession.setlists.map((setlist) =>
-      queryClient.query({ ...setlistEntriesQueryOptions(setlist.id), staleTime: NEVER_STALE }),
+  const setlistIds = setlistsOfSession.setlists.map((setlist) => setlist.id);
+  await Promise.all([
+    ...mapSetlists(setlistIds, (options) =>
+      queryClient.query({ ...options, staleTime: NEVER_STALE }),
     ),
-  );
-}
-
-async function loadSongDetails(
-  queryClient: QueryClient,
-  songIds: readonly string[],
-): Promise<void> {
-  const list = await queryClient
-    .query({ ...songsListQueryOptions(), staleTime: NEVER_STALE })
-    .catch(() => undefined);
-  const listedSongs = new Map((list?.songs ?? []).map((song) => [song.id, song]));
-  await Promise.allSettled(
-    songIds.map(async (songId) => {
-      const listedSong = listedSongs.get(songId);
-      const isHeld = queryClient.getQueryData(songKeys.byId(songId)) !== undefined;
-      if (listedSong !== undefined && !isHeld) {
-        queryClient.setQueryData(songKeys.byId(songId), { song: listedSong });
-        return;
-      }
-      await queryClient.query({ ...songQueryOptions(songId), staleTime: NEVER_STALE });
-    }),
-  );
-}
-
-async function loadOfflineReading(
-  queryClient: QueryClient,
-  manifest: OfflineManifestUrls,
-): Promise<void> {
-  const targets = selectOfflineReadingTargets(manifest);
-  await Promise.allSettled([
-    loadSongDetails(queryClient, targets.songIds),
-    ...targets.sessionIds.map((sessionId) => loadNextSession(queryClient, sessionId)),
+    ...mapEntriesOfSetlists(setlistIds, (options) =>
+      queryClient.query({ ...options, staleTime: NEVER_STALE }),
+    ),
   ]);
-}
-
-async function isSignedIn(queryClient: QueryClient): Promise<boolean> {
-  const probe = await queryClient.query(sessionProbeQueryOptions()).catch(() => undefined);
-  return probe?.authenticated === true;
 }
 
 // @FollowsBlueprint query-module
 export async function loadOfflineReadingWhenSignedIn(queryClient: QueryClient): Promise<void> {
-  if (!hasSessionMarker()) return;
-  if (!(await isSignedIn(queryClient))) return;
-  const manifestOptions = offlineManifestQueryOptions();
-  const manifest = await queryClient
-    .query(manifestOptions)
-    .catch(() => queryClient.getQueryData(manifestOptions.queryKey));
-  if (manifest === undefined) return;
-  await loadOfflineReading(queryClient, manifest);
+  if (!hasSessionMarker() || !isSignedIn(queryClient)) return;
+  const [, sessions] = await Promise.all([
+    seedSongDetails(queryClient),
+    readSessionsList(queryClient),
+  ]);
+  const nextSession = selectNextSession(sessions, new Date());
+  if (nextSession === null) return;
+  await loadNextSession(queryClient, nextSession.id).catch(() => undefined);
 }

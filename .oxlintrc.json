@@ -549,6 +549,7 @@
         "borso/no-dynamic-translation-keys": "error",
         "borso/no-discarded-await-before-navigation": "error",
         "borso/no-refetch-of-optimistically-written-query": "error",
+        "borso/no-request-fan-out-in-site": "error",
         "borso/optimistic-mutation-declares-scope": "error",
         "borso/no-string-concatenated-class-names": "error"
       }
@@ -941,6 +942,7 @@
         ],
         "vitest/no-commented-out-tests": "error",
         "borso/no-hidden-role-query": "error",
+        "borso/no-request-fan-out-in-site": "off",
         "vitest/no-conditional-expect": "error",
         "vitest/no-disabled-tests": "warn",
         "vitest/no-focused-tests": "error",

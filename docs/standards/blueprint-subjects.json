@@ -2110,15 +2110,11 @@
   "apps/pragma/api/src/outreach/outreach.schema.ts": {
     "outreachTemplateTable": "schema-table-and-input"
   },
-  "apps/pragma/api/src/sessions/offline-manifest.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
   "apps/pragma/api/src/sessions/session-tool.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/sessions/session-tool.core.ts": {
     "matchSessionReference": "core-decision",
-    "projectSessionForTool": "core-projection",
     "selectSessionsInWindow": "core-projection"
   },
   "apps/pragma/api/src/sessions/sessions-tools.controller.test.ts": {
@@ -2147,7 +2143,6 @@
     "sessionTable": "schema-table-and-input"
   },
   "apps/pragma/api/src/sessions/sessions.service.ts": {
-    "getNextSessionOfflineManifest": "service-read-model",
     "getSessions": "service-clock-injected",
     "patchSession": "service-crud-update"
   },

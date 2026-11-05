@@ -35,6 +35,7 @@ import noQueryHooksOutsideOrganisms from './no-query-hooks-outside-organisms.js'
 import noRawInteractiveElement from './no-raw-interactive-element.js';
 import noRawSqlOutsideMigrations from './no-raw-sql-outside-migrations.js';
 import noRefetchOfOptimisticallyWrittenQuery from './no-refetch-of-optimistically-written-query.js';
+import noRequestFanOutInSite from './no-request-fan-out-in-site.js';
 import optimisticMutationDeclaresScope from './optimistic-mutation-declares-scope.js';
 import noServerStateInUseState from './no-server-state-in-use-state.js';
 import noStepNamedValue from './no-step-named-value.js';
@@ -87,6 +88,7 @@ export const borsoPlugin = {
     'no-raw-interactive-element': noRawInteractiveElement,
     'no-raw-sql-outside-migrations': noRawSqlOutsideMigrations,
     'no-refetch-of-optimistically-written-query': noRefetchOfOptimisticallyWrittenQuery,
+    'no-request-fan-out-in-site': noRequestFanOutInSite,
     'optimistic-mutation-declares-scope': optimisticMutationDeclaresScope,
     'no-server-state-in-use-state': noServerStateInUseState,
     'no-step-named-value': noStepNamedValue,
