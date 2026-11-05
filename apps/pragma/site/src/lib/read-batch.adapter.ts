@@ -30,7 +30,7 @@ export interface ReadBatchFailure {
 export interface ReadTransportOptions {
   readonly apiBase: string;
   readonly closeGroup?: (close: () => void) => void;
-  readonly closeRetryGroup?: (close: () => void) => void;
+  readonly waitForStragglers?: (release: () => void) => void;
   readonly fetchResponse?: FetchResponse;
   readonly reportBatchFailure: (failure: ReadBatchFailure) => void;
 }
@@ -46,7 +46,13 @@ interface Caller {
   readonly reject: (reason: unknown) => void;
 }
 
+interface RetryGathering {
+  awaited: FailedCallers;
+  readonly gathered: WaitingRead<Caller>[];
+}
+
 const MALFORMED_BATCH_ANSWER = 'read-batch-malformed';
+const RETRY_STRAGGLER_WAIT_MS = 100;
 
 function fetchFromPlatform(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   return globalThis.fetch(input, init);
@@ -56,8 +62,12 @@ function isStillWaiting(caller: Caller): boolean {
   return caller.signal?.aborted !== true;
 }
 
-function closeAfterWaitingTimers(close: () => void): void {
+function closeAtEndOfTask(close: () => void): void {
   setTimeout(close);
+}
+
+function waitForRetryStragglers(release: () => void): void {
+  setTimeout(release, RETRY_STRAGGLER_WAIT_MS);
 }
 
 function callersOf(batch: readonly MergedRead<Caller>[]): Caller[] {
@@ -68,14 +78,13 @@ function callersOf(batch: readonly MergedRead<Caller>[]): Caller[] {
 export function createReadTransport(options: ReadTransportOptions): ReadTransport {
   const {
     apiBase,
-    closeGroup = queueMicrotask,
-    closeRetryGroup = closeAfterWaitingTimers,
+    closeGroup = closeAtEndOfTask,
+    waitForStragglers = waitForRetryStragglers,
     fetchResponse = fetchFromPlatform,
     reportBatchFailure,
   } = options;
   let openGroup: WaitingRead<Caller>[] = [];
-  let retryGroup: WaitingRead<Caller>[] = [];
-  let failedCallers: FailedCallers = new Map();
+  let gatherings: RetryGathering[] = [];
   let waiting: MergedRead<Caller>[] = [];
   let readsInFlight = 0;
   let lane: object = {};
@@ -98,7 +107,10 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   }
 
   function rememberFailedBatch(batch: readonly MergedRead<Caller>[]): void {
-    failedCallers = rememberFailedCallers(failedCallers, batch);
+    gatherings = [
+      ...gatherings,
+      { awaited: rememberFailedCallers(new Map(), batch), gathered: [] },
+    ];
   }
 
   async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
@@ -159,22 +171,37 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
     drain();
   }
 
-  function closeOpenRetryGroup(): void {
-    waiting = mergeIdenticalReads(waiting, retryGroup);
-    retryGroup = [];
-    drain();
+  function joinOpenGroup(entry: WaitingRead<Caller>): void {
+    if (openGroup.length === 0) closeGroup(closeOpenGroup);
+    openGroup.push(entry);
+  }
+
+  function release(gathering: RetryGathering): void {
+    if (!gatherings.includes(gathering)) return;
+    gatherings = gatherings.filter((known) => known !== gathering);
+    gathering.gathered.forEach(joinOpenGroup);
+  }
+
+  function claimRetry(identity: string): RetryGathering | null {
+    for (const gathering of gatherings) {
+      const { isRetry, failed } = takeFailedCaller(gathering.awaited, identity);
+      if (isRetry) {
+        gathering.awaited = failed;
+        return gathering;
+      }
+    }
+    return null;
   }
 
   function joinGroup(entry: WaitingRead<Caller>): void {
-    const { isRetry, failed } = takeFailedCaller(failedCallers, readIdentity(entry.read));
-    failedCallers = failed;
-    if (isRetry) {
-      if (retryGroup.length === 0) closeRetryGroup(closeOpenRetryGroup);
-      retryGroup.push(entry);
+    const gathering = claimRetry(readIdentity(entry.read));
+    if (gathering === null) {
+      joinOpenGroup(entry);
       return;
     }
-    if (openGroup.length === 0) closeGroup(closeOpenGroup);
-    openGroup.push(entry);
+    if (gathering.gathered.length === 0) waitForStragglers(() => release(gathering));
+    gathering.gathered.push(entry);
+    if (gathering.awaited.size === 0) release(gathering);
   }
 
   function send(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -197,8 +224,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
 
   function reset(): void {
     openGroup = [];
-    retryGroup = [];
-    failedCallers = new Map();
+    gatherings = [];
     waiting = [];
     readsInFlight = 0;
     lane = {};

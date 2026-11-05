@@ -10,6 +10,7 @@ import {
   createMutateSlot,
   deferred,
   flushMicrotasks,
+  flushTasks,
   jsonResponse,
   mountWithClient,
   stubFetch,
@@ -122,6 +123,7 @@ describe('useVoteOnImprovement', () => {
     );
     const slot = createMutateSlot<ReturnType<typeof useVoteOnImprovement>['mutateAsync']>();
     const tree = mountWithClient(queryClient, <ProbeVote sink={slot.sink} />);
+    await flushTasks();
 
     await slot.read()({ id: 'improvement-1', intent: 'withdraw' });
     await flushMicrotasks();

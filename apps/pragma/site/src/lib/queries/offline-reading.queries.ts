@@ -10,7 +10,7 @@ import {
   sessionsListQueryOptions,
 } from './sessions.queries';
 import { mapEntriesOfSetlists } from './setlist-entries.queries';
-import { setlistsOfSessionQueryOptions } from './setlists.queries';
+import { mapSetlists, setlistsOfSessionQueryOptions } from './setlists.queries';
 import { songKeys, songsListQueryOptions } from './songs.queries';
 
 const NEVER_STALE = 'static';
@@ -43,12 +43,15 @@ async function loadNextSession(queryClient: QueryClient, sessionId: string): Pro
     queryClient.query({ ...sessionQueryOptions(sessionId), staleTime: NEVER_STALE }),
     queryClient.query({ ...setlistsOfSessionQueryOptions(sessionId), staleTime: NEVER_STALE }),
   ]);
-  await Promise.all(
-    mapEntriesOfSetlists(
-      setlistsOfSession.setlists.map((setlist) => setlist.id),
-      (options) => queryClient.query({ ...options, staleTime: NEVER_STALE }),
+  const setlistIds = setlistsOfSession.setlists.map((setlist) => setlist.id);
+  await Promise.all([
+    ...mapSetlists(setlistIds, (options) =>
+      queryClient.query({ ...options, staleTime: NEVER_STALE }),
     ),
-  );
+    ...mapEntriesOfSetlists(setlistIds, (options) =>
+      queryClient.query({ ...options, staleTime: NEVER_STALE }),
+    ),
+  ]);
 }
 
 // @FollowsBlueprint query-module

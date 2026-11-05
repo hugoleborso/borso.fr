@@ -11,6 +11,7 @@ import {
   createMutateSlot,
   deferred,
   flushMicrotasks,
+  flushTasks,
   jsonResponse,
   mountWithClient,
   stubFetch,
@@ -81,6 +82,7 @@ describe('notifications queries', () => {
     stub = stubFetch(() => Promise.resolve(jsonResponse(SEED_PREFERENCES)));
     const queryClient = createIsolatedQueryClient();
     const tree = mountWithClient(queryClient, <ProbeReads isSupported={false} />);
+    await flushTasks();
     await flushMicrotasks();
     expect(readExistingPushSubscription).not.toHaveBeenCalled();
     expect(queryClient.getQueryData(notificationKeys.preferences())).toEqual(SEED_PREFERENCES);
@@ -98,6 +100,7 @@ describe('notifications queries', () => {
     stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'nope' }, 500)));
     const queryClient = createIsolatedQueryClient();
     const tree = mountWithClient(queryClient, <ProbeReads isSupported={false} />);
+    await flushTasks();
     await flushMicrotasks();
     expect(queryClient.getQueryState(notificationKeys.preferences())?.status).toBe('error');
     tree.unmount();

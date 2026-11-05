@@ -270,3 +270,76 @@ describe('batches the API refused at different times, under retry: 1', () => {
     expect(sent).toStrictEqual(Array.from({ length: 6 }, () => 'POST /api/read-batch'));
   });
 });
+
+const SPREAD_QUERY_COUNT = 7;
+
+function songQuery(songId: string, delayBeforeFailingMs = 0) {
+  return {
+    queryKey: ['songs', songId],
+    queryFn: async () => {
+      const response = await api.api.songs[':id'].$get({ param: { id: songId } });
+      if (!response.ok) {
+        await new Promise((resolve) => setTimeout(resolve, delayBeforeFailingMs));
+        throw new Error(String(response.status));
+      }
+      return await response.json();
+    },
+  };
+}
+
+function recordSentRequests(): string[] {
+  const sent: string[] = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: string, init?: RequestInit) => {
+      sent.push(`${init?.method ?? 'GET'} ${new URL(input, 'http://pragma.test').pathname}`);
+      return Promise.resolve(new Response('{}', { status: SERVICE_UNAVAILABLE }));
+    }),
+  );
+  return sent;
+}
+
+describe('reads that fail together, retried by their own timers', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    readTransport.reset();
+  });
+
+  it('resend as one batch, though each query took its own millisecond to fail', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sent = recordSentRequests();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
+
+    const fetched = Array.from({ length: SPREAD_QUERY_COUNT }, (_, index) =>
+      queryClient.query(songQuery(`song-${String(index)}`, index)).catch((error: unknown) => error),
+    );
+    await vi.runAllTimersAsync();
+    await Promise.all(fetched);
+
+    expect(sent).toStrictEqual(['POST /api/read-batch', 'POST /api/read-batch']);
+  });
+
+  it('try again as one batch, though one of them had failed alone', async () => {
+    const sent = recordSentRequests();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const together = ['song-0', 'song-1'].map(
+      (songId) => new QueryObserver(queryClient, songQuery(songId)),
+    );
+    const stopTogether = together.map((observer) => observer.subscribe(() => undefined));
+    await vi.waitFor(() => {
+      expect(together.every((observer) => observer.getCurrentResult().isError)).toBe(true);
+    });
+    const alone = new QueryObserver(queryClient, songQuery('song-2'));
+    const stopAlone = alone.subscribe(() => undefined);
+    await vi.waitFor(() => {
+      expect(alone.getCurrentResult().isError).toBe(true);
+    });
+    sent.length = 0;
+
+    await queryClient.refetchQueries({ type: 'active' });
+
+    [...stopTogether, stopAlone].forEach((stop) => stop());
+    expect(sent).toStrictEqual(['POST /api/read-batch']);
+  });
+});

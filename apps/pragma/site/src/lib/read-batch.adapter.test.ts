@@ -11,12 +11,13 @@ interface SentRequest {
 }
 
 const API_BASE = 'https://api.pragma.test';
+const RETRY_SPREAD_MS = 6;
 const READ_INIT: RequestInit = { method: 'GET', credentials: 'include' };
 
 function harness() {
   const sent: SentRequest[] = [];
   const closers: (() => void)[] = [];
-  const retryClosers: (() => void)[] = [];
+  const stragglerWaits: (() => void)[] = [];
   const failures: ReadBatchFailure[] = [];
   const fetchResponse = vi.fn<FetchResponse>(
     (input, init) =>
@@ -27,19 +28,19 @@ function harness() {
   const transport = createReadTransport({
     apiBase: API_BASE,
     closeGroup: (close) => closers.push(close),
-    closeRetryGroup: (close) => retryClosers.push(close),
+    waitForStragglers: (release) => stragglerWaits.push(release),
     fetchResponse,
     reportBatchFailure: (failure) => failures.push(failure),
   });
   return {
-    retryClosers,
+    stragglerWaits,
     transport,
     sent,
     failures,
     read: (path: string, init: RequestInit = READ_INIT) =>
       transport.send(`${API_BASE}${path}`, init),
     closeTick: () => closers.splice(0).forEach((close) => close()),
-    closeRetries: () => retryClosers.splice(0).forEach((close) => close()),
+    stopWaitingForStragglers: () => stragglerWaits.splice(0).forEach((release) => release()),
     request: (index: number): SentRequest => {
       const request = sent[index];
       if (request === undefined) throw new Error(`no request ${String(index)} left the tab`);
@@ -403,12 +404,11 @@ describe('the reads of a failed batch, retried', () => {
       tab.closeTick();
       void tab.read('/api/me');
       tab.closeTick();
+      expect(tab.sent).toHaveLength(1);
       void tab.read('/api/tasks');
       tab.closeTick();
-      expect(tab.sent).toHaveLength(1);
-      expect(tab.retryClosers).toHaveLength(1);
-      tab.closeRetries();
 
+      expect(tab.stragglerWaits).toHaveLength(1);
       expect(tab.sent).toHaveLength(2);
       expect(batchBody(tab.request(1))).toStrictEqual({
         reads: [
@@ -428,7 +428,7 @@ describe('the reads of a failed batch, retried', () => {
     const list = tab.read('/api/instruments');
     tab.closeTick();
     void tab.read('/api/me');
-    tab.closeRetries();
+    tab.closeTick();
 
     expect(batchBody(tab.request(1))).toStrictEqual({
       reads: [
@@ -441,6 +441,44 @@ describe('the reads of a failed batch, retried', () => {
     expect((await list).status).toBe(200);
   });
 
+  it('send the retries that came once the wait for the others is over', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+
+    void tab.read('/api/songs');
+    tab.closeTick();
+    expect(tab.sent).toHaveLength(1);
+    tab.stopWaitingForStragglers();
+    tab.closeTick();
+
+    expect(tab.request(1).input).toBe(`${API_BASE}/api/songs`);
+  });
+
+  it('send the retries and the fresh reads of one task as one batch', async () => {
+    const tab = harness();
+    const failed = [tab.read('/api/songs'), tab.read('/api/me')];
+    tab.closeTick();
+    const lone = tab.read('/api/tasks');
+    tab.closeTick();
+    tab.request(0).answer(new Response('{}', { status: 503 }));
+    tab.request(1).fail(new TypeError('Failed to fetch'));
+    await Promise.allSettled([...failed, lone]);
+    await settle();
+
+    void tab.read('/api/tasks');
+    void tab.read('/api/songs');
+    void tab.read('/api/me');
+    tab.closeTick();
+
+    expect(tab.sent).toHaveLength(3);
+    expect(batchBody(tab.request(2))).toStrictEqual({
+      reads: [
+        { path: '/api/tasks', headers: {} },
+        { path: '/api/songs', headers: {} },
+        { path: '/api/me', headers: {} },
+      ],
+    });
+  });
+
   it('let a fresh read close at the end of its own task while the retries gather', async () => {
     const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
 
@@ -451,15 +489,16 @@ describe('the reads of a failed batch, retried', () => {
     expect(tab.request(1).input).toBe(`${API_BASE}/api/streaks`);
   });
 
-  it('forget a failed read once its retry joined a group', async () => {
+  it('forget a failed read once its retry left', async () => {
     const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
     void tab.read('/api/songs');
-    tab.closeRetries();
+    tab.stopWaitingForStragglers();
+    tab.closeTick();
 
     void tab.read('/api/songs');
     tab.closeTick();
 
-    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.stragglerWaits).toHaveLength(0);
     expect(tab.sent).toHaveLength(3);
   });
 
@@ -470,7 +509,7 @@ describe('the reads of a failed batch, retried', () => {
     void tab.read('/api/songs');
     tab.closeTick();
 
-    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.stragglerWaits).toHaveLength(0);
     expect(tab.request(1).input).toBe(`${API_BASE}/api/songs`);
   });
 
@@ -478,14 +517,16 @@ describe('the reads of a failed batch, retried', () => {
     const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
     const songs = tab.read('/api/songs');
     const profile = tab.read('/api/me');
-    tab.closeRetries();
+    tab.closeTick();
     tab.request(1).answer(new Response('{}', { status: 503 }));
     await Promise.all([songs, profile]);
     await settle();
 
     void tab.read('/api/songs');
+    tab.closeTick();
+    expect(tab.sent).toHaveLength(2);
     void tab.read('/api/me');
-    tab.closeRetries();
+    tab.closeTick();
 
     expect(batchBody(tab.request(2))).toStrictEqual({
       reads: [
@@ -508,13 +549,19 @@ describe('the reads of a failed batch, retried', () => {
 
     void tab.read('/api/songs');
     void tab.read('/api/me');
-    tab.closeRetries();
+    tab.closeTick();
     void tab.read('/api/songs');
     tab.closeTick();
+    expect(tab.sent).toHaveLength(3);
     void tab.read('/api/tasks');
     tab.closeTick();
-    tab.closeRetries();
 
+    expect(batchBody(tab.request(2))).toStrictEqual({
+      reads: [
+        { path: '/api/songs', headers: {} },
+        { path: '/api/me', headers: {} },
+      ],
+    });
     expect(batchBody(tab.request(3))).toStrictEqual({
       reads: [
         { path: '/api/songs', headers: {} },
@@ -527,7 +574,8 @@ describe('the reads of a failed batch, retried', () => {
     const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
     void tab.read('/api/songs');
     tab.transport.reset();
-    tab.closeRetries();
+    tab.stopWaitingForStragglers();
+    tab.closeTick();
 
     expect(tab.sent).toHaveLength(1);
   });
@@ -538,7 +586,7 @@ describe('the reads of a failed batch, retried', () => {
     void tab.read('/api/songs');
     tab.closeTick();
 
-    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.stragglerWaits).toHaveLength(0);
     expect(tab.request(1).input).toBe(`${API_BASE}/api/songs`);
   });
 });
@@ -620,7 +668,7 @@ describe('a caller that stops waiting', () => {
 });
 
 describe('the transport the client uses', () => {
-  it('gathers the retries of a failed batch until the timers due with them have run', async () => {
+  it('gathers the retries of a failed batch that come back a few milliseconds apart', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const sent: string[] = [];
     const platformFetch = vi.fn<FetchResponse>((input) => {
@@ -629,16 +677,50 @@ describe('the transport the client uses', () => {
     });
     vi.stubGlobal('fetch', platformFetch);
     const transport = createReadTransport({ apiBase: '', reportBatchFailure: () => undefined });
-    await Promise.all([
-      transport.send('/api/songs', READ_INIT),
-      transport.send('/api/me', READ_INIT),
-    ]);
+    const failed = [transport.send('/api/songs', READ_INIT), transport.send('/api/me', READ_INIT)];
+    await vi.runAllTimersAsync();
+    await Promise.all(failed);
 
     setTimeout(() => void transport.send('/api/songs', READ_INIT));
-    setTimeout(() => void transport.send('/api/me', READ_INIT));
+    setTimeout(() => void transport.send('/api/me', READ_INIT), RETRY_SPREAD_MS);
     await vi.runAllTimersAsync();
 
     expect(sent).toStrictEqual(['/api/read-batch', '/api/read-batch']);
+  });
+
+  it('sends the retries that came once it stopped waiting for one that never comes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sent: string[] = [];
+    const platformFetch = vi.fn<FetchResponse>((input) => {
+      sent.push(typeof input === 'string' ? input : 'not a path');
+      return Promise.resolve(new Response('{}', { status: 503 }));
+    });
+    vi.stubGlobal('fetch', platformFetch);
+    const transport = createReadTransport({ apiBase: '', reportBatchFailure: () => undefined });
+    const failed = [transport.send('/api/songs', READ_INIT), transport.send('/api/me', READ_INIT)];
+    await vi.runAllTimersAsync();
+    await Promise.all(failed);
+
+    void transport.send('/api/songs', READ_INIT);
+    await vi.runAllTimersAsync();
+
+    expect(sent).toStrictEqual(['/api/read-batch', '/api/songs']);
+  });
+
+  it('keeps a group open for a read issued a few promise turns later in the same task', async () => {
+    const platformFetch = vi.fn<FetchResponse>(() =>
+      Promise.resolve(batchAnswer({ status: 200, body: '1' }, { status: 200, body: '2' })),
+    );
+    vi.stubGlobal('fetch', platformFetch);
+    const transport = createReadTransport({ apiBase: '', reportBatchFailure: () => undefined });
+
+    const ticket = transport.send('/api/realtime/ticket', READ_INIT);
+    await settle();
+    const nextSession = transport.send('/api/sessions/next', READ_INIT);
+    await Promise.all([ticket, nextSession]);
+
+    expect(platformFetch).toHaveBeenCalledTimes(1);
+    expect(platformFetch.mock.calls[0]?.[0]).toBe('/api/read-batch');
   });
 
   it('closes a group at the end of the task and reads the fetch of the moment', async () => {

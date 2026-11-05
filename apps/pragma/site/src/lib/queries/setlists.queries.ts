@@ -57,16 +57,29 @@ export function useSetlistsBySession(sessionId: string, isEnabled = true) {
   return useQuery({ ...setlistsOfSessionQueryOptions(sessionId), enabled: isEnabled });
 }
 
-export function useSetlist(setlistId: string, isEnabled = true) {
-  return useQuery({
+async function fetchSetlist(setlistId: string) {
+  const response = await api.api.setlists[':id'].$get({ param: { id: setlistId } });
+  if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
+  return response.json();
+}
+
+export function setlistQueryOptions(setlistId: string) {
+  return queryOptions({
     queryKey: setlistKeys.detail(setlistId),
-    queryFn: async () => {
-      const response = await api.api.setlists[':id'].$get({ param: { id: setlistId } });
-      if (!response.ok) throw new ApiError(response.status, `setlist ${response.status}`, null);
-      return response.json();
-    },
-    enabled: isEnabled,
+    queryFn: () => fetchSetlist(setlistId),
   });
+}
+
+export function mapSetlists<Mapped>(
+  setlistIds: readonly string[],
+  mapQuery: (options: ReturnType<typeof setlistQueryOptions>) => Mapped,
+): Mapped[] {
+  // eslint-disable-next-line borso/no-request-fan-out-in-site -- one read per setlist of one session; production holds at most 1 per session (measured)
+  return setlistIds.map((setlistId) => mapQuery(setlistQueryOptions(setlistId)));
+}
+
+export function useSetlist(setlistId: string, isEnabled = true) {
+  return useQuery({ ...setlistQueryOptions(setlistId), enabled: isEnabled });
 }
 
 type QueryClient = ReturnType<typeof useQueryClient>;

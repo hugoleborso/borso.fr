@@ -15,6 +15,7 @@ const ANSWERS: Readonly<Record<string, unknown>> = {
   '/api/sessions': { sessions: [LATER_SESSION, NEXT_SESSION] },
   '/api/sessions/session-next': { session: NEXT_SESSION },
   '/api/setlists/by-session/session-next': { setlists: [{ id: 'setlist-next' }] },
+  '/api/setlists/setlist-next': { setlist: { id: 'setlist-next', name: 'Next' } },
   '/api/setlists/setlist-next/entries': { entries: [] },
 };
 
@@ -54,7 +55,7 @@ describe('loading what a member reads offline', () => {
     vi.useRealTimers();
   });
 
-  it('reads the two lists, then the next session, its setlists and their entries', async () => {
+  it('reads the two lists, then the next session, its setlists, each setlist and its entries', async () => {
     const queryClient = createSignedInQueryClient();
     stub = answerFrom(ANSWERS);
 
@@ -64,9 +65,13 @@ describe('loading what a member reads offline', () => {
       '/api/sessions',
       '/api/sessions/session-next',
       '/api/setlists/by-session/session-next',
+      '/api/setlists/setlist-next',
       '/api/setlists/setlist-next/entries',
       '/api/songs',
     ]);
+    expect(queryClient.getQueryData(setlistKeys.detail('setlist-next'))).toEqual({
+      setlist: { id: 'setlist-next', name: 'Next' },
+    });
     expect(queryClient.getQueryData(setlistKeys.entriesOf('setlist-next'))).toEqual({
       entries: [],
     });
