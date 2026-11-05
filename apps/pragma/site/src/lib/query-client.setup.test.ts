@@ -146,8 +146,11 @@ describe('a member who signs in', () => {
       expect(
         vi
           .mocked(fetch)
-          .mock.calls.map(([request]) =>
-            request instanceof Request ? request.url : JSON.stringify(request),
+          .mock.calls.map(([request, init]) =>
+            [
+              request instanceof Request ? request.url : JSON.stringify(request),
+              typeof init?.body === 'string' ? init.body : '',
+            ].join(' '),
           ),
       ).toContainEqual(expect.stringContaining('/api/sessions'));
     });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   recordTakeBreadcrumb,
+  reportReadBatchFailed,
   reportRenderFailure,
   reportEntryNoteSaveFailed,
   reportSetlistBatchAddFailed,
@@ -173,5 +174,29 @@ describe('flame read failures', () => {
     sentry.captureException.mockClear();
     reportStreaksReadFailed(new ApiError(401, 'streaks 401', { error: 'session-required' }));
     expect(sentry.captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('reportReadBatchFailed', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports a refused batch with its status and its size', () => {
+    reportReadBatchFailed({ status: 503, size: 4 });
+
+    expect(sentry.captureMessage).toHaveBeenCalledWith('read-batch-failed', {
+      level: 'error',
+      tags: { 'read_batch.status': '503', 'read_batch.size': '4' },
+    });
+  });
+
+  it('reports a batch the network dropped with no status', () => {
+    reportReadBatchFailed({ status: null, size: 2 });
+
+    expect(sentry.captureMessage).toHaveBeenCalledWith('read-batch-failed', {
+      level: 'error',
+      tags: { 'read_batch.status': 'none', 'read_batch.size': '2' },
+    });
   });
 });

@@ -2,6 +2,7 @@ import type { AppRouter } from '@api/app';
 import { REALTIME_CLIENT_HEADER } from '@domain/stale-scope.core';
 import { hc } from 'hono/client';
 import { isWriteMethod } from './live-invalidation.core';
+import { createReadTransport, type ReadBatchFailure } from './read-batch.adapter';
 import { isEndedSessionBody, canAnswerEndedSession } from './session-end.core';
 
 const RAW_API_BASE: unknown = import.meta.env.VITE_API_BASE;
@@ -39,6 +40,21 @@ export async function readErrorBody(response: { json: () => Promise<unknown> }):
   return await readJsonOrNull(response);
 }
 
+type ReadBatchFailureListener = (failure: ReadBatchFailure) => void;
+
+const readBatchFailureListeners = new Set<ReadBatchFailureListener>();
+
+export function onReadBatchFailed(listener: ReadBatchFailureListener): () => void {
+  readBatchFailureListeners.add(listener);
+  return () => readBatchFailureListeners.delete(listener);
+}
+
+export const readTransport = createReadTransport({
+  apiBase: API_BASE,
+  reportBatchFailure: (failure) =>
+    readBatchFailureListeners.forEach((listener) => listener(failure)),
+});
+
 export const REALTIME_CLIENT_ID: string = crypto.randomUUID();
 
 function signWrite(init: RequestInit | undefined): RequestInit | undefined {
@@ -53,7 +69,7 @@ export async function fetchWatchingSessionEnd(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
-  const response = await fetch(input, signWrite(init));
+  const response = await readTransport.send(input, signWrite(init));
   if (!canAnswerEndedSession(response.status)) return response;
   if (!isEndedSessionBody(await readJsonOrNull(response.clone()))) return response;
   sessionEndListeners.forEach((listener) => listener());

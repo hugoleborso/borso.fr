@@ -1,6 +1,13 @@
 import { REALTIME_CLIENT_HEADER } from '@domain/stale-scope.core';
+import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { api, REALTIME_CLIENT_ID } from './api.client';
+import {
+  api,
+  onReadBatchFailed,
+  onSessionEnded,
+  readTransport,
+  REALTIME_CLIENT_ID,
+} from './api.client';
 
 function readSentHeader(): string | null {
   const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
@@ -34,5 +41,136 @@ describe('the tab id on API calls', () => {
     await api.api.tasks.$get({ query: {} });
 
     expect(readSentHeader()).toBeNull();
+  });
+});
+
+function answerBatch(...answers: readonly { status: number; body: unknown }[]): Response {
+  return new Response(
+    JSON.stringify({
+      answers: answers.map((answer) => ({
+        status: answer.status,
+        contentType: 'application/json',
+        body: JSON.stringify(answer.body),
+      })),
+    }),
+    { status: 200 },
+  );
+}
+
+describe('reads sent through the read batch', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    readTransport.reset();
+  });
+
+  it('ends the session once when one read of a batch answers that the session is gone', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          answerBatch(
+            { status: 401, body: { error: 'session-invalid' } },
+            { status: 200, body: [] },
+          ),
+        ),
+      ),
+    );
+    const ended = vi.fn();
+    const stopListening = onSessionEnded(ended);
+
+    const [me, songs] = await Promise.all([api.api.me.$get(), api.api.tasks.$get({ query: {} })]);
+    stopListening();
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+    expect(me.status).toBe(401);
+    expect(songs.status).toBe(200);
+    expect(ended).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends the realtime ticket in the same batch as the reads of its tick', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          answerBatch({ status: 200, body: { ticket: 't' } }, { status: 200, body: {} }),
+        ),
+      ),
+    );
+
+    await Promise.all([api.api.realtime.ticket.$get(), api.api.me.$get()]);
+
+    const [input, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(input).toBe('/api/read-batch');
+    expect(init?.body).toBe(
+      JSON.stringify({
+        reads: [
+          { path: '/api/realtime/ticket', headers: {} },
+          { path: '/api/me', headers: {} },
+        ],
+      }),
+    );
+  });
+
+  it('tells the listeners when a batch fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(new Response('', { status: 503 }))),
+    );
+    const failed = vi.fn();
+    const stopListening = onReadBatchFailed(failed);
+
+    await Promise.all([api.api.me.$get(), api.api.tasks.$get({ query: {} })]);
+    stopListening();
+
+    expect(failed).toHaveBeenCalledWith({ status: 503, size: 2 });
+  });
+});
+
+const MOUNTED_SONGS = 12;
+
+describe('a live invalidation of every mounted query', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    readTransport.reset();
+  });
+
+  it('refetches twelve songs in two batches, never more than two at once', async () => {
+    let inFlight = 0;
+    let peak = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_input: string, init?: RequestInit) => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        await Promise.resolve();
+        inFlight -= 1;
+        const body: unknown = JSON.parse(typeof init?.body === 'string' ? init.body : '{}');
+        const reads: unknown =
+          typeof body === 'object' && body !== null ? Reflect.get(body, 'reads') : [];
+        const count = Array.isArray(reads) ? reads.length : 0;
+        return answerBatch(...Array.from({ length: count }, () => ({ status: 200, body: {} })));
+      }),
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const songIds = Array.from({ length: MOUNTED_SONGS }, (_, index) => `song-${String(index)}`);
+    const observers = songIds.map(
+      (songId) =>
+        new QueryObserver(queryClient, {
+          queryKey: ['songs', songId],
+          queryFn: async () =>
+            await (await api.api.songs[':id'].$get({ param: { id: songId } })).json(),
+        }),
+    );
+    const stopObserving = observers.map((observer) => observer.subscribe(() => undefined));
+    await vi.waitFor(() => {
+      expect(observers.every((observer) => observer.getCurrentResult().isSuccess)).toBe(true);
+    });
+    vi.mocked(fetch).mockClear();
+
+    await queryClient.invalidateQueries();
+
+    stopObserving.forEach((stop) => stop());
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2);
+    expect(peak).toBeLessThanOrEqual(2);
   });
 });

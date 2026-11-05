@@ -873,7 +873,7 @@ Up to ten API reads sent as one `POST /api/read-batch`, so one tab never
 needs more of the API's ten seats than it has batches in flight
 (ADR-202611050445).
 
-Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`
+Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read-batch.adapter.ts`
 
 - Holds 1 to 10 reads (`MOST_READS_PER_BATCH`, the database pool's default
   size). Each read is a path under `/api/` and the headers of
@@ -885,9 +885,13 @@ Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`
 - Answers `200` with one status, content type and body per read, in order.
   One read that fails or throws fails only its own answer.
 - A malformed batch answers `400` `read-batch-invalid` and runs nothing.
+- In the tab, the reads of one task form one group. A group of one leaves
+  as a plain `GET`, and at most two read requests are in flight
+  (`MOST_READS_IN_FLIGHT`). Writes never join a group.
 
 Held by: `api/src/read-batch/read-batch.controller.test.ts` › fails only the gated read when the batch carries no cookie
 Held by: `api/src/read-batch/read-batch.controller.test.ts` › answers 500 for a read that throws while the others answer 200
+Held by: `site/src/lib/read-batch.adapter.test.ts` › hold a third group until one of the two answers
 
 Not to be confused with: a **written root**, which a write announces; the
 batch writes nothing and announces nothing.
