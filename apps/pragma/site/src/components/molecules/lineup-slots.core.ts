@@ -49,6 +49,7 @@ export interface LineupSlot {
 
 export interface LineupColumnView {
   readonly slots: readonly LineupSlot[];
+  readonly isUnassigned: boolean;
 }
 
 export type LineupColumnKind = 'empty' | 'filled';
@@ -83,15 +84,18 @@ export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnVi
         holderColor: member.color,
       })),
   );
-  return { slots };
+  const isUnassigned = Object.values(input.lineup).every(
+    (instrumentIds) => instrumentIds.length === 0,
+  );
+  return { slots, isUnassigned };
 }
 
 export function selectLineupColumnKind(column: LineupColumnView): LineupColumnKind {
-  return column.slots.length === 0 ? 'empty' : 'filled';
+  return column.isUnassigned ? 'empty' : 'filled';
 }
 
 export function naturalColumnWidth(column: LineupColumnView): number | 'auto' {
-  if (column.slots.length === 0) return 'auto';
+  if (column.isUnassigned) return 'auto';
   return column.slots.length * LINEUP_SLOT_WIDTH_PX;
 }
 
