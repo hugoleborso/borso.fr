@@ -24,4 +24,4 @@ export const calendarFeedBodySchema = z
 
 export type CalendarFeedRow = typeof calendarFeedTable.$inferSelect;
 
-export const calendarFeedIdParamSchema = z.object({ id: z.string().uuid() });
+export const calendarFeedIdParamSchema = z.object({ id: z.guid() });

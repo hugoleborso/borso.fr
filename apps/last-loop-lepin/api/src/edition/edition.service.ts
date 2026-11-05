@@ -16,6 +16,8 @@ import {
 } from './edition.repository';
 import type { GpxMetadata, RaceEdition } from './edition.types';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 function trackJsonOmittingAbsentSeries(track: GpxTrack): GpxMetadata['trackJson'] {
   const base: GpxMetadata['trackJson'] = { points: track.points };
   const withTimings: GpxMetadata['trackJson'] =

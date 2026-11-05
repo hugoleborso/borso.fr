@@ -88,6 +88,13 @@ describe('sessionCreateSchema', () => {
 });
 
 describe('sessionUpdateSchema', () => {
+  it('leaves out every field the patch does not name, defaults included', () => {
+    expect(sessionUpdateSchema.parse({ venue: 'La Maroquinerie' })).toEqual({
+      venue: 'La Maroquinerie',
+    });
+    expect(sessionUpdateSchema.parse({ kind: 'practice' })).toEqual({ kind: 'practice' });
+  });
+
   it('accepts a patch that names only what it changes', () => {
     expect(sessionUpdateSchema.safeParse({ venue: 'La Maroquinerie' }).success).toBe(true);
     expect(sessionUpdateSchema.safeParse({}).success).toBe(true);

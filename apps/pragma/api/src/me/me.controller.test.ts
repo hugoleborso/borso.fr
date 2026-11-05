@@ -5,7 +5,7 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { insertPasskey } from '../auth/credentials.repository';
 
 const passkeysSchema = z.object({
-  passkeys: z.array(z.object({ id: z.string().uuid(), label: z.string() })),
+  passkeys: z.array(z.object({ id: z.guid(), label: z.string() })),
 });
 
 async function givePasskey(memberId: string): Promise<string> {
@@ -22,7 +22,7 @@ async function givePasskey(memberId: string): Promise<string> {
 }
 
 const signedInMemberSchema = z.object({
-  memberId: z.string().uuid(),
+  memberId: z.guid(),
   firstName: z.string(),
   color: z.string(),
   username: z.string(),

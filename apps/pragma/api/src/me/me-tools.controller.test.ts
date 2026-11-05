@@ -21,7 +21,7 @@ const signedInMemberSchema = z.object({
   phone: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
 });
-const idOf = (body: unknown) => z.object({ id: z.string().uuid() }).parse(body).id;
+const idOf = (body: unknown) => z.object({ id: z.guid() }).parse(body).id;
 
 function describeStudy(song: string, instrument: string, isUndoing = false) {
   return { study: { song, instrument, undo: isUndoing } };

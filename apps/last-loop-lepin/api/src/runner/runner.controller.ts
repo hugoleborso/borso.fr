@@ -9,6 +9,7 @@ import {
   listRunnersAsDto,
   RunnerAlreadyExistsError,
   RunnerNotFoundError,
+  answerInvalidInput,
 } from './runner.service';
 
 // @FollowsBlueprint controller-public-router
@@ -40,7 +41,7 @@ const runnerRouter = new Hono()
 // @FollowsBlueprint controller-guarded-router
 const adminRunnerRouter = new Hono()
   .use('*', requireAdminSession)
-  .post('/', zValidator('json', createRunnerInputSchema), async (context) => {
+  .post('/', zValidator('json', createRunnerInputSchema, answerInvalidInput), async (context) => {
     try {
       const runner = await createRunnerAsDto(context.req.valid('json'));
       return context.json({ runner }, 201);

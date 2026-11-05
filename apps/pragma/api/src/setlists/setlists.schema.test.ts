@@ -82,6 +82,10 @@ describe('setlistEntryCreateSchema', () => {
 });
 
 describe('setlistEntryUpdateSchema', () => {
+  it('leaves out every field the patch does not name, defaults included', () => {
+    expect(setlistEntryUpdateSchema.parse({ capo: 2 })).toEqual({ capo: 2 });
+  });
+
   it('accepts a patch with nothing in it', () => {
     expect(setlistEntryUpdateSchema.safeParse({}).success).toBe(true);
   });

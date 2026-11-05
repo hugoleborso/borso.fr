@@ -5,16 +5,16 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { setlistEntryTable } from './setlists.schema';
 
 const entrySchema = z.object({
-  id: z.string().uuid(),
-  songId: z.string().uuid(),
+  id: z.guid(),
+  songId: z.guid(),
   position: z.number().int(),
   energy: z.number().int().nullable(),
 });
 const entryListEnvelope = z.object({ entries: z.array(entrySchema) });
 
 type ListedEntry = z.infer<typeof entrySchema>;
-const setlistEnvelope = z.object({ setlist: z.object({ id: z.string().uuid() }) });
-const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+const setlistEnvelope = z.object({ setlist: z.object({ id: z.guid() }) });
+const songEnvelope = z.object({ song: z.object({ id: z.guid() }) });
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 const SONG_TITLES = ['Alpha', 'Bravo', 'Charlie', 'Delta'] as const;

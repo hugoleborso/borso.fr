@@ -20,6 +20,7 @@ import {
   replaceEditionFromInput,
   SunCalculationError,
   transitionEditionStatus,
+  answerInvalidInput,
 } from './edition.service';
 
 // @FollowsBlueprint controller-public-router
@@ -50,7 +51,7 @@ const editionRouter = new Hono()
 // @FollowsBlueprint controller-guarded-router
 const adminEditionRouter = new Hono()
   .use('*', requireAdminSession)
-  .post('/', zValidator('json', createEditionInputSchema), async (context) => {
+  .post('/', zValidator('json', createEditionInputSchema, answerInvalidInput), async (context) => {
     try {
       const edition = await createEditionFromInput(context.req.valid('json'));
       return context.json({ edition }, 201);
@@ -64,24 +65,29 @@ const adminEditionRouter = new Hono()
       throw error;
     }
   })
-  .put('/:slug', zValidator('json', updateEditionInputSchema), async (context) => {
-    try {
-      const edition = await replaceEditionFromInput(
-        context.req.param('slug'),
-        context.req.valid('json'),
-      );
-      return context.json({ edition });
-    } catch (error) {
-      if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
-      if (error instanceof EditionNotInSetupError)
-        return context.json({ error: 'edition has already started; setup is locked' }, 409);
-      if (error instanceof GpxParseError)
-        return context.json({ error: 'gpx parse error', detail: error.message }, 400);
-      if (error instanceof SunCalculationError)
-        return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
-      throw error;
-    }
-  })
+  .put(
+    '/:slug',
+    zValidator('json', updateEditionInputSchema, answerInvalidInput),
+    async (context) => {
+      try {
+        const edition = await replaceEditionFromInput(
+          context.req.param('slug'),
+          context.req.valid('json'),
+        );
+        return context.json({ edition });
+      } catch (error) {
+        if (error instanceof EditionNotFoundError)
+          return context.json({ error: error.message }, 404);
+        if (error instanceof EditionNotInSetupError)
+          return context.json({ error: 'edition has already started; setup is locked' }, 409);
+        if (error instanceof GpxParseError)
+          return context.json({ error: 'gpx parse error', detail: error.message }, 400);
+        if (error instanceof SunCalculationError)
+          return context.json({ error: 'sun calculation failed', detail: error.message }, 400);
+        throw error;
+      }
+    },
+  )
   .delete('/:slug', async (context) => {
     const slug = context.req.param('slug');
     try {
@@ -94,16 +100,21 @@ const adminEditionRouter = new Hono()
       throw error;
     }
   })
-  .put('/:slug/status', zValidator('json', editionStatusUpdateSchema), async (context) => {
-    const slug = context.req.param('slug');
-    const { status } = context.req.valid('json');
-    try {
-      await transitionEditionStatus(slug, status);
-      return context.json({ slug, status });
-    } catch (error) {
-      if (error instanceof EditionNotFoundError) return context.json({ error: error.message }, 404);
-      throw error;
-    }
-  });
+  .put(
+    '/:slug/status',
+    zValidator('json', editionStatusUpdateSchema, answerInvalidInput),
+    async (context) => {
+      const slug = context.req.param('slug');
+      const { status } = context.req.valid('json');
+      try {
+        await transitionEditionStatus(slug, status);
+        return context.json({ slug, status });
+      } catch (error) {
+        if (error instanceof EditionNotFoundError)
+          return context.json({ error: error.message }, 404);
+        throw error;
+      }
+    },
+  );
 
 export { adminEditionRouter, editionRouter };

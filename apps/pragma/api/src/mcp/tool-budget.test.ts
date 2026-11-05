@@ -76,7 +76,7 @@ const READ_BUDGETS: Readonly<Record<string, number>> = {
 
 const textContentSchema = z.array(z.object({ type: z.literal('text'), text: z.string() }));
 const sessionPlanSchema = z.object({
-  setlists: z.array(z.object({ id: z.string().uuid() })).min(1),
+  setlists: z.array(z.object({ id: z.guid() })).min(1),
 });
 
 interface ToolCall {

@@ -30,7 +30,7 @@ const SECTION_TAB = '[role=tab]';
 const HOME = '/';
 const SEEDED_CONCERT_VENUE = 'Le Petit Bain';
 
-const anyRecord = z.record(z.unknown());
+const anyRecord = z.record(z.string(), z.unknown());
 const songArtistSchema = z.object({ artist: z.string().optional() });
 
 export type TaskWalkRunner = (driver: BandSessionDriver) => Promise<unknown>;
@@ -571,8 +571,8 @@ const addChords: TaskWalkRunner = async (driver) => {
   const location = await walk.readLocation();
   const isShown = await isTextInMain(driver, 'sunshine');
   const saved = z
-    .object({ song: z.object({ chart: z.object({ text: z.string() }).passthrough().nullable() }) })
-    .passthrough()
+    .object({ song: z.object({ chart: z.object({ text: z.string() }).loose().nullable() }) })
+    .loose()
     .safeParse(await driver.fetchJson(`/api/songs/${location.path.split('/').at(-1) ?? ''}`));
   return walk.summarise({
     success: {
@@ -618,13 +618,13 @@ const studiesOverviewSchema = z
       .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
       .optional(),
   })
-  .passthrough();
+  .loose();
 
 const streaksSchema = z
   .object({
     mine: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
   })
-  .passthrough();
+  .loose();
 
 const discussWhichSongs: TaskWalkRunner = async (driver) => {
   const known = await driver.startFresh((records) => `/setlists/${records.rehearsal.id}`);

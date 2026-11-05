@@ -10,13 +10,13 @@ import {
 import { jsonRequest, readJson } from '../../../test/auth-utils';
 
 const improvementSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   status: z.string(),
   voteCount: z.number(),
   votedByViewer: z.boolean(),
 });
-const createdSchema = z.object({ id: z.string().uuid() });
+const createdSchema = z.object({ id: z.guid() });
 const improvementsBodySchema = z.object({ improvements: z.array(improvementSchema) });
 const toolListSchema = z.object({
   improvements: z.array(z.object({ title: z.string(), kind: z.string() })),
@@ -106,7 +106,10 @@ describe('improvements tools (back-e2e)', () => {
     ).toEqual(refusal('not-found'));
     expect(await callTool(band.assistant, 'save_improvement', { details: 'x' })).toEqual({
       isError: true,
-      body: { error: 'invalid-input', fields: { title: 'Required' } },
+      body: {
+        error: 'invalid-input',
+        fields: { title: 'Invalid input: expected string, received undefined' },
+      },
     });
     expect(
       await callTool(band.assistant, 'delete', { kind: 'improvement', id: improvement.id }),

@@ -12,13 +12,13 @@ import {
 import { taskTable } from './tasks.schema';
 
 const taskSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   notes: z.string(),
   status: z.enum(['todo', 'doing', 'done']),
-  assigneeId: z.string().uuid().nullable(),
-  songId: z.string().uuid().nullable(),
-  sessionId: z.string().uuid().nullable(),
+  assigneeId: z.guid().nullable(),
+  songId: z.guid().nullable(),
+  sessionId: z.guid().nullable(),
   dueDate: z.string().nullable(),
 });
 const singleTaskEnvelope = z.object({ task: taskSchema });
@@ -36,7 +36,7 @@ async function createPracticeSession(
     cookieHeader,
   });
   const body: unknown = await response.json();
-  return z.object({ session: z.object({ id: z.string().uuid() }) }).parse(body).session.id;
+  return z.object({ session: z.object({ id: z.guid() }) }).parse(body).session.id;
 }
 
 async function createCoverSong(
@@ -49,7 +49,7 @@ async function createCoverSong(
     cookieHeader,
   });
   const body: unknown = await response.json();
-  return z.object({ song: z.object({ id: z.string().uuid() }) }).parse(body).song.id;
+  return z.object({ song: z.object({ id: z.guid() }) }).parse(body).song.id;
 }
 
 function holdTaskRow(taskId: string): LockHold {

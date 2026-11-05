@@ -1,5 +1,5 @@
 ---
-summary: 'agent-browser traps: `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), no `display-mode` emulation, and `chrome-error://` on a dead loopback redirect.'
+summary: 'agent-browser traps: ignored `--user-agent` and silent relaunch, no `resize`, a shared `eval` scope, a session wedging after about forty drives, clicks and fills that do nothing, no `display-mode`, `chrome-error://` on a dead loopback, a routed mock with no CORS headers, and offline emulation that keeps an open WebSocket.'
 triggers:
   commands:
     - '\bagent-browser\b'
@@ -10,6 +10,7 @@ triggers:
     - 'chrome-error://chromewebdata'
     - 'daemon already running'
     - 'Identifier ''\w+'' has already been declared'
+    - 'MissingAllowOriginHeader'
 ---
 
 # `agent-browser` CLI quirks worth remembering
@@ -237,6 +238,24 @@ Logged by PR #224's `browser-simplify` agent, not re-measured since. `agent-brow
 starts a browser on `about:blank` and prints that browser's URL, so a script
 that reads the URL to attach to an existing page attaches to an empty one.
 Open the page in that session first, then ask for the URL.
+
+## A routed response carries no CORS headers
+
+Logged by PR #261's `visual-validator`, with agent-browser 0.35.2.
+`agent-browser network route '<pattern>' --body '<json>'` answers with the body
+and no `Access-Control-Allow-Origin`. A page calling a cross-origin API, such
+as any preview (see [`preview-api-cross-origin.md`](./preview-api-cross-origin.md)),
+rejects the mock as `MissingAllowOriginHeader`, and the app's retry then reads
+like a retry loop in the app. Mock a same-origin path, or drive `pnpm dev`,
+where the Vite proxy keeps the API same-origin.
+
+## Offline emulation does not close an open WebSocket
+
+Logged by the same agent. `Network.emulateNetworkConditions` with
+`offline: true` blocks new requests in Chromium but leaves an already open
+WebSocket open and delivering. It cannot simulate a phone losing its socket.
+Close the socket from the page (an init script that keeps a handle on each
+`WebSocket`) or hide the tab, if the app closes its socket when hidden.
 
 ## Related
 

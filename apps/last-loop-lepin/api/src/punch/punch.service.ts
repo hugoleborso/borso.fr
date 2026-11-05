@@ -30,6 +30,8 @@ import {
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
+export { answerInvalidInput } from '../helpers/validation/invalid-input.middleware';
+
 // @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';

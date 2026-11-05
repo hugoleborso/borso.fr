@@ -55,7 +55,7 @@ const LINK_COMMENT_MAX = 2_048;
 const S3_KEY_MAX = 512;
 
 export const songExternalLinkSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
   provider: z.enum(LINK_PROVIDERS),
   comment: z.string().max(LINK_COMMENT_MAX).default(''),
 });
@@ -66,10 +66,10 @@ export const chordChartSchema = z.union([
   z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
 ]);
 
-const storedLineupValueSchema = z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]);
+const storedLineupValueSchema = z.union([z.array(z.guid()), z.guid(), z.null()]);
 
 export const defaultLineupSchema = z
-  .record(z.string().uuid(), storedLineupValueSchema)
+  .record(z.guid(), storedLineupValueSchema)
   .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
 
 const SONG_ISRC_MAX = 32;
@@ -82,32 +82,54 @@ const SECONDS_PER_MINUTE = 60;
 const SONG_DURATION_MAX_SECONDS = HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 const SONG_LINKS_MAX = 16;
 
-const songBaseSchema = z.object({
+const songFieldShape = {
   title: z.string().trim().min(1).max(SONG_TEXT_FIELD_MAX_LENGTH),
-  artist: z.string().trim().max(SONG_TEXT_FIELD_MAX_LENGTH).default(''),
+  artist: z.string().trim().max(SONG_TEXT_FIELD_MAX_LENGTH),
   status: z.enum(SONG_STATUSES),
-  origin: z.enum(SONG_ORIGINS).default(DEFAULT_SONG_ORIGIN),
-  links: z.array(songExternalLinkSchema).max(SONG_LINKS_MAX).default([]),
-  chart: chordChartSchema.nullable().default(null),
-  tonalityStart: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable().default(null),
-  tonalityEnd: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable().default(null),
-  defaultLineup: defaultLineupSchema.default({}),
-  baseEnergy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
-  deezerTrackId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable().default(null),
-  deezerAlbumId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable().default(null),
-  spotifyTrackId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable().default(null),
-  album: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable().default(null),
-  durationSeconds: z.number().int().min(0).max(SONG_DURATION_MAX_SECONDS).nullable().default(null),
-  isrcs: z.array(z.string().max(SONG_ISRC_MAX)).max(SONG_ISRCS_MAX).default([]),
-  tags: z.array(z.string().max(SONG_TAG_MAX)).max(SONG_TAGS_MAX).default([]),
-  structureNotes: z.string().max(SONG_NOTE_MAX_LENGTH).default(''),
-  gimmickNotes: z.string().max(SONG_NOTE_MAX_LENGTH).default(''),
-  notes: z.string().max(SONG_NOTE_MAX_LENGTH).default(''),
+  origin: z.enum(SONG_ORIGINS),
+  links: z.array(songExternalLinkSchema).max(SONG_LINKS_MAX),
+  chart: chordChartSchema.nullable(),
+  tonalityStart: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable(),
+  tonalityEnd: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable(),
+  defaultLineup: defaultLineupSchema,
+  baseEnergy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable(),
+  deezerTrackId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable(),
+  deezerAlbumId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable(),
+  spotifyTrackId: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable(),
+  album: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).nullable(),
+  durationSeconds: z.number().int().min(0).max(SONG_DURATION_MAX_SECONDS).nullable(),
+  isrcs: z.array(z.string().max(SONG_ISRC_MAX)).max(SONG_ISRCS_MAX),
+  tags: z.array(z.string().max(SONG_TAG_MAX)).max(SONG_TAGS_MAX),
+  structureNotes: z.string().max(SONG_NOTE_MAX_LENGTH),
+  gimmickNotes: z.string().max(SONG_NOTE_MAX_LENGTH),
+  notes: z.string().max(SONG_NOTE_MAX_LENGTH),
+};
+
+const songBaseSchema = z.object({
+  ...songFieldShape,
+  artist: songFieldShape.artist.default(''),
+  origin: songFieldShape.origin.default(DEFAULT_SONG_ORIGIN),
+  links: songFieldShape.links.default([]),
+  chart: songFieldShape.chart.default(null),
+  tonalityStart: songFieldShape.tonalityStart.default(null),
+  tonalityEnd: songFieldShape.tonalityEnd.default(null),
+  defaultLineup: songFieldShape.defaultLineup.default({}),
+  baseEnergy: songFieldShape.baseEnergy.default(null),
+  deezerTrackId: songFieldShape.deezerTrackId.default(null),
+  deezerAlbumId: songFieldShape.deezerAlbumId.default(null),
+  spotifyTrackId: songFieldShape.spotifyTrackId.default(null),
+  album: songFieldShape.album.default(null),
+  durationSeconds: songFieldShape.durationSeconds.default(null),
+  isrcs: songFieldShape.isrcs.default([]),
+  tags: songFieldShape.tags.default([]),
+  structureNotes: songFieldShape.structureNotes.default(''),
+  gimmickNotes: songFieldShape.gimmickNotes.default(''),
+  notes: songFieldShape.notes.default(''),
 });
 
 export const songCreateInputSchema = songBaseSchema;
-export const songUpdateInputSchema = songBaseSchema.partial();
-export const songIdParamSchema = z.object({ id: z.string().uuid() });
+export const songUpdateInputSchema = z.object(songFieldShape).partial();
+export const songIdParamSchema = z.object({ id: z.guid() });
 export const songReferenceToolInputSchema = z.object({ song: referenceSchema });
 export const songReadToolInputSchema = songReferenceToolInputSchema.extend(detailInputShape);
 export const songFindToolInputSchema = z.object({
@@ -123,7 +145,7 @@ export const songMasteryToolInputSchema = songReferenceToolInputSchema.extend({
 });
 export const songSaveToolInputSchema = z
   .object({ song: referenceSchema.optional() })
-  .merge(songUpdateInputSchema.omit({ defaultLineup: true }))
+  .extend(songUpdateInputSchema.omit({ defaultLineup: true }).shape)
   .extend({ defaultLineup: namedLineupSchema.optional() });
 export const externalSearchQuerySchema = z.object({
   q: z.string().min(1).max(SONG_TEXT_FIELD_MAX_LENGTH),

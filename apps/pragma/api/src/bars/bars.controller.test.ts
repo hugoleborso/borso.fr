@@ -4,7 +4,7 @@ import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const barSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   name: z.string(),
   status: z.string(),
   notes: z.string(),
@@ -104,7 +104,7 @@ describe('bars controller (back-e2e)', () => {
 
   it('carries the owner through create and clears it when that member goes', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const memberEnvelope = z.object({ member: z.object({ id: z.string().uuid() }) });
+    const memberEnvelope = z.object({ member: z.object({ id: z.guid() }) });
     const member = await readJson(
       await jsonRequest(app, '/api/members', {
         method: 'POST',

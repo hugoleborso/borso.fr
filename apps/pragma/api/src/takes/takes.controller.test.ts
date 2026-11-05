@@ -46,7 +46,7 @@ const takeSchema = z.object({
 const takeEnvelope = z.object({ take: takeSchema });
 const takeListEnvelope = z.object({ takes: z.array(takeSchema) });
 const signEnvelope = z.object({
-  uploadUrl: z.string().url(),
+  uploadUrl: z.url(),
   objectKey: z.string(),
   expiresAt: z.string(),
 });
@@ -65,7 +65,7 @@ const errorEnvelope = z.object({ error: z.string() });
 const deleteRequestSchema = z.object({
   Delete: z.object({ Objects: z.array(z.object({ Key: z.string() })) }),
 });
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
+const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 async function createId(
   band: AuthenticatedApp,

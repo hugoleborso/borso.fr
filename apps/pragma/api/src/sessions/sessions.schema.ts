@@ -26,27 +26,39 @@ export const SESSION_ORIGINS = ['free_slot'] as const;
 export const SESSION_KINDS = ['concert', 'practice'] as const;
 
 export const friendsCountSchema = z.record(
-  z.string().uuid(),
+  z.guid(),
   z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX),
 );
 
+const concertFieldShape = {
+  kind: z.literal('concert'),
+  date: z.iso.datetime(),
+  venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
+  capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
+  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
+  friendsCountPerMember: friendsCountSchema,
+};
+
+const practiceFieldShape = {
+  kind: z.literal('practice'),
+  date: z.iso.datetime(),
+  preparedConcertId: z.guid().nullable(),
+  origin: z.enum(SESSION_ORIGINS).nullable(),
+};
+
 export const concertCreateSchema = z
   .object({
-    kind: z.literal('concert'),
-    date: z.string().datetime(),
-    venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
-    capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
-    gear: z.string().max(CONCERT_GEAR_MAX_LENGTH).default(''),
-    friendsCountPerMember: friendsCountSchema.default({}),
+    ...concertFieldShape,
+    gear: concertFieldShape.gear.default(''),
+    friendsCountPerMember: concertFieldShape.friendsCountPerMember.default({}),
   })
   .strict();
 
 export const practiceCreateSchema = z
   .object({
-    kind: z.literal('practice'),
-    date: z.string().datetime(),
-    preparedConcertId: z.string().uuid().nullable().default(null),
-    origin: z.enum(SESSION_ORIGINS).nullable().default(null),
+    ...practiceFieldShape,
+    preparedConcertId: practiceFieldShape.preparedConcertId.default(null),
+    origin: practiceFieldShape.origin.default(null),
   })
   .strict();
 
@@ -55,10 +67,14 @@ export const sessionCreateSchema = z.discriminatedUnion('kind', [
   practiceCreateSchema,
 ]);
 
-export const concertUpdateSchema = concertCreateSchema
+export const concertUpdateSchema = z
+  .object(concertFieldShape)
+  .strict()
   .partial()
   .extend({ kind: z.literal('concert').optional() });
-export const practiceUpdateSchema = practiceCreateSchema
+export const practiceUpdateSchema = z
+  .object(practiceFieldShape)
+  .strict()
   .partial()
   .extend({ kind: z.literal('practice').optional() });
 export const sessionUpdateSchema = z.union([concertUpdateSchema, practiceUpdateSchema]);
@@ -70,17 +86,17 @@ export const sessionPersistedUpdateSchema = z
     capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
     gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
     friendsCountPerMember: friendsCountSchema,
-    preparedConcertId: z.string().uuid().nullable(),
+    preparedConcertId: z.guid().nullable(),
   })
   .partial();
 
 export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema>;
 
-export const sessionIdParamSchema = z.object({ id: z.string().uuid() });
+export const sessionIdParamSchema = z.object({ id: z.guid() });
 
 export const sessionSaveToolInputSchema = z.object({
-  ...concertCreateSchema.partial().shape,
-  ...practiceCreateSchema.partial().shape,
+  ...z.object(concertFieldShape).partial().shape,
+  ...z.object(practiceFieldShape).partial().shape,
   session: referenceSchema.optional(),
   kind: z.enum(SESSION_KINDS).optional(),
 });

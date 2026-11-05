@@ -9,7 +9,7 @@ import {
 import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
 
 const songSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   artist: z.string(),
   status: z.string(),
@@ -35,15 +35,15 @@ const singleEnvelope = z.object({ song: songSchema });
 const listEnvelope = z.object({ songs: z.array(songSchema) });
 
 const masteryOverrideSchema = z.object({
-  memberId: z.string().uuid(),
-  instrumentId: z.string().uuid(),
-  songId: z.string().uuid(),
+  memberId: z.guid(),
+  instrumentId: z.guid(),
+  songId: z.guid(),
   score: z.number(),
 });
 const overridesEnvelope = z.object({ overrides: z.array(masteryOverrideSchema) });
 const deezerTrackTakenEnvelope = z.object({
   error: z.literal('deezer-track-taken'),
-  songId: z.string().uuid(),
+  songId: z.guid(),
   songTitle: z.string(),
 });
 
@@ -156,7 +156,7 @@ describe('songs controller (back-e2e)', () => {
       cookieHeader,
     });
     const memberId = (
-      await readJson(memberResponse, z.object({ member: z.object({ id: z.string().uuid() }) }))
+      await readJson(memberResponse, z.object({ member: z.object({ id: z.guid() }) }))
     ).member.id;
     const instrumentResponse = await jsonRequest(app, '/api/instruments', {
       method: 'POST',
@@ -164,10 +164,7 @@ describe('songs controller (back-e2e)', () => {
       cookieHeader,
     });
     const instrumentId = (
-      await readJson(
-        instrumentResponse,
-        z.object({ instrument: z.object({ id: z.string().uuid() }) }),
-      )
+      await readJson(instrumentResponse, z.object({ instrument: z.object({ id: z.guid() }) }))
     ).instrument.id;
     const songResponse = await jsonRequest(app, '/api/songs', {
       method: 'POST',

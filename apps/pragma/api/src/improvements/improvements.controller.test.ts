@@ -5,12 +5,12 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { improvementTable } from './improvements.schema';
 
 const improvementSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   title: z.string(),
   details: z.string(),
   status: z.string(),
   kind: z.string(),
-  authorMemberId: z.string().uuid(),
+  authorMemberId: z.guid(),
   createdAt: z.string(),
   voteCount: z.number(),
   votedByViewer: z.boolean(),

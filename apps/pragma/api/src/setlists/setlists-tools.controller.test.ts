@@ -18,21 +18,21 @@ import { sessionSetlistTable, setlistEntryTable, setlistTable } from './setlists
 const PRACTICE_DATE = '2026-11-03T19:00:00.000Z';
 const PRACTICE_DAY = '2026-11-03';
 
-const idBodySchema = z.object({ id: z.string().uuid() });
+const idBodySchema = z.object({ id: z.guid() });
 const setlistsBodySchema = z.object({
-  setlists: z.array(z.object({ id: z.string().uuid(), sessionIds: z.array(z.string()) })),
+  setlists: z.array(z.object({ id: z.guid(), sessionIds: z.array(z.string()) })),
 });
 const entryViewSchema = z.object({
-  entryId: z.string().uuid(),
+  entryId: z.guid(),
   position: z.number().int(),
-  songId: z.string().uuid(),
+  songId: z.guid(),
   title: z.string(),
   notes: z.string().optional(),
   lineup: z.record(z.string(), z.string()),
   transitionComment: z.string().optional(),
 });
 const setlistViewSchema = z.object({
-  setlist: z.object({ id: z.string().uuid(), name: z.string(), status: z.string() }),
+  setlist: z.object({ id: z.guid(), name: z.string(), status: z.string() }),
   entries: z.array(entryViewSchema),
 });
 
@@ -350,7 +350,7 @@ describe('setlists tools (back-e2e)', () => {
     });
     const breakViewSchema = setlistViewSchema.extend({
       breaks: z.array(
-        z.object({ breakId: z.string().uuid(), label: z.string(), afterSongCount: z.number() }),
+        z.object({ breakId: z.guid(), label: z.string(), afterSongCount: z.number() }),
       ),
     });
 
@@ -359,7 +359,7 @@ describe('setlists tools (back-e2e)', () => {
       after: 'Karma Police',
       label: 'Intermission',
     });
-    const { breakId } = z.object({ breakId: z.string().uuid() }).parse(added.body);
+    const { breakId } = z.object({ breakId: z.guid() }).parse(added.body);
     const withBreak = breakViewSchema.parse(
       (await callTool(band.assistant, 'get_setlist', { setlist: setlistId })).body,
     );

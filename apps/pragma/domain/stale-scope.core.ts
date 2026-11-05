@@ -1,3 +1,5 @@
+import { PRAGMA_REQUEST_HEADERS } from './request-headers.core';
+
 export const EVERY_WRITTEN_ROOT = 'all';
 
 export const WRITTEN_API_ROOTS = [
@@ -51,7 +53,7 @@ export function buildStaleMessage(written: readonly WrittenRoot[]): StaleMessage
   return { kind: STALE_MESSAGE_KIND, written };
 }
 
-export const REALTIME_CLIENT_HEADER = 'X-Pragma-Client';
+export const REALTIME_CLIENT_HEADER = PRAGMA_REQUEST_HEADERS.realtimeClient;
 
 const READ_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD', 'OPTIONS']);
 

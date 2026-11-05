@@ -18,7 +18,7 @@ const pointTimeFractionsSchema = z.array(z.number()).refine(isMonotonicZeroToOne
   message: 'pointTimeFractions must be strictly monotonic, start at 0 and end at 1',
 });
 
-const pointElevationsSchema = z.array(z.number().finite());
+const pointElevationsSchema = z.array(z.number());
 
 const trackJsonSchema = z
   .object({
@@ -81,8 +81,8 @@ export const editionSlugSchema = z
 export const createEditionInputSchema = z.object({
   slug: editionSlugSchema,
   displayName: z.string().min(1).max(MAXIMUM_EDITION_NAME_LENGTH),
-  startsAt: z.string().datetime({ offset: true }),
-  endsAt: z.string().datetime({ offset: true }),
+  startsAt: z.iso.datetime({ offset: true }),
+  endsAt: z.iso.datetime({ offset: true }),
   intervalMinutes: z
     .number()
     .int()

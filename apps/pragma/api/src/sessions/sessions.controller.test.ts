@@ -4,10 +4,10 @@ import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const sessionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.guid(),
   kind: z.string(),
   date: z.string(),
-  preparedConcertId: z.string().uuid().nullable(),
+  preparedConcertId: z.guid().nullable(),
   venue: z.string().nullable(),
   capacity: z.number().nullable(),
   gear: z.string().nullable(),
@@ -16,10 +16,10 @@ const sessionSchema = z.object({
 const singleEnvelope = z.object({ session: sessionSchema });
 const listEnvelope = z.object({ sessions: z.array(sessionSchema) });
 const setlistEnvelope = z.object({
-  setlist: z.object({ id: z.string().uuid(), name: z.string() }),
+  setlist: z.object({ id: z.guid(), name: z.string() }),
 });
 const setlistListEnvelope = z.object({
-  setlists: z.array(z.object({ id: z.string().uuid() })),
+  setlists: z.array(z.object({ id: z.guid() })),
 });
 const entriesEnvelope = z.object({ entries: z.array(z.unknown()) });
 
@@ -187,9 +187,8 @@ describe('sessions controller (back-e2e)', () => {
       body: { title: 'X', status: 'idea' },
       cookieHeader,
     });
-    const songId = (
-      await readJson(songCreate, z.object({ song: z.object({ id: z.string().uuid() }) }))
-    ).song.id;
+    const songId = (await readJson(songCreate, z.object({ song: z.object({ id: z.guid() }) }))).song
+      .id;
 
     const sessionCreate = await jsonRequest(app, '/api/sessions', {
       method: 'POST',

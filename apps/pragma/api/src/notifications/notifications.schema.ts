@@ -39,7 +39,6 @@ export const vapidKeyPairTable = pgTable('vapid_key_pair', {
 });
 
 const endpointSchema = z
-  .string()
   .url()
   .max(ENDPOINT_MAX_LENGTH)
   .refine((endpoint) => endpoint.startsWith(SECURE_SCHEME_PREFIX), {

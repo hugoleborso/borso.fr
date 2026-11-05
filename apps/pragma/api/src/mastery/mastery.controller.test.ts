@@ -6,8 +6,8 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 const defaultsEnvelope = z.object({
   defaults: z.array(
     z.object({
-      memberId: z.string().uuid(),
-      instrumentId: z.string().uuid(),
+      memberId: z.guid(),
+      instrumentId: z.guid(),
       score: z.number(),
     }),
   ),
@@ -16,9 +16,9 @@ const defaultsEnvelope = z.object({
 const overridesEnvelope = z.object({
   overrides: z.array(
     z.object({
-      memberId: z.string().uuid(),
-      instrumentId: z.string().uuid(),
-      songId: z.string().uuid(),
+      memberId: z.guid(),
+      instrumentId: z.guid(),
+      songId: z.guid(),
       score: z.number(),
     }),
   ),
@@ -28,9 +28,9 @@ const historyEnvelope = z.object({
   changes: z.array(z.object({ score: z.number(), changedAt: z.string() })),
 });
 
-const memberEnvelope = z.object({ member: z.object({ id: z.string().uuid() }) });
-const instrumentEnvelope = z.object({ instrument: z.object({ id: z.string().uuid() }) });
-const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+const memberEnvelope = z.object({ member: z.object({ id: z.guid() }) });
+const instrumentEnvelope = z.object({ instrument: z.object({ id: z.guid() }) });
+const songEnvelope = z.object({ song: z.object({ id: z.guid() }) });
 
 async function seedTriple(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],

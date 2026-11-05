@@ -112,7 +112,7 @@ export const joinCodeParamSchema = z.object({
 
 export const outcomesSchema = z.array(
   z.object({
-    playerId: z.string().uuid(),
+    playerId: z.guid(),
     bid: z.number().int(),
     stashBefore: z.number().int(),
     stashAfter: z.number().int(),

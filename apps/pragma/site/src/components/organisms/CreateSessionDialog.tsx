@@ -48,7 +48,7 @@ const concertFormSchema = z.object({
 
 const practiceFormSchema = z.object({
   dateLocal: z.string().min(1),
-  preparedConcertId: z.string().uuid().nullable(),
+  preparedConcertId: z.guid().nullable(),
 });
 
 // @FollowsBlueprint organism-form

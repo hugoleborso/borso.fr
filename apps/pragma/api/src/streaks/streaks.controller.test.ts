@@ -21,7 +21,7 @@ const streaksEnvelope = z
     members: z.array(
       z
         .object({
-          memberId: z.string().uuid(),
+          memberId: z.guid(),
           firstName: z.string(),
           color: z.string(),
           flame: personalFlameSchema,
@@ -30,7 +30,7 @@ const streaksEnvelope = z
     ),
   })
   .strict();
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
+const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 const COUNTED_TODAY = { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 };
 const NO_FLAME = { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 };

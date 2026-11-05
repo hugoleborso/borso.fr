@@ -2,12 +2,17 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireAdminSession } from '../auth/auth.middleware';
 import { presignInputSchema } from './media.schema';
-import { MediaConfigError, MediaContentTypeError, presignRunnerPhotoUpload } from './media.service';
+import {
+  MediaConfigError,
+  MediaContentTypeError,
+  presignRunnerPhotoUpload,
+  answerInvalidInput,
+} from './media.service';
 
 // @FollowsBlueprint controller-guarded-router
 const mediaRouter = new Hono()
   .use('*', requireAdminSession)
-  .post('/presign', zValidator('json', presignInputSchema), async (context) => {
+  .post('/presign', zValidator('json', presignInputSchema, answerInvalidInput), async (context) => {
     try {
       const presignedUpload = await presignRunnerPhotoUpload(context.req.valid('json'), new Date());
       return context.json({
