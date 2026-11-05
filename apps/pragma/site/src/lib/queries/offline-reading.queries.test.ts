@@ -75,6 +75,32 @@ describe('loading what a member reads offline', () => {
     });
   });
 
+  it('takes the songs the catalogue list already carries instead of fetching each one', async () => {
+    rememberSessionMarker();
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(authKeys.session(), { authenticated: true });
+    stub = stubFetch((request) => {
+      const path = new URL(request.url).pathname;
+      if (path === '/api/songs') {
+        return Promise.resolve(
+          jsonResponse({ songs: [{ id: 'song-held' }, { id: 'song-missing' }] }),
+        );
+      }
+      const body = ANSWERS[path];
+      return Promise.resolve(
+        body === undefined ? jsonResponse({}, NOT_FOUND_STATUS) : jsonResponse(body),
+      );
+    });
+
+    await loadOfflineReadingWhenSignedIn(queryClient);
+
+    expect(listRequestedPaths(stub)).not.toContain('/api/songs/song-held');
+    expect(listRequestedPaths(stub)).not.toContain('/api/songs/song-missing');
+    expect(queryClient.getQueryData(songKeys.byId('song-missing'))).toEqual({
+      song: { id: 'song-missing' },
+    });
+  });
+
   it('probes the session first when the cache holds no answer for it', async () => {
     rememberSessionMarker();
     const queryClient = createIsolatedQueryClient();

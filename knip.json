@@ -79,6 +79,7 @@
       "entry": [
         "cdk/bin/cdk.ts",
         "api/src/main.ts",
+        "api/src/main.websocket.ts",
         "api/src/**/*.test.ts",
         "domain/**/*.core.test.ts",
         "site/src/**/*.utils.test.ts",

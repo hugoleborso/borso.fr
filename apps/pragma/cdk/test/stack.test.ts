@@ -9,12 +9,20 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { REALTIME_CLIENT_HEADER } from '@domain/stale-scope.core';
 import { buildPragmaAppStack } from '../lib/stack.js';
+
+const corsHeadersSchema = z.object({
+  Properties: z.object({
+    CorsConfiguration: z.object({ AllowHeaders: z.array(z.string()) }).optional(),
+  }),
+});
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = path.resolve(HERE, '..', '..');
 const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
+const WEBSOCKET_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.websocket.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
 const PROD_ERROR_REPORTING = {
@@ -23,6 +31,9 @@ const PROD_ERROR_REPORTING = {
 };
 
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
+const WEBSOCKET_FUNCTION_LOGICAL_ID_FRAGMENT = 'RealtimeFn';
+const MANAGE_CONNECTIONS_ACTION = 'execute-api:ManageConnections';
+const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
 
 const templateByStage = new Map<string, Template>();
 
@@ -58,6 +69,7 @@ function buildAppStackTemplate(stage: 'prod' | 'preview'): Template {
     domainName: stage === 'prod' ? 'pragma.borso.fr' : undefined,
     assetsPath: FAKE_ASSETS_DIR,
     apiEntry: FAKE_API_ENTRY,
+    websocketEntry: WEBSOCKET_ENTRY,
     migrationsPath: FAKE_MIGRATIONS_DIR,
     cluster: clusterStack.cluster,
     ...(stage === 'prod' ? { errorReporting: PROD_ERROR_REPORTING } : {}),
@@ -154,6 +166,7 @@ describe('pragma read-only agent access (ADR-0044)', () => {
       'member_calendar_feed',
       'member_passkey',
       'push_subscription',
+      'realtime_connection',
       'vapid_key_pair',
       'webauthn_challenge',
       'audience_suggestion',
@@ -188,6 +201,7 @@ describe('pragma preview schema cloning', () => {
         'member_calendar_feed',
         'member_passkey',
         'push_subscription',
+        'realtime_connection',
         'vapid_key_pair',
         'webauthn_challenge',
       ],
@@ -258,6 +272,15 @@ describe('pragma app stack', () => {
         }),
       }),
     );
+  });
+
+  it('lets the realtime client header through the API preflight a preview site sends', () => {
+    const httpApis = synthAppStack('preview').findResources('AWS::ApiGatewayV2::Api');
+    const allowedHeaders = Object.values(httpApis).flatMap(
+      (httpApi) =>
+        corsHeadersSchema.parse(httpApi).Properties.CorsConfiguration?.AllowHeaders ?? [],
+    );
+    expect(allowedHeaders).toContain(REALTIME_CLIENT_HEADER.toLowerCase());
   });
 
   it('mounts the test-seed flag only on non-prod stacks', () => {
@@ -488,5 +511,78 @@ describe('pragma streak reminder schedule (ADR-202610291139)', () => {
 
   it('schedules nothing on a preview, which holds no push subscription', () => {
     synthAppStack('preview').resourceCountIs('AWS::Scheduler::Schedule', 0);
+  });
+});
+
+function readFunctionVariables(stage: 'prod' | 'preview', logicalIdFragment: string) {
+  const functions = synthAppStack(stage).findResources('AWS::Lambda::Function');
+  const found = Object.entries(functions).find(([logicalId]) =>
+    logicalId.includes(logicalIdFragment),
+  )?.[1];
+  return found === undefined ? {} : readEnvVars(found);
+}
+
+describe('pragma live invalidation channel (ADR-0021)', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+  it('declares one WebSocket API per stage, named after the stage', () => {
+    const expectedNames = { prod: 'pragma-prod-websocket', preview: 'pragma-preview-websocket' };
+    for (const stage of ['prod', 'preview'] as const) {
+      synthAppStack(stage).hasResourceProperties(
+        'AWS::ApiGatewayV2::Api',
+        Match.objectLike({ Name: expectedNames[stage], ProtocolType: 'WEBSOCKET' }),
+      );
+    }
+  });
+
+  it('names the WebSocket stage after the pull request on a preview', () => {
+    synthAppStack('preview').hasResourceProperties(
+      'AWS::ApiGatewayV2::Stage',
+      Match.objectLike({ StageName: 'preview-pr-1' }),
+    );
+    synthAppStack('prod').hasResourceProperties(
+      'AWS::ApiGatewayV2::Stage',
+      Match.objectLike({ StageName: 'prod' }),
+    );
+  });
+
+  it('hands the HTTP API the address it posts to and the one it gives the browser', () => {
+    for (const stage of ['prod', 'preview'] as const) {
+      expect(readApiVariables(stage)).toHaveProperty('WEBSOCKET_CALLBACK_URL');
+      expect(readApiVariables(stage)).toHaveProperty('WEBSOCKET_CLIENT_URL');
+    }
+  });
+
+  it('gives the WebSocket handler the schema it writes a connection row into', () => {
+    for (const stage of ['prod', 'preview'] as const) {
+      const variables = readFunctionVariables(stage, WEBSOCKET_FUNCTION_LOGICAL_ID_FRAGMENT);
+      expect(variables).toHaveProperty('DSQL_ENDPOINT');
+      expect(variables).toHaveProperty('DSQL_ROLE');
+      expect(variables.DSQL_SCHEMA).toBe(stage === 'prod' ? 'prod' : 'pr_1');
+    }
+  });
+
+  it('lets the HTTP API post to connections, because broadcasting is its job', () => {
+    const policies = synthAppStack('prod').findResources('AWS::IAM::Policy');
+    const statements = Object.values(policies).flatMap(
+      (policy) => policyStatementSchema.parse(policy).Properties.PolicyDocument.Statement,
+    );
+    expect(statements.some((statement) => statement.Action === MANAGE_CONNECTIONS_ACTION)).toBe(
+      true,
+    );
+  });
+
+  it('grants the WebSocket handler its own connection to the cluster', () => {
+    const policies = synthAppStack('prod').findResources('AWS::IAM::Policy');
+    const grantedRoles = Object.values(policies)
+      .map((policy) => rolePolicySchema.parse(policy).Properties)
+      .filter((policy) => JSON.stringify(policy.PolicyDocument).includes(DSQL_CONNECT_ACTION))
+      .flatMap((policy) => policy.Roles.map((role) => role.Ref));
+    expect(grantedRoles.some((role) => role.includes(WEBSOCKET_FUNCTION_LOGICAL_ID_FRAGMENT))).toBe(
+      true,
+    );
   });
 });

@@ -24,6 +24,7 @@ export interface McpSession {
   readonly tools: readonly ToolDefinition[];
   readonly actor: ToolActor;
   readonly reportFailure: (failure: TaggedFailure) => void;
+  readonly onToolRan?: (tool: ToolDefinition) => void;
 }
 
 function answerTool(tool: ToolDefinition, answer: ToolAnswer): ToolResult {
@@ -52,6 +53,8 @@ async function runTool(
     });
     recordProductEvent({ event: TOOL_CALLED_EVENT, tool: tool.name, outcome: 'failed' });
     return shapeToolFailure();
+  } finally {
+    session.onToolRan?.(tool);
   }
 }
 

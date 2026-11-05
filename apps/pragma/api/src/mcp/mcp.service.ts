@@ -1,4 +1,6 @@
 import type { Context } from 'hono';
+import { selectToolWrittenRoots } from '../realtime/stale-scope.core';
+import { rememberWrittenRoots } from '../realtime/stale-scope.middleware';
 import { z } from 'zod';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import {
@@ -84,6 +86,10 @@ export async function resolveReference(
   const isIdentifier = isIdentifierReference(reference);
   if (isIdentifier) return reference;
   return pickReference(noun, await listCandidates(), reference);
+}
+
+export function rememberToolWrittenRoots(context: Context, tool: ToolDefinition): void {
+  rememberWrittenRoots(context, selectToolWrittenRoots(tool));
 }
 
 export async function answerToolRequest(context: Context, session: McpSession): Promise<Response> {

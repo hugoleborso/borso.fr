@@ -7,6 +7,9 @@ triggers:
 
 # Aurora DSQL read-after-write is per-connection — a fresh GET can miss a just-committed PUT
 
+> **Contested 2026-11-04, measured.** On the PR #261 preview, 30 reorders were each followed by 6 parallel `GET`s on fresh connections (`Connection: close`, one process each). 0 of the 180 reads returned the old order. AWS documents DSQL as giving "strong consistency" and says "readers always see the same data" ([What is Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/what-is-aurora-dsql.html)). PR #31's revert dates from when the service worker answered API reads from its own cache first ([`the-offline-cache-that-answered-first-online.md`](../dantotsus/the-offline-cache-that-answered-first-online.md)). That cache is the likelier cause, but this is inferred, not reproduced. Reconciling from the mutation response is still good practice. A refetch after another member's commit, as live invalidation does ([ADR-202611040227](../adr/202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md)), read the new rows every time.
+
+
 ## The trap
 
 Two HTTP requests to a Lambda-backed API — a write (`PUT`) immediately

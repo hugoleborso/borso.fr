@@ -7,7 +7,6 @@ import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
 import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
 import { deleteAssistantStateOfDeletedMember } from '../oauth/oauth.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { barTable } from '../bars/bars.schema';
 import { instrumentTable } from '../instruments/instruments.schema';
@@ -72,7 +71,7 @@ function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrument
 async function runInOneMemberTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+  return await getDatabase().transaction(work);
 }
 
 export async function listMembers(): Promise<MemberRow[]> {
