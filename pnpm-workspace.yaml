@@ -65,6 +65,6 @@ catalogs:
   sentry8:
     '@sentry/react': '^8.50.0'
   zod3:
-    zod: '^3.24.0'
+    zod: '^4.6.6'
   zod4:
     zod: '^4.4.3'
