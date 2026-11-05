@@ -25,8 +25,8 @@ export const sessionKeys = {
   byId: (id: string) => [...sessionKeys.all, 'byId', id] as const,
 };
 
-export function useSessionsList() {
-  return useQuery({
+export function sessionsListQueryOptions() {
+  return queryOptions({
     queryKey: sessionKeys.list(),
     queryFn: async () => {
       const response = await api.api.sessions.$get();
@@ -34,6 +34,10 @@ export function useSessionsList() {
       return response.json();
     },
   });
+}
+
+export function useSessionsList() {
+  return useQuery(sessionsListQueryOptions());
 }
 
 export function sessionQueryOptions(id: string) {

@@ -4,19 +4,11 @@ import { readMemberId, requireMemberSession } from '../auth/member-session.middl
 import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from './sessions.schema';
 import {
   createSession,
-  getNextSessionOfflineManifest,
   findSessionById,
   getSessions,
   patchSession,
   removeSession,
 } from './sessions.service';
-
-export function buildOfflineManifestRouter() {
-  return new Hono().use('*', requireMemberSession).get('/', async (context) => {
-    const manifest = await getNextSessionOfflineManifest(new Date());
-    return context.json(manifest);
-  });
-}
 
 // @FollowsBlueprint controller-dispatch
 export function buildSessionsRouter() {

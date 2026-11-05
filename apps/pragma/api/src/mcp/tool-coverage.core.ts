@@ -24,7 +24,6 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   '* /api/audience/*': 'The ballot of the concert audience, used by the public and not by members.',
   '* /api/uploads/*':
     'Presigned addresses the upload flow of the app uses; takes have request_take_upload.',
-  'GET /api/offline-manifest': 'The list a browser caches for offline use, bound to that browser.',
   '* /api/oauth/*':
     'The consent page, which the member answers in the browser, never an assistant.',
   '* /api/assistant-grants/*':

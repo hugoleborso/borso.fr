@@ -1,35 +1,5 @@
 /** @Feature shell */
 
-import type { InferResponseType } from 'hono/client';
-import type { api } from '../api.client';
-
-const PATH_SEPARATOR = '/';
-
-type OfflineManifestResponse = InferResponseType<(typeof api.api)['offline-manifest']['$get'], 200>;
-
-export type OfflineManifestUrls = Pick<
-  OfflineManifestResponse,
-  'songDetailUrls' | 'nextSessionUrl'
->;
-
-export interface OfflineReadingTargets {
-  readonly songIds: readonly string[];
-  readonly sessionIds: readonly string[];
-}
-
-function selectLastPathSegment(url: string): string {
-  return url.slice(url.lastIndexOf(PATH_SEPARATOR) + 1);
-}
-
-// @FollowsBlueprint utils-pure-module
-export function selectOfflineReadingTargets(manifest: OfflineManifestUrls): OfflineReadingTargets {
-  return {
-    songIds: manifest.songDetailUrls.map(selectLastPathSegment),
-    sessionIds:
-      manifest.nextSessionUrl === null ? [] : [selectLastPathSegment(manifest.nextSessionUrl)],
-  };
-}
-
 export interface QueryCacheUpdate {
   readonly eventType: string;
   readonly actionType: string | undefined;

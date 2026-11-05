@@ -21,7 +21,7 @@ import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildRealtimeRouter } from './realtime/realtime.controller';
 import type { StaleBroadcastSettings } from './realtime/realtime.service';
 import { buildWrittenRootsAnnouncer } from './realtime/stale-scope.middleware';
-import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
+import { buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildStreaksRouter } from './streaks/streaks.controller';
@@ -77,7 +77,6 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/mastery', buildMasteryRouter())
     .route('/api/sessions', buildSessionsRouter())
     .route('/api/free-slots', buildFreeSlotsRouter())
-    .route('/api/offline-manifest', buildOfflineManifestRouter())
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())

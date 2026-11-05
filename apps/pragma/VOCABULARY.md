@@ -850,22 +850,22 @@ Held by: `api/src/notifications/notifications.controller.test.ts` › stores the
 Not to be confused with: a **push subscription**, which is the device's own
 key and address rather than the stage's.
 
-## Offline manifest
+## Offline reading
 
-The list of URLs whose reads the app loads into its saved query cache once
-signed in, so the band can read the catalogue and the next setlist with no
-signal (`loadOfflineReadingWhenSignedIn`). The service worker caches no API
-read.
+What the app loads into its saved query cache once signed in, so the band can
+read the catalogue and the next setlist with no signal
+(`loadOfflineReadingWhenSignedIn`). The service worker caches no API read.
 
-Lives in: `api/src/sessions/`
+Lives in: `site/src/lib/queries/offline-reading.queries.ts`
 
-- Carries the catalogue list URL, one detail URL per song, and the next
-  session's URL with its setlist URL.
-- The next session is the earliest one strictly after now, with ties
-  broken on the identifier (`buildNextSessionOfflineManifest`).
+- Reads the songs list and the sessions list, seeds each song's detail from
+  the songs list, then reads the next session, its setlists and their entries.
+- The next session is the one home shows (`selectNextSession`), so a session
+  that started earlier today still counts.
+- Starts only from a probe answer already in the cache, and never probes.
 
-Held by: `api/src/sessions/offline-manifest.core.test.ts` › treats a session starting exactly now as past, not upcoming
-Held by: `api/src/sessions/offline-manifest.core.test.ts` › breaks a date tie on the identifier so the choice is stable
+Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › preloads a session that started earlier today, as home shows it
+Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes the session itself, so a start with no probe answer sends nothing
 
 ## Order screen
 

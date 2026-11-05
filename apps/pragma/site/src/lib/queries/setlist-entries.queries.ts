@@ -36,6 +36,18 @@ function snapshotEntries(
   return queryClient.getQueryData<EntriesCache>(setlistKeys.entriesOf(setlistId));
 }
 
+function restoreEntries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  variables: { readonly setlistId: string },
+  context: OptimisticContext | undefined,
+): void {
+  if (context?.previous === undefined) return;
+  queryClient.setQueryData<EntriesCache>(
+    setlistKeys.entriesOf(variables.setlistId),
+    context.previous,
+  );
+}
+
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 const ENTRY_WRITE_SCOPE = { id: 'setlist-entry-writes' } as const;
 
@@ -60,9 +72,16 @@ export function useSetlistEntriesToReorder(setlistId: string) {
   return useQuery({ ...setlistEntriesQueryOptions(setlistId), refetchOnMount: 'always' });
 }
 
+export function mapEntriesOfSetlists<Mapped>(
+  setlistIds: readonly string[],
+  mapQuery: (options: ReturnType<typeof setlistEntriesQueryOptions>) => Mapped,
+): Mapped[] {
+  return setlistIds.map((setlistId) => mapQuery(setlistEntriesQueryOptions(setlistId)));
+}
+
 export function useEntriesOfSetlists(setlistIds: readonly string[]) {
   return useQueries({
-    queries: setlistIds.map((setlistId) => setlistEntriesQueryOptions(setlistId)),
+    queries: mapEntriesOfSetlists(setlistIds, (options) => options),
     combine: (results) => ({
       entriesBySetlistId: Object.fromEntries(
         setlistIds.map((setlistId, index) => [setlistId, results[index]?.data?.entries ?? []]),
@@ -104,14 +123,7 @@ export function useAddSetlistEntries() {
       }
       return { previous };
     },
-    onError: (_error, variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          setlistKeys.entriesOf(variables.setlistId),
-          context.previous,
-        );
-      }
-    },
+    onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
         cache === undefined
@@ -158,14 +170,7 @@ export function useUpdateSetlistEntry() {
       }
       return { previous };
     },
-    onError: (_error, variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          setlistKeys.entriesOf(variables.setlistId),
-          context.previous,
-        );
-      }
-    },
+    onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
   });
 }
 
@@ -191,14 +196,7 @@ export function useDeleteSetlistEntry() {
       }
       return { previous };
     },
-    onError: (_error, variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          setlistKeys.entriesOf(variables.setlistId),
-          context.previous,
-        );
-      }
-    },
+    onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
   });
 }
 
@@ -268,14 +266,7 @@ export function useRestoreSetlistEntry() {
       }
       return { previous };
     },
-    onError: (_error, variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          setlistKeys.entriesOf(variables.setlistId),
-          context.previous,
-        );
-      }
-    },
+    onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
         cache === undefined
@@ -312,13 +303,6 @@ export function useReorderSetlist() {
       }
       return { previous };
     },
-    onError: (_error, variables, context) => {
-      if (context?.previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
-          setlistKeys.entriesOf(variables.setlistId),
-          context.previous,
-        );
-      }
-    },
+    onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
   });
 }

@@ -25,7 +25,6 @@ export const UNANNOUNCED_API_ROOTS = [
   'free-slots',
   'notifications',
   'oauth',
-  'offline-manifest',
   'streaks',
 ] as const;
 
@@ -72,7 +71,6 @@ export const DERIVED_READ_ROOTS: Readonly<Partial<Record<ApiRoot, readonly ApiRo
   members: ['instruments'],
   notifications: ['members'],
   oauth: ['members'],
-  'offline-manifest': ['instruments', 'sessions', 'songs'],
   sessions: ['instruments', 'songs'],
   setlists: ['instruments', 'members', 'sessions', 'songs'],
   songs: ['instruments', 'members'],

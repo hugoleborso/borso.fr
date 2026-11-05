@@ -21,7 +21,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   notifications: ['notifications'],
   oauth: ['oauth', 'assistant-grants'],
   outreach: ['outreach'],
-  sessions: ['sessions', 'offline-manifest'],
+  sessions: ['sessions'],
   setlists: ['setlists'],
   songs: ['songs'],
   streaks: ['streaks'],
