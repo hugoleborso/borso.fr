@@ -42,7 +42,7 @@
     "@tanstack/react-query": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
-    "dompurify": "3.4.16",
+    "dompurify": "3.4.17",
     "drizzle-orm": "catalog:",
     "force-graph": "1.52.0",
     "hono": "catalog:",
