@@ -1,5 +1,5 @@
 ---
-summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, dead code to delete, and a call made at `describe` level that per-test coverage credits to no test.'
+summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, dead code to delete, a call made at `describe` level that per-test coverage credits to no test, and `toHaveBeenCalledWith` reading a property set to `undefined` as absent.'
 triggers:
   output:
     - '#\d+\.\s*\[Survived\]'
@@ -145,3 +145,12 @@ Every mutant in it then reports as survived, which reads as missing
 assertions. On PR #263, 29 mutants in `buildGatewayIndicators` survived for
 this reason while the assertions on its result were all there (measured).
 Move the call into each `it`, or into a helper each `it` calls.
+
+## `toHaveBeenCalledWith` reads `body: undefined` as no `body`
+
+`toHaveBeenCalledWith` compares arguments with recursive equality, which
+treats a property set to `undefined` as a missing one. On PR #261 two mutants
+that made the streaks report send `{ body: undefined }` for a plain `Error`
+survived, because the test expected the call without `body` (commit
+`4a12e46`). Compare the call with `toStrictEqual` on `mock.calls[0]`, which
+tells the two apart.
