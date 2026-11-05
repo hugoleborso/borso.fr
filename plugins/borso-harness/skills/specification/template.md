@@ -40,6 +40,7 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 - The final, visible result. Embed mockups, screenshots, or before/after diagrams inline.
 - For backend-only features, show the endpoint shape or the dashboard row that did not exist before.
 - "No visible result" is a red flag — name it.
+- **Audience:** who can open the result, and where it lives. A page, a report or a dashboard published where the repository's other outputs go is public by default; say so, or say why it is not.
 
 ## Use cases / edge cases
 

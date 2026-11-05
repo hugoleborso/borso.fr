@@ -74,7 +74,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Parallel agents
 
-- Agents share one git index. Subagents never commit, and while one runs you stage explicit paths, never `git add -A`.
+- Agents share one git index. Subagents never commit, and while one runs you stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
 - Run `scripts/reports.sh` once, after every agent has finished.
 - Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> "<the problem, one sentence>"`. Put that line in every brief.
 
