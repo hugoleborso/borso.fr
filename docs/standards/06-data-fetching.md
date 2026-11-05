@@ -197,6 +197,33 @@ the whole order, so whichever committed last won, and the screen kept showing
 the other one until the next visit refetched. On PR #234 the same race hit the
 study log and undo, which both answered the member's flames.
 
+## One request per item, and the read batch
+
+A site reads a collection in one request. It never sends one request per item of
+a list, and it never awaits a read inside a loop. When per-item keys have to be
+warm, it seeds them from the list response with `setQueryData`.
+
+The reason is the ceiling. A production API answers 10 requests at once, because
+its reserved concurrency is also its limit (`DEFAULT_RESERVED_CONCURRENCY` in
+`infra/cdk/src/constructs/lambda-api.ts`). On 2026-11-04 one member opening
+pragma sent a request per song, and the API refused 193 requests in one minute
+(measured, [the dantotsu](../dantotsus/forty-requests-at-a-ten-seat-function.md)).
+
+pragma folds the reads issued in one tick into one `POST /api/read-batch`, with
+at most 10 reads per batch and 2 read requests in flight per tab
+([ADR-202611050445](../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md)).
+The batch does not make a fan-out free. A list longer than 10 becomes several
+batches, and each item still costs its own database read in the Lambda. The other
+full-stack apps have no batch, so there each item is a request of its own.
+
+An awaited read in a loop waits for the one before it. N reads take N round trips,
+and none of them shares a batch.
+
+A literal array of a fixed number of calls, such as `Promise.all([a(), b()])`, is
+bounded and allowed. A write in a loop is allowed, because the order of writes
+matters. A fan-out that is bounded by the data model carries an inline disable
+whose reason names the bound and where it was measured.
+
 ## Enforced by
 
 - `oxlint:borso/no-vendor-sdk-outside-adapter` rejects an import of a reporting
@@ -216,6 +243,12 @@ study log and undo, which both answered the member's flames.
   in the same file. It expands each key through its factory, so a sibling key
   passes and a prefix of a written key does not; a key it cannot expand, such as
   one from a factory declared in another file, counts as covering.
+- `oxlint:borso/no-request-fan-out-in-site` rejects, under `apps/*/site`, a
+  `.map`, `.flatMap` or `Array.from` whose callback sends a request, directly or
+  through a function declared in the same file, and a `useQueries` or
+  `useSuspenseQueries` over a mapping. It also rejects a `$get`,
+  `queryClient.query` or `queryClient.fetchQuery` awaited in a loop body. A
+  literal array, a write in a loop and a request inside an event handler pass.
 - `oxlint:typescript/no-unsafe-assignment` fails on a response value that
   has lost its type.
 - `oxlint:no-restricted-imports` rejects a database package imported from a

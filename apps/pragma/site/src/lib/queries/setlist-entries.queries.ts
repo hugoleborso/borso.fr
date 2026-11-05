@@ -76,6 +76,7 @@ export function mapEntriesOfSetlists<Mapped>(
   setlistIds: readonly string[],
   mapQuery: (options: ReturnType<typeof setlistEntriesQueryOptions>) => Mapped,
 ): Mapped[] {
+  // eslint-disable-next-line borso/no-request-fan-out-in-site -- one read per setlist of one session; production holds at most 1 per session (measured)
   return setlistIds.map((setlistId) => mapQuery(setlistEntriesQueryOptions(setlistId)));
 }
 
