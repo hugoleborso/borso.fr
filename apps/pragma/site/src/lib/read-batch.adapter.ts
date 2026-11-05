@@ -3,6 +3,7 @@ import {
   isRefusedBatch,
   keepCallers,
   mergeIdenticalReads,
+  readIdentity,
   pairAnswersWithReads,
   readContentType,
   takeNextBatch,
@@ -26,6 +27,7 @@ export interface ReadBatchFailure {
 export interface ReadTransportOptions {
   readonly apiBase: string;
   readonly closeGroup?: (close: () => void) => void;
+  readonly closeRetryGroup?: (close: () => void) => void;
   readonly fetchResponse?: FetchResponse;
   readonly reportBatchFailure: (failure: ReadBatchFailure) => void;
 }
@@ -51,6 +53,10 @@ function isStillWaiting(caller: Caller): boolean {
   return caller.signal?.aborted !== true;
 }
 
+function closeAfterWaitingTimers(close: () => void): void {
+  setTimeout(close);
+}
+
 function callersOf(batch: readonly MergedRead<Caller>[]): Caller[] {
   return batch.flatMap((entry) => entry.callers);
 }
@@ -60,10 +66,13 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
   const {
     apiBase,
     closeGroup = queueMicrotask,
+    closeRetryGroup = closeAfterWaitingTimers,
     fetchResponse = fetchFromPlatform,
     reportBatchFailure,
   } = options;
   let openGroup: WaitingRead<Caller>[] = [];
+  let retryGroup: WaitingRead<Caller>[] = [];
+  let failedReads = new Set<string>();
   let waiting: MergedRead<Caller>[] = [];
   let readsInFlight = 0;
   let lane: object = {};
@@ -85,6 +94,10 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
     }
   }
 
+  function rememberFailedBatch(batch: readonly MergedRead<Caller>[]): void {
+    batch.forEach((entry) => failedReads.add(readIdentity(entry.read)));
+  }
+
   async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
     const size = batch.length;
     try {
@@ -95,6 +108,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
       const isRefused = isRefusedBatch(response.status);
       if (isRefused) {
         reportBatchFailure({ status: response.status, size });
+        rememberFailedBatch(batch);
         const failure = {
           status: response.status,
           contentType: readContentType(response),
@@ -110,6 +124,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
       );
     } catch (error) {
       reportBatchFailure({ status: null, size });
+      rememberFailedBatch(batch);
       callersOf(batch).forEach((caller) => caller.reject(error));
     }
   }
@@ -141,21 +156,46 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
     drain();
   }
 
+  function closeOpenRetryGroup(): void {
+    waiting = mergeIdenticalReads(waiting, retryGroup);
+    retryGroup = [];
+    failedReads = new Set();
+    drain();
+  }
+
+  function joinGroup(entry: WaitingRead<Caller>): void {
+    const isRetry = failedReads.has(readIdentity(entry.read));
+    if (isRetry) {
+      if (retryGroup.length === 0) closeRetryGroup(closeOpenRetryGroup);
+      retryGroup.push(entry);
+      return;
+    }
+    if (openGroup.length === 0) closeGroup(closeOpenGroup);
+    openGroup.push(entry);
+  }
+
   function send(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     if (typeof input !== 'string') return fetchResponse(input, init);
     const read = toBatchedRead(input, init, apiBase);
     if (read === null) return fetchResponse(input, init);
     const signal = init?.signal;
     if (signal?.aborted === true) return Promise.reject(toAbortError(signal.reason));
-    return new Promise<Response>((resolve, reject) => {
-      signal?.addEventListener('abort', () => reject(toAbortError(signal.reason)));
-      if (openGroup.length === 0) closeGroup(closeOpenGroup);
-      openGroup.push({ read, caller: { signal, resolve, reject } });
+    const listening = new AbortController();
+    const stopListening = () => listening.abort();
+    const answer = new Promise<Response>((resolve, reject) => {
+      signal?.addEventListener('abort', () => reject(toAbortError(signal.reason)), {
+        signal: listening.signal,
+      });
+      joinGroup({ read, caller: { signal, resolve, reject } });
     });
+    void answer.then(stopListening, stopListening);
+    return answer;
   }
 
   function reset(): void {
     openGroup = [];
+    retryGroup = [];
+    failedReads = new Set();
     waiting = [];
     readsInFlight = 0;
     lane = {};

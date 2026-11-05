@@ -16,6 +16,7 @@ const READ_INIT: RequestInit = { method: 'GET', credentials: 'include' };
 function harness() {
   const sent: SentRequest[] = [];
   const closers: (() => void)[] = [];
+  const retryClosers: (() => void)[] = [];
   const failures: ReadBatchFailure[] = [];
   const fetchResponse = vi.fn<FetchResponse>(
     (input, init) =>
@@ -26,16 +27,19 @@ function harness() {
   const transport = createReadTransport({
     apiBase: API_BASE,
     closeGroup: (close) => closers.push(close),
+    closeRetryGroup: (close) => retryClosers.push(close),
     fetchResponse,
     reportBatchFailure: (failure) => failures.push(failure),
   });
   return {
+    retryClosers,
     transport,
     sent,
     failures,
     read: (path: string, init: RequestInit = READ_INIT) =>
       transport.send(`${API_BASE}${path}`, init),
     closeTick: () => closers.splice(0).forEach((close) => close()),
+    closeRetries: () => retryClosers.splice(0).forEach((close) => close()),
     request: (index: number): SentRequest => {
       const request = sent[index];
       if (request === undefined) throw new Error(`no request ${String(index)} left the tab`);
@@ -67,6 +71,7 @@ const reads = (count: number) =>
   Array.from({ length: count }, (_, index) => `/api/songs/${String(index)}`);
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -374,7 +379,178 @@ describe('a batch that fails', () => {
   });
 });
 
+async function failBatchOf(paths: readonly string[], failure: 'refused' | 'dropped') {
+  const tab = harness();
+  const pending = paths.map((path) => tab.read(path));
+  tab.closeTick();
+  if (failure === 'refused') {
+    tab.request(0).answer(new Response('{}', { status: 503 }));
+  } else {
+    tab.request(0).fail(new TypeError('Failed to fetch'));
+  }
+  await Promise.allSettled(pending);
+  await settle();
+  return tab;
+}
+
+describe('the reads of a failed batch, retried', () => {
+  it.each(['refused', 'dropped'] as const)(
+    'leave again as one batch when the batch was %s, though each retry comes in its own task',
+    async (failure) => {
+      const tab = await failBatchOf(['/api/songs', '/api/me', '/api/tasks'], failure);
+
+      void tab.read('/api/songs');
+      tab.closeTick();
+      void tab.read('/api/me');
+      tab.closeTick();
+      void tab.read('/api/tasks');
+      tab.closeTick();
+      expect(tab.sent).toHaveLength(1);
+      expect(tab.retryClosers).toHaveLength(1);
+      tab.closeRetries();
+
+      expect(tab.sent).toHaveLength(2);
+      expect(batchBody(tab.request(1))).toStrictEqual({
+        reads: [
+          { path: '/api/songs', headers: {} },
+          { path: '/api/me', headers: {} },
+          { path: '/api/tasks', headers: {} },
+        ],
+      });
+    },
+  );
+
+  it('carry a read two callers shared once, with both callers in the retry', async () => {
+    const tab = await failBatchOf(['/api/instruments', '/api/instruments', '/api/me'], 'refused');
+
+    const probe = tab.read('/api/instruments');
+    tab.closeTick();
+    const list = tab.read('/api/instruments');
+    tab.closeTick();
+    void tab.read('/api/me');
+    tab.closeRetries();
+
+    expect(batchBody(tab.request(1))).toStrictEqual({
+      reads: [
+        { path: '/api/instruments', headers: {} },
+        { path: '/api/me', headers: {} },
+      ],
+    });
+    tab.request(1).answer(batchAnswer({ status: 200, body: '[]' }, { status: 200, body: '{}' }));
+    expect((await probe).status).toBe(200);
+    expect((await list).status).toBe(200);
+  });
+
+  it('let a fresh read close at the end of its own task while the retries gather', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+
+    void tab.read('/api/songs');
+    void tab.read('/api/streaks');
+    tab.closeTick();
+
+    expect(tab.request(1).input).toBe(`${API_BASE}/api/streaks`);
+  });
+
+  it('forget the failed reads once the retry group left', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+    void tab.read('/api/songs');
+    tab.closeRetries();
+
+    void tab.read('/api/songs');
+    tab.closeTick();
+
+    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.sent).toHaveLength(3);
+  });
+
+  it('forget the failed reads on a reset', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+    tab.transport.reset();
+
+    void tab.read('/api/songs');
+    tab.closeTick();
+
+    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.request(1).input).toBe(`${API_BASE}/api/songs`);
+  });
+
+  it('gather a second retry with only its own reads, after a first retry failed too', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+    const songs = tab.read('/api/songs');
+    const profile = tab.read('/api/me');
+    tab.closeRetries();
+    tab.request(1).answer(new Response('{}', { status: 503 }));
+    await Promise.all([songs, profile]);
+    await settle();
+
+    void tab.read('/api/songs');
+    void tab.read('/api/me');
+    tab.closeRetries();
+
+    expect(batchBody(tab.request(2))).toStrictEqual({
+      reads: [
+        { path: '/api/songs', headers: {} },
+        { path: '/api/me', headers: {} },
+      ],
+    });
+  });
+
+  it('drop a retry that was gathering when the tab reset', async () => {
+    const tab = await failBatchOf(['/api/songs', '/api/me'], 'refused');
+    void tab.read('/api/songs');
+    tab.transport.reset();
+    tab.closeRetries();
+
+    expect(tab.sent).toHaveLength(1);
+  });
+
+  it('send a read whose lone GET failed in the next ordinary group', async () => {
+    const tab = await failBatchOf(['/api/songs'], 'refused');
+
+    void tab.read('/api/songs');
+    tab.closeTick();
+
+    expect(tab.retryClosers).toHaveLength(0);
+    expect(tab.request(1).input).toBe(`${API_BASE}/api/songs`);
+  });
+});
+
+function listenTo(controller: AbortController): () => boolean | undefined {
+  const listen = vi.spyOn(controller.signal, 'addEventListener');
+  return () => {
+    const options = listen.mock.calls[0]?.[2];
+    return typeof options === 'object' ? options.signal?.aborted : undefined;
+  };
+}
+
 describe('a caller that stops waiting', () => {
+  it('stops listening to its signal once it has its answer', async () => {
+    const tab = harness();
+    const controller = new AbortController();
+    const hasStoppedListening = listenTo(controller);
+    const songs = tab.read('/api/songs', { signal: controller.signal });
+    tab.closeTick();
+    expect(hasStoppedListening()).toBe(false);
+    tab.request(0).answer(new Response('[]', { status: 200 }));
+    await songs;
+    await settle();
+
+    expect(hasStoppedListening()).toBe(true);
+  });
+
+  it('stops listening to its signal once its read failed', async () => {
+    const tab = harness();
+    const controller = new AbortController();
+    const hasStoppedListening = listenTo(controller);
+    const songs = tab.read('/api/songs', { signal: controller.signal });
+    tab.closeTick();
+    tab.request(0).fail(new TypeError('Failed to fetch'));
+    await expect(songs).rejects.toThrow('Failed to fetch');
+    await settle();
+
+    expect(hasStoppedListening()).toBe(true);
+  });
+
   it('rejects at once when its signal was already aborted, and sends nothing', async () => {
     const tab = harness();
     const controller = new AbortController();
@@ -416,6 +592,27 @@ describe('a caller that stops waiting', () => {
 });
 
 describe('the transport the client uses', () => {
+  it('gathers the retries of a failed batch until the timers due with them have run', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sent: string[] = [];
+    const platformFetch = vi.fn<FetchResponse>((input) => {
+      sent.push(typeof input === 'string' ? input : 'not a path');
+      return Promise.resolve(new Response('{}', { status: 503 }));
+    });
+    vi.stubGlobal('fetch', platformFetch);
+    const transport = createReadTransport({ apiBase: '', reportBatchFailure: () => undefined });
+    await Promise.all([
+      transport.send('/api/songs', READ_INIT),
+      transport.send('/api/me', READ_INIT),
+    ]);
+
+    setTimeout(() => void transport.send('/api/songs', READ_INIT));
+    setTimeout(() => void transport.send('/api/me', READ_INIT));
+    await vi.runAllTimersAsync();
+
+    expect(sent).toStrictEqual(['/api/read-batch', '/api/read-batch']);
+  });
+
   it('closes a group at the end of the task and reads the fetch of the moment', async () => {
     const platformFetch = vi.fn<FetchResponse>(() =>
       Promise.resolve(batchAnswer({ status: 200, body: '1' }, { status: 200, body: '2' })),

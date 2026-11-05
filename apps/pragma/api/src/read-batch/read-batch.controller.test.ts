@@ -150,17 +150,31 @@ describe('read batch controller (back-e2e)', () => {
     });
   });
 
-  it('refuses a body that is not JSON with 400', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
+  it.each([
+    ['a JSON content type', 'application/json'],
+    ['a text content type', 'text/plain'],
+  ])(
+    'refuses a body that is not JSON under %s with read-batch-invalid, and reports it',
+    async (_, contentType) => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const reportFailure = vi.spyOn(errorReporting, 'reportTaggedFailure');
 
-    const response = await app.request(`${TEST_HOST}${READ_BATCH_PATH}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', cookie: cookieHeader },
-      body: '{"reads": [',
-    });
+      const response = await app.request(`${TEST_HOST}${READ_BATCH_PATH}`, {
+        method: 'POST',
+        headers: { 'content-type': contentType, cookie: cookieHeader },
+        body: '{"reads": [',
+      });
 
-    expect(response.status).toBe(400);
-  });
+      expect(response.status).toBe(400);
+      expect(await readJson(response, refusalEnvelope)).toStrictEqual({
+        error: 'read-batch-invalid',
+      });
+      expect(reportFailure).toHaveBeenCalledExactlyOnceWith({
+        name: 'read-batch-invalid',
+        tags: { route: READ_BATCH_PATH },
+      });
+    },
+  );
 
   it('serves the batch on POST only', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();

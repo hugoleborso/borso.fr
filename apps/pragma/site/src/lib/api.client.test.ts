@@ -174,3 +174,45 @@ describe('a live invalidation of every mounted query', () => {
     expect(peak).toBeLessThanOrEqual(2);
   });
 });
+
+const RETRIED_SONGS = 5;
+const SERVICE_UNAVAILABLE = 503;
+
+describe('a batch the API refused, under retry: 1', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    readTransport.reset();
+  });
+
+  it('resends its reads once, again as one batch', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const sent: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: string, init?: RequestInit) => {
+        sent.push(`${init?.method ?? 'GET'} ${new URL(input, 'http://pragma.test').pathname}`);
+        return Promise.resolve(new Response('{}', { status: SERVICE_UNAVAILABLE }));
+      }),
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
+    const songIds = Array.from({ length: RETRIED_SONGS }, (_, index) => `song-${String(index)}`);
+
+    const fetched = songIds.map((songId) =>
+      queryClient
+        .query({
+          queryKey: ['songs', songId],
+          queryFn: async () => {
+            const response = await api.api.songs[':id'].$get({ param: { id: songId } });
+            if (!response.ok) throw new Error(String(response.status));
+            return await response.json();
+          },
+        })
+        .catch((error: unknown) => error),
+    );
+    await vi.runAllTimersAsync();
+    await Promise.all(fetched);
+
+    expect(sent).toStrictEqual(['POST /api/read-batch', 'POST /api/read-batch']);
+  });
+});

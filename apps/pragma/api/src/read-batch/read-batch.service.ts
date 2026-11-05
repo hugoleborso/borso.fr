@@ -5,6 +5,8 @@ import {
 } from '../helpers/observability/error-reporting.adapter';
 import { buildItemRequest, toBatchedAnswer } from './read-batch.core';
 
+export { parseJsonOrNull } from '../helpers/json/json.core';
+
 const CONTENT_TYPE_HEADER = 'content-type';
 
 export const READ_BATCH_INVALID = 'read-batch-invalid';

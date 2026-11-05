@@ -41,7 +41,7 @@ function isPragmaRequestHeader(name: string): name is PragmaRequestHeader {
   return PRAGMA_REQUEST_HEADER_NAMES.some((allowed) => allowed === name);
 }
 
-// @FollowsBlueprint utils-pure-module
+// @FollowsBlueprint core-decision
 export function toBatchedRead(
   url: string,
   init: RequestInit | undefined,

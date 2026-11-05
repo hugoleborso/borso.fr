@@ -21,9 +21,28 @@ const REQUEST_METHOD_NAMES = new Set([
   'prefetchQuery',
   'ensureQueryData',
 ]);
-const READ_METHOD_NAMES = new Set(['$get', 'query', 'fetchQuery']);
+const READ_METHOD_NAMES = new Set([
+  '$get',
+  'query',
+  'fetchQuery',
+  'prefetchQuery',
+  'ensureQueryData',
+]);
 const FETCH_FUNCTION_NAME = 'fetch';
-const MAPPING_METHOD_NAMES = new Set(['map', 'flatMap']);
+const ITERATION_METHOD_NAMES = new Set([
+  'map',
+  'flatMap',
+  'forEach',
+  'reduce',
+  'reduceRight',
+  'filter',
+  'find',
+  'findIndex',
+  'findLast',
+  'findLastIndex',
+  'some',
+  'every',
+]);
 const QUERIES_HOOK_NAMES = new Set(['useQueries', 'useSuspenseQueries']);
 const QUERIES_PROPERTY_NAME = 'queries';
 const DEFERRED_REQUEST_PROPERTY_NAME = 'queryFn';
@@ -139,9 +158,9 @@ function reachesOperation(call, senders, isOperation) {
   return isOperation(call) || senders.has(calledFunctionName(call) ?? '');
 }
 
-function mappingCallbackOf(call) {
+function iterationCallbackOf(call) {
   const method = calledMethodName(call);
-  if (method !== null && MAPPING_METHOD_NAMES.has(method)) {
+  if (method !== null && ITERATION_METHOD_NAMES.has(method)) {
     return { callback: call.arguments[0] };
   }
   const { callee } = call;
@@ -162,12 +181,37 @@ function mappedQueriesOf(call) {
       property.key.type === 'Identifier' &&
       property.key.name === QUERIES_PROPERTY_NAME &&
       property.value.type === 'CallExpression' &&
-      mappingCallbackOf(property.value) !== null
+      iterationCallbackOf(property.value) !== null
     ) {
       return property.value;
     }
   }
   return null;
+}
+
+function forEachOutermostUnawaitedRequest(node, isRequest, visit) {
+  for (const key of Object.keys(node)) {
+    if (key === PARENT_KEY) continue;
+    const value = node[key];
+    const children = Array.isArray(value) ? value : [value];
+    for (const child of children) {
+      if (!isAstNode(child) || child.type === 'AwaitExpression') continue;
+      if (FUNCTION_TYPES.has(child.type) && !isQueryFunctionValue(child)) continue;
+      if (child.type === 'CallExpression' && isRequest(child)) {
+        visit(child);
+        continue;
+      }
+      forEachOutermostUnawaitedRequest(child, isRequest, visit);
+    }
+  }
+}
+
+function awaitsRead(call, readSenders) {
+  let hasRead = reachesOperation(call, readSenders, isReadCall);
+  forEachCallReached(call, (reached) => {
+    hasRead ||= reachesOperation(reached, readSenders, isReadCall);
+  });
+  return hasRead;
 }
 
 function isAwaitedInLoopBody(node) {
@@ -188,7 +232,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Reject a request per item over a mapping, and a read awaited inside a loop, in site code.',
+        'Reject a request per item over an iteration or a loop, and a read awaited inside a loop, in site code.',
     },
     schema: [],
     messages: {
@@ -199,8 +243,10 @@ export default {
   create(context) {
     if (!isSiteFile(context.filename)) return {};
     const declaredFunctions = new Map();
-    const mappings = [];
+    const iterations = [];
+    const loops = [];
     const mappedQueries = [];
+    const rememberLoop = (node) => loops.push(node);
     const awaitedCalls = [];
 
     return {
@@ -209,11 +255,12 @@ export default {
         if (name !== null) declaredFunctions.set(name, node);
       },
       CallExpression(node) {
-        const mapping = mappingCallbackOf(node);
-        if (mapping !== null) mappings.push({ node, callback: mapping.callback });
+        const iteration = iterationCallbackOf(node);
+        if (iteration !== null) iterations.push({ node, callback: iteration.callback });
         const queries = mappedQueriesOf(node);
         if (queries !== null) mappedQueries.push(queries);
       },
+      ...Object.fromEntries([...LOOP_TYPES].map((loopType) => [loopType, rememberLoop])),
       AwaitExpression(node) {
         if (node.argument.type === 'CallExpression' && isAwaitedInLoopBody(node)) {
           awaitedCalls.push(node.argument);
@@ -227,14 +274,22 @@ export default {
           reported.add(queries);
           context.report({ node: queries, messageId: 'requestFanOut' });
         }
-        for (const { node, callback } of mappings) {
+        for (const { node, callback } of iterations) {
           if (reported.has(node) || !callbackSends(callback, requestSenders, isRequestCall)) {
             continue;
           }
           context.report({ node, messageId: 'requestFanOut' });
         }
+        const sendsRequest = (call) => reachesOperation(call, requestSenders, isRequestCall);
+        for (const loop of loops) {
+          forEachOutermostUnawaitedRequest(loop.body, sendsRequest, (call) => {
+            if (reported.has(call)) return;
+            reported.add(call);
+            context.report({ node: call, messageId: 'requestFanOut' });
+          });
+        }
         for (const call of awaitedCalls) {
-          if (!reachesOperation(call, readSenders, isReadCall)) continue;
+          if (!awaitsRead(call, readSenders)) continue;
           context.report({ node: call, messageId: 'readAwaitedInLoop' });
         }
       },

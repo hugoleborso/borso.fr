@@ -243,12 +243,15 @@ whose reason names the bound and where it was measured.
   in the same file. It expands each key through its factory, so a sibling key
   passes and a prefix of a written key does not; a key it cannot expand, such as
   one from a factory declared in another file, counts as covering.
-- `oxlint:borso/no-request-fan-out-in-site` rejects, under `apps/*/site`, a
-  `.map`, `.flatMap` or `Array.from` whose callback sends a request, directly or
+- `oxlint:borso/no-request-fan-out-in-site` rejects, under `apps/*/site`, an
+  array iteration (`.map`, `.flatMap`, `.forEach`, `.reduce`, `.filter`, `.some`
+  and the rest, or `Array.from`) whose callback sends a request, directly or
   through a function declared in the same file, and a `useQueries` or
-  `useSuspenseQueries` over a mapping. It also rejects a `$get`,
-  `queryClient.query` or `queryClient.fetchQuery` awaited in a loop body. A
-  literal array, a write in a loop and a request inside an event handler pass.
+  `useSuspenseQueries` over a mapping. In a loop body it rejects a request sent
+  without `await`, and a read (`$get`, `query`, `fetchQuery`, `prefetchQuery`,
+  `ensureQueryData`) awaited on its own or inside an awaited `Promise.all`. A
+  literal array, an awaited write in a loop and a request inside an event
+  handler pass.
 - `oxlint:typescript/no-unsafe-assignment` fails on a response value that
   has lost its type.
 - `oxlint:no-restricted-imports` rejects a database package imported from a

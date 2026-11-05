@@ -147,6 +147,110 @@ const READ_IN_LOOP_INSIDE_A_DEFERRED_FUNCTION = `
     return reads;
   }`;
 
+const GET_IN_FOR_EACH = `
+  export function readSongs(ids) {
+    ids.forEach((id) => {
+      void api.api.songs[':id'].$get({ param: { id } });
+    });
+  }`;
+
+const SAME_FILE_PREFETCH_PASSED_TO_FOR_EACH = `
+  function prefetchSong(id) {
+    return queryClient.prefetchQuery(songQueryOptions(id));
+  }
+  export function prefetchSongs(ids) {
+    ids.forEach(prefetchSong);
+  }`;
+
+const FETCH_IN_REDUCE = `
+  export function readPages(pages) {
+    return pages.reduce((sent, page) => [...sent, fetch(pageUrl(page))], []);
+  }`;
+
+const PREFETCH_UNAWAITED_IN_FOR_OF = `
+  export function prefetchSongs(queryClient, ids) {
+    for (const id of ids) {
+      void queryClient.prefetchQuery(songQueryOptions(id));
+    }
+  }`;
+
+const GETS_PUSHED_IN_FOR = `
+  export async function readSongs(ids) {
+    const reads = [];
+    for (let index = 0; index < ids.length; index += 1) {
+      reads.push(api.api.songs[':id'].$get({ param: { id: ids[index] } }));
+    }
+    return Promise.all(reads);
+  }`;
+
+const QUERY_WITH_QUERY_FN_UNAWAITED_IN_LOOP = `
+  export function readSongs(queryClient, ids) {
+    for (const id of ids) {
+      void queryClient.query({
+        queryKey: ['songs', id],
+        queryFn: () => api.api.songs[':id'].$get({ param: { id } }),
+      });
+    }
+  }`;
+
+const READ_IN_NESTED_LOOPS = `
+  export function readTakes(queryClient, sessions) {
+    for (const session of sessions) {
+      for (const take of session.takes) {
+        void queryClient.query(takeQueryOptions(take.id));
+      }
+    }
+  }`;
+
+const LITERAL_PAIR_AWAITED_IN_LOOP = `
+  export async function readSessions(queryClient, ids) {
+    for (const id of ids) {
+      await Promise.all([
+        queryClient.query(sessionQueryOptions(id)),
+        queryClient.query(setlistsQueryOptions(id)),
+      ]);
+    }
+  }`;
+
+const ENSURE_AWAITED_IN_FOR_OF = `
+  export async function readSongs(queryClient, ids) {
+    for (const id of ids) {
+      await queryClient.ensureQueryData(songQueryOptions(id));
+    }
+  }`;
+
+const CACHE_WRITES_IN_FOR_EACH_AND_LOOP = `
+  export function seedSongs(queryClient, songs) {
+    songs.forEach((song) => queryClient.setQueryData(['songs', song.id], song));
+    for (const song of songs) {
+      queryClient.removeQueries({ queryKey: ['takes', song.id] });
+    }
+  }`;
+
+const HANDLERS_BOUND_IN_FOR_EACH = `
+  export function bindRows(rows) {
+    rows.forEach((row) => {
+      row.addEventListener('click', () => api.api.songs[':id'].$get({ param: { id: row.id } }));
+    });
+  }`;
+
+const USE_QUERIES_OVER_A_LITERAL_PAIR = `
+  export function useLists() {
+    return useQueries({ queries: [songsListQueryOptions(), sessionsListQueryOptions()] });
+  }`;
+
+const READ_AWAITED_AT_THE_TOP_OF_A_MODULE = `
+  const songs = await api.api.songs.$get();`;
+
+const ITERATIONS_WITH_NO_INLINE_CALLBACK = `
+  export function useNothingSent(ids, formatters, listOptions) {
+    ids.forEach();
+    ids.map(formatters.label);
+    useQueries(listOptions);
+    useQueries({ 'queries': listOptions.queries, queries: buildListQueries() });
+    return useQueries({ ...listOptions });
+  }`;
+
 const BACK_END_FAN_OUT = {
   code: MAP_OVER_QUERY,
   filename: 'apps/pragma/api/src/read-batch/read-batch.service.ts',
@@ -163,6 +267,11 @@ ruleTester.run('no-request-fan-out-in-site', rule, {
     INVALIDATION_IN_MAP,
     HANDLER_IN_MAPPED_JSX,
     READ_IN_LOOP_INSIDE_A_DEFERRED_FUNCTION,
+    CACHE_WRITES_IN_FOR_EACH_AND_LOOP,
+    HANDLERS_BOUND_IN_FOR_EACH,
+    USE_QUERIES_OVER_A_LITERAL_PAIR,
+    READ_AWAITED_AT_THE_TOP_OF_A_MODULE,
+    ITERATIONS_WITH_NO_INLINE_CALLBACK,
     BACK_END_FAN_OUT,
   ],
   invalid: [
@@ -179,5 +288,14 @@ ruleTester.run('no-request-fan-out-in-site', rule, {
     { code: FETCH_QUERY_AWAITED_IN_WHILE, errors: [{ messageId: 'readAwaitedInLoop' }] },
     { code: SAME_FILE_READ_AWAITED_IN_FOR, errors: [{ messageId: 'readAwaitedInLoop' }] },
     { code: QUERY_AWAITED_IN_DO_WHILE, errors: [{ messageId: 'readAwaitedInLoop' }] },
+    { code: GET_IN_FOR_EACH, errors: [{ messageId: 'requestFanOut' }] },
+    { code: SAME_FILE_PREFETCH_PASSED_TO_FOR_EACH, errors: [{ messageId: 'requestFanOut' }] },
+    { code: FETCH_IN_REDUCE, errors: [{ messageId: 'requestFanOut' }] },
+    { code: PREFETCH_UNAWAITED_IN_FOR_OF, errors: [{ messageId: 'requestFanOut' }] },
+    { code: GETS_PUSHED_IN_FOR, errors: [{ messageId: 'requestFanOut' }] },
+    { code: QUERY_WITH_QUERY_FN_UNAWAITED_IN_LOOP, errors: [{ messageId: 'requestFanOut' }] },
+    { code: READ_IN_NESTED_LOOPS, errors: [{ messageId: 'requestFanOut' }] },
+    { code: LITERAL_PAIR_AWAITED_IN_LOOP, errors: [{ messageId: 'readAwaitedInLoop' }] },
+    { code: ENSURE_AWAITED_IN_FOR_OF, errors: [{ messageId: 'readAwaitedInLoop' }] },
   ],
 });
