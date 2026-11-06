@@ -9,17 +9,22 @@ import { renderDashboardPage } from './quality-dashboard-page.core';
 import {
   FRONT_END_APPS,
   FULL_STACK_APPS,
+  RANGES,
   buildBugReportIndicators,
   buildGatewayIndicators,
   buildSecurityIndicators,
   buildSentryIndicators,
   isEverySourceUnavailable,
+  listBuckets,
   listUnavailableSources,
   placeBugReports,
   readTargets,
+  type RangeSpec,
+  type SentryReading,
+  type SentrySnapshot,
   type SourceResult,
 } from './quality-dashboard.core';
-import { readAudit, readGateway, readSnapshotFile } from './quality-sources.adapter';
+import { readAudit, readGateway, readHttpApis, readSnapshotFile } from './quality-sources.adapter';
 import type { PlacedDot } from './weak-points-page.core';
 import {
   countWeeklyOccurrences,
@@ -44,6 +49,14 @@ function placeDot(dot: DefectDot): PlacedDot {
   return { dot, map: 'factory', row: selectStation(dot.zone), column: FACTORY_COLUMN };
 }
 
+function selectSentry(
+  sentry: SourceResult<SentrySnapshot>,
+  range: RangeSpec,
+): SourceResult<SentryReading> {
+  if (sentry.kind === 'unavailable') return sentry;
+  return { kind: 'ok', value: sentry.value[range.id] };
+}
+
 function main(): void {
   const { values } = parseArgs({
     options: { snapshot: { type: 'string' }, output: { type: 'string' } },
@@ -59,11 +72,12 @@ function main(): void {
   const outputPath = resolve(values.output ?? DEFAULT_OUTPUT_PATH);
   const clock = new Date();
   const now = clock.toISOString().slice(0, ISO_DATE_LENGTH);
-  const gateway = readGateway(clock);
+  const apis = readHttpApis();
+  const readings = RANGES.map((range) => ({ range, gateway: readGateway(apis, clock, range) }));
   const audit = readAudit();
   const { sentry, bugReports, dependabot, secretScanning } = snapshot.value;
   const sources = new Map<string, SourceResult<unknown>>([
-    ['CloudWatch', gateway],
+    ['CloudWatch', readings[0]?.gateway ?? apis],
     ['pnpm audit', audit],
     ['Sentry', sentry],
     ['pragma bug reports', bugReports],
@@ -90,12 +104,19 @@ function main(): void {
     outputPath,
     renderDashboardPage({
       now,
-      indicators: [
-        ...buildSecurityIndicators({ dependabot, audit, secretScanning }, now),
-        ...buildGatewayIndicators(gateway, APPS, now),
-        ...buildSentryIndicators(sentry, APPS, now),
-        ...buildBugReportIndicators(bugReports, APPS, now),
-      ],
+      ranges: readings.map(({ range, gateway }) => {
+        const buckets = listBuckets(range, clock);
+        return {
+          id: range.id,
+          title: range.title,
+          indicators: [
+            ...buildGatewayIndicators(gateway, APPS, range, buckets),
+            ...buildSentryIndicators(selectSentry(sentry, range), APPS, buckets),
+            ...buildBugReportIndicators(bugReports, APPS, range, buckets),
+          ],
+        };
+      }),
+      security: buildSecurityIndicators({ dependabot, audit, secretScanning }),
       targets: existsSync(TARGETS_PATH) ? readTargets(readFileSync(TARGETS_PATH, 'utf8')) : [],
       placed: dots.map(placeDot),
       engaged,

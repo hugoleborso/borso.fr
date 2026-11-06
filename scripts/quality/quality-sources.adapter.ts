@@ -4,22 +4,21 @@ import { z } from 'zod';
 import {
   EMPTY_SNAPSHOT,
   buildMetricQueries,
-  listWeekStarts,
   readAuditCounts,
   readMetricSeries,
   readSnapshot,
   selectHttpApis,
+  type GatewayReading,
   type HttpApi,
   type MetricSeries,
+  type RangeSpec,
   type SecurityCounts,
   type Snapshot,
   type SourceResult,
 } from './quality-dashboard.core';
 
 const AWS_REGION = process.env.AWS_REGION ?? 'eu-west-3';
-const MILLISECONDS_PER_DAY = 86_400_000;
-const DAYS_PER_WEEK = 7;
-const ISO_DATE_LENGTH = 10;
+const MILLISECONDS_PER_SECOND = 1_000;
 const MAX_BUFFER = 64 * 1024 * 1024;
 
 function describeFailure(error: unknown): string {
@@ -52,8 +51,9 @@ function fetchMetricSeries(
   apis: readonly HttpApi[],
   start: Date,
   end: Date,
+  periodSeconds: number,
 ): readonly MetricSeries[] {
-  const queries = buildMetricQueries(apis);
+  const queries = buildMetricQueries(apis, periodSeconds);
   if (queries.length === 0) return [];
   return readMetricSeries(
     runAws([
@@ -69,24 +69,29 @@ function fetchMetricSeries(
   );
 }
 
-export function readGateway(now: Date): SourceResult<{
-  readonly apis: readonly HttpApi[];
-  readonly rolling: readonly MetricSeries[];
-  readonly weekly: readonly MetricSeries[];
-}> {
-  return attempt(() => {
-    const apis = selectHttpApis(
+export function readHttpApis(): SourceResult<readonly HttpApi[]> {
+  return attempt(() =>
+    selectHttpApis(
       z.object({ Items: z.array(z.unknown()) }).parse(runAws(['apigatewayv2', 'get-apis'])).Items,
+    ),
+  );
+}
+
+export function readGateway(
+  apis: SourceResult<readonly HttpApi[]>,
+  now: Date,
+  range: RangeSpec,
+): SourceResult<GatewayReading> {
+  if (apis.kind === 'unavailable') return apis;
+  return attempt(() => {
+    const windowStart = new Date(now.getTime() - range.windowSeconds * MILLISECONDS_PER_SECOND);
+    const historyStart = new Date(
+      now.getTime() - range.buckets * range.bucketSeconds * MILLISECONDS_PER_SECOND,
     );
-    const firstWeek = listWeekStarts(now.toISOString().slice(0, ISO_DATE_LENGTH))[0] ?? '';
     return {
-      apis,
-      rolling: fetchMetricSeries(
-        apis,
-        new Date(now.getTime() - DAYS_PER_WEEK * MILLISECONDS_PER_DAY),
-        now,
-      ),
-      weekly: fetchMetricSeries(apis, new Date(`${firstWeek}T00:00:00Z`), now),
+      apis: apis.value,
+      current: fetchMetricSeries(apis.value, windowStart, now, range.windowSeconds),
+      buckets: fetchMetricSeries(apis.value, historyStart, now, range.bucketSeconds),
     };
   });
 }

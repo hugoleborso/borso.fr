@@ -13,6 +13,15 @@ background:var(--dot);margin:1px;opacity:.45}.dot.recent{opacity:1}.dot.engaged{
 .bars{display:flex;gap:2px;align-items:flex-end;height:48px}.bar{width:10px;background:var(--hot);min-height:1px}
 .bar.zero{background:var(--line)}.bar.missing{background:none;border-bottom:1px dashed var(--line)}
 .sections{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+.range-switch{margin-top:14px}
+.range-pick{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.range-tabs{display:inline-flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;margin-bottom:12px;flex-wrap:wrap}
+.range-tab{font-size:13px;padding:4px 12px;border-radius:999px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.range-tab:hover{color:var(--fg)}
+.range-panel{display:none;grid-template-columns:1fr;gap:12px}
+#range-week:checked~.range-tabs [for="range-week"],#range-hour:checked~.range-tabs [for="range-hour"],#range-minute:checked~.range-tabs [for="range-minute"]{background:var(--fg);color:var(--bg)}
+#range-week:checked~[data-range="week"],#range-hour:checked~[data-range="hour"],#range-minute:checked~[data-range="minute"]{display:grid}
+.range-pick:focus-visible~.range-tabs{outline:2px solid var(--series-1);outline-offset:2px}
 details.section{margin:0;border:1px solid var(--line);border-radius:8px;min-width:0}
 details.section>summary{display:flex;align-items:center;gap:10px;padding:10px 12px}
 details.section>summary h2{margin:0;font-size:18px}

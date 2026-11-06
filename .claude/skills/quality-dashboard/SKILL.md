@@ -16,12 +16,13 @@ Write `<scratchpad>/quality-dashboard/snapshot.json`. Each of the four keys hold
 - **`sentry`**. Organization `borsofr`, region `https://de.sentry.io`, one project. Applications are told apart by the `app` tag, which every app sets. Previews run with Sentry off, because the DSN is a prod-environment variable, so preview errors show only in the CloudWatch 5xx column. Call `search_errors` with `fields: ["app", "environment", "count()"]`.
   - `rolling` is the rows for `period: "7d"`.
   - `weekly` maps each Monday (ISO date) of the last eight weeks to the rows of that week, with `query: "timestamp:>=<monday>T00:00:00 timestamp:<<next monday>T00:00:00"`. Leave out a week from before the `app` tag existed (before 2026-10-26) rather than writing zero, so the bar shows no data.
-  - Each row is `{ "app", "environment", "count" }`.
+  - `hour` is the rows for `period: "12h"`, and `minute` the rows for `period: "1h"`. These feed the two short ranges of the board's range switch. Sentry has no cheap per-hour or per-minute bucket here, so those ranges show the count with no graph.
+  - Each of the four keys is a list of `{ "app", "environment", "count" }` rows, except `weekly`, which maps a Monday to such a list.
 - **`improvements`**. Call the Pragma MCP `list_improvements`. Pass every item as `{ "id", "title", "status", "kind", "createdAt" }`. The renderer keeps those with `kind: "bug"`. If the tool returns no `kind`, the source is unavailable.
 - **`dependabot`**. Run `gh api repos/hugoleborso/borso.fr/dependabot/alerts?state=open --paginate` and count by `security_advisory.severity` into `{ "criticalOrHigh", "other" }`. A 403 saying alerts are disabled is the reason to record.
 - **`secretScanning`**. Run `gh api repos/hugoleborso/borso.fr/secret-scanning/alerts?state=open` and record the count. The hosted-session proxy refused this path on 2026-11-04.
 
-CloudWatch latency and 5xx and `pnpm audit` are read by the renderer itself, with the session's AWS credentials.
+CloudWatch latency and 5xx and `pnpm audit` are read by the renderer itself, with the session's AWS credentials. The renderer asks CloudWatch once per range of the board's switch, so a run makes three pairs of `get-metric-data` calls.
 
 ## 2. Render
 

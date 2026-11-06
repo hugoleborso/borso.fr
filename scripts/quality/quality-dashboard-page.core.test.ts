@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { renderDashboardPage, type DashboardPageInput } from './quality-dashboard-page.core';
+import {
+  renderDashboardPage,
+  type DashboardPageInput,
+  type RangeView,
+} from './quality-dashboard-page.core';
 import type { Indicator } from './quality-dashboard.core';
 import type { PlacedDot } from './weak-points-page.core';
 import type { DefectDot, EngagedWeakPoint } from './weak-points.core';
@@ -14,9 +18,9 @@ function indicator(overrides: Partial<Indicator>): Indicator {
     unit: 'ms',
     app: 'pragma',
     current: 1391,
-    weeks: [
-      { weekStart: '2026-10-05', value: 1000 },
-      { weekStart: '2026-10-12', value: 2000 },
+    points: [
+      { label: '2026-10-05', value: 1000 },
+      { label: '2026-10-12', value: 2000 },
     ],
     status: { kind: 'ok' },
     ...overrides,
@@ -54,15 +58,24 @@ function placedDot(overrides: Partial<DefectDot>, map: PlacedDot['map']): Placed
   };
 }
 
-function buildInput(overrides: Partial<DashboardPageInput> = {}): DashboardPageInput {
+type InputOverrides = Partial<Omit<DashboardPageInput, 'ranges'>> & {
+  readonly indicators?: readonly Indicator[];
+  readonly ranges?: readonly RangeView[];
+};
+
+function buildInput(overrides: InputOverrides = {}): DashboardPageInput {
+  const { indicators, ranges, ...rest } = overrides;
   return {
     now: NOW,
-    indicators: [indicator({})],
+    ranges: ranges ?? [
+      { id: 'week', title: 'week by week', indicators: indicators ?? [indicator({})] },
+    ],
+    security: [],
     targets: [],
     placed: [],
     engaged: [],
     weeklyCounts: new Map(),
-    ...overrides,
+    ...rest,
   };
 }
 
@@ -90,6 +103,8 @@ describe('renderDashboardPage', () => {
         indicators: [
           indicator({}),
           indicator({ id: 'errors-prod', pillar: 'stability', label: '5xx', unit: 'count' }),
+        ],
+        security: [
           indicator({
             id: 'audit-other',
             pillar: 'security',
@@ -97,7 +112,7 @@ describe('renderDashboardPage', () => {
             unit: 'count',
             app: 'repository',
             current: 26,
-            weeks: [{ weekStart: '2026-10-12', value: null }],
+            points: [],
           }),
         ],
       }),
@@ -112,7 +127,7 @@ describe('renderDashboardPage', () => {
     expect(order).toStrictEqual([...order].sort((first, second) => first - second));
     expect(order[0]).toBeGreaterThan(0);
     expect(html).toContain(
-      '<details class="section section-speed"><summary title="Latency of each production API, in milliseconds."><h2>Speed</h2><span class="score unjudged">no ceiling</span></summary><div class="rows">',
+      '<details class="section section-speed"><summary title="Latency of each production API, in milliseconds, over the selected range."><h2>Speed</h2><span class="score unjudged">no ceiling</span></summary><div class="rows">',
     );
   });
 
@@ -142,7 +157,7 @@ describe('renderDashboardPage', () => {
           indicator({
             app: 'borso-fr',
             current: null,
-            weeks: [{ weekStart: '2026-10-12', value: null }],
+            points: [{ label: '2026-10-12', value: null }],
             status: { kind: 'not-applicable', reason: 'no API' },
           }),
         ],
@@ -172,10 +187,10 @@ describe('renderDashboardPage', () => {
       buildInput({
         indicators: [
           indicator({
-            weeks: [
-              { weekStart: '2026-09-28', value: null },
-              { weekStart: '2026-10-05', value: 0 },
-              { weekStart: '2026-10-12', value: 4 },
+            points: [
+              { label: '2026-09-28', value: null },
+              { label: '2026-10-05', value: 0 },
+              { label: '2026-10-12', value: 4 },
             ],
           }),
         ],
@@ -186,7 +201,7 @@ describe('renderDashboardPage', () => {
       '<details class="zoomable" name="chart-zoom" id="speed-latency-p95-pragma"><summary class="chip" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chip-head">',
     );
     expect(html).toContain(
-      '<span class="bar missing" title="week of 2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="week of 2026-10-05: 0 ms"></span><span class="bar" style="height:100%" title="week of 2026-10-12: 4 ms"></span></span></summary>',
+      '<span class="bar missing" title="2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="2026-10-05: 0 ms"></span><span class="bar" style="height:100%" title="2026-10-12: 4 ms"></span></span></summary>',
     );
     expect(html).toContain(
       '<span class="y-axis"><span class="tick" style="bottom:0%">0 ms</span><span class="tick" style="bottom:25%">1 ms</span><span class="tick" style="bottom:50%">2 ms</span><span class="tick" style="bottom:75%">3 ms</span><span class="tick" style="bottom:100%">4 ms</span></span>',
@@ -194,7 +209,7 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('<span class="gridline" style="bottom:75%"></span>');
     expect(html).toContain('<span class="ceiling" style="bottom:50%" title="ceiling 2 ms"></span>');
     expect(html).toContain(
-      '<span class="col" title="week of 2026-10-12: 4 ms"><span class="bar" style="height:100%"><span class="week-value">4 ms</span></span></span>',
+      '<span class="col" title="2026-10-12: 4 ms"><span class="bar" style="height:100%"><span class="week-value">4 ms</span></span></span>',
     );
     expect(html).toContain('<span class="col"><span class="bar missing"></span></span>');
     expect(html).toContain(
@@ -211,9 +226,9 @@ describe('renderDashboardPage', () => {
         indicators: [
           indicator({
             unit: 'count',
-            weeks: [
-              { weekStart: '2026-10-05', value: 153 },
-              { weekStart: '2026-10-12', value: 544 },
+            points: [
+              { label: '2026-10-05', value: 153 },
+              { label: '2026-10-12', value: 544 },
             ],
           }),
         ],
@@ -225,7 +240,7 @@ describe('renderDashboardPage', () => {
       '<span class="bar" style="height:91%"><span class="week-value">544</span></span>',
     );
     expect(html).toContain(
-      '<span class="col" title="week of 2026-10-05: 153"><span class="bar" style="height:26%"></span></span>',
+      '<span class="col" title="2026-10-05: 153"><span class="bar" style="height:26%"></span></span>',
     );
   });
 
@@ -240,7 +255,7 @@ describe('renderDashboardPage', () => {
       const html = renderDashboardPage(
         buildInput({
           indicators: [
-            indicator({ unit: 'count', weeks: [{ weekStart: '2026-10-12', value: step.value }] }),
+            indicator({ unit: 'count', points: [{ label: '2026-10-12', value: step.value }] }),
           ],
         }),
       );
@@ -251,7 +266,7 @@ describe('renderDashboardPage', () => {
   it('draws no ceiling line and no legend entry when the ceiling sits above the axis', () => {
     const html = renderDashboardPage(
       buildInput({
-        indicators: [indicator({ weeks: [{ weekStart: '2026-10-12', value: 4 }] })],
+        indicators: [indicator({ points: [{ label: '2026-10-12', value: 4 }] })],
         targets: [{ indicatorId: 'latency-p95', app: 'pragma', ceiling: 900 }],
       }),
     );
@@ -265,7 +280,7 @@ describe('renderDashboardPage', () => {
   it('draws no graph at all when no week of the row holds a value', () => {
     const html = renderDashboardPage(
       buildInput({
-        indicators: [indicator({ weeks: [{ weekStart: '2026-10-12', value: null }] })],
+        indicators: [indicator({ points: [{ label: '2026-10-12', value: null }] })],
       }),
     );
     expect(html).toContain(
@@ -283,7 +298,7 @@ describe('renderDashboardPage', () => {
             current: null,
             status: { kind: 'unavailable', reason: 'token <expired>' },
           }),
-          indicator({ app: 'c', current: null, weeks: [{ weekStart: '2026-10-12', value: 3 }] }),
+          indicator({ app: 'c', current: null, points: [{ label: '2026-10-12', value: 3 }] }),
         ],
       }),
     );
@@ -294,7 +309,7 @@ describe('renderDashboardPage', () => {
   it('warns inside the section whose source could not be read, once per reason', () => {
     const html = renderDashboardPage(
       buildInput({
-        indicators: [
+        security: [
           indicator({
             id: 'dependabot-other',
             pillar: 'security',
@@ -356,6 +371,30 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('<span class="chip-value">—</span>');
     expect(html).toContain('no occurrence yet. Target: zero per week.');
     expect(html).not.toContain('A closed weak point');
+  });
+
+  it('offers one tab per range and shows only the first', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [
+          { id: 'week', title: 'week by week', indicators: [indicator({})] },
+          {
+            id: 'hour',
+            title: 'last 12 hours',
+            indicators: [indicator({ points: [{ label: '14:00', value: 7 }] })],
+          },
+        ],
+      }),
+    );
+    expect(html).toContain(
+      '<input type="radio" class="range-pick" name="range" id="range-week" checked><input type="radio" class="range-pick" name="range" id="range-hour">',
+    );
+    expect(html).toContain(
+      '<label class="range-tab" for="range-week">week by week</label><label class="range-tab" for="range-hour">last 12 hours</label>',
+    );
+    expect(html).toContain('<div class="range-panel" data-range="hour">');
+    expect(html).toContain('<span>14:00</span>');
+    expect(html).toContain('title="14:00: 7 ms"');
   });
 
   it('counts the defects and gives the product and factory maps their own toggle', () => {

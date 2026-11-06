@@ -22,9 +22,16 @@ import {
 } from './weak-points-page.core';
 import type { EngagedWeakPoint, WeeklyCount } from './weak-points.core';
 
+export interface RangeView {
+  readonly id: string;
+  readonly title: string;
+  readonly indicators: readonly Indicator[];
+}
+
 export interface DashboardPageInput {
   readonly now: string;
-  readonly indicators: readonly Indicator[];
+  readonly ranges: readonly RangeView[];
+  readonly security: readonly Indicator[];
   readonly targets: readonly Target[];
   readonly placed: readonly PlacedDot[];
   readonly engaged: readonly EngagedWeakPoint[];
@@ -43,25 +50,32 @@ interface Point {
   readonly value: number | null;
 }
 
-const PILLARS: readonly { readonly id: Pillar; readonly title: string; readonly intent: string }[] =
-  [
-    {
-      id: 'speed',
-      title: 'Speed',
-      intent: 'Latency of each production API, in milliseconds.',
-    },
-    {
-      id: 'stability',
-      title: 'Stability',
-      intent:
-        'API 5xx and Lambda throttling on previews and in production, Sentry errors, and bugs users reported.',
-    },
-    {
-      id: 'security',
-      title: 'Security',
-      intent: 'Known vulnerable dependencies and exposed secrets, counted, never named.',
-    },
-  ];
+interface PillarView {
+  readonly id: Pillar;
+  readonly title: string;
+  readonly intent: string;
+}
+
+const RATE_PILLARS: readonly PillarView[] = [
+  {
+    id: 'speed',
+    title: 'Speed',
+    intent: 'Latency of each production API, in milliseconds, over the selected range.',
+  },
+  {
+    id: 'stability',
+    title: 'Stability',
+    intent:
+      'API 5xx and Lambda throttling on previews and in production, Sentry errors, and bugs users reported, over the selected range.',
+  },
+];
+
+const SECURITY_PILLAR: PillarView = {
+  id: 'security',
+  title: 'Security',
+  intent:
+    'Known vulnerable dependencies and exposed secrets, counted, never named. This is the state of the repository now, so the range above does not change it.',
+};
 
 const UNIT_SUFFIX: Readonly<Record<Indicator['unit'], string>> = { count: '', ms: ' ms' };
 const PERCENT = 100;
@@ -75,7 +89,11 @@ const WEAK_POINT_CEILING = 0;
 const MONTH_DAY_START = 5;
 const AXIS_INTERVALS = 4;
 const ZOOM_GROUP = 'chart-zoom';
+const RANGE_GROUP = 'range';
+const RANGE_NOTE =
+  'The range the Speed and Stability values are measured over. Week by week is the rolling seven days with eight weekly buckets, the others are the rolling window with hourly or minute buckets. Sentry has no bucket under a week, so its graph is empty there.';
 const UNSAFE_ID = /[^a-z0-9]+/gi;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const PAGE_NOTE =
   'Each indicator is the rolling seven days, and is ok or ko against its ceiling in docs/quality/targets.md. A closed row shows one pastille per application. Opening a row shows every value with its ceiling, then one eight-week graph per application, oldest week first. Clicking a graph opens it large, where hovering a week gives its value; clicking outside the graph closes it. Hover anything for its detail.';
 const WEAK_POINTS_NOTE =
@@ -179,10 +197,10 @@ function percentOf(value: number, maximum: number): string {
 function renderSparkline(points: readonly Point[], maximum: number, unit: string): string {
   const bars = points.map((point) => {
     if (point.value === null) {
-      return `<span class="bar missing" title="week of ${point.label}: no data"></span>`;
+      return `<span class="bar missing" title="${point.label}: no data"></span>`;
     }
     const zero = point.value === 0 ? ' zero' : '';
-    return `<span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%" title="week of ${point.label}: ${String(point.value)}${unit}"></span>`;
+    return `<span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%" title="${point.label}: ${String(point.value)}${unit}"></span>`;
   });
   return `<span class="bars">${bars.join('')}</span>`;
 }
@@ -196,13 +214,17 @@ function selectLabelledWeeks(points: readonly Point[]): ReadonlySet<number> {
   ]);
 }
 
+function tickOf(label: string): string {
+  return ISO_DATE.test(label) ? label.slice(MONTH_DAY_START) : label;
+}
+
 function renderColumn(point: Point, maximum: number, unit: string, isLabelled: boolean): string {
   if (point.value === null) return `<span class="col"><span class="bar missing"></span></span>`;
   const zero = point.value === 0 ? ' zero' : '';
   const label = isLabelled
     ? `<span class="week-value">${escapeHtml(`${String(point.value)}${unit}`)}</span>`
     : '';
-  return `<span class="col" title="${escapeHtml(`week of ${point.label}: ${String(point.value)}${unit}`)}"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%">${label}</span></span>`;
+  return `<span class="col" title="${escapeHtml(`${point.label}: ${String(point.value)}${unit}`)}"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%">${label}</span></span>`;
 }
 
 function selectDrawnCeiling(maximum: number, ceiling: number | null): number | null {
@@ -239,9 +261,7 @@ function renderPlot(
   const columns = points.map((point, index) =>
     renderColumn(point, axis.maximum, unit, labelled.has(index)),
   );
-  const weeks = points.map(
-    (point) => `<span>${escapeHtml(point.label.slice(MONTH_DAY_START))}</span>`,
-  );
+  const weeks = points.map((point) => `<span>${escapeHtml(tickOf(point.label))}</span>`);
   return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit)}`;
 }
 
@@ -293,7 +313,7 @@ function renderIndicatorRow(
       amount: describeAmount(indicator),
       goal: describeGoal(ceiling, indicator.unit),
       detail: describeIndicator(indicator, targets, verdict),
-      points: indicator.weeks.map((week) => ({ label: week.weekStart, value: week.value })),
+      points: indicator.points,
       ceiling,
       unit: UNIT_SUFFIX[indicator.unit],
     };
@@ -332,7 +352,7 @@ function renderSection(
 }
 
 function renderPillar(
-  pillar: (typeof PILLARS)[number],
+  pillar: PillarView,
   indicators: readonly Indicator[],
   targets: readonly Target[],
 ): string {
@@ -408,22 +428,42 @@ function renderMapRow(title: string, note: string, grid: MapGrid, now: string): 
   );
 }
 
+function renderStageRow(): string {
+  return `<div class="row flat"><span class="row-name">Stages</span><span class="pips">${renderStageLegend('board')}</span></div>`;
+}
+
 function renderDefectMapSection(placed: readonly PlacedDot[], now: string): string {
   const { product, factory } = splitDefectMaps(placed);
   const score: Score = { text: `${String(placed.length)} defects`, verdict: 'unjudged' };
-  const body = `${renderStageLegend('board')}${renderMapRow(PRODUCT_MAP_TITLE, PRODUCT_MAP_NOTE, product, now)}${renderMapRow(FACTORY_MAP_TITLE, FACTORY_MAP_NOTE, factory, now)}`;
+  const body = `${renderStageRow()}${renderMapRow(PRODUCT_MAP_TITLE, PRODUCT_MAP_NOTE, product, now)}${renderMapRow(FACTORY_MAP_TITLE, FACTORY_MAP_NOTE, factory, now)}`;
   return renderSection('defect-map', 'Defect map', DEFECT_MAP_NOTE, score, '', body);
 }
 
+function renderRangeSwitch(ranges: readonly RangeView[], targets: readonly Target[]): string {
+  const radios = ranges.map(
+    (range, index) =>
+      `<input type="radio" class="range-pick" name="${RANGE_GROUP}" id="range-${range.id}"${index === 0 ? ' checked' : ''}>`,
+  );
+  const tabs = ranges.map(
+    (range) =>
+      `<label class="range-tab" for="range-${range.id}">${escapeHtml(range.title)}</label>`,
+  );
+  const panels = ranges.map((range) => {
+    const sections = RATE_PILLARS.map((pillar) => renderPillar(pillar, range.indicators, targets));
+    return `<div class="range-panel" data-range="${range.id}">${sections.join('')}</div>`;
+  });
+  return `<div class="range-switch">${radios.join('')}<div class="range-tabs" role="tablist" title="${escapeHtml(RANGE_NOTE)}">${tabs.join('')}</div>${panels.join('')}</div>`;
+}
+
 export function renderDashboardPage(input: DashboardPageInput): string {
-  const sections = [
-    ...PILLARS.map((pillar) => renderPillar(pillar, input.indicators, input.targets)),
+  const standing = [
+    renderPillar(SECURITY_PILLAR, input.security, input.targets),
     renderWeakPointSection(input.engaged, input.weeklyCounts),
     renderDefectMapSection(input.placed, input.now),
   ];
   return renderQualityFragment(
     'borso.fr 3S board',
     `Generated by scripts/quality/quality-dashboard.ts on ${input.now}. ${PAGE_NOTE}`,
-    `<div class="sections">${sections.join('')}</div>`,
+    `${renderRangeSwitch(input.ranges, input.targets)}<div class="sections">${standing.join('')}</div>`,
   );
 }
