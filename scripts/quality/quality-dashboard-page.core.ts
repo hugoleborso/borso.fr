@@ -3,7 +3,6 @@ import {
   type Indicator,
   type Pillar,
   type Target,
-  type WeeklyValue,
 } from './quality-dashboard.core';
 import { escapeHtml, renderQualityFragment } from './quality-page.core';
 import {
@@ -17,7 +16,6 @@ import {
   listOpenWeakPoints,
   renderGrid,
   renderStageLegend,
-  renderWeeklyBars,
   splitDefectMaps,
   type MapGrid,
   type PlacedDot,
@@ -34,6 +32,16 @@ export interface DashboardPageInput {
 }
 
 type Verdict = 'ok' | 'ko' | 'unjudged';
+
+interface Score {
+  readonly text: string;
+  readonly verdict: Verdict;
+}
+
+interface Point {
+  readonly label: string;
+  readonly value: number | null;
+}
 
 const PILLARS: readonly { readonly id: Pillar; readonly title: string; readonly intent: string }[] =
   [
@@ -64,8 +72,10 @@ const NO_CEILING = 'no ceiling in docs/quality/targets.md, so neither ok nor ko'
 const WARNING_GLYPH = '⚠';
 const SEPARATOR = ' · ';
 const WEAK_POINT_CEILING = 0;
+const MONTH_DAY_START = 5;
+const UNSAFE_ID = /[^a-z0-9]+/gi;
 const PAGE_NOTE =
-  'Each indicator is the rolling seven days, and is ok or ko against its ceiling in docs/quality/targets.md. A closed section shows how many of its indicators are ok. Opening a row shows one eight-week graph per application, oldest week first; clicking a graph opens it large. Hover anything for its detail.';
+  'Each indicator is the rolling seven days, and is ok or ko against its ceiling in docs/quality/targets.md. A closed row shows one pastille per application. Opening a row shows every value with its ceiling, then one eight-week graph per application, oldest week first. Clicking a graph opens it full screen; clicking the enlarged graph closes it. Hover anything for its detail.';
 const WEAK_POINTS_NOTE =
   'Each weak point engaged in docs/quality/weak-points.md, with the dantotsus that recorded it, week by week. Target: zero per week.';
 const DEFECT_MAP_NOTE =
@@ -83,20 +93,13 @@ function judgeCount(count: number | null, ceiling: number): Verdict {
   return count <= ceiling ? 'ok' : 'ko';
 }
 
-function scoreVerdict(okCount: number, judgedCount: number): Verdict {
-  if (judgedCount === 0) return 'unjudged';
-  return okCount === judgedCount ? 'ok' : 'ko';
-}
-
-function scoreOf(verdicts: readonly Verdict[]): {
-  readonly text: string;
-  readonly verdict: Verdict;
-} {
+function scoreOf(verdicts: readonly Verdict[]): Score {
   const okCount = verdicts.filter((verdict) => verdict === 'ok').length;
   const judgedCount = verdicts.filter((verdict) => verdict !== 'unjudged').length;
+  if (judgedCount === 0) return { text: 'no ceiling', verdict: 'unjudged' };
   return {
     text: `${String(okCount)}/${String(judgedCount)} ok`,
-    verdict: scoreVerdict(okCount, judgedCount),
+    verdict: okCount === judgedCount ? 'ok' : 'ko',
   };
 }
 
@@ -124,7 +127,7 @@ function describeIndicator(
   const ceiling = findCeiling(indicator, targets);
   if (ceiling === null) return `${name}${SEPARATOR}${NO_CEILING}`;
   const comparison = verdict === 'ok' ? 'at or under' : 'over';
-  return `${name}${SEPARATOR}${comparison} the ceiling of ${String(ceiling)}${UNIT_SUFFIX[indicator.unit]}`;
+  return `${name}${SEPARATOR}${String(indicator.current)}${UNIT_SUFFIX[indicator.unit]}${SEPARATOR}${comparison} the ceiling of ${String(ceiling)}${UNIT_SUFFIX[indicator.unit]}`;
 }
 
 function describeAmount(indicator: Indicator): string {
@@ -132,24 +135,61 @@ function describeAmount(indicator: Indicator): string {
   return `${String(indicator.current)}${UNIT_SUFFIX[indicator.unit]}`;
 }
 
-function describeGoal(indicator: Indicator, targets: readonly Target[]): string {
-  const ceiling = findCeiling(indicator, targets);
+function describeGoal(ceiling: number | null, unit: Indicator['unit']): string {
   if (ceiling === null) return NO_GOAL;
-  return `≤ ${String(ceiling)}${UNIT_SUFFIX[indicator.unit]}`;
+  return `≤ ${String(ceiling)}${UNIT_SUFFIX[unit]}`;
 }
 
-function renderTrend(weeks: readonly WeeklyValue[]): string {
-  if (weeks.every((week) => week.value === null)) return '';
-  const highest = Math.max(1, ...weeks.map((week) => week.value ?? 0));
-  const bars = weeks.map((week) => {
-    if (week.value === null) {
-      return `<span class="bar missing" title="week of ${week.weekStart}: no data"></span>`;
+function identifier(parts: readonly string[]): string {
+  return parts.join('-').replaceAll(UNSAFE_ID, '-').toLowerCase();
+}
+
+function hasData(points: readonly Point[]): boolean {
+  return points.some((point) => point.value !== null);
+}
+
+function highestOf(points: readonly Point[]): number {
+  return Math.max(1, ...points.map((point) => point.value ?? 0));
+}
+
+function renderBars(points: readonly Point[], highest: number): string {
+  const bars = points.map((point) => {
+    if (point.value === null) {
+      return `<span class="bar missing" title="week of ${point.label}: no data"></span>`;
     }
-    const height = Math.round((week.value / highest) * PERCENT);
-    const zero = week.value === 0 ? ' zero' : '';
-    return `<span class="bar${zero}" style="height:${String(height)}%" title="week of ${week.weekStart}: ${String(week.value)}"></span>`;
+    const height = Math.round((point.value / highest) * PERCENT);
+    const zero = point.value === 0 ? ' zero' : '';
+    return `<span class="bar${zero}" style="height:${String(height)}%" title="week of ${point.label}: ${String(point.value)}"></span>`;
   });
   return `<div class="bars">${bars.join('')}</div>`;
+}
+
+function renderCeilingLine(highest: number, ceiling: number | null): string {
+  if (ceiling === null || ceiling > highest) return '';
+  const bottom = Math.round((ceiling / highest) * PERCENT);
+  return `<span class="ceiling" style="bottom:${String(bottom)}%" title="ceiling ${String(ceiling)}"></span>`;
+}
+
+function renderTicks(points: readonly Point[]): string {
+  const ticks = points.map(
+    (point) => `<span>${escapeHtml(point.label.slice(MONTH_DAY_START))}</span>`,
+  );
+  return `<div class="ticks">${ticks.join('')}</div>`;
+}
+
+function renderChart(
+  key: string,
+  name: string,
+  detail: string,
+  points: readonly Point[],
+  ceiling: number | null,
+): string {
+  if (!hasData(points)) return '';
+  const highest = highestOf(points);
+  const bars = renderBars(points, highest);
+  const small = `<a class="chart" id="c-${key}" href="#z-${key}" title="${escapeHtml(detail)}"><span class="chart-app">${escapeHtml(name)}</span>${bars}</a>`;
+  const large = `<a class="zoom" id="z-${key}" href="#c-${key}" aria-label="close the enlarged graph"><span class="zoom-card"><span class="zoom-title">${escapeHtml(detail)}</span><span class="zoom-plot">${bars}${renderCeilingLine(highest, ceiling)}</span>${renderTicks(points)}</span></a>`;
+  return `${small}${large}`;
 }
 
 function renderTile(
@@ -162,14 +202,12 @@ function renderTile(
   return `<span class="tile" title="${escapeHtml(detail)}"><span class="tile-head"><span class="flag ${verdict}"></span><span class="tile-app">${escapeHtml(name)}</span></span><span class="tile-value">${escapeHtml(amount)}</span><span class="tile-goal">${escapeHtml(goal)}</span></span>`;
 }
 
-function renderChart(name: string, detail: string, bars: string): string {
-  return `<button type="button" class="chart" title="${escapeHtml(detail)}"><span class="chart-app">${escapeHtml(name)}</span>${bars}</button>`;
+function renderPip(verdict: Verdict, detail: string): string {
+  return `<span class="flag ${verdict}" title="${escapeHtml(detail)}"></span>`;
 }
 
-function renderRow(title: string, tiles: string, charts: string): string {
-  const head = `<span class="row-name">${escapeHtml(title)}</span><div class="tiles">${tiles}</div>`;
-  if (charts === '') return `<div class="row flat">${head}</div>`;
-  return `<details class="row"><summary>${head}</summary><div class="charts">${charts}</div></details>`;
+function renderRow(name: string, pips: string, score: Score, body: string): string {
+  return `<details class="row"><summary><span class="row-name">${escapeHtml(name)}</span><span class="pips">${pips}</span><span class="score ${score.verdict}">${escapeHtml(score.text)}</span></summary>${body}</details>`;
 }
 
 function renderIndicatorRow(
@@ -177,27 +215,38 @@ function renderIndicatorRow(
   own: readonly Indicator[],
   targets: readonly Target[],
 ): string {
-  const tiles = own
-    .map((indicator) => {
-      const verdict = judge(indicator, targets);
-      return renderTile(
+  const cells = own.map((indicator) => {
+    const verdict = judge(indicator, targets);
+    const ceiling = findCeiling(indicator, targets);
+    const detail = describeIndicator(indicator, targets, verdict);
+    return {
+      verdict,
+      detail,
+      pip: renderPip(verdict, detail),
+      tile: renderTile(
         indicator.app,
         verdict,
         describeAmount(indicator),
-        describeGoal(indicator, targets),
-        describeIndicator(indicator, targets, verdict),
-      );
-    })
-    .join('');
-  const charts = own
-    .flatMap((indicator) => {
-      const bars = renderTrend(indicator.weeks);
-      if (bars === '') return [];
-      const verdict = judge(indicator, targets);
-      return [renderChart(indicator.app, describeIndicator(indicator, targets, verdict), bars)];
-    })
-    .join('');
-  return renderRow(label, tiles, charts);
+        describeGoal(ceiling, indicator.unit),
+        detail,
+      ),
+      chart: renderChart(
+        identifier([indicator.pillar, indicator.id, indicator.app]),
+        indicator.app,
+        detail,
+        indicator.weeks.map((week) => ({ label: week.weekStart, value: week.value })),
+        ceiling,
+      ),
+    };
+  });
+  const charts = cells.map((cell) => cell.chart).join('');
+  const body = `<div class="tiles">${cells.map((cell) => cell.tile).join('')}</div><div class="charts">${charts}</div>`;
+  return renderRow(
+    label,
+    cells.map((cell) => cell.pip).join(''),
+    scoreOf(cells.map((cell) => cell.verdict)),
+    body,
+  );
 }
 
 function orderedUnique(values: readonly string[]): readonly string[] {
@@ -218,7 +267,7 @@ function renderSection(
   id: string,
   title: string,
   note: string,
-  score: { readonly text: string; readonly verdict: Verdict },
+  score: Score,
   warning: string,
   body: string,
 ): string {
@@ -238,12 +287,11 @@ function renderPillar(
       targets,
     ),
   );
-  const score = scoreOf(own.map((indicator) => judge(indicator, targets)));
   return renderSection(
     pillar.id,
     pillar.title,
     pillar.intent,
-    score,
+    scoreOf(own.map((indicator) => judge(indicator, targets))),
     renderWarning(own),
     rows.join(''),
   );
@@ -252,18 +300,27 @@ function renderPillar(
 function renderWeakPointRow(weakPoint: EngagedWeakPoint, series: readonly WeeklyCount[]): string {
   const count = countCurrentWeek(series);
   const verdict = judgeCount(count, WEAK_POINT_CEILING);
-  const amount = count === null ? NO_VALUE : String(count);
-  const detail = `${describeWeakPointMeta(weakPoint, series)}${SEPARATOR}${describeCurrentWeek(series)}`;
-  const tiles = renderTile(
+  const detail = `${weakPoint.title}${SEPARATOR}${describeWeakPointMeta(weakPoint, series)}${SEPARATOR}${describeCurrentWeek(series)}`;
+  const tile = renderTile(
     weakPoint.id,
     verdict,
-    amount,
-    `≤ ${String(WEAK_POINT_CEILING)}`,
+    count === null ? NO_VALUE : String(count),
+    describeGoal(WEAK_POINT_CEILING, 'count'),
     detail,
   );
-  const charts =
-    series.length === 0 ? '' : renderChart(weakPoint.id, detail, renderWeeklyBars(series));
-  return renderRow(weakPoint.title, tiles, charts);
+  const chart = renderChart(
+    identifier(['weak', weakPoint.id]),
+    weakPoint.id,
+    detail,
+    series.map((week) => ({ label: week.weekStart, value: week.count })),
+    WEAK_POINT_CEILING,
+  );
+  return renderRow(
+    weakPoint.title,
+    renderPip(verdict, detail),
+    scoreOf([verdict]),
+    `<div class="tiles">${tile}</div><div class="charts">${chart}</div>`,
+  );
 }
 
 function renderWeakPointSection(
@@ -289,20 +346,17 @@ function renderWeakPointSection(
 }
 
 function renderMapRow(title: string, note: string, grid: MapGrid, now: string): string {
-  const tiles = renderTile(
-    'dots',
-    'unjudged',
-    String(grid.placed.length),
-    NO_GOAL,
-    `${title}${SEPARATOR}${note}`,
+  return renderRow(
+    title,
+    '',
+    { text: `${String(grid.placed.length)} dots`, verdict: 'unjudged' },
+    `<div class="map" title="${escapeHtml(note)}">${renderGrid(grid.placed, grid.rows, grid.columns, now)}</div>`,
   );
-  const head = `<span class="row-name">${escapeHtml(title)}</span><div class="tiles">${tiles}</div>`;
-  return `<details class="row"><summary>${head}</summary>${renderGrid(grid.placed, grid.rows, grid.columns, now)}</details>`;
 }
 
 function renderDefectMapSection(placed: readonly PlacedDot[], now: string): string {
   const { product, factory } = splitDefectMaps(placed);
-  const score = { text: `${String(placed.length)} defects`, verdict: 'unjudged' as const };
+  const score: Score = { text: `${String(placed.length)} defects`, verdict: 'unjudged' };
   const body = `${renderStageLegend('board')}${renderMapRow(PRODUCT_MAP_TITLE, PRODUCT_MAP_NOTE, product, now)}${renderMapRow(FACTORY_MAP_TITLE, FACTORY_MAP_NOTE, factory, now)}`;
   return renderSection('defect-map', 'Defect map', DEFECT_MAP_NOTE, score, '', body);
 }
