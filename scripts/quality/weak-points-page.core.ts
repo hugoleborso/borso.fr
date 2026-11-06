@@ -177,8 +177,9 @@ export function renderStageLegend(style: PageStyle): string {
   ];
   const items = entries.map((entry) => {
     const title = style === 'board' ? ` title="${escapeHtml(entry.note)}"` : '';
-    const text = style === 'board' ? '' : ` ${escapeHtml(entry.note)}`;
-    return `<span${title}><span class="dot ${entry.dotClass}"></span>${text}</span>`;
+    const text = style === 'document' ? ` ${escapeHtml(entry.note)}` : '';
+    const classes = ['dot', entry.dotClass].filter((name) => name !== '').join(' ');
+    return `<span${title}><span class="${classes}"></span>${text}</span>`;
   });
   return `<div class="legend">${items.join('')}</div>`;
 }

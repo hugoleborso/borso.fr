@@ -234,9 +234,8 @@ function renderColumn(point: Point, maximum: number, unit: string, isLabelled: b
   return `<span class="col" title="${escapeHtml(`${point.label}: ${String(point.value)}${unit}`)}"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%">${label}</span></span>`;
 }
 
-function selectDrawnCeiling(maximum: number, ceiling: number | null): number | null {
-  if (ceiling === null || ceiling > maximum) return null;
-  return ceiling;
+function isCeilingOnScale(maximum: number, ceiling: number | null): ceiling is number {
+  return ceiling !== null && ceiling <= maximum;
 }
 
 function renderCeilingLine(maximum: number, ceiling: number, unit: string): string {
@@ -263,8 +262,8 @@ function renderPlot(
   const lines = axis.ticks.map(
     (tick) => `<span class="gridline" style="bottom:${percentOf(tick, axis.maximum)}%"></span>`,
   );
-  const drawn = selectDrawnCeiling(axis.maximum, ceiling);
-  const line = drawn === null ? '' : renderCeilingLine(axis.maximum, drawn, unit);
+  const isOnScale = isCeilingOnScale(axis.maximum, ceiling);
+  const line = isOnScale ? renderCeilingLine(axis.maximum, ceiling, unit) : '';
   const labelled = selectLabelledWeeks(points);
   const columns = points.map((point, index) =>
     renderColumn(point, axis.maximum, unit, labelled.has(index)),
@@ -275,7 +274,7 @@ function renderPlot(
       ? `<span>${escapeHtml(tickOf(point.label))}</span>`
       : '<span></span>',
   );
-  return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit, seriesName)}`;
+  return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(isOnScale ? ceiling : null, unit, seriesName)}`;
 }
 
 interface Cell {
@@ -374,8 +373,9 @@ function renderStaticRow(
   label: string,
   own: readonly Indicator[],
   targets: readonly Target[],
+  pillar: PillarView,
 ): string {
-  const { summary, body } = renderCellsOf(buildCells(own, 'static', targets));
+  const { summary, body } = renderCellsOf(buildCells(own, pillar.id, targets));
   return renderRow(label, summary, body);
 }
 
@@ -449,6 +449,7 @@ function renderStaticPillar(
       label,
       own.filter((indicator) => indicator.label === label),
       targets,
+      pillar,
     ),
   );
   return renderSection(

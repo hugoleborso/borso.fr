@@ -79,6 +79,21 @@ function buildInput(overrides: InputOverrides = {}): DashboardPageInput {
   };
 }
 
+function section(html: string, pattern: RegExp): string {
+  return pattern.exec(html)?.[0] ?? '(no match)';
+}
+
+function axisTicks(value: number): readonly (string | undefined)[] {
+  const html = renderDashboardPage(
+    buildInput({
+      indicators: [indicator({ unit: 'count', points: [{ label: 'w', value }] })],
+    }),
+  );
+  return [...html.matchAll(/<span class="tick" style="bottom:[0-9]+%">([^<]+)</g)].map(
+    (match) => match[1],
+  );
+}
+
 describe('renderDashboardPage', () => {
   it('opens with the title, keeps the generation note in its tooltip and ships no script', () => {
     const html = renderDashboardPage(buildInput());
@@ -269,7 +284,7 @@ describe('renderDashboardPage', () => {
         indicators: [
           indicator({
             unit: 'count',
-            points: Array.from({ length: 24 }, (_, index) => ({
+            points: Array.from({ length: 26 }, (_, index) => ({
               label: `13:${String(index).padStart(2, '0')}`,
               value: index,
             })),
@@ -281,19 +296,17 @@ describe('renderDashboardPage', () => {
       /<span class="x-weeks">(.*?)<\/span><\/span><span class="chart-legend"/s.exec(html)?.[1] ??
       '';
     const ticks = [...axis.matchAll(/<span>([^<]*)<\/span>/g)].map((match) => match[1]);
+    expect(ticks.length).toBe(26);
     expect(ticks.filter((tick) => tick !== '')).toEqual([
       '13:01',
-      '13:03',
-      '13:05',
+      '13:04',
       '13:07',
-      '13:09',
-      '13:11',
+      '13:10',
       '13:13',
-      '13:15',
-      '13:17',
+      '13:16',
       '13:19',
-      '13:21',
-      '13:23',
+      '13:22',
+      '13:25',
     ]);
   });
 
@@ -309,6 +322,11 @@ describe('renderDashboardPage', () => {
     expect(html).toContain(
       '<span class="chart-legend"><span><i class="swatch"></i>value per week</span></span>',
     );
+    const noTarget = renderDashboardPage(
+      buildInput({ indicators: [indicator({ points: [{ label: '2026-10-12', value: 4 }] })] }),
+    );
+    expect(noTarget).toContain('class="panel"');
+    expect(noTarget).not.toContain('class="ceiling"');
   });
 
   it('draws no graph at all when no week of the row holds a value', () => {
@@ -453,5 +471,272 @@ describe('renderDashboardPage', () => {
     );
     expect(html).toContain('<th>apps/pragma (2)</th>');
     expect(html).toContain('<th>gates (1)</th>');
+  });
+});
+
+describe('renderDashboardPage, whole fragments', () => {
+  it('renders a whole indicator row across ranges, applications and chip kinds', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [
+          {
+            id: 'week',
+            title: 'week by week',
+            indicators: [
+              indicator({
+                app: 'a',
+                current: 1,
+                points: [
+                  { label: 'w1', value: 1 },
+                  { label: 'w2', value: 0 },
+                ],
+              }),
+              indicator({ app: 'b', current: 2, points: [] }),
+              indicator({ id: 'latency-p50', label: 'p50', app: 'a', current: 3, points: [] }),
+            ],
+          },
+          {
+            id: 'hour',
+            title: 'last 12 hours',
+            indicators: [indicator({ app: 'a', current: 9, points: [] })],
+          },
+        ],
+        targets: [
+          { indicatorId: 'latency-p95', app: 'a', ceiling: 4 },
+          { indicatorId: 'latency-p50', app: 'a', ceiling: 0 },
+        ],
+      }),
+    );
+    expect(
+      section(
+        html,
+        /<details class="row"><summary><span class="row-name">p95<\/span>.*?<\/details><details class="row">/s,
+      ),
+    ).toBe(
+      '<details class="row"><summary><span class="row-name">p95</span><span class="ranged" data-range="week"><span class="pips"><span class="flag ok" title="a · p95 · 1 ms · at or under the ceiling of 4 ms"></span><span class="flag unjudged" title="b · p95 · no ceiling in docs/quality/targets.md, so neither ok nor ko"></span></span><span class="score ok">1/1 ok</span></span><span class="ranged" data-range="hour"><span class="pips"><span class="flag ko" title="a · p95 · 9 ms · over the ceiling of 4 ms"></span></span><span class="score ko">0/1 ok</span></span></summary><span class="ranged" data-range="week"><div class="chips"><details class="zoomable" name="chart-zoom" id="week-speed-latency-p95-a"><summary class="chip" title="a · p95 · 1 ms · at or under the ceiling of 4 ms"><span class="chip-head"><span class="flag ok"></span><span class="chip-app">a</span></span><span class="chip-value">1 ms</span><span class="chip-goal">≤ 4 ms</span><span class="bars"><span class="bar" style="height:100%" title="w1: 1 ms"></span><span class="bar zero" style="height:0%" title="w2: 0 ms"></span></span></summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">a · p95 · 1 ms · at or under the ceiling of 4 ms</span><span class="plot"><span class="y-axis"><span class="tick" style="bottom:0%">0 ms</span><span class="tick" style="bottom:100%">1 ms</span></span><span class="panel"><span class="gridline" style="bottom:0%"></span><span class="gridline" style="bottom:100%"></span><span class="series"><span class="col" title="w1: 1 ms"><span class="bar" style="height:100%"><span class="week-value">1 ms</span></span></span><span class="col" title="w2: 0 ms"><span class="bar zero" style="height:0%"><span class="week-value">0 ms</span></span></span></span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks"><span>w1</span><span>w2</span></span></span><span class="chart-legend"><span><i class="swatch"></i>value per week</span></span></span></span></details><span class="chip flat" title="b · p95 · no ceiling in docs/quality/targets.md, so neither ok nor ko"><span class="chip-head"><span class="flag unjudged"></span><span class="chip-app">b</span></span><span class="chip-value">2 ms</span><span class="chip-goal">no ceiling</span></span></div></span><span class="ranged" data-range="hour"><div class="chips"><span class="chip flat" title="a · p95 · 9 ms · over the ceiling of 4 ms"><span class="chip-head"><span class="flag ko"></span><span class="chip-app">a</span></span><span class="chip-value">9 ms</span><span class="chip-goal">≤ 4 ms</span></span></div></span></details><details class="row">',
+    );
+  });
+
+  it('renders the radios, the tabs and their note once per range', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [
+          { id: 'week', title: 'week by week', indicators: [] },
+          { id: 'hour', title: 'last 12 hours', indicators: [] },
+        ],
+      }),
+    );
+    expect(section(html, /<div class="range-switch">.*?<div class="sections">/s)).toBe(
+      '<div class="range-switch"><input type="radio" class="range-pick" name="range" id="range-week" checked><input type="radio" class="range-pick" name="range" id="range-hour"><div class="range-tabs" role="tablist" title="The range the Speed and Stability values are measured over. Week by week is the rolling seven days with eight weekly buckets, the others are the rolling window with hourly or minute buckets. Sentry has no bucket under a week, so its graph is empty there."><label class="range-tab" for="range-week">week by week</label><label class="range-tab" for="range-hour">last 12 hours</label></div><div class="sections">',
+    );
+  });
+
+  it('renders the whole security section, which carries no range', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [],
+        security: [
+          indicator({
+            id: 'audit-other',
+            pillar: 'security',
+            label: 'Audit',
+            unit: 'count',
+            app: 'repository',
+            current: 7,
+            points: [],
+          }),
+          indicator({
+            id: 'secret-scanning-open',
+            pillar: 'security',
+            label: 'Secrets',
+            unit: 'count',
+            app: 'repository',
+            current: 0,
+            points: [],
+          }),
+        ],
+        targets: [{ indicatorId: 'audit-other', app: 'repository', ceiling: 9 }],
+      }),
+    );
+    expect(section(html, /<details class="section section-security">.*?<\/details><\/div>/s)).toBe(
+      '<details class="section section-security"><summary title="Known vulnerable dependencies and exposed secrets, counted, never named. This is the state of the repository now, so the range above does not change it."><h2>Security</h2><span class="score ok">1/1 ok</span></summary><div class="rows"><details class="row"><summary><span class="row-name">Audit</span><span class="pips"><span class="flag ok" title="repository · Audit · 7 · at or under the ceiling of 9"></span></span><span class="score ok">1/1 ok</span></summary><div class="chips"><span class="chip flat" title="repository · Audit · 7 · at or under the ceiling of 9"><span class="chip-head"><span class="flag ok"></span><span class="chip-app">repository</span></span><span class="chip-value">7</span><span class="chip-goal">≤ 9</span></span></div></details><details class="row"><summary><span class="row-name">Secrets</span><span class="pips"><span class="flag unjudged" title="repository · Secrets · no ceiling in docs/quality/targets.md, so neither ok nor ko"></span></span><span class="score unjudged">no ceiling</span></summary><div class="chips"><span class="chip flat" title="repository · Secrets · no ceiling in docs/quality/targets.md, so neither ok nor ko"><span class="chip-head"><span class="flag unjudged"></span><span class="chip-app">repository</span></span><span class="chip-value">0</span><span class="chip-goal">no ceiling</span></span></div></details></div>',
+    );
+  });
+
+  it('renders the whole weak point row, ceiling line and legend included', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [],
+        engaged: [weakPoint({ id: 'wp', title: 'A weak point', countermeasure: 'None' })],
+        weeklyCounts: new Map([
+          [
+            'wp',
+            [
+              { weekStart: '2026-10-05', count: 2 },
+              { weekStart: '2026-10-12', count: 1 },
+            ],
+          ],
+        ]),
+      }),
+    );
+    expect(
+      section(
+        html,
+        /<details class="section section-weak-points">.*?<\/details><\/div><\/details>/s,
+      ),
+    ).toBe(
+      '<details class="section section-weak-points"><summary title="Each weak point engaged in docs/quality/weak-points.md, with the dantotsus that recorded it, week by week. Target: zero per week."><h2>Engaged weak points</h2><span class="score ko">0/1 ok</span></summary><div class="rows"><details class="row"><summary><span class="row-name">A weak point</span><span class="pips"><span class="flag ko" title="A weak point · factory map · engaged on 2026-10-10 · 3 occurrence(s) recorded · countermeasure: None · 1 in the week of 2026-10-12. Target: zero per week."></span></span><span class="score ko">0/1 ok</span></summary><div class="chips"><details class="zoomable" name="chart-zoom" id="weak-wp"><summary class="chip" title="A weak point · factory map · engaged on 2026-10-10 · 3 occurrence(s) recorded · countermeasure: None · 1 in the week of 2026-10-12. Target: zero per week."><span class="chip-head"><span class="flag ko"></span><span class="chip-app">wp</span></span><span class="chip-value">1</span><span class="chip-goal">≤ 0</span><span class="bars"><span class="bar" style="height:100%" title="2026-10-05: 2"></span><span class="bar" style="height:50%" title="2026-10-12: 1"></span></span></summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">A weak point · factory map · engaged on 2026-10-10 · 3 occurrence(s) recorded · countermeasure: None · 1 in the week of 2026-10-12. Target: zero per week.</span><span class="plot"><span class="y-axis"><span class="tick" style="bottom:0%">0</span><span class="tick" style="bottom:50%">1</span><span class="tick" style="bottom:100%">2</span></span><span class="panel"><span class="gridline" style="bottom:0%"></span><span class="gridline" style="bottom:50%"></span><span class="gridline" style="bottom:100%"></span><span class="ceiling" style="bottom:0%" title="ceiling 0"></span><span class="series"><span class="col" title="2026-10-05: 2"><span class="bar" style="height:100%"><span class="week-value">2</span></span></span><span class="col" title="2026-10-12: 1"><span class="bar" style="height:50%"><span class="week-value">1</span></span></span></span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks"><span>10-05</span><span>10-12</span></span></span><span class="chart-legend"><span><i class="swatch"></i>value per week</span><span><i class="swatch rule"></i>ceiling 0</span></span></span></span></details></div></details>',
+    );
+  });
+
+  it('renders the stage row and both map rows whole', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [],
+        placed: [
+          placedDot({ slug: 'a', title: 'a', link: 'https://example.test/a' }, 'product'),
+          placedDot({ slug: 'b', title: 'b', link: 'https://example.test/b' }, 'factory'),
+        ],
+      }),
+    );
+    expect(
+      section(
+        html,
+        /<div class="row flat"><span class="row-name">Stages.*?Factory map.*?<\/details>/s,
+      ),
+    ).toBe(
+      '<div class="row flat"><span class="row-name">Stages</span><span class="pips"><div class="legend"><span title="A: caught locally or by a gate"><span class="dot stage-a"></span></span><span title="B: caught in review"><span class="dot stage-b"></span></span><span title="C: caught on a preview"><span class="dot stage-c"></span></span><span title="D: found in production by the operator or an agent"><span class="dot stage-d"></span></span><span title="E: reported by a user"><span class="dot stage-e"></span></span><span title="no stage recorded"><span class="dot"></span></span><span title="engaged weak point"><span class="dot engaged"></span></span></div></span></div><details class="row"><summary><span class="row-name">Product map</span><span class="pips"></span><span class="score unjudged">1 dots</span></summary><div class="map" title="Applications and infrastructure packages by layer, the layer read from the path the way the blueprint scripts read it."><div class="scroll"><table><tr><th></th><th>site</th></tr><tr><th>apps/pragma (1)</th><td class="cell"><a class="dot recent stage-c" href="https://example.test/a" title="2026-10-12 · stage C · a" aria-label="2026-10-12 · stage C · a"></a></td></tr></table></div></div></details><details class="row"><summary><span class="row-name">Factory map</span><span class="pips"></span><span class="score unjudged">1 dots</span></summary><div class="map" title="The stations of the line that builds the product: the skills, the gates, the hooks, CI and the deploy."><div class="scroll"><table><tr><th></th><th>defects</th></tr><tr><th>gates (1)</th><td class="cell"><a class="dot recent stage-c" href="https://example.test/b" title="2026-10-12 · stage C · b" aria-label="2026-10-12 · stage C · b"></a></td></tr></table></div></div></details>',
+    );
+  });
+
+  it('joins the sections, the ranges and the rows with nothing between them', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        ranges: [
+          {
+            id: 'week',
+            title: 'week by week',
+            indicators: [
+              indicator({ app: 'a', unit: 'count', current: 1, points: [] }),
+              indicator({
+                id: 'errors-prod',
+                pillar: 'stability',
+                label: '5xx',
+                unit: 'count',
+                app: 'a',
+                current: 1,
+                points: [],
+              }),
+            ],
+          },
+          {
+            id: 'hour',
+            title: 'last 12 hours',
+            indicators: [indicator({ app: 'a', unit: 'count', current: 2, points: [] })],
+          },
+        ],
+        security: [
+          indicator({
+            id: 'audit-other',
+            pillar: 'security',
+            label: 'Audit',
+            unit: 'count',
+            app: 'repository',
+            current: 3,
+            points: [],
+          }),
+          indicator({
+            id: 'latency-p95',
+            pillar: 'speed',
+            label: 'Not security',
+            unit: 'count',
+            app: 'a',
+            current: 4,
+            points: [],
+          }),
+        ],
+        engaged: [
+          weakPoint({ id: 'w1', title: 'One', countermeasure: 'C' }),
+          weakPoint({ id: 'w2', title: 'Two', countermeasure: 'C' }),
+        ],
+        weeklyCounts: new Map([
+          ['w1', [{ weekStart: '2026-10-12', count: 0 }]],
+          ['w2', [{ weekStart: '2026-10-12', count: 0 }]],
+        ]),
+      }),
+    );
+    expect(section(html, /<details class="section section-speed"><summary.*?<\/summary>/s)).toBe(
+      '<details class="section section-speed"><summary title="Latency of each production API, in milliseconds, over the selected range."><h2>Speed</h2><span class="ranged" data-range="week"><span class="score unjudged">no ceiling</span></span><span class="ranged" data-range="hour"><span class="score unjudged">no ceiling</span></span></summary>',
+    );
+    expect(html).toContain('</details><details class="section section-stability">');
+    expect(html).toContain('</details><details class="section section-weak-points">');
+    expect(html).toContain(
+      '</details><details class="row"><summary><span class="row-name">Two</span>',
+    );
+    expect(html).toContain(
+      '<details class="section section-defect-map"><summary title="One dot per defect',
+    );
+    expect(html).toContain('<h2>Defect map</h2><span class="score unjudged">0 defects</span>');
+    expect(html).not.toContain('Not security');
+    expect(html).toContain(
+      '<h2>Speed</h2><span class="ranged" data-range="week"><span class="score unjudged">no ceiling</span></span><span class="ranged" data-range="hour"><span class="score unjudged">no ceiling</span></span></summary><div class="rows"><details class="row"><summary><span class="row-name">p95</span>',
+    );
+    expect(html).toContain(
+      '<h2>Stability</h2><span class="ranged" data-range="week"><span class="score unjudged">no ceiling</span></span><span class="ranged" data-range="hour"><span class="score unjudged">no ceiling</span></span></summary><div class="rows"><details class="row"><summary><span class="row-name">5xx</span>',
+    );
+    expect(html).toContain(
+      '<h2>Defect map</h2><span class="score unjudged">0 defects</span></summary><div class="rows">',
+    );
+  });
+
+  it('steps the axis at the exact boundary of each nice step', () => {
+    expect(axisTicks(4)).toEqual(['0', '1', '2', '3', '4']);
+    expect(axisTicks(8)).toEqual(['0', '2', '4', '6', '8']);
+    expect(axisTicks(9)).toEqual(['0', '5', '10']);
+    expect(axisTicks(20)).toEqual(['0', '5', '10', '15', '20']);
+    expect(axisTicks(21)).toEqual(['0', '10', '20', '30']);
+  });
+
+  it('draws the ceiling line when it sits exactly on the axis maximum', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        indicators: [indicator({ unit: 'count', points: [{ label: 'w', value: 4 }] })],
+        targets: [{ indicatorId: 'latency-p95', app: 'pragma', ceiling: 4 }],
+      }),
+    );
+    expect(html).toContain('<span class="ceiling" style="bottom:100%" title="ceiling 4"></span>');
+  });
+
+  it('labels the peak and the latest bucket, and the last of tied peaks', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        indicators: [
+          indicator({
+            unit: 'count',
+            points: [
+              { label: 'w1', value: 5 },
+              { label: 'w2', value: 5 },
+              { label: 'w3', value: 1 },
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(section(html, /<span class="series">.*?<\/span><\/span><span class="x-axis"/s)).toBe(
+      '<span class="series"><span class="col" title="w1: 5"><span class="bar" style="height:83%"><span class="week-value">5</span></span></span><span class="col" title="w2: 5"><span class="bar" style="height:83%"><span class="week-value">5</span></span></span><span class="col" title="w3: 1"><span class="bar" style="height:17%"><span class="week-value">1</span></span></span></span></span></span><span class="x-axis"',
+    );
+  });
+
+  it('reads the ceiling of the indicator, not of another indicator of the same application', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        indicators: [indicator({ current: 10, points: [] })],
+        targets: [
+          { indicatorId: 'latency-p50', app: 'pragma', ceiling: 99 },
+          { indicatorId: 'latency-p95', app: 'pragma', ceiling: 1 },
+        ],
+      }),
+    );
+    expect(html).toContain('<span class="chip-goal">≤ 1 ms</span>');
   });
 });
