@@ -142,6 +142,7 @@ describe('renderDashboardPage', () => {
           indicator({
             app: 'borso-fr',
             current: null,
+            weeks: [{ weekStart: '2026-10-12', value: null }],
             status: { kind: 'not-applicable', reason: 'no API' },
           }),
         ],
@@ -149,10 +150,10 @@ describe('renderDashboardPage', () => {
       }),
     );
     expect(html).toContain(
-      '<div class="tiles"><span class="tile" title="pragma · p95 · 2845 ms · over the ceiling of 2000 ms"><span class="tile-head"><span class="flag ko"></span><span class="tile-app">pragma</span></span><span class="tile-value">2845 ms</span><span class="tile-goal">≤ 2000 ms</span></span>',
+      '<summary class="chip" title="pragma · p95 · 2845 ms · over the ceiling of 2000 ms"><span class="chip-head"><span class="flag ko"></span><span class="chip-app">pragma</span></span><span class="chip-value">2845 ms</span><span class="chip-goal">≤ 2000 ms</span>',
     );
     expect(html).toContain(
-      '<span class="tile" title="borso-fr · p95 · no API"><span class="tile-head"><span class="flag unjudged"></span><span class="tile-app">borso-fr</span></span><span class="tile-value">—</span><span class="tile-goal">no ceiling</span></span>',
+      '<span class="chip flat" title="borso-fr · p95 · no API"><span class="chip-head"><span class="flag unjudged"></span><span class="chip-app">borso-fr</span></span><span class="chip-value">—</span><span class="chip-goal">no ceiling</span></span>',
     );
   });
 
@@ -182,7 +183,7 @@ describe('renderDashboardPage', () => {
       }),
     );
     expect(html).toContain(
-      '<details class="zoomable" name="chart-zoom" id="speed-latency-p95-pragma"><summary class="chart" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chart-app">pragma</span><span class="bars">',
+      '<details class="zoomable" name="chart-zoom" id="speed-latency-p95-pragma"><summary class="chip" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chip-head">',
     );
     expect(html).toContain(
       '<span class="bar missing" title="week of 2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="week of 2026-10-05: 0 ms"></span><span class="bar" style="height:100%" title="week of 2026-10-12: 4 ms"></span></span></summary>',
@@ -193,11 +194,9 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('<span class="gridline" style="bottom:75%"></span>');
     expect(html).toContain('<span class="ceiling" style="bottom:50%" title="ceiling 2 ms"></span>');
     expect(html).toContain(
-      '<span class="col"><span class="bar" style="height:100%"><span class="bubble">week of 2026-10-12: 4 ms</span></span></span>',
+      '<span class="col" title="week of 2026-10-12: 4 ms"><span class="bar" style="height:100%"><span class="week-value">4 ms</span></span></span>',
     );
-    expect(html).toContain(
-      '<span class="col"><span class="bar missing"><span class="bubble">week of 2026-09-28: no data</span></span></span>',
-    );
+    expect(html).toContain('<span class="col"><span class="bar missing"></span></span>');
     expect(html).toContain(
       '<span class="x-axis"><span class="x-pad"></span><span class="x-weeks"><span>09-28</span><span>10-05</span><span>10-12</span></span></span>',
     );
@@ -223,7 +222,10 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('<span class="tick" style="bottom:100%">600</span>');
     expect(html).toContain('<span class="tick" style="bottom:33%">200</span>');
     expect(html).toContain(
-      '<span class="bar" style="height:91%"><span class="bubble">week of 2026-10-12: 544</span>',
+      '<span class="bar" style="height:91%"><span class="week-value">544</span></span>',
+    );
+    expect(html).toContain(
+      '<span class="col" title="week of 2026-10-05: 153"><span class="bar" style="height:26%"></span></span>',
     );
   });
 
@@ -266,8 +268,10 @@ describe('renderDashboardPage', () => {
         indicators: [indicator({ weeks: [{ weekStart: '2026-10-12', value: null }] })],
       }),
     );
-    expect(html).toContain('<div class="charts"></div>');
-    expect(html).not.toContain('class="chart"');
+    expect(html).toContain(
+      '<div class="chips"><span class="chip flat" title="pragma · p95 · no ceiling in docs/quality/targets.md, so neither ok nor ko">',
+    );
+    expect(html).not.toContain('class="zoomable"');
   });
 
   it('says in the tooltip why an indicator holds no value', () => {
@@ -347,9 +351,9 @@ describe('renderDashboardPage', () => {
     expect(html).toContain(
       '<span class="row-name">A gate reports green while measuring nothing</span><span class="pips"><span class="flag ko" title="A gate reports green while measuring nothing · factory map · engaged on 2026-10-10 · 3 occurrence(s) recorded · countermeasure: Plant one defect per gate · 2 in the week of 2026-10-12. Target: zero per week."></span></span><span class="score ko">0/1 ok</span>',
     );
-    expect(html).toContain('<span class="tile-app">quiet-one</span>');
+    expect(html).toContain('<span class="chip-app">quiet-one</span>');
     expect(html).toContain('id="weak-gate-measures-nothing"');
-    expect(html).toContain('<span class="tile-value">—</span>');
+    expect(html).toContain('<span class="chip-value">—</span>');
     expect(html).toContain('no occurrence yet. Target: zero per week.');
     expect(html).not.toContain('A closed weak point');
   });

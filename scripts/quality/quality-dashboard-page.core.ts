@@ -187,13 +187,22 @@ function renderSparkline(points: readonly Point[], maximum: number, unit: string
   return `<span class="bars">${bars.join('')}</span>`;
 }
 
-function renderColumn(point: Point, maximum: number, unit: string): string {
-  const week = `week of ${point.label}`;
-  if (point.value === null) {
-    return `<span class="col"><span class="bar missing"><span class="bubble">${escapeHtml(`${week}: no data`)}</span></span></span>`;
-  }
+function selectLabelledWeeks(points: readonly Point[]): ReadonlySet<number> {
+  const peak = Math.max(...points.map((point) => point.value ?? 0));
+  return new Set([
+    points.findIndex((point) => point.value === peak),
+    points.map((point) => point.value).lastIndexOf(peak),
+    points.length - 1,
+  ]);
+}
+
+function renderColumn(point: Point, maximum: number, unit: string, isLabelled: boolean): string {
+  if (point.value === null) return `<span class="col"><span class="bar missing"></span></span>`;
   const zero = point.value === 0 ? ' zero' : '';
-  return `<span class="col"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%"><span class="bubble">${escapeHtml(`${week}: ${String(point.value)}${unit}`)}</span></span></span>`;
+  const label = isLabelled
+    ? `<span class="week-value">${escapeHtml(`${String(point.value)}${unit}`)}</span>`
+    : '';
+  return `<span class="col" title="${escapeHtml(`week of ${point.label}: ${String(point.value)}${unit}`)}"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%">${label}</span></span>`;
 }
 
 function selectDrawnCeiling(maximum: number, ceiling: number | null): number | null {
@@ -226,34 +235,39 @@ function renderPlot(
   );
   const drawn = selectDrawnCeiling(axis.maximum, ceiling);
   const line = drawn === null ? '' : renderCeilingLine(axis.maximum, drawn, unit);
-  const columns = points.map((point) => renderColumn(point, axis.maximum, unit));
+  const labelled = selectLabelledWeeks(points);
+  const columns = points.map((point, index) =>
+    renderColumn(point, axis.maximum, unit, labelled.has(index)),
+  );
   const weeks = points.map(
     (point) => `<span>${escapeHtml(point.label.slice(MONTH_DAY_START))}</span>`,
   );
   return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit)}`;
 }
 
-function renderChart(
-  key: string,
-  name: string,
-  detail: string,
-  points: readonly Point[],
-  ceiling: number | null,
-  unit: string,
-): string {
-  if (!hasData(points)) return '';
-  const axis = buildAxis(points);
-  return `<details class="zoomable" name="${ZOOM_GROUP}" id="${key}"><summary class="chart" title="${escapeHtml(detail)}"><span class="chart-app">${escapeHtml(name)}</span>${renderSparkline(points, axis.maximum, unit)}</summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">${escapeHtml(detail)}</span>${renderPlot(points, ceiling, unit, axis)}</span></span></details>`;
+interface Cell {
+  readonly key: string;
+  readonly name: string;
+  readonly verdict: Verdict;
+  readonly amount: string;
+  readonly goal: string;
+  readonly detail: string;
+  readonly points: readonly Point[];
+  readonly ceiling: number | null;
+  readonly unit: string;
 }
 
-function renderTile(
-  name: string,
-  verdict: Verdict,
-  amount: string,
-  goal: string,
-  detail: string,
-): string {
-  return `<span class="tile" title="${escapeHtml(detail)}"><span class="tile-head"><span class="flag ${verdict}"></span><span class="tile-app">${escapeHtml(name)}</span></span><span class="tile-value">${escapeHtml(amount)}</span><span class="tile-goal">${escapeHtml(goal)}</span></span>`;
+function renderChipFace(cell: Cell, sparkline: string): string {
+  return `<span class="chip-head"><span class="flag ${cell.verdict}"></span><span class="chip-app">${escapeHtml(cell.name)}</span></span><span class="chip-value">${escapeHtml(cell.amount)}</span><span class="chip-goal">${escapeHtml(cell.goal)}</span>${sparkline}`;
+}
+
+function renderChip(cell: Cell): string {
+  if (!hasData(cell.points)) {
+    return `<span class="chip flat" title="${escapeHtml(cell.detail)}">${renderChipFace(cell, '')}</span>`;
+  }
+  const axis = buildAxis(cell.points);
+  const face = renderChipFace(cell, renderSparkline(cell.points, axis.maximum, cell.unit));
+  return `<details class="zoomable" name="${ZOOM_GROUP}" id="${cell.key}"><summary class="chip" title="${escapeHtml(cell.detail)}">${face}</summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">${escapeHtml(cell.detail)}</span>${renderPlot(cell.points, cell.ceiling, cell.unit, axis)}</span></span></details>`;
 }
 
 function renderPip(verdict: Verdict, detail: string): string {
@@ -269,38 +283,26 @@ function renderIndicatorRow(
   own: readonly Indicator[],
   targets: readonly Target[],
 ): string {
-  const cells = own.map((indicator) => {
+  const cells = own.map((indicator): Cell => {
     const verdict = judge(indicator, targets);
     const ceiling = findCeiling(indicator, targets);
-    const detail = describeIndicator(indicator, targets, verdict);
     return {
+      key: identifier([indicator.pillar, indicator.id, indicator.app]),
+      name: indicator.app,
       verdict,
-      detail,
-      pip: renderPip(verdict, detail),
-      tile: renderTile(
-        indicator.app,
-        verdict,
-        describeAmount(indicator),
-        describeGoal(ceiling, indicator.unit),
-        detail,
-      ),
-      chart: renderChart(
-        identifier([indicator.pillar, indicator.id, indicator.app]),
-        indicator.app,
-        detail,
-        indicator.weeks.map((week) => ({ label: week.weekStart, value: week.value })),
-        ceiling,
-        UNIT_SUFFIX[indicator.unit],
-      ),
+      amount: describeAmount(indicator),
+      goal: describeGoal(ceiling, indicator.unit),
+      detail: describeIndicator(indicator, targets, verdict),
+      points: indicator.weeks.map((week) => ({ label: week.weekStart, value: week.value })),
+      ceiling,
+      unit: UNIT_SUFFIX[indicator.unit],
     };
   });
-  const charts = cells.map((cell) => cell.chart).join('');
-  const body = `<div class="tiles">${cells.map((cell) => cell.tile).join('')}</div><div class="charts">${charts}</div>`;
   return renderRow(
     label,
-    cells.map((cell) => cell.pip).join(''),
+    cells.map((cell) => renderPip(cell.verdict, cell.detail)).join(''),
     scoreOf(cells.map((cell) => cell.verdict)),
-    body,
+    `<div class="chips">${cells.map(renderChip).join('')}</div>`,
   );
 }
 
@@ -356,26 +358,22 @@ function renderWeakPointRow(weakPoint: EngagedWeakPoint, series: readonly Weekly
   const count = countCurrentWeek(series);
   const verdict = judgeCount(count, WEAK_POINT_CEILING);
   const detail = `${weakPoint.title}${SEPARATOR}${describeWeakPointMeta(weakPoint, series)}${SEPARATOR}${describeCurrentWeek(series)}`;
-  const tile = renderTile(
-    weakPoint.id,
+  const chip = renderChip({
+    key: identifier(['weak', weakPoint.id]),
+    name: weakPoint.id,
     verdict,
-    count === null ? NO_VALUE : String(count),
-    describeGoal(WEAK_POINT_CEILING, 'count'),
+    amount: count === null ? NO_VALUE : String(count),
+    goal: describeGoal(WEAK_POINT_CEILING, 'count'),
     detail,
-  );
-  const chart = renderChart(
-    identifier(['weak', weakPoint.id]),
-    weakPoint.id,
-    detail,
-    series.map((week) => ({ label: week.weekStart, value: week.count })),
-    WEAK_POINT_CEILING,
-    UNIT_SUFFIX.count,
-  );
+    points: series.map((week) => ({ label: week.weekStart, value: week.count })),
+    ceiling: WEAK_POINT_CEILING,
+    unit: UNIT_SUFFIX.count,
+  });
   return renderRow(
     weakPoint.title,
     renderPip(verdict, detail),
     scoreOf([verdict]),
-    `<div class="tiles">${tile}</div><div class="charts">${chart}</div>`,
+    `<div class="chips">${chip}</div>`,
   );
 }
 
