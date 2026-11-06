@@ -18,9 +18,9 @@ background:var(--dot);margin:1px;opacity:.45}.dot.recent{opacity:1}.dot.engaged{
 .range-tabs{display:inline-flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;margin-bottom:12px;flex-wrap:wrap}
 .range-tab{font-size:13px;padding:4px 12px;border-radius:999px;cursor:pointer;color:var(--muted);white-space:nowrap}
 .range-tab:hover{color:var(--fg)}
-.range-panel{display:none;grid-template-columns:1fr;gap:12px}
+.ranged{display:none}
 #range-week:checked~.range-tabs [for="range-week"],#range-hour:checked~.range-tabs [for="range-hour"],#range-minute:checked~.range-tabs [for="range-minute"]{background:var(--fg);color:var(--bg)}
-#range-week:checked~[data-range="week"],#range-hour:checked~[data-range="hour"],#range-minute:checked~[data-range="minute"]{display:grid}
+#range-week:checked~.sections .ranged[data-range="week"],#range-hour:checked~.sections .ranged[data-range="hour"],#range-minute:checked~.sections .ranged[data-range="minute"]{display:contents}
 .range-pick:focus-visible~.range-tabs{outline:2px solid var(--series-1);outline-offset:2px}
 details.section{margin:0;border:1px solid var(--line);border-radius:8px;min-width:0}
 details.section>summary{display:flex;align-items:center;gap:10px;padding:10px 12px}
@@ -71,7 +71,7 @@ summary::-webkit-details-marker{display:none}summary::marker{content:""}
 .x-axis{display:flex}
 .x-pad{width:4.5em;flex:none}
 .x-weeks{display:flex;flex:1;gap:2px}
-.x-weeks span{flex:1;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0;overflow:hidden}
+.x-weeks span{flex:1;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0;overflow:visible;white-space:nowrap}
 .chart-legend{display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center}
 .chart-legend i{display:inline-block;width:12px;height:10px;border-radius:2px;background:var(--series-1);margin-right:6px;vertical-align:-1px}
 .chart-legend i.rule{height:0;border-top:2px dashed var(--bad);background:none;border-radius:0;vertical-align:4px}

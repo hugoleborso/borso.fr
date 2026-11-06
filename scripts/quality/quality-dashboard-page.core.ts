@@ -88,6 +88,13 @@ const SEPARATOR = ' · ';
 const WEAK_POINT_CEILING = 0;
 const MONTH_DAY_START = 5;
 const AXIS_INTERVALS = 4;
+const MOST_TICKS = 12;
+const DEFAULT_SERIES_NAME = 'value per week';
+const SERIES_NAMES: Readonly<Record<string, string>> = {
+  week: 'value per week',
+  hour: 'value per hour',
+  minute: 'value per minute',
+};
 const ZOOM_GROUP = 'chart-zoom';
 const RANGE_GROUP = 'range';
 const RANGE_NOTE =
@@ -236,8 +243,8 @@ function renderCeilingLine(maximum: number, ceiling: number, unit: string): stri
   return `<span class="ceiling" style="bottom:${percentOf(ceiling, maximum)}%" title="${escapeHtml(`ceiling ${String(ceiling)}${unit}`)}"></span>`;
 }
 
-function renderLegend(ceiling: number | null, unit: string): string {
-  const series = `<span><i class="swatch"></i>weekly value</span>`;
+function renderLegend(ceiling: number | null, unit: string, seriesName: string): string {
+  const series = `<span><i class="swatch"></i>${escapeHtml(seriesName)}</span>`;
   if (ceiling === null) return `<span class="chart-legend">${series}</span>`;
   return `<span class="chart-legend">${series}<span><i class="swatch rule"></i>${escapeHtml(`ceiling ${String(ceiling)}${unit}`)}</span></span>`;
 }
@@ -246,6 +253,7 @@ function renderPlot(
   points: readonly Point[],
   ceiling: number | null,
   unit: string,
+  seriesName: string,
   axis: { readonly maximum: number; readonly ticks: readonly number[] },
 ): string {
   const marks = axis.ticks.map(
@@ -261,8 +269,13 @@ function renderPlot(
   const columns = points.map((point, index) =>
     renderColumn(point, axis.maximum, unit, labelled.has(index)),
   );
-  const weeks = points.map((point) => `<span>${escapeHtml(tickOf(point.label))}</span>`);
-  return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit)}`;
+  const step = Math.ceil(points.length / MOST_TICKS);
+  const weeks = points.map((point, index) =>
+    (points.length - 1 - index) % step === 0
+      ? `<span>${escapeHtml(tickOf(point.label))}</span>`
+      : '<span></span>',
+  );
+  return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit, seriesName)}`;
 }
 
 interface Cell {
@@ -275,6 +288,7 @@ interface Cell {
   readonly points: readonly Point[];
   readonly ceiling: number | null;
   readonly unit: string;
+  readonly series: string;
 }
 
 function renderChipFace(cell: Cell, sparkline: string): string {
@@ -287,27 +301,35 @@ function renderChip(cell: Cell): string {
   }
   const axis = buildAxis(cell.points);
   const face = renderChipFace(cell, renderSparkline(cell.points, axis.maximum, cell.unit));
-  return `<details class="zoomable" name="${ZOOM_GROUP}" id="${cell.key}"><summary class="chip" title="${escapeHtml(cell.detail)}">${face}</summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">${escapeHtml(cell.detail)}</span>${renderPlot(cell.points, cell.ceiling, cell.unit, axis)}</span></span></details>`;
+  return `<details class="zoomable" name="${ZOOM_GROUP}" id="${cell.key}"><summary class="chip" title="${escapeHtml(cell.detail)}">${face}</summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">${escapeHtml(cell.detail)}</span>${renderPlot(cell.points, cell.ceiling, cell.unit, cell.series, axis)}</span></span></details>`;
 }
 
 function renderPip(verdict: Verdict, detail: string): string {
   return `<span class="flag ${verdict}" title="${escapeHtml(detail)}"></span>`;
 }
 
-function renderRow(name: string, pips: string, score: Score, body: string): string {
-  return `<details class="row"><summary><span class="row-name">${escapeHtml(name)}</span><span class="pips">${pips}</span><span class="score ${score.verdict}">${escapeHtml(score.text)}</span></summary>${body}</details>`;
+function renderScore(score: Score): string {
+  return `<span class="score ${score.verdict}">${escapeHtml(score.text)}</span>`;
 }
 
-function renderIndicatorRow(
-  label: string,
+function ranged(rangeId: string, body: string): string {
+  return `<span class="ranged" data-range="${rangeId}">${body}</span>`;
+}
+
+function renderRow(name: string, summary: string, body: string): string {
+  return `<details class="row"><summary><span class="row-name">${escapeHtml(name)}</span>${summary}</summary>${body}</details>`;
+}
+
+function buildCells(
   own: readonly Indicator[],
+  rangeId: string,
   targets: readonly Target[],
-): string {
-  const cells = own.map((indicator): Cell => {
+): readonly Cell[] {
+  return own.map((indicator): Cell => {
     const verdict = judge(indicator, targets);
     const ceiling = findCeiling(indicator, targets);
     return {
-      key: identifier([indicator.pillar, indicator.id, indicator.app]),
+      key: identifier([rangeId, indicator.pillar, indicator.id, indicator.app]),
       name: indicator.app,
       verdict,
       amount: describeAmount(indicator),
@@ -316,14 +338,45 @@ function renderIndicatorRow(
       points: indicator.points,
       ceiling,
       unit: UNIT_SUFFIX[indicator.unit],
+      series: SERIES_NAMES[rangeId] ?? DEFAULT_SERIES_NAME,
     };
+  });
+}
+
+function renderCellsOf(cells: readonly Cell[]): {
+  readonly summary: string;
+  readonly body: string;
+} {
+  return {
+    summary: `<span class="pips">${cells.map((cell) => renderPip(cell.verdict, cell.detail)).join('')}</span>${renderScore(scoreOf(cells.map((cell) => cell.verdict)))}`,
+    body: `<div class="chips">${cells.map(renderChip).join('')}</div>`,
+  };
+}
+
+function renderIndicatorRow(
+  label: string,
+  ranges: readonly RangeView[],
+  targets: readonly Target[],
+): string {
+  const parts = ranges.map((range) => {
+    const own = range.indicators.filter((indicator) => indicator.label === label);
+    const { summary, body } = renderCellsOf(buildCells(own, range.id, targets));
+    return { summary: ranged(range.id, summary), body: ranged(range.id, body) };
   });
   return renderRow(
     label,
-    cells.map((cell) => renderPip(cell.verdict, cell.detail)).join(''),
-    scoreOf(cells.map((cell) => cell.verdict)),
-    `<div class="chips">${cells.map(renderChip).join('')}</div>`,
+    parts.map((part) => part.summary).join(''),
+    parts.map((part) => part.body).join(''),
   );
+}
+
+function renderStaticRow(
+  label: string,
+  own: readonly Indicator[],
+  targets: readonly Target[],
+): string {
+  const { summary, body } = renderCellsOf(buildCells(own, 'static', targets));
+  return renderRow(label, summary, body);
 }
 
 function orderedUnique(values: readonly string[]): readonly string[] {
@@ -344,21 +397,55 @@ function renderSection(
   id: string,
   title: string,
   note: string,
-  score: Score,
+  scores: string,
   warning: string,
   body: string,
 ): string {
-  return `<details class="section section-${id}"><summary title="${escapeHtml(note)}"><h2>${escapeHtml(title)}</h2><span class="score ${score.verdict}">${escapeHtml(score.text)}</span>${warning}</summary><div class="rows">${body}</div></details>`;
+  return `<details class="section section-${id}"><summary title="${escapeHtml(note)}"><h2>${escapeHtml(title)}</h2>${scores}${warning}</summary><div class="rows">${body}</div></details>`;
 }
 
-function renderPillar(
+function selectPillar(pillar: PillarView, range: RangeView): RangeView {
+  return {
+    ...range,
+    indicators: range.indicators.filter((indicator) => indicator.pillar === pillar.id),
+  };
+}
+
+function renderRangedPillar(
+  pillar: PillarView,
+  allRanges: readonly RangeView[],
+  targets: readonly Target[],
+): string {
+  const ranges = allRanges.map((range) => selectPillar(pillar, range));
+  const labels = orderedUnique(
+    ranges.flatMap((range) => range.indicators.map((indicator) => indicator.label)),
+  );
+  const scores = ranges
+    .map((range) =>
+      ranged(
+        range.id,
+        renderScore(scoreOf(range.indicators.map((indicator) => judge(indicator, targets)))),
+      ),
+    )
+    .join('');
+  return renderSection(
+    pillar.id,
+    pillar.title,
+    pillar.intent,
+    scores,
+    renderWarning(ranges.flatMap((range) => range.indicators)),
+    labels.map((label) => renderIndicatorRow(label, ranges, targets)).join(''),
+  );
+}
+
+function renderStaticPillar(
   pillar: PillarView,
   indicators: readonly Indicator[],
   targets: readonly Target[],
 ): string {
   const own = indicators.filter((indicator) => indicator.pillar === pillar.id);
   const rows = orderedUnique(own.map((indicator) => indicator.label)).map((label) =>
-    renderIndicatorRow(
+    renderStaticRow(
       label,
       own.filter((indicator) => indicator.label === label),
       targets,
@@ -368,7 +455,7 @@ function renderPillar(
     pillar.id,
     pillar.title,
     pillar.intent,
-    scoreOf(own.map((indicator) => judge(indicator, targets))),
+    renderScore(scoreOf(own.map((indicator) => judge(indicator, targets)))),
     renderWarning(own),
     rows.join(''),
   );
@@ -388,11 +475,11 @@ function renderWeakPointRow(weakPoint: EngagedWeakPoint, series: readonly Weekly
     points: series.map((week) => ({ label: week.weekStart, value: week.count })),
     ceiling: WEAK_POINT_CEILING,
     unit: UNIT_SUFFIX.count,
+    series: DEFAULT_SERIES_NAME,
   });
   return renderRow(
     weakPoint.title,
-    renderPip(verdict, detail),
-    scoreOf([verdict]),
+    `<span class="pips">${renderPip(verdict, detail)}</span>${renderScore(scoreOf([verdict]))}`,
     `<div class="chips">${chip}</div>`,
   );
 }
@@ -413,7 +500,7 @@ function renderWeakPointSection(
     'weak-points',
     'Engaged weak points',
     WEAK_POINTS_NOTE,
-    score,
+    renderScore(score),
     '',
     rows.join(''),
   );
@@ -422,8 +509,7 @@ function renderWeakPointSection(
 function renderMapRow(title: string, note: string, grid: MapGrid, now: string): string {
   return renderRow(
     title,
-    '',
-    { text: `${String(grid.placed.length)} dots`, verdict: 'unjudged' },
+    `<span class="pips"></span>${renderScore({ text: `${String(grid.placed.length)} dots`, verdict: 'unjudged' })}`,
     `<div class="map" title="${escapeHtml(note)}">${renderGrid(grid.placed, grid.rows, grid.columns, now)}</div>`,
   );
 }
@@ -436,7 +522,7 @@ function renderDefectMapSection(placed: readonly PlacedDot[], now: string): stri
   const { product, factory } = splitDefectMaps(placed);
   const score: Score = { text: `${String(placed.length)} defects`, verdict: 'unjudged' };
   const body = `${renderStageRow()}${renderMapRow(PRODUCT_MAP_TITLE, PRODUCT_MAP_NOTE, product, now)}${renderMapRow(FACTORY_MAP_TITLE, FACTORY_MAP_NOTE, factory, now)}`;
-  return renderSection('defect-map', 'Defect map', DEFECT_MAP_NOTE, score, '', body);
+  return renderSection('defect-map', 'Defect map', DEFECT_MAP_NOTE, renderScore(score), '', body);
 }
 
 function renderRangeSwitch(ranges: readonly RangeView[], targets: readonly Target[]): string {
@@ -448,16 +534,13 @@ function renderRangeSwitch(ranges: readonly RangeView[], targets: readonly Targe
     (range) =>
       `<label class="range-tab" for="range-${range.id}">${escapeHtml(range.title)}</label>`,
   );
-  const panels = ranges.map((range) => {
-    const sections = RATE_PILLARS.map((pillar) => renderPillar(pillar, range.indicators, targets));
-    return `<div class="range-panel" data-range="${range.id}">${sections.join('')}</div>`;
-  });
-  return `<div class="range-switch">${radios.join('')}<div class="range-tabs" role="tablist" title="${escapeHtml(RANGE_NOTE)}">${tabs.join('')}</div>${panels.join('')}</div>`;
+  const sections = RATE_PILLARS.map((pillar) => renderRangedPillar(pillar, ranges, targets));
+  return `<div class="range-switch">${radios.join('')}<div class="range-tabs" role="tablist" title="${escapeHtml(RANGE_NOTE)}">${tabs.join('')}</div><div class="sections">${sections.join('')}</div></div>`;
 }
 
 export function renderDashboardPage(input: DashboardPageInput): string {
   const standing = [
-    renderPillar(SECURITY_PILLAR, input.security, input.targets),
+    renderStaticPillar(SECURITY_PILLAR, input.security, input.targets),
     renderWeakPointSection(input.engaged, input.weeklyCounts),
     renderDefectMapSection(input.placed, input.now),
   ];

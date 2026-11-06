@@ -127,7 +127,7 @@ describe('renderDashboardPage', () => {
     expect(order).toStrictEqual([...order].sort((first, second) => first - second));
     expect(order[0]).toBeGreaterThan(0);
     expect(html).toContain(
-      '<details class="section section-speed"><summary title="Latency of each production API, in milliseconds, over the selected range."><h2>Speed</h2><span class="score unjudged">no ceiling</span></summary><div class="rows">',
+      '<details class="section section-speed"><summary title="Latency of each production API, in milliseconds, over the selected range."><h2>Speed</h2><span class="ranged" data-range="week"><span class="score unjudged">no ceiling</span></span></summary><div class="rows">',
     );
   });
 
@@ -145,7 +145,7 @@ describe('renderDashboardPage', () => {
       }),
     );
     expect(html).toContain(
-      '<summary><span class="row-name">p95</span><span class="pips"><span class="flag ko" title="pragma · p95 · 2845 ms · over the ceiling of 2000 ms"></span><span class="flag ok" title="talos · p95 · 1995 ms · at or under the ceiling of 2000 ms"></span></span><span class="score ko">1/2 ok</span></summary>',
+      '<summary><span class="row-name">p95</span><span class="ranged" data-range="week"><span class="pips"><span class="flag ko" title="pragma · p95 · 2845 ms · over the ceiling of 2000 ms"></span><span class="flag ok" title="talos · p95 · 1995 ms · at or under the ceiling of 2000 ms"></span></span><span class="score ko">1/2 ok</span></span></summary>',
     );
   });
 
@@ -198,7 +198,7 @@ describe('renderDashboardPage', () => {
       }),
     );
     expect(html).toContain(
-      '<details class="zoomable" name="chart-zoom" id="speed-latency-p95-pragma"><summary class="chip" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chip-head">',
+      '<details class="zoomable" name="chart-zoom" id="week-speed-latency-p95-pragma"><summary class="chip" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chip-head">',
     );
     expect(html).toContain(
       '<span class="bar missing" title="2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="2026-10-05: 0 ms"></span><span class="bar" style="height:100%" title="2026-10-12: 4 ms"></span></span></summary>',
@@ -216,7 +216,7 @@ describe('renderDashboardPage', () => {
       '<span class="x-axis"><span class="x-pad"></span><span class="x-weeks"><span>09-28</span><span>10-05</span><span>10-12</span></span></span>',
     );
     expect(html).toContain(
-      '<span class="chart-legend"><span><i class="swatch"></i>weekly value</span><span><i class="swatch rule"></i>ceiling 2 ms</span></span>',
+      '<span class="chart-legend"><span><i class="swatch"></i>value per week</span><span><i class="swatch rule"></i>ceiling 2 ms</span></span>',
     );
   });
 
@@ -263,6 +263,40 @@ describe('renderDashboardPage', () => {
     }
   });
 
+  it('labels at most twelve weeks on the axis and blanks the rest', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        indicators: [
+          indicator({
+            unit: 'count',
+            points: Array.from({ length: 24 }, (_, index) => ({
+              label: `13:${String(index).padStart(2, '0')}`,
+              value: index,
+            })),
+          }),
+        ],
+      }),
+    );
+    const axis =
+      /<span class="x-weeks">(.*?)<\/span><\/span><span class="chart-legend"/s.exec(html)?.[1] ??
+      '';
+    const ticks = [...axis.matchAll(/<span>([^<]*)<\/span>/g)].map((match) => match[1]);
+    expect(ticks.filter((tick) => tick !== '')).toEqual([
+      '13:01',
+      '13:03',
+      '13:05',
+      '13:07',
+      '13:09',
+      '13:11',
+      '13:13',
+      '13:15',
+      '13:17',
+      '13:19',
+      '13:21',
+      '13:23',
+    ]);
+  });
+
   it('draws no ceiling line and no legend entry when the ceiling sits above the axis', () => {
     const html = renderDashboardPage(
       buildInput({
@@ -273,7 +307,7 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('class="panel"');
     expect(html).not.toContain('class="ceiling"');
     expect(html).toContain(
-      '<span class="chart-legend"><span><i class="swatch"></i>weekly value</span></span>',
+      '<span class="chart-legend"><span><i class="swatch"></i>value per week</span></span>',
     );
   });
 
@@ -392,7 +426,7 @@ describe('renderDashboardPage', () => {
     expect(html).toContain(
       '<label class="range-tab" for="range-week">week by week</label><label class="range-tab" for="range-hour">last 12 hours</label>',
     );
-    expect(html).toContain('<div class="range-panel" data-range="hour">');
+    expect(html).toContain('<span class="ranged" data-range="hour">');
     expect(html).toContain('<span>14:00</span>');
     expect(html).toContain('title="14:00: 7 ms"');
   });
