@@ -101,7 +101,11 @@ export function VoteDeck({
   };
 
   function endDrag() {
-    const intent = judgeRelease(selectZoneForOffset(offset, geometry), remainingPoints);
+    const intent = judgeRelease(
+      selectZoneForOffset(offset, geometry),
+      remainingPoints,
+      givenPoints,
+    );
     setIsDragging(false);
     setOffset(IDLE_OFFSET);
     applyRelease[intent.kind](readIntentPoints(intent));

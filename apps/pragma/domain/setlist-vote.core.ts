@@ -24,6 +24,10 @@ export function resolveSetlistStatus(stored: string | null | undefined): Setlist
   return stored === SETLIST_VOTING ? SETLIST_VOTING : SETLIST_LOCKED;
 }
 
+export function isSetlistVoting(stored: string | null | undefined): boolean {
+  return resolveSetlistStatus(stored) === SETLIST_VOTING;
+}
+
 export function compareSongTallies(left: RankedTally, right: RankedTally): number {
   // Stryker disable next-line EqualityOperator: equivalent mutant. The guard on this very line has established that the two point counts differ, so `>` and `>=` answer the same.
   if (right.points !== left.points) return right.points > left.points ? AFTER : BEFORE;

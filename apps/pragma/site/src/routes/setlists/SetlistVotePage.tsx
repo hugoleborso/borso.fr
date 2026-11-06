@@ -30,13 +30,17 @@ import {
 } from '../../lib/queries/voting.queries';
 import { readMemberPoints } from '../../lib/queries/voting.utils';
 import {
+  DEFAULT_VOTE_PANEL,
   indexMembersById,
   indexSongsById,
+  isBallotShown,
+  isTallyShown,
   isVotingPageState,
   selectCloseIntent,
   selectVoteHeaderAction,
   projectPointsBySongId,
   selectVotePageState,
+  type VotePanel,
 } from './setlist-vote.core';
 import {
   DEFAULT_VOTE_MODE,
@@ -67,6 +71,7 @@ export function SetlistVotePage(): JSX.Element {
   const [typedTarget, setTypedTarget] = useState<number | null>(null);
   const [cardIndex, setCardIndex] = useState<number>(0);
   const [voteMode, setVoteMode] = useState<VoteMode>(DEFAULT_VOTE_MODE);
+  const [votePanel, setVotePanel] = useState<VotePanel>(DEFAULT_VOTE_PANEL);
   const [deckSeed] = useState<string>(() => crypto.randomUUID());
   const proposal = useClosingProposal(setlistId, isClosingOpen);
 
@@ -83,6 +88,8 @@ export function SetlistVotePage(): JSX.Element {
 
   const targetSongCount = typedTarget ?? board.data?.targetSongCount ?? DEFAULT_TARGET_SONG_COUNT;
   const isDeck = isDeckMode(voteMode);
+  const isBallotVisible = isBallotShown(isVoting, votePanel);
+  const isTallyVisible = isTallyShown(isVoting, votePanel);
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
   const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
@@ -192,6 +199,19 @@ export function SetlistVotePage(): JSX.Element {
       ) : null}
 
       {isVoting ? (
+        <SectionTabs
+          label={t('voting.panelLabel')}
+          tabs={[
+            { value: 'ballot', label: t('voting.panelBallot'), icon: 'vote' },
+            { value: 'results', label: t('voting.panelResults'), icon: 'chart' },
+          ]}
+          value={votePanel}
+          onChange={setVotePanel}
+          className="mx-4"
+        />
+      ) : null}
+
+      {isBallotVisible ? (
         <>
           <VoteBudgetBar
             total={board.data?.budget.total ?? 0}
@@ -254,11 +274,13 @@ export function SetlistVotePage(): JSX.Element {
         </>
       ) : null}
 
-      <VoteTally
-        tallies={board.data?.tallies ?? []}
-        songsById={songsById}
-        membersById={membersById}
-      />
+      {isTallyVisible ? (
+        <VoteTally
+          tallies={board.data?.tallies ?? []}
+          songsById={songsById}
+          membersById={membersById}
+        />
+      ) : null}
       {stripAction === null ? null : <BottomActions>{stripAction}</BottomActions>}
     </section>
   );

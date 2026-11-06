@@ -7,14 +7,15 @@ import {
   readIntentPoints,
   selectCardRotation,
   selectDiscardTint,
-  isBudgetExhausted,
+  selectBudgetNotice,
   selectScoringTint,
   selectCardTransitionClass,
   selectOffsetFromOrigin,
-  cycleSongPoints,
+  canStepDown,
+  canStepUp,
   hashDeckKey,
   isDeckMode,
-  judgeTap,
+  judgeStep,
   selectOtherVoteMode,
   selectScoredSongs,
   selectShuffledDeck,
@@ -72,20 +73,26 @@ describe('vote-deck.core', () => {
   });
 
   it('returns the card home when it was never pulled far enough', () => {
-    expect(judgeRelease('none', 9)).toEqual({ kind: 'return' });
+    expect(judgeRelease('none', 9, 0)).toEqual({ kind: 'return' });
   });
 
   it('scores zero for a discard, whatever the budget', () => {
-    expect(judgeRelease('discard', 0)).toEqual({ kind: 'score', points: 0 });
+    expect(judgeRelease('discard', 0, 0)).toEqual({ kind: 'score', points: 0 });
   });
 
   it('refuses a zone the budget cannot pay for', () => {
-    expect(judgeRelease('three', 2)).toEqual({ kind: 'refused' });
-    expect(judgeRelease('one', 0)).toEqual({ kind: 'refused' });
+    expect(judgeRelease('three', 2, 0)).toEqual({ kind: 'refused' });
+    expect(judgeRelease('one', 0, 0)).toEqual({ kind: 'refused' });
   });
 
   it('accepts a zone the budget covers exactly', () => {
-    expect(judgeRelease('three', 3)).toEqual({ kind: 'score', points: 3 });
+    expect(judgeRelease('three', 3, 0)).toEqual({ kind: 'score', points: 3 });
+  });
+
+  it('counts the points the song already holds when the budget is spent', () => {
+    expect(judgeRelease('one', 0, 3)).toEqual({ kind: 'score', points: 1 });
+    expect(judgeRelease('three', 0, 2)).toEqual({ kind: 'refused' });
+    expect(judgeRelease('three', 1, 2)).toEqual({ kind: 'score', points: 3 });
   });
 
   it('gives back what the song held before it took its new points', () => {
@@ -188,10 +195,18 @@ describe('a budget the member has overspent', () => {
     expect(selectSpentShare(6, -1)).toBe(100);
   });
 
-  it('reads as exhausted at zero and below', () => {
-    expect(isBudgetExhausted(1)).toBe(false);
-    expect(isBudgetExhausted(0)).toBe(true);
-    expect(isBudgetExhausted(-1)).toBe(true);
+  it('says nothing while points are left', () => {
+    expect(selectBudgetNotice(1, false)).toBe('none');
+  });
+
+  it('reads a spent budget as a hint, at zero and below', () => {
+    expect(selectBudgetNotice(0, false)).toBe('spent');
+    expect(selectBudgetNotice(-1, false)).toBe('spent');
+  });
+
+  it('reads a refused score as a warning, whatever is left', () => {
+    expect(selectBudgetNotice(0, true)).toBe('refused');
+    expect(selectBudgetNotice(2, true)).toBe('refused');
   });
 });
 
@@ -269,19 +284,31 @@ describe('the songs the member has already scored', () => {
   });
 });
 
-describe('a tap on a song in the catalogue', () => {
-  it('walks the points up and drops a three back to nothing', () => {
-    expect(cycleSongPoints(0)).toBe(1);
-    expect(cycleSongPoints(1)).toBe(2);
-    expect(cycleSongPoints(2)).toBe(3);
-    expect(cycleSongPoints(3)).toBe(0);
+describe('a step on a song in the catalogue', () => {
+  it('lowers any song by one point, even with the budget spent', () => {
+    expect(judgeStep(1, 0, 'down')).toEqual({ kind: 'score', points: 0 });
+    expect(judgeStep(2, 0, 'down')).toEqual({ kind: 'score', points: 1 });
+    expect(judgeStep(3, 0, 'down')).toEqual({ kind: 'score', points: 2 });
   });
 
-  it('refuses the step that would overspend, and always allows the one that frees points', () => {
-    expect(judgeTap(0, 1)).toEqual({ kind: 'score', points: 1 });
-    expect(judgeTap(0, 0)).toEqual({ kind: 'refused' });
-    expect(judgeTap(2, 0)).toEqual({ kind: 'refused' });
-    expect(judgeTap(3, 0)).toEqual({ kind: 'score', points: 0 });
+  it('raises a song by one point while the budget can pay for it', () => {
+    expect(judgeStep(0, 1, 'up')).toEqual({ kind: 'score', points: 1 });
+    expect(judgeStep(2, 1, 'up')).toEqual({ kind: 'score', points: 3 });
+    expect(judgeStep(0, 0, 'up')).toEqual({ kind: 'refused' });
+    expect(judgeStep(1, 0, 'up')).toEqual({ kind: 'refused' });
+  });
+
+  it('does nothing past either end of the scale', () => {
+    expect(judgeStep(0, 5, 'down')).toEqual({ kind: 'return' });
+    expect(judgeStep(3, 5, 'up')).toEqual({ kind: 'return' });
+  });
+
+  it('offers each step only where the scale allows it', () => {
+    expect(canStepUp(2, 1)).toBe(true);
+    expect(canStepUp(3, 1)).toBe(false);
+    expect(canStepUp(1, 0)).toBe(false);
+    expect(canStepDown(1)).toBe(true);
+    expect(canStepDown(0)).toBe(false);
   });
 
   it('names both modes, and which one is the deck', () => {

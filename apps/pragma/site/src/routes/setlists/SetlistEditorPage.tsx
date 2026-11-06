@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import { resolveSetlistStatus } from '@domain/setlist-vote.core';
+import { isSetlistVoting, resolveSetlistStatus } from '@domain/setlist-vote.core';
 import type { JSX } from 'react';
 import { useMemo, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
+import { VoteInProgressBanner } from '../../components/molecules/VoteInProgressBanner';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { MEMBER_FILTER_PARAM } from '../../lib/next-concert.core';
@@ -105,6 +106,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   }
 
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
+  const isVoting = isSetlistVoting(setlist.status);
   const parent = header.parentSession;
   const parentParts =
     parent === null
@@ -144,6 +146,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
           />
         }
       />
+      {isVoting ? <VoteInProgressBanner setlistId={setlist.id} /> : null}
       {copyFeedback === null ? null : (
         <p
           role={copyFeedback === 'copied' ? 'status' : 'alert'}
