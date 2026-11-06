@@ -12,10 +12,24 @@ background:var(--dot);margin:1px;opacity:.45}.dot.recent{opacity:1}.dot.engaged{
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}.legend .dot{opacity:1}
 .bars{display:flex;gap:2px;align-items:flex-end;height:48px}.bar{width:10px;background:var(--hot);min-height:1px}
 .bar.zero{background:var(--line)}.bar.missing{background:none;border-bottom:1px dashed var(--line)}
-.pillars{display:grid;grid-template-columns:1fr;gap:16px}@media (min-width:1024px){.pillars{grid-template-columns:minmax(0,1fr) minmax(0,1.8fr) minmax(0,1.25fr)}}
-.pillar{border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}.pillar h2{margin:0 0 8px}
-.value{font-variant-numeric:tabular-nums;font-size:18px;white-space:nowrap;font-variant-numeric:tabular-nums}.value.over{color:var(--bad)}.value.within{color:var(--good)}.status{color:var(--muted);font-size:12px}
-.banner{border:1px solid var(--bad);color:var(--bad);border-radius:8px;padding:8px 12px;margin:12px 0}.bars.small{height:24px}.bars.small .bar{width:6px}ol li,ul li{margin-bottom:6px}details{margin:4px 0 12px}summary{cursor:pointer}`;
+.pillars{display:grid;grid-template-columns:1fr;gap:12px}@media (min-width:900px){.pillars{grid-template-columns:repeat(3,minmax(0,1fr))}}
+details.pillar{margin:0;border:1px solid var(--line);border-radius:8px;min-width:0}
+details.pillar>summary{display:flex;align-items:center;gap:10px;padding:10px 12px}
+details.pillar>summary h2{margin:0;font-size:18px}
+summary::-webkit-details-marker{display:none}summary::marker{content:""}
+.score{margin-left:auto;font-size:13px;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.score.ok{color:var(--good);border-color:var(--good)}.score.ko{color:var(--bad);border-color:var(--bad)}.score.unjudged{color:var(--muted)}
+.warn{color:var(--stage-c);font-size:14px;cursor:help;line-height:1}
+.rows{padding:0 12px 8px}
+.indicator{margin:0;border-top:1px solid var(--line)}
+.indicator>summary,.indicator.flat{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;min-height:20px}
+.indicator.flat{cursor:help}
+.flag{width:9px;height:9px;border-radius:50%;background:var(--dot);flex:none}
+.flag.ok{background:var(--good)}.flag.ko{background:var(--bad)}
+.who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amount{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.indicator .bars{padding:2px 0 8px}
+.bars.small{height:24px}.bars.small .bar{width:6px}ol li,ul li{margin-bottom:6px}details{margin:4px 0 12px}summary{cursor:pointer}`;
 
 export function escapeHtml(text: string): string {
   return text
@@ -37,12 +51,12 @@ ${body}
 `;
 }
 
-export function renderQualityFragment(title: string, body: string): string {
+export function renderQualityFragment(title: string, note: string, body: string): string {
   return `<title>${escapeHtml(title)}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>${STYLE}</style>
 <main>
-<h1>${escapeHtml(title)}</h1>
+<h1 title="${escapeHtml(note)}">${escapeHtml(title)}</h1>
 ${body}
 </main>
 `;

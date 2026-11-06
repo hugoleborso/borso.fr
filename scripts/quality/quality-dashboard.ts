@@ -97,7 +97,6 @@ function main(): void {
         ...buildBugReportIndicators(bugReports, APPS, now),
       ],
       targets: existsSync(TARGETS_PATH) ? readTargets(readFileSync(TARGETS_PATH, 'utf8')) : [],
-      unavailableSources,
       placed: dots.map(placeDot),
       engaged,
       weeklyCounts: new Map(

@@ -16,6 +16,8 @@ export interface PlacedDot {
   readonly column: string;
 }
 
+export type CaptionMode = 'visible' | 'tooltip';
+
 export interface WeakPointPageInput {
   readonly now: string;
   readonly placed: readonly PlacedDot[];
@@ -28,8 +30,28 @@ const DANTOTSU_ADDRESS = 'https://github.com/hugoleborso/borso.fr/blob/main/docs
 const RECENT_DAYS = 30;
 const MILLISECONDS_PER_DAY = 86_400_000;
 const FACTORY_COLUMN = 'defects';
+const NO_WEAK_POINT = 'No weak point is engaged.';
+const PRODUCT_MAP_NOTE =
+  'Applications and infrastructure packages by layer, the layer read from the path the way the blueprint scripts read it.';
+const FACTORY_MAP_NOTE =
+  'The stations of the line that builds the product: the skills, the gates, the hooks, CI and the deploy.';
+const NO_STAGE_NOTE = 'no stage recorded';
+const ENGAGED_NOTE = 'engaged weak point';
+
 function daysBetween(earlier: string, later: string): number {
   return (Date.parse(later) - Date.parse(earlier)) / MILLISECONDS_PER_DAY;
+}
+
+function titleAttribute(mode: CaptionMode, text: string): string {
+  return mode === 'tooltip' ? ` title="${escapeHtml(text)}"` : '';
+}
+
+function captionParagraph(mode: CaptionMode, text: string): string {
+  return mode === 'visible' ? `<p>${escapeHtml(text)}</p>` : '';
+}
+
+function captionText(mode: CaptionMode, text: string): string {
+  return mode === 'visible' ? ` ${escapeHtml(text)}` : '';
 }
 
 function renderDot(dot: DefectDot, now: string): string {
@@ -74,7 +96,7 @@ export function renderGrid(
   return `<div class="scroll"><table>${header}${body.join('')}</table></div>`;
 }
 
-function renderWeeklySeries(series: readonly WeeklyCount[]): string {
+function renderWeeklySeries(series: readonly WeeklyCount[], mode: CaptionMode): string {
   const highest = Math.max(1, ...series.map((week) => week.count));
   const bars = series.map((week) => {
     const height = Math.round((week.count / highest) * 100);
@@ -86,35 +108,42 @@ function renderWeeklySeries(series: readonly WeeklyCount[]): string {
     current === undefined
       ? 'no occurrence yet'
       : `${String(current.count)} in the week of ${current.weekStart}`;
-  return `<div class="bars">${bars.join('')}</div><p>${escapeHtml(currentText)}. Target: zero per week.</p>`;
+  const note = `${currentText}. Target: zero per week.`;
+  return `<div class="bars"${titleAttribute(mode, note)}>${bars.join('')}</div>${captionParagraph(mode, note)}`;
 }
 
 export function renderEngagedWeakPoints(
   allEngaged: readonly EngagedWeakPoint[],
   weeklyCounts: ReadonlyMap<string, readonly WeeklyCount[]>,
+  mode: CaptionMode,
 ): string {
   const engaged = allEngaged.filter((weakPoint) => !weakPoint.isClosed);
-  if (engaged.length === 0) return '<p>No weak point is engaged.</p>';
+  if (engaged.length === 0) return captionParagraph(mode, NO_WEAK_POINT);
   return engaged
     .map((weakPoint) => {
       const series = weeklyCounts.get(weakPoint.id) ?? [];
       const total = series.reduce((sum, week) => sum + week.count, 0);
-      return `<h3>${escapeHtml(weakPoint.title)} <code>${escapeHtml(weakPoint.id)}</code></h3>
-<p>${escapeHtml(weakPoint.map)} map · engaged on ${escapeHtml(weakPoint.engagedOn)} · ${String(total)} occurrence(s) recorded · countermeasure: ${escapeHtml(weakPoint.countermeasure)}</p>
-${renderWeeklySeries(series)}`;
+      const note = `${weakPoint.map} map · engaged on ${weakPoint.engagedOn} · ${String(total)} occurrence(s) recorded · countermeasure: ${weakPoint.countermeasure}`;
+      return `<h3${titleAttribute(mode, note)}>${escapeHtml(weakPoint.title)} <code>${escapeHtml(weakPoint.id)}</code></h3>
+${captionParagraph(mode, note)}
+${renderWeeklySeries(series, mode)}`;
     })
     .join('\n');
 }
 
-function renderStageLegend(): string {
-  const items = STAGES.map(
-    (stage) =>
-      `<span><span class="dot stage-${stage.toLowerCase()}"></span> ${stage}: ${escapeHtml(STAGE_MEANINGS[stage])}</span>`,
-  );
-  return `<div class="legend">${items.join('')}<span><span class="dot"></span> no stage recorded</span><span><span class="dot engaged"></span> engaged weak point</span></div>`;
+function renderStageLegend(mode: CaptionMode): string {
+  const items = STAGES.map((stage) => {
+    const note = `${stage}: ${STAGE_MEANINGS[stage]}`;
+    return `<span${titleAttribute(mode, note)}><span class="dot stage-${stage.toLowerCase()}"></span>${captionText(mode, note)}</span>`;
+  });
+  return `<div class="legend">${items.join('')}<span${titleAttribute(mode, NO_STAGE_NOTE)}><span class="dot"></span>${captionText(mode, NO_STAGE_NOTE)}</span><span${titleAttribute(mode, ENGAGED_NOTE)}><span class="dot engaged"></span>${captionText(mode, ENGAGED_NOTE)}</span></div>`;
 }
 
-export function renderVaricelle(placed: readonly PlacedDot[], now: string): string {
+export function renderVaricelle(
+  placed: readonly PlacedDot[],
+  now: string,
+  mode: CaptionMode,
+): string {
   const product = placed.filter((entry) => entry.map === 'product');
   const factory = placed.filter((entry) => entry.map === 'factory');
   const productRows = orderByCount(product.map((entry) => entry.row));
@@ -122,12 +151,12 @@ export function renderVaricelle(placed: readonly PlacedDot[], now: string): stri
   const factoryRows = FACTORY_STATIONS.filter((station) =>
     factory.some((entry) => entry.row === station),
   );
-  return `${renderStageLegend()}
-<h3>Product map</h3>
-<p>Applications and infrastructure packages by layer, the layer read from the path the way the blueprint scripts read it.</p>
+  return `${renderStageLegend(mode)}
+<h3${titleAttribute(mode, PRODUCT_MAP_NOTE)}>Product map</h3>
+${captionParagraph(mode, PRODUCT_MAP_NOTE)}
 ${renderGrid(product, productRows, productColumns, now)}
-<h3>Factory map</h3>
-<p>The stations of the line that builds the product: the skills, the gates, the hooks, CI and the deploy.</p>
+<h3${titleAttribute(mode, FACTORY_MAP_NOTE)}>Factory map</h3>
+${captionParagraph(mode, FACTORY_MAP_NOTE)}
 ${renderGrid(factory, factoryRows, [FACTORY_COLUMN], now)}`;
 }
 
@@ -148,9 +177,9 @@ export function renderWeakPointPage(input: WeakPointPageInput): string {
     'Weak points',
     `<p>Generated by scripts/quality/weak-points.ts on ${input.now} from ${String(input.placed.length)} dantotsus. One dot per defect, placed at the <code>zone:</code> its entry names and coloured by the stage that caught it. A full dot is under ${String(RECENT_DAYS)} days old; a ringed dot belongs to an engaged weak point. Hover a dot for its date and title.</p>
 <h2>Engaged weak points</h2>
-${renderEngagedWeakPoints(input.engaged, input.weeklyCounts)}
+${renderEngagedWeakPoints(input.engaged, input.weeklyCounts, 'visible')}
 <h2>Defect map</h2>
-${renderVaricelle(input.placed, input.now)}
+${renderVaricelle(input.placed, input.now, 'visible')}
 <h2>Recurrences</h2>
 <p>Entries joined through <code>recurs:</code>, largest group first. A group that keeps growing is a class the eradications did not close.</p>
 ${renderRecurrences(input.recurrences)}`,
