@@ -21,6 +21,9 @@ human input:
   `/visual-validation`, `/open-pr` skills as subagents — it does not
   reimplement them. The skill standards (`.claude/skills/<skill>/standard.md`)
   remain the durable contract; the workflow is the runtime substrate.
+  A Workflow runs only when the operator opted into one. Without that
+  opt-in, the chat session runs the same stages as sequential Agent calls,
+  one fresh subagent per stage, and loads the two validation skills itself.
 - **Exit-and-resume** is the mid-workflow ADR-trigger handoff: if the
   workflow detects an ADR-qualifying decision during `implement`, it
   exits with `outcome: needs-human-adr-ratification`, the human runs
@@ -297,7 +300,7 @@ validation/visual-validation-<ts>.md       (if any)
 runs/<run-id>/state.json
 runs/<run-id>/journal.md.jsonl
 runs/<run-id>/journal.md                  (human-readable render)
-runs/<run-id>/agents/<agent>-<step>.md
+runs/<run-id>/agents/<skill>-<step>.md
 runs/<run-id>/errors.log                  (only when something throws)
 ```
 

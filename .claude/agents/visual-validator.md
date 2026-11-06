@@ -123,4 +123,5 @@ There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeab
 - Do not skip edge cases because they need extra setup. Resize. Emulate. Try.
 - Every PASS must reference an evidence file or a deterministic check. "Looks right" is not evidence.
 - Wait for `networkidle` plus 600 ms before any screenshot of an animated UI.
-- Do not modify any file outside `report_path` and `evidence_dir`.
+- Do not modify any file outside `report_path` and `evidence_dir`, except helper scripts.
+- A helper script you write (an init script, a measuring script) lives in your scratchpad, never in `evidence_dir`. Pre-commit lints every `.js` and `.sh` in the tree and refuses one written for a browser session. Quote in the report the lines a reader needs. In PR #278, `request-log.init.js` sat in the evidence folder, was moved out before the commit, and the report still links it.

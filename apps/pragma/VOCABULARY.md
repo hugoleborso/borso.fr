@@ -888,10 +888,15 @@ Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read
 - In the tab, the reads of one task form one group. A group of one leaves
   as a plain `GET`, and at most two read requests are in flight
   (`MOST_READS_IN_FLIGHT`). Writes never join a group.
+- The tab retries a read once, never a query. When a request is refused
+  with `429` or a `5xx`, or the network drops, its reads leave again
+  together one second later. A read that answered `429` or a `5xx` inside an
+  answered batch is retried the same way. Queries keep `retry: 0`.
 
 Held by: `api/src/read-batch/read-batch.controller.test.ts` › fails only the gated read when the batch carries no cookie
 Held by: `api/src/read-batch/read-batch.controller.test.ts` › answers 500 for a read that throws while the others answer 200
 Held by: `site/src/lib/read-batch.adapter.test.ts` › hold a third group until one of the two answers
+Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed read once, after the app client has spent its retry
 
 Not to be confused with: a **written root**, which a write announces; the
 batch writes nothing and announces nothing.

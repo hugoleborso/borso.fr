@@ -40,6 +40,7 @@ import {
   resolveSceneIndex,
   selectSceneKeyCommand,
 } from './setlist-scene.core';
+import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 
 const NO_ROWS: readonly never[] = [];
 const CAPTION_CLASS = 'text-label tracking-[0.18em] uppercase text-stage-ink-dim m-0';
@@ -124,7 +125,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   if (setlist === null) {
     return (
       <NotFoundNotice
-        message={t('setlist.notFound')}
+        message={t(selectMissingSetlistMessageKey(setlistQuery.error))}
         backTo="/setlists"
         backLabel={t('setlist.title')}
       />

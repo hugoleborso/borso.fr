@@ -6,12 +6,12 @@ what the criteria were, and what it costs us.
 
 ADRs sit between the spec ("what we want") and the plan's `How each
 decision becomes code` table ("where it lands"). A plan row that says
-"we chose X instead of Y because Z" deserves an ADR — the alternatives
+"we chose X instead of Y because Z" deserves an ADR. The alternatives
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
 Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
-Drafting is `/adr` — the skill has two entry modes (see
+Drafting is `/adr`. The skill has two entry modes (see
 [`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)):
 the interactive decision-support walk when a human invokes it, or a
 piloted mode that takes a pre-built payload when
@@ -19,11 +19,11 @@ piloted mode that takes a pre-built payload when
 
 ## Status lifecycle
 
-- **proposed** — drafted, not yet shipped. Default on creation.
-- **accepted** — merged into main. Stamped by `/after-task-kaizen`.
-- **superseded by ADR-XXXX** — replaced. Forward link mandatory; old
+- **proposed**. drafted, not yet shipped. Default on creation.
+- **accepted**. merged into main. Stamped by `/after-task-kaizen`.
+- **superseded by ADR-XXXX**. replaced. Forward link mandatory; old
   file stays for audit.
-- **deprecated** — surrounding system is gone; preserved as historical.
+- **deprecated**. surrounding system is gone; preserved as historical.
 
 ADRs are append-only. Ids are never recycled, even after supersession.
 
@@ -49,7 +49,7 @@ No:
 ## Index
 
 <!-- New entries go under the right heading. If no heading fits, add
-     one. Manually curated — `/adr` never reorders existing entries.
+     one. Manually curated. `/adr` never reorders existing entries.
      scripts/check-adr-numbers-resolve.sh refuses a record with no row and
      a row with no record; it had drifted by nine of twenty before it ran. -->
 
@@ -107,75 +107,75 @@ No:
 | [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 | [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | proposed | 2026-11-05 |
-| [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | proposed | 2026-11-05 |
+| [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
 
 ### Data layer
 
-- 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
-- 0009 — pragma previews clone production, credentials included.
-- 0036 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
-- 0037 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
-- 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
-- 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously, and since the PR #193 kaizen the migration runner waits on the build job and fails the deploy when it fails, so the operator still counts prod duplicates before merging but no longer checks `sys.jobs` by hand.
-- 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
-- 0049 — the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
-- 0050 — a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
-- 0052 — pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
+- 0006. cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
+- 0009. pragma previews clone production, credentials included.
+- 0036. every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
+- 0037. a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
+- 0039. the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
+- 0043. one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously, and since the PR #193 kaizen the migration runner waits on the build job and fails the deploy when it fails, so the operator still counts prod duplicates before merging but no longer checks `sys.jobs` by hand.
+- 0044. a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
+- 0049. the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
+- 0050. a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
+- 0052. pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
 
 ### App architecture
 
-- 0002, 0003 — react-bits Galaxy integration (see table above).
-- 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
-- 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
-- 0015 — per-member credentials replace the shared password (supersedes 0004); the old secret opens a self-closing enrolment window and nothing else.
-- 0016 — `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
-- 0017 — a song's Spotify track is resolved once by the ISRC Deezer already returns, and the client credential lives in SSM rather than the database ADR-0004 chose, because rotation-as-an-endpoint does not apply to a machine credential.
-- 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
-- 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
-- 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
-- 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
-- 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
-- 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
-- 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
-- 0041 — pragma serves MCP at `/mcp` on its API Lambda, stateless, with `@modelcontextprotocol/sdk` behind `@hono/mcp`; every tool is a schema plus one service call.
-- 0042 — pragma is its own OAuth 2.1 authorization server for assistants (discovery, dynamic registration, PKCE S256, rotating refresh tokens), signing members in through their existing session rather than a hosted provider.
-- 0047 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
-- 0048 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
-- 0051 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
-- 202611011313 — pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
+- 0002, 0003. react-bits Galaxy integration (see table above).
+- 0004. shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
+- 0010. a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
+- 0015. per-member credentials replace the shared password (supersedes 0004); the old secret opens a self-closing enrolment window and nothing else.
+- 0016. `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
+- 0017. a song's Spotify track is resolved once by the ISRC Deezer already returns, and the client credential lives in SSM rather than the database ADR-0004 chose, because rotation-as-an-endpoint does not apply to a machine credential.
+- 0018. Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
+- 0019. the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
+- 0020. `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
+- 0022. the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
+- 0038. `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
+- 0028. `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
+- 0040. pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
+- 0041. pragma serves MCP at `/mcp` on its API Lambda, stateless, with `@modelcontextprotocol/sdk` behind `@hono/mcp`; every tool is a schema plus one service call.
+- 0042. pragma is its own OAuth 2.1 authorization server for assistants (discovery, dynamic registration, PKCE S256, rotating refresh tokens), signing members in through their existing session rather than a hosted provider.
+- 0047. pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
+- 0048. Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
+- 0051. chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
+- 202611011313. pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
 - 202611050445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
 
 ### CDK / infra
 
-- [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
-- 0027 — talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
-- 202610291139 — pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
+- [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md). an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
+- 0027. talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
+- 202610291139. pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
 
 ### Harness
 
-- 0026, superseded by 202611050106 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
-- 202611050106 — the harness lives in `.claude/` as plain files and the `borso-harness` plugin is deleted, because talos moved into `apps/` and the plugin had no other consumer; a repository outside borso.fr can no longer install it.
-- 0030 — every knowledge entry declares `triggers:` (paths, commands, output), `knowledge-triggers.sh` prints the matching entry into the agent's context at that moment, and a gate refuses an entry without one, because entries were read only when a hook printed them.
-- 0032 — the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
+- 0026, superseded by 202611050106. the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+- 202611050106. the harness lives in `.claude/` as plain files and the `borso-harness` plugin is deleted, because talos moved into `apps/` and the plugin had no other consumer; a repository outside borso.fr can no longer install it.
+- 0030. every knowledge entry declares `triggers:` (paths, commands, output), `knowledge-triggers.sh` prints the matching entry into the agent's context at that moment, and a gate refuses an entry without one, because entries were read only when a hook printed them.
+- 0032. the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
 
 ### Observability
 
-- 202611041200 — the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
+- 202611041200. the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
 
-- 0031 — pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
+- 0031. pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
 ### Tooling / DevX
 
-- 0001 — `/tech-lead-orchestrator` replaces the linear skill auto-chain.
-- 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
-- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name. Superseded by 0045.
-- 0045 — oxlint replaces ESLint and oxfmt replaces Prettier; every rule keeps running, natively, through tsgolint, or as the upstream ESLint rule loaded as a JavaScript plugin, and the lint and format checks return to the commit, except the type-aware rules, which run on push and in CI.
-- 0046 — TypeScript 7.0.2 is the only TypeScript: every type check and the `infra/cdk` build run it; the architecture model parses with `oxc-parser` and the rule suites run on oxlint's `RuleTester`.
-- 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
-- 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
-- 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
-- 0023 — a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
-- 0029 — weak point management reads the dantotsu front matter, made checkable by a schema gate; `zone:` is chosen by hand, and the weekly count comes from the entries' dates, so no new writer and no cron.
+- 0001. `/tech-lead-orchestrator` replaces the linear skill auto-chain.
+- 0005. Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
+- 0007. ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name. Superseded by 0045.
+- 0045. oxlint replaces ESLint and oxfmt replaces Prettier; every rule keeps running, natively, through tsgolint, or as the upstream ESLint rule loaded as a JavaScript plugin, and the lint and format checks return to the commit, except the type-aware rules, which run on push and in CI.
+- 0046. TypeScript 7.0.2 is the only TypeScript: every type check and the `infra/cdk` build run it; the architecture model parses with `oxc-parser` and the rule suites run on oxlint's `RuleTester`.
+- 0008. purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
+- 0011. ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
+- 0014. generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
+- 0023. a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
+- 0029. weak point management reads the dantotsu front matter, made checkable by a schema gate; `zone:` is chosen by hand, and the weekly count comes from the entries' dates, so no new writer and no cron.
 
 ## How `/open-pr` uses ADRs
 

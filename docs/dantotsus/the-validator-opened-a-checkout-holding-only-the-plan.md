@@ -6,8 +6,8 @@ severity: medium
 related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
-eradication-level: 5
-eradication-paths: [.claude/commands/feature-pipeline.md]
+eradication-level: 2
+eradication-paths: [.claude/commands/feature-pipeline.md, .claude/hooks/pretool-validation-runs-as-its-agent.sh, .claude/settings.json, .claude/skills/tech-lead-orchestrator/SKILL.md]
 time-to-detect: hours
 tags: [orchestrator, agents, harness, validation, git]
 zone: .claude/commands/feature-pipeline.md
@@ -103,6 +103,49 @@ predicts. Moving it up a level needs the generated script to exist somewhere a
 check can read it, which CLAUDE.md currently rules out ("No script is
 committed"). That is an operator decision, raised by the kaizen pull request
 for PR #206 rather than taken here.
+
+## Recurrence on PR #278
+
+PR #278 ran `/tech-lead-orchestrator` with sequential Agent calls, not the
+Workflow, so the generated script was not involved. The defect came back
+anyway. `tech-val`, `tech-val-2` and `vis-val` each logged that their skill
+asked for the Agent tool they did not have, and both validation reports say
+the brief ran inline (`docs/features/pragma/open-in-two-calls/validation/`).
+The tech-lead skill said "spawn `/technical-validation`", which hands the
+skill to a subagent.
+
+So the defect is not the Workflow. It is any subagent loading a skill whose
+first step dispatches an agent. That moment is visible to a hook. Claude Code
+puts `agent_id` on a hook's input only inside a subagent (read in the
+installed binary 2.1.318, where the common hook fields are built with
+`agent_id:s?.agentId`).
+
+**Eradication, raised to level 2:**
+`.claude/hooks/pretool-validation-runs-as-its-agent.sh`, registered on the
+`Skill` matcher in `.claude/settings.json`, refuses `/technical-validation`
+and `/visual-validation` when `agent_id` is set. It tells the subagent to
+escalate, and names the `Agent` call the main session makes instead. The
+tech-lead skill's validate step now loads both skills in the main session.
+
+```sh
+if [[ -z "$AGENT_ID" ]]; then exit 0; fi
+echo "[validation-runs-as-its-agent] /$SKILL dispatches the isolated $VALIDATOR agent, and a subagent has no Agent tool." >&2
+```
+
+**Proof it can fail,** with `KAIZEN_LOG_REFUSALS=0` and a planted subagent
+input:
+
+```
+$ echo '{"tool_name":"Skill","tool_input":{"skill":"technical-validation"},"agent_id":"a1b2"}' | .claude/hooks/pretool-validation-runs-as-its-agent.sh
+[validation-runs-as-its-agent] /technical-validation dispatches the isolated technical-validator agent, and a subagent has no Agent tool.
+...
+exit 2
+```
+
+The same skill with no `agent_id` exits 0, and so does another skill with
+one. Whether a live subagent's input carries `agent_id` is read from the
+binary, not observed. This session's attempt to log a live hook input was
+refused by the auto-mode classifier.
 
 ## See also
 

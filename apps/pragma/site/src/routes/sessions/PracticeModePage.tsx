@@ -49,6 +49,7 @@ import {
   serializePracticePosition,
   type StoredPracticePosition,
 } from './practice-mode.core';
+import { selectMissingSessionMessageKey } from './missing-session.core';
 import { buildPracticePath } from './session-page.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 
@@ -136,7 +137,7 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
   if (session === null) {
     return (
       <NotFoundNotice
-        message={t('sessions.sessionNotFound')}
+        message={t(selectMissingSessionMessageKey(sessionQuery.error))}
         backTo="/sessions"
         backLabel={t('sessions.title')}
       />

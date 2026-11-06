@@ -63,6 +63,7 @@ A numbered list of commands or skill invocations to run before push. These are t
 - **Reproducible** — anyone can re-run it.
 - **Verifiable** — it has a pass / fail outcome that doesn't require interpretation.
 - **Cheap** — running it costs less than catching the defect later.
+- **Run once by the plan author** — every gate that can run on the tree as it stands is run before the plan is handed over, and its output goes under the gate. A gate that needs the feature's code is run on a stub of it. In PR #278, four gates failed as written: a query on a table named `songs` (it is `song`), test files passed to `test:e2e` that sit in the `core` project, a `git checkout` the `no-discarding-reset` hook refuses, and a resource timing count that reads 0 under `pnpm dev`. Each cost an implementer a detour.
 
 Gates that need human judgement (e.g. "review the screenshots") are still listed, but as `human:` gates. They are real gates; they just don't pass automatically.
 

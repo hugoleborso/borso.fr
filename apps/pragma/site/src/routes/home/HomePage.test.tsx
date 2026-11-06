@@ -253,7 +253,7 @@ describe('the home page', () => {
   });
 
   it('shows no flame when the flames cannot be read, and the rest of Home still works', async () => {
-    const answer = answerHomeApi([NEXT_PRACTICE], 500);
+    const answer = answerHomeApi([NEXT_PRACTICE], 403);
     stub = stubFetch((request) => Promise.resolve(answer(request)));
     const queryClient = createIsolatedQueryClient();
     renderHomePage(queryClient);

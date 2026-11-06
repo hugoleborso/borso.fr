@@ -55,6 +55,26 @@
 #
 # `#root` is allowed because the mount node is declared in `index.html` and no
 # component renders it, so there is no JSX to carry a utility.
+#
+# One more rejection is about a token's value, not a selector:
+#
+#   a `var(--name)` inside a static `@theme` block,      Tailwind declares the
+#   when no `@theme` or `:root` rule declares `--name`   token on `:root`, so
+#                                                        the `var()` resolves
+#                                                        there, where a
+#                                                        per-element property
+#                                                        does not exist, and
+#                                                        its fallback wins on
+#                                                        every element.
+#                                                        `@theme inline`
+#                                                        writes the `var()`
+#                                                        into the utility, where
+#                                                        it resolves per element.
+#
+# It bit in PR #76 (every warp streak ran at 400 ms) and again in PR #278 (the
+# opening screen's per-key delays collapsed to 0) while a knowledge entry said
+# it could not be checked. A property no root rule declares can only be meant
+# per element. See docs/knowledge/tailwind-v4-theme-and-preflight-traps.md.
 
 set -euo pipefail
 
@@ -151,6 +171,43 @@ read_offending_rules() {
       return 0
     }
 
+    function innermost_head() {
+      return depth > 0 ? head[depth] : ""
+    }
+
+    # Records what one declaration declares or reads, for the token check.
+    function read_declaration(declaration, line,   rest, name) {
+      if (innermost_head() ~ /^@theme/ || innermost_head() ~ /(^|[ ,]):root($|[ ,])/) {
+        rest = declaration
+        while (match(rest, /--[A-Za-z0-9_-]+[ \t\n]*:/)) {
+          name = substr(rest, RSTART, RLENGTH)
+          sub(/[ \t\n]*:$/, "", name)
+          declared[name] = 1
+          rest = substr(rest, RSTART + RLENGTH)
+        }
+      }
+      if (innermost_head() ~ /^@theme/ && innermost_head() !~ /(^|[ \t])inline([ \t]|$)/) {
+        rest = declaration
+        while (match(rest, /var\([ \t\n]*--[A-Za-z0-9_-]+/)) {
+          name = substr(rest, RSTART, RLENGTH)
+          sub(/^var\([ \t\n]*/, "", name)
+          reference_count++
+          reference_name[reference_count] = name
+          reference_line[reference_count] = line
+          rest = substr(rest, RSTART + RLENGTH)
+        }
+      }
+    }
+
+    function report_per_element_references(   index_, name) {
+      for (index_ = 1; index_ <= reference_count; index_++) {
+        name = reference_name[index_]
+        if (!(name in declared)) {
+          report(reference_line[index_], "var(" name ")", "per-element var() in a static @theme")
+        }
+      }
+    }
+
     function report(line, selector, reason) {
       if (reason == "class selector" && is_exempt(line)) return
       printf "%d|%s|%s\n", line, selector, reason
@@ -188,8 +245,13 @@ read_offending_rules() {
           }
           continue
         }
-        if (character == ";") { prelude = ""; continue }
-        if (character == "}") { if (depth > 0) depth--; prelude = ""; continue }
+        if (character == ";") { read_declaration(prelude, prelude_line); prelude = ""; continue }
+        if (character == "}") {
+          read_declaration(prelude, prelude_line)
+          if (depth > 0) depth--
+          prelude = ""
+          continue
+        }
         if (character != "{") {
           if (prelude ~ /^[ \t]*$/ && character !~ /[ \t]/) prelude_line = line
           prelude = prelude character
@@ -202,8 +264,10 @@ read_offending_rules() {
           if (!is_inside_opaque()) check_selectors(prelude, prelude_line)
           depth++; kind[depth] = "opaque"
         }
+        head[depth] = prelude
         prelude = ""
       }
+      report_per_element_references()
     }
   ' "$1"
 }
@@ -226,6 +290,8 @@ if [ "$failed" -ne 0 ]; then
   printf 'utilities. A class selector belongs on the JSX element as a Tailwind\n'
   printf 'utility, and a base element rule belongs inside `@layer base`, where the\n'
   printf 'utilities still outrank it. See docs/standards/08-styling.md.\n'
+  printf 'A token whose value differs per element goes in `@theme inline`, where\n'
+  printf 'its `var()` resolves on the element rather than on `:root`.\n'
   exit 1
 fi
 

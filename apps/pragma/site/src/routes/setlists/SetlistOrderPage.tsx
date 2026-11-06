@@ -24,6 +24,7 @@ import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useCopySetlistOrder } from './copy-setlist-order.hook';
+import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -74,7 +75,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   if (setlist === null) {
     return (
       <NotFoundNotice
-        message={t('setlist.notFound')}
+        message={t(selectMissingSetlistMessageKey(setlistQuery.error))}
         backTo="/setlists"
         backLabel={t('setlist.title')}
       />

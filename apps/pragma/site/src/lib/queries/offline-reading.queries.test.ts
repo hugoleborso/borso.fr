@@ -155,12 +155,20 @@ describe('loading what a member reads offline', () => {
     queryClient.setQueryData(sessionKeys.list(), { sessions: [NEXT_SESSION] });
     stub = stubFetch(() => Promise.reject(new TypeError('offline')));
 
-    await expect(loadOfflineReadingWhenSignedIn(queryClient)).resolves.toBeUndefined();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const loading = loadOfflineReadingWhenSignedIn(queryClient);
+    await vi.runAllTimersAsync();
+
+    await expect(loading).resolves.toBeUndefined();
 
     expect(listRequestedPaths(stub)).toEqual([
       '/api/sessions',
+      '/api/sessions',
+      '/api/sessions/session-next',
       '/api/sessions/session-next',
       '/api/setlists/by-session/session-next',
+      '/api/setlists/by-session/session-next',
+      '/api/songs',
       '/api/songs',
     ]);
   });
@@ -169,8 +177,17 @@ describe('loading what a member reads offline', () => {
     const queryClient = createSignedInQueryClient();
     stub = stubFetch(() => Promise.reject(new TypeError('offline')));
 
-    await expect(loadOfflineReadingWhenSignedIn(queryClient)).resolves.toBeUndefined();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const loading = loadOfflineReadingWhenSignedIn(queryClient);
+    await vi.runAllTimersAsync();
 
-    expect(listRequestedPaths(stub)).toEqual(['/api/sessions', '/api/songs']);
+    await expect(loading).resolves.toBeUndefined();
+
+    expect(listRequestedPaths(stub)).toEqual([
+      '/api/sessions',
+      '/api/sessions',
+      '/api/songs',
+      '/api/songs',
+    ]);
   });
 });
