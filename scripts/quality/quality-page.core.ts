@@ -12,24 +12,55 @@ background:var(--dot);margin:1px;opacity:.45}.dot.recent{opacity:1}.dot.engaged{
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}.legend .dot{opacity:1}
 .bars{display:flex;gap:2px;align-items:flex-end;height:48px}.bar{width:10px;background:var(--hot);min-height:1px}
 .bar.zero{background:var(--line)}.bar.missing{background:none;border-bottom:1px dashed var(--line)}
-.pillars{display:grid;grid-template-columns:1fr;gap:12px}@media (min-width:900px){.pillars{grid-template-columns:repeat(3,minmax(0,1fr))}}
-details.pillar{margin:0;border:1px solid var(--line);border-radius:8px;min-width:0}
-details.pillar>summary{display:flex;align-items:center;gap:10px;padding:10px 12px}
-details.pillar>summary h2{margin:0;font-size:18px}
+.sections{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+details.section{margin:0;border:1px solid var(--line);border-radius:8px;min-width:0}
+details.section>summary{display:flex;align-items:center;gap:10px;padding:10px 12px}
+details.section>summary h2{margin:0;font-size:18px}
 summary::-webkit-details-marker{display:none}summary::marker{content:""}
 .score{margin-left:auto;font-size:13px;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
 .score.ok{color:var(--good);border-color:var(--good)}.score.ko{color:var(--bad);border-color:var(--bad)}.score.unjudged{color:var(--muted)}
 .warn{color:var(--stage-c);font-size:14px;cursor:help;line-height:1}
-.rows{padding:0 12px 8px}
-.indicator{margin:0;border-top:1px solid var(--line)}
-.indicator>summary,.indicator.flat{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;min-height:20px}
-.indicator.flat{cursor:help}
-.flag{width:9px;height:9px;border-radius:50%;background:var(--dot);flex:none}
+.rows{padding:0 12px 10px}
+.row{margin:0;border-top:1px solid var(--line)}
+.row>summary,.row.flat{display:flex;align-items:center;gap:12px;padding:8px 0;min-width:0}
+.row-name{font-size:13px;font-weight:600;flex:0 0 11em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.section-weak-points .row-name{flex:0 0 26em;white-space:normal;overflow:visible}
+@media (max-width:640px){.row>summary,.row.flat{display:block}.row-name{flex:none;display:block;margin-bottom:4px;white-space:normal;overflow:visible}}
+.tiles{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;min-width:0;flex:1}
+.tile{flex:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px;min-width:84px;display:flex;flex-direction:column;cursor:help}
+.tile-head{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-value{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile-goal{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.flag{width:8px;height:8px;border-radius:50%;background:var(--dot);flex:none}
 .flag.ok{background:var(--good)}.flag.ko{background:var(--bad)}
-.who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.amount{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
-.indicator .bars{padding:2px 0 8px}
+.charts{display:flex;flex-wrap:wrap;gap:10px;padding:2px 0 10px}
+.chart{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:zoom-in;color:inherit;font:inherit;display:block}
+.chart-app{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.chart .bars{height:30px;gap:2px}.chart .bar{width:5px}
+.chart .bars,dialog.zoom .bars{border-bottom:1px solid var(--line)}.bar.zero{min-height:2px}
+.row>summary>.scroll,.row>.scroll{margin-bottom:10px}
+dialog.zoom{border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);padding:16px;width:min(720px,92vw)}
+dialog.zoom::backdrop{background:rgba(0,0,0,.5)}
+dialog.zoom h3{margin:0 0 10px;font-size:15px}
+dialog.zoom .bars{height:240px;gap:4px}dialog.zoom .bar{width:auto;flex:1;min-width:10px}
+dialog.zoom .chart-app{font-size:13px;margin-bottom:6px}
 .bars.small{height:24px}.bars.small .bar{width:6px}ol li,ul li{margin-bottom:6px}details{margin:4px 0 12px}summary{cursor:pointer}`;
+
+const ZOOM_DIALOG = `<dialog class="zoom" id="zoom" aria-labelledby="zoom-title"><h3 id="zoom-title"></h3><div id="zoom-body"></div></dialog>`;
+
+const ZOOM_SCRIPT = `
+const zoom = document.getElementById('zoom');
+const zoomTitle = document.getElementById('zoom-title');
+const zoomBody = document.getElementById('zoom-body');
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+  if (event.target === zoom) { zoom.close(); return; }
+  const chart = event.target.closest('.chart');
+  if (chart === null) return;
+  zoomTitle.textContent = chart.getAttribute('title') ?? '';
+  zoomBody.innerHTML = chart.innerHTML;
+  zoom.showModal();
+});`;
 
 export function escapeHtml(text: string): string {
   return text
@@ -59,5 +90,8 @@ export function renderQualityFragment(title: string, note: string, body: string)
 <h1 title="${escapeHtml(note)}">${escapeHtml(title)}</h1>
 ${body}
 </main>
+${ZOOM_DIALOG}
+<script type="module">${ZOOM_SCRIPT}
+</script>
 `;
 }
