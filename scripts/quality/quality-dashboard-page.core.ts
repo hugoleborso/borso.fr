@@ -73,9 +73,11 @@ const WARNING_GLYPH = '⚠';
 const SEPARATOR = ' · ';
 const WEAK_POINT_CEILING = 0;
 const MONTH_DAY_START = 5;
+const AXIS_INTERVALS = 4;
+const ZOOM_GROUP = 'chart-zoom';
 const UNSAFE_ID = /[^a-z0-9]+/gi;
 const PAGE_NOTE =
-  'Each indicator is the rolling seven days, and is ok or ko against its ceiling in docs/quality/targets.md. A closed row shows one pastille per application. Opening a row shows every value with its ceiling, then one eight-week graph per application, oldest week first. Clicking a graph opens it full screen; clicking the enlarged graph closes it. Hover anything for its detail.';
+  'Each indicator is the rolling seven days, and is ok or ko against its ceiling in docs/quality/targets.md. A closed row shows one pastille per application. Opening a row shows every value with its ceiling, then one eight-week graph per application, oldest week first. Clicking a graph opens it large, where hovering a week gives its value; clicking outside the graph closes it. Hover anything for its detail.';
 const WEAK_POINTS_NOTE =
   'Each weak point engaged in docs/quality/weak-points.md, with the dantotsus that recorded it, week by week. Target: zero per week.';
 const DEFECT_MAP_NOTE =
@@ -148,33 +150,87 @@ function hasData(points: readonly Point[]): boolean {
   return points.some((point) => point.value !== null);
 }
 
-function highestOf(points: readonly Point[]): number {
-  return Math.max(1, ...points.map((point) => point.value ?? 0));
+function niceStep(rough: number): number {
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(rough, 1)));
+  const normalized = rough / magnitude;
+  if (normalized <= 1) return magnitude;
+  if (normalized <= 2) return 2 * magnitude;
+  if (normalized <= 5) return 5 * magnitude;
+  return 10 * magnitude;
 }
 
-function renderBars(points: readonly Point[], highest: number): string {
+function buildAxis(points: readonly Point[]): {
+  readonly maximum: number;
+  readonly ticks: readonly number[];
+} {
+  const highest = Math.max(1, ...points.map((point) => point.value ?? 0));
+  const step = niceStep(highest / AXIS_INTERVALS);
+  const count = Math.ceil(highest / step);
+  return {
+    maximum: step * count,
+    ticks: Array.from({ length: count + 1 }, (_, index) => index * step),
+  };
+}
+
+function percentOf(value: number, maximum: number): string {
+  return String(Math.round((value / maximum) * PERCENT));
+}
+
+function renderSparkline(points: readonly Point[], maximum: number, unit: string): string {
   const bars = points.map((point) => {
     if (point.value === null) {
       return `<span class="bar missing" title="week of ${point.label}: no data"></span>`;
     }
-    const height = Math.round((point.value / highest) * PERCENT);
     const zero = point.value === 0 ? ' zero' : '';
-    return `<span class="bar${zero}" style="height:${String(height)}%" title="week of ${point.label}: ${String(point.value)}"></span>`;
+    return `<span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%" title="week of ${point.label}: ${String(point.value)}${unit}"></span>`;
   });
-  return `<div class="bars">${bars.join('')}</div>`;
+  return `<span class="bars">${bars.join('')}</span>`;
 }
 
-function renderCeilingLine(highest: number, ceiling: number | null): string {
-  if (ceiling === null || ceiling > highest) return '';
-  const bottom = Math.round((ceiling / highest) * PERCENT);
-  return `<span class="ceiling" style="bottom:${String(bottom)}%" title="ceiling ${String(ceiling)}"></span>`;
+function renderColumn(point: Point, maximum: number, unit: string): string {
+  const week = `week of ${point.label}`;
+  if (point.value === null) {
+    return `<span class="col"><span class="bar missing"><span class="bubble">${escapeHtml(`${week}: no data`)}</span></span></span>`;
+  }
+  const zero = point.value === 0 ? ' zero' : '';
+  return `<span class="col"><span class="bar${zero}" style="height:${percentOf(point.value, maximum)}%"><span class="bubble">${escapeHtml(`${week}: ${String(point.value)}${unit}`)}</span></span></span>`;
 }
 
-function renderTicks(points: readonly Point[]): string {
-  const ticks = points.map(
+function selectDrawnCeiling(maximum: number, ceiling: number | null): number | null {
+  if (ceiling === null || ceiling > maximum) return null;
+  return ceiling;
+}
+
+function renderCeilingLine(maximum: number, ceiling: number, unit: string): string {
+  return `<span class="ceiling" style="bottom:${percentOf(ceiling, maximum)}%" title="${escapeHtml(`ceiling ${String(ceiling)}${unit}`)}"></span>`;
+}
+
+function renderLegend(ceiling: number | null, unit: string): string {
+  const series = `<span><i class="swatch"></i>weekly value</span>`;
+  if (ceiling === null) return `<span class="chart-legend">${series}</span>`;
+  return `<span class="chart-legend">${series}<span><i class="swatch rule"></i>${escapeHtml(`ceiling ${String(ceiling)}${unit}`)}</span></span>`;
+}
+
+function renderPlot(
+  points: readonly Point[],
+  ceiling: number | null,
+  unit: string,
+  axis: { readonly maximum: number; readonly ticks: readonly number[] },
+): string {
+  const marks = axis.ticks.map(
+    (tick) =>
+      `<span class="tick" style="bottom:${percentOf(tick, axis.maximum)}%">${escapeHtml(`${String(tick)}${unit}`)}</span>`,
+  );
+  const lines = axis.ticks.map(
+    (tick) => `<span class="gridline" style="bottom:${percentOf(tick, axis.maximum)}%"></span>`,
+  );
+  const drawn = selectDrawnCeiling(axis.maximum, ceiling);
+  const line = drawn === null ? '' : renderCeilingLine(axis.maximum, drawn, unit);
+  const columns = points.map((point) => renderColumn(point, axis.maximum, unit));
+  const weeks = points.map(
     (point) => `<span>${escapeHtml(point.label.slice(MONTH_DAY_START))}</span>`,
   );
-  return `<div class="ticks">${ticks.join('')}</div>`;
+  return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(drawn, unit)}`;
 }
 
 function renderChart(
@@ -183,13 +239,11 @@ function renderChart(
   detail: string,
   points: readonly Point[],
   ceiling: number | null,
+  unit: string,
 ): string {
   if (!hasData(points)) return '';
-  const highest = highestOf(points);
-  const bars = renderBars(points, highest);
-  const small = `<a class="chart" id="c-${key}" href="#z-${key}" title="${escapeHtml(detail)}"><span class="chart-app">${escapeHtml(name)}</span>${bars}</a>`;
-  const large = `<a class="zoom" id="z-${key}" href="#c-${key}" aria-label="close the enlarged graph"><span class="zoom-card"><span class="zoom-title">${escapeHtml(detail)}</span><span class="zoom-plot">${bars}${renderCeilingLine(highest, ceiling)}</span>${renderTicks(points)}</span></a>`;
-  return `${small}${large}`;
+  const axis = buildAxis(points);
+  return `<details class="zoomable" name="${ZOOM_GROUP}" id="${key}"><summary class="chart" title="${escapeHtml(detail)}"><span class="chart-app">${escapeHtml(name)}</span>${renderSparkline(points, axis.maximum, unit)}</summary><span class="zoom"><span class="zoom-card"><span class="zoom-title">${escapeHtml(detail)}</span>${renderPlot(points, ceiling, unit, axis)}</span></span></details>`;
 }
 
 function renderTile(
@@ -236,6 +290,7 @@ function renderIndicatorRow(
         detail,
         indicator.weeks.map((week) => ({ label: week.weekStart, value: week.value })),
         ceiling,
+        UNIT_SUFFIX[indicator.unit],
       ),
     };
   });
@@ -314,6 +369,7 @@ function renderWeakPointRow(weakPoint: EngagedWeakPoint, series: readonly Weekly
     detail,
     series.map((week) => ({ label: week.weekStart, value: week.count })),
     WEAK_POINT_CEILING,
+    UNIT_SUFFIX.count,
   );
   return renderRow(
     weakPoint.title,

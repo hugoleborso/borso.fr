@@ -166,7 +166,7 @@ describe('renderDashboardPage', () => {
     expect(html).toContain('<span class="score ok">1/1 ok</span>');
   });
 
-  it('links each graph to a full-screen copy of itself that links back, with its ceiling drawn', () => {
+  it('opens a graph as a toggle holding a full chart with axis, gridlines, hover and legend', () => {
     const html = renderDashboardPage(
       buildInput({
         indicators: [
@@ -181,25 +181,83 @@ describe('renderDashboardPage', () => {
         targets: [{ indicatorId: 'latency-p95', app: 'pragma', ceiling: 2 }],
       }),
     );
-    const bars =
-      '<div class="bars"><span class="bar missing" title="week of 2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="week of 2026-10-05: 0"></span><span class="bar" style="height:100%" title="week of 2026-10-12: 4"></span></div>';
     expect(html).toContain(
-      `<a class="chart" id="c-speed-latency-p95-pragma" href="#z-speed-latency-p95-pragma" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chart-app">pragma</span>${bars}</a>`,
+      '<details class="zoomable" name="chart-zoom" id="speed-latency-p95-pragma"><summary class="chart" title="pragma · p95 · 1391 ms · over the ceiling of 2 ms"><span class="chart-app">pragma</span><span class="bars">',
     );
     expect(html).toContain(
-      `<a class="zoom" id="z-speed-latency-p95-pragma" href="#c-speed-latency-p95-pragma" aria-label="close the enlarged graph"><span class="zoom-card"><span class="zoom-title">pragma · p95 · 1391 ms · over the ceiling of 2 ms</span><span class="zoom-plot">${bars}<span class="ceiling" style="bottom:50%" title="ceiling 2"></span></span><div class="ticks"><span>09-28</span><span>10-05</span><span>10-12</span></div></span></a>`,
+      '<span class="bar missing" title="week of 2026-09-28: no data"></span><span class="bar zero" style="height:0%" title="week of 2026-10-05: 0 ms"></span><span class="bar" style="height:100%" title="week of 2026-10-12: 4 ms"></span></span></summary>',
+    );
+    expect(html).toContain(
+      '<span class="y-axis"><span class="tick" style="bottom:0%">0 ms</span><span class="tick" style="bottom:25%">1 ms</span><span class="tick" style="bottom:50%">2 ms</span><span class="tick" style="bottom:75%">3 ms</span><span class="tick" style="bottom:100%">4 ms</span></span>',
+    );
+    expect(html).toContain('<span class="gridline" style="bottom:75%"></span>');
+    expect(html).toContain('<span class="ceiling" style="bottom:50%" title="ceiling 2 ms"></span>');
+    expect(html).toContain(
+      '<span class="col"><span class="bar" style="height:100%"><span class="bubble">week of 2026-10-12: 4 ms</span></span></span>',
+    );
+    expect(html).toContain(
+      '<span class="col"><span class="bar missing"><span class="bubble">week of 2026-09-28: no data</span></span></span>',
+    );
+    expect(html).toContain(
+      '<span class="x-axis"><span class="x-pad"></span><span class="x-weeks"><span>09-28</span><span>10-05</span><span>10-12</span></span></span>',
+    );
+    expect(html).toContain(
+      '<span class="chart-legend"><span><i class="swatch"></i>weekly value</span><span><i class="swatch rule"></i>ceiling 2 ms</span></span>',
     );
   });
 
-  it('draws no ceiling line when the ceiling sits above the tallest week', () => {
+  it('rounds the axis up to a clean step above the tallest week', () => {
+    const html = renderDashboardPage(
+      buildInput({
+        indicators: [
+          indicator({
+            unit: 'count',
+            weeks: [
+              { weekStart: '2026-10-05', value: 153 },
+              { weekStart: '2026-10-12', value: 544 },
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(html).toContain('<span class="tick" style="bottom:100%">600</span>');
+    expect(html).toContain('<span class="tick" style="bottom:33%">200</span>');
+    expect(html).toContain(
+      '<span class="bar" style="height:91%"><span class="bubble">week of 2026-10-12: 544</span>',
+    );
+  });
+
+  it('picks a clean axis step at each magnitude', () => {
+    const steps = [
+      { value: 7, top: '8' },
+      { value: 30, top: '30' },
+      { value: 2845, top: '3000' },
+      { value: 9000, top: '10000' },
+    ];
+    for (const step of steps) {
+      const html = renderDashboardPage(
+        buildInput({
+          indicators: [
+            indicator({ unit: 'count', weeks: [{ weekStart: '2026-10-12', value: step.value }] }),
+          ],
+        }),
+      );
+      expect(html).toContain(`<span class="tick" style="bottom:100%">${step.top}</span>`);
+    }
+  });
+
+  it('draws no ceiling line and no legend entry when the ceiling sits above the axis', () => {
     const html = renderDashboardPage(
       buildInput({
         indicators: [indicator({ weeks: [{ weekStart: '2026-10-12', value: 4 }] })],
         targets: [{ indicatorId: 'latency-p95', app: 'pragma', ceiling: 900 }],
       }),
     );
-    expect(html).toContain('class="zoom-plot"');
+    expect(html).toContain('class="panel"');
     expect(html).not.toContain('class="ceiling"');
+    expect(html).toContain(
+      '<span class="chart-legend"><span><i class="swatch"></i>weekly value</span></span>',
+    );
   });
 
   it('draws no graph at all when no week of the row holds a value', () => {
@@ -290,7 +348,7 @@ describe('renderDashboardPage', () => {
       '<span class="row-name">A gate reports green while measuring nothing</span><span class="pips"><span class="flag ko" title="A gate reports green while measuring nothing · factory map · engaged on 2026-10-10 · 3 occurrence(s) recorded · countermeasure: Plant one defect per gate · 2 in the week of 2026-10-12. Target: zero per week."></span></span><span class="score ko">0/1 ok</span>',
     );
     expect(html).toContain('<span class="tile-app">quiet-one</span>');
-    expect(html).toContain('id="c-weak-gate-measures-nothing"');
+    expect(html).toContain('id="weak-gate-measures-nothing"');
     expect(html).toContain('<span class="tile-value">—</span>');
     expect(html).toContain('no occurrence yet. Target: zero per week.');
     expect(html).not.toContain('A closed weak point');
