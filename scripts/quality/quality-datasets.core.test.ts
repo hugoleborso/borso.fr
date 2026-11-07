@@ -81,12 +81,13 @@ describe('buildIndicatorRows', () => {
     ]);
   });
 
-  it('reads the ceiling of this indicator, not of another of the same application', () => {
+  it('reads the ceiling of this indicator and this application, not of a neighbour', () => {
     const rows = buildIndicatorRows(
       'week',
       [indicator({ current: 1000 })],
       [
         { indicatorId: 'latency-p50', app: 'pragma', ceiling: 1 },
+        { indicatorId: 'latency-p95', app: 'talos', ceiling: 1 },
         { indicatorId: 'latency-p95', app: 'pragma', ceiling: 2000 },
       ],
     );
