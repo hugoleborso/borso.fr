@@ -22,8 +22,6 @@ export interface MapGrid {
   readonly columns: readonly string[];
 }
 
-export type PageStyle = 'document' | 'board';
-
 export interface WeakPointPageInput {
   readonly now: string;
   readonly placed: readonly PlacedDot[];
@@ -166,7 +164,7 @@ ${renderWeeklyBars(series)}<p>${escapeHtml(describeCurrentWeek(series))}</p>`;
     .join('\n');
 }
 
-export function renderStageLegend(style: PageStyle): string {
+export function renderStageLegend(): string {
   const entries = [
     ...STAGES.map((stage) => ({
       dotClass: `stage-${stage.toLowerCase()}`,
@@ -176,17 +174,15 @@ export function renderStageLegend(style: PageStyle): string {
     { dotClass: 'engaged', note: 'engaged weak point' },
   ];
   const items = entries.map((entry) => {
-    const title = style === 'board' ? ` title="${escapeHtml(entry.note)}"` : '';
-    const text = style === 'document' ? ` ${escapeHtml(entry.note)}` : '';
     const classes = ['dot', entry.dotClass].filter((name) => name !== '').join(' ');
-    return `<span${title}><span class="${classes}"></span>${text}</span>`;
+    return `<span><span class="${classes}"></span> ${escapeHtml(entry.note)}</span>`;
   });
   return `<div class="legend">${items.join('')}</div>`;
 }
 
 export function renderVaricelle(placed: readonly PlacedDot[], now: string): string {
   const { product, factory } = splitDefectMaps(placed);
-  return `${renderStageLegend('document')}
+  return `${renderStageLegend()}
 <h3>${PRODUCT_MAP_TITLE}</h3>
 <p>${PRODUCT_MAP_NOTE}</p>
 ${renderGrid(product.placed, product.rows, product.columns, now)}

@@ -1,67 +1,76 @@
 ---
 name: quality-dashboard
-description: Refresh the private borso.fr 3S board, the claude.ai page showing Speed, Stability and Security for every app over a week, 12 hours or 60 minutes, plus the engaged weak points and the defect map. Use when the operator says "/quality-dashboard", "refresh the dashboard", "update the 3S board", or asks how the apps are doing on latency, errors or vulnerabilities.
+description: Refresh the private borso.fr 3S board, the claude.ai dashboard showing Speed, Stability and Security for every app over a week, 12 hours or 60 minutes, plus the engaged weak points and the defect map. Use when the operator says "/quality-dashboard", "refresh the dashboard", "update the 3S board", or asks how the apps are doing on latency, errors or vulnerabilities.
 ---
 
 # Refresh the 3S board
 
-The board is a private claude.ai artifact at https://claude.ai/artifact/1kJhriURt4bM8bZLsoFmBe. Nothing generated is committed. The repository holds the renderer (`scripts/quality/quality-dashboard.ts`) and this procedure. A session refreshes the page because it holds the access CI does not have, which is AWS read, the Sentry MCP, the Pragma MCP and `gh`. [ADR 202611041200](../../../docs/adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) records why.
+The board is a private claude.ai dashboard at https://claude.ai/artifact/SPfft3WuWwZh2YHRu3Ztab, made from the shared Dashboard Artifact type. The repository holds the page and the dataset builder; nothing generated is committed. A session refreshes it because it holds the access CI does not have, which is AWS read, the Sentry MCP, the Pragma MCP and `gh`. [ADR 202611041200](../../../docs/adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) records why.
 
 Refresh only when the operator asks. Never schedule it.
 
-## What the page is
+## How it is put together
 
-One page, five sections, each a `details` toggle whose closed state carries a score.
+The Dashboard type runs the page's own JavaScript and gives it d3, a Sources panel, filters and theme tokens. So the board is **data plus a page**, not generated HTML:
 
-- **Speed** and **Stability** sit under a range switch offering `week by week`, `last 12 hours` and `last 60 minutes`. Switching the range re-reads the same indicators over that window. The sections are rendered once with a variant per range, so a section or row you opened stays open when you switch.
-- **Security**, **Engaged weak points** and **Defect map** sit below the switch. They are repository state and a defect record, not a rate, so no range applies to them.
-- A row is one indicator holding every application. Closed it shows one pastille per application and the row score; open it shows a chip per application with the value, its ceiling and a sparkline. Clicking a chip opens that application's chart full screen, with a y axis, gridlines, direct labels on the peak and the latest bucket, a dashed ceiling line and a legend.
-- An indicator is `ok` or `ko` against its ceiling in [docs/quality/targets.md](../../../docs/quality/targets.md), measured on the rolling window of the selected range. An indicator with no ceiling is neither, and does not count in a score.
+- `scripts/quality/dashboard/index.html` is the page. It is static: it reads every number from a dataset and draws the charts with d3. Change it by editing that file and writing it to `files/index.html` in the dashboard's store.
+- `scripts/quality/quality-dashboard.ts` builds the datasets as JSON files. It reads CloudWatch and `pnpm audit` itself, and takes everything else from the snapshot you collect.
+- Six datasets: `indicators`, `buckets`, `security`, `weak_points`, `weak_point_weeks`, `defects`. Each is an attached file, because none of their sources is a connector the reader's page could query. Sentry is the exception that could be live; it is attached so the whole board has one freshness story.
 
-## Hard constraints the page is built under
+Read the type's own `SKILL.md` and `artifact-type/reference/design-defaults.md` on the dashboard before changing the page. The store refuses a document over 256 KB, so the page stays one file and the data stays in assets.
 
-- **The published page runs no JavaScript.** An inline `script` and an `a href="#id"` were both tried and neither fires in the artifact runtime, though both work in a plain browser. Every interaction is `details`/`summary` or a radio group with labels. Do not reintroduce script; it will look fine locally and be dead once published.
-- **No prose.** Only headings and values are visible text. Every caption is a `title` attribute.
-- **No invented number.** A source that cannot be read shows an em dash and a reason in its tooltip, and its section carries a small warning glyph. It never shows zero.
+## What the board shows
+
+- **Speed** and **Stability** sit under a range filter: `week by week`, `last 12 hours`, `last 60 minutes`. The filter is `dash/params.range`; every range is already in `indicators` and `buckets`, so switching redraws without re-reading anything.
+- **Security**, **Engaged weak points** and the **Defect map** are repository state and a defect record, not a rate, so no range applies.
+- A row is one indicator holding every application. Open it for a chip per application with the value, its ceiling and a sparkline; click a chip for the full chart with axes, gridlines, a ceiling line and hover.
+- An indicator is ok or ko against its ceiling in [docs/quality/targets.md](../../../docs/quality/targets.md), measured on the rolling window of the selected range. No ceiling means neither, and it counts in no score.
 
 ## 1. Collect the snapshot
 
-Write `<scratchpad>/quality-dashboard/snapshot.json`. Each key holds its data, or `{ "unavailable": "<why, one sentence>" }` when the source cannot be read. The renderer refuses a malformed file, so fix the file rather than the renderer.
+Write `<scratchpad>/quality-dashboard/snapshot.json`. Each key holds its data, or `{ "unavailable": "<why, one sentence>" }` when the source cannot be read. The builder refuses a malformed file, so fix the file rather than the builder.
 
-- **`sentry`**. Organization `borsofr`, region `https://de.sentry.io`, one project. Applications are told apart by the `app` tag, which every app sets. Previews run with Sentry off, because the DSN is a prod-environment variable, so preview errors show only in the CloudWatch 5xx row. Call `search_errors` with `fields: ["app", "environment", "count()"]` four times.
-  - `rolling` is the rows for `period: "7d"`, `hour` the rows for `period: "12h"`, `minute` the rows for `period: "1h"`. Each is a list of `{ "app", "environment", "count" }`.
-  - `weekly` maps each Monday (ISO date) of the last eight weeks to the rows of that week, with `query: "timestamp:>=<monday>T00:00:00 timestamp:<<next monday>T00:00:00"`. Leave out a week from before the `app` tag existed (before 2026-10-26) rather than writing zero, so the bar shows no data.
-  - Sentry has no cheap per-hour or per-minute bucket here, so the two short ranges carry the count with no graph. That is expected, not a gap to fill with zeros.
-- **`improvements`**. Call the Pragma MCP `list_improvements`. Pass every item as `{ "id", "title", "status", "kind", "createdAt" }`. The renderer keeps those with `kind: "bug"`. If the tool returns no `kind`, the source is unavailable.
+- **`sentry`**. Organization `borsofr`, region `https://de.sentry.io`, one project. Applications are told apart by the `app` tag. Previews run with Sentry off, because the DSN is a prod-environment variable, so preview errors show only in the CloudWatch 5xx row. Call `search_errors` with `fields: ["app", "environment", "count()"]` four times.
+  - `rolling` is the rows for `period: "7d"`, `hour` for `period: "12h"`, `minute` for `period: "1h"`. Each is a list of `{ "app", "environment", "count" }`.
+  - `weekly` maps each Monday (ISO date) of the last eight weeks to that week's rows, with `query: "timestamp:>=<monday>T00:00:00 timestamp:<<next monday>T00:00:00"`. Leave out a week from before the `app` tag existed (before 2026-10-26) rather than writing zero.
+  - Sentry has no cheap per-hour or per-minute bucket, so the two short ranges carry the count with no graph. That is expected, not a gap to fill with zeros.
+- **`sentryIssues`**. Call `search_issues` once per app with `query: "is:unresolved app:<app>"`, `period: "7d"`, and record `{ "app", "count" }` with the number of issues returned. This is the count of distinct open problems; the event count above is the rate. It is deliberately unscored.
+- **`improvements`**. Call the Pragma MCP `list_improvements`. Pass every item as `{ "id", "title", "status", "kind", "createdAt" }`. The builder keeps those with `kind: "bug"`. If the tool returns no `kind`, the source is unavailable.
 - **`dependabot`**. Run `gh api repos/hugoleborso/borso.fr/dependabot/alerts?state=open --paginate` and count by `security_advisory.severity` into `{ "criticalOrHigh", "other" }`. A 403 saying the token lacks the permission is the reason to record.
 - **`secretScanning`**. Run `gh api repos/hugoleborso/borso.fr/secret-scanning/alerts?state=open` and record the count. The hosted-session proxy has refused this path since 2026-11-04.
 
-CloudWatch latency, 5xx and throttling, and `pnpm audit`, are read by the renderer itself with the session's AWS credentials. The renderer asks CloudWatch twice per range, once for the rolling value and once for the buckets, so a run makes six `get-metric-data` calls.
+CloudWatch latency, 5xx and throttling, and `pnpm audit`, are read by the builder itself with the session's AWS credentials. It asks CloudWatch twice per range, so a run makes six `get-metric-data` calls.
 
-## 2. Render
+## 2. Build the datasets
 
 ```bash
 pnpm exec tsx scripts/quality/quality-dashboard.ts \
   --snapshot <scratchpad>/quality-dashboard/snapshot.json \
-  --output <scratchpad>/quality-dashboard/borso-3s-board.html
+  --output <scratchpad>/quality-dashboard/datasets
 ```
 
 It prints each unavailable source. It exits 1 only when every source failed or the snapshot is malformed.
 
-## 3. Check it in a browser before publishing
+## 3. Upload and write the store
 
-The output is a fragment, so wrap it in a minimal document, then drive it with Playwright, which is preinstalled. Check at 1280 px and at 375 px, in dark and light:
+Upload each `<name>.json` with the Artifact tool, `asset: true` and the board's url, one call per file because they are text. Keep each reply's `/_blob/<id>` url.
 
-- a range tab switches the panel and leaves open sections open,
-- a chip opens its chart and a click outside closes it,
-- the console is clean.
+Then one `ArtifactData` `batch` on the board's url, pinning `if_version` for every document that already exists (read them first):
 
-A screenshot is worth more than an assertion here, because the failures this page has had were all layout and all invisible to the tests.
+- `datasets/<name>` — `{title, description, source: {kind: "file", url: "/_blob/<id>", name, format: "json"}, updated: {at, by}, schedule, staleAfterHours, edit}`. Only `source.url`, `updated` and `edit` change on a refresh.
+- `files/index.html` — `{text: <the page file>, edit}`, only when the page itself changed.
+- `dash/meta` and `dash/params` — set once; they do not change on a refresh.
 
-## 4. Publish
+Then read `data/users/me` doc `check` on the board. `checking` means read again, up to five times. `failed` names what the page threw or showed wrong: fix what the code confirms, write, check again, at most twice. No document after two reads means nothing failed.
 
-Publish the output with the Artifact tool, passing `url: https://claude.ai/artifact/1kJhriURt4bM8bZLsoFmBe` so the link stays the same. Before the first publish of the session, read the artifact with `action: "read"`, as the tool requires. Then give the operator the link and the two or three values that moved since the last refresh.
+Do not render, screenshot or browse the board to check it: the type forbids it, and the check document is the check.
 
-## Changing the renderer
+## 4. Tell the operator
 
-`scripts/quality/quality-dashboard.core.ts` holds the data, `quality-dashboard-page.core.ts` the markup, `quality-page.core.ts` the one stylesheet, `quality-sources.adapter.ts` the AWS and `pnpm audit` reads. All four `.core.ts` files are gated at 100% statements, branches, functions and lines, so a new branch needs a test in the same commit. Charts follow `/dataviz`: run its palette validator rather than picking a colour by eye.
+Give the link and the two or three values that moved since the last refresh. Say that an attached file is readable by anyone who can open the board, and that the numbers are as fresh as the last refresh, not live.
+
+## Changing the page
+
+`scripts/quality/dashboard/index.html` is plain HTML, CSS and JavaScript with `d3` and `dash` as globals. Every figure must carry its `data-source`, and `data-field`/`data-where` where it is one cell, or the type reports it back as a mis-marked number. Charts follow `/dataviz`.
+
+`scripts/quality/*.core.ts` is gated at 100% statements, branches, functions and lines plus a 100% mutation score, so a new branch needs a test in the same commit. `scripts/quality/quality-datasets.core.ts` turns indicators into rows; `quality-dashboard.core.ts` reads the sources.

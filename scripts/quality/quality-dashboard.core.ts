@@ -75,6 +75,11 @@ export interface SecurityCounts {
   readonly other: number;
 }
 
+export interface SentryIssueCount {
+  readonly app: string;
+  readonly count: number;
+}
+
 export interface SentryCount {
   readonly app: string;
   readonly environment: string;
@@ -466,6 +471,35 @@ export function buildSentryIndicators(
   );
 }
 
+export function buildSentryIssueIndicators(
+  reading: SourceResult<readonly SentryIssueCount[]>,
+  apps: readonly string[],
+): readonly Indicator[] {
+  return apps.map((app): Indicator => {
+    const base = {
+      id: 'sentry-issues-open',
+      pillar: 'stability' as const,
+      label: 'Sentry issues open',
+      unit: 'count' as const,
+      app,
+      points: [],
+    };
+    if (!SENTRY_APPS.includes(app))
+      return {
+        ...base,
+        current: null,
+        status: { kind: 'not-applicable', reason: NO_SENTRY_REASON },
+      };
+    if (reading.kind === 'unavailable') return { ...base, current: null, status: reading };
+    const own = reading.value.filter((count) => count.app === app);
+    return {
+      ...base,
+      current: own.reduce((total, count) => total + count.count, 0),
+      status: { kind: 'ok' },
+    };
+  });
+}
+
 export function buildBugReportIndicators(
   reading: SourceResult<readonly BugReport[]>,
   apps: readonly string[],
@@ -641,6 +675,7 @@ export interface SentrySnapshot {
 
 export interface Snapshot {
   readonly sentry: SourceResult<SentrySnapshot>;
+  readonly sentryIssues: SourceResult<readonly SentryIssueCount[]>;
   readonly bugReports: SourceResult<readonly BugReport[]>;
   readonly dependabot: SourceResult<SecurityCounts>;
   readonly secretScanning: SourceResult<number>;
@@ -650,6 +685,7 @@ const NOT_COLLECTED: SourceResult<never> = { kind: 'unavailable', reason: 'not c
 
 export const EMPTY_SNAPSHOT: Snapshot = {
   sentry: NOT_COLLECTED,
+  sentryIssues: NOT_COLLECTED,
   bugReports: NOT_COLLECTED,
   dependabot: NOT_COLLECTED,
   secretScanning: NOT_COLLECTED,
@@ -691,6 +727,9 @@ const snapshotSchema = z.object({
       minute: z.array(sentryCountSchema),
     }),
   ),
+  sentryIssues: sourceSchema(
+    z.array(z.object({ app: z.string(), count: z.number().int().nonnegative() })),
+  ),
   improvements: sourceSchema(z.array(improvementSchema)),
   dependabot: sourceSchema(securityCountsSchema),
   secretScanning: sourceSchema(z.number().int().nonnegative()),
@@ -704,6 +743,7 @@ export function readSnapshot(raw: unknown): Snapshot {
       hour: { rolling: sentry.hour, history: new Map() },
       minute: { rolling: sentry.minute, history: new Map() },
     })),
+    sentryIssues: snapshot.sentryIssues,
     bugReports: mapResult(snapshot.improvements, (improvements) =>
       improvements
         .filter((improvement) => improvement.kind === BUG_KIND)

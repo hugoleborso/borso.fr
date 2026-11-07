@@ -1,11 +1,10 @@
 #!/usr/bin/env tsx
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { inferLayer } from '../../.claude/skills/blueprint/blueprint-utils.js';
 import { REPOSITORY_ROOT, readDantotsuCorpus } from './dantotsu-corpus';
-import { renderDashboardPage } from './quality-dashboard-page.core';
 import {
   FRONT_END_APPS,
   FULL_STACK_APPS,
@@ -14,16 +13,25 @@ import {
   buildGatewayIndicators,
   buildSecurityIndicators,
   buildSentryIndicators,
+  buildSentryIssueIndicators,
   isEverySourceUnavailable,
   listBuckets,
   listUnavailableSources,
   placeBugReports,
   readTargets,
+  type Indicator,
   type RangeSpec,
   type SentryReading,
   type SentrySnapshot,
   type SourceResult,
 } from './quality-dashboard.core';
+import {
+  buildBucketRows,
+  buildDefectRows,
+  buildIndicatorRows,
+  buildWeakPointRows,
+  buildWeakPointWeekRows,
+} from './quality-datasets.core';
 import { readAudit, readGateway, readHttpApis, readSnapshotFile } from './quality-sources.adapter';
 import type { PlacedDot } from './weak-points-page.core';
 import {
@@ -38,10 +46,12 @@ import {
 const QUALITY_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'quality');
 const ENGAGED_PATH = join(QUALITY_DIRECTORY, 'weak-points.md');
 const TARGETS_PATH = join(QUALITY_DIRECTORY, 'targets.md');
-const DEFAULT_OUTPUT_PATH = join(QUALITY_DIRECTORY, 'dashboard.html');
+const DEFAULT_OUTPUT_PATH = join(QUALITY_DIRECTORY, 'datasets');
 const ISO_DATE_LENGTH = 10;
 const FACTORY_COLUMN = 'defects';
 const APPS = [...FULL_STACK_APPS, ...FRONT_END_APPS];
+const JSON_INDENT = 2;
+const REPOSITORY_RANGE = 'repository';
 
 function placeDot(dot: DefectDot): PlacedDot {
   const product = placeOnProductMap(dot.zone, inferLayer);
@@ -75,11 +85,12 @@ function main(): void {
   const apis = readHttpApis();
   const readings = RANGES.map((range) => ({ range, gateway: readGateway(apis, clock, range) }));
   const audit = readAudit();
-  const { sentry, bugReports, dependabot, secretScanning } = snapshot.value;
+  const { sentry, sentryIssues, bugReports, dependabot, secretScanning } = snapshot.value;
   const sources = new Map<string, SourceResult<unknown>>([
     ['CloudWatch', readings[0]?.gateway ?? apis],
     ['pnpm audit', audit],
     ['Sentry', sentry],
+    ['Sentry issues', sentryIssues],
     ['pragma bug reports', bugReports],
     ['Dependabot', dependabot],
     ['Secret scanning', secretScanning],
@@ -87,10 +98,11 @@ function main(): void {
   const unavailableSources = listUnavailableSources(sources);
   for (const source of unavailableSources) process.stderr.write(`  unavailable: ${source}\n`);
   if (isEverySourceUnavailable(sources)) {
-    process.stderr.write('\nEvery source failed, so no page was written.\n');
+    process.stderr.write('\nEvery source failed, so no dataset was written.\n');
     process.exitCode = 1;
     return;
   }
+  const targets = existsSync(TARGETS_PATH) ? readTargets(readFileSync(TARGETS_PATH, 'utf8')) : [];
   const dantotsuDots = readDantotsuCorpus()
     .map(readDefectDot)
     .filter((dot): dot is DefectDot => dot !== null);
@@ -99,38 +111,53 @@ function main(): void {
     ...(bugReports.kind === 'ok' ? placeBugReports(bugReports.value) : []),
   ];
   const engaged = readEngagedWeakPoints(readFileSync(ENGAGED_PATH, 'utf8'));
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(
-    outputPath,
-    renderDashboardPage({
-      now,
-      ranges: readings.map(({ range, gateway }) => {
-        const buckets = listBuckets(range, clock);
-        return {
-          id: range.id,
-          title: range.title,
-          indicators: [
-            ...buildGatewayIndicators(gateway, APPS, range, buckets),
-            ...buildSentryIndicators(selectSentry(sentry, range), APPS, buckets),
-            ...buildBugReportIndicators(bugReports, APPS, range, buckets),
-          ],
-        };
-      }),
-      security: buildSecurityIndicators({ dependabot, audit, secretScanning }),
-      targets: existsSync(TARGETS_PATH) ? readTargets(readFileSync(TARGETS_PATH, 'utf8')) : [],
-      placed: dots.map(placeDot),
-      engaged,
-      weeklyCounts: new Map(
-        engaged.map((weakPoint) => [
-          weakPoint.id,
-          countWeeklyOccurrences(dantotsuDots, weakPoint.id, now),
-        ]),
-      ),
-    }),
-    'utf8',
+  const weeklyCounts = new Map(
+    engaged.map((weakPoint) => [
+      weakPoint.id,
+      countWeeklyOccurrences(dantotsuDots, weakPoint.id, now),
+    ]),
   );
+  const perRange = readings.map(({ range, gateway }) => {
+    const buckets = listBuckets(range, clock);
+    const indicators: readonly Indicator[] = [
+      ...buildGatewayIndicators(gateway, APPS, range, buckets),
+      ...buildSentryIndicators(selectSentry(sentry, range), APPS, buckets),
+      ...buildSentryIssueIndicators(sentryIssues, APPS),
+      ...buildBugReportIndicators(bugReports, APPS, range, buckets),
+    ];
+    return { range, indicators };
+  });
+
+  mkdirSync(outputPath, { recursive: true });
+  const datasets = new Map<string, readonly unknown[]>([
+    [
+      'indicators',
+      perRange.flatMap(({ range, indicators }) =>
+        buildIndicatorRows(range.id, indicators, targets),
+      ),
+    ],
+    ['buckets', perRange.flatMap(({ range, indicators }) => buildBucketRows(range.id, indicators))],
+    [
+      'security',
+      buildIndicatorRows(
+        REPOSITORY_RANGE,
+        buildSecurityIndicators({ dependabot, audit, secretScanning }),
+        targets,
+      ),
+    ],
+    ['weak_points', buildWeakPointRows(engaged, weeklyCounts)],
+    ['weak_point_weeks', buildWeakPointWeekRows(engaged, weeklyCounts)],
+    ['defects', buildDefectRows(dots.map(placeDot))],
+  ]);
+  for (const [name, rows] of datasets) {
+    writeFileSync(
+      join(outputPath, `${name}.json`),
+      JSON.stringify(rows, null, JSON_INDENT),
+      'utf8',
+    );
+  }
   process.stdout.write(
-    `Wrote ${outputPath} (${String(sources.size - unavailableSources.length)} of ${String(sources.size)} sources read, ${String(dots.length)} dots).\n`,
+    `Wrote ${String(datasets.size)} dataset(s) to ${outputPath} (${String(sources.size - unavailableSources.length)} of ${String(sources.size)} sources read, ${String(dots.length)} defects).\n`,
   );
 }
 

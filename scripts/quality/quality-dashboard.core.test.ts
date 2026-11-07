@@ -9,6 +9,7 @@ import {
   buildMetricQueries,
   buildSecurityIndicators,
   buildSentryIndicators,
+  buildSentryIssueIndicators,
   isEverySourceUnavailable,
   judgeAgainstTarget,
   listBuckets,
@@ -450,6 +451,43 @@ const REPORTS = [
   { id: 'id-3', status: 'planned', createdAt: '2026-10-12T08:00:00Z', title: 'A' },
 ];
 
+describe('Sentry issues', () => {
+  it('counts the open issues of each application, and skips an app with no Sentry', () => {
+    const indicators = buildSentryIssueIndicators(
+      {
+        kind: 'ok',
+        value: [
+          { app: 'pragma', count: 5 },
+          { app: 'pragma', count: 1 },
+        ],
+      },
+      ['pragma', 'talos', 'nowhere'],
+    );
+    expect(find(indicators, 'sentry-issues-open', 'pragma')).toEqual({
+      id: 'sentry-issues-open',
+      pillar: 'stability',
+      label: 'Sentry issues open',
+      unit: 'count',
+      app: 'pragma',
+      points: [],
+      current: 6,
+      status: { kind: 'ok' },
+    });
+    expect(find(indicators, 'sentry-issues-open', 'talos')?.current).toBe(0);
+    expect(find(indicators, 'sentry-issues-open', 'nowhere')).toMatchObject({
+      current: null,
+      status: { kind: 'not-applicable', reason: 'no Sentry' },
+    });
+  });
+
+  it('passes an unavailable source through', () => {
+    expect(buildSentryIssueIndicators(UNAVAILABLE, ['pragma']).at(0)).toMatchObject({
+      current: null,
+      status: UNAVAILABLE,
+    });
+  });
+});
+
 describe('bug reports', () => {
   it('counts the open reports, and the reports filed each week', () => {
     const indicators = buildBugReportIndicators(
@@ -542,6 +580,7 @@ describe('readSnapshot', () => {
         hour: [{ app: 'pragma', environment: 'prod', count: 1 }],
         minute: [],
       },
+      sentryIssues: [{ app: 'pragma', count: 5 }],
       improvements: [improvement, { ...improvement, id: 'id-2', kind: 'idea' }],
       dependabot: { criticalOrHigh: 1, other: 0 },
       secretScanning: 0,
@@ -568,6 +607,7 @@ describe('readSnapshot', () => {
         },
       ],
     });
+    expect(snapshot.sentryIssues).toEqual({ kind: 'ok', value: [{ app: 'pragma', count: 5 }] });
     expect(snapshot.dependabot).toEqual({ kind: 'ok', value: { criticalOrHigh: 1, other: 0 } });
     expect(snapshot.secretScanning).toEqual({ kind: 'ok', value: 0 });
   });
@@ -577,12 +617,14 @@ describe('readSnapshot', () => {
     expect(
       readSnapshot({
         sentry: unavailable,
+        sentryIssues: unavailable,
         improvements: unavailable,
         dependabot: unavailable,
         secretScanning: unavailable,
       }),
     ).toEqual({
       sentry: { kind: 'unavailable', reason: 'disabled on the repository' },
+      sentryIssues: { kind: 'unavailable', reason: 'disabled on the repository' },
       bugReports: { kind: 'unavailable', reason: 'disabled on the repository' },
       dependabot: { kind: 'unavailable', reason: 'disabled on the repository' },
       secretScanning: { kind: 'unavailable', reason: 'disabled on the repository' },
@@ -592,6 +634,7 @@ describe('readSnapshot', () => {
   it('refuses a snapshot a session got wrong rather than drawing it', () => {
     const valid = {
       sentry: { unavailable: 'x' },
+      sentryIssues: { unavailable: 'x' },
       improvements: [improvement],
       dependabot: { unavailable: 'x' },
       secretScanning: 0,
@@ -620,6 +663,7 @@ describe('readSnapshot', () => {
     const notCollected = { kind: 'unavailable', reason: 'not collected' };
     expect(EMPTY_SNAPSHOT).toEqual({
       sentry: notCollected,
+      sentryIssues: notCollected,
       bugReports: notCollected,
       dependabot: notCollected,
       secretScanning: notCollected,
