@@ -89,6 +89,8 @@ const WEAK_POINT_CEILING = 0;
 const MONTH_DAY_START = 5;
 const AXIS_INTERVALS = 4;
 const MOST_TICKS = 12;
+const NARROW_TICK_FACTOR = 2;
+const NARROW_TICK_LIMIT = 6;
 const DEFAULT_SERIES_NAME = 'value per week';
 const SERIES_NAMES: Readonly<Record<string, string>> = {
   week: 'value per week',
@@ -225,6 +227,14 @@ function tickOf(label: string): string {
   return ISO_DATE.test(label) ? label.slice(MONTH_DAY_START) : label;
 }
 
+function renderTick(point: Point, fromEnd: number, count: number): string {
+  const step = Math.ceil(count / MOST_TICKS);
+  if (fromEnd % step !== 0) return '<span></span>';
+  const isWideOnly = count > NARROW_TICK_LIMIT && fromEnd % (step * NARROW_TICK_FACTOR) !== 0;
+  const narrow = isWideOnly ? ' class="wide-only"' : '';
+  return `<span${narrow}>${escapeHtml(tickOf(point.label))}</span>`;
+}
+
 function renderColumn(point: Point, maximum: number, unit: string, isLabelled: boolean): string {
   if (point.value === null) return `<span class="col"><span class="bar missing"></span></span>`;
   const zero = point.value === 0 ? ' zero' : '';
@@ -268,11 +278,8 @@ function renderPlot(
   const columns = points.map((point, index) =>
     renderColumn(point, axis.maximum, unit, labelled.has(index)),
   );
-  const step = Math.ceil(points.length / MOST_TICKS);
   const weeks = points.map((point, index) =>
-    (points.length - 1 - index) % step === 0
-      ? `<span>${escapeHtml(tickOf(point.label))}</span>`
-      : '<span></span>',
+    renderTick(point, points.length - 1 - index, points.length),
   );
   return `<span class="plot"><span class="y-axis">${marks.join('')}</span><span class="panel">${lines.join('')}${line}<span class="series">${columns.join('')}</span></span></span><span class="x-axis"><span class="x-pad"></span><span class="x-weeks">${weeks.join('')}</span></span>${renderLegend(isOnScale ? ceiling : null, unit, seriesName)}`;
 }

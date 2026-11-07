@@ -295,7 +295,7 @@ describe('renderDashboardPage', () => {
     const axis =
       /<span class="x-weeks">(.*?)<\/span><\/span><span class="chart-legend"/s.exec(html)?.[1] ??
       '';
-    const ticks = [...axis.matchAll(/<span>([^<]*)<\/span>/g)].map((match) => match[1]);
+    const ticks = [...axis.matchAll(/<span[^>]*>([^<]*)<\/span>/g)].map((match) => match[1]);
     expect(ticks.length).toBe(26);
     expect(ticks.filter((tick) => tick !== '')).toEqual([
       '13:01',
@@ -308,6 +308,31 @@ describe('renderDashboardPage', () => {
       '13:22',
       '13:25',
     ]);
+    const axisHtml =
+      /<span class="x-weeks">(.*?)<\/span><\/span><span class="chart-legend"/s.exec(html)?.[1] ??
+      '';
+    expect([...axisHtml.matchAll(/<span class="wide-only">([^<]*)</g)].map((m) => m[1])).toEqual([
+      '13:04',
+      '13:10',
+      '13:16',
+      '13:22',
+    ]);
+    const six = renderDashboardPage(
+      buildInput({
+        indicators: [
+          indicator({
+            unit: 'count',
+            points: Array.from({ length: 6 }, (_, index) => ({
+              label: `14:0${String(index)}`,
+              value: index,
+            })),
+          }),
+        ],
+      }),
+    );
+    expect(section(six, /<span class="x-weeks">.*?<\/span><\/span>/s)).toBe(
+      '<span class="x-weeks"><span>14:00</span><span>14:01</span><span>14:02</span><span>14:03</span><span>14:04</span><span>14:05</span></span>',
+    );
   });
 
   it('draws no ceiling line and no legend entry when the ceiling sits above the axis', () => {

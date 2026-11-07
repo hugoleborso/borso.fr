@@ -72,6 +72,7 @@ summary::-webkit-details-marker{display:none}summary::marker{content:""}
 .x-pad{width:4.5em;flex:none}
 .x-weeks{display:flex;flex:1;gap:2px}
 .x-weeks span{flex:1;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0;overflow:visible;white-space:nowrap}
+@media (max-width:640px){.x-weeks .wide-only{visibility:hidden}}
 .chart-legend{display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center}
 .chart-legend i{display:inline-block;width:12px;height:10px;border-radius:2px;background:var(--series-1);margin-right:6px;vertical-align:-1px}
 .chart-legend i.rule{height:0;border-top:2px dashed var(--bad);background:none;border-radius:0;vertical-align:4px}
