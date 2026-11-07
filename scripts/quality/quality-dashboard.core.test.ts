@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY_SNAPSHOT,
+  RANGES,
+  SECONDS_PER_WEEK,
+  bucketOf,
   buildBugReportIndicators,
   buildGatewayIndicators,
   buildMetricQueries,
   buildSecurityIndicators,
   buildSentryIndicators,
+  buildSentryIssueIndicators,
   isEverySourceUnavailable,
   judgeAgainstTarget,
+  listBuckets,
   listUnavailableSources,
   listWeekStarts,
   metricQueryId,
@@ -19,11 +24,14 @@ import {
   selectHttpApis,
   type HttpApi,
   type Indicator,
+  type RangeSpec,
   type MetricSeries,
   type SourceResult,
 } from './quality-dashboard.core';
 
 const NOW = '2026-10-13';
+const WEEK_RANGE: RangeSpec = RANGES.find((range) => range.id === 'week')!;
+const WEEK_BUCKETS = listWeekStarts(NOW);
 const WEEKS = [
   '2026-08-24',
   '2026-08-31',
@@ -34,7 +42,7 @@ const WEEKS = [
   '2026-10-05',
   '2026-10-12',
 ];
-const EMPTY_WEEKS = WEEKS.map((weekStart) => ({ weekStart, value: null }));
+const EMPTY_WEEKS = WEEKS.map((label) => ({ label, value: null }));
 const UNAVAILABLE = { kind: 'unavailable', reason: 'token expired' } as const;
 const PRAGMA_PROD: HttpApi = { app: 'pragma', stage: 'prod', apiId: 'ab-1' };
 const PRAGMA_PREVIEW: HttpApi = { app: 'pragma', stage: 'preview', apiId: 'cd2' };
@@ -52,7 +60,7 @@ function speedIndicator(id: string, app: string, current: number | null): Indica
     unit: 'ms',
     app,
     current,
-    weeks: [],
+    points: [],
     status: { kind: 'ok' },
   };
 }
@@ -87,7 +95,7 @@ describe('selectHttpApis', () => {
 
 describe('buildMetricQueries', () => {
   it('asks latency and errors for production, and errors only for a preview', () => {
-    expect(buildMetricQueries([PRAGMA_PROD, PRAGMA_PREVIEW])).toEqual([
+    expect(buildMetricQueries([PRAGMA_PROD, PRAGMA_PREVIEW], SECONDS_PER_WEEK)).toEqual([
       {
         Id: 'latencyP50_ab1',
         MetricStat: {
@@ -191,7 +199,7 @@ describe('buildGatewayIndicators', () => {
     kind: 'ok',
     value: {
       apis: [PRAGMA_PROD, PRAGMA_PREVIEW, PRAGMA_SECOND_PREVIEW],
-      rolling: [
+      current: [
         series('latencyP50_ab1', [['2026-10-06T09:00:00Z', 89.6]]),
         series('latencyP95_ab1', [['2026-10-06T09:00:00Z', 1391.2]]),
         series('serverErrors_ab1', [['2026-10-06T09:00:00Z', 20]]),
@@ -199,7 +207,7 @@ describe('buildGatewayIndicators', () => {
         series('serverErrors_ef3', [['2026-10-06T09:00:00Z', 3]]),
         series('throttles_ab1', [['2026-10-06T09:00:00Z', 545]]),
       ],
-      weekly: [
+      buckets: [
         series('latencyP50_ab1', [
           ['2026-10-05T00:00:00Z', 80.4],
           ['2026-10-12T00:00:00Z', 120],
@@ -212,7 +220,7 @@ describe('buildGatewayIndicators', () => {
     },
   } as const;
   const buildDefault = (): readonly Indicator[] =>
-    buildGatewayIndicators(reading, ['pragma', 'talos', 'borso-fr'], NOW);
+    buildGatewayIndicators(reading, ['pragma', 'talos', 'borso-fr'], WEEK_RANGE, WEEK_BUCKETS);
 
   it('reports five indicators per application, in pillar order', () => {
     const indicators = buildDefault();
@@ -245,8 +253,8 @@ describe('buildGatewayIndicators', () => {
       current: 5,
       status: { kind: 'ok' },
     });
-    expect(previews?.weeks.at(5)).toEqual({ weekStart: '2026-09-28', value: 6 });
-    expect(previews?.weeks.at(0)).toEqual({ weekStart: '2026-08-24', value: 0 });
+    expect(previews?.points.at(5)).toEqual({ label: '2026-09-28', value: 6 });
+    expect(previews?.points.at(0)).toEqual({ label: '2026-08-24', value: 0 });
     const production = find(indicators, 'errors-prod', 'pragma');
     expect(production).toMatchObject({
       pillar: 'stability',
@@ -254,7 +262,7 @@ describe('buildGatewayIndicators', () => {
       unit: 'count',
       current: 20,
     });
-    expect(production?.weeks.at(7)).toEqual({ weekStart: '2026-10-12', value: 7 });
+    expect(production?.points.at(7)).toEqual({ label: '2026-10-12', value: 7 });
   });
 
   it('sums the throttled calls of production', () => {
@@ -276,11 +284,11 @@ describe('buildGatewayIndicators', () => {
       unit: 'ms',
       current: 90,
     });
-    expect(median?.weeks.slice(6)).toEqual([
-      { weekStart: '2026-10-05', value: 80 },
-      { weekStart: '2026-10-12', value: 120 },
+    expect(median?.points.slice(6)).toEqual([
+      { label: '2026-10-05', value: 80 },
+      { label: '2026-10-12', value: 120 },
     ]);
-    expect(median?.weeks.at(0)?.value).toBeNull();
+    expect(median?.points.at(0)?.value).toBeNull();
     const tail = find(indicators, 'latency-p95', 'pragma');
     expect(tail).toMatchObject({
       pillar: 'speed',
@@ -288,7 +296,7 @@ describe('buildGatewayIndicators', () => {
       unit: 'ms',
       current: 1391,
     });
-    expect(tail?.weeks).toEqual(EMPTY_WEEKS);
+    expect(tail?.points).toEqual(EMPTY_WEEKS);
   });
 
   it('keeps the slowest API when an application has two in production', () => {
@@ -297,15 +305,16 @@ describe('buildGatewayIndicators', () => {
         kind: 'ok',
         value: {
           apis: [PRAGMA_PROD, { app: 'pragma', stage: 'prod', apiId: 'zz' }],
-          rolling: [
+          current: [
             series('latencyP50_ab1', [['2026-10-06T00:00:00Z', 40]]),
             series('latencyP50_zz', [['2026-10-06T00:00:00Z', 70]]),
           ],
-          weekly: [],
+          buckets: [],
         },
       },
       ['pragma'],
-      NOW,
+      WEEK_RANGE,
+      WEEK_BUCKETS,
     );
     expect(find(twoApis, 'latency-p50', 'pragma')?.current).toBe(70);
     expect(find(twoApis, 'errors-prod', 'pragma')?.current).toBe(0);
@@ -321,7 +330,7 @@ describe('buildGatewayIndicators', () => {
       unit: 'count',
       app: 'talos',
       current: null,
-      weeks: EMPTY_WEEKS,
+      points: EMPTY_WEEKS,
       status: { kind: 'not-applicable', reason: 'no preview deployed' },
     });
     expect(find(indicators, 'latency-p50', 'talos')?.status).toEqual({
@@ -335,13 +344,54 @@ describe('buildGatewayIndicators', () => {
   });
 
   it('passes an unavailable source through to every full-stack cell', () => {
-    const failed = buildGatewayIndicators(UNAVAILABLE, ['pragma', 'borso-fr'], NOW);
+    const failed = buildGatewayIndicators(
+      UNAVAILABLE,
+      ['pragma', 'borso-fr'],
+      WEEK_RANGE,
+      WEEK_BUCKETS,
+    );
     expect(find(failed, 'latency-p95', 'pragma')).toMatchObject({
       current: null,
-      weeks: EMPTY_WEEKS,
+      points: EMPTY_WEEKS,
       status: UNAVAILABLE,
     });
     expect(find(failed, 'latency-p95', 'borso-fr')?.status.kind).toBe('not-applicable');
+  });
+});
+
+describe('ranges', () => {
+  const hourRange = RANGES.find((range) => range.id === 'hour');
+  const minuteRange = RANGES.find((range) => range.id === 'minute');
+
+  it('names the three ranges the board offers', () => {
+    expect(RANGES.map((range) => [range.id, range.title, range.buckets])).toEqual([
+      ['week', 'week by week', 8],
+      ['hour', 'last 12 hours', 12],
+      ['minute', 'last 60 minutes', 60],
+    ]);
+  });
+
+  it('lists a bucket per week, per hour and per minute, oldest first', () => {
+    const clock = new Date('2026-10-13T14:37:42Z');
+    expect(listBuckets(WEEK_RANGE, clock)).toEqual(WEEKS);
+    const hours = listBuckets(hourRange!, clock);
+    expect(hours.length).toBe(12);
+    expect(hours.at(0)).toBe('03:00');
+    expect(hours.at(-1)).toBe('14:00');
+    const minutes = listBuckets(minuteRange!, clock);
+    expect(minutes.length).toBe(60);
+    expect(minutes.at(0)).toBe('13:38');
+    expect(minutes.at(-1)).toBe('14:37');
+  });
+
+  it('places a timestamp in the bucket that holds it', () => {
+    expect(bucketOf(WEEK_RANGE, '2026-10-14T09:12:00Z')).toBe('2026-10-12');
+    expect(bucketOf(hourRange!, '2026-10-13T14:59:59Z')).toBe('14:00');
+    expect(bucketOf(minuteRange!, '2026-10-13T14:37:59Z')).toBe('14:37');
+  });
+
+  it('asks CloudWatch for the period the range buckets by', () => {
+    expect(buildMetricQueries([PRAGMA_PROD], 60).at(0)?.MetricStat.Period).toBe(60);
   });
 });
 
@@ -355,12 +405,12 @@ describe('Sentry', () => {
         { app: 'pragma', environment: 'preview', count: 4 },
         { app: 'last-loop-lepin', environment: 'prod', count: 9 },
       ],
-      weekly: new Map([['2026-10-05', [{ app: 'pragma', environment: 'prod', count: 6 }]]]),
+      history: new Map([['2026-10-05', [{ app: 'pragma', environment: 'prod', count: 6 }]]]),
     },
   } as const;
 
   it('counts each application per environment, week by week', () => {
-    const indicators = buildSentryIndicators(reading, ['pragma', 'other-app'], NOW);
+    const indicators = buildSentryIndicators(reading, ['pragma', 'other-app'], WEEK_BUCKETS);
     expect(find(indicators, 'sentry-errors-prod', 'pragma')).toMatchObject({
       pillar: 'stability',
       label: 'Sentry, production',
@@ -368,9 +418,9 @@ describe('Sentry', () => {
       current: 5,
       status: { kind: 'ok' },
     });
-    expect(find(indicators, 'sentry-errors-prod', 'pragma')?.weeks.slice(6)).toEqual([
-      { weekStart: '2026-10-05', value: 6 },
-      { weekStart: '2026-10-12', value: null },
+    expect(find(indicators, 'sentry-errors-prod', 'pragma')?.points.slice(6)).toEqual([
+      { label: '2026-10-05', value: 6 },
+      { label: '2026-10-12', value: null },
     ]);
     expect(find(indicators, 'sentry-errors-preview', 'pragma')).toMatchObject({
       label: 'Sentry, previews',
@@ -383,13 +433,13 @@ describe('Sentry', () => {
       unit: 'count',
       app: 'other-app',
       current: null,
-      weeks: EMPTY_WEEKS,
+      points: EMPTY_WEEKS,
       status: { kind: 'not-applicable', reason: 'no Sentry' },
     });
   });
 
   it('passes an unavailable source through', () => {
-    const indicators = buildSentryIndicators(UNAVAILABLE, ['pragma'], NOW);
+    const indicators = buildSentryIndicators(UNAVAILABLE, ['pragma'], WEEK_BUCKETS);
     expect(indicators.map((indicator) => indicator.status)).toEqual([UNAVAILABLE, UNAVAILABLE]);
     expect(indicators.every((indicator) => indicator.current === null)).toBe(true);
   });
@@ -401,12 +451,50 @@ const REPORTS = [
   { id: 'id-3', status: 'planned', createdAt: '2026-10-12T08:00:00Z', title: 'A' },
 ];
 
+describe('Sentry issues', () => {
+  it('counts the open issues of each application, and skips an app with no Sentry', () => {
+    const indicators = buildSentryIssueIndicators(
+      {
+        kind: 'ok',
+        value: [
+          { app: 'pragma', count: 5 },
+          { app: 'pragma', count: 1 },
+        ],
+      },
+      ['pragma', 'talos', 'nowhere'],
+    );
+    expect(find(indicators, 'sentry-issues-open', 'pragma')).toEqual({
+      id: 'sentry-issues-open',
+      pillar: 'stability',
+      label: 'Sentry issues open',
+      unit: 'count',
+      app: 'pragma',
+      points: [],
+      current: 6,
+      status: { kind: 'ok' },
+    });
+    expect(find(indicators, 'sentry-issues-open', 'talos')?.current).toBe(0);
+    expect(find(indicators, 'sentry-issues-open', 'nowhere')).toMatchObject({
+      current: null,
+      status: { kind: 'not-applicable', reason: 'no Sentry' },
+    });
+  });
+
+  it('passes an unavailable source through', () => {
+    expect(buildSentryIssueIndicators(UNAVAILABLE, ['pragma']).at(0)).toMatchObject({
+      current: null,
+      status: UNAVAILABLE,
+    });
+  });
+});
+
 describe('bug reports', () => {
   it('counts the open reports, and the reports filed each week', () => {
     const indicators = buildBugReportIndicators(
       { kind: 'ok', value: REPORTS },
       ['pragma', 'talos'],
-      NOW,
+      WEEK_RANGE,
+      WEEK_BUCKETS,
     );
     const pragma = find(indicators, 'user-bug-reports-open', 'pragma');
     expect(pragma).toMatchObject({
@@ -416,14 +504,14 @@ describe('bug reports', () => {
       current: 2,
       status: { kind: 'ok' },
     });
-    expect(pragma?.weeks.slice(5)).toEqual([
-      { weekStart: '2026-09-28', value: 1 },
-      { weekStart: '2026-10-05', value: 1 },
-      { weekStart: '2026-10-12', value: 1 },
+    expect(pragma?.points.slice(5)).toEqual([
+      { label: '2026-09-28', value: 1 },
+      { label: '2026-10-05', value: 1 },
+      { label: '2026-10-12', value: 1 },
     ]);
     expect(find(indicators, 'user-bug-reports-open', 'talos')).toMatchObject({
       current: null,
-      weeks: EMPTY_WEEKS,
+      points: EMPTY_WEEKS,
       status: { kind: 'not-applicable', reason: 'pragma only' },
     });
   });
@@ -432,13 +520,31 @@ describe('bug reports', () => {
     const declined = buildBugReportIndicators(
       { kind: 'ok', value: [{ id: 'x', status: 'declined', createdAt: '2026-10-06', title: 't' }] },
       ['pragma'],
-      NOW,
+      WEEK_RANGE,
+      WEEK_BUCKETS,
     );
     expect(declined.at(0)?.current).toBe(0);
-    expect(buildBugReportIndicators(UNAVAILABLE, ['pragma'], NOW).at(0)).toMatchObject({
+    expect(
+      buildBugReportIndicators(UNAVAILABLE, ['pragma'], WEEK_RANGE, WEEK_BUCKETS).at(0),
+    ).toMatchObject({
       current: null,
       status: UNAVAILABLE,
     });
+  });
+
+  it('leaves the history empty outside the week range', () => {
+    const hourRange = RANGES.find((range) => range.id === 'hour');
+    const hourly = buildBugReportIndicators(
+      { kind: 'ok', value: REPORTS },
+      ['pragma'],
+      hourRange!,
+      ['14:00', '15:00'],
+    );
+    expect(hourly.at(0)?.current).toBe(2);
+    expect(hourly.at(0)?.points).toEqual([
+      { label: '14:00', value: null },
+      { label: '15:00', value: null },
+    ]);
   });
 
   it('places each report as a stage E dot on pragma', () => {
@@ -471,7 +577,10 @@ describe('readSnapshot', () => {
       sentry: {
         rolling: [{ app: 'pragma', environment: 'prod', count: 3 }],
         weekly: { '2026-10-05': [{ app: 'pragma', environment: 'prod', count: 2 }] },
+        hour: [{ app: 'pragma', environment: 'prod', count: 1 }],
+        minute: [],
       },
+      sentryIssues: [{ app: 'pragma', count: 5 }],
       improvements: [improvement, { ...improvement, id: 'id-2', kind: 'idea' }],
       dependabot: { criticalOrHigh: 1, other: 0 },
       secretScanning: 0,
@@ -479,8 +588,12 @@ describe('readSnapshot', () => {
     expect(snapshot.sentry).toEqual({
       kind: 'ok',
       value: {
-        rolling: [{ app: 'pragma', environment: 'prod', count: 3 }],
-        weekly: new Map([['2026-10-05', [{ app: 'pragma', environment: 'prod', count: 2 }]]]),
+        week: {
+          rolling: [{ app: 'pragma', environment: 'prod', count: 3 }],
+          history: new Map([['2026-10-05', [{ app: 'pragma', environment: 'prod', count: 2 }]]]),
+        },
+        hour: { rolling: [{ app: 'pragma', environment: 'prod', count: 1 }], history: new Map() },
+        minute: { rolling: [], history: new Map() },
       },
     });
     expect(snapshot.bugReports).toEqual({
@@ -494,6 +607,7 @@ describe('readSnapshot', () => {
         },
       ],
     });
+    expect(snapshot.sentryIssues).toEqual({ kind: 'ok', value: [{ app: 'pragma', count: 5 }] });
     expect(snapshot.dependabot).toEqual({ kind: 'ok', value: { criticalOrHigh: 1, other: 0 } });
     expect(snapshot.secretScanning).toEqual({ kind: 'ok', value: 0 });
   });
@@ -503,12 +617,14 @@ describe('readSnapshot', () => {
     expect(
       readSnapshot({
         sentry: unavailable,
+        sentryIssues: unavailable,
         improvements: unavailable,
         dependabot: unavailable,
         secretScanning: unavailable,
       }),
     ).toEqual({
       sentry: { kind: 'unavailable', reason: 'disabled on the repository' },
+      sentryIssues: { kind: 'unavailable', reason: 'disabled on the repository' },
       bugReports: { kind: 'unavailable', reason: 'disabled on the repository' },
       dependabot: { kind: 'unavailable', reason: 'disabled on the repository' },
       secretScanning: { kind: 'unavailable', reason: 'disabled on the repository' },
@@ -518,6 +634,7 @@ describe('readSnapshot', () => {
   it('refuses a snapshot a session got wrong rather than drawing it', () => {
     const valid = {
       sentry: { unavailable: 'x' },
+      sentryIssues: { unavailable: 'x' },
       improvements: [improvement],
       dependabot: { unavailable: 'x' },
       secretScanning: 0,
@@ -525,7 +642,10 @@ describe('readSnapshot', () => {
     expect(() => readSnapshot({ ...valid, secretScanning: -1 })).toThrow();
     expect(() => readSnapshot({ ...valid, sentry: { unavailable: '' } })).toThrow();
     expect(() =>
-      readSnapshot({ ...valid, sentry: { unavailable: 'x', rolling: [], weekly: {} } }),
+      readSnapshot({
+        ...valid,
+        sentry: { unavailable: 'x', rolling: [], weekly: {}, hour: [], minute: [] },
+      }),
     ).not.toThrow();
     expect(() =>
       readSnapshot({ ...valid, improvements: [{ ...improvement, createdAt: 'x2026-10-06' }] }),
@@ -543,6 +663,7 @@ describe('readSnapshot', () => {
     const notCollected = { kind: 'unavailable', reason: 'not collected' };
     expect(EMPTY_SNAPSHOT).toEqual({
       sentry: notCollected,
+      sentryIssues: notCollected,
       bugReports: notCollected,
       dependabot: notCollected,
       secretScanning: notCollected,
@@ -561,14 +682,11 @@ describe('security', () => {
   });
 
   it('reports five repository rows with no trend', () => {
-    const indicators = buildSecurityIndicators(
-      {
-        dependabot: { kind: 'ok', value: { criticalOrHigh: 1, other: 2 } },
-        audit: UNAVAILABLE,
-        secretScanning: { kind: 'ok', value: 0 },
-      },
-      NOW,
-    );
+    const indicators = buildSecurityIndicators({
+      dependabot: { kind: 'ok', value: { criticalOrHigh: 1, other: 2 } },
+      audit: UNAVAILABLE,
+      secretScanning: { kind: 'ok', value: 0 },
+    });
     expect(
       indicators.map((indicator) => [indicator.id, indicator.label, indicator.current]),
     ).toEqual([
@@ -582,7 +700,7 @@ describe('security', () => {
       pillar: 'security',
       unit: 'count',
       app: 'repository',
-      weeks: EMPTY_WEEKS,
+      points: [],
       status: { kind: 'ok' },
     });
     expect(indicators.at(2)?.status).toEqual(UNAVAILABLE);
@@ -591,14 +709,11 @@ describe('security', () => {
 
 describe('security with every source read', () => {
   it('reads both halves of the audit', () => {
-    const indicators = buildSecurityIndicators(
-      {
-        dependabot: UNAVAILABLE,
-        audit: { kind: 'ok', value: { criticalOrHigh: 42, other: 46 } },
-        secretScanning: UNAVAILABLE,
-      },
-      NOW,
-    );
+    const indicators = buildSecurityIndicators({
+      dependabot: UNAVAILABLE,
+      audit: { kind: 'ok', value: { criticalOrHigh: 42, other: 46 } },
+      secretScanning: UNAVAILABLE,
+    });
     expect(indicators.map((indicator) => indicator.current)).toEqual([null, null, 42, 46, null]);
   });
 });

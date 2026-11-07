@@ -1,0 +1,766 @@
+<style>
+  .s3 {
+    display: grid;
+    gap: var(--cds-gap-lg);
+    font-family: var(--font-anthropic-sans);
+  }
+  .s3 h1 {
+    font-family: var(--font-anthropic-serif);
+    font-weight: 400;
+    font-size: var(--cds-font-size-title);
+    margin: 0;
+  }
+  .s3 h2 {
+    font-size: var(--cds-font-size-heading);
+    font-weight: var(--cds-font-weight-medium);
+    margin: 0;
+  }
+  .s3-take {
+    color: var(--color-fg-muted);
+    font-size: var(--cds-font-size-body);
+    margin: var(--cds-gap-xs) 0 0;
+  }
+  .s3-controls {
+    display: flex;
+    gap: var(--cds-gap-sm);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .s3-grid {
+    display: grid;
+    gap: var(--cds-gap-md);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .s3-card {
+    background: var(--color-panel);
+    border: 1px solid var(--color-border-line);
+    border-radius: var(--cds-radius);
+    padding: var(--cds-pad-lg);
+    min-width: 0;
+    display: grid;
+    gap: var(--cds-gap-sm);
+    align-content: start;
+  }
+  .s3-card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--cds-gap-sm);
+  }
+  .s3-score {
+    margin-left: auto;
+    font-size: var(--cds-font-size-caption);
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--color-border-line);
+    border-radius: 999px;
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+  .s3-score.ok {
+    color: var(--color-ok);
+    border-color: var(--color-ok);
+  }
+  .s3-score.ko {
+    color: var(--color-bad);
+    border-color: var(--color-bad);
+  }
+  .s3-note {
+    color: var(--color-fg-muted);
+    font-size: var(--cds-font-size-caption);
+    margin: 0;
+  }
+  .s3-row {
+    border-top: 1px solid var(--color-border-line);
+  }
+  .s3-row > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--cds-gap-sm);
+    padding: 7px 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--cds-font-size-caption);
+  }
+  .s3-row > summary::-webkit-details-marker {
+    display: none;
+  }
+  .s3-row-name {
+    font-weight: var(--cds-font-weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .s3-pips {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex: 1;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .s3-flag {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--cds-chart-muted);
+    flex: none;
+  }
+  .s3-flag.ok {
+    background: var(--color-ok);
+  }
+  .s3-flag.ko {
+    background: var(--color-bad);
+  }
+  .s3-chips {
+    display: flex;
+    gap: var(--cds-gap-xs);
+    overflow-x: auto;
+    padding: 2px 0 var(--cds-pad-sm);
+  }
+  .s3-chip {
+    flex: none;
+    border: 1px solid var(--color-border-line);
+    border-radius: var(--cds-radius);
+    padding: 5px 9px 7px;
+    min-width: 7rem;
+    display: grid;
+    gap: 1px;
+    text-align: left;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .s3-chip-head {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--cds-font-size-caption);
+    color: var(--color-fg-muted);
+    white-space: nowrap;
+  }
+  .s3-chip-value {
+    font-family: var(--font-anthropic-serif);
+    font-size: var(--cds-font-size-heading);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .s3-chip-goal {
+    font-size: var(--cds-font-size-caption);
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .s3-spark {
+    height: 28px;
+    margin-top: 4px;
+  }
+  .s3-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--cds-pad-md);
+  }
+  .s3-modal[hidden] {
+    display: none;
+  }
+  .s3-modal-card {
+    position: relative;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border-line);
+    border-radius: var(--cds-radius);
+    padding: var(--cds-pad-lg);
+    width: min(1400px, 92vw);
+    height: min(78vh, 760px);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: var(--cds-gap-sm);
+  }
+  .s3-modal-title {
+    font-size: var(--cds-font-size-heading);
+    font-weight: var(--cds-font-weight-medium);
+  }
+  .s3-close {
+    position: absolute;
+    top: var(--cds-pad-sm);
+    right: var(--cds-pad-sm);
+    background: none;
+    border: 1px solid var(--color-border-line);
+    border-radius: var(--cds-radius);
+    color: var(--color-fg-muted);
+    font: inherit;
+    cursor: pointer;
+    padding: 2px 9px;
+  }
+  .s3-plot {
+    min-height: 0;
+  }
+  .s3-tip {
+    position: absolute;
+    background: var(--cds-surface-popover);
+    border: 1px solid var(--cds-border);
+    border-radius: var(--cds-radius);
+    box-shadow: var(--cds-shadow-popover);
+    padding: var(--cds-pad-xs) var(--cds-pad-sm);
+    font-size: var(--cds-font-size-caption);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .s3-tip[hidden] {
+    display: none;
+  }
+  .s3-maps {
+    display: grid;
+    gap: var(--cds-gap-md);
+  }
+  .s3-scroll {
+    overflow-x: auto;
+  }
+  .s3-maps table {
+    border-collapse: collapse;
+    font-size: var(--cds-font-size-caption);
+  }
+  .s3-maps th,
+  .s3-maps td {
+    border: 1px solid var(--color-border-line);
+    padding: 4px 6px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .s3-dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin: 1px;
+    opacity: 0.5;
+  }
+  .s3-dot.recent {
+    opacity: 1;
+  }
+  .s3-dot.engaged {
+    box-shadow: 0 0 0 2px var(--color-fg);
+  }
+  .s3-legend {
+    display: flex;
+    gap: var(--cds-gap-sm);
+    flex-wrap: wrap;
+    font-size: var(--cds-font-size-caption);
+    color: var(--color-fg-muted);
+    align-items: center;
+  }
+  .dash-skeleton {
+    min-height: 1em;
+  }
+  [data-dash-source-state='empty'] {
+    color: transparent;
+  }
+  [data-dash-source-state='refreshing'] {
+    opacity: 0.5;
+    transition: opacity var(--cds-dur-slow);
+  }
+</style>
+
+<div class="s3">
+  <header>
+    <h1>borso.fr 3S board</h1>
+    <p class="s3-take dash-skeleton" data-source="indicators">—</p>
+  </header>
+
+  <div class="s3-controls">
+    <select class="dash-select s3-range" aria-label="Range">
+      <option value="week">week by week</option>
+      <option value="hour">last 12 hours</option>
+      <option value="minute">last 60 minutes</option>
+    </select>
+  </div>
+
+  <section class="s3-grid">
+    <article class="s3-card" id="speed">
+      <div class="s3-card-head">
+        <h2>Speed</h2>
+        <span class="s3-score dash-skeleton" data-source="indicators">—</span>
+      </div>
+      <p class="s3-note">Latency of each production API, in milliseconds.</p>
+      <div class="s3-rows" data-pillar="speed"></div>
+    </article>
+    <article class="s3-card" id="stability">
+      <div class="s3-card-head">
+        <h2>Stability</h2>
+        <span class="s3-score dash-skeleton" data-source="indicators">—</span>
+      </div>
+      <p class="s3-note">
+        API 5xx, Lambda throttling, Sentry errors and open issues, and bugs users reported.
+      </p>
+      <div class="s3-rows" data-pillar="stability"></div>
+    </article>
+    <article class="s3-card" id="security">
+      <div class="s3-card-head">
+        <h2>Security</h2>
+        <span class="s3-score dash-skeleton" data-source="security">—</span>
+      </div>
+      <p class="s3-note">
+        Vulnerable dependencies and exposed secrets, counted now. The range does not change these.
+      </p>
+      <div class="s3-rows" data-pillar="security"></div>
+    </article>
+  </section>
+
+  <article class="s3-card" id="weak-points">
+    <div class="s3-card-head">
+      <h2>Engaged weak points</h2>
+      <span class="s3-score dash-skeleton" data-source="weak_points">—</span>
+    </div>
+    <p class="s3-note">
+      Each weak point engaged in docs/quality/weak-points.md, week by week. Target: zero per week.
+    </p>
+    <div class="s3-rows" data-pillar="weak"></div>
+  </article>
+
+  <article class="s3-card" id="defect-map">
+    <div class="s3-card-head">
+      <h2>Defect map</h2>
+      <span class="s3-score dash-skeleton" data-source="defects">—</span>
+    </div>
+    <p class="s3-note">
+      One dot per defect, where it lived, coloured by the stage that caught it. A full dot is
+      recent; a ringed dot belongs to an engaged weak point.
+    </p>
+    <div class="s3-legend" data-source="defects"></div>
+    <div class="s3-maps" data-source="defects"></div>
+  </article>
+</div>
+
+<div class="s3-modal" hidden>
+  <div class="s3-modal-card">
+    <button class="s3-close" type="button">Close</button>
+    <div class="s3-modal-title"></div>
+    <div class="s3-plot"></div>
+    <div class="s3-tip" hidden></div>
+  </div>
+</div>
+
+<script>
+  window.s3 = {
+    STAGES: [
+      ['A', 'caught locally or by a gate'],
+      ['B', 'caught in review'],
+      ['C', 'caught on a preview'],
+      ['D', 'found in production by the operator or an agent'],
+      ['E', 'reported by a user'],
+    ],
+    RECENT_DAYS: 30,
+    MOST_TICKS: 12,
+    count: d3.format(','),
+    unitOf: (unit) => (unit === 'ms' ? ' ms' : ''),
+    amount(value, unit) {
+      return value === null || value === undefined ? '—' : this.count(value) + this.unitOf(unit);
+    },
+    rowsOf(id) {
+      const set = dash.data(id);
+      return set.status === 'ok' && Array.isArray(set.data) ? set.data : [];
+    },
+    score(verdicts) {
+      const ok = verdicts.filter((v) => v === 'ok').length;
+      const judged = verdicts.filter((v) => v !== 'unjudged').length;
+      if (judged === 0) return { text: 'no ceiling', verdict: 'unjudged' };
+      return { text: ok + '/' + judged + ' ok', verdict: ok === judged ? 'ok' : 'ko' };
+    },
+    niceStep(rough) {
+      const magnitude = 10 ** Math.floor(Math.log10(Math.max(rough, 1)));
+      const normalized = rough / magnitude;
+      if (normalized <= 1) return magnitude;
+      if (normalized <= 2) return 2 * magnitude;
+      if (normalized <= 5) return 5 * magnitude;
+      return 10 * magnitude;
+    },
+    axis(values) {
+      const highest = Math.max(1, ...values);
+      const step = this.niceStep(highest / 4);
+      const count = Math.ceil(highest / step);
+      return { maximum: step * count, ticks: d3.range(count + 1).map((i) => i * step) };
+    },
+  };
+</script>
+
+<script>
+  const PANEL = { top: 16, right: 16, bottom: 26, left: 52 };
+
+  function drawChart(host, rows, options) {
+    host.replaceChildren();
+    const width = host.clientWidth || 320;
+    const height = options.height;
+    const values = rows.map((r) => (r.value === null ? 0 : Number(r.value)));
+    const axis = window.s3.axis(values);
+    const pad = options.full ? PANEL : { top: 2, right: 0, bottom: 0, left: 0 };
+    const svg = d3
+      .select(host)
+      .append('svg')
+      .attr('width', '100%')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'none');
+    const inner = {
+      w: Math.max(1, width - pad.left - pad.right),
+      h: Math.max(1, height - pad.top - pad.bottom),
+    };
+    const x = d3
+      .scaleBand()
+      .domain(rows.map((r) => r.bucket))
+      .range([0, inner.w])
+      .padding(0.25);
+    const y = d3.scaleLinear([0, axis.maximum], [inner.h, 0]);
+    const g = svg.append('g').attr('transform', `translate(${pad.left},${pad.top})`);
+
+    if (options.full) {
+      g.selectAll('line.grid')
+        .data(axis.ticks)
+        .join('line')
+        .attr('class', 'grid')
+        .attr('x1', 0)
+        .attr('x2', inner.w)
+        .attr('y1', (t) => y(t))
+        .attr('y2', (t) => y(t))
+        .attr('stroke', 'var(--cds-chart-grid)');
+      g.selectAll('text.ytick')
+        .data(axis.ticks)
+        .join('text')
+        .attr('class', 'ytick')
+        .attr('x', -8)
+        .attr('y', (t) => y(t))
+        .attr('dy', '0.32em')
+        .attr('text-anchor', 'end')
+        .attr('fill', 'var(--color-fg-muted)')
+        .attr('font-size', 11)
+        .text((t) => window.s3.count(t) + window.s3.unitOf(options.unit));
+      const step = Math.ceil(rows.length / window.s3.MOST_TICKS);
+      g.selectAll('text.xtick')
+        .data(rows.filter((_, i) => (rows.length - 1 - i) % step === 0))
+        .join('text')
+        .attr('class', 'xtick')
+        .attr('x', (r) => x(r.bucket) + x.bandwidth() / 2)
+        .attr('y', inner.h + 18)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'var(--color-fg-muted)')
+        .attr('font-size', 11)
+        .text((r) => (r.bucket.length === 10 ? r.bucket.slice(5) : r.bucket));
+    }
+
+    if (options.ceiling !== null && options.ceiling <= axis.maximum) {
+      g.append('line')
+        .attr('x1', 0)
+        .attr('x2', inner.w)
+        .attr('y1', y(options.ceiling))
+        .attr('y2', y(options.ceiling))
+        .attr('stroke', 'var(--cds-chart-status-critical)')
+        .attr('stroke-dasharray', '4 3');
+    }
+
+    const bars = g
+      .selectAll('rect')
+      .data(rows.filter((r) => r.value !== null))
+      .join('rect')
+      .attr('x', (r) => x(r.bucket))
+      .attr('width', Math.min(x.bandwidth(), 32))
+      .attr('y', (r) => y(Number(r.value)))
+      .attr('height', (r) => Math.max(options.full ? 0 : 1, inner.h - y(Number(r.value))))
+      .attr('rx', 2)
+      .attr('fill', dash.colors[0]);
+
+    if (!options.full) return;
+    const tip = document.querySelector('.s3-tip');
+    bars
+      .on('pointerenter', (event, r) => {
+        tip.hidden = false;
+        tip.textContent = r.bucket + ': ' + window.s3.amount(Number(r.value), options.unit);
+        const box = host.closest('.s3-modal-card').getBoundingClientRect();
+        tip.style.left = Math.min(box.width - 160, event.clientX - box.left + 12) + 'px';
+        tip.style.top = event.clientY - box.top - 34 + 'px';
+      })
+      .on('pointerleave', () => {
+        tip.hidden = true;
+      });
+  }
+</script>
+
+<script>
+  const modal = document.querySelector('.s3-modal');
+  const rangeSelect = document.querySelector('.s3-range');
+  let openChart = null;
+
+  rangeSelect.addEventListener('change', () => dash.setParams({ range: rangeSelect.value }));
+  document.querySelector('.s3-close').addEventListener('click', () => {
+    modal.hidden = true;
+    openChart = null;
+  });
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      modal.hidden = true;
+      openChart = null;
+    }
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      modal.hidden = true;
+      openChart = null;
+    }
+  });
+
+  function bucketsFor(key) {
+    return window.s3
+      .rowsOf('buckets')
+      .filter((b) => b.range === key.range && b.indicator === key.indicator && b.app === key.app);
+  }
+
+  function showChart(key) {
+    openChart = key;
+    modal.hidden = false;
+    document.querySelector('.s3-modal-title').textContent = key.title;
+    drawChart(document.querySelector('.s3-plot'), key.rows(), {
+      full: true,
+      height: Math.max(220, document.querySelector('.s3-plot').clientHeight),
+      ceiling: key.ceiling,
+      unit: key.unit,
+    });
+  }
+
+  function chip(options) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 's3-chip';
+    button.title = options.note;
+    for (const [name, value] of Object.entries(options.marks)) button.setAttribute(name, value);
+    const head = document.createElement('span');
+    head.className = 's3-chip-head';
+    const flag = document.createElement('span');
+    flag.className = 's3-flag ' + options.verdict;
+    const name = document.createElement('span');
+    name.textContent = options.name;
+    head.append(flag, name);
+    const value = document.createElement('span');
+    value.className = 's3-chip-value';
+    value.textContent = options.value;
+    const goal = document.createElement('span');
+    goal.className = 's3-chip-goal';
+    goal.textContent = options.goal;
+    button.append(head, value, goal);
+    if (options.rows.length > 0) {
+      const spark = document.createElement('div');
+      spark.className = 's3-spark';
+      button.append(spark);
+      requestAnimationFrame(() =>
+        drawChart(spark, options.rows, {
+          full: false,
+          height: 28,
+          ceiling: null,
+          unit: options.unit,
+        }),
+      );
+      button.addEventListener('click', () =>
+        showChart({
+          title: options.note,
+          rows: () => options.rows,
+          ceiling: options.ceiling,
+          unit: options.unit,
+        }),
+      );
+    } else {
+      button.disabled = true;
+    }
+    return button;
+  }
+
+  function row(name, cells) {
+    const details = document.createElement('details');
+    details.className = 's3-row';
+    const summary = document.createElement('summary');
+    const label = document.createElement('span');
+    label.className = 's3-row-name';
+    label.textContent = name;
+    const pips = document.createElement('span');
+    pips.className = 's3-pips';
+    for (const cell of cells) {
+      const flag = document.createElement('span');
+      flag.className = 's3-flag ' + cell.verdict;
+      flag.title = cell.note;
+      pips.append(flag);
+    }
+    const score = window.s3.score(cells.map((c) => c.verdict));
+    const badge = document.createElement('span');
+    badge.className = 's3-score ' + score.verdict;
+    badge.textContent = score.text;
+    summary.append(label, pips, badge);
+    const chips = document.createElement('div');
+    chips.className = 's3-chips';
+    for (const cell of cells) chips.append(cell.chip);
+    details.append(summary, chips);
+    return details;
+  }
+
+  function fillPillar(host, rows, bucketsOf) {
+    const labels = [...new Set(rows.map((r) => r.label))];
+    const open = new Set([...host.querySelectorAll('details[open]')].map((d) => d.dataset.label));
+    host.replaceChildren();
+    for (const label of labels) {
+      const own = rows.filter((r) => r.label === label);
+      const cells = own.map((r) => ({
+        verdict: r.verdict,
+        note: r.note,
+        chip: chip({
+          name: r.app,
+          verdict: r.verdict,
+          value: window.s3.amount(r.value, r.unit),
+          goal: r.ceiling === null ? 'no ceiling' : '≤ ' + window.s3.amount(r.ceiling, r.unit),
+          note: r.note,
+          unit: r.unit,
+          ceiling: r.ceiling,
+          rows: bucketsOf(r),
+          marks: {
+            'data-source': 'indicators',
+            'data-field': 'value',
+            'data-where': `range=${r.range}&indicator=${r.indicator}&app=${r.app}`,
+          },
+        }),
+      }));
+      const element = row(label, cells);
+      element.dataset.label = label;
+      if (open.has(label)) element.open = true;
+      host.append(element);
+    }
+  }
+
+  dash.onData(() => {
+    const range = dash.params().range ?? 'week';
+    rangeSelect.value = range;
+
+    const indicators = window.s3.rowsOf('indicators').filter((r) => r.range === range);
+    for (const pillar of ['speed', 'stability']) {
+      const own = indicators.filter((r) => r.pillar === pillar);
+      fillPillar(document.querySelector(`.s3-rows[data-pillar="${pillar}"]`), own, (r) =>
+        bucketsFor({ range: r.range, indicator: r.indicator, app: r.app }),
+      );
+      const card = document.getElementById(pillar);
+      const score = window.s3.score(own.map((r) => r.verdict));
+      const badge = card.querySelector('.s3-score');
+      badge.textContent = score.text;
+      badge.className = 's3-score ' + score.verdict;
+      badge.classList.remove('dash-skeleton');
+    }
+
+    const security = window.s3.rowsOf('security');
+    fillPillar(document.querySelector('.s3-rows[data-pillar="security"]'), security, () => []);
+    const securityBadge = document.querySelector('#security .s3-score');
+    const securityScore = window.s3.score(security.map((r) => r.verdict));
+    securityBadge.textContent = securityScore.text;
+    securityBadge.className = 's3-score ' + securityScore.verdict;
+
+    const weakPoints = window.s3.rowsOf('weak_points');
+    const weeks = window.s3.rowsOf('weak_point_weeks');
+    fillPillar(
+      document.querySelector('.s3-rows[data-pillar="weak"]'),
+      weakPoints.map((w) => ({
+        range: 'week',
+        indicator: w.id,
+        label: w.title,
+        app: w.id,
+        unit: 'count',
+        value: w.thisWeek,
+        ceiling: 0,
+        verdict: w.verdict,
+        note: w.note,
+      })),
+      (r) =>
+        weeks.filter((w) => w.id === r.indicator).map((w) => ({ bucket: w.week, value: w.count })),
+    );
+    const weakBadge = document.querySelector('#weak-points .s3-score');
+    const weakScore = window.s3.score(weakPoints.map((w) => w.verdict));
+    weakBadge.textContent = weakScore.text;
+    weakBadge.className = 's3-score ' + weakScore.verdict;
+
+    drawDefects();
+    drawTakeaway(indicators, security);
+    if (openChart) showChart(openChart);
+  });
+
+  function drawTakeaway(indicators, security) {
+    const take = document.querySelector('.s3-take');
+    const failing = [...indicators, ...security].filter((r) => r.verdict === 'ko');
+    take.classList.remove('dash-skeleton');
+    take.textContent =
+      failing.length === 0
+        ? 'Every indicator with a ceiling is inside it.'
+        : failing.length +
+          ' indicator(s) over their ceiling: ' +
+          failing.map((r) => r.app + ' ' + r.label).join(', ') +
+          '.';
+  }
+
+  function drawDefects() {
+    const defects = window.s3.rowsOf('defects');
+    const legend = document.querySelector('.s3-legend');
+    legend.replaceChildren();
+    for (const [stage, meaning] of window.s3.STAGES) {
+      const item = document.createElement('span');
+      const dot = document.createElement('span');
+      dot.className = 's3-dot recent';
+      dot.style.background = dash.colors[window.s3.STAGES.findIndex((s) => s[0] === stage)];
+      const text = document.createElement('span');
+      text.textContent = stage + ': ' + meaning;
+      item.append(dot, text);
+      legend.append(item);
+    }
+    const maps = document.querySelector('.s3-maps');
+    maps.replaceChildren();
+    const badge = document.querySelector('#defect-map .s3-score');
+    badge.textContent = window.s3.count(defects.length) + ' defects';
+    badge.className = 's3-score unjudged';
+    for (const map of ['product', 'factory']) {
+      const own = defects.filter((d) => d.map === map);
+      if (own.length === 0) continue;
+      const zones = [...new Set(own.map((d) => d.zone))];
+      const layers = [...new Set(own.map((d) => d.layer))];
+      const heading = document.createElement('h3');
+      heading.style.font = 'inherit';
+      heading.style.fontWeight = 'var(--cds-font-weight-medium)';
+      heading.style.margin = '0';
+      heading.textContent = map === 'product' ? 'Product map' : 'Factory map';
+      const scroll = document.createElement('div');
+      scroll.className = 's3-scroll';
+      const table = document.createElement('table');
+      const head = document.createElement('tr');
+      head.append(document.createElement('th'));
+      for (const layer of layers) {
+        const th = document.createElement('th');
+        th.textContent = layer;
+        head.append(th);
+      }
+      table.append(head);
+      for (const zone of zones) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = zone + ' (' + own.filter((d) => d.zone === zone).length + ')';
+        tr.append(th);
+        for (const layer of layers) {
+          const td = document.createElement('td');
+          for (const defect of own.filter((d) => d.zone === zone && d.layer === layer)) {
+            const dot = document.createElement('a');
+            dot.className = 's3-dot';
+            dot.href = defect.link;
+            dot.title = defect.date + ' · stage ' + defect.stage + ' · ' + defect.title;
+            const index = window.s3.STAGES.findIndex((s) => s[0] === defect.stage);
+            dot.style.background = index < 0 ? 'var(--cds-chart-muted)' : dash.colors[index];
+            if (Date.now() - Date.parse(defect.date) <= window.s3.RECENT_DAYS * 86400000)
+              dot.classList.add('recent');
+            if (defect.engaged) dot.classList.add('engaged');
+            td.append(dot);
+          }
+          tr.append(td);
+        }
+        table.append(tr);
+      }
+      scroll.append(table);
+      maps.append(heading, scroll);
+    }
+  }
+</script>
