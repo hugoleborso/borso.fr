@@ -38,6 +38,7 @@
     padding: var(--cds-pad-lg);
     min-width: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--cds-gap-sm);
     align-content: start;
   }
@@ -386,7 +387,7 @@
     score(verdicts) {
       const ok = verdicts.filter((v) => v === 'ok').length;
       const judged = verdicts.filter((v) => v !== 'unjudged').length;
-      if (judged === 0) return { text: 'no ceiling', verdict: 'unjudged' };
+      if (judged === 0) return { text: 'not scored', verdict: 'unjudged' };
       return { text: ok + '/' + judged + ' ok', verdict: ok === judged ? 'ok' : 'ko' };
     },
     niceStep(rough) {
