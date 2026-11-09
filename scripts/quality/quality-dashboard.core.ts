@@ -355,7 +355,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-preview',
         pillar: 'stability',
-        label: '5xx, previews',
+        label: 'Failed requests, previews',
         unit: 'count',
       },
       'serverErrors',
@@ -369,7 +369,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-prod',
         pillar: 'stability',
-        label: '5xx, production',
+        label: 'Failed requests, production',
         unit: 'count',
       },
       'serverErrors',
@@ -383,7 +383,7 @@ export function buildGatewayIndicators(
       {
         id: 'throttles-prod',
         pillar: 'stability',
-        label: 'Throttled, production',
+        label: 'Throttled requests, production',
         unit: 'count',
       },
       'throttles',
@@ -434,9 +434,9 @@ export function buildSentryIndicators(
     {
       id: 'sentry-errors-preview',
       environment: 'preview',
-      label: 'Sentry, previews',
+      label: 'Errors raised, previews',
     },
-    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry, production' },
+    { id: 'sentry-errors-prod', environment: 'prod', label: 'Errors raised, production' },
   ];
   return apps.flatMap((app) =>
     definitions.map((definition): Indicator => {
@@ -479,7 +479,7 @@ export function buildSentryIssueIndicators(
     const base = {
       id: 'sentry-issues-open',
       pillar: 'stability' as const,
-      label: 'Sentry issues open',
+      label: 'Error groups open',
       unit: 'count' as const,
       app,
       points: [],
@@ -616,7 +616,7 @@ export function buildSecurityIndicators(reading: SecurityReading): readonly Indi
       mapResult(reading.audit, (counts) => counts.criticalOrHigh),
     ),
     currentOnly(
-      { id: 'audit-other', label: 'pnpm audit, moderate or lower' },
+      { id: 'audit-other', label: 'pnpm audit, moderate or low' },
       mapResult(reading.audit, (counts) => counts.other),
     ),
     currentOnly(

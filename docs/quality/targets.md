@@ -59,9 +59,9 @@ row is neither, and does not count in its section's score.
 - The app is an application slug, or `repository` for the security rows.
 - The ceiling is a number: a count, or milliseconds for latency. Lower is
   always better.
-- `sentry-issues-open` has no row on purpose. The board scores Sentry on the
-  event count, which is the rate; the open issue count sits beside it to say
-  how many distinct problems are behind those events.
+- `sentry-issues-open` has no row on purpose. The board scores the errors
+  raised, which is the rate; the open error groups sit beside it unscored, to
+  say how many distinct problems are behind those errors.
 - The ceilings above were set on 2026-11-06 against the figures measured that
   day. `sentry-errors-preview` is the one row that measures nothing: previews
   run with Sentry off, because the DSN is a production environment variable, so
