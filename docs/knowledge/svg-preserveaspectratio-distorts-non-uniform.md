@@ -74,11 +74,20 @@ px box. Pure layout, no measuring, round at any width. See
 ## Enforcement
 
 This trap recurred in PR #31 despite this very entry existing — a
-knowledge doc has no teeth. It's now a lint:
-`biome-plugins/no-circle-in-non-uniform-svg.grit` flags `<circle>` /
-`<ellipse>` inside an `<svg preserveAspectRatio="none">`, wired into
-`apps/pragma/biome.jsonc`. See
+knowledge doc has no teeth. It is a lint for JSX:
+`eslint-rules/no-circle-in-non-uniform-svg.js` flags `<circle>` /
+`<ellipse>` inside an `<svg preserveAspectRatio="none">`. (It began as a
+GritQL Biome plugin; the repository moved to oxlint and ESLint rules, and
+the rule moved with it.) See
 [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md).
+
+It recurred a **third** time in PR #281, in a file no ESLint rule reads:
+the 3S board's `.html` page, setting the attribute from d3 as
+`.attr('preserveAspectRatio', 'none')`, where the things distorted were
+`<rect>` bars and `<text>` labels rather than circles.
+`scripts/quality/check-dashboard-page.ts` refuses both spellings over that
+page on push and in CI. See
+[`../dantotsus/the-chart-stretched-where-no-lint-could-see-it.md`](../dantotsus/the-chart-stretched-where-no-lint-could-see-it.md).
 
 ## See also
 

@@ -284,6 +284,19 @@ if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
   start_gate tooling pnpm exec vitest run --changed "$push_base"
 fi
 
+# The 3S board's page, rendered in a real Chromium. It ships to a dashboard
+# artifact rather than to a site, so no preview deploy, dev server or visual
+# validation ever draws it and the operator's phone was its first renderer:
+# three of PR #281's defects were found there. Push time rather than commit
+# time, because launching a browser costs 4.2 s measured on 2026-11-09, which
+# is over the 300 ms a pre-commit check gets in
+# docs/standards/14-tool-runtime-budgets.md and well inside the 60 s this hook
+# gets. CI runs the same check behind its own paths filter. See
+# docs/dantotsus/the-page-nobody-rendered-before-the-operator.md.
+if echo "$changed" | grep -qE '^scripts/quality/(dashboard/|dashboard-page\.core\.ts|check-dashboard-page\.ts)'; then
+  start_gate dashboard-page pnpm exec tsx scripts/quality/check-dashboard-page.ts
+fi
+
 # Mutation testing runs in CI, on the pull request: scripts/mutate-changed.sh.
 
 wait_for_gates

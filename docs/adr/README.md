@@ -106,7 +106,7 @@ No:
 | [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
 | [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
-| [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | proposed | 2026-11-05 |
+| [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
 | [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
 
 ### Data layer

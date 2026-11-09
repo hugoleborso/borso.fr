@@ -4,7 +4,7 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["build"],
-      "ignoreDependencies": ["agent-browser", "esbuild"],
+      "ignoreDependencies": ["agent-browser", "d3", "esbuild"],
       "entry": [
         ".claude/skills/blueprint/blueprint-*.ts",
         "scripts/architecture/*.ts",

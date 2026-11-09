@@ -17,12 +17,23 @@
 # file in the Actions cache per pull request: a later push re-tests only what
 # moved since. Stryker writes the file only when a run completes.
 #
+# The changed set is the branch's commits plus the working tree, untracked files
+# included, so a local run grades the same files CI will once they are committed.
+#
 # Usage: scripts/mutate-changed.sh <base-ref>
 
 set -euo pipefail
 
 base="${1:?usage: scripts/mutate-changed.sh <base-ref>}"
-changed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
+# The commits, and the working tree on top of them. Reading the commits alone
+# declared a run clean while a brand-new gated file sat untracked beside it, and
+# CI mutated the same file once it was committed and found a survivor: PR #281's
+# dataset builder. A local run exists to predict that CI run, so it reads what
+# CI will see, which is this branch plus whatever is not committed yet. Renames
+# print `old -> new`; the new name is the file on disk.
+committed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
+uncommitted=$(git status --porcelain=v1 --untracked-files=all | sed 's/^...//;s/.* -> //')
+changed=$(printf '%s\n%s\n' "$committed" "$uncommitted" | sed '/^$/d' | sort -u)
 failed=()
 runs=0
 incremental=(--incremental --incrementalFile reports/mutation/incremental.json)
@@ -73,7 +84,7 @@ if [ "${#failed[@]}" -gt 0 ]; then
   exit 1
 fi
 if [ "$runs" -eq 0 ]; then
-  echo "[mutate-changed] no gated file changed between $base and HEAD, so nothing ran; commits only, uncommitted work is not read"
+  echo "[mutate-changed] no gated file changed between $base and the working tree, so nothing ran"
   exit 0
 fi
 echo "[mutate-changed] every changed gated file passed mutation ($runs run(s))"

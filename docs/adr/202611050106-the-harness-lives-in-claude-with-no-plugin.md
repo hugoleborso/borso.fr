@@ -1,6 +1,6 @@
 # ADR-202611050106: The harness lives in .claude/ with no plugin
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-05
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, harness

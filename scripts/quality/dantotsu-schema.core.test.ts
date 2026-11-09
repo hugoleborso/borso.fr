@@ -72,7 +72,7 @@ describe('selectSchemaProblems', () => {
 
   it('names every missing required field', () => {
     expect(check([buildEntry('partial', { zone: null, severity: '' })])).toEqual([
-      'partial: `severity:` is missing',
+      'partial: `severity:` has no value on its line. This reader takes one line per field, so a [list] goes inline',
       'partial: `zone:` is missing',
     ]);
   });
