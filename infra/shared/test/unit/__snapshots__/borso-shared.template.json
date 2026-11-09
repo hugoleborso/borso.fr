@@ -726,6 +726,42 @@
         ]
       }
     },
+    "NoMailSpf0FD1A3C5": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": "Z1FAKE",
+        "Name": "borso.fr.",
+        "ResourceRecords": [
+          "\"v=spf1 -all\""
+        ],
+        "TTL": "1800",
+        "Type": "TXT"
+      }
+    },
+    "NoMailDmarcCD2199F5": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": "Z1FAKE",
+        "Name": "_dmarc.borso.fr.",
+        "ResourceRecords": [
+          "\"v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s\""
+        ],
+        "TTL": "1800",
+        "Type": "TXT"
+      }
+    },
+    "NullMx56EBF6D3": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": "Z1FAKE",
+        "Name": "borso.fr.",
+        "ResourceRecords": [
+          "0 ."
+        ],
+        "TTL": "1800",
+        "Type": "MX"
+      }
+    },
     "Budget2": {
       "Type": "AWS::Budgets::Budget",
       "Properties": {

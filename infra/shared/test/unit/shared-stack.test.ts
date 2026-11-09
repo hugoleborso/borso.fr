@@ -302,6 +302,34 @@ describe('SharedStack', () => {
     });
   });
 
+  describe('no-mail DNS records', () => {
+    const tpl = synth();
+
+    it('publishes an SPF record that authorizes no sender', () => {
+      tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+        Name: `${HOSTED_ZONE_NAME}.`,
+        Type: 'TXT',
+        ResourceRecords: ['"v=spf1 -all"'],
+      });
+    });
+
+    it('publishes a DMARC policy that rejects every unaligned message', () => {
+      tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+        Name: `_dmarc.${HOSTED_ZONE_NAME}.`,
+        Type: 'TXT',
+        ResourceRecords: ['"v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s"'],
+      });
+    });
+
+    it('publishes a null MX so no server accepts mail for the domain', () => {
+      tpl.hasResourceProperties('AWS::Route53::RecordSet', {
+        Name: `${HOSTED_ZONE_NAME}.`,
+        Type: 'MX',
+        ResourceRecords: ['0 .'],
+      });
+    });
+  });
+
   describe('template snapshot', () => {
     it('matches the committed template, so drift shows up in the diff', async () => {
       const template = serializeTemplateForSnapshot(synth({ budgetEmail: 'hugo@example.com' }));
