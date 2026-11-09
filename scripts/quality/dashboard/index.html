@@ -200,6 +200,7 @@
   .s3-modal-title {
     font-size: var(--cds-font-size-heading);
     font-weight: var(--cds-font-weight-medium);
+    padding-right: 5.5rem;
   }
   .s3-close {
     position: absolute;
@@ -372,6 +373,7 @@
     ],
     RECENT_DAYS: 30,
     MOST_TICKS: 12,
+    TICK_ROOM: 56,
     count: d3.format(','),
     unitOf: (unit) => (unit === 'ms' ? ' ms' : ''),
     amount(value, unit) {
@@ -405,16 +407,16 @@
 </script>
 
 <script>
-  const PANEL = { top: 16, right: 16, bottom: 26, left: 52 };
+  window.s3.PANEL = { top: 16, right: 16, bottom: 26, left: 52 };
 
-  function drawChart(host, rows, options) {
+  window.s3.drawChart = function drawChart(host, rows, options) {
     host.replaceChildren();
     const width = host.clientWidth;
     if (width === 0) return;
     const height = options.height;
     const values = rows.map((r) => (r.value === null ? 0 : Number(r.value)));
     const axis = window.s3.axis(values);
-    const pad = options.full ? PANEL : { top: 2, right: 0, bottom: 0, left: 0 };
+    const pad = options.full ? window.s3.PANEL : { top: 2, right: 0, bottom: 0, left: 0 };
     const svg = d3
       .select(host)
       .append('svg')
@@ -454,7 +456,8 @@
         .attr('fill', 'var(--color-fg-muted)')
         .attr('font-size', 11)
         .text((t) => window.s3.count(t) + window.s3.unitOf(options.unit));
-      const step = Math.ceil(rows.length / window.s3.MOST_TICKS);
+      const room = Math.max(2, Math.floor(inner.w / window.s3.TICK_ROOM));
+      const step = Math.ceil(rows.length / Math.min(room, window.s3.MOST_TICKS));
       g.selectAll('text.xtick')
         .data(rows.filter((_, i) => (rows.length - 1 - i) % step === 0))
         .join('text')
@@ -514,7 +517,7 @@
       .on('pointerleave', () => {
         tip.hidden = true;
       });
-  }
+  };
 </script>
 
 <script>
@@ -550,7 +553,7 @@
     openChart = key;
     modal.hidden = false;
     document.querySelector('.s3-modal-title').textContent = key.title;
-    drawChart(document.querySelector('.s3-plot'), key.rows(), {
+    window.s3.drawChart(document.querySelector('.s3-plot'), key.rows(), {
       full: true,
       height: Math.max(220, document.querySelector('.s3-plot').clientHeight),
       ceiling: key.ceiling,
@@ -583,7 +586,7 @@
       spark.className = 's3-spark';
       button.append(spark);
       requestAnimationFrame(() =>
-        drawChart(spark, options.rows, {
+        window.s3.drawChart(spark, options.rows, {
           full: false,
           height: 28,
           ceiling: null,
