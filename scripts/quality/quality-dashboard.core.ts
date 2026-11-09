@@ -9,9 +9,19 @@ export type SourceStatus =
   | { readonly kind: 'unavailable'; readonly reason: string }
   | { readonly kind: 'not-applicable'; readonly reason: string };
 
-export interface WeeklyValue {
-  readonly weekStart: string;
+export interface SeriesPoint {
+  readonly label: string;
   readonly value: number | null;
+}
+
+export type RangeId = 'week' | 'hour' | 'minute';
+
+export interface RangeSpec {
+  readonly id: RangeId;
+  readonly title: string;
+  readonly windowSeconds: number;
+  readonly bucketSeconds: number;
+  readonly buckets: number;
 }
 
 export interface Indicator {
@@ -21,7 +31,7 @@ export interface Indicator {
   readonly unit: 'count' | 'ms';
   readonly app: string;
   readonly current: number | null;
-  readonly weeks: readonly WeeklyValue[];
+  readonly points: readonly SeriesPoint[];
   readonly status: SourceStatus;
 }
 
@@ -65,6 +75,11 @@ export interface SecurityCounts {
   readonly other: number;
 }
 
+export interface SentryIssueCount {
+  readonly app: string;
+  readonly count: number;
+}
+
 export interface SentryCount {
   readonly app: string;
   readonly environment: string;
@@ -96,8 +111,39 @@ export const BUG_REPORT_APP = 'pragma';
 export const REPOSITORY_ROW = 'repository';
 export const WEEKS_SHOWN = 8;
 export const SECONDS_PER_WEEK = 604_800;
+export const SECONDS_PER_HOUR = 3_600;
+export const SECONDS_PER_MINUTE = 60;
+export const HOURS_SHOWN = 12;
+export const MINUTES_SHOWN = 60;
+
+export const RANGES: readonly RangeSpec[] = [
+  {
+    id: 'week',
+    title: 'week by week',
+    windowSeconds: SECONDS_PER_WEEK,
+    bucketSeconds: SECONDS_PER_WEEK,
+    buckets: WEEKS_SHOWN,
+  },
+  {
+    id: 'hour',
+    title: 'last 12 hours',
+    windowSeconds: HOURS_SHOWN * SECONDS_PER_HOUR,
+    bucketSeconds: SECONDS_PER_HOUR,
+    buckets: HOURS_SHOWN,
+  },
+  {
+    id: 'minute',
+    title: 'last 60 minutes',
+    windowSeconds: MINUTES_SHOWN * SECONDS_PER_MINUTE,
+    bucketSeconds: SECONDS_PER_MINUTE,
+    buckets: MINUTES_SHOWN,
+  },
+];
 
 const MILLISECONDS_PER_DAY = 86_400_000;
+const MILLISECONDS_PER_SECOND = 1_000;
+const CLOCK_LABEL_START = 11;
+const CLOCK_LABEL_END = 16;
 const DAYS_PER_WEEK = 7;
 const ISO_DATE_LENGTH = 10;
 const API_NAME_PATTERN = /^(.+)-(prod|preview)-api$/;
@@ -149,6 +195,29 @@ export function listWeekStarts(now: string): readonly string[] {
   );
 }
 
+function clockLabel(milliseconds: number): string {
+  return new Date(milliseconds).toISOString().slice(CLOCK_LABEL_START, CLOCK_LABEL_END);
+}
+
+function floorToBucket(milliseconds: number, bucketSeconds: number): number {
+  const size = bucketSeconds * MILLISECONDS_PER_SECOND;
+  return Math.floor(milliseconds / size) * size;
+}
+
+export function listBuckets(range: RangeSpec, now: Date): readonly string[] {
+  if (range.id === 'week') return listWeekStarts(now.toISOString().slice(0, ISO_DATE_LENGTH));
+  const last = floorToBucket(now.getTime(), range.bucketSeconds);
+  const size = range.bucketSeconds * MILLISECONDS_PER_SECOND;
+  return Array.from({ length: range.buckets }, (_, index) =>
+    clockLabel(last - (range.buckets - 1 - index) * size),
+  );
+}
+
+export function bucketOf(range: RangeSpec, timestamp: string): string {
+  if (range.id === 'week') return startOfWeek(timestamp.slice(0, ISO_DATE_LENGTH));
+  return clockLabel(floorToBucket(Date.parse(timestamp), range.bucketSeconds));
+}
+
 export function selectHttpApis(items: readonly unknown[]): readonly HttpApi[] {
   const schema = z.object({ Name: z.string(), ApiId: z.string(), ProtocolType: z.string() });
   return items.flatMap((item) => {
@@ -165,7 +234,10 @@ export function metricQueryId(api: HttpApi, kind: MetricKind): string {
   return `${kind}_${api.apiId.replaceAll(/[^a-zA-Z0-9]/g, '')}`;
 }
 
-export function buildMetricQueries(apis: readonly HttpApi[]): readonly MetricQuery[] {
+export function buildMetricQueries(
+  apis: readonly HttpApi[],
+  periodSeconds: number,
+): readonly MetricQuery[] {
   return apis.flatMap((api) =>
     METRIC_KINDS.filter((kind) => api.stage === 'prod' || PREVIEW_KINDS.has(kind)).map((kind) => {
       const definition = METRIC_DEFINITIONS[kind];
@@ -177,7 +249,7 @@ export function buildMetricQueries(apis: readonly HttpApi[]): readonly MetricQue
             MetricName: definition.name,
             Dimensions: [selectDimension(api, kind)],
           },
-          Period: SECONDS_PER_WEEK,
+          Period: periodSeconds,
           Stat: definition.stat,
         },
       };
@@ -220,14 +292,10 @@ function combinePoints(
   return Math.round(Math.max(...values));
 }
 
-function weekOf(timestamp: string): string {
-  return startOfWeek(timestamp.slice(0, ISO_DATE_LENGTH));
-}
-
-interface GatewayReading {
+export interface GatewayReading {
   readonly apis: readonly HttpApi[];
-  readonly rolling: readonly MetricSeries[];
-  readonly weekly: readonly MetricSeries[];
+  readonly current: readonly MetricSeries[];
+  readonly buckets: readonly MetricSeries[];
 }
 
 function buildGatewayIndicator(
@@ -241,13 +309,14 @@ function buildGatewayIndicator(
   stage: 'prod' | 'preview',
   app: string,
   reading: SourceResult<GatewayReading>,
-  weekStarts: readonly string[],
+  range: RangeSpec,
+  buckets: readonly string[],
 ): Indicator {
   const empty = {
     ...definition,
     app,
     current: null,
-    weeks: weekStarts.map((weekStart) => ({ weekStart, value: null })),
+    points: buckets.map((label) => ({ label, value: null })),
   };
   if (!FULL_STACK_APPS.includes(app)) {
     return { ...empty, status: { kind: 'not-applicable', reason: NO_API_REASON } };
@@ -261,14 +330,14 @@ function buildGatewayIndicator(
   return {
     ...definition,
     app,
-    current: combinePoints(apis, reading.value.rolling, kind, () => true),
-    weeks: weekStarts.map((weekStart) => ({
-      weekStart,
+    current: combinePoints(apis, reading.value.current, kind, () => true),
+    points: buckets.map((label) => ({
+      label,
       value: combinePoints(
         apis,
-        reading.value.weekly,
+        reading.value.buckets,
         kind,
-        (timestamp) => weekOf(timestamp) === weekStart,
+        (timestamp) => bucketOf(range, timestamp) === label,
       ),
     })),
     status: { kind: 'ok' },
@@ -278,9 +347,9 @@ function buildGatewayIndicator(
 export function buildGatewayIndicators(
   reading: SourceResult<GatewayReading>,
   apps: readonly string[],
-  now: string,
+  range: RangeSpec,
+  buckets: readonly string[],
 ): readonly Indicator[] {
-  const weekStarts = listWeekStarts(now);
   return apps.flatMap((app) => [
     buildGatewayIndicator(
       {
@@ -293,7 +362,8 @@ export function buildGatewayIndicators(
       'preview',
       app,
       reading,
-      weekStarts,
+      range,
+      buckets,
     ),
     buildGatewayIndicator(
       {
@@ -306,20 +376,22 @@ export function buildGatewayIndicators(
       'prod',
       app,
       reading,
-      weekStarts,
+      range,
+      buckets,
     ),
     buildGatewayIndicator(
       {
         id: 'throttles-prod',
         pillar: 'stability',
-        label: 'Throttled, production',
+        label: 'Throttled requests, production',
         unit: 'count',
       },
       'throttles',
       'prod',
       app,
       reading,
-      weekStarts,
+      range,
+      buckets,
     ),
     buildGatewayIndicator(
       { id: 'latency-p50', pillar: 'speed', label: 'p50', unit: 'ms' },
@@ -327,7 +399,8 @@ export function buildGatewayIndicators(
       'prod',
       app,
       reading,
-      weekStarts,
+      range,
+      buckets,
     ),
     buildGatewayIndicator(
       { id: 'latency-p95', pillar: 'speed', label: 'p95', unit: 'ms' },
@@ -335,14 +408,15 @@ export function buildGatewayIndicators(
       'prod',
       app,
       reading,
-      weekStarts,
+      range,
+      buckets,
     ),
   ]);
 }
 
 export interface SentryReading {
   readonly rolling: readonly SentryCount[];
-  readonly weekly: ReadonlyMap<string, readonly SentryCount[]>;
+  readonly history: ReadonlyMap<string, readonly SentryCount[]>;
 }
 
 function sumSentry(counts: readonly SentryCount[], app: string, environment: string): number {
@@ -354,16 +428,15 @@ function sumSentry(counts: readonly SentryCount[], app: string, environment: str
 export function buildSentryIndicators(
   reading: SourceResult<SentryReading>,
   apps: readonly string[],
-  now: string,
+  buckets: readonly string[],
 ): readonly Indicator[] {
-  const weekStarts = listWeekStarts(now);
   const definitions = [
     {
       id: 'sentry-errors-preview',
       environment: 'preview',
-      label: 'Sentry, previews',
+      label: 'Sentry errors, previews',
     },
-    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry, production' },
+    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry errors, production' },
   ];
   return apps.flatMap((app) =>
     definitions.map((definition): Indicator => {
@@ -377,7 +450,7 @@ export function buildSentryIndicators(
       const empty = {
         ...base,
         current: null,
-        weeks: weekStarts.map((weekStart) => ({ weekStart, value: null })),
+        points: buckets.map((label) => ({ label, value: null })),
       };
       if (!SENTRY_APPS.includes(app))
         return { ...empty, status: { kind: 'not-applicable', reason: NO_SENTRY_REASON } };
@@ -385,10 +458,10 @@ export function buildSentryIndicators(
       return {
         ...base,
         current: sumSentry(reading.value.rolling, app, definition.environment),
-        weeks: weekStarts.map((weekStart) => {
-          const counts = reading.value.weekly.get(weekStart);
+        points: buckets.map((label) => {
+          const counts = reading.value.history.get(label);
           return {
-            weekStart,
+            label,
             value: counts === undefined ? null : sumSentry(counts, app, definition.environment),
           };
         }),
@@ -398,12 +471,41 @@ export function buildSentryIndicators(
   );
 }
 
+export function buildSentryIssueIndicators(
+  reading: SourceResult<readonly SentryIssueCount[]>,
+  apps: readonly string[],
+): readonly Indicator[] {
+  return apps.map((app): Indicator => {
+    const base = {
+      id: 'sentry-issues-open',
+      pillar: 'stability' as const,
+      label: 'Sentry issues open',
+      unit: 'count' as const,
+      app,
+      points: [],
+    };
+    if (!SENTRY_APPS.includes(app))
+      return {
+        ...base,
+        current: null,
+        status: { kind: 'not-applicable', reason: NO_SENTRY_REASON },
+      };
+    if (reading.kind === 'unavailable') return { ...base, current: null, status: reading };
+    const own = reading.value.filter((count) => count.app === app);
+    return {
+      ...base,
+      current: own.reduce((total, count) => total + count.count, 0),
+      status: { kind: 'ok' },
+    };
+  });
+}
+
 export function buildBugReportIndicators(
   reading: SourceResult<readonly BugReport[]>,
   apps: readonly string[],
-  now: string,
+  range: RangeSpec,
+  buckets: readonly string[],
 ): readonly Indicator[] {
-  const weekStarts = listWeekStarts(now);
   return apps.map((app): Indicator => {
     const base = {
       id: 'user-bug-reports-open',
@@ -415,7 +517,7 @@ export function buildBugReportIndicators(
     const empty = {
       ...base,
       current: null,
-      weeks: weekStarts.map((weekStart) => ({ weekStart, value: null })),
+      points: buckets.map((label) => ({ label, value: null })),
     };
     if (app !== BUG_REPORT_APP)
       return { ...empty, status: { kind: 'not-applicable', reason: NO_BUG_REPORTS_REASON } };
@@ -424,11 +526,14 @@ export function buildBugReportIndicators(
     return {
       ...base,
       current: open.length,
-      weeks: weekStarts.map((weekStart) => ({
-        weekStart,
-        value: reading.value.filter(
-          (report) => startOfWeek(report.createdAt.slice(0, ISO_DATE_LENGTH)) === weekStart,
-        ).length,
+      points: buckets.map((label) => ({
+        label,
+        value:
+          range.id === 'week'
+            ? reading.value.filter(
+                (report) => startOfWeek(report.createdAt.slice(0, ISO_DATE_LENGTH)) === label,
+              ).length
+            : null,
       })),
       status: { kind: 'ok' },
     };
@@ -476,7 +581,6 @@ export interface SecurityReading {
 function currentOnly(
   definition: { readonly id: string; readonly label: string },
   reading: SourceResult<number>,
-  weekStarts: readonly string[],
 ): Indicator {
   const isOk = reading.kind === 'ok';
   return {
@@ -485,7 +589,7 @@ function currentOnly(
     unit: 'count',
     app: REPOSITORY_ROW,
     current: isOk ? reading.value : null,
-    weeks: weekStarts.map((weekStart) => ({ weekStart, value: null })),
+    points: [],
     status: isOk ? { kind: 'ok' } : reading,
   };
 }
@@ -497,36 +601,27 @@ function mapResult<Value, Mapped>(
   return result.kind === 'ok' ? { kind: 'ok', value: map(result.value) } : result;
 }
 
-export function buildSecurityIndicators(
-  reading: SecurityReading,
-  now: string,
-): readonly Indicator[] {
-  const weekStarts = listWeekStarts(now);
+export function buildSecurityIndicators(reading: SecurityReading): readonly Indicator[] {
   return [
     currentOnly(
       { id: 'dependabot-critical-high', label: 'Dependabot, critical or high' },
       mapResult(reading.dependabot, (counts) => counts.criticalOrHigh),
-      weekStarts,
     ),
     currentOnly(
       { id: 'dependabot-other', label: 'Dependabot, moderate or low' },
       mapResult(reading.dependabot, (counts) => counts.other),
-      weekStarts,
     ),
     currentOnly(
       { id: 'audit-critical-high', label: 'pnpm audit, critical or high' },
       mapResult(reading.audit, (counts) => counts.criticalOrHigh),
-      weekStarts,
     ),
     currentOnly(
-      { id: 'audit-other', label: 'pnpm audit, moderate or lower' },
+      { id: 'audit-other', label: 'pnpm audit, moderate or low' },
       mapResult(reading.audit, (counts) => counts.other),
-      weekStarts,
     ),
     currentOnly(
       { id: 'secret-scanning-open', label: 'Secret scanning, open' },
       reading.secretScanning,
-      weekStarts,
     ),
   ];
 }
@@ -572,8 +667,15 @@ export function isEverySourceUnavailable(
   return sources.size > 0 && [...sources.values()].every((result) => result.kind === 'unavailable');
 }
 
+export interface SentrySnapshot {
+  readonly week: SentryReading;
+  readonly hour: SentryReading;
+  readonly minute: SentryReading;
+}
+
 export interface Snapshot {
-  readonly sentry: SourceResult<SentryReading>;
+  readonly sentry: SourceResult<SentrySnapshot>;
+  readonly sentryIssues: SourceResult<readonly SentryIssueCount[]>;
   readonly bugReports: SourceResult<readonly BugReport[]>;
   readonly dependabot: SourceResult<SecurityCounts>;
   readonly secretScanning: SourceResult<number>;
@@ -583,6 +685,7 @@ const NOT_COLLECTED: SourceResult<never> = { kind: 'unavailable', reason: 'not c
 
 export const EMPTY_SNAPSHOT: Snapshot = {
   sentry: NOT_COLLECTED,
+  sentryIssues: NOT_COLLECTED,
   bugReports: NOT_COLLECTED,
   dependabot: NOT_COLLECTED,
   secretScanning: NOT_COLLECTED,
@@ -620,7 +723,12 @@ const snapshotSchema = z.object({
     z.object({
       rolling: z.array(sentryCountSchema),
       weekly: z.record(z.string(), z.array(sentryCountSchema)),
+      hour: z.array(sentryCountSchema),
+      minute: z.array(sentryCountSchema),
     }),
+  ),
+  sentryIssues: sourceSchema(
+    z.array(z.object({ app: z.string(), count: z.number().int().nonnegative() })),
   ),
   improvements: sourceSchema(z.array(improvementSchema)),
   dependabot: sourceSchema(securityCountsSchema),
@@ -631,9 +739,11 @@ export function readSnapshot(raw: unknown): Snapshot {
   const snapshot = snapshotSchema.parse(raw);
   return {
     sentry: mapResult(snapshot.sentry, (sentry) => ({
-      rolling: sentry.rolling,
-      weekly: new Map(Object.entries(sentry.weekly)),
+      week: { rolling: sentry.rolling, history: new Map(Object.entries(sentry.weekly)) },
+      hour: { rolling: sentry.hour, history: new Map() },
+      minute: { rolling: sentry.minute, history: new Map() },
     })),
+    sentryIssues: snapshot.sentryIssues,
     bugReports: mapResult(snapshot.improvements, (improvements) =>
       improvements
         .filter((improvement) => improvement.kind === BUG_KIND)

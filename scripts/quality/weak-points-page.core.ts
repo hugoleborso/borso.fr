@@ -16,6 +16,12 @@ export interface PlacedDot {
   readonly column: string;
 }
 
+export interface MapGrid {
+  readonly placed: readonly PlacedDot[];
+  readonly rows: readonly string[];
+  readonly columns: readonly string[];
+}
+
 export interface WeakPointPageInput {
   readonly now: string;
   readonly placed: readonly PlacedDot[];
@@ -28,6 +34,16 @@ const DANTOTSU_ADDRESS = 'https://github.com/hugoleborso/borso.fr/blob/main/docs
 const RECENT_DAYS = 30;
 const MILLISECONDS_PER_DAY = 86_400_000;
 const FACTORY_COLUMN = 'defects';
+const PERCENT = 100;
+const NO_OCCURRENCE = 'no occurrence yet';
+
+export const PRODUCT_MAP_TITLE = 'Product map';
+export const FACTORY_MAP_TITLE = 'Factory map';
+export const PRODUCT_MAP_NOTE =
+  'Applications and infrastructure packages by layer, the layer read from the path the way the blueprint scripts read it.';
+export const FACTORY_MAP_NOTE =
+  'The stations of the line that builds the product: the skills, the gates, the hooks, CI and the deploy.';
+
 function daysBetween(earlier: string, later: string): number {
   return (Date.parse(later) - Date.parse(earlier)) / MILLISECONDS_PER_DAY;
 }
@@ -74,61 +90,105 @@ export function renderGrid(
   return `<div class="scroll"><table>${header}${body.join('')}</table></div>`;
 }
 
-function renderWeeklySeries(series: readonly WeeklyCount[]): string {
-  const highest = Math.max(1, ...series.map((week) => week.count));
-  const bars = series.map((week) => {
-    const height = Math.round((week.count / highest) * 100);
-    const zero = week.count === 0 ? ' zero' : '';
-    return `<span class="bar${zero}" style="height:${String(height)}%" title="week of ${week.weekStart}: ${String(week.count)}"></span>`;
-  });
+export function splitDefectMaps(placed: readonly PlacedDot[]): {
+  readonly product: MapGrid;
+  readonly factory: MapGrid;
+} {
+  const product = placed.filter((entry) => entry.map === 'product');
+  const factory = placed.filter((entry) => entry.map === 'factory');
+  return {
+    product: {
+      placed: product,
+      rows: orderByCount(product.map((entry) => entry.row)),
+      columns: orderByCount(product.map((entry) => entry.column)),
+    },
+    factory: {
+      placed: factory,
+      rows: FACTORY_STATIONS.filter((station) => factory.some((entry) => entry.row === station)),
+      columns: [FACTORY_COLUMN],
+    },
+  };
+}
+
+export function listOpenWeakPoints(
+  allEngaged: readonly EngagedWeakPoint[],
+): readonly EngagedWeakPoint[] {
+  return allEngaged.filter((weakPoint) => !weakPoint.isClosed);
+}
+
+export function countCurrentWeek(series: readonly WeeklyCount[]): number | null {
+  const current = series.at(-1);
+  return current === undefined ? null : current.count;
+}
+
+export function describeWeakPointMeta(
+  weakPoint: EngagedWeakPoint,
+  series: readonly WeeklyCount[],
+): string {
+  const total = series.reduce((sum, week) => sum + week.count, 0);
+  return `${weakPoint.map} map · engaged on ${weakPoint.engagedOn} · ${String(total)} occurrence(s) recorded · countermeasure: ${weakPoint.countermeasure}`;
+}
+
+export function describeCurrentWeek(series: readonly WeeklyCount[]): string {
   const current = series.at(-1);
   const currentText =
     current === undefined
-      ? 'no occurrence yet'
+      ? NO_OCCURRENCE
       : `${String(current.count)} in the week of ${current.weekStart}`;
-  return `<div class="bars">${bars.join('')}</div><p>${escapeHtml(currentText)}. Target: zero per week.</p>`;
+  return `${currentText}. Target: zero per week.`;
+}
+
+export function renderWeeklyBars(series: readonly WeeklyCount[]): string {
+  const highest = Math.max(1, ...series.map((week) => week.count));
+  const bars = series.map((week) => {
+    const height = Math.round((week.count / highest) * PERCENT);
+    const zero = week.count === 0 ? ' zero' : '';
+    return `<span class="bar${zero}" style="height:${String(height)}%" title="week of ${week.weekStart}: ${String(week.count)}"></span>`;
+  });
+  return `<div class="bars">${bars.join('')}</div>`;
 }
 
 export function renderEngagedWeakPoints(
   allEngaged: readonly EngagedWeakPoint[],
   weeklyCounts: ReadonlyMap<string, readonly WeeklyCount[]>,
 ): string {
-  const engaged = allEngaged.filter((weakPoint) => !weakPoint.isClosed);
+  const engaged = listOpenWeakPoints(allEngaged);
   if (engaged.length === 0) return '<p>No weak point is engaged.</p>';
   return engaged
     .map((weakPoint) => {
       const series = weeklyCounts.get(weakPoint.id) ?? [];
-      const total = series.reduce((sum, week) => sum + week.count, 0);
       return `<h3>${escapeHtml(weakPoint.title)} <code>${escapeHtml(weakPoint.id)}</code></h3>
-<p>${escapeHtml(weakPoint.map)} map · engaged on ${escapeHtml(weakPoint.engagedOn)} · ${String(total)} occurrence(s) recorded · countermeasure: ${escapeHtml(weakPoint.countermeasure)}</p>
-${renderWeeklySeries(series)}`;
+<p>${escapeHtml(describeWeakPointMeta(weakPoint, series))}</p>
+${renderWeeklyBars(series)}<p>${escapeHtml(describeCurrentWeek(series))}</p>`;
     })
     .join('\n');
 }
 
-function renderStageLegend(): string {
-  const items = STAGES.map(
-    (stage) =>
-      `<span><span class="dot stage-${stage.toLowerCase()}"></span> ${stage}: ${escapeHtml(STAGE_MEANINGS[stage])}</span>`,
-  );
-  return `<div class="legend">${items.join('')}<span><span class="dot"></span> no stage recorded</span><span><span class="dot engaged"></span> engaged weak point</span></div>`;
+export function renderStageLegend(): string {
+  const entries = [
+    ...STAGES.map((stage) => ({
+      dotClass: `stage-${stage.toLowerCase()}`,
+      note: `${stage}: ${STAGE_MEANINGS[stage]}`,
+    })),
+    { dotClass: '', note: 'no stage recorded' },
+    { dotClass: 'engaged', note: 'engaged weak point' },
+  ];
+  const items = entries.map((entry) => {
+    const classes = ['dot', entry.dotClass].filter((name) => name !== '').join(' ');
+    return `<span><span class="${classes}"></span> ${escapeHtml(entry.note)}</span>`;
+  });
+  return `<div class="legend">${items.join('')}</div>`;
 }
 
 export function renderVaricelle(placed: readonly PlacedDot[], now: string): string {
-  const product = placed.filter((entry) => entry.map === 'product');
-  const factory = placed.filter((entry) => entry.map === 'factory');
-  const productRows = orderByCount(product.map((entry) => entry.row));
-  const productColumns = orderByCount(product.map((entry) => entry.column));
-  const factoryRows = FACTORY_STATIONS.filter((station) =>
-    factory.some((entry) => entry.row === station),
-  );
+  const { product, factory } = splitDefectMaps(placed);
   return `${renderStageLegend()}
-<h3>Product map</h3>
-<p>Applications and infrastructure packages by layer, the layer read from the path the way the blueprint scripts read it.</p>
-${renderGrid(product, productRows, productColumns, now)}
-<h3>Factory map</h3>
-<p>The stations of the line that builds the product: the skills, the gates, the hooks, CI and the deploy.</p>
-${renderGrid(factory, factoryRows, [FACTORY_COLUMN], now)}`;
+<h3>${PRODUCT_MAP_TITLE}</h3>
+<p>${PRODUCT_MAP_NOTE}</p>
+${renderGrid(product.placed, product.rows, product.columns, now)}
+<h3>${FACTORY_MAP_TITLE}</h3>
+<p>${FACTORY_MAP_NOTE}</p>
+${renderGrid(factory.placed, factory.rows, factory.columns, now)}`;
 }
 
 function renderRecurrences(recurrences: readonly Recurrence[]): string {

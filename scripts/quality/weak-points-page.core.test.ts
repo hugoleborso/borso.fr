@@ -137,6 +137,7 @@ describe('stage colouring', () => {
     const html = renderVaricelle([], NOW);
     expect(html).toContain('<span class="dot stage-a"></span> A: caught locally or by a gate');
     expect(html).toContain('<span class="dot stage-e"></span> E: reported by a user');
+    expect(html).toContain('<span class="dot"></span> no stage recorded');
     expect(html).toContain('<span class="dot engaged"></span> engaged weak point');
     expect(html).toContain(
       'a gate</span><span><span class="dot stage-b"></span> B: caught in review</span>',
