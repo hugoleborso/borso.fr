@@ -18,7 +18,15 @@ import {
 } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { OpenIdConnectProvider, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { AaaaRecord, ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import {
+  AaaaRecord,
+  ARecord,
+  HostedZone,
+  type IHostedZone,
+  MxRecord,
+  RecordTarget,
+  TxtRecord,
+} from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
@@ -41,6 +49,9 @@ const MONTHLY_BUDGET_AMOUNTS_USD = [
 ];
 const BUDGET_ALERT_THRESHOLD_PERCENT = 80;
 const PREVIEWS_WILDCARD_RECORD_NAME = '*.preview';
+const SPF_SEND_NOTHING = 'v=spf1 -all';
+const DMARC_REJECT_ALL = 'v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s';
+const NULL_MX_HOST = '.';
 
 interface SharedStackProps extends StackProps {
   readonly borsoFrCert: ICertificate;
@@ -143,6 +154,7 @@ export class SharedStack extends Stack {
       account: this.account,
     });
 
+    this.createNoMailRecords(zone);
     this.createMonthlyBudgets(props.budgetEmail);
 
     new StringParameter(this, 'OidcArnParam', {
@@ -193,6 +205,12 @@ export class SharedStack extends Stack {
       parameterName: SHARED_SSM_PARAMETERS.sharedDeployRoleArn,
       stringValue: deployRoles.shared.roleArn,
     });
+  }
+
+  private createNoMailRecords(zone: IHostedZone): void {
+    new TxtRecord(this, 'NoMailSpf', { zone, values: [SPF_SEND_NOTHING] });
+    new TxtRecord(this, 'NoMailDmarc', { zone, recordName: '_dmarc', values: [DMARC_REJECT_ALL] });
+    new MxRecord(this, 'NullMx', { zone, values: [{ priority: 0, hostName: NULL_MX_HOST }] });
   }
 
   private createMonthlyBudgets(budgetEmail: string): void {
