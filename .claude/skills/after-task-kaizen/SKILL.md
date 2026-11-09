@@ -67,10 +67,18 @@ reality before any conclusions.
 
 Sources to walk in order, capturing each friction event as one row:
 
-- **The archived friction log (primary input).** Read it from the
-  repository, at the path the task prompt names, normally
-  `docs/features/<docs-slug>/<feature>/kaizen.md` on `main` after
-  `git fetch`. It is the merged session's `KAIZEN.md`, copied by
+- **The archived friction log (primary input).** `git fetch origin main`,
+  then `scripts/kaizen.sh sweep-input <merge-sha>`. It names every archive
+  the merge touched and, in each, the entry lines *this* merge added. Read
+  that, not the path the prompt names: the prompt is written by hand and gets
+  this wrong two ways. A task that archives into a slug an earlier pull
+  request already used merges its lines into that committed file, so the
+  prompt hands you lines an earlier sweep already eradicated (16 of the 19 in
+  PR #281's `meta/quality-dashboard`). And a task that archives into two
+  slugs gives the prompt's author two files to remember, who named one
+  (PR #281 also archived `meta/quality-dashboard-range-switch`). An archive
+  path the prompt names that the command does not is a line to check, not a
+  file to read. The archive is the merged session's `KAIZEN.md`, copied by
   `scripts/kaizen.sh archive` and appended to by the main session *and
   by every subagent that was told to*, one line per friction event,
   problem-only. Lines the prompt pasted because they were logged after

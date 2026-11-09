@@ -165,6 +165,43 @@ case "${1:-}" in
     kept="$(sed '/^- \[/d' "$KAIZEN_FILE")"
     printf '%s\n' "$kept" > "$KAIZEN_FILE"
     ;;
+  sweep-input)
+    # What `/after-task-kaizen` reads. The sweep's input is not "the archive the
+    # task prompt named": it is every entry line the merge added to any archive.
+    # Two ways the prompt gets it wrong, both seen on PR #281. A task that
+    # archives into a slug an earlier pull request already used merges its lines
+    # into that committed file, so the sweep is handed every line the earlier
+    # sweep eradicated: 16 of the 19 in meta/quality-dashboard belonged to
+    # PR #263. And a session that archives into two slugs hands the prompt's
+    # author two files to remember, who named one.
+    [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh sweep-input <merge-ref>\n' >&2; exit 1; }
+    merge="$2"
+    git -C "$REPO_ROOT" rev-parse --verify --quiet "$merge^{commit}" > /dev/null ||
+      { printf 'scripts/kaizen.sh: %s is not a commit here; fetch origin first\n' "$merge" >&2; exit 1; }
+    archives="$(git -C "$REPO_ROOT" diff --name-only "$merge^" "$merge" -- "$FEATURES_DIRECTORY" |
+      grep '/kaizen\.md$' || true)"
+    if [ -z "$archives" ]; then
+      printf '[kaizen] %s added no friction archive. The task logged nothing, or never archived: that is a finding, not an absence.\n' "$merge"
+      exit 0
+    fi
+    total=0
+    while IFS= read -r archive; do
+      [ -n "$archive" ] || continue
+      added="$(git -C "$REPO_ROOT" diff "$merge^" "$merge" -- "$archive" |
+        sed -n 's/^+\(- \[.*\)/\1/p')"
+      count="$(printf '%s' "$added" | grep -c '^- \[' || true)"
+      carried="$(git -C "$REPO_ROOT" show "$merge:$archive" | grep -c '^- \[' || true)"
+      total=$((total + count))
+      printf '\n\033[36m%s\033[0m — %s line(s) this merge added, of %s in the file\n' \
+        "$archive" "$count" "$carried"
+      [ "$count" -eq 0 ] || printf '%s\n' "$added"
+      [ "$count" -eq "$carried" ] ||
+        printf '  the other %s line(s) came with an earlier pull request that reused this slug; they were swept with it\n' \
+          "$((carried - count))"
+    done <<< "$archives"
+    printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' \
+      "$total" "$(printf '%s\n' "$archives" | grep -c . || true)"
+    ;;
   init)
     park_another_sessions_log
     ensure_file

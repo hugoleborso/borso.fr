@@ -418,6 +418,40 @@ jobs:
             stryker-pr-${{ github.event.pull_request.number }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
       - run: scripts/mutate-changed.sh "origin/${{ github.base_ref }}"
 
+  # The 3S board's page, rendered in a real Chromium. It ships to a dashboard
+  # artifact rather than to a site, so no preview deploy, dev server or visual
+  # validation ever draws it and three of PR #281's defects reached the
+  # operator's phone first. A job of its own, behind a paths filter, because it
+  # is the only step here that needs a browser: the page changes rarely and
+  # every other pull request pays nothing. See
+  # docs/dantotsus/the-page-nobody-rendered-before-the-operator.md.
+  dashboard-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            page:
+              - 'scripts/quality/dashboard/**'
+              - 'scripts/quality/dashboard-page.core.ts'
+              - 'scripts/quality/check-dashboard-page.ts'
+      - uses: pnpm/action-setup@v6
+        if: steps.filter.outputs.page == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.filter.outputs.page == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.filter.outputs.page == 'true'
+      - run: pnpm exec playwright install --with-deps chromium
+        if: steps.filter.outputs.page == 'true'
+      - run: pnpm exec tsx scripts/quality/check-dashboard-page.ts
+        if: steps.filter.outputs.page == 'true'
+
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

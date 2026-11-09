@@ -73,9 +73,17 @@ export function resolveCommit(prefix: string, mainCommits: readonly string[]): s
   return only !== undefined && others.length === 0 ? only : null;
 }
 
-function checkRequiredFields(document: DantotsuDocument): readonly string[] {
-  return REQUIRED_FIELDS.filter((name) => readField(document, name) === undefined).map(
-    (name) => `${document.slug}: \`${name}:\` is missing`,
+const FIELD_WITH_NO_VALUE =
+  'has no value on its line. This reader takes one line per field, so a [list] goes inline';
+
+function checkRequiredFields(
+  document: DantotsuDocument,
+  fields: ReadonlyMap<string, string>,
+): readonly string[] {
+  return REQUIRED_FIELDS.filter((name) => readField(document, name) === undefined).map((name) =>
+    fields.has(name)
+      ? `${document.slug}: \`${name}:\` ${FIELD_WITH_NO_VALUE}`
+      : `${document.slug}: \`${name}:\` is missing`,
   );
 }
 
@@ -248,7 +256,7 @@ export function selectSchemaProblems(
       continue;
     }
     problems.push(
-      ...checkRequiredFields(document),
+      ...checkRequiredFields(document, fields),
       ...checkEnumeratedFields(document),
       ...checkDate(document),
       ...checkPullRequestField(document, 'related-pr'),

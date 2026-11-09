@@ -63,7 +63,7 @@ Then one `ArtifactData` `batch` on the board's url, pinning `if_version` for eve
 
 Then read `data/users/me` doc `check` on the board. `checking` means read again, up to five times. `failed` names what the page threw or showed wrong: fix what the code confirms, write, check again, at most twice. No document after two reads means nothing failed.
 
-Do not render, screenshot or browse the board to check it: the type forbids it, and the check document is the check.
+Do not render, screenshot or browse the published board: it keeps the operator waiting, and the check document is the check. That says nothing about the page file, which you render locally before you write it, with `pnpm exec tsx scripts/quality/check-dashboard-page.ts`. Reading this as "the page cannot be rendered" is what let a blank modal and a sideways-scrolling board reach the operator's phone in PR #281.
 
 ## 4. Tell the operator
 
@@ -72,5 +72,9 @@ Give the link and the two or three values that moved since the last refresh. Say
 ## Changing the page
 
 `scripts/quality/dashboard/index.html` is plain HTML, CSS and JavaScript with `d3` and `dash` as globals. Every figure must carry its `data-source`, and `data-field`/`data-where` where it is one cell, or the type reports it back as a mis-marked number. Charts follow `/dataviz`.
+
+**The type runs each `<script>` in a scope of its own.** A `function` or `const` declared in one is invisible to the next, and the call throws only in the published page. Everything two scripts share goes on `window.s3`. The page must also fit 375 px with every row open, because a card that floors at its widest child scrolls the whole board sideways.
+
+`pnpm exec tsx scripts/quality/check-dashboard-page.ts` is what holds both. It loads this page in Chromium with real d3, a `dash` stubbed from `scripts/quality/dashboard/fixture.json`, and each script body wrapped in its own scope, opens every row, and refuses on a page error, on a document wider than the viewport at 390, 768 or 1280 px, and on a sparkline or enlarged chart that drew no bar. The pre-commit hook runs it whenever the page moves. Run it before you write `files/index.html`.
 
 `scripts/quality/*.core.ts` is gated at 100% statements, branches, functions and lines plus a 100% mutation score, so a new branch needs a test in the same commit. `scripts/quality/quality-datasets.core.ts` turns indicators into rows; `quality-dashboard.core.ts` reads the sources.
