@@ -355,7 +355,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-preview',
         pillar: 'stability',
-        label: 'Failed requests, previews',
+        label: '5xx, previews',
         unit: 'count',
       },
       'serverErrors',
@@ -369,7 +369,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-prod',
         pillar: 'stability',
-        label: 'Failed requests, production',
+        label: '5xx, production',
         unit: 'count',
       },
       'serverErrors',
@@ -434,9 +434,9 @@ export function buildSentryIndicators(
     {
       id: 'sentry-errors-preview',
       environment: 'preview',
-      label: 'Errors raised, previews',
+      label: 'Sentry errors, previews',
     },
-    { id: 'sentry-errors-prod', environment: 'prod', label: 'Errors raised, production' },
+    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry errors, production' },
   ];
   return apps.flatMap((app) =>
     definitions.map((definition): Indicator => {
@@ -479,7 +479,7 @@ export function buildSentryIssueIndicators(
     const base = {
       id: 'sentry-issues-open',
       pillar: 'stability' as const,
-      label: 'Error groups open',
+      label: 'Sentry issues open',
       unit: 'count' as const,
       app,
       points: [],

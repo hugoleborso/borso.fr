@@ -248,7 +248,7 @@ describe('buildGatewayIndicators', () => {
     const previews = find(indicators, 'errors-preview', 'pragma');
     expect(previews).toMatchObject({
       pillar: 'stability',
-      label: 'Failed requests, previews',
+      label: '5xx, previews',
       unit: 'count',
       current: 5,
       status: { kind: 'ok' },
@@ -258,7 +258,7 @@ describe('buildGatewayIndicators', () => {
     const production = find(indicators, 'errors-prod', 'pragma');
     expect(production).toMatchObject({
       pillar: 'stability',
-      label: 'Failed requests, production',
+      label: '5xx, production',
       unit: 'count',
       current: 20,
     });
@@ -326,7 +326,7 @@ describe('buildGatewayIndicators', () => {
     expect(find(indicators, 'errors-preview', 'talos')).toEqual({
       id: 'errors-preview',
       pillar: 'stability',
-      label: 'Failed requests, previews',
+      label: '5xx, previews',
       unit: 'count',
       app: 'talos',
       current: null,
@@ -413,7 +413,7 @@ describe('Sentry', () => {
     const indicators = buildSentryIndicators(reading, ['pragma', 'other-app'], WEEK_BUCKETS);
     expect(find(indicators, 'sentry-errors-prod', 'pragma')).toMatchObject({
       pillar: 'stability',
-      label: 'Errors raised, production',
+      label: 'Sentry errors, production',
       unit: 'count',
       current: 5,
       status: { kind: 'ok' },
@@ -423,13 +423,13 @@ describe('Sentry', () => {
       { label: '2026-10-12', value: null },
     ]);
     expect(find(indicators, 'sentry-errors-preview', 'pragma')).toMatchObject({
-      label: 'Errors raised, previews',
+      label: 'Sentry errors, previews',
       current: 4,
     });
     expect(find(indicators, 'sentry-errors-preview', 'other-app')).toEqual({
       id: 'sentry-errors-preview',
       pillar: 'stability',
-      label: 'Errors raised, previews',
+      label: 'Sentry errors, previews',
       unit: 'count',
       app: 'other-app',
       current: null,
@@ -466,7 +466,7 @@ describe('Sentry issues', () => {
     expect(find(indicators, 'sentry-issues-open', 'pragma')).toEqual({
       id: 'sentry-issues-open',
       pillar: 'stability',
-      label: 'Error groups open',
+      label: 'Sentry issues open',
       unit: 'count',
       app: 'pragma',
       points: [],
