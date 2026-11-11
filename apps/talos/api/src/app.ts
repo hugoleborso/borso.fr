@@ -1,6 +1,5 @@
 import { TODO_LISTS } from '@domain/todo-list.core';
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
 import { buildAgentRouter } from './agent/agent.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildCommitmentsRouter } from './commitments/commitments.controller';
@@ -9,6 +8,7 @@ import { buildFocusRouter } from './focus/focus.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { isUnexpectedFailure, selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnhandledError } from './helpers/observability/error-reporting.adapter';
+import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { buildHistoryRouter } from './history/history.controller';
 import { buildMessagesRouter } from './messages/messages.controller';
 import { buildNotifyRouter } from './notify/notify.controller';
@@ -28,7 +28,7 @@ export interface CreateAppOptions {
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { sessionRouter, ceremonyRouter, passkeysRouter } = buildAuthRouter(options.auth);
   return new Hono()
-    .use('*', logger())
+    .use('*', recordWideEvents)
     .onError(async (failure, context) => {
       const answer = selectErrorResponse(failure);
       const isWorthReporting = isUnexpectedFailure(answer);
