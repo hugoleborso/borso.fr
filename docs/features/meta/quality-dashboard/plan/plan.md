@@ -1,6 +1,6 @@
 # Plan: the 3S quality dashboard
 
-Spec: [`spec.md`](../spec/spec.md). ADR: [202611041200](../../../../adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md).
+Spec: [`spec.md`](../spec/spec.md). ADR: [2026-11-04T1200](../../../../adr/2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md).
 
 ## Where each decision lands
 

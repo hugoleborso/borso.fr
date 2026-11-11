@@ -1,4 +1,4 @@
-# ADR-202611050445: pragma's reads go out as one batch per tick
+# ADR-2026-11-05T0445: pragma's reads go out as one batch per tick
 
 - **Status:** accepted
 - **Ratified:** by the operator on 2026-11-05, in the session that ran `/tech-lead-orchestrator` on `open-in-two-calls` (spec D1)
@@ -33,7 +33,7 @@
 - `-` One slow read holds its whole batch. A cold Lambda opens up to 10 database connections for one batch, each signing a DSQL token. The batch's latency is unknown and is reported in the PR.
 - `-` Dependent waves still cost one request each. The next session's setlists wait for the session, and their entries wait for the setlists.
 - `-` New constraints on the code. A read must go through `api`. A GET route must answer text or JSON, since an answer body travels as text. A per-call header must be listed in `PRAGMA_REQUEST_HEADERS` to ride a batch.
-- `~` This amends ADR-202611011313. Offline reading stays in the persisted query cache, and only its manifest endpoint goes.
+- `~` This amends ADR-2026-11-01T1313. Offline reading stays in the persisted query cache, and only its manifest endpoint goes.
 - `~` The 40 site test files that stub `fetch` keep their assertions, because `stubFetch` unwraps a batch into item `Request`s (measured count, spec Risks).
 - `~` `talos`, `last-loop-lepin` and `banana-rush` get no batch. Rule B (`borso/no-request-fan-out-in-site`) still guards them and pragma against a fan-out over an unbounded list.
 
@@ -110,4 +110,4 @@
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/domain/read-batch.core.ts`, `apps/pragma/site/src/lib/read-batch.adapter.ts`, `apps/pragma/site/src/lib/api.client.ts:52` (`fetchWatchingSessionEnd`), `apps/pragma/api/src/read-batch/read-batch.controller.ts`, `apps/pragma/api/src/app.ts` (`createApp`), `infra/cdk/src/constructs/lambda-api.ts:29`
 - Root cause: docs/dantotsus/forty-requests-at-a-ten-seat-function.md
-- Related ADRs: amends [ADR-202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) (its offline manifest is deleted), builds on [ADR-202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) (its `all` invalidation now refetches as one batch)
+- Related ADRs: amends [ADR-2026-11-01T1313](./2026-11-01T1313-pragma-offline-reads-through-the-query-cache.md) (its offline manifest is deleted), builds on [ADR-2026-11-04T0227](./2026-11-04T0227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) (its `all` invalidation now refetches as one batch)

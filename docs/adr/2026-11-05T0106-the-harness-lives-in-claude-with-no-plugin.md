@@ -1,4 +1,4 @@
-# ADR-202611050106: The harness lives in .claude/ with no plugin
+# ADR-2026-11-05T0106: The harness lives in .claude/ with no plugin
 
 - **Status:** accepted
 - **Date:** 2026-11-05

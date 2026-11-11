@@ -164,7 +164,7 @@ apps/pragma/VOCABULARY.md                               UPDATE
 
 ### Analytics
 
-**Input metrics:** each month, the count of members with a feed, from `member_calendar_feed`. Each request's wide event (ADR-202611111318) carries `free_slots.*` fields with the counts of feeds read, failed and excluded, and `free_slots.duration_ms`, but never the addresses.
+**Input metrics:** each month, the count of members with a feed, from `member_calendar_feed`. Each request's wide event (ADR-2026-11-11T1318) carries `free_slots.*` fields with the counts of feeds read, failed and excluded, and `free_slots.duration_ms`, but never the addresses.
 
 **Output metric:** once a month, the operator reads the share of the month's practices whose `origin = 'free_slot'`. If it stays near zero after every member has connected a calendar, the windows or the 2-hour length are wrong.
 

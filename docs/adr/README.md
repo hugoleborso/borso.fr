@@ -28,9 +28,10 @@ piloted mode that takes a pre-built payload when
 ADRs are append-only. Ids are never recycled, even after supersession.
 
 A new record is named after the UTC minute it was written,
-`YYYYMMDDHHMM-<slug>.md`, so branches open at the same time never take
-the same id. Records `0001` to `0052` kept the sequential numbers they
-were written with, and the timestamps sort after them.
+`YYYY-MM-DDTHHMM-<slug>.md`, for example `2026-11-11T1318`, so
+branches open at the same time never take the same id. Records `0001`
+to `0052` kept the sequential numbers they were written with, and the
+timestamps sort after them.
 
 ## When to write one
 
@@ -77,7 +78,7 @@ No:
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
 | [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | accepted | 2026-09-21 |
-| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | superseded by [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | 2026-10-05 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | superseded by [2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md) | 2026-10-05 |
 | [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | accepted | 2026-10-06 |
 | [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
 | [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | accepted | 2026-10-10 |
@@ -101,14 +102,14 @@ No:
 | [0050](./0050-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
-| [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
-| [202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | accepted | 2026-11-01 |
-| [202611031438](./202611031438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
-| [202611040227](./202611040227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
-| [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
-| [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
-| [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
-| [202611111318](./202611111318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | proposed | 2026-11-11 |
+| [2026-10-29T1139](./2026-10-29T1139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
+| [2026-11-01T1313](./2026-11-01T1313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | accepted | 2026-11-01 |
+| [2026-11-03T1438](./2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md) | pragma's interactive primitives come from React Aria Components | accepted | 2026-11-03 |
+| [2026-11-04T0227](./2026-11-04T0227-pragma-pushes-stale-scopes-over-the-websocket-channel.md) | pragma pushes stale scopes over the WebSocket channel | accepted | 2026-11-04 |
+| [2026-11-04T1200](./2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
+| [2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
+| [2026-11-05T0445](./2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
+| [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | proposed | 2026-11-11 |
 
 ### Data layer
 
@@ -143,29 +144,29 @@ No:
 - 0047. pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
 - 0048. Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 0051. chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
-- 202611011313. pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
-- 202611050445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
+- 2026-11-01T1313. pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
+- 2026-11-05T0445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
 
 ### CDK / infra
 
 - [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md). an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
 - 0027. talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
-- 202610291139. pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
+- 2026-10-29T1139. pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
 
 ### Harness
 
-- 0026, superseded by 202611050106. the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
-- 202611050106. the harness lives in `.claude/` as plain files and the `borso-harness` plugin is deleted, because talos moved into `apps/` and the plugin had no other consumer; a repository outside borso.fr can no longer install it.
+- 0026, superseded by 2026-11-05T0106. the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+- 2026-11-05T0106. the harness lives in `.claude/` as plain files and the `borso-harness` plugin is deleted, because talos moved into `apps/` and the plugin had no other consumer; a repository outside borso.fr can no longer install it.
 - 0030. every knowledge entry declares `triggers:` (paths, commands, output), `knowledge-triggers.sh` prints the matching entry into the agent's context at that moment, and a gate refuses an entry without one, because entries were read only when a hook printed them.
 - 0032. the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
 
 ### Observability
 
-- 202611041200. the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
+- 2026-11-04T1200. the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
 
 - 0031. pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
-- 202611111318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
+- 2026-11-11T1318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
 
 ### Tooling / DevX
 

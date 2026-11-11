@@ -1,4 +1,4 @@
-# ADR-202611111318: the pragma API emits one wide event per request, to stdout and onto its Sentry span
+# ADR-2026-11-11T1318: the pragma API emits one wide event per request, to stdout and onto its Sentry span
 
 - **Status:** proposed
 - **Date:** 2026-11-11
@@ -11,7 +11,7 @@ The pragma API logs the way loggingsucks.com describes as the failure mode. Each
 
 Sentry (ADR-0031) already wraps each request in one `http.server` span. That span carries only the route, the method and the status.
 
-Since ADR-202611050445, most reads reach the Lambda inside one `POST /api/read-batch`. That ADR records that "grouped reads lose their path in the API Gateway log". Today nothing logs which reads a batch held.
+Since ADR-2026-11-05T0445, most reads reach the Lambda inside one `POST /api/read-batch`. That ADR records that "grouped reads lose their path in the API Gateway log". Today nothing logs which reads a batch held.
 
 Four constraints close doors before the trade-off:
 
@@ -56,7 +56,7 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 ## Consequences
 
 - `+` One query answers a request's story. In Sentry Explore, filter `http.server` spans by `member.id` or `outcome:failed`. In CloudWatch Logs Insights, run `filter member.id = "…"`, which parses the JSON line.
-- `+` Each read inside a batch becomes its own event, with `request.parent_id` pointing at the batch. That restores the path ADR-202611050445 recorded as lost.
+- `+` Each read inside a batch becomes its own event, with `request.parent_id` pointing at the batch. That restores the path ADR-2026-11-05T0445 recorded as lost.
 - `+` No new dependency. `AsyncLocalStorage` ships with Node 22, and Sentry already uses it for its own scopes.
 - `+` Cost is unchanged in practice. The API stays at one span per request on Sentry. Attributes are not billed separately, per the [Developer plan](https://sentry.io/pricing/) (5M spans, 30-day lookback). CloudWatch Logs in eu-west-3 costs $0.5985 per GB ingested and $0.0059 per GB scanned by Logs Insights, per the AWS price list API on 2026-11-11. At 5.4 MB a month today, even several times more bytes stays under one cent. The new size per event was not measured.
 - `-` Sentry now holds a member identifier on every API span, where ADR-0031 had sent none. It is pseudonymous, and only someone who can read the database can resolve it.
@@ -118,4 +118,4 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 - Plan: none.
 - Commit: {{SHA, stamped on merge}}
 - Files: `apps/pragma/api/src/helpers/observability/wide-event.{core,adapter,middleware}.ts`, `apps/pragma/api/src/app.ts`, `apps/pragma/api/src/main.ts`, `apps/pragma/api/src/main.websocket.ts`, `.oxlintrc.json`
-- Related ADRs: ADR-0031 (Sentry, which this extends with a member identifier), ADR-202611050445 (read batches, whose reads this logs again one by one), ADR-0012 (outbound calls in `*.adapter.ts`).
+- Related ADRs: ADR-0031 (Sentry, which this extends with a member identifier), ADR-2026-11-05T0445 (read batches, whose reads this logs again one by one), ADR-0012 (outbound calls in `*.adapter.ts`).

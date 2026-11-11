@@ -1,6 +1,6 @@
 ---
 name: adr
-description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.md`, where `<id>` is the UTC minute it was written, `YYYYMMDDHHMM`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `.claude/skills/adr/`.
+description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.md`, where `<id>` is the UTC minute it was written, `YYYY-MM-DDTHHMM`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `.claude/skills/adr/`.
 ---
 
 # ADR skill
@@ -111,7 +111,7 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
 
 1. **Read** the latest version of [`standard.md`](./standard.md) and [`template.md`](./template.md).
 2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching `<digits>-<slug>.md`.
-3. **Pick the id.** Run `date -u +%Y%m%d%H%M` and take what it prints, for example `202610291405`. The id is the UTC minute the record is written, so two branches open at the same time take different ids without reading each other, and no number is ever reserved or handed out. It sorts after the four-digit records `0001` to `0052`, which keep their names. If two records still land in the same minute, `check-numbered-sequences.sh` refuses the second, which takes the next minute before merging.
+3. **Pick the id.** Run `date -u +%Y-%m-%dT%H%M` and take what it prints, for example `2026-10-29T1405`. The id is the UTC minute the record is written, so two branches open at the same time take different ids without reading each other, and no number is ever reserved or handed out. It sorts after the four-digit records `0001` to `0052`, which keep their names. If two records still land in the same minute, `check-numbered-sequences.sh` refuses the second, which takes the next minute before merging.
 4. **Check conflicts.** Iterate the existing ADRs. An ADR conflicts when **all** of:
    - its slug equals the new ADR's slug, **and**
    - its status is `accepted`, **and**
@@ -173,6 +173,6 @@ That's the contract: the walk (or the orchestrator's payload) produces a record 
 ## Repo-specific notes
 
 - ADRs live at `docs/adr/`, next to `docs/dantotsus/` and `docs/knowledge/`.
-- Filename: `<id>-kebab-slug.md`. `<id>` is the UTC minute of writing, `YYYYMMDDHHMM`. Records written before 2026-10-29 keep their four-digit numbers `0001` to `0052`, and are cited by them.
+- Filename: `<id>-kebab-slug.md`. `<id>` is the UTC minute of writing, `YYYY-MM-DDTHHMM`. Records written before 2026-10-29 keep their four-digit numbers `0001` to `0052`, and are cited by them.
 - The skill always reads [`standard.md`](./standard.md) before walking or rendering — that's where section names, status lifecycle, and the rubric format are pinned. Drift would break `/open-pr`.
 - This skill is markdown-driven. No `package.json`, no test suite. The LLM is the runtime.

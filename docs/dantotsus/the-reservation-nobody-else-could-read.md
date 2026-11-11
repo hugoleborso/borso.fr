@@ -58,9 +58,9 @@ take or hand out numbers by message.
 
 > **Superseded mechanism.** `next-adr-number.sh` was removed on 2026-10-29.
 > A new ADR is now named after the UTC minute it was written,
-> `YYYYMMDDHHMM-<slug>.md`, so parallel branches take different ids without
+> `YYYY-MM-DDTHHMM-<slug>.md`, so parallel branches take different ids without
 > reading each other and there is nothing left to allocate. The `/adr` skill's
-> id step runs `date -u +%Y%m%d%H%M`, and `check-numbered-sequences.sh` still
+> id step runs `date -u +%Y-%m-%dT%H%M`, and `check-numbered-sequences.sh` still
 > refuses two records that land in the same minute. Records `0001` to `0049`
 > kept their numbers.
 

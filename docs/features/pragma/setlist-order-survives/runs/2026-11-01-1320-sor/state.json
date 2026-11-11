@@ -4,7 +4,7 @@
   "pilotedByTechLead": true,
   "stage": "spec",
   "retries": { "implement": 0, "validate": 0 },
-  "adrIndex": [202611011313],
+  "adrIndex": ["2026-11-01T1313"],
   "bytesRead": 0,
   "specChecksum": null,
   "startedAt": "2026-11-01T13:53:16.000Z",

@@ -1,7 +1,7 @@
 # ADR template
 
 The skill emits one ADR per `/adr` invocation, written to
-`docs/adr/<id>-<kebab-slug>.md`, where `<id>` is `date -u +%Y%m%d%H%M`, using the layout below. The standard at
+`docs/adr/<id>-<kebab-slug>.md`, where `<id>` is `date -u +%Y-%m-%dT%H%M`, using the layout below. The standard at
 [`standard.md`](./standard.md) explains *why* each section is mandatory; this
 template gives the *what*.
 

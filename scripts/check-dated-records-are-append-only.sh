@@ -30,13 +30,39 @@ BASE_REF="${1:-}"
 if [ -n "$BASE_REF" ]; then
   RANGE_START=$(git merge-base "$BASE_REF" HEAD)
   subject=(git diff --name-only --diff-filter=MD "$RANGE_START" HEAD --)
+  before="$RANGE_START:"
+  after="HEAD:"
 else
   subject=(git diff --cached --name-only --diff-filter=MD --)
+  before="HEAD:"
+  after=":"
 fi
+
+# ADR ids moved from `202611111318` to `2026-11-11T1318` on 2026-11-11. A
+# record whose only change is that rewrite still says what it said, now with a
+# citation that resolves, so the rewrite is allowed and nothing else is.
+id_rewrite=()
+for adr in docs/adr/*.md; do
+  [[ "${adr##*/}" =~ ^(([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{4}))- ]] || continue
+  m=("${BASH_REMATCH[@]}")
+  id_rewrite+=(-e "s/\\b${m[2]}${m[3]}${m[4]}${m[5]}\\b/${m[1]}/g")
+done
+
+only_rewrites_adr_ids() {
+  [ "${#id_rewrite[@]}" -gt 0 ] || return 1
+  git cat-file -e "${after}$1" 2>/dev/null || return 1
+  [ "$(git show "${before}$1" | sed "${id_rewrite[@]}")" = "$(git show "${after}$1")" ]
+}
 
 # `M` is a modification and `D` a deletion; `A` and `R` are not listed, because a
 # new report is the point and a moved folder keeps the bytes.
-edited=$("${subject[@]}" "${DATED_RECORD_PATHS[@]}" || true)
+edited=""
+while IFS= read -r record; do
+  [ -n "$record" ] || continue
+  only_rewrites_adr_ids "$record" && continue
+  edited+="${record}"$'\n'
+done < <("${subject[@]}" "${DATED_RECORD_PATHS[@]}" || true)
+edited="${edited%$'\n'}"
 
 if [ -n "$edited" ]; then
   echo "[check-dated-records-are-append-only] a dated record was edited or deleted:" >&2

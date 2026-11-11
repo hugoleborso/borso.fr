@@ -28,19 +28,22 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# A UTC minute, `2026-11-11T1318`, or one of the numbers 0001 to 0052.
+ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}|[0-9]+'
+
 failed=0
 
 for record in docs/adr/[0-9]*.md; do
   [ -f "$record" ] || continue
 
   filename="${record##*/}"
-  [[ "$filename" =~ ^([0-9]+)- ]] || continue
+  [[ "$filename" =~ ^(${ID_PATTERN})- ]] || continue
   filename_number="${BASH_REMATCH[1]}"
 
   heading=''
   IFS= read -r heading <"$record" || true
   heading_number=''
-  if [[ "$heading" =~ ^#[[:space:]]*ADR[\ -]?([0-9]+) ]]; then
+  if [[ "$heading" =~ ^#[[:space:]]*ADR[\ -]?(${ID_PATTERN})([^0-9T]|$) ]]; then
     heading_number="${BASH_REMATCH[1]}"
   fi
 

@@ -1,4 +1,4 @@
-# ADR-202611011313: Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push
+# ADR-2026-11-01T1313: Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push
 
 - **Status:** accepted
 - **Date:** 2026-11-01

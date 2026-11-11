@@ -5,7 +5,7 @@ description: Refresh the private borso.fr 3S board, the claude.ai dashboard show
 
 # Refresh the 3S board
 
-The board is a private claude.ai dashboard at https://claude.ai/artifact/SPfft3WuWwZh2YHRu3Ztab, made from the shared Dashboard Artifact type. The repository holds the page and the dataset builder; nothing generated is committed. A session refreshes it because it holds the access CI does not have, which is AWS read, the Sentry MCP, the Pragma MCP and `gh`. [ADR 202611041200](../../../docs/adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) records why.
+The board is a private claude.ai dashboard at https://claude.ai/artifact/SPfft3WuWwZh2YHRu3Ztab, made from the shared Dashboard Artifact type. The repository holds the page and the dataset builder; nothing generated is committed. A session refreshes it because it holds the access CI does not have, which is AWS read, the Sentry MCP, the Pragma MCP and `gh`. [ADR 2026-11-04T1200](../../../docs/adr/2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) records why.
 
 Refresh only when the operator asks. Never schedule it.
 

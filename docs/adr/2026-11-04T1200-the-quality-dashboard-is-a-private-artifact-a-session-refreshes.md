@@ -1,4 +1,4 @@
-# ADR-202611041200: The quality dashboard is a private artifact a session refreshes
+# ADR-2026-11-04T1200: The quality dashboard is a private artifact a session refreshes
 
 - **Status:** accepted
 - **Date:** 2026-11-04

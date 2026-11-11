@@ -72,7 +72,7 @@ poison the audit trail.
   "pilotedByTechLead": true,
   "stage": "spec",                         // current stage from the diagram above
   "retries": { "implement": 0, "validate": 0 },
-  "adrIndex": [1, 2],                      // numbers of ADRs created this run
+  "adrIndex": ["2026-11-11T1318"],         // ids of ADRs created this run
   "bytesRead": 0,                          // cumulative, for context-growth events
   "specChecksum": null,                    // SHA-256 hex of spec.md once recorded
   "startedAt": "2026-05-13T15:30:00.000Z",

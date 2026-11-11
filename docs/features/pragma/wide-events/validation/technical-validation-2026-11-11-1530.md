@@ -1,6 +1,6 @@
 # Technical validation — the pragma API emits one wide event per request
 
-- Spec: [`../../../../adr/202611111318-pragma-api-emits-one-wide-event-per-request.md`](../../../../adr/202611111318-pragma-api-emits-one-wide-event-per-request.md) (no `spec.md` exists; the ADR's *Decision* and *Consequences* are the contract)
+- Spec: [`../../../../adr/2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md`](../../../../adr/2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) (no `spec.md` exists; the ADR's *Decision* and *Consequences* are the contract)
 - Plan: none
 - Branch: claude/optimistic-maxwell-2i2zzt
 - Base: origin/main (merge base 17c785daac826e2da75cbce819dde272fce2f7da)

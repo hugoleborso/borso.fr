@@ -1,6 +1,6 @@
 # ADR-0026: The harness ships as a plugin and is linked into .claude/ part by part
 
-- **Status:** superseded by [ADR-202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md)
+- **Status:** superseded by [ADR-2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md)
 - **Date:** 2026-10-05
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, harness
@@ -141,5 +141,5 @@ borso.fr's layout is the default.
   `scripts/check-harness-links.sh`, `.claude/settings.json`,
   `plugins/borso-harness/hooks/session-env.sh`,
   `plugins/borso-harness/scripts/harness-path.sh`
-- Install guide: `plugins/borso-harness/README.md`, removed by ADR-202611050106
+- Install guide: `plugins/borso-harness/README.md`, removed by ADR-2026-11-05T0106
 - Related ADRs: ADR-0005, whose command contract moved into the plugin.

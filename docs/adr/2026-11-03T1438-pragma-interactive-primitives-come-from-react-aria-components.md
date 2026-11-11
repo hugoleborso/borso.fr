@@ -1,4 +1,4 @@
-# ADR-202611031438: pragma's interactive primitives come from React Aria Components
+# ADR-2026-11-03T1438: pragma's interactive primitives come from React Aria Components
 
 - **Status:** accepted
 - **Ratified:** by the operator on PR #249 on 2026-11-03 ("Aria ok"), with one condition: the app's UI must not change, so each migrated component is styled to match today's screens and any visible difference is presented

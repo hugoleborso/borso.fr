@@ -44,7 +44,7 @@ subagent logged under its own label.
 | 26 | validation | Two mutants survived because `toHaveBeenCalledWith` reads `body: undefined` as absent | commit `4a12e46` | knowledge: how-a-mutation-survivor-hides (extended) |
 | 27 | validation | Technical validation asked whether whole-cache invalidation on tab reopen re-creates the Lambda throttling the same pull request fixed | report `technical-validation-2026-11-04-0239.md` Notes | no-op: an operator question about spec behaviour 2, left in the report; the visual run measured only on-screen queries refetching (row 11) |
 | 28 | deploy | Merging main into the branch conflicted on `VOCABULARY.md` and `docs/adr/README.md` | commit `852ed5a` | no-op: two append-only files edited by two pull requests, resolved in one commit |
-| 29 | post-merge | ADR `202611040227` and the amended ADR-0009 | `git diff --name-only 06abedfd9^ 06abedfd9 -- docs/adr/` | no-op: both already read `accepted` in the file and the index |
+| 29 | post-merge | ADR `2026-11-04T0227` and the amended ADR-0009 | `git diff --name-only 06abedfd9^ 06abedfd9 -- docs/adr/` | no-op: both already read `accepted` in the file and the index |
 | 30 | post-merge | Cost of the pull request | `get_session` on `session_01K69KnCef9VDkTpdGgT6TsD` | fixed: this pull request, row in `docs/quality/feature-cost.md` |
 
 ## Counts

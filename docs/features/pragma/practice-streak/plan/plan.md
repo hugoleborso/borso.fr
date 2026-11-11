@@ -164,7 +164,7 @@ interface StreaksInput {
 | `site/src/components/organisms/NotificationSettings.tsx` | `CATEGORY_LABEL_KEY.streak`. The `Record<NotificationCategory, …>` makes this a type error until it is added. | |
 | `site/src/i18n/en.json`, `fr.json` | `notifications.categories.streak`: "Daily flame reminder at 20:00" / "Rappel de flamme chaque jour à 20 h" | |
 | `cdk/lib/stack.ts` | inside `if (isProduction && previewableApp.api !== undefined)`, a `Schedule` with `ScheduleExpression.cron({ minute: '0', hour: '20', timeZone: TimeZone.EUROPE_PARIS })` and the target `new LambdaInvoke(previewableApp.api.handler, { input: ScheduleTargetInput.fromObject({ job: 'streak-reminder' }), maxEventAge: Duration.hours(1), retryAttempts: 2 })`. It imports from `aws-cdk-lib/aws-scheduler` and `aws-cdk-lib/aws-scheduler-targets`, both in aws-cdk-lib 2.272.0 (measured in `apps/pragma/node_modules`). The job's payload string is one exported constant shared by `stack.ts` and `lambda-event.core.ts`, through `domain/scheduled-job.core.ts` (`STREAK_REMINDER_JOB = 'streak-reminder'`, blueprint `core-lookup-table`). That keeps the guard and the schedule from drifting. | `app-cdk-stack` |
-| `cdk/test/stack.test.ts` | new `describe('pragma streak reminder schedule (ADR-202610291139)')` | `test-cdk-synth` |
+| `cdk/test/stack.test.ts` | new `describe('pragma streak reminder schedule (ADR-2026-10-29T1139)')` | `test-cdk-synth` |
 
 **Data shapes**
 
@@ -346,7 +346,7 @@ Run these after slice 4, in order, before the PR goes up. The per-slice gates ab
 
 - **Q-A** is settled as lenient (2026-10-29). The spec states the rule under its personal flame rules.
 - Scheduler's invocation mode for a Lambda target (async or sync) is unknown, so whether Lambda's own async retries add to Scheduler's is unknown. D4 and D5 make the outcome the same either way, so this does not block.
-- ADR-202610291139 is `proposed`. The main session ratifies it before the PR, and it does not block the plan.
+- ADR-2026-10-29T1139 is `proposed`. The main session ratifies it before the PR, and it does not block the plan.
 
 ## Missing technical skills
 

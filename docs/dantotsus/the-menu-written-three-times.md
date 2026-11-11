@@ -60,7 +60,7 @@ backdrop tap and on Escape. `<dialog>` and `popover` are the platform's.
 Neither was looked at before version 1. The operator then asked for a
 component library, because pragma hand-writes every primitive and four
 dantotsus trace to that (see
-[ADR-202611031438](../adr/202611031438-pragma-interactive-primitives-come-from-react-aria-components.md)).
+[ADR-2026-11-03T1438](../adr/2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md)).
 
 ## Detection failure causes
 
@@ -102,7 +102,7 @@ assistive technology that takes a pointer event is a hand-written outside-tap ca
 
 The level-1 answer is a library that owns dismissal, focus and scroll lock,
 so no primitive is written by hand. It is a new dependency, so it is
-[ADR-202611031438](../adr/202611031438-pragma-interactive-primitives-come-from-react-aria-components.md),
+[ADR-2026-11-03T1438](../adr/2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md),
 proposed for the operator's ratification on the kaizen pull request. The
 ADR measured the tap rule (close, and reach nothing) on four libraries.
 

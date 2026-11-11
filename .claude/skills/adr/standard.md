@@ -11,10 +11,10 @@ docs/adr/
 ├── 0002-aurora-dsql-over-rds.md
 ├── ...
 ├── 0049-agents-read-production-through-an-invoked-reader-lambda.md
-└── 202610291405-<kebab-slug>.md
+└── 2026-10-29T1405-<kebab-slug>.md
 ```
 
-A new record's id is the UTC minute it was written, `YYYYMMDDHHMM`, from `date -u +%Y%m%d%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0052` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
+A new record's id is the UTC minute it was written, `YYYY-MM-DDTHHMM`, from `date -u +%Y-%m-%dT%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0052` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
 
 ## Mandatory sections
 
@@ -82,7 +82,7 @@ the option, score it, and let it lose on the rubric if it loses. See
 
 ### 6. Criteria, then scores
 
-`## Criteria` comes right after *Context*, before *Decision* and before any option, because criteria listed after the choice justify it rather than test it. Each row names who raised it, `operator` or `author`. At least one row is the operator's, asked in round 2 of the skill, never guessed. One row is always *Does it change the app for its users*, measured with a render, a run or a number. For a library that replaces hand-written code, one row is its *coverage*: how many of the pieces it would replace it actually provides, counted from its exports. `scripts/check-adr-criteria.sh` refuses an ADR from 202611031438 on that lacks the section, the column or an operator row. ADR-202611031438 was first written with author-picked criteria at the bottom, and the operator named the two that mattered.
+`## Criteria` comes right after *Context*, before *Decision* and before any option, because criteria listed after the choice justify it rather than test it. Each row names who raised it, `operator` or `author`. At least one row is the operator's, asked in round 2 of the skill, never guessed. One row is always *Does it change the app for its users*, measured with a render, a run or a number. For a library that replaces hand-written code, one row is its *coverage*: how many of the pieces it would replace it actually provides, counted from its exports. `scripts/check-adr-criteria.sh` refuses an ADR from 2026-11-03T1438 on that lacks the section, the column or an operator row. ADR-2026-11-03T1438 was first written with author-picked criteria at the bottom, and the operator named the two that mattered.
 
 The criteria table carries a weight, a justification and how each is measured. The *Scores* section, after *Alternatives considered*, holds the matrix.
 
