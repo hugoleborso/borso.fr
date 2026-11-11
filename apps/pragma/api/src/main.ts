@@ -1,5 +1,6 @@
 import { handle, type LambdaContext, type LambdaEvent } from 'hono/aws-lambda';
 import { createApp } from './app';
+import { getAppConfig } from './auth/auth.service';
 import {
   isStreakReminderEvent,
   type StreakReminderEvent,
@@ -17,6 +18,15 @@ import { runStreakReminder } from './streaks/streak-reminder.service';
 startErrorReporting(selectErrorReportingSettings(readErrorReportingInputs()));
 
 const app = createApp();
+
+const warmUpStartedAt = performance.now();
+const warmUpOutcome = await getAppConfig().then(
+  () => 'connected',
+  () => 'failed',
+);
+process.stdout.write(
+  `${JSON.stringify({ probe: 'init.warm_up', outcome: warmUpOutcome, duration_ms: Math.round(performance.now() - warmUpStartedAt), since_process_start_ms: Math.round(performance.now()) })}\n`,
+);
 
 const httpHandler = handle(app);
 

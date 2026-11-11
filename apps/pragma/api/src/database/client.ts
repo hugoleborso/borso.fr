@@ -28,6 +28,9 @@ interface LocalConfig {
 }
 
 let cachedDatabase: Database | null = null;
+let probedQueries = 0;
+const PROBED_QUERY_LIMIT = 6;
+const PROBED_QUERY_PREVIEW_LENGTH = 40;
 
 function readEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -57,9 +60,23 @@ function createDsqlClient(config: DatabaseConfig): Sql {
     database: DSQL_DATABASE,
     user: config.roleName,
     ssl: 'require',
-    password: () => signer.getDbConnectAuthToken(),
+    password: async () => {
+      const startedAt = performance.now();
+      const token = await signer.getDbConnectAuthToken();
+      process.stdout.write(
+        `${JSON.stringify({ probe: 'dsql.token', at_ms: Math.round(performance.now()), duration_ms: Math.round(performance.now() - startedAt) })}\n`,
+      );
+      return token;
+    },
     types: { bigint: postgres.BigInt },
     connection: { search_path: config.schemaName },
+    debug: (_connection, query) => {
+      if (probedQueries >= PROBED_QUERY_LIMIT) return;
+      probedQueries += 1;
+      process.stdout.write(
+        `${JSON.stringify({ probe: 'dsql.query_sent', at_ms: Math.round(performance.now()), query: query.trim().slice(0, PROBED_QUERY_PREVIEW_LENGTH) })}\n`,
+      );
+    },
   });
 }
 
