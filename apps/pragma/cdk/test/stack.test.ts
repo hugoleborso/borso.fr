@@ -477,7 +477,7 @@ function readStatementsOfRole(roleId: string): unknown[] {
     .flatMap((policy) => policy.PolicyDocument.Statement);
 }
 
-describe('pragma streak reminder schedule (ADR-202610291139)', () => {
+describe('pragma streak reminder schedule (ADR-2026-10-29T1139)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');

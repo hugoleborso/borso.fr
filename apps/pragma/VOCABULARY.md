@@ -871,7 +871,7 @@ Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes
 
 Up to ten API reads sent as one `POST /api/read-batch`, so one tab never
 needs more of the API's ten seats than it has batches in flight
-(ADR-202611050445).
+(ADR-2026-11-05T0445).
 
 Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read-batch.adapter.ts`
 
