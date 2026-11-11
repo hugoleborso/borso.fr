@@ -86,6 +86,37 @@ describe('planEntityUpsert', () => {
     });
   });
 
+  it('writes a closeness of 0 on a person, and keeps a stored 0 an update leaves out', () => {
+    expect(planEntityUpsert(EXISTING, { ...UPSERT, closeness: 0 }, NOW)).toMatchObject({
+      kind: 'write',
+      values: { closeness: 0 },
+    });
+    expect(planEntityUpsert({ ...EXISTING, closeness: 0 }, UPSERT, NOW)).toMatchObject({
+      kind: 'write',
+      values: { closeness: 0 },
+    });
+  });
+
+  it('refuses a closeness of 0 on any kind but a person, by the kind the operation carries', () => {
+    const domain = { ...UPSERT, kind: 'domaine' as const };
+    expect(planEntityUpsert(null, { ...domain, closeness: 0 }, NOW)).toStrictEqual({
+      kind: 'closeness-refused',
+    });
+    expect(planEntityUpsert(EXISTING, { ...domain, closeness: 0 }, NOW)).toStrictEqual({
+      kind: 'closeness-refused',
+    });
+    expect(planEntityUpsert(null, { ...domain, closeness: 1 }, NOW)).toMatchObject({
+      kind: 'write',
+      values: { closeness: 1 },
+    });
+    expect(
+      planEntityUpsert({ ...EXISTING, kind: 'domaine', closeness: 0 }, domain, NOW),
+    ).toMatchObject({ kind: 'write', values: { closeness: 0 } });
+    expect(
+      planEntityUpsert({ ...EXISTING, kind: 'domaine' }, { ...UPSERT, closeness: 0 }, NOW),
+    ).toMatchObject({ kind: 'write', values: { kind: 'personne', closeness: 0 } });
+  });
+
   it('stores a received body without the lines of the computed sections, their headings kept', () => {
     const body =
       '# Alice\n\n## Faits\n\n- ville: Lyon\n## Comprend\n\n- [[second-brain/projets/potager]]\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | fèves commandées\n';

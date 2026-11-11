@@ -97,7 +97,9 @@ export function BrainPageView({ path }: BrainPageViewProps): JSX.Element {
       ) : null}
       {page.data === undefined ? null : (
         <>
-          <FrontMatterChips entries={selectFrontMatterEntries(page.data.frontMatter)} />
+          <FrontMatterChips
+            entries={selectFrontMatterEntries(page.data.frontMatter, (key) => t(key))}
+          />
           <Card padding="lg">
             <MarkdownContent html={renderMarkdownToSafeHtml(title)} onClick={onLinkClick} />
             {page.data.summarizedOn === null ? null : (

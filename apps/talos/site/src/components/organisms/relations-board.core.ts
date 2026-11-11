@@ -1,3 +1,5 @@
+import type { ParseKeys } from 'i18next';
+import { selectClosenessNameKey } from '../../lib/closeness-name.core';
 import type { ChipTone } from '../atoms/chip.variants';
 import { CLOSENESS_LEVELS, type ClosenessLevel } from '../atoms/closeness-dot.variants';
 
@@ -6,22 +8,45 @@ export type BirthdayDayKey =
   | 'relations.birthday.tomorrow'
   | 'relations.birthday.in-days';
 
+export type ClosenessLabelKey =
+  | 'relations.closeness.named'
+  | 'relations.closeness.unnamed'
+  | 'relations.closeness.unscored';
+
 export interface Closeness {
   readonly level: ClosenessLevel;
-  readonly rank: number;
+  readonly rank: number | null;
+  readonly labelKey: ClosenessLabelKey;
+  readonly nameKey: ParseKeys | null;
 }
 
+const [UNSCORED_LEVEL, ...SCORED_LEVELS] = CLOSENESS_LEVELS;
 const LOWEST_RANK = 0;
-const HIGHEST_RANK = CLOSENESS_LEVELS.length - 1;
+const HIGHEST_RANK = SCORED_LEVELS.length - 1;
 const TOMORROW = 1;
 const SOON_DAYS = 3;
-const NO_CLOSENESS: Closeness = { level: 'none', rank: LOWEST_RANK };
+const NO_CLOSENESS: Closeness = {
+  level: UNSCORED_LEVEL,
+  rank: null,
+  labelKey: 'relations.closeness.unscored',
+  nameKey: null,
+};
+
+function selectScoredCloseness(rank: number): Closeness {
+  const level = SCORED_LEVELS[Math.min(HIGHEST_RANK, Math.max(LOWEST_RANK, Math.round(rank)))];
+  if (level === undefined) return NO_CLOSENESS;
+  const nameKey = selectClosenessNameKey(rank);
+  return {
+    level,
+    rank,
+    labelKey: nameKey === null ? 'relations.closeness.unnamed' : 'relations.closeness.named',
+    nameKey,
+  };
+}
 
 // @FollowsBlueprint core-view-intent
 export function selectCloseness(closeness: number | null): Closeness {
-  const rank = Math.min(HIGHEST_RANK, Math.max(LOWEST_RANK, Math.round(closeness ?? LOWEST_RANK)));
-  const level = CLOSENESS_LEVELS[rank];
-  return level === undefined ? NO_CLOSENESS : { level, rank };
+  return closeness === null ? NO_CLOSENESS : selectScoredCloseness(closeness);
 }
 
 export function selectBirthdayDayKey(daysUntil: number): BirthdayDayKey {

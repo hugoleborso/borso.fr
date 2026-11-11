@@ -15,11 +15,14 @@ export type EntityUpsertPlan =
       readonly status: 'created' | 'updated';
       readonly values: EntityInsert;
     }
-  | { readonly kind: 'version-conflict' };
+  | { readonly kind: 'version-conflict' }
+  | { readonly kind: 'closeness-refused' };
 
 const FOCUS_SLOT_COUNT = 3;
 const FOCUS_RANKS = Array.from({ length: FOCUS_SLOT_COUNT }, (_unused, index) => index + 1);
 const FIRST_VERSION = 1;
+const PERSON_KIND = 'personne';
+const PERSON_ONLY_CLOSENESS = 0;
 
 function isVersionStale(expectedVersion: number | undefined, currentVersion: number): boolean {
   return expectedVersion !== undefined && expectedVersion !== currentVersion;
@@ -34,6 +37,9 @@ export function planEntityUpsert(
   const currentVersion = existing?.version ?? FIRST_VERSION;
   if (isVersionStale(operation.expectedVersion, currentVersion)) {
     return { kind: 'version-conflict' };
+  }
+  if (operation.closeness === PERSON_ONLY_CLOSENESS && operation.kind !== PERSON_KIND) {
+    return { kind: 'closeness-refused' };
   }
   return {
     kind: 'write',

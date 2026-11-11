@@ -69,6 +69,10 @@ const SOURCE: StoredGraphSource = {
   ],
 };
 
+function buildPerson(slug: string, closeness: number | null) {
+  return { slug, title: slug, kind: 'personne', closeness, archived: false };
+}
+
 describe('projectStoredGraph', () => {
   it('turns live entities and commitments into nodes and keeps a valid closeness only', () => {
     expect(projectStoredGraph(SOURCE, null).nodes).toStrictEqual([
@@ -82,6 +86,23 @@ describe('projectStoredGraph', () => {
         title: '2026-10-07-sans-titre',
         type: 'engagement',
       },
+    ]);
+  });
+
+  it('carries a proximity of 0 for a person scored 0, and none for an entity with none or out of the scale', () => {
+    const entities = [
+      buildPerson('zero', 0),
+      buildPerson('none', null),
+      buildPerson('six', 6),
+      buildPerson('low', -1),
+    ];
+    expect(
+      projectStoredGraph({ entities, commitments: [], relations: [] }, null).nodes,
+    ).toStrictEqual([
+      { id: 'zero', title: 'zero', type: 'personne', proximity: 0 },
+      { id: 'none', title: 'none', type: 'personne' },
+      { id: 'six', title: 'six', type: 'personne' },
+      { id: 'low', title: 'low', type: 'personne' },
     ]);
   });
 

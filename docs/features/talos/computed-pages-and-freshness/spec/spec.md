@@ -39,7 +39,7 @@ interface Freshness { generatedAt: string | null; lateCount: number; pages: Late
 - C1.2 A line is `- [[<slug>]]`. When the contained page is a project, the line continues with its attributes that are present and not empty, in this order: ` | statut: <statut> | meteo: <meteo> | prochaine_etape: <prochaine_etape> | echeance: <echeance>`.
 - C1.3 A closed relation (with an `until`) is not listed. A contained page that no longer exists is listed by its slug alone.
 - C1.4 An entity with no open outgoing `comprend` relation gets no such section, whatever its kind.
-- C1.5 The section is placed as « Faits » and « Relations » are: under an existing `## Comprend` heading of the body, else appended at the end.
+- C1.5 The section is placed as « Faits » and « Relations » are: under an existing `## Comprend` heading of the body, else appended at the end. One exception: when the body has a `## Faits récents` heading and no `## Comprend` heading, `## Comprend` and its lines go right above that `## Faits récents` heading.
 - C1.6 « Relations » is unchanged and still lists the `comprend` relations with the others.
 
 ## C2. A page shows what moved below it

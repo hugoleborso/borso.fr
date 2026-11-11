@@ -25,7 +25,7 @@ For every other kind (project, domain, organisation, concept…) the scale stays
 ## S1. A 0 can be written, for a person
 
 - S1.1 `entity.upsert` accepts `closeness` from 0 to 5 for an entity of kind `personne`.
-- S1.2 For any other kind, a `closeness` of 0 is refused with the API's validation error and nothing is written. 1 to 5 stay accepted. The kind is the one the operation carries, else the one stored.
+- S1.2 For any other kind, a `closeness` of 0 is refused with the API's validation error and nothing is written. 1 to 5 stay accepted. The kind is the one the operation carries, which `entity.upsert` always requires.
 - S1.3 A `closeness` below 0 or above 5, or not an integer, is refused as today.
 
 ## S2. A 0 is a score, not an absence

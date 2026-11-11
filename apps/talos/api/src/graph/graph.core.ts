@@ -26,7 +26,7 @@ export interface StoredGraphSource {
 
 const COMMITMENT_TYPE = 'engagement';
 const HIGHEST_PROXIMITY = 5;
-const VALID_PROXIMITIES = Array.from({ length: HIGHEST_PROXIMITY }, (_unused, index) => index + 1);
+const VALID_PROXIMITIES = Array.from({ length: HIGHEST_PROXIMITY + 1 }, (_unused, index) => index);
 const PATH_SEPARATOR = '/';
 
 function readProximity(closeness: number | null): number | undefined {

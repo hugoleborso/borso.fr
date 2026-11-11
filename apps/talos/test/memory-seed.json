@@ -154,6 +154,19 @@
           "proximite": 4,
           "dernier_contact": "2026-08-29",
           "jours": 37
+        },
+        {
+          "page": "second-brain/personnes/basile-fontaine",
+          "titre": "Basile Fontaine",
+          "proximite": 0,
+          "dernier_contact": "2026-07-01",
+          "jours": 96
+        },
+        {
+          "page": "second-brain/personnes/colette-marchand",
+          "titre": "Colette Marchand",
+          "dernier_contact": "2026-06-01",
+          "jours": 126
         }
       ],
       "anniversaires": []
@@ -432,6 +445,25 @@
     "slug": "second-brain/projets/verger",
     "value": "pommier arraché",
     "learnedOn": "2026-11-09"
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/personnes/basile-fontaine",
+    "kind": "personne",
+    "title": "Basile Fontaine",
+    "summary": "Artisan fictif, contact utile",
+    "body": "# Basile Fontaine\n\nArtisan fictif.\n\n## Relations\n",
+    "attributes": { "type": "personne" },
+    "closeness": 0
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/personnes/colette-marchand",
+    "kind": "personne",
+    "title": "Colette Marchand",
+    "summary": "Voisine fictive, pas encore notée",
+    "body": "# Colette Marchand\n\nVoisine fictive.\n\n## Relations\n",
+    "attributes": { "type": "personne" }
   },
   {
     "op": "state.set",

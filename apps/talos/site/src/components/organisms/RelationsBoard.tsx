@@ -59,7 +59,10 @@ export function RelationsBoard(): JSX.Element {
                       leading={
                         <ClosenessDot
                           level={closeness.level}
-                          label={t('relations.closeness', { level: closeness.rank })}
+                          label={t(closeness.labelKey, {
+                            level: closeness.rank,
+                            nameKey: closeness.nameKey,
+                          })}
                         />
                       }
                       trailing={

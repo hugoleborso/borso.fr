@@ -19,7 +19,7 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 
 | Table | Primary key | Columns |
 |---|---|---|
-| `memory_entity` | `slug` | `kind` text (front-matter `type`: personne, organisation, projet, domaine, concept, reunion, carte, moi, objectif, autre), `title` text, `summary` text null (body of « En bref »), `body` text (the page body below the front matter, stored without the *lines* of the five computed sections « Faits », « Historique », « Relations », « Comprend » and « Faits récents », their `## ` headings kept in place, whoever writes: `entity.upsert` drops them, see §3), `attributes` jsonb (the whole front matter as parsed: strings, or arrays of strings), `closeness` int null (1–5), `closeness_reason` text null, `confidentiality` text null, `archived` boolean default false, `version` int default 1, `created_at`, `updated_at` |
+| `memory_entity` | `slug` | `kind` text (front-matter `type`: personne, organisation, projet, domaine, concept, reunion, carte, moi, objectif, autre), `title` text, `summary` text null (body of « En bref »), `body` text (the page body below the front matter, stored without the *lines* of the five computed sections « Faits », « Historique », « Relations », « Comprend » and « Faits récents », their `## ` headings kept in place, whoever writes: `entity.upsert` drops them, see §3), `attributes` jsonb (the whole front matter as parsed: strings, or arrays of strings), `closeness` int null (0–5, see « Closeness » below), `closeness_reason` text null, `confidentiality` text null, `archived` boolean default false, `version` int default 1, `created_at`, `updated_at` |
 | `memory_alias` | (`entity_slug`, `kind`, `normalized_value`) | `value` text. `kind` ∈ `name`, `alias`, `email`, `handle`. `normalized_value` = lowercase, accents stripped, whitespace collapsed |
 | `memory_fact` | `id` uuid | `entity_slug`, `section` (`facts` or `history`), `position` int, `key` text null (text before the first `:` when the line is `key: value`), `value` text, `since`, `until`, `seen` (date text, null), `source_ref` text null, `inferred` boolean, `extra` text null (anything after the known attributes, kept verbatim), `raw` text (the original line without `- `), `learned_on` text null (date the line first entered git, from the importer, else creation day), `created_at` |
 | `memory_relation` | `id` uuid | `from_slug`, `verb`, `to_slug`, `position` int, `since`, `until`, `seen`, `source_ref`, `inferred`, `extra`, `raw`, `learned_on`, `created_at` |
@@ -38,6 +38,23 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 | `memory_change_batch` | `idempotency_key` | `run_id`, `actor`, `applied_at`, `result` jsonb. A replayed key returns the stored result without applying again |
 
 Index (async): `memory_fact(entity_slug)`, `memory_relation(from_slug)`, `memory_relation(to_slug)`, `memory_alias(normalized_value)`, `memory_citation(source_ref)`, `memory_todo(list)`, `memory_event(occurred_at)`.
+
+### Closeness
+
+`closeness` is an integer from 0 to 5, or null when the entity has no score. A 0 is a score, not an absence: it is stored, rendered as `proximite: 0`, sorted above null and below 1, and the lint code `missing-closeness` fires on null only.
+
+For an entity of kind `personne` the six levels have names, which the PWA shows:
+
+| Level | Name | Meaning |
+|---|---|---|
+| 5 | Intimes | He drops everything for them |
+| 4 | Proches | They know what goes on in his life, they talk for no reason |
+| 3 | Amis | A real bond that holds outside the setting where they met |
+| 2 | Copains | A pleasant bond, tied to a setting (work, sport, class) |
+| 1 | Bonnes relations | A useful contact he gets on with, no personal bond |
+| 0 | Contacts | A useful relation, neutral or distant |
+
+For every other kind the scale is an interest from 1 to 5, without names. `entity.upsert` therefore refuses a `closeness` of 0 when the `kind` the operation carries is not `personne`: the call answers 400 `{ error }` and writes nothing, as an unknown verb does. `kind` is required on every `entity.upsert`, so the stored kind is never consulted. A stored row is never rewritten by this rule.
 
 ## 3. Rendering a page (the wiki view)
 
@@ -83,7 +100,7 @@ Commitments, proposals and drafts render the same way from `attributes` + `body`
 | Method | Route | Request | Response |
 |---|---|---|---|
 | GET | `/status` | | `{ cutover: "git" \| "database", counts: { entities, facts, relations, aliases, citations, sources, commitments, todos, proposals, drafts, journalEntries, documents, events }, lastEventAt: string \| null, tokenName }` |
-| GET | `/context?budget=<bytes>` | budget default 80000 | `{ markdown }`: sections in this order — `# Contexte Talos (<ISO now>)`, `## Préférences` (every `preferences/*` document, full), `## Focus`, `## Todo` (open personal todos) and `## Todo taff` (open work todos), `## Engagements ouverts` (slug, title, due), `## État` (cursors, last_scan), `## Derniers événements` (30, `- <occurred_at> <actor> <operation> <object_id> — <summary>`), `## Index` (one line per non-archived entity: `- [[slug]] (p<closeness>) — <title> : <summary truncated to 80 chars>`, sorted by kind then closeness desc). The index is truncated last (whole lines) to fit the budget; a final line says how many entries were cut |
+| GET | `/context?budget=<bytes>` | budget default 80000 | `{ markdown }`: sections in this order — `# Contexte Talos (<ISO now>)`, `## Préférences` (every `preferences/*` document, full), `## Focus`, `## Todo` (open personal todos) and `## Todo taff` (open work todos), `## Engagements ouverts` (slug, title, due), `## État` (cursors, last_scan), `## Derniers événements` (30, `- <occurred_at> <actor> <operation> <object_id> — <summary>`), `## Index` (one line per non-archived entity: `- [[slug]] (p<closeness>) — <title> : <summary truncated to 80 chars>`, sorted by kind then closeness desc, a 0 above an entity with no closeness). The index is truncated last (whole lines) to fit the budget; a final line says how many entries were cut |
 | GET | `/page?slug=<slug>` | | `{ slug, type: "entity" \| "commitment" \| "proposal" \| "draft" \| "source" \| "journal" \| "document", markdown, outgoing: string[], incoming: string[] }`; 404 `{ error }` when unknown. `incoming` = slugs with a relation to it or whose body links `[[slug]]` |
 | GET | `/search?q=<text>&limit=<n≤50>` | | `{ items: { slug, type, title, excerpt, matchedIn: "title" \| "alias" \| "summary" \| "fact" \| "body" \| "content" }[] }`: case- and accent-insensitive `ILIKE` over entity title, aliases, summary, facts, body, commitments, sources, journal, documents; title and alias matches first; excerpt ±80 chars around the first hit |
 | GET | `/graph/neighbours?slug=&date=AAAA-MM-JJ&depth=1..3` | | `{ nodes: { slug, title, kind, closeness }[], edges: { id, from, verb, to, since, until, seen, sourceRef, isClosed }[] }` with the same date rule as `domain/graph.core.ts` (a relation counts at a date when `since` ≤ date; closed when `until` < date) |
@@ -118,7 +135,7 @@ Operations (`op` field; other fields camelCase):
 
 | op | fields | effect |
 |---|---|---|
-| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch. The `body` is stored without the lines of the five computed sections (§3, Writing) |
+| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch; 400 on a `closeness` of 0 when `kind` is not `personne` (§2, Closeness). The `body` is stored without the lines of the five computed sections (§3, Writing) |
 | `entity.archive` | `slug` | `archived = true` |
 | `entity.rename` | `from`, `to` | moves the slug in every table that references it, and rewrites `[[from]]` to `[[to]]` in bodies |
 | `alias.add` | `slug`, `kind`, `value` | idempotent |

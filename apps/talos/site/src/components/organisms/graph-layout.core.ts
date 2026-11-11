@@ -17,6 +17,7 @@ const RADIUS_BY_PROXIMITY: Readonly<Record<number, number>> = {
   3: 175,
   2: 215,
   1: 250,
+  0: 285,
 };
 
 const TIES_WITH_RELATIONS = ['family', 'friendship', 'work'] as const;

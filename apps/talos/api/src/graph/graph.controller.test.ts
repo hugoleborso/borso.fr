@@ -28,6 +28,8 @@ describe('GET /api/graph', () => {
       'moi second-brain/hugo',
       'organisation second-brain/organisations/acme',
       'personne second-brain/personnes/alice-martin',
+      'personne second-brain/personnes/basile-fontaine',
+      'personne second-brain/personnes/colette-marchand',
       'projet second-brain/projets/compost',
       'projet second-brain/projets/potager',
       'projet second-brain/projets/serre',

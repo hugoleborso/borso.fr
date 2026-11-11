@@ -71,6 +71,11 @@ export async function upsertEntityOperation(
       message: `version attendue périmée : ${operation.slug}`,
     });
   }
+  if (plan.kind === 'closeness-refused') {
+    throw new TalosError('memory-refused', {
+      message: `proximité 0 réservée au type personne : ${operation.slug}`,
+    });
+  }
   await upsertEntity(context.executor, plan.values);
   return { status: plan.status, before: existing, after: plan.values };
 }
