@@ -22,7 +22,7 @@ session does once it has measured the result.
 | Found in | Task | Right it needs | How to check it is done |
 | --- | --- | --- | --- |
 | #294 | Delete the orphan `/aws/lambda/<app>-pr-<N>-*` log groups whose stack is gone. The script below skips every live `<app>-pr-<N>` stack. About 930 on 2026-11-11 (measured). | AWS `logs:DeleteLogGroup` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-prefix /aws/lambda/` lists `-pr-` groups only for open pull requests |
-| #286, #289 | Create the SecureStrings `/talos/fire-url`, `/talos/fire-token` and `/talos/secret-phrase`, and make the talos agent routine read the `message:` line. | AWS SSM write, and the operator's Claude account, where the routine and its fire token live | `aws ssm get-parameters --region eu-west-3 --names /talos/fire-url /talos/fire-token /talos/secret-phrase` returns no `InvalidParameters` |
+| #292, which holds the closed #286 and #289 | Create the SecureStrings `/talos/fire-url`, `/talos/fire-token` and `/talos/secret-phrase`, and make the talos agent routine read the `message:` line. | AWS SSM write, and the operator's Claude account, where the routine and its fire token live | `aws ssm get-parameters --region eu-west-3 --names /talos/fire-url /talos/fire-token /talos/secret-phrase` returns no `InvalidParameters` |
 
 ### Deleting the orphan preview log groups
 
