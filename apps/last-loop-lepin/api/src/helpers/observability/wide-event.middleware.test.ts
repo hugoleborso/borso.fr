@@ -1,13 +1,8 @@
 import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { findActiveTraceId } from './error-reporting.adapter';
 import { addWideEventFields } from './wide-event.adapter';
-import { recordWideEvents } from './wide-event.middleware';
-
-vi.mock('./error-reporting.adapter', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('./error-reporting.adapter')>()),
-  findActiveTraceId: vi.fn(() => null),
-}));
+import type { MiddlewareHandler } from 'hono';
+import { buildWideEventRecording, recordWideEvents } from './wide-event.middleware';
 
 const TRACE_ID = '0123456789abcdef0123456789abcdef';
 const UUID_PATTERN = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/;
@@ -24,7 +19,7 @@ function readWrittenEvents(write: ReturnType<typeof captureWrittenLines>): unkno
   });
 }
 
-function buildRecordedApp(): Hono {
+function buildRecordedApp(recording: MiddlewareHandler = recordWideEvents): Hono {
   const rows = new Hono()
     .get('/:rowId', (context) => {
       addWideEventFields({ 'rows.read': 1 });
@@ -32,7 +27,7 @@ function buildRecordedApp(): Hono {
     })
     .get('/:rowId/missing', (context) => context.json({ error: 'row-not-found' }, 404));
   return new Hono()
-    .use('*', recordWideEvents)
+    .use('*', recording)
     .onError((_failure, context) =>
       context.text('Internal Server Error', INTERNAL_SERVER_ERROR_STATUS),
     )
@@ -105,10 +100,9 @@ describe('recordWideEvents', () => {
 
   it('carries the id of the trace the request span belongs to, and leaves it out when none is active', async () => {
     const write = captureWrittenLines();
-    vi.mocked(findActiveTraceId).mockReturnValueOnce(TRACE_ID);
 
-    await buildRecordedApp().request('/api/rows/42');
-    await buildRecordedApp().request('/api/rows/42');
+    await buildRecordedApp(buildWideEventRecording(() => TRACE_ID)).request('/api/rows/42');
+    await buildRecordedApp(buildWideEventRecording(() => null)).request('/api/rows/42');
 
     const [tracedEvent, untracedEvent] = readWrittenEvents(write);
     expect(tracedEvent).toMatchObject({ 'trace.id': TRACE_ID });

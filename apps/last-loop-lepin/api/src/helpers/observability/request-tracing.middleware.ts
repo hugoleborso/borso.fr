@@ -15,6 +15,7 @@ type TraceRequest = (
   answer: () => Promise<AnsweredRequest>,
 ) => Promise<void>;
 
+// @FollowsBlueprint middleware-request-tracing
 export function buildRequestTracing(traceRequest: TraceRequest): MiddlewareHandler {
   return async (context, next) => {
     await traceRequest(

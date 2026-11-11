@@ -38,7 +38,7 @@ afterEach(() => {
 
 // @FollowsBlueprint test-node-adapter
 describe('runInWideEvent', () => {
-  it('writes one line holding the opening fields, the added ones and the outcome', async () => {
+  it('writes one line holding the opening fields, the added ones and the outcome, and sets the same fields on the active span', async () => {
     const write = captureWrittenLines();
     const { addWideEventFields, runInWideEvent } = await importFreshAdapter();
 
