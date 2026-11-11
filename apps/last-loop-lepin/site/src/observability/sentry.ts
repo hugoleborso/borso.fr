@@ -6,6 +6,16 @@ const UNKNOWN_STAGE = 'unknown';
 
 const TRACE_SAMPLE_RATE = 1;
 
+type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
+
+const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
+  userInfo: false,
+  cookies: false,
+  httpHeaders: false,
+  httpBodies: [],
+  urlQueryParams: false,
+};
+
 const SHARED_PROJECT_APP_TAGS = { app: 'last-loop-lepin' } as const;
 
 export function initSentry(): void {
@@ -15,7 +25,7 @@ export function initSentry(): void {
     dsn,
     environment: readStageName() ?? UNKNOWN_STAGE,
     initialScope: { tags: SHARED_PROJECT_APP_TAGS },
-    sendDefaultPii: false,
+    dataCollection: PRIVATE_DATA_COLLECTION,
     tracesSampleRate: TRACE_SAMPLE_RATE,
     tracePropagationTargets: [
       composeApiTraceTarget(selectApiBase(readApiBaseSetting()), window.location.origin),
