@@ -127,17 +127,24 @@ export function selectStage(detectedAt: string | undefined): Stage | null {
   return STAGE_BY_DETECTED_AT.get(stripQuotes(detectedAt)) ?? null;
 }
 
+const NO_WEAK_POINT = 'none';
+
+function selectWeakPoint(field: string | undefined): string | null {
+  if (field === undefined) return null;
+  const weakPoint = stripQuotes(field);
+  return weakPoint === NO_WEAK_POINT ? null : weakPoint;
+}
+
 export function readDefectDot(document: DantotsuDocument): DefectDot | null {
   const date = readField(document, 'date');
   const zone = readField(document, 'zone');
   if (date === undefined || zone === undefined) return null;
-  const weakPoint = readField(document, 'weak-point');
   return {
     slug: document.slug,
     title: document.title,
     date,
     zone: stripQuotes(zone),
-    weakPoint: weakPoint === undefined ? null : stripQuotes(weakPoint),
+    weakPoint: selectWeakPoint(readField(document, 'weak-point')),
     recurs: readListValue(readField(document, 'recurs')) ?? [],
     stage: selectStage(readField(document, 'detected-at')),
     link: `${DANTOTSU_ADDRESS}${document.slug}.md`,
