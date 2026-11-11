@@ -108,6 +108,7 @@ No:
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 | [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
 | [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
+| [202611111318](./202611111318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | proposed | 2026-11-11 |
 
 ### Data layer
 
@@ -163,6 +164,8 @@ No:
 - 202611041200. the 3S quality dashboard is a private claude.ai artifact a session refreshes on request, reading Sentry and pragma through its MCP connections and CloudWatch with its AWS read keys, because the CI version needed three new credentials and published the numbers publicly.
 
 - 0031. pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
+
+- 202611111318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
 
 ### Tooling / DevX
 
