@@ -67,6 +67,22 @@ export function recordReadBatchSize(size: number): void {
   Sentry.getActiveSpan()?.setAttribute(READ_BATCH_SIZE_ATTRIBUTE, size);
 }
 
+export type SpanAttributeValue = string | number | boolean | readonly string[];
+
+export function recordAttributesOnActiveSpan(
+  attributes: Readonly<Record<string, SpanAttributeValue>>,
+): void {
+  const span = Sentry.getActiveSpan();
+  if (span === undefined) return;
+  for (const [key, value] of Object.entries(attributes)) {
+    span.setAttribute(key, typeof value === 'object' ? [...value] : value);
+  }
+}
+
+export function findActiveTraceId(): string | undefined {
+  return Sentry.getActiveSpan()?.spanContext().traceId;
+}
+
 export interface TaggedFailure {
   readonly name: string;
   readonly tags: Readonly<Record<string, string>>;

@@ -18,7 +18,6 @@ describe('buildUnhandledErrorAnswer', () => {
   });
 
   it('reports an unexpected failure and answers 500 without its message', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const reportFailure = vi.fn();
     const failure = new Error('secret detail');
 

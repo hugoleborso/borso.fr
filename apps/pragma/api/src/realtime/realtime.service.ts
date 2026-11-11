@@ -1,3 +1,5 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
+import { describeThrownValue } from '../helpers/observability/wide-event.core';
 import { buildStaleMessage, type WrittenRoot } from '@domain/stale-scope.core';
 import { getAppConfig } from '../auth/auth.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
@@ -78,7 +80,11 @@ async function settleWithinBudget(
   const settled = delivery.then(
     (): BroadcastOutcome => ({ kind: 'delivered' }),
     (error: unknown): BroadcastOutcome => {
-      console.error(error);
+      const failure = describeThrownValue(error);
+      addWideEventFields({
+        'realtime.broadcast_failure': failure.type,
+        'realtime.broadcast_failure_message': failure.message,
+      });
       return { kind: 'failed', error };
     },
   );

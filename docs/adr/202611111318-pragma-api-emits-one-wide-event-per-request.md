@@ -47,7 +47,7 @@ The event is a flat record of dotted keys. Its values are strings, numbers, bool
 | `member.id` | The session gate and the MCP bearer check |
 | `error.type`, `error.message`, `error.stack` | The error that became a 500 |
 | `product.events` | The names passed to `recordProductEvent` during the request |
-| `<slice>.<fact>` | Business context each slice adds, for example `spotify.failure`, `push.failed_hosts`, `calendar_feed.failures`, `free_slots.duration_ms`, `mcp.tool` |
+| `<slice>.<fact>` | Business context each slice adds, for example `spotify.failure`, `push.failed_hosts`, `calendar_feed.failures`, `free_slots.duration_ms`, `mcp.tools` |
 
 The scheduled streak reminder and the WebSocket handler run inside the same scope, with `event.kind` set to `scheduled` or `socket` instead of `http`. A field added after the event was emitted, or outside any scope, is not lost. It goes out as its own line with `event.kind` set to `detached`, along with the `request.id` it belonged to, if any. This happens when a realtime broadcast fails after its budget let the response go.
 

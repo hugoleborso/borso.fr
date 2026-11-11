@@ -248,7 +248,6 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
   });
 
   it('reports a send that fails and still answers the write', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     buildRecordingPoster(() => Promise.reject(new RangeError('gateway down')));
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp();

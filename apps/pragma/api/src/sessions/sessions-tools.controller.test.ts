@@ -34,7 +34,6 @@ describe('sessions tools (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
   afterEach(() => {

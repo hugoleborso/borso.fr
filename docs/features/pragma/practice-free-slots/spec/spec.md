@@ -164,12 +164,12 @@ apps/pragma/VOCABULARY.md                               UPDATE
 
 ### Analytics
 
-**Input metrics:** each month, the count of members with a feed, from `member_calendar_feed`. Each request logs `free_slots_computed` with the counts of feeds read, failed and excluded, and the duration, but never the addresses.
+**Input metrics:** each month, the count of members with a feed, from `member_calendar_feed`. Each request's wide event (ADR-202611111318) carries `free_slots.*` fields with the counts of feeds read, failed and excluded, and `free_slots.duration_ms`, but never the addresses.
 
 **Output metric:** once a month, the operator reads the share of the month's practices whose `origin = 'free_slot'`. If it stays near zero after every member has connected a calendar, the windows or the 2-hour length are wrong.
 
 ### Zero-defect strategy
 
 - `CalendarFeedNeedsReconnecting` and `CalendarFeedUnavailable` are logged with `memberId` and the status code, never the address.
-- The p90 of `free_slots_computed.duration` is watched in the CloudWatch logs. Its threshold is set from the first measurements and is not guessed here.
+- The p90 of `free_slots.duration_ms` on the `GET /api/free-slots` wide event is watched in the CloudWatch logs. Its threshold is set from the first measurements and is not guessed here.
 - A database authentication failure after the role cutover makes the whole API return 5xx. The preview deploy runs the same role path as production, so it fails first, before the merge.

@@ -532,6 +532,12 @@
       }
     },
     {
+      "files": ["apps/pragma/api/src/**/*.ts"],
+      "rules": {
+        "no-console": ["error", { "allow": [] }]
+      }
+    },
+    {
       "files": ["apps/*/site/**/*.{ts,tsx}"],
       "rules": {
         "borso/no-use-effect": "error",

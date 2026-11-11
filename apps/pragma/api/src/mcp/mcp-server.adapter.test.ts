@@ -7,7 +7,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { Hono } from 'hono';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { answerMcpRequest } from './mcp-server.adapter';
@@ -88,15 +88,15 @@ interface RecordedWrites {
   readonly mock: { readonly calls: readonly (readonly unknown[])[] };
 }
 
+function readWrittenEvents(write: RecordedWrites): unknown[] {
+  return write.mock.calls.map(([line]) => parseLine(line));
+}
+
 function readToolEvents(write: RecordedWrites): unknown[] {
   return write.mock.calls
     .map(([line]) => parseLine(line))
     .filter((event) => toolEventSchema.safeParse(event).success);
 }
-
-beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => undefined);
-});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -130,6 +130,9 @@ describe('answerMcpRequest', () => {
     expect(readToolEvents(write)).toEqual([
       { event: 'mcp_tool_called', tool: 'echo_title', outcome: 'ok' },
     ]);
+    expect(readWrittenEvents(write)).toContainEqual(
+      expect.objectContaining({ 'mcp.tools': ['echo_title'], 'mcp.tool_outcomes': ['ok'] }),
+    );
   });
 
   it('answers a refusal as a tool error carrying the route error body', async () => {
@@ -182,6 +185,14 @@ describe('answerMcpRequest', () => {
     expect(readToolEvents(write)).toEqual([
       { event: 'mcp_tool_called', tool: 'explode', outcome: 'failed' },
     ]);
+    expect(readWrittenEvents(write)).toContainEqual(
+      expect.objectContaining({
+        'mcp.tools': ['explode'],
+        'mcp.tool_outcomes': ['failed'],
+        'mcp.failure_types': ['RangeError'],
+        'mcp.failure_messages': ['database went away'],
+      }),
+    );
   });
 
   it('tells the caller which tool ran, whether it answered, refused or threw', async () => {

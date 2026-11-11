@@ -388,7 +388,6 @@ describe('calendar feeds and free slots (back-e2e)', () => {
         new Response(null, { status: new Request(input).url.includes('gone') ? 404 : 503 }),
       ),
     );
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const freeSlots = await readJson(
       await jsonRequest(first.app, '/api/free-slots', { cookieHeader: first.cookieHeader }),
       freeSlotsSchema,
@@ -421,7 +420,6 @@ describe('calendar feeds and free slots (back-e2e)', () => {
         new Response(null, { status: new Request(input).url.includes('unnamed') ? 503 : 404 }),
       ),
     );
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const freeSlots = await readJson(
       await jsonRequest(app, '/api/free-slots', { cookieHeader }),
       freeSlotsSchema,

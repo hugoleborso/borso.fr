@@ -1,3 +1,5 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
+import { describeThrownValue } from '../helpers/observability/wide-event.core';
 import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import type { DatabaseExecutor } from '../database/client';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
@@ -155,7 +157,11 @@ async function sendWithinDeadline(
 function reportSendFailures(failures: readonly PushFailureReport[], failureName: string): void {
   for (const failure of failures) {
     const status = failure.statusCode === null ? UNKNOWN_STATUS : String(failure.statusCode);
-    console.warn(JSON.stringify({ event: failureName, host: failure.host, status }));
+    addWideEventFields({
+      'push.failures': [failureName],
+      'push.failed_hosts': [failure.host],
+      'push.failed_statuses': [status],
+    });
     reportTaggedFailure({
       name: failureName,
       tags: { 'push.host': failure.host, 'push.status': status },
@@ -179,7 +185,10 @@ async function deliverPayload(
     ),
   );
   if (outcomes === null) {
-    console.warn(JSON.stringify({ event: PUSH_SEND_TIMED_OUT, recipients: recipients.length }));
+    addWideEventFields({
+      'push.timed_out_kinds': [payload.messageKey],
+      'push.timed_out_recipient_counts': [String(recipients.length)],
+    });
     reportTaggedFailure({ name: PUSH_SEND_TIMED_OUT, tags: { 'push.kind': payload.messageKey } });
     return 'timed-out';
   }
@@ -222,7 +231,12 @@ export async function notifyBand(event: NotificationEvent, now: Date): Promise<N
   try {
     return await notifyRecipients(event, now);
   } catch (error) {
-    console.warn(JSON.stringify({ event: NOTIFY_BAND_FAILED, kind: event.kind }), error);
+    const failure = describeThrownValue(error);
+    addWideEventFields({
+      'push.notify_failed_kinds': [event.kind],
+      'push.notify_failure_types': [failure.type],
+      'push.notify_failure_messages': [failure.message],
+    });
     reportTaggedFailure({ name: NOTIFY_BAND_FAILED, tags: { 'push.kind': event.kind } });
     return 'failed';
   }

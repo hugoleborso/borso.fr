@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  findActiveTraceId,
   flushErrorReports,
+  recordAttributesOnActiveSpan,
   recordReadBatchSize,
   reportTaggedFailure,
   reportUnhandledError,
@@ -9,7 +11,10 @@ import {
 } from './error-reporting.adapter';
 import { isUnrecordedOutgoingRequest } from './error-reporting.core';
 
-const requestSpan = vi.hoisted(() => ({ setAttribute: vi.fn() }));
+const requestSpan = vi.hoisted(() => ({
+  setAttribute: vi.fn(),
+  spanContext: vi.fn(() => ({ traceId: '0123456789abcdef0123456789abcdef' })),
+}));
 
 const sentry = vi.hoisted(() => ({
   init: vi.fn(),
@@ -130,6 +135,51 @@ describe('recordReadBatchSize', () => {
     recordReadBatchSize(7);
 
     expect(requestSpan.setAttribute).not.toHaveBeenCalled();
+  });
+});
+
+describe('recordAttributesOnActiveSpan', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sets every field on the active span, a list as a copy the SDK may keep', () => {
+    const failedHosts: readonly string[] = ['web.push.apple.com'];
+
+    recordAttributesOnActiveSpan({
+      'member.id': 'member-1',
+      duration_ms: 12,
+      'lambda.cold_start': false,
+      'push.failed_hosts': failedHosts,
+    });
+
+    expect(requestSpan.setAttribute.mock.calls).toStrictEqual([
+      ['member.id', 'member-1'],
+      ['duration_ms', 12],
+      ['lambda.cold_start', false],
+      ['push.failed_hosts', ['web.push.apple.com']],
+    ]);
+    expect(requestSpan.setAttribute.mock.calls[3]?.[1]).not.toBe(failedHosts);
+  });
+
+  it('records nothing when no span is active', () => {
+    sentry.getActiveSpan.mockReturnValueOnce(undefined);
+
+    recordAttributesOnActiveSpan({ 'member.id': 'member-1' });
+
+    expect(requestSpan.setAttribute).not.toHaveBeenCalled();
+  });
+});
+
+describe('findActiveTraceId', () => {
+  it('reads the trace id of the active span', () => {
+    expect(findActiveTraceId()).toBe('0123456789abcdef0123456789abcdef');
+  });
+
+  it('answers undefined when no span is active', () => {
+    sentry.getActiveSpan.mockReturnValueOnce(undefined);
+
+    expect(findActiveTraceId()).toBeUndefined();
   });
 });
 

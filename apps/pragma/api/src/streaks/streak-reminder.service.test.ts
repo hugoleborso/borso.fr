@@ -29,12 +29,7 @@ interface Band {
   readonly lea: AuthenticatedApp;
   readonly tom: AuthenticatedApp;
   readonly send: ReturnType<typeof stubPushService>;
-  readonly warnings: ReturnType<typeof silenceWarnings>;
   readonly productEvents: ReturnType<typeof silenceProductEvents>;
-}
-
-function silenceWarnings() {
-  return vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 }
 
 function silenceProductEvents() {
@@ -56,7 +51,6 @@ async function logStudies(memberId: string, days: readonly string[]): Promise<vo
 }
 
 async function prepareBand(): Promise<Band> {
-  const warnings = silenceWarnings();
   const productEvents = silenceProductEvents();
   const send = stubPushService();
   const hugo = await buildAuthenticatedApp('Hugo');
@@ -67,7 +61,7 @@ async function prepareBand(): Promise<Band> {
   await subscribeDevice(tom, 'tom-phone');
   await logStudies(hugo.memberId, LAST_THREE_DAYS);
   await logStudies(lea.memberId, [TODAY]);
-  return { hugo, lea, tom, send, warnings, productEvents };
+  return { hugo, lea, tom, send, productEvents };
 }
 
 function failPushTo(band: Band, device: string, statusCode: number): void {
@@ -201,11 +195,13 @@ describe('the 20:00 streak reminder (back-e2e)', () => {
     await runStreakReminder(PARIS_EVENING);
 
     expect(band.send).toHaveBeenCalledTimes(2);
-    expect(readLoggedEvents(band.warnings)).toContainEqual({
-      event: 'streak_push_failed',
-      host: 'web.push.apple.com',
-      status: '500',
-    });
+    expect(readLoggedEvents(band.productEvents)).toContainEqual(
+      expect.objectContaining({
+        'push.failures': ['streak_push_failed'],
+        'push.failed_hosts': ['web.push.apple.com'],
+        'push.failed_statuses': ['500'],
+      }),
+    );
     expect(await listStoredEndpoints()).toHaveLength(3);
   });
 
