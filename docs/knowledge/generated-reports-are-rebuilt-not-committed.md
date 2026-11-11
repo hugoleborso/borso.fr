@@ -13,7 +13,7 @@ triggers:
 # Generated reports are rebuilt, not committed
 
 A file is committed when it is an input and ignored when it is an output.
-[ADR-0014](../adr/0014-generated-files-are-not-committed.md) records the
+[ADR-2026-08-20T1031](../adr/2026-08-20T1031-generated-files-are-not-committed.md) records the
 decision and its measurements.
 
 An input is something a person wrote or accepted that no command can recompute.

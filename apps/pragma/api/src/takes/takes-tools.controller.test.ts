@@ -110,7 +110,6 @@ describe('takes tools (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     for (const [name, value] of Object.entries(PRESIGNER_ENV)) {
       previous[name] = process.env[name];
       process.env[name] = value;

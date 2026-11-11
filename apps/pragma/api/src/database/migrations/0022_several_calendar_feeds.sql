@@ -10,7 +10,7 @@
 -- ON CONFLICT ("id") instead of inserting the address twice.
 --
 -- The old table is emptied, not dropped, so a retry of the copy still
--- finds it. It stays in the preview and reader blocklists. See ADR-0037.
+-- finds it. It stays in the preview and reader blocklists. See ADR-2026-10-02T1352.
 CREATE TABLE "calendar_feed" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"member_id" uuid NOT NULL,

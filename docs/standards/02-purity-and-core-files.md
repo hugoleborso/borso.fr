@@ -166,7 +166,7 @@ difference is where it sits. `apps/<app>/domain/` lives beside `api/` and
 reachable through `@domain/*`. It exists because a rule the song form and the
 songs route both apply has no owning side, and duplicating it is how the two
 copies drift.
-[ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md) records
+[ADR-2026-08-13T0026](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md) records
 the decision and the conditions: a real caller on each side, or the rule belongs
 to whichever side actually uses it.
 

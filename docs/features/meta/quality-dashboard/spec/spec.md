@@ -4,7 +4,7 @@
 
 - [x] **Client / business**. The operator wants the Theodo 3S ritual (Security, Stability, Speed) applied to borso.fr, with the weak point map, on one page.
 - [x] **Product**. The criteria were chosen one by one: Dependabot, `pnpm audit` and secret scanning; errors on previews and in production; API p50 and p95; the varicelle map coloured by stage A to E. On 2026-11-04 the operator chose a private page over a public one.
-- [x] **Tech-lead**. A session refreshes the page with the access it already holds, so no role, token or database grant is added ([ADR 202611041200](../../../../adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md)).
+- [x] **Tech-lead**. A session refreshes the page with the access it already holds, so no role, token or database grant is added ([ADR 2026-11-04T1200](../../../../adr/2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md)).
 - [x] **Developer**. Every source was probed from a session on 2026-11-04 (see *Sources*).
 - [x] **Designer**. One 3S band of three columns, then the varicelle map at full width, stacked at 375 px.
 
@@ -71,7 +71,7 @@ Out of scope: a scheduled refresh, web vitals, end-to-end coverage, alerting.
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [202611041200](../../../../adr/202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | Private artifact refreshed by a session | No CI job, role or secret. A refresh needs a session with AWS read, the Sentry MCP and the Pragma MCP. |
+| [2026-11-04T1200](../../../../adr/2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | Private artifact refreshed by a session | No CI job, role or secret. A refresh needs a session with AWS read, the Sentry MCP and the Pragma MCP. |
 
 ## Changes
 

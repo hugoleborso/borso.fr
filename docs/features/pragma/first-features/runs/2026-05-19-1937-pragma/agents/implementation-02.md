@@ -57,7 +57,7 @@ request reaching `POST /api/admin/rotate-password` traverses
 `requireSharedPasswordSession` first; the new back-e2e directly observes this
 by sending the request without a cookie and asserting both the 401 status and
 that the DB row was not modified. The bootstrap route lives on a distinct
-router that does *not* apply the middleware — preserving the ADR-0004 contract
+router that does *not* apply the middleware — preserving the ADR-2026-05-19T1955 contract
 ("the row-absent check is the bootstrap gate").
 
 ## Kaizen observations

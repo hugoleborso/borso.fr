@@ -1,16 +1,16 @@
 ---
 status: done
 summary: |
-  ADR-202611050445 written at
-  docs/adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md,
+  ADR-2026-11-05T0445 written at
+  docs/adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md,
   status proposed. It records the generic read batch in the Hono client's
   fetch layer, one POST /api/read-batch answered by one Lambda with
   per-read status, at most 10 reads per batch and 2 in flight per tab,
   writes never batched, and /api/offline-manifest deleted. Six options
   scored against five criteria, four of them the operator's. It amends
-  ADR-202611011313 and supersedes none. Both ADR gates pass.
+  ADR-2026-11-01T1313 and supersedes none. Both ADR gates pass.
 artifacts:
-  - docs/adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md
+  - docs/adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md
   - docs/adr/README.md
 ---
 

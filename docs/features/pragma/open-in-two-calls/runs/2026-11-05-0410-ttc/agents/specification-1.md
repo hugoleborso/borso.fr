@@ -40,4 +40,4 @@ refetch on mount for seeded roots, D8 no ticket inside, D9 all or nothing,
 D10 to D12 the rule's scope, message and one inline disable.
 
 One ADR to write after ratification, `pragma-opens-on-one-read`, amending
-ADR-202611011313.
+ADR-2026-11-01T1313.

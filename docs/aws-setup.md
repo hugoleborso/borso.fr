@@ -305,7 +305,7 @@ Then:
 
 ### 12.6 Let a session publish validation screenshots
 
-[ADR-0023](./adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md) moves a passing
+[ADR-2026-09-21T0819](./adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md) moves a passing
 validation's screenshots out of git and onto the previews CDN. The upload has to happen in the
 session, because that is where the files are produced and a branch commit becomes an ancestor
 of `main` on merge — so anything committed to be picked up by CI is already in history for
@@ -411,20 +411,20 @@ most often because the deny still lists `s3:Put*` in the blanket statement, wher
 "*"` overrides the second statement's `NotResource`.
 
 Until this is applied, `/visual-validation` finds the upload denied and commits every
-screenshot, which is the behaviour from before ADR-0023 rather than a failure.
+screenshot, which is the behaviour from before ADR-2026-09-21T0819 rather than a failure.
 
 ### 12.7 Let a session read production
 
-[ADR-0044](./adr/0044-read-only-production-database-access-for-agents.md) gives a hosted
+[ADR-2026-10-25T0054](./adr/2026-10-25T0054-read-only-production-database-access-for-agents.md) gives a hosted
 session one read path into the `prod` schema of pragma, last-loop-lepin and banana-rush:
 `APP=<app> scripts/db-read.sh "<sql>"`, served by the database role `ai_reader_prod`, which
-holds `SELECT` only, and not on the tables that hold credentials, keys or tokens (ADR-0044's
+holds `SELECT` only, and not on the tables that hold credentials, keys or tokens (ADR-2026-10-25T0054's
 *Tables the reader never sees*). The migration runner creates that role on each application's
 cluster and maps it on that application's production deploy. The IAM half is manual, because
 the user is not managed by any stack. talos is not part of it: its data is private, and agents
-read it through its own API ([ADR-0039](./adr/0039-talos-memory-in-the-database.md)).
+read it through its own API ([ADR-2026-10-16T0716](./adr/2026-10-16T0716-talos-memory-in-the-database.md)).
 
-**[ADR-0049](./adr/0049-agents-read-production-through-an-invoked-reader-lambda.md) replaced the
+**[ADR-2026-10-28T2126](./adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md) replaced the
 transport.** The sandbox a hosted session runs in refuses outbound 5432 and Aurora DSQL has no
 data API, so the script no longer speaks Postgres. It invokes a reader Lambda per application —
 `<app>-prod-agent-reader`, created by `DsqlAgentReader` beside each production schema — over
@@ -484,8 +484,8 @@ aws --profile borso-admin iam get-user-policy \
 ```
 
 One `jq` makes every edit, and running it twice leaves the same policy. It removes
-`lambda:Invoke*` from the blanket statement, puts `dsql:*` back into it — ADR-0044's two DSQL
-narrowing statements are what ADR-0049 retired — and appends the two Lambda ones. The `-c` is
+`lambda:Invoke*` from the blanket statement, puts `dsql:*` back into it — ADR-2026-10-25T0054's two DSQL
+narrowing statements are what ADR-2026-10-28T2126 retired — and appends the two Lambda ones. The `-c` is
 not cosmetic; see *The 2048-character wall* below.
 
 ```bash
@@ -596,14 +596,14 @@ scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"                    # refuse
 ```
 
 Only the talos refusal happens locally; the rest are the function's answer, which is the point of
-ADR-0049. A session that invokes the function directly with a blocklisted table gets the same
+ADR-2026-10-28T2126. A session that invokes the function directly with a blocklisted table gets the same
 refusal, and one that reached past the function to the database would still get `permission
 denied for table` from Postgres, which is the database half of the same rule.
 
 If a command fails with `AccessDeniedException` naming an explicit deny, the `lambda:Invoke*`
 entry is still in a statement with `Resource: "*"`. If it is refused with *the deployed stack
 carries no `AgentReaderFunctionName` output*, that application's production deploy has not run
-since ADR-0049 landed.
+since ADR-2026-10-28T2126 landed.
 
 ## Reference: SSM parameters
 

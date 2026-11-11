@@ -156,7 +156,7 @@ guards. `loop_punch_claims` in `last-loop-lepin` and `seat_claim` in
 Foreign keys are not enforced by DSQL, so a cascade that Postgres would give
 you for free has to be written explicitly in a service, and the decision is
 recorded in
-[`docs/adr/0006-cascade-on-delete-via-json-blob-scrub.md`](../adr/0006-cascade-on-delete-via-json-blob-scrub.md).
+[`docs/adr/2026-06-06T1326-cascade-on-delete-via-json-blob-scrub.md`](../adr/2026-06-06T1326-cascade-on-delete-via-json-blob-scrub.md).
 
 A connection parameter, a transaction syntax and a role mapping are part of a
 contract with DSQL rather than part of the code, so only a cluster can refuse

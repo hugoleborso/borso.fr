@@ -12,7 +12,7 @@ triggers:
 pragma resolves a song's Spotify track once, from the ISRC Deezer returned, and
 stores the id. The call needs a Spotify client id and secret. This page is how
 they are created and where they go. The decision behind the shape is
-[ADR-0017](../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md).
+[ADR-2026-09-15T2023](../adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md).
 
 ## The credential does nothing until it is seeded, and says nothing when it is missing
 

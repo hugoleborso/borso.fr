@@ -19,7 +19,7 @@ recurs: [the-blocklist-that-was-empty-because-nothing-was-deployed]
 
 ## Symptom
 
-The first production read through the reader Lambda ADR-0049 introduced, on the
+The first production read through the reader Lambda ADR-2026-10-28T2126 introduced, on the
 very first invocation after the deploy:
 
 ```
@@ -105,7 +105,7 @@ anybody's to find)
 `deploy.yml` on each application right after its production deploy. It invokes
 that application's reader with `SELECT 1` and fails the job unless one row
 comes back. An application whose stack publishes no `AgentReaderFunctionName`
-exits 0, which is the normal state for the three ADR-0049 does not cover.
+exits 0, which is the normal state for the three ADR-2026-10-28T2126 does not cover.
 
 This is the **only thing in this repository that reaches a real DSQL cluster
 outside a migration**, which is why it is the eradication and a lint-shaped
@@ -153,7 +153,7 @@ without breaking production.
 
 That rewrite removed a duplication the first version introduced: the shell
 script judged the response in `jq`, a second writing of `readInvocationOutcome`
-in `scripts/database/reader-invocation.utils.ts`. ADR-0049's own
+in `scripts/database/reader-invocation.utils.ts`. ADR-2026-10-28T2126's own
 single-implementation criterion, broken within a day of being written.
 
 **Sibling defects swept:** the four application clients send `search_path` and
@@ -164,5 +164,5 @@ statement rather than a startup parameter. No other site passes `connection`.
 
 - [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) — the DDL and type divergences; this is the connection-layer one.
 - [`the-blocklist-that-was-empty-because-nothing-was-deployed.md`](./the-blocklist-that-was-empty-because-nothing-was-deployed.md) — the same shape: a gate ran and returned the safe-looking answer.
-- [`docs/adr/0049-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+- [`docs/adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
 - [`docs/quality/weak-points.md`](../quality/weak-points.md) — `gate-measures-nothing`.

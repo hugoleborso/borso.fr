@@ -1,6 +1,6 @@
 ---
 status: done
-summary: Wrote the engineering plan for the audience song-voting feature. Every Q.O.D. row, every API route, every database change, every edge and error case and every out-of-scope item maps to a file path with a self-check, and the rows whose decisions come from ADR-0015 or ADR-0016 link them. The three placements the brief singled out are pinned precisely: the public and gated audience routers, whose mount interaction I measured in this workspace rather than assumed; lazy idempotent settlement, claimed with a conditional update and committed in one transaction with the setlist append; and the nullable-forever setlist_sheet.kind column with its narrowing moved into setlists.core.ts. Fifteen risks carry a detection path each. Six engineering decisions the spec left open were taken and recorded rather than escalated, so nothing blocks implementation.
+summary: Wrote the engineering plan for the audience song-voting feature. Every Q.O.D. row, every API route, every database change, every edge and error case and every out-of-scope item maps to a file path with a self-check, and the rows whose decisions come from ADR-2026-09-16T1931 or ADR-2026-08-26T1739 link them. The three placements the brief singled out are pinned precisely: the public and gated audience routers, whose mount interaction I measured in this workspace rather than assumed; lazy idempotent settlement, claimed with a conditional update and committed in one transaction with the setlist append; and the nullable-forever setlist_sheet.kind column with its narrowing moved into setlists.core.ts. Fifteen risks carry a detection path each. Six engineering decisions the spec left open were taken and recorded rather than escalated, so nothing blocks implementation.
 artifacts:
   - docs/features/pragma/audience-song-voting/plan/plan.md
   - docs/features/pragma/audience-song-voting/runs/2026-08-26-audience-song-voting/agents/technical-conception-01.md
@@ -40,18 +40,18 @@ One correction to the spec's file list came out of this. The spec puts `resolveS
 
 ## Six decisions taken rather than escalated
 
-The plan lists them in their own section. The two worth naming here are that the short `/vote` address needs an endpoint the spec's API table does not carry, so `GET /api/audience/live` is added to serve behaviour that was already ratified, and that ADR-0015's change to the search return type is shared with the existing gated `/api/songs/search`, so its controller, service, query module and search organism join the change set even though the spec's file list omits them.
+The plan lists them in their own section. The two worth naming here are that the short `/vote` address needs an endpoint the spec's API table does not carry, so `GET /api/audience/live` is added to serve behaviour that was already ratified, and that ADR-2026-09-16T1931's change to the search return type is shared with the existing gated `/api/songs/search`, so its controller, service, query module and search organism join the change set even though the spec's file list omits them.
 
 None of the six is a product decision or an architecture decision, so none is an ADR trigger, and none is left as an open question. The plan's open-questions section is empty on purpose: an item there is a hard block on `/implementation`, and there is nothing here a human needs to answer.
 
 ## ADR handling
 
-ADR-0015 and ADR-0016 are ratified and committed on this branch. They are not triggers. Every plan row whose decision descends from one of them links it, which is nine rows for ADR-0015 and two for ADR-0016.
+ADR-2026-09-16T1931 and ADR-2026-08-26T1739 are ratified and committed on this branch. They are not triggers. Every plan row whose decision descends from one of them links it, which is nine rows for ADR-2026-09-16T1931 and two for ADR-2026-08-26T1739.
 
 ## Gates
 
-The plan's pre-flight list has nineteen entries. It names `pnpm exec eslint` and `pnpm exec prettier --check`, never `biome check`, because ADR-0007 removed that binary from the repository. Two entries are `human:` gates: re-reading the `adapter-rate-limited-fetch` blueprint description against the adapter it now misdescribes, and the visual validation run, which must drive the public page in a browser context carrying no session cookie and must wait the real thirty seconds.
+The plan's pre-flight list has nineteen entries. It names `pnpm exec eslint` and `pnpm exec prettier --check`, never `biome check`, because ADR-2026-08-08T1538 removed that binary from the repository. Two entries are `human:` gates: re-reading the `adapter-rate-limited-fetch` blueprint description against the adapter it now misdescribes, and the visual validation run, which must drive the public page in a browser context carrying no session cookie and must wait the real thirty seconds.
 
 ## Friction logged
 
-Three entries under the `plan` label: the workspace-name mismatch, the technical-conception template still prescribing `pnpm exec biome lint` after ADR-0007, and the Hono mount-order trap.
+Three entries under the `plan` label: the workspace-name mismatch, the technical-conception template still prescribing `pnpm exec biome lint` after ADR-2026-08-08T1538, and the Hono mount-order trap.

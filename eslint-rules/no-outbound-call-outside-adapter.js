@@ -3,7 +3,7 @@ import { toPosixPath } from './site-paths.js';
 const MESSAGE =
   'An outbound call belongs in a `<domain>.adapter.ts` file. Move {{what}} there and call ' +
   'the adapter from here, so the architecture map can read the dependency off the tree ' +
-  'rather than off a tag. See docs/adr/0012-outbound-calls-live-in-adapter-files.md.';
+  'rather than off a tag. See docs/adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md.';
 
 const ADAPTER_FILE_PATTERN = /\.adapter\.tsx?$/;
 const TEST_FILE_PATTERN = /\.test\.[jt]sx?$/;

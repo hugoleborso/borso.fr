@@ -18,7 +18,7 @@ summary: |
     aria + transition-delay JS, Escape ferme, pageshow→animate-in si
     visible ET non reduced-motion.
   - shader-bg.js (NEW) — vendoré depuis spec/design-shader-bg.js avec
-    attribution MIT SPDX en tête (cf. ADR 0002). Module ESM (pas IIFE).
+    attribution MIT SPDX en tête (cf. ADR 2026-05-14T1300). Module ESM (pas IIFE).
     BgController retiré (dead code). Branche reduced-motion qui premier-
     drawArrays synchrone puis early-return (pas de rAF, pas de listeners
     pointer). Vendored locals (cw/ch/U) renommés (pixelWidth/pixelHeight/
@@ -57,7 +57,7 @@ next:
 
 ## Notes pour /technical-validation
 
-- ADR 0002 attribution MIT présente en tête de `apps/borso-fr/site/shader-bg.js` — ne pas la stripper.
+- ADR 2026-05-14T1300 attribution MIT présente en tête de `apps/borso-fr/site/shader-bg.js` — ne pas la stripper.
 - Aucun import/usage de React dans `apps/borso-fr/site/script.js` ou `shader-bg.js` (port vanilla réussi).
 - `BgController` (Tweaks panel) supprimé du vendoring — `grep -rn BgController apps/borso-fr/` retourne 0 hit.
 - Constantes nommées en haut de `script.js` (clean code rule).

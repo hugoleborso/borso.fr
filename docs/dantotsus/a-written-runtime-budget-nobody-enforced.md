@@ -100,8 +100,8 @@ measures each check against it and refuses the one that exceeds it.
   where it is or moves earlier, and the tool gets faster instead. oxlint,
   oxfmt and TypeScript 7 replaced ESLint, Prettier and TypeScript 5.9 for the
   checks
-  ([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md),
-  [ADR-0046](../adr/0046-typescript-7-replaces-typescript-5-9.md)),
+  ([ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md),
+  [ADR-2026-10-27T2321](../adr/2026-10-27T2321-typescript-7-replaces-typescript-5-9.md)),
   the generators run under plain node, and all of them are back on the commit
   except the type-aware lint rules.
 

@@ -155,7 +155,7 @@ Errors: network errors are retried 3 times with backoff (1 s, 3 s, 9 s) on conne
 
 ## 9. Implementation notes (borso.fr API, lot 1)
 
-What the API does where the contract leaves a choice or DSQL forbids the letter of it. The HTTP shape is unchanged in every case. Decision record: [ADR-0039](../../docs/adr/0039-talos-memory-in-the-database.md).
+What the API does where the contract leaves a choice or DSQL forbids the letter of it. The HTTP shape is unchanged in every case. Decision record: [ADR-2026-10-16T0716](../../docs/adr/2026-10-16T0716-talos-memory-in-the-database.md).
 
 - Every column typed `jsonb` above is a `text` column holding JSON, because DSQL refuses `jsonb` as a column type. The API decodes it before answering; SQL over it needs a cast (`attributes::jsonb ->> 'type'`).
 - `focus.replace` writes the three ranks every time; a rank the new focus leaves empty gets an empty `title` and is not shown, since nothing deletes rows.

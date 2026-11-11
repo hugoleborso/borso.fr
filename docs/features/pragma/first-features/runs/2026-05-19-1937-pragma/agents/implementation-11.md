@@ -56,7 +56,7 @@ summary: |
   - apps/pragma/site/src/i18n/{en,fr}.json
   - apps/pragma/package.json + pnpm-lock.yaml (+s3-request-presigner)
 
-  No deviation from the round-11 prompt. spec.md / plan.md / ADR-0004
+  No deviation from the round-11 prompt. spec.md / plan.md / ADR-2026-05-19T1955
   / design-bundle untouched. No new ADR (MusicBrainz vs Discogs is a
   judgment call inside the implementer's scope, as the prompt
   permits).

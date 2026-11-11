@@ -19,7 +19,7 @@ recurs: none (jsonb-column-passed-local-postgres-failed-dsql is a DDL DSQL refus
 
 ## Symptom
 
-ADR-0043, written on PR #193, chose a unique index on `song.deezer_track_id`
+ADR-2026-10-24T0932, written on PR #193, chose a unique index on `song.deezer_track_id`
 to hold one catalogue song per Deezer track, and listed as a consequence: "The
 guarantee depends on a build nobody waits for. A failed build is silent." The
 operator was asked to count duplicate track ids before merging and to read
@@ -105,11 +105,11 @@ index skipped by `IF NOT EXISTS`, and a statement that left no index.
 as the build, and fails where it used to succeed with an unbuilt index.
 Migrations already recorded as applied are not re-checked.
 
-**Sibling defects swept:** ADR-0043 gains a revision, its README line and
+**Sibling defects swept:** ADR-2026-10-24T0932 gains a revision, its README line and
 `dsql-postgres-compat-gaps.md` §11 say the runner waits, and both ADRs from
 PR #193 now carry their commit.
 
 ## See also
 
-- [`../adr/0043-one-catalogue-song-per-deezer-track-by-unique-index.md`](../adr/0043-one-catalogue-song-per-deezer-track-by-unique-index.md)
+- [`../adr/2026-10-24T0932-one-catalogue-song-per-deezer-track-by-unique-index.md`](../adr/2026-10-24T0932-one-catalogue-song-per-deezer-track-by-unique-index.md)
 - [`../knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §11

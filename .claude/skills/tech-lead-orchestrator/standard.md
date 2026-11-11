@@ -5,7 +5,7 @@ reviewing a tech-lead-orchestrator change.
 
 ## Substrate boundary — Skill (chat) vs Workflow (script)
 
-Per [ADR-0005](../../../docs/adr/0005-dynamic-workflows-for-orchestration.md),
+Per [ADR-2026-06-05T2337](../../../docs/adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md),
 the pipeline runs on two substrates depending on whether the stage needs
 human input:
 
@@ -72,7 +72,7 @@ poison the audit trail.
   "pilotedByTechLead": true,
   "stage": "spec",                         // current stage from the diagram above
   "retries": { "implement": 0, "validate": 0 },
-  "adrIndex": [1, 2],                      // numbers of ADRs created this run
+  "adrIndex": ["2026-11-11T1318"],         // ids of ADRs created this run
   "bytesRead": 0,                          // cumulative, for context-growth events
   "specChecksum": null,                    // SHA-256 hex of spec.md once recorded
   "startedAt": "2026-05-13T15:30:00.000Z",
@@ -134,7 +134,7 @@ Before invoking `/adr` (piloted mode), surface the candidate list to Hugo via
 
 - *Write ADR (Recommended)* — confirm, proceed to `/adr` (piloted mode).
 - *Skip — not really architectural* — drop the candidate, no ADR.
-- *Merge with ADR &lt;NNNN&gt;* — fold into an existing ADR (the
+- *Merge with ADR &lt;id&gt;* — fold into an existing ADR (the
   orchestrator records the link, no new ADR written).
 
 The human's answers are `guidance` / `answer` messages, not

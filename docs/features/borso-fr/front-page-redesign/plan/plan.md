@@ -2,11 +2,11 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
-ADR ratifié associé : [`docs/adr/0003-react-bits-galaxy-as-react-component.md`](../../../../adr/0003-react-bits-galaxy-as-react-component.md) (supersedes [0002](../../../../adr/0002-vendor-react-bits-galaxy-shader.md)).
+ADR ratifié associé : [`docs/adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md`](../../../../adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md) (supersedes [2026-05-14T1300](../../../../adr/2026-05-14T1300-vendor-react-bits-galaxy-shader.md)).
 
 ## Revision 2 — 2026-05-14 (post-shipping)
 
-The first revision of this plan shipped against ADR 0002 (vendor vanilla WebGL). Hugo's review surfaced that the ADR's premise ("avoid forcing Vite + React into apps/borso-fr") was invalidated by the live workspace — Vite + React were already in place. The defect is captured in [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). The structural eradication lands in the same kaizen PR (`.claude/skills/specification/standard.md` and `.claude/skills/technical-conception/standard.md` now mandate a live-workspace cross-check before locking toolchain-shaped Q.O.D. rows).
+The first revision of this plan shipped against ADR 2026-05-14T1300 (vendor vanilla WebGL). Hugo's review surfaced that the ADR's premise ("avoid forcing Vite + React into apps/borso-fr") was invalidated by the live workspace — Vite + React were already in place. The defect is captured in [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). The structural eradication lands in the same kaizen PR (`.claude/skills/specification/standard.md` and `.claude/skills/technical-conception/standard.md` now mandate a live-workspace cross-check before locking toolchain-shaped Q.O.D. rows).
 
 The code-level correction is this revision:
 
@@ -29,7 +29,7 @@ Tout le reste du plan (table d'origine ci-dessous, risk register, code-quality s
 | Surface | Source in spec | Existing sub-skill ? |
 |---|---|---|
 | Static HTML / CSS / JS (no bundler) | Q.O.D. "Build pipeline" → garder | `none` (flagged below) |
-| Vanilla WebGL fragment shader | Q.O.D. "Source du shader" → vendor (ADR 0002) | `none` (flagged below) |
+| Vanilla WebGL fragment shader | Q.O.D. "Source du shader" → vendor (ADR 2026-05-14T1300) | `none` (flagged below) |
 | Google Fonts loading (Major Mono Display + Space Mono) | Result + Q.O.D. "Police du titre" | `none` |
 | DOM glue (burger toggle, Escape, body class, staggered transition-delay) | Use cases / Result | `none` |
 | `prefers-reduced-motion` handling | Q.O.D. "prefers-reduced-motion" → respecter | `none` |
@@ -46,7 +46,7 @@ Trigger : on introduit deux nouveaux patterns dans `apps/borso-fr` (WebGL shader
 | Vanilla WebGL fragment shader | Non. `apps/borso-fr/site/script.js` actuel utilise `canvas.getContext('2d')`. | Le shader vit en local sous `apps/borso-fr/site/shader-bg.js`. Si un second app un jour ajoute du WebGL, on factorisera via `infra/shared` ou un nouveau workspace `@borso/webgl-bits`. **Pas de factorisation prématurée.** |
 | `prefers-reduced-motion` | Non utilisé dans le repo (`grep prefers-reduced-motion apps/`). | Handling local en CSS (`@media (prefers-reduced-motion: reduce)`) + early-return JS (`matchMedia('(prefers-reduced-motion: reduce)').matches` → ne pas démarrer `requestAnimationFrame`). |
 | Burger menu + body class toggle | Pattern proche existe sur `apps/borso-fr` actuel (`navIcon.classList.toggle('open')`). Nouveau : on remonte l'état sur `<body>` (`menu-open`) au lieu du wrap. | Cohérence préservée — on raffine localement, pas de nouveau workspace. |
-| Vendored MIT third-party code | Premier vendoring du repo. | Convention posée par ADR 0002 (attribution en tête de fichier, pas de license séparée). Si on vendor un second snippet plus tard, on reproduira ce pattern. |
+| Vendored MIT third-party code | Premier vendoring du repo. | Convention posée par ADR 2026-05-14T1300 (attribution en tête de fichier, pas de license séparée). Si on vendor un second snippet plus tard, on reproduira ce pattern. |
 
 Outcome : aucune unification cross-app à faire dans cette PR. Tout reste local à `apps/borso-fr/site/`.
 
@@ -59,7 +59,7 @@ Outcome : aucune unification cross-app à faire dans cette PR. Tout reste local 
 | Q.O.D. "Mobile shader" | Identique desktop | `shader-bg.js` : aucun branchement viewport. DPR cap déjà à 2. | Mobile emulator → mêmes paramètres. |
 | Q.O.D. "Police du titre" | Major Mono Display | `index.html` : `<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Mono:wght@400&display=swap">`. `style.css` : `--font-display: 'Major Mono Display', ui-monospace, monospace; --font-mono: 'Space Mono', ui-monospace, monospace; .title { font-family: var(--font-display); text-transform: lowercase; }` (Major Mono est déjà caps-only, le `text-transform` est cosmétique). | Computed CSS `.title` font-family contient `Major Mono Display`. |
 | Q.O.D. "Fallback WebGL" | Rien (body bg) | `style.css` : `body { background: #05070d; }`. `shader-bg.js` : `if (!gl) return;` — pas de DOM injecté. | Désactiver WebGL (Chrome flag) → fond `#05070d` visible, grain par-dessus. |
-| Q.O.D. "Source du shader" | Vendor (ADR 0002) | `apps/borso-fr/site/shader-bg.js` NEW : copie textuelle du `spec/design-shader-bg.js` + attribution MIT en tête. | `grep -c "react-bits" apps/borso-fr/site/shader-bg.js` ≥ 1. |
+| Q.O.D. "Source du shader" | Vendor (ADR 2026-05-14T1300) | `apps/borso-fr/site/shader-bg.js` NEW : copie textuelle du `spec/design-shader-bg.js` + attribution MIT en tête. | `grep -c "react-bits" apps/borso-fr/site/shader-bg.js` ≥ 1. |
 | Q.O.D. "Tweaks panel" | Out of scope | `script.js` n'expose pas `BgController` ; `shader-bg.js` garde sa surface `window.BgController` mais aucun appelant ne l'utilise. **Action** : retirer l'export `window.BgController` du fichier vendoré pour ne pas porter de dead code. | `grep BgController apps/borso-fr/site/` → 0 hit. |
 | Q.O.D. "Tracking analytics" | Aucun | `index.html` ne charge ni Plausible, ni GA, ni snippet tracking. | View source : pas de `<script src="...plausible..."` / `gtag`. |
 | Q.O.D. "Build pipeline" | Plain HTML conservé | `apps/borso-fr/package.json` : pas de nouvelle dep. `pnpm build` reste `cp -R site dist`. | `git diff apps/borso-fr/package.json` → vide (à part éventuellement script unchanged). |
@@ -96,7 +96,7 @@ Outcome : aucune unification cross-app à faire dans cette PR. Tout reste local 
 - [x] No `any` — N/A : pas de TS.
 - [ ] No abbreviations or single-letter locals outside trivial loop indices. (Le shader vendoré contient `p`, `c`, `K` dans les helpers GLSL → c'est du GLSL upstream, on conserve verbatim. Pour le JS du harness, on renomme les locales courtes du vendor (`U`, `cw`, `ch`) en `uniforms`, `pixelWidth`, `pixelHeight` si le diff reste lisible.)
 - [ ] Magic numbers / strings extracted to named constants. `STAGGER_BASE_MS`, `STAGGER_STEP_MS`, `MENU_OPEN_CLASS = 'menu-open'`, `BURGER_OPEN_CLASS = 'is-open'`, `ANIMATE_IN_CLASS = 'animate-in'`. Le shader garde `PARAMS` comme bloc nommé.
-- [ ] Comments document the WHY only. Cibler 0 commentaire dans `script.js` (DOM glue est évident) ; commentaires conservés dans `shader-bg.js` uniquement pour : attribution MIT (load-bearing, voir ADR 0002), explication du premier `drawArrays` synchrone (non-obvious), explication du `pageshow`-only `animate-in` (non-obvious).
+- [ ] Comments document the WHY only. Cibler 0 commentaire dans `script.js` (DOM glue est évident) ; commentaires conservés dans `shader-bg.js` uniquement pour : attribution MIT (load-bearing, voir ADR 2026-05-14T1300), explication du premier `drawArrays` synchrone (non-obvious), explication du `pageshow`-only `animate-in` (non-obvious).
 - [x] No JSDoc on internals — N/A : pas de JSDoc dans ce PR.
 - [ ] Function names describe the result, not the mechanism. Ex : `respectsReducedMotion()` plutôt que `checkPreferences()` ; `applyStaggeredReveal(items)` plutôt que `setDelays(items)`.
 

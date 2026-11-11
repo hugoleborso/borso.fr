@@ -20,7 +20,7 @@ Hit twice:
 - PR #154: the key and capo fields composed `inputVariants()` (`w-full`) with
   `w-12`; the field stayed full width.
 
-## Since ADR-0028
+## Since ADR-2026-10-12T0032
 
 `composeClassName` now runs `clsx` through `twMerge` from `tailwind-merge`, so
 the last class per property wins, in pragma and talos. The two fields from
@@ -29,6 +29,6 @@ it on also fixed a third case nobody had reported: the remove action in the
 setlist song sheet carried `text-danger`, which had always lost to the
 action's `text-ink-700` and rendered grey.
 
-[ADR-0028](../adr/0028-tailwind-merge-resolves-class-conflicts.md) has the
+[ADR-2026-10-12T0032](../adr/2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md) has the
 alternatives. An application that composes classes some other way still has
 the old behaviour: a later class does not override an earlier one.

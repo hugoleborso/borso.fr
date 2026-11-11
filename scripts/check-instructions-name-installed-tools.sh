@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # A skill cannot tell an agent to run a command this repository does not have.
 #
-# ADR-0007 replaced Biome with ESLint. The dependency went, the config went,
+# ADR-2026-08-08T1538 replaced Biome with ESLint. The dependency went, the config went,
 # the hooks were rewritten — and eleven files under `.claude/` went on telling
 # an agent to run `pnpm exec biome lint`. One of them was the technical
 # validator's own verdict table, where row B02 read *Biome lint clean* with
@@ -38,7 +38,7 @@ if [ ! -d "$BIN_DIR" ]; then
 fi
 
 # The vendored impeccable skill is upstream's text, kept verbatim so an update
-# is a file copy (ADR-0032). It tells its reader to `npx impeccable`, which
+# is a file copy (ADR-2026-10-12T2337). It tells its reader to `npx impeccable`, which
 # here means its own launcher; PROVENANCE.md beside it says so.
 INSTRUCTION_SURFACES=('.claude/*' 'docs/standards/*' ':!.claude/skills/impeccable/*')
 

@@ -62,9 +62,9 @@ each passed individually, while the formatter drift the composite
 `biome check` would have caught accumulated until 105 files crossed the
 threshold together and a catch-up validation found 125 diagnostics.
 
-[ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
+[ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md)
 replaced Biome with ESLint, and
-[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)
+[ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md)
 replaced ESLint and Prettier with oxlint and oxfmt. The two halves are two
 commands: `pnpm exec oxlint --type-aware` and `node_modules/.bin/oxfmt --check`.
 That makes the trap easier to fall into, not harder — a brief naming only the

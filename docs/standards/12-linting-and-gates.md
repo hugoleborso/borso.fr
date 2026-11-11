@@ -23,7 +23,7 @@ oxlint then replaced ESLint, and oxfmt replaced Prettier, because ESLint could
 not meet the [runtime budgets](./14-tool-runtime-budgets.md): one changed pragma
 file took 21 s on the commit. oxlint runs the same custom rules unchanged, as a
 JavaScript plugin, and the type-aware rules through tsgolint
-([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)).
+([ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md)).
 
 ## Layout
 
@@ -109,7 +109,7 @@ There is no cache: the whole repository takes under a minute.
 | `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
 | `borso/no-api-import-in-site`                          | a dantotsu, [02](./02-purity-and-core-files.md)            |
 | `borso/no-api-declaration-repeated-in-site`            | a dantotsu, [02](./02-purity-and-core-files.md)            |
-| `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
+| `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-2026-08-15T0234                      |
 | `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
 | `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
 | `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
@@ -204,7 +204,7 @@ So the enabled rules are listed one by one. Each either enforces a rule from
 ### A rule meant for one application
 
 Some rules belong to one application's own decisions, not to the repository.
-Pragma's design system ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md))
+Pragma's design system ([ADR-2026-10-27T1115](../adr/2026-10-27T1115-pragma-design-system-is-notebook-with-grafts.md))
 forbids arbitrary Tailwind values and raw `<button>` and `<dialog>` elements;
 the other applications made no such decision and hold dozens of each. Those
 rules are enabled for `apps/pragma/site` only.
@@ -466,7 +466,7 @@ review.
   Write or Edit target, a command about to run, or a call's output matches it.
   Of 123 entries only the few a hook or a gate printed ever stopped a repeat,
   and nine dantotsus record an entry that existed and was not read
-  ([ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md)).
+  ([ADR-2026-10-10T0122](../adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md)).
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.
@@ -486,7 +486,7 @@ review.
   not resolve the same way in the three places it appears: the filename a
   citation resolves to, the heading a reader sees, and the index row. A
   renumber moves the file and forgets the other two — `0020-qrcode-react-…`
-  read `ADR-0016:` for a day after one, and the index had drifted by nine of
+  read `ADR-2026-09-14T1904:` for a day after one, and the index had drifted by nine of
   twenty records before anything checked it. Only the number is compared, not
   the punctuation: seven records predate the current heading shape and their
   numbers are right.
@@ -499,7 +499,7 @@ review.
   plan is read by the validator that runs its gates, and PR #107's named a
   package that never existed in four of them
   ([dantotsu](../dantotsus/the-workspace-name-that-was-never-checked.md)).
-  [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
+  [ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md)
   removed Biome and eleven files went on telling an agent to run its linter
   for a month, one of them the technical validator's own verdict row. Prose
   has no build step, and a skill is read by a model that will try what it is
@@ -543,6 +543,6 @@ review.
   23 claiming a level their eradication did not ship; an instruction edit is
   level 5, however it is described. On a commit it resolves only the staged
   entries' commits; CI resolves all of them, from a full clone
-  ([ADR-0029](../adr/0029-weak-point-management-from-the-dantotsu-record.md)).
+  ([ADR-2026-10-10T0141](../adr/2026-10-10T0141-weak-point-management-from-the-dantotsu-record.md)).
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".

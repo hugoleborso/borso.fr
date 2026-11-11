@@ -85,7 +85,7 @@ listening, so the song a person has in mind comes first.
 and remixes; for *mr brightside* the top three were all remixes and live takes,
 with the studio version fourth. A title typed without its artist can lose to
 covers: *smells like teen spirit* put Nirvana seventh. The first problem is
-what [ADR-0019](../adr/0019-the-room-search-collapses-masters-into-songs.md)
+what [ADR-2026-09-16T1931](../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md)
 collapses.
 
 **Limit of this measurement.** The old adapter fetched 25 MusicBrainz rows and
@@ -155,7 +155,7 @@ take can no longer ask for it — acceptable where a band plays its own
 arrangement anyway, and not acceptable in a catalogue's own search, where
 losing a named version loses information.
 
-Measured 2026-09-16. See [ADR-0019](../adr/0019-the-room-search-collapses-masters-into-songs.md).
+Measured 2026-09-16. See [ADR-2026-09-16T1931](../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md).
 
 ## MusicBrainz has no tempo and never did
 

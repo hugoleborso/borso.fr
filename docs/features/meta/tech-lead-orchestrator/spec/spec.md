@@ -226,7 +226,7 @@ Aucune. Skill local, état sur disque uniquement.
 .claude/skills/adr-writer/src/adr-render.utils.test.ts                    # NEW
 
 docs/adr/README.md                                                        # NEW — index des ADRs
-docs/adr/0001-tech-lead-orchestrator-replaces-auto-chain.md               # NEW — premier ADR meta, dogfooding
+docs/adr/2026-05-13T1510-tech-lead-orchestrator-replaces-auto-chain.md               # NEW — premier ADR meta, dogfooding
 
 .claude/skills/specification/SKILL.md                                     # UPDATE — auto-chain conditionnel (lit runs/<run-id>/state.json)
 .claude/skills/technical-conception/SKILL.md                              # UPDATE — idem + émet verdict YAML en fin de run

@@ -36,5 +36,5 @@ Four upstream ESLint plugins run as oxlint JavaScript plugins under aliases:
 one of their rules has to use the alias, `jsx-a11y-js/no-autofocus`, because
 `jsx-a11y/no-autofocus` names oxlint's native rule, which is a different rule
 and is not on. See
-[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) and the
+[ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md) and the
 alias table in [standard 12](../standards/12-linting-and-gates.md).

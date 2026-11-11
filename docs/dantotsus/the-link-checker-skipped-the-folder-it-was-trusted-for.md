@@ -44,7 +44,7 @@ docs/features/last-loop-lepin/elevation-profile-under-map/spec/spec.md:93 → ..
 docs/features/last-loop-lepin/gpx-speed-aware-projection/plan/plan.md:30 → ../../../knowledge/dsql-postgres-compat-gaps.md
 docs/features/last-loop-lepin/gpx-speed-aware-projection/spec/spec.md:112 → (same)
 docs/features/last-loop-lepin/self-punch-runners/spec/spec.md:7 → (same)
-docs/features/pragma/first-features/plan/plan.md:10 → ../../../adr/0004-pragma-shared-password-auth.md
+docs/features/pragma/first-features/plan/plan.md:10 → ../../../adr/2026-05-19T1955-pragma-shared-password-auth.md
 ```
 
 Five of the six are off by one `../`. All five targets exist; an agent

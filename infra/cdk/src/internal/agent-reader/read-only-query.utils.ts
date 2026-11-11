@@ -209,7 +209,7 @@ export function decideTableAccess(source: string, blocklist: readonly string[]):
   const named = listBlocklistedTables(source, blocklist);
   if (named.length > 0) {
     return refuse(
-      `the query names ${named.join(', ')}, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-0044).`,
+      `the query names ${named.join(', ')}, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-2026-10-25T0054).`,
     );
   }
   return { accepted: true, statement: source };

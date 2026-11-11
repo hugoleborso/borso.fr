@@ -1,6 +1,6 @@
 ---
 status: done
-summary: Slice 1 takes-api shipped. /api/takes signs a length-bound upload (50 MiB, content-length is a signed header), creates takes idempotently on the client id, lists a song's takes newest first by recordedAt with author name and comment count, deletes takes and comments for any member, and holds comments with an optional moment bounded by the take's duration. Song deletion cascades takes, comments and audio objects after commit; session deletion clears session_id; member deletion keeps takes with authorName null. Migration 0017 creates all five tables; take, take_comment and push_subscription join the preview tableBlocklist (ADR-0009 amended); the API role gains s3:DeleteObject. Core at 100% coverage, scoped mutation at 100%, back-e2e 235/235, typecheck, eslint, prettier and knip clean.
+summary: Slice 1 takes-api shipped. /api/takes signs a length-bound upload (50 MiB, content-length is a signed header), creates takes idempotently on the client id, lists a song's takes newest first by recordedAt with author name and comment count, deletes takes and comments for any member, and holds comments with an optional moment bounded by the take's duration. Song deletion cascades takes, comments and audio objects after commit; session deletion clears session_id; member deletion keeps takes with authorName null. Migration 0017 creates all five tables; take, take_comment and push_subscription join the preview tableBlocklist (ADR-2026-08-09T1654 amended); the API role gains s3:DeleteObject. Core at 100% coverage, scoped mutation at 100%, back-e2e 235/235, typecheck, eslint, prettier and knip clean.
 artifacts:
   - apps/pragma/domain/take-upload.core.ts
   - apps/pragma/api/src/database/migrations/0017_takes_and_push.sql
@@ -15,7 +15,7 @@ artifacts:
   - apps/pragma/api/src/app.ts
   - apps/pragma/cdk/lib/stack.ts
   - apps/pragma/VOCABULARY.md
-  - docs/adr/0009-pragma-previews-clone-production.md
+  - docs/adr/2026-08-09T1654-pragma-previews-clone-production.md
 next:
   kind: validate
 ---

@@ -104,7 +104,7 @@ attendance.
 
 - `GET /api/songs/search` answered an empty hit list when MusicBrainz refused.
   It now answers 503 `external-search-unavailable`, and the adapter returns a
-  union rather than an empty array. This is the defect ADR-0015 exists to fix.
+  union rather than an empty array. This is the defect ADR-2026-09-16T1931 exists to fix.
 - The MusicBrainz cache moved from module state, warm per Lambda instance, to
   the per-stage `external_search_cache` table. Sixty-second lifetime unchanged;
   a cold instance now starts warm, and two instances racing one cold query both

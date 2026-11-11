@@ -101,7 +101,7 @@ are computed post-hoc.
    `/adr`, surface the candidate list to the human via
    `AskUserQuestion`: one question per candidate, options
    `[ "Write ADR (Recommended)", "Skip — not really architectural",
-   "Merge with ADR <NNNN>" ]`. The human acts as tech-lead and either
+   "Merge with ADR <id>" ]`. The human acts as tech-lead and either
    confirms, drops, or merges each candidate. This is a `guidance` /
    `answer` human-message, **not** a `correction` — the orchestrator's
    judgment is a draft, the human ratifies. Append a

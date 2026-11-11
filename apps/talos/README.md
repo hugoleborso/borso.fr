@@ -3,7 +3,7 @@
 PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, a message screen that opens Claude Code on the web, and push notifications. Its content is the memory database (`memory_*` tables, [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md)); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
 
 - Contract and file formats: [`CONTRAT.md`](./CONTRAT.md). Words to use in code: [`VOCABULARY.md`](./VOCABULARY.md).
-- Deploys to prod only, never to a preview ([ADR-0027](../../docs/adr/0027-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.
+- Deploys to prod only, never to a preview ([ADR-2026-10-06T2302](../../docs/adr/2026-10-06T2302-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.
 - Secrets are SSM SecureStrings under `/talos/`, created by hand: `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, and optionally `fire-url`, `fire-token`, `secret-phrase`.
 
 ## Deliberate differences from the other apps

@@ -6,7 +6,7 @@ summary: |
   self-check ; risk register de 9 entrées avec mitigation + detection ;
   pre-flight gates listés en commandes exécutables. Pattern Coherence
   pass : aucun pattern à factoriser hors de apps/borso-fr/.
-  ADR 0002 référencé en tête.
+  ADR 2026-05-14T1300 référencé en tête.
   Aucune sub-skill domaine invoquée (aucune disponible) ; deux candidates
   flaggées sous "Missing technical skills" : /static-html-app, /webgl-shader.
 artifacts:

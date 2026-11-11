@@ -1,7 +1,7 @@
 # ADR template
 
 The skill emits one ADR per `/adr` invocation, written to
-`docs/adr/<id>-<kebab-slug>.md`, where `<id>` is `date -u +%Y%m%d%H%M`, using the layout below. The standard at
+`docs/adr/<id>-<kebab-slug>.md`, where `<id>` is `date -u +%Y-%m-%dT%H%M`, using the layout below. The standard at
 [`standard.md`](./standard.md) explains *why* each section is mandatory; this
 template gives the *what*.
 
@@ -95,7 +95,7 @@ below.}}
 - Plan: {{path to plan.md (mention the row)}}
 - Commit: {{SHA — stamped by /after-task-kaizen on merge}}
 - Files: {{path:line, path:line — the load-bearing call sites}}
-- Related ADRs: {{ADR-XXXX, ADR-YYYY — supersedes/superseded-by/builds-on}}
+- Related ADRs: {{ADR-<id>, ADR-<id> — supersedes/superseded-by/builds-on}}
 
 <!-- Optional. Append a Revision block when evidence shifts. -->
 <!-- ## Revisions

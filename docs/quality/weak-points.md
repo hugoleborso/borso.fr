@@ -2,7 +2,7 @@
 
 This file lists the weak points this repository has committed to drive to
 zero. A person writes it and a person accepts it; no generator rewrites it.
-[ADR-0029](../adr/0029-weak-point-management-from-the-dantotsu-record.md)
+[ADR-2026-10-10T0141](../adr/2026-10-10T0141-weak-point-management-from-the-dantotsu-record.md)
 records why it exists and how it is read.
 
 A weak point is a place in the product or in the factory where defects keep

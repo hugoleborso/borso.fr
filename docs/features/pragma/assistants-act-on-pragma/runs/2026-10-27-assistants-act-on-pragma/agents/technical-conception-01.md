@@ -1,6 +1,6 @@
 ---
 status: done
-summary: Plan written at docs/features/pragma/assistants-act-on-pragma/plan/plan.md, referencing ADR-0041 and ADR-0042, cut into seven ordered slices (CloudFront routing in infra/cdk, OAuth server, MCP transport with catalogue tools, session and setlist tools, take tools, band operation tools with the route and tool coverage gate, consent page and Account section). No new ADR trigger. Ten planning decisions are recorded; D2 (routes excluded from tools beyond the spec's list, all credentials or browser-bound) is the one the operator may want to overturn.
+summary: Plan written at docs/features/pragma/assistants-act-on-pragma/plan/plan.md, referencing ADR-2026-10-23T0227 and ADR-2026-10-23T0228, cut into seven ordered slices (CloudFront routing in infra/cdk, OAuth server, MCP transport with catalogue tools, session and setlist tools, take tools, band operation tools with the route and tool coverage gate, consent page and Account section). No new ADR trigger. Ten planning decisions are recorded; D2 (routes excluded from tools beyond the spec's list, all credentials or browser-bound) is the one the operator may want to overturn.
 artifacts:
   - docs/features/pragma/assistants-act-on-pragma/plan/plan.md
 next:
