@@ -70,6 +70,7 @@ function createDsqlClient(config: DatabaseConfig): Sql {
     },
     types: { bigint: postgres.BigInt },
     connection: { search_path: config.schemaName },
+    fetch_types: false,
     debug: (_connection, query) => {
       if (probedQueries >= PROBED_QUERY_LIMIT) return;
       probedQueries += 1;
@@ -81,7 +82,7 @@ function createDsqlClient(config: DatabaseConfig): Sql {
 }
 
 function createLocalClient(config: LocalConfig): Sql {
-  return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt } });
+  return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt }, fetch_types: false });
 }
 
 /**
