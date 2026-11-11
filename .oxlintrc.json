@@ -532,7 +532,7 @@
       }
     },
     {
-      "files": ["apps/pragma/api/src/**/*.ts"],
+      "files": ["apps/*/api/src/**/*.ts"],
       "rules": {
         "no-console": ["error", { "allow": [] }]
       }

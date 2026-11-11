@@ -64,7 +64,7 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 - `-` Fields only reach the event along the request's async path. Work a service starts without awaiting it lands in a `detached` line, not in the request's event.
 - `~` `recordProductEvent` keeps writing its own line, because the specs that define those events read them by name. Inside a request, it also appends the name to `product.events`.
 - `~` `free_slots_computed` stops being its own `console.info` line. It becomes `free_slots.*` fields on the `GET /api/free-slots` event. The practice-free-slots spec's p90 watch now reads `free_slots.duration_ms`.
-- `~` last-loop-lepin, banana-rush and talos follow the same shape, each with its own copy, because apps do not import each other.
+- `~` last-loop-lepin, banana-rush and talos follow the same shape, each with its own copy, because apps do not import each other. They write to stdout only, because none of them records a Sentry request span (last-loop-lepin sets `tracesSampleRate: 0`, banana-rush and talos set none). They carry no identity field, because the lepin admin session id is a bearer credential, talos has one owner and banana-rush players are anonymous. The `no-console` ban covers every `apps/*/api/src` tree.
 
 ## Alternatives considered
 
