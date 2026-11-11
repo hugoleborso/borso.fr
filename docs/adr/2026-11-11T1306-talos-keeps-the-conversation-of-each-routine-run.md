@@ -1,6 +1,6 @@
 # ADR-2026-11-11T1306: Talos keeps the conversation of each routine run in a table of its own database
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-11
 - **Deciders:** Hugo
 - **Tags:** routine-launch, talos, data
