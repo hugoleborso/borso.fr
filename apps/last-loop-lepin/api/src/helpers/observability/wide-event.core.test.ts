@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildDetachedFields,
   buildFailureFields,
   buildHttpEndingFields,
   buildOpeningFields,
@@ -9,7 +8,6 @@ import {
   describeThrownValue,
   mergeWideEventFields,
   selectLambdaRequestId,
-  selectRequestId,
   selectRequestOutcome,
   serializeWideEvent,
 } from './wide-event.core';
@@ -228,42 +226,6 @@ describe('mergeWideEventFields', () => {
     mergeWideEventFields(held, { tags: ['two'] });
 
     expect(held).toStrictEqual({ tags: ['one'] });
-  });
-});
-
-describe('buildDetachedFields', () => {
-  it('sends a late field on its own line, naming the request it belonged to', () => {
-    expect(buildDetachedFields('prod', REQUEST_ID, { 'late.failure': 'TypeError' })).toStrictEqual({
-      'service.name': 'last-loop-lepin-api',
-      'service.stage': 'prod',
-      'event.kind': 'detached',
-      'request.id': REQUEST_ID,
-      'late.failure': 'TypeError',
-    });
-  });
-
-  it('leaves the request out when the field was added outside any request', () => {
-    expect(
-      buildDetachedFields(undefined, undefined, { 'late.failure': 'TypeError' }),
-    ).toStrictEqual({
-      'service.name': 'last-loop-lepin-api',
-      'event.kind': 'detached',
-      'late.failure': 'TypeError',
-    });
-  });
-});
-
-describe('selectRequestId', () => {
-  it('reads the request id of an event', () => {
-    expect(selectRequestId({ 'request.id': REQUEST_ID })).toBe(REQUEST_ID);
-  });
-
-  it('answers undefined for an event with no request id', () => {
-    expect(selectRequestId({ 'event.kind': 'scheduled' })).toBeUndefined();
-  });
-
-  it('answers undefined when the request id is not text', () => {
-    expect(selectRequestId({ 'request.id': ['not', 'text'] })).toBeUndefined();
   });
 });
 
