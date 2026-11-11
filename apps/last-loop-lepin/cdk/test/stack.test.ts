@@ -98,7 +98,7 @@ function readSchemaReader(template: Template): unknown {
   return undefined;
 }
 
-describe('last-loop-lepin read-only agent access (ADR-0044)', () => {
+describe('last-loop-lepin read-only agent access (ADR-2026-10-25T0054)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');

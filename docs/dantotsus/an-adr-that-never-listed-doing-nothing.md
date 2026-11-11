@@ -38,7 +38,7 @@ merging.
    section told them how to store the secret, not whether to. It read as a
    prerequisite, because that is the only shape a "before merge" instruction
    has.
-2. **Why did the ADR not settle it?** [ADR-0017](../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md)
+2. **Why did the ADR not settle it?** [ADR-2026-09-15T2023](../adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md)
    scored five options against four criteria. All five are answers to *where
    does the Spotify credential live and when is the lookup made*. None of them
    is *do not integrate Spotify*.
@@ -111,8 +111,8 @@ the piloted `/adr` modes read before writing.
 The rule carries this defect as its worked example, so the next author meets
 the reason rather than the instruction.
 
-**Sibling defects swept:** [ADR-0015](../adr/0015-per-member-credentials-replace-the-shared-password.md)
-and [ADR-0004](../adr/0004-pragma-shared-password-auth.md) are
+**Sibling defects swept:** [ADR-2026-09-14T1903](../adr/2026-09-14T1903-per-member-credentials-replace-the-shared-password.md)
+and [ADR-2026-05-19T1955](../adr/2026-05-19T1955-pragma-shared-password-auth.md) are
 the two other credential-storage ADRs. Both decide where a credential the
 product genuinely cannot work without is kept — a band with no password cannot
 sign in — so the do-nothing option is not merely unscored there, it does not
@@ -121,7 +121,7 @@ are left as written rather than back-filled.
 
 ## See also
 
-- [ADR-0017](../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) —
+- [ADR-2026-09-15T2023](../adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md) —
   the five options that were scored, and the one that was not.
 - [`orchestrator-agency-overcorrected-on-product-decisions`](./orchestrator-agency-overcorrected-on-product-decisions.md)
   — the neighbouring failure, where product decisions were taken that should

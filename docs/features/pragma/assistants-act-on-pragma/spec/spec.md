@@ -97,11 +97,11 @@ sequenceDiagram
 | Question | Options | Decision (2026-10-23) |
 | --- | --- | --- |
 | How does a member authenticate an assistant? | personal token / OAuth / token now, OAuth later | OAuth with a browser login. It also opens claude.ai and Le Chat connectors, which need OAuth. |
-| Who runs the authorization server? | in the pragma API / oidc-provider / Cognito / Auth0 or WorkOS | In the pragma API, reusing the MCP SDK's OAuth schemas. See ADR-0042. |
+| Who runs the authorization server? | in the pragma API / oidc-provider / Cognito / Auth0 or WorkOS | In the pragma API, reusing the MCP SDK's OAuth schemas. See ADR-2026-10-23T0228. |
 | How are notifications triggered? | the existing fan-out / plus a free notify tool | The existing fan-out, because tools call the same services. No free-text push. |
 | Which areas get tools? | catalogue / sessions and setlists / takes / band ops | All four. |
 | Tools from HTTP routes or from services? | call the HTTP API from the MCP handler / call the services | Call the services, with the routes' own Zod schemas. One process, no second authentication hop. |
-| Where does the MCP server run? | the existing API Lambda / its own Lambda | The existing API Lambda at `/mcp`, stateless Streamable HTTP. See ADR-0041. |
+| Where does the MCP server run? | the existing API Lambda / its own Lambda | The existing API Lambda at `/mcp`, stateless Streamable HTTP. See ADR-2026-10-23T0227. |
 | Token lifetimes | — | Access token 1 hour, refresh token 90 days, rotated on use. Stored as SHA-256 hashes. |
 | Which actions get a tool? (2026-10-29, after the preview trial) | every route a member can call / a smaller list chosen per action | The operator approved 35 tools on 2026-10-29, which narrows "anything the member can do". Assistants do not vote (improvement votes, setlist votes, live concert votes), do not change notification preferences, do not write take comments or transition comments (they read the transition comments through `get_setlist`), do not create, change, reorder or delete instruments, do not set mastery defaults, do not edit the outreach template, and do not add, change or remove members. Creation and change of the same noun share one `save_<noun>` tool, and every deletion goes through one `delete { kind, id }` tool whose description asks the assistant to confirm with the user. Plan D14. |
 
@@ -113,8 +113,8 @@ sequenceDiagram
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0041](../../../../adr/0041-pragma-serves-mcp-from-its-api-lambda.md) | `@modelcontextprotocol/sdk` with `@hono/mcp`, stateless Streamable HTTP at `/mcp` on the existing API Lambda | two new dependencies; a new server and transport per request; tools call services, never HTTP |
-| [ADR-0042](../../../../adr/0042-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server: discovery, dynamic client registration, PKCE S256, rotating refresh tokens, login through the existing member session | three new tables; grants per stage and kept out of preview clones; the security code is ours and carries the coverage and mutation gates |
+| [ADR-2026-10-23T0227](../../../../adr/2026-10-23T0227-pragma-serves-mcp-from-its-api-lambda.md) | `@modelcontextprotocol/sdk` with `@hono/mcp`, stateless Streamable HTTP at `/mcp` on the existing API Lambda | two new dependencies; a new server and transport per request; tools call services, never HTTP |
+| [ADR-2026-10-23T0228](../../../../adr/2026-10-23T0228-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server: discovery, dynamic client registration, PKCE S256, rotating refresh tokens, login through the existing member session | three new tables; grants per stage and kept out of preview clones; the security code is ours and carries the coverage and mutation gates |
 
 ## Changes
 

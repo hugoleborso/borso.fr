@@ -168,7 +168,7 @@ fixes those in one place and takes the event name as a closed union, so a name
 that does not exist is a type error rather than an event nobody finds.
 
 That module is named `<vendor>.adapter.ts`, so the folder and
-[ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) agree rather
+[ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md) agree rather
 than compete. They are answering different questions: the folder is a *scope*,
 and it is the narrower rule, because a reporting SDK is the one outbound
 dependency whose call sites are the whole application rather than one bounded

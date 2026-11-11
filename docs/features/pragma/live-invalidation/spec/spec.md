@@ -4,11 +4,11 @@
 
 When a member changes band data, every other member with pragma open sees the change within a couple of seconds. They do not have to wait for a freshness window or pull to refresh. The case the operator named is several members ordering one setlist together.
 
-The smallest change that meets it: after a successful write, the API tells the other open clients which part of the cache went stale, over the WebSocket channel ADR-0021 built for banana-rush. Each client invalidates that part and refetches what is on screen. No data travels on the socket.
+The smallest change that meets it: after a successful write, the API tells the other open clients which part of the cache went stale, over the WebSocket channel ADR-2026-09-19T2140 built for banana-rush. Each client invalidates that part and refetches what is on screen. No data travels on the socket.
 
 ## Constraints
 
-- **Cost.** The operator wants no fixed monthly charge. API Gateway WebSocket bills per message and per connection minute (ADR-0021). A client closes its socket while the page is hidden, so an idle phone costs nothing.
+- **Cost.** The operator wants no fixed monthly charge. API Gateway WebSocket bills per message and per connection minute (ADR-2026-09-19T2140). A client closes its socket while the page is hidden, so an idle phone costs nothing.
 - **Delivery only.** The socket is a delivery channel, never a command channel, as in banana-rush. A frame from a client changes nothing.
 - **Mobile first.** It works on a phone that locks, sleeps and comes back.
 

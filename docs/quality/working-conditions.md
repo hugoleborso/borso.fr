@@ -22,7 +22,7 @@ grow: when three unfiled lines describe the same thing, add a wall here.
 The three areas come from the Theodo Academy *Working Conditions* standard:
 **Build** is the local loop (equipment, setup, fast feedback, readable code),
 **Observe** is seeing what the system did, and **Ship** is getting merged code
-to production. ADR-0029 records why this board exists.
+to production. ADR-2026-10-10T0141 records why this board exists.
 
 ## Format
 

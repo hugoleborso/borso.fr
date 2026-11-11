@@ -21,7 +21,7 @@ recurs: [an-adr-number-goes-to-whoever-writes-it-first]
 A coordinator running twelve agents reserved ADR numbers by message: 0028
 for Sentry, 0029 for weak point management, 0030 for knowledge triggers. In
 the meantime a kaizen pull request, #167, which never saw the message, merged
-its own `0028-tailwind-merge-resolves-class-conflicts.md`. The Sentry branch
+its own `2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md`. The Sentry branch
 renumbered to 0031, and #118's three ADRs moved to 0032 to 0034. Each move
 touches the file name, its heading and every citation.
 

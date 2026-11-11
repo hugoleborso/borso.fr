@@ -29,7 +29,7 @@
 # `.tool_response`. Plain stdout from either event reaches the debug log and not
 # the model. This hook did both wrong until 2026-10-10, so it never spoke on the
 # run it was written for; it is registered on both events now and answers with
-# `additionalContext`. See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+# `additionalContext`. See docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0

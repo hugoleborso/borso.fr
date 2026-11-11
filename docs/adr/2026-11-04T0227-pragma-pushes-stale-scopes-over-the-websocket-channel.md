@@ -14,7 +14,7 @@ Three channels were open:
 
 - **Web push.** pragma subscribes with `userVisibleOnly: true` (`push-subscription.adapter.ts`), so every push shows a notification and none can be silent. Pushes are also grouped and can be muted per member.
 - **A CDN or Redis cache.** Either one caches on the server side, while the delay lives in each phone's query cache. ElastiCache also bills a fixed monthly charge.
-- **The API Gateway WebSocket channel** that [ADR-0021](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) built for banana-rush. It bills per message and per connection minute, with no fixed charge, according to the pricing that ADR quotes.
+- **The API Gateway WebSocket channel** that [ADR-2026-09-19T2140](./2026-09-19T2140-api-gateway-websocket-pushes-banana-rush-round-state.md) built for banana-rush. It bills per message and per connection minute, with no fixed charge, according to the pricing that ADR quotes.
 
 ## Criteria
 

@@ -2,7 +2,7 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
-The work splits into two slices that ship in one pull request: **A**, the database roles in `infra/cdk` and the three `client.ts` files ([ADR-0036](../../../../adr/0036-one-database-role-per-stage-schema.md)); **B**, the pragma feature ([ADR-0037](../../../../adr/0037-calendar-feed-address-in-its-own-table.md), [ADR-0038](../../../../adr/0038-ical-js-parses-calendar-feeds.md)). Slice A lands first in the commit order, so the preview deploy proves it before slice B depends on it.
+The work splits into two slices that ship in one pull request: **A**, the database roles in `infra/cdk` and the three `client.ts` files ([ADR-2026-10-02T1351](../../../../adr/2026-10-02T1351-one-database-role-per-stage-schema.md)); **B**, the pragma feature ([ADR-2026-10-02T1352](../../../../adr/2026-10-02T1352-calendar-feed-address-in-its-own-table.md), [ADR-2026-10-02T1353](../../../../adr/2026-10-02T1353-ical-js-parses-calendar-feeds.md)). Slice A lands first in the commit order, so the preview deploy proves it before slice B depends on it.
 
 ## How each spec decision becomes code
 

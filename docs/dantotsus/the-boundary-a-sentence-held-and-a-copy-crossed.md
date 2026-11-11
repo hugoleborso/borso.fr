@@ -9,7 +9,7 @@ fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-api-import-in-site.js, eslint-rules/no-api-declaration-repeated-in-site.js]
 time-to-detect: months
-tags: [eslint, domain, adr-0010, forms, zod, banana-rush, last-loop-lepin, pragma, talos, blueprints]
+tags: [eslint, domain, adr-2026-08-13T0026, forms, zod, banana-rush, last-loop-lepin, pragma, talos, blueprints]
 blueprints: [core-form-schema]
 zone: apps/pragma/site/src
 recurs: none (the first entry where a site copied an API rule across the boundary; the overlapping entries share only lint and app tags)
@@ -57,10 +57,10 @@ The same shape was in every application with an API:
    declares the Drizzle tables." Ten files followed it.
 4. **Why was restating the only option the blueprint saw?** The limits
    lived in `*.schema.ts`, next to the tables, and CLAUDE.md forbids a
-   site importing from `@api/*`. ADR-0010 had opened `domain/` for rules
+   site importing from `@api/*`. ADR-2026-08-13T0026 had opened `domain/` for rules
    both sides read, and nobody read a maximum length as a rule.
 5. **Why did banana-rush import from `@api/*` instead?** Nothing stopped
-   it. The rule was a sentence in CLAUDE.md, and ADR-0010 said "the alias
+   it. The rule was a sentence in CLAUDE.md, and ADR-2026-08-13T0026 said "the alias
    plus the lint rules already hold" the boundary. The only lint rule
    near it was `no-restricted-imports` on `domain/`, which stops the
    folder reaching into either side and says nothing about the site
@@ -80,7 +80,7 @@ for exactly that.
 - **Typing:** a number is a number. `.max(256)` and `.max(32)` have the
   same type, and the site's form values are strings the API never sees
   in that shape, so no type joins the two schemas.
-- **Linter:** no rule read site imports into `api/`. ADR-0010 claimed one
+- **Linter:** no rule read site imports into `api/`. ADR-2026-08-13T0026 claimed one
   did. The boundary also has a second door, the copy, which no import
   rule can see.
 - **Local validation:** nobody types a 40 character phone number while
@@ -157,4 +157,4 @@ before a request exists, and the API still decides.
   one.
 - [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md),
   the same shape: a blueprint prescribed the move that caused the defect.
-- [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
+- [ADR-2026-08-13T0026](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md).

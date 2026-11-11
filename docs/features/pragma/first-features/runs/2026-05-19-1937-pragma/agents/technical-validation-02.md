@@ -3,7 +3,7 @@ status: done
 summary: |
   Blocker A09 / D20 (auth bypass on POST /api/admin/rotate-password) is
   closed. The fix splits the admin router into bootstrapRouter (ungated,
-  row-absent guard preserved per ADR-0004) and rotateRouter (carries
+  row-absent guard preserved per ADR-2026-05-19T1955) and rotateRouter (carries
   requireSharedPasswordSession via router.use('*', ...) before the rotate
   handler). Both mounted at /api/admin in app.ts. Hono's router-level
   middleware resolution guarantees the cookie verifier runs before the

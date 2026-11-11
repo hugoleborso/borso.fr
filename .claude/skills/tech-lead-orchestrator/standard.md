@@ -5,7 +5,7 @@ reviewing a tech-lead-orchestrator change.
 
 ## Substrate boundary — Skill (chat) vs Workflow (script)
 
-Per [ADR-0005](../../../docs/adr/0005-dynamic-workflows-for-orchestration.md),
+Per [ADR-2026-06-05T2337](../../../docs/adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md),
 the pipeline runs on two substrates depending on whether the stage needs
 human input:
 
@@ -134,7 +134,7 @@ Before invoking `/adr` (piloted mode), surface the candidate list to Hugo via
 
 - *Write ADR (Recommended)* — confirm, proceed to `/adr` (piloted mode).
 - *Skip — not really architectural* — drop the candidate, no ADR.
-- *Merge with ADR &lt;NNNN&gt;* — fold into an existing ADR (the
+- *Merge with ADR &lt;id&gt;* — fold into an existing ADR (the
   orchestrator records the link, no new ADR written).
 
 The human's answers are `guidance` / `answer` messages, not

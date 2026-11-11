@@ -46,7 +46,7 @@ describe('countable', () => {
   });
 
   it('ignores a link target while keeping the text a reader actually reads', () => {
-    expect(countable('[ADR17](docs/adr/0017-a-very-long-file-name.md)')).toBe(5);
+    expect(countable('[ADR17](docs/adr/2026-09-15T2023-a-very-long-file-name.md)')).toBe(5);
   });
 
   it('ignores html markup', () => {

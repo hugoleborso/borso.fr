@@ -32,8 +32,8 @@ SEQUENCE_GLOBS=(
   'docs/adr:md:architecture decision record'
 )
 
-# An id is a UTC minute, `2026-11-11T1318`, or a plain number for the
-# migrations and the ADRs written before the timestamps.
+# An ADR id is a UTC minute, `2026-11-11T1318`. A migration id is a plain
+# number. check-adr-numbers-resolve.sh refuses an ADR named by a number.
 ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}|[0-9]+'
 
 failed=0

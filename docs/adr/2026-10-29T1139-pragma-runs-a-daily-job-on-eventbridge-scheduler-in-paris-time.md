@@ -9,7 +9,7 @@
 
 The practice flame spec (`docs/features/pragma/practice-streak/spec/spec.md`) sends one push at 20:00 Europe/Paris to every member whose day has not counted yet. The operator ratified that job on 2026-10-29. It is the first thing in pragma that runs on a clock rather than on a request.
 
-Two forces shape it. First, 20:00 is a wall-clock time in Paris, and Paris moves between UTC+1 and UTC+2 twice a year. Second, the job reads `study`, `session`, `member` and the push tables, so it needs the stage's DSQL login role. ADR-0036 maps that role to the stage's API Lambda only.
+Two forces shape it. First, 20:00 is a wall-clock time in Paris, and Paris moves between UTC+1 and UTC+2 twice a year. Second, the job reads `study`, `session`, `member` and the push tables, so it needs the stage's DSQL login role. ADR-2026-10-02T1351 maps that role to the stage's API Lambda only.
 
 The job needs no new secret, because the VAPID keys are read from the database as `notifyBand` does today. Previews hold no push subscription, because `push_subscription` is blocklisted from preview clones.
 
@@ -34,7 +34,7 @@ The job needs no new secret, because the VAPID keys are read from the database a
 - **Summary:** As in *Decision*.
 - **Strengths:**
   - Wall-clock correct across DST.
-  - Reuses the API's DSQL role (ADR-0036), environment and Sentry setup.
+  - Reuses the API's DSQL role (ADR-2026-10-02T1351), environment and Sentry setup.
 - **Costs:**
   - One more event shape on the API entry point.
 - **Rationale:** It is the only option correct on time without extra code, and the cheapest on infrastructure.
@@ -52,7 +52,7 @@ The job needs no new secret, because the VAPID keys are read from the database a
 - **Raised by:** author
 - **Summary:** A second `NodejsFunction` with its own entry for the job.
 - **Strengths:** The API entry point keeps one event shape, and the job could get its own timeout.
-- **Costs:** A second DSQL role mapping per ADR-0036, a duplicated environment and error-reporting setup, and a second bundle to deploy.
+- **Costs:** A second DSQL role mapping per ADR-2026-10-02T1351, a duplicated environment and error-reporting setup, and a second bundle to deploy.
 - **Rejection rationale:** It loses on infrastructure cost and on reuse. It would win if the job outgrew the API's timeout.
 
 ## Evaluation rubric
@@ -60,7 +60,7 @@ The job needs no new secret, because the VAPID keys are read from the database a
 | Criterion | Weight | Why it matters |
 |---|---|---|
 | Wall-clock correctness | high | The spec promises 20:00 Paris time, and the operator chose that hour. |
-| Infrastructure added | medium | One operator maintains every stack, and ADR-0036 ties the database role to one function. |
+| Infrastructure added | medium | One operator maintains every stack, and ADR-2026-10-02T1351 ties the database role to one function. |
 | API entry point stays simple | low | One guard is cheap to test, but every entry point shape is a place to route wrongly. |
 
 |   | Option A | Option B | Option C |
@@ -75,4 +75,4 @@ The job needs no new secret, because the VAPID keys are read from the database a
 - Plan: `docs/features/pragma/practice-streak/plan/plan.md`
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/cdk/lib/stack.ts`, `apps/pragma/api/src/main.ts`, `apps/pragma/api/src/streaks/`
-- Related ADRs: ADR-0036 (one DSQL login role per stage, mapped to the API Lambda), ADR-0031 (error reporting)
+- Related ADRs: ADR-2026-10-02T1351 (one DSQL login role per stage, mapped to the API Lambda), ADR-2026-10-10T0457 (error reporting)

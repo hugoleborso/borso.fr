@@ -10,7 +10,7 @@
 
 pragma has no component library. It hand-writes 16 interactive primitives, from the menu and the bottom sheet to the slider and the snackbar (measured, `grep` for roles, dialogs and inputs under `apps/pragma/site/src/components/`). Each one rediscovered a platform edge case after it shipped. Four dantotsus trace to that (measured): [the energy bar that wrote on a scroll](../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md), [the dialog that collapsed on a phone](../dantotsus/a-dialog-that-only-collapsed-on-a-phone.md), [the shell that scrolled inside the window](../dantotsus/the-shell-that-scrolled-inside-a-window-that-still-could.md) and [the menu only its own button could close](../dantotsus/the-menu-that-only-its-own-button-could-close.md). The menu fix of PR #246 was then written three times ([the-menu-written-three-times](../dantotsus/the-menu-written-three-times.md)). The operator asked on 2026-11-03 for an easy-to-use component library.
 
-Constraints that close doors: React 19, Tailwind with pragma's own Notebook tokens ([ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md)), so the library must ship no look of its own; a phone-first installed app; one developer pays for each migration. A new dependency is an ADR decision under CLAUDE.md.
+Constraints that close doors: React 19, Tailwind with pragma's own Notebook tokens ([ADR-2026-10-27T1115](./2026-10-27T1115-pragma-design-system-is-notebook-with-grafts.md)), so the library must ship no look of its own; a phone-first installed app; one developer pays for each migration. A new dependency is an ADR decision under CLAUDE.md.
 
 ## Criteria
 

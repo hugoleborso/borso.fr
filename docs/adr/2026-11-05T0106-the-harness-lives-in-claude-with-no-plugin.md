@@ -4,7 +4,7 @@
 - **Date:** 2026-11-05
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, harness
-- **Supersedes:** [ADR-0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md)
+- **Supersedes:** [ADR-2026-10-05T1023](./2026-10-05T1023-the-harness-ships-as-a-plugin-linked-into-claude.md)
 
 ## Criteria
 
@@ -12,11 +12,11 @@
 |---|---|---|---|---|
 | The skills sit in `.claude/` and the plugin is gone | operator | high | The operator asked for it on 2026-11-05 | Whether `plugins/` exists |
 | One copy, no indirection | author | high | Links, a link checker and a path resolver are three things to keep in step | Count of scripts that exist only to locate the harness |
-| A cloud session loads every part | author | high | ADR-0026 measured that a cloud session skips an untrusted plugin | Whether each skill, agent, command and hook is a plain file Claude Code reads from `.claude/` |
+| A cloud session loads every part | author | high | ADR-2026-10-05T1023 measured that a cloud session skips an untrusted plugin | Whether each skill, agent, command and hook is a plain file Claude Code reads from `.claude/` |
 
 ## Context
 
-ADR-0026 packaged the harness as `plugins/borso-harness/` so that `hugoleborso/talos` could vendor borso.fr as a submodule and load the same skills. Talos now lives in this monorepo, at `apps/talos/` (measured, `ls apps` on 2026-11-05). The plugin has no consumer outside this repository. It still costs a symlink per part, `link-into.sh` and `check-harness-links.sh` to keep the links in step, `harness-path.sh` and `.claude/borso-harness.json` to resolve paths for other repositories, a SessionStart hook that exports `CLAUDE_PLUGIN_ROOT`, and a `.claude-plugin/marketplace.json`.
+ADR-2026-10-05T1023 packaged the harness as `plugins/borso-harness/` so that `hugoleborso/talos` could vendor borso.fr as a submodule and load the same skills. Talos now lives in this monorepo, at `apps/talos/` (measured, `ls apps` on 2026-11-05). The plugin has no consumer outside this repository. It still costs a symlink per part, `link-into.sh` and `check-harness-links.sh` to keep the links in step, `harness-path.sh` and `.claude/borso-harness.json` to resolve paths for other repositories, a SessionStart hook that exports `CLAUDE_PLUGIN_ROOT`, and a `.claude-plugin/marketplace.json`.
 
 ## Decision
 
@@ -40,7 +40,7 @@ ADR-0026 packaged the harness as `plugins/borso-harness/` so that `hugoleborso/t
 
 ### Option B: keep the plugin and its links (rejected)
 
-- **Summary:** ADR-0026 as it stands.
+- **Summary:** ADR-2026-10-05T1023 as it stands.
 - **Strengths:** another repository can still vendor it.
 - **Costs:** the links, the checker, the path resolver and the environment export.
 - **Rejection rationale:** fails the operator's criterion, and pays for reuse nobody uses.
@@ -61,4 +61,4 @@ ADR-0026 packaged the harness as `plugins/borso-harness/` so that `hugoleborso/t
 ## Implementation pointers
 
 - Files: `.claude/skills/`, `.claude/agents/`, `.claude/commands/`, `.claude/hooks/`, `.claude/settings.json`, `scripts/kaizen.sh`, `scripts/knowledge-triggers.py`
-- Related ADRs: ADR-0026, superseded. ADR-0030, whose hook and compiler moved.
+- Related ADRs: ADR-2026-10-05T1023, superseded. ADR-2026-10-10T0122, whose hook and compiler moved.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerates the files no commit carries.
 #
-# None of the reports, indexes or models below is in git — see ADR-0014. A
+# None of the reports, indexes or models below is in git — see ADR-2026-08-20T1031. A
 # fresh clone has none of them, and neither does a subagent given its own
 # worktree, for which the SessionStart hook never runs. Anything that reads one
 # runs this first.

@@ -131,7 +131,7 @@ One `ALLOWED_TEST_ONLY` entry of this shape remains,
 `apps/pragma/api/src/mastery/mastery.core.ts`, whose live counterpart is
 `site/src/lib/mastery-aggregate.core.ts`. Consolidating that pair means
 moving the rule into `apps/pragma/domain/`, which is a cross-boundary
-decision under [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md)
+decision under [ADR-2026-08-13T0026](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md)
 and belongs to the operator, not to a sweep.
 
 ## See also

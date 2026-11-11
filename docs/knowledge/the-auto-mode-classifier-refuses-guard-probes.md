@@ -17,7 +17,7 @@ guard refuses a dangerous query* carries the dangerous query, so it reads the
 same way the real thing does, and the refusal arrives before the guard ever
 runs.
 
-It happened four times in two days around ADR-0044's read path:
+It happened four times in two days around ADR-2026-10-25T0054's read path:
 
 | What was being proven | Classifier reason |
 | --- | --- |
@@ -50,7 +50,7 @@ and the only dangerous thing in it is a description of danger.
 
 ## It also refuses a chain of privileged calls
 
-On 2026-10-29, applying ADR-0049's IAM half, a single Bash call chaining two
+On 2026-10-29, applying ADR-2026-10-28T2126's IAM half, a single Bash call chaining two
 `aws iam put-user-policy` invocations was refused with `[Permission Grant]`.
 The same two commands, sent one per call, both went through. Nothing about the
 policies changed between the attempts.
@@ -79,4 +79,4 @@ shown to work. Say so, rather than reporting the refusal as a passing probe.
 
 - [`the-production-database-is-out-of-reach-of-a-hosted-session.md`](./the-production-database-is-out-of-reach-of-a-hosted-session.md)
 - [`what-a-hosted-session-cannot-do-on-github.md`](./what-a-hosted-session-cannot-do-on-github.md)
-- [`docs/adr/0044-read-only-production-database-access-for-agents.md`](../adr/0044-read-only-production-database-access-for-agents.md)
+- [`docs/adr/2026-10-25T0054-read-only-production-database-access-for-agents.md`](../adr/2026-10-25T0054-read-only-production-database-access-for-agents.md)

@@ -14,8 +14,8 @@ artifacts:
   - apps/pragma/test/database-utils.ts
   - apps/pragma/package.json
   - apps/pragma/VOCABULARY.md
-  - docs/adr/0009-pragma-previews-clone-production.md
-  - docs/adr/0044-read-only-production-database-access-for-agents.md
+  - docs/adr/2026-08-09T1654-pragma-previews-clone-production.md
+  - docs/adr/2026-10-25T0054-read-only-production-database-access-for-agents.md
 next:
   kind: validate
 ---

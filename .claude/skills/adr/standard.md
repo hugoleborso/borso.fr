@@ -7,14 +7,13 @@ The canonical shape of an Architecture Decision Record in this repo.
 ```
 docs/adr/
 ├── README.md                 ← index, grouped by area
-├── 0001-pnpm-workspaces.md
-├── 0002-aurora-dsql-over-rds.md
+├── 2026-05-13T1510-tech-lead-orchestrator-replaces-auto-chain.md
 ├── ...
-├── 0049-agents-read-production-through-an-invoked-reader-lambda.md
+├── 2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md
 └── 2026-10-29T1405-<kebab-slug>.md
 ```
 
-A new record's id is the UTC minute it was written, `YYYY-MM-DDTHHMM`, from `date -u +%Y-%m-%dT%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0052` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
+A new record's id is the UTC minute it was written, `YYYY-MM-DDTHHMM`, from `date -u +%Y-%m-%dT%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records written before that change were numbered `0001` to `0052`; they were renamed to the UTC minute of the commit that added them. Ids are never recycled: superseded ADRs keep theirs forever.
 
 ## Mandatory sections
 
@@ -23,7 +22,7 @@ The template at [`template.md`](./template.md) enforces this. Every ADR carries 
 ### 1. Header block
 
 ```yaml
-- **Status:** proposed | accepted | superseded by ADR-XXXX | deprecated
+- **Status:** proposed | accepted | superseded by ADR-<id> | deprecated
 - **Date:** YYYY-MM-DD            # creation date, never updated
 - **Deciders:** name(s)
 - **Tags:** comma, separated
@@ -32,7 +31,7 @@ The template at [`template.md`](./template.md) enforces this. Every ADR carries 
 Status transitions:
 - `proposed` → drafted but not shipped. Default on first commit.
 - `accepted` → shipped. `/after-task-kaizen` stamps this on merge.
-- `superseded by ADR-XXXX` → replaced. Forward link mandatory. Old file stays.
+- `superseded by ADR-<id>` → replaced. Forward link mandatory. Old file stays.
 - `deprecated` → the surrounding system is gone; the ADR is historical.
 
 ### 2. Context
@@ -73,7 +72,7 @@ option with a real rationale, never as a sentence saying it was obviously
 rejected: what the product still does without the change, and what it costs to
 keep living that way. An ADR framed as *where do we store this credential*
 answers a question nobody asked until *do we want a credential at all* has been
-answered on the page. ADR-0017 scored five options for where a Spotify secret
+answered on the page. ADR-2026-09-15T2023 scored five options for where a Spotify secret
 should live and never listed going without one, so the operator met that
 question for the first time after the pull request merged — and the honest
 answer was that the feature degrades to a search link and nothing breaks. Name
@@ -117,7 +116,7 @@ Backlinks to the artefacts that operationalise the decision:
 - Plan: docs/features/<app>/<slug>/plan/plan.md (row "<...>")
 - Commit: <sha>
 - Files: apps/<x>/<file>:<line>
-- Related ADRs: ADR-0001, ADR-0017
+- Related ADRs: ADR-2026-05-13T1510, ADR-2026-09-15T2023
 ```
 
 ### 8. Revisions (optional)
@@ -135,9 +134,9 @@ Implication for the original decision: still valid / re-evaluate / supersede wit
 ## Cross-linking rules
 
 - **From `plan.md`** — every "How each decision becomes code" row whose decision has an ADR points at it: `→ see [ADR-<id>](../../adr/<id>-slug.md)`.
-- **From `spec.md`** — usually not; specs describe *what*, ADRs describe *why we built it this way*. Exception: when the spec calls out a constraint that comes from an ADR (e.g. "see ADR-0007 for the DSQL trade-off").
+- **From `spec.md`** — usually not; specs describe *what*, ADRs describe *why we built it this way*. Exception: when the spec calls out a constraint that comes from an ADR (e.g. "see ADR-2026-08-08T1538 for the DSQL trade-off").
 - **From `docs/dantotsus/`** — the *Eradication* section links the ADR if the eradication is "we picked structure A over structure B".
-- **From code** — only when the *why* is non-obvious at the call site. ADR references in code are JSDoc-tagged: `@see {@link ../../docs/adr/0042-...}`. Keep these rare — comments rot faster than the ADR they point at.
+- **From code** — only when the *why* is non-obvious at the call site. ADR references in code are JSDoc-tagged: `@see {@link ../../docs/adr/2026-10-23T0228-...}`. Keep these rare — comments rot faster than the ADR they point at.
 
 ## When to supersede
 
@@ -146,7 +145,7 @@ A new ADR supersedes an old one when:
 - The system grew a constraint the original ADR didn't model.
 - A different option won, on the same problem, with the same criteria.
 
-The new ADR's header carries `**Supersedes:** ADR-XXXX`. The old ADR's header is updated to `**Status:** superseded by ADR-<id>`. Both files remain in `docs/adr/`.
+The new ADR's header carries `**Supersedes:** ADR-<id>`. The old ADR's header is updated to `**Status:** superseded by ADR-<id>`. Both files remain in `docs/adr/`.
 
 ## When not to supersede
 

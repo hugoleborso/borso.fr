@@ -33,7 +33,7 @@ Each session spent a commit cycle putting back files it never meant to change.
   - The session ran Prettier, which disagrees with oxfmt on some lines.
     - Nothing stops a Prettier call, and the root still held
       `.prettierrc.json`, which says Prettier is the formatter.
-      - ADR 0045 swapped Prettier for oxfmt and left the old config behind.
+      - ADR 2026-10-27T2320 swapped Prettier for oxfmt and left the old config behind.
 
 ## Root cause of occurrence
 

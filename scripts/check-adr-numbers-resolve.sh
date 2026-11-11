@@ -7,29 +7,28 @@
 # to; the heading carries the number a reader sees. Nothing kept them equal.
 #
 # They came apart the one way they can: a renumber. Two branches open at once
-# each took 0015 and 0016 — one for per-member credentials, one for the
-# audience vote — and git merged both because the slugs differ. Resolving it
+# each took 0015 and 0016, one for per-member credentials, one for the
+# audience vote, and git merged both because the slugs differ. Resolving it
 # renamed the second pair to 0019 and 0020, and the rename moved the filename
-# while the heading of `0020-qrcode-react-…` went on reading `ADR-0016:` for a
-# day. A reader opening it would have been told, by the document itself, that
-# it was a record about passkeys.
+# while the heading of `0020-qrcode-react-…` went on reading 0016 for a day.
+# A reader opening it would have been told, by the document itself, that it
+# was a record about passkeys.
 #
 # The collision itself is refused by check-numbered-sequences.sh. This refuses
 # its aftermath, which is the half a gate on numbers cannot see: the rename
 # that fixes the folder and forgets the file.
 #
-# Only the number is checked, not the punctuation around it. Seven records
-# predate the `ADR-0018: …` shape and write `ADR 0001 — …` or `ADR-0005 — …`;
-# their numbers are right and a gate that renamed seven headings to buy
-# consistency would be spending a reviewer's attention on nothing.
+# Every id is the UTC minute it names, `2026-11-11T1318`, and every heading
+# reads `# ADR-<id>: <title>`. The four-digit numbers 0001 to 0052 were
+# renamed to that form on 2026-11-11, so a file that does not start with a
+# minute is refused rather than skipped.
 #
 # See docs/dantotsus/an-adr-number-goes-to-whoever-writes-it-first.md.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# A UTC minute, `2026-11-11T1318`, or one of the numbers 0001 to 0052.
-ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}|[0-9]+'
+ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}'
 
 failed=0
 
@@ -37,19 +36,23 @@ for record in docs/adr/[0-9]*.md; do
   [ -f "$record" ] || continue
 
   filename="${record##*/}"
-  [[ "$filename" =~ ^(${ID_PATTERN})- ]] || continue
+  if ! [[ "$filename" =~ ^(${ID_PATTERN})- ]]; then
+    failed=1
+    echo "[check-adr-numbers-resolve] $record: the filename does not start with a UTC minute, YYYY-MM-DDTHHMM" >&2
+    continue
+  fi
   filename_number="${BASH_REMATCH[1]}"
 
   heading=''
   IFS= read -r heading <"$record" || true
   heading_number=''
-  if [[ "$heading" =~ ^#[[:space:]]*ADR[\ -]?(${ID_PATTERN})([^0-9T]|$) ]]; then
+  if [[ "$heading" =~ ^#\ ADR-(${ID_PATTERN}):\  ]]; then
     heading_number="${BASH_REMATCH[1]}"
   fi
 
   if [ -z "$heading_number" ]; then
     failed=1
-    echo "[check-adr-numbers-resolve] $record: the heading states no number" >&2
+    echo "[check-adr-numbers-resolve] $record: the heading does not read # ADR-<id>: <title>" >&2
     echo "    $heading" >&2
     continue
   fi

@@ -38,20 +38,38 @@ else
   after=":"
 fi
 
-# ADR ids moved from `202611111318` to `2026-11-11T1318` on 2026-11-11. A
-# record whose only change is that rewrite still says what it said, now with a
-# citation that resolves, so the rewrite is allowed and nothing else is.
+# ADR ids moved to `2026-11-11T1318` on 2026-11-11, from `202611111318` and
+# from the four-digit numbers `0001` to `0052`. A record whose only change is
+# that rewrite still says what it said, now with a citation that resolves, so
+# the rewrite is allowed and nothing else is. A four-digit number is rewritten
+# only where it names its record, as `ADR 0031`, `ADR-0031`, `0031-<slug>` or a
+# `[0031]` link to that record, because the same records cite migrations
+# `0001` to `0022` too.
 id_rewrite=()
 for adr in docs/adr/*.md; do
-  [[ "${adr##*/}" =~ ^(([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{4}))- ]] || continue
+  [[ "${adr##*/}" =~ ^(([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{4}))-(.*)\.md$ ]] || continue
   m=("${BASH_REMATCH[@]}")
   id_rewrite+=(-e "s/\\b${m[2]}${m[3]}${m[4]}${m[5]}\\b/${m[1]}/g")
 done
+while IFS= read -r legacy; do
+  [[ "${legacy##*/}" =~ ^([0-9]{4})-([a-z][a-z0-9-]*)\.md$ ]] || continue
+  number="${BASH_REMATCH[1]}"
+  slug="${BASH_REMATCH[2]}"
+  for adr in docs/adr/[0-9]*-"${slug}".md; do
+    [[ "${adr##*/}" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4})- ]] || continue
+    id="${BASH_REMATCH[1]}"
+    id_rewrite+=(
+      -e "s/\\b${number}-${slug}\\b/${id}-${slug}/g"
+      -e "s/\\b(ADRs?[ -])${number}\\b/\\1${id}/gI"
+      -e "s/\\[${number}\\](\\([^)]*${id}-${slug})/[${id}]\\1/g"
+    )
+  done
+done < <(git ls-tree --name-only "${before%:}" docs/adr/ 2>/dev/null || true)
 
 only_rewrites_adr_ids() {
   [ "${#id_rewrite[@]}" -gt 0 ] || return 1
   git cat-file -e "${after}$1" 2>/dev/null || return 1
-  [ "$(git show "${before}$1" | sed "${id_rewrite[@]}")" = "$(git show "${after}$1")" ]
+  [ "$(git show "${before}$1" | sed -E "${id_rewrite[@]}")" = "$(git show "${after}$1")" ]
 }
 
 # `M` is a modification and `D` a deletion; `A` and `R` are not listed, because a

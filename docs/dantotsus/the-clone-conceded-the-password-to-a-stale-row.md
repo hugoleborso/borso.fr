@@ -19,7 +19,7 @@ zone: infra/cdk/src/internal/migration-runner
 
 pragma's previews were changed to clone production, so a reviewer sees
 real songs and real setlists instead of a thin fixture (ratified in
-[ADR-0009](../adr/0009-pragma-previews-clone-production.md); the operator
+[ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md); the operator
 consented explicitly to their own and their band's data being replicated
 into a password-protected preview).
 
@@ -119,7 +119,7 @@ repeating it, so `4aaab63` makes the omission unsynthesizable:
 +  throw new Error(
 +    `DsqlSchema: cloneFromSchema does not say what to do with ${undecided.join(', ')}. ` +
 +      `Add each to tableBlocklist (the preview gets no credential) or to tablesToReplace ` +
-+      `(the preview shares the source's credential — see ADR-0009).`,
++      `(the preview shares the source's credential — see ADR-2026-08-09T1654).`,
 +  );
 +}
 ```
@@ -130,7 +130,7 @@ why the choice must be written rather than defaulted:
 | Config | Result |
 | --- | --- |
 | blocklisted | preview has no credential, answers 503 until seeded |
-| in `tablesToReplace` | preview shares the source's credential (ADR-0009) |
+| in `tablesToReplace` | preview shares the source's credential (ADR-2026-08-09T1654) |
 | **neither** | whatever row was already there wins — **this defect** |
 
 Scoped to credential tables the app's own migrations `CREATE`, so pragma
@@ -154,7 +154,7 @@ rate-limit state, not data.
 
 ## See also
 
-- [`docs/adr/0009-pragma-previews-clone-production.md`](../adr/0009-pragma-previews-clone-production.md)
+- [`docs/adr/2026-08-09T1654-pragma-previews-clone-production.md`](../adr/2026-08-09T1654-pragma-previews-clone-production.md)
   — the decision to clone at all, and the consent it rests on.
 - [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)
   — the clone contract in full.

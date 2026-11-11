@@ -1,9 +1,9 @@
--- pragma is its own OAuth 2.1 authorization server (ADR-0042). These three
+-- pragma is its own OAuth 2.1 authorization server (ADR-2026-10-23T0228). These three
 -- tables hold what it issues to assistants: the clients that registered
 -- themselves, the one-use authorization codes, and the grants a member
 -- allowed. Every token and code is stored as its SHA-256 hash, never raw.
 --
--- No foreign keys (ADR-0006) and no DEFAULT now(): every timestamp comes
+-- No foreign keys (ADR-2026-06-06T1326) and no DEFAULT now(): every timestamp comes
 -- from the service's injected clock, which migrations.audit.test.ts gates.
 -- The three tables are kept out of every preview's copy of production and
 -- out of the read-only reader's reach, so a production token never works on

@@ -111,7 +111,7 @@ signs its token locally.
 
 ## See also
 
-- [ADR-0031](../adr/0031-pragma-reports-errors-and-traces-to-sentry-eu.md):
+- [ADR-2026-10-10T0457](../adr/2026-10-10T0457-pragma-reports-errors-and-traces-to-sentry-eu.md):
   Sentry in pragma, personal data collection off.
-- [ADR-0037](../adr/0037-calendar-feed-address-in-its-own-table.md): the
+- [ADR-2026-10-02T1352](../adr/2026-10-02T1352-calendar-feed-address-in-its-own-table.md): the
   address is plain text in a table of its own and never leaves the API.

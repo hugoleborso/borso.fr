@@ -11,7 +11,7 @@ _Last verified: 2026-10-05 — by reading `apps/pragma/cdk/lib/stack.ts` and
 `auth/credentials.service.ts`._
 
 A pragma preview is signed into with production's credentials, which an agent
-does not hold. This is deliberate ([ADR-0009](../adr/0009-pragma-previews-clone-production.md)).
+does not hold. This is deliberate ([ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md)).
 
 1. **The preview clones production.** `preview.yml` skips the seed for pragma,
    because the fixture seed wipes before it writes and would throw the clone

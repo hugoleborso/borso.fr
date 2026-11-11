@@ -43,7 +43,7 @@ export interface PresignPutParams {
  * @Blueprint adapter-external-service
  * @BlueprintName Adapter Over An External Service
  * @BlueprintUsage Use for the one file in a bounded context that leaves the process, whether that is a vendor SDK or a plain fetch.
- * @BlueprintDescription Holds the client in a module-level cache, reads its configuration at call time so a missing variable raises the slice's own error instead of failing at import, and returns a plain value rather than the vendor's own type, which keeps the SDK import out of the service and the controller. Per ADR-0012 this suffix is the only place an outbound call may be written.
+ * @BlueprintDescription Holds the client in a module-level cache, reads its configuration at call time so a missing variable raises the slice's own error instead of failing at import, and returns a plain value rather than the vendor's own type, which keeps the SDK import out of the service and the controller. Per ADR-2026-08-15T0234 this suffix is the only place an outbound call may be written.
  */
 export async function presignPutObject(params: PresignPutParams): Promise<string> {
   const bucket = readEnv('UPLOADS_BUCKET');

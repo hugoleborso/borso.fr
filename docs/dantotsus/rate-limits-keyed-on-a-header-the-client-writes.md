@@ -55,7 +55,7 @@ export function readClientIp(headerValue: string | undefined): string {
    header"*. `X-Forwarded-For: 1.2.3.4` from a viewer at `198.51.100.10`
    arrives as `1.2.3.4,198.51.100.10`. The trustworthy hop is the last one
    CloudFront wrote, never the first.
-3. **Why did the code take the first?** Because the design said so. ADR-0004,
+3. **Why did the code take the first?** Because the design said so. ADR-2026-05-19T1955,
    line 28: *"The IP itself arrives from API Gateway in `x-forwarded-for`,
    whose **first** comma-separated entry is the real client."* The
    last-loop-lepin test pinned the same belief by name:

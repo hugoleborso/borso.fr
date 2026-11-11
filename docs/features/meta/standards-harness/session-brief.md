@@ -56,7 +56,7 @@ Second round:
 | The seal hashes content, not paths | A rename is not something a review would say anything new about, and this repository does mass renames. |
 | The seal is an attestation, not a signature | Nothing in a checkout can sign anything. Said plainly in the docs rather than implied otherwise. |
 | HTTP status codes exempt from `no-magic-numbers` | They are names in a published registry. The Hono-requires-a-literal argument was **probed and found false**, so it was dropped rather than repeated. |
-| `apps/<app>/domain/` is not a horizontal folder | ADR-0010 sanctions it. Standard 02 was ambiguous enough that the audit read it backwards; the wording now names the ADR. |
+| `apps/<app>/domain/` is not a horizontal folder | ADR-2026-08-13T0026 sanctions it. Standard 02 was ambiguous enough that the audit read it backwards; the wording now names the ADR. |
 | Standard 08 gains a `@third-party-dom` exception | Leaflet renders its own DOM, so no JSX element can carry a utility. The ban never accounted for it, and the code was right. |
 | Agents do not commit or stage | Six agents share one git index and every whole-tree `--check` generator. Recorded as a dantotsu. |
 | `borsolivres` ships with its back end only | Its React side was not reached. Committed anyway because the back end is green and the build surfaced three harness bugs. Flagged loudly rather than hidden. |

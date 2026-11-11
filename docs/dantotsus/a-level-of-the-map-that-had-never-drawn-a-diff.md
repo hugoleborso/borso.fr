@@ -61,7 +61,7 @@ looking at it.
   string.
 - **Linter / static analysis:** nothing looks at what a `slice` means.
 - **Functional validation locally:** the generator's own `--check` mode compares
-  nothing — the pages are not committed (ADR-0014), so `--check` validates
+  nothing — the pages are not committed (ADR-2026-08-20T1031), so `--check` validates
   what a person can get wrong (an annotation naming no blueprint, a dependency
   no manifest declares) and never opens the diff page.
 - **CI (tests / build):** the architecture workflow regenerates and diffs the
@@ -134,7 +134,7 @@ function.
 
 ## See also
 
-- [`docs/adr/0014-generated-files-are-not-committed.md`](../adr/0014-generated-files-are-not-committed.md) —
+- [`docs/adr/2026-08-20T1031-generated-files-are-not-committed.md`](../adr/2026-08-20T1031-generated-files-are-not-committed.md) —
   why there is no committed page to diff against, and therefore why a check
   mode has to *validate* rather than *compare*. This entry is the cost of that
   decision landing in a place where nothing validated.

@@ -9,15 +9,15 @@
 
 The pragma API logs the way loggingsucks.com describes as the failure mode. Each request writes one free-text line from `hono/logger`. A dozen `console.warn` and `console.error` calls sit in services and adapters, in three formats. Some are plain strings, some are `JSON.stringify` objects, and some pass an error object as a second argument. Examples are `notifications.service.ts`, `spotify.adapter.ts`, `takes.service.ts`, `calendar-feeds.service.ts`, `token.service.ts`, `realtime.service.ts`, `parameter-store.client.ts` and `mcp-server.adapter.ts`, all read on 2026-11-11. None of these lines carries the route, the member or the outcome of the request it belongs to. Answering "why did this member's request fail" means a string search across lines that share no key.
 
-Sentry (ADR-0031) already wraps each request in one `http.server` span. That span carries only the route, the method and the status.
+Sentry (ADR-2026-10-10T0457) already wraps each request in one `http.server` span. That span carries only the route, the method and the status.
 
 Since ADR-2026-11-05T0445, most reads reach the Lambda inside one `POST /api/read-batch`. That ADR records that "grouped reads lose their path in the API Gateway log". Today nothing logs which reads a batch held.
 
 Four constraints close doors before the trade-off:
 
-- Volume is small. Measured over 2026-10-11 to 2026-11-11, CloudWatch received 5,355,309 bytes into `/aws/lambda/pragma-prod-api`. Sentry counted 1,459 prod `http.server` spans over the 7 days before 2026-11-11. ADR-0031 counted fewer than 9,000 API requests a month.
+- Volume is small. Measured over 2026-10-11 to 2026-11-11, CloudWatch received 5,355,309 bytes into `/aws/lambda/pragma-prod-api`. Sentry counted 1,459 prod `http.server` spans over the 7 days before 2026-11-11. ADR-2026-10-10T0457 counted fewer than 9,000 API requests a month.
 - A dependency is an ADR decision (CLAUDE.md), so a logging library has to earn its place.
-- ADR-0031 switched off every Sentry personal data category. A member identifier is a choice this record has to make on purpose.
+- ADR-2026-10-10T0457 switched off every Sentry personal data category. A member identifier is a choice this record has to make on purpose.
 - The scheduled streak reminder and the WebSocket Lambda run outside any HTTP request.
 
 ## Criteria
@@ -59,7 +59,7 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 - `+` Each read inside a batch becomes its own event, with `request.parent_id` pointing at the batch. That restores the path ADR-2026-11-05T0445 recorded as lost.
 - `+` No new dependency. `AsyncLocalStorage` ships with Node 22, and Sentry already uses it for its own scopes.
 - `+` Cost is unchanged in practice. The API stays at one span per request on Sentry. Attributes are not billed separately, per the [Developer plan](https://sentry.io/pricing/) (5M spans, 30-day lookback). CloudWatch Logs in eu-west-3 costs $0.5985 per GB ingested and $0.0059 per GB scanned by Logs Insights, per the AWS price list API on 2026-11-11. At 5.4 MB a month today, even several times more bytes stays under one cent. The new size per event was not measured.
-- `-` Sentry now holds a member identifier on every API span, where ADR-0031 had sent none. It is pseudonymous, and only someone who can read the database can resolve it.
+- `-` Sentry now holds a member identifier on every API span, where ADR-2026-10-10T0457 had sent none. It is pseudonymous, and only someone who can read the database can resolve it.
 - `-` Each event is written twice. A schema change to the event shows up in two places, and Logs Insights and Sentry keep different retentions, one week and 30 days.
 - `-` The final result of work that outlives its budget is lost. A realtime broadcast that fails after its 1.5 s budget reads `late`, never `failed`, and push sends still running at their deadline report nothing more.
 - `~` `recordProductEvent` keeps writing its own line, because the specs that define those events read them by name. Inside a request, it also appends the name to `product.events`.
@@ -83,7 +83,7 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 - **Raised by:** author
 - **Summary:** Set the event as span attributes and write nothing to stdout.
 - **Strengths:** One sink, and the 30-day lookback.
-- **Costs:** Nothing is visible in `pnpm dev` or on a stage without a DSN. What happens to spans beyond the free plan's quota was not verified (ADR-0031).
+- **Costs:** Nothing is visible in `pnpm dev` or on a stage without a DSN. What happens to spans beyond the free plan's quota was not verified (ADR-2026-10-10T0457).
 - **Rejection rationale:** It fails the criterion about surviving a missing or saturated Sentry. It would flip if Sentry ran in every environment, local dev included.
 
 ### Option B: one JSON line on stdout only (rejected)
@@ -118,4 +118,4 @@ The scheduled streak reminder and the WebSocket handler run inside the same scop
 - Plan: none.
 - Commit: {{SHA, stamped on merge}}
 - Files: `apps/pragma/api/src/helpers/observability/wide-event.{core,adapter,middleware}.ts`, `apps/pragma/api/src/app.ts`, `apps/pragma/api/src/main.ts`, `apps/pragma/api/src/main.websocket.ts`, `.oxlintrc.json`
-- Related ADRs: ADR-0031 (Sentry, which this extends with a member identifier), ADR-2026-11-05T0445 (read batches, whose reads this logs again one by one), ADR-0012 (outbound calls in `*.adapter.ts`).
+- Related ADRs: ADR-2026-10-10T0457 (Sentry, which this extends with a member identifier), ADR-2026-11-05T0445 (read batches, whose reads this logs again one by one), ADR-2026-08-15T0234 (outbound calls in `*.adapter.ts`).
