@@ -193,6 +193,14 @@ describe('selectSchemaProblems', () => {
     ).toEqual(['missing: eradication path scripts/gone.sh was never in the repository']);
   });
 
+  it('checks eradication paths only for the slugs it was told to verify', () => {
+    const entry = buildEntry('drafted', { 'eradication-paths': '[scripts/gone.sh]' });
+    expect(check([entry], { ...FACTS, verifiedSlugs: new Set(['other']) })).toEqual([]);
+    expect(check([entry], { ...FACTS, verifiedSlugs: new Set(['drafted']) })).toEqual([
+      'drafted: eradication path scripts/gone.sh was never in the repository',
+    ]);
+  });
+
   it('refuses a level from 1 to 4 that names only markdown', () => {
     const problems = check([
       buildEntry('prose', {

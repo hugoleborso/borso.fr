@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n db,api,site -c blue,magenta,green 'pnpm dev:db' 'pnpm dev:api' 'pnpm dev:site'",
-    "dev:db": "./dev-db.sh",
+    "dev": "pnpm dev:db && concurrently -k -n api,site -c magenta,green 'pnpm dev:api' 'pnpm dev:site'",
+    "dev:db": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin dev) tsx test/dev-database.setup.ts",
     "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin dev) STAGE=dev ALLOW_TEST_SEED=1 ALLOWED_ORIGIN=http://localhost:5173 PHOTOS_BUCKET=dev-bucket tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start last-loop-lepin",

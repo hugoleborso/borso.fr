@@ -1,6 +1,6 @@
 # ADR-2026-11-11T1318: the pragma API emits one wide event per request, to stdout and onto its Sentry span
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-11
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma, observability

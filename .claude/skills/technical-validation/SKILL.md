@@ -41,7 +41,7 @@ Invoke when:
 - The `/technical-conception` plan reaches gate 7.
 
 Do **not** invoke when:
-- There is no spec.
+- There is no spec and no ADR stands in for one. When the operator asked for the change directly and an ADR records it, pass the ADR as `spec_path`; the validator has a procedure for it.
 - The branch hasn't diverged from base (no diff to review).
 - The work is purely documentation with no code changes (skip the gate; CLAUDE.md and the spec speak for themselves).
 

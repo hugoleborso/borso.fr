@@ -2,7 +2,7 @@
 summary: '`pnpm run test:e2e -- <path>` passes the `--` on to Vitest, which then ignores the path and runs every file; write `pnpm run test:e2e <path>` or call `pnpm exec vitest run --project <name> <path>`.'
 triggers:
   commands:
-    - 'pnpm\b[^|;&]*\brun\s+test(:[a-z-]+)?\s+--\s'
+    - 'pnpm\b[^|;&]*\brun\s+test(:[a-z0-9-]+)?\s+--\s'
 ---
 
 # `pnpm run test:e2e -- <path>` runs everything
