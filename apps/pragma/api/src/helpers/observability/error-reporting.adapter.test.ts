@@ -76,6 +76,12 @@ describe('startErrorReporting', () => {
     });
   });
 
+  it('registers no module hook, which a bundle cannot load and which costs a worker thread at every cold start', () => {
+    startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1 });
+
+    expect(sentry.init.mock.calls[0]?.[0]).toHaveProperty('enableRuntimeChannelInjection', false);
+  });
+
   it('leaves the release to the SDK when none was given', () => {
     startErrorReporting({ dsn: DSN, environment: 'preview', tracesSampleRate: 1 });
 
