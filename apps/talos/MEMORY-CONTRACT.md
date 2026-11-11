@@ -33,7 +33,7 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 | `memory_draft` | `slug` | `channel`, `recipients` text, `subject` null, `link` null, `status`, `created_on`, `sent_on` null, `source_ref` null, `proposal_slug` null, `attributes` jsonb, `body` text, `updated_at` |
 | `memory_journal_entry` | `slug` (`journal/2026-10-08`, `journal/2026-S41-hebdo`) | `kind` (`daily`, `weekly`, `other`), `content` text (whole file), `updated_at` |
 | `memory_document` | `slug` | `content` text (whole file, any format, e.g. `preferences/redaction`, `etat/questions`, `etat/frictions`, `etat/securite`, `archives/…`, `etat/backfill/…`), `content_type` (`markdown`, `json`, `text`), `updated_at`. Everything that is data and not modelled above lands here, so nothing is lost |
-| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"database"` since 2026-10-16; informational only, nothing reads it but `/status`), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `focus.updated_on` |
+| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"database"` since 2026-10-16; informational only, nothing reads it but `/status`), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `recurring` (the recurring tasks, read by the PWA at `GET /api/recurring-tasks`), `focus.updated_on` |
 | `memory_event` | `id` uuid | `occurred_at`, `actor` text (`import`, `pwa`, `routine:nuit`, `session:<id>`, `mac`…), `token_name` text null (`lecture`, `build`, `mac`, null for PWA), `run_id` text null, `operation` text, `object_type` text, `object_id` text, `before` jsonb null, `after` jsonb null, `summary` text |
 | `memory_change_batch` | `idempotency_key` | `run_id`, `actor`, `applied_at`, `result` jsonb. A replayed key returns the stored result without applying again |
 
@@ -118,7 +118,7 @@ Operations (`op` field; other fields camelCase):
 | `todo.remove` | `id` | `removed = true` |
 | `focus.replace` | `items` (≤ 3 `{ title, why?, horizon? }`), `updatedOn?` | |
 | `proposal.upsert` | `slug`, `category`, `status`, `title`, `priority`, `createdOn`, `expiresOn?`, `attributes?`, `body` | |
-| `proposal.status` | `slug`, `status`, `decisionLine?` | `decisionLine` appended under « ## Décision » |
+| `proposal.status` | `slug`, `status`, `decisionLine?`, `expectedStatus?` | `decisionLine` appended under « ## Décision ». With `expectedStatus`, the status changes only if the stored one still equals it, in one `UPDATE … WHERE status = <expectedStatus>`; otherwise 409 and nothing is written. Without it the write is unconditional, as before |
 | `draft.upsert` | `slug`, `channel`, `recipients`, `subject?`, `link?`, `status`, `createdOn`, `sentOn?`, `sourceRef?`, `proposalSlug?`, `attributes?`, `body` | |
 | `draft.status` | `slug`, `status`, `sentOn?` | |
 | `journal.append` | `slug` (`journal/AAAA-MM-JJ`), `heading`, `markdown` | creates the entry with `# AAAA-MM-JJ` if absent, appends `\n## <heading>\n\n<markdown>\n` |
@@ -163,5 +163,5 @@ What the API does where the contract leaves a choice or DSQL forbids the letter 
 - Search folds accents with `translate()`, because DSQL has no `unaccent` and its `lower()` leaves accented capitals as they are.
 - When a call spans several chunks and a later one fails, the earlier chunks stay committed, the response is 200 with `error` and the `chunks` flags, and that partial response is what a replay of the key returns; the client resends the rest under a new key.
 - An invalid envelope (missing key, more than 500 operations) answers 400 `{ error }`; an invalid operation answers 400 `{ error, operationIndex, issues }`; a secret in `summary`, `actor` or `runId` answers 400 with `operationIndex: null`.
-- Unknown pages, facts, relations, todos, commitments, proposals and drafts answer 404; a stale `expectedVersion`, a source rewritten with different content, and a rename onto a taken slug answer 409; an unknown verb answers 400.
+- Unknown pages, facts, relations, todos, commitments, proposals and drafts answer 404; a stale `expectedVersion`, a stale `expectedStatus`, a source rewritten with different content, and a rename onto a taken slug answer 409; an unknown verb answers 400.
 

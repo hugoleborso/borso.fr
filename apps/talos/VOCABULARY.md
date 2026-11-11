@@ -25,6 +25,7 @@ Lives in: `api/src/todos/`
 - Its id is `sha1(text + "|" + addedOn)` cut to 10 hexadecimal characters (`domain/todo-id.core.ts`), so it survives a reordering of the file.
 - Attributes the code does not know are kept on rewrite (`domain/line-attributes.core.ts`).
 - Two files hold todos, each a `TodoList` named by `TodoListName` (`domain/todo-list.core.ts`): `main` for `todo.md`, `work` for `todo-taff.md`, the day-to-day work of the owner's assignments. Only `main` reaches the today screen (`isTodoListShownOnToday`).
+- The Todo screen shows one list or both: a `TodoListChoice` is `main`, `work` or `both` (`site/src/components/organisms/todo-list.core.ts`). The kept choice is the one the device remembers (`site/src/lib/todo-list-choice.adapter.ts`).
 
 Not to be confused with: a commitment, which is a promise with a page of its own that a todo may point at.
 
@@ -36,7 +37,7 @@ Lives in: `api/src/proposals/`
 
 - Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `decisions`).
 - The values `proposee`, `acceptee`, `refusee` stay in French: they are data the repository holds, not identifiers.
-- A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`).
+- A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`), kept as a routine run.
 - A cancellation (`cancelProposalDecision`) takes back an `acceptee` or `refusee` decision before Talos acts on it: the status returns to `proposee`, a `décision annulée` line is appended, and no run fires. It is not a third decision, which is why it is not in `PROPOSAL_DECISIONS`.
 
 Not to be confused with: a message, which the owner writes and Talos reads.
@@ -79,6 +80,19 @@ Lives in: `api/src/relations/`
 - `silentDays` and `daysUntil` are moved to today from the day of `genere`, so a file written the day before still reads right.
 
 Not to be confused with: a relation of the graph, which links two pages.
+
+## Recurring task
+
+A task Talos redoes at a fixed cadence, such as a weekly watch, read from the memory state `recurring` (`etat/recurrentes.json`), which the runs write.
+
+Lives in: `api/src/recurring-tasks/`
+
+- Code: `RecurringTasks` (`generatedAt` for `genere`, `tasks` for `taches`), `RecurringTask` (`id`, `title` for `titre`, `cadence`, `routine`, `what` for `quoi`, `lastRunOn` for `dernier`, `nextRunOn` for `prochain`, `isDue` for `due`).
+- The values of `cadence` (`hebdomadaire`, `mensuelle`, `trimestrielle`) and of `routine` (`nuit`, `dimanche`, `collecte-mac`) stay in French: they are data.
+- Read only. The app never writes the state.
+Held by: `api/src/recurring-tasks/recurring-tasks.controller.test.ts` › answers 404 to a POST, a PUT and a DELETE and leaves the state as written
+
+Not to be confused with: a routine run, which is one firing of the routine by a decision or a message; a todo, which the owner does himself.
 
 ## Draft
 
@@ -137,14 +151,28 @@ Lives in: `api/src/pages/`
 
 ## Message
 
-A note from the owner to Talos. It is not stored: the Message screen opens a Claude Code session on the web with the message as its prompt.
+A note from the owner to Talos. Its text is not stored whole: the Message screen fires the routine with it, and only the routine run it started is kept. While the routine is not configured, and for « Construire », the screen opens a Claude Code session on the web with the message as its prompt.
 
-Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`
+Lives in: `api/src/routine/`, `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`
 
 - Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
 - The repository Claude Code opens is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
 
-Not to be confused with: a run, which Talos starts on a schedule or after a proposal decision.
+Not to be confused with: a routine run, which a message or a proposal decision starts and which is what the API keeps; nor a run report, which says when a scheduled scan last went through.
+
+## Routine run
+
+One successful fire of the Claude Code routine, started by a message or by a decision on a proposal, one row of `routine_run`.
+
+Lives in: `api/src/routine/`, `site/src/lib/routine-run.core.ts`
+
+- Code: `routineRunTable` and its row `RoutineRunRow` (`firedAt`, `trigger`, `subject`, `sessionUrl`), answered by the API as `RoutineRun`; `RoutineTrigger` (`proposition` or `message`, the word that starts the fired line, so it stays in French for a decision).
+- `subject` is the proposal's memory slug, or the message cut to 200 characters (`cutMessageSubject`).
+- `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it is `https://claude.ai/code/` followed by a plain path (`readSessionUrl`), `null` otherwise.
+- A fire that fails, or that is skipped because no `fire-url` is set, leaves no run.
+Held by: `api/src/routine/routine.controller.test.ts` › answers 503 and stores nothing while no fire url is configured
+
+Not to be confused with: a run report, which says when a scheduled scan last went through; a routine run is started by the owner and has a conversation to open.
 
 ## Passkey, session, push subscription
 

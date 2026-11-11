@@ -2,6 +2,7 @@ export const loadLoginPage = async () => await import('./routes/LoginPage');
 export const loadTodayPage = async () => await import('./routes/TodayPage');
 export const loadTodosPage = async () => await import('./routes/TodosPage');
 export const loadProposalsPage = async () => await import('./routes/ProposalsPage');
+export const loadProposalPage = async () => await import('./routes/ProposalPage');
 export const loadCommitmentsPage = async () => await import('./routes/CommitmentsPage');
 export const loadTodoDetailPage = async () => await import('./routes/TodoDetailPage');
 export const loadCommitmentDetailPage = async () => await import('./routes/CommitmentDetailPage');
@@ -11,6 +12,7 @@ export const loadGraphPage = async () => await import('./routes/GraphPage');
 export const loadMessagePage = async () => await import('./routes/MessagePage');
 export const loadSettingsPage = async () => await import('./routes/SettingsPage');
 export const loadRelationsPage = async () => await import('./routes/RelationsPage');
+export const loadRecurringTasksPage = async () => await import('./routes/RecurringTasksPage');
 export const loadDraftsPage = async () => await import('./routes/DraftsPage');
 export const loadDraftPage = async () => await import('./routes/DraftPage');
 export const loadHistoryPage = async () => await import('./routes/HistoryPage');
@@ -21,6 +23,7 @@ const SCREENS_KEPT_FOR_OFFLINE = [
   loadTodayPage,
   loadTodosPage,
   loadProposalsPage,
+  loadProposalPage,
   loadCommitmentsPage,
   loadTodoDetailPage,
   loadCommitmentDetailPage,
@@ -29,6 +32,7 @@ const SCREENS_KEPT_FOR_OFFLINE = [
   loadMessagePage,
   loadSettingsPage,
   loadRelationsPage,
+  loadRecurringTasksPage,
   loadDraftsPage,
   loadDraftPage,
   loadHistoryPage,

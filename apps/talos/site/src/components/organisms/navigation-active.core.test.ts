@@ -15,6 +15,22 @@ describe('isNavigationDestinationActive', () => {
   it('does not light a section that only shares a prefix', () => {
     expect(isNavigationDestinationActive('/brainstorm', '/brain')).toBe(false);
   });
+
+  it('lights a section on an address that stands for it, and below it', () => {
+    expect(isNavigationDestinationActive('/work-todos/4e6590b574', '/todos', ['/work-todos'])).toBe(
+      true,
+    );
+    expect(isNavigationDestinationActive('/work-todos', '/todos', ['/work-todos'])).toBe(true);
+    expect(isNavigationDestinationActive('/work-todos', '/todos')).toBe(false);
+    expect(isNavigationDestinationActive('/workshop', '/todos', ['/work-todos'])).toBe(false);
+  });
+
+  it('lights a section when any one of several addresses stands for it, and none when there is none', () => {
+    expect(
+      isNavigationDestinationActive('/work-todos', '/todos', ['/archive', '/work-todos']),
+    ).toBe(true);
+    expect(isNavigationDestinationActive('/work-todos', '/todos', [])).toBe(false);
+  });
 });
 
 describe('isBadgeShownOnTab', () => {

@@ -28,7 +28,6 @@ export interface PendingProposalProps {
   readonly proposal: PendingProposalShape;
   readonly isWriting: boolean;
   readonly startsCommenting: boolean;
-  readonly showsDraft: boolean;
   readonly onDecide: (payload: { decision: ProposalDecision; comment?: string }) => void;
 }
 
@@ -37,7 +36,6 @@ export function PendingProposal({
   proposal,
   isWriting,
   startsCommenting,
-  showsDraft,
   onDecide,
 }: PendingProposalProps): JSX.Element {
   const { t } = useTranslation();
@@ -53,7 +51,7 @@ export function PendingProposal({
           : t('proposals.expires', { date: formatShortDay(proposal.expiresOn, DISPLAY_LOCALE) })
       }
       whyHtml={renderMarkdownToSafeHtml(proposal.why)}
-      {...(showsDraft ? { draft: proposal.draft } : {})}
+      draft={proposal.draft}
       onLongPress={() => {
         openActionSheet({
           title: proposal.title,

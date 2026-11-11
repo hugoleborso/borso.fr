@@ -6,6 +6,7 @@ export {
   webauthnChallengeTable,
 } from '../auth/auth.schema';
 export { pushSubscriptionTable } from '../push/push.schema';
+export { routineRunTable } from '../routine/routine.schema';
 export {
   memoryAliasTable,
   memoryCitationTable,

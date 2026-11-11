@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findProposal,
+  selectProposalStatus,
   buildDecisionPayload,
   partitionProposals,
   selectCategoryLabelKey,
@@ -137,5 +139,25 @@ describe('PROPOSAL_SHEET_ACTION', () => {
   it('offers to accept or refuse from the long-press sheet', () => {
     expect(PROPOSAL_SHEET_ACTION.acceptee.labelKey).toBe('proposals.accept');
     expect(PROPOSAL_SHEET_ACTION.refusee.labelKey).toBe('proposals.refuse');
+  });
+});
+
+describe('the direct link to a proposal', () => {
+  it('finds the proposal a link names, or nothing', () => {
+    const proposals = [{ slug: '2026-11-11-faits' }, { slug: '2026-11-11-appris-relances' }];
+    expect(findProposal(proposals, '2026-11-11-appris-relances')).toBe(proposals[1]);
+    expect(findProposal(proposals, '2026-11-10-faits')).toBeNull();
+  });
+
+  it('reads a pending proposal past its expiry as expired, and any other by its status', () => {
+    expect(
+      selectProposalStatus({ status: 'proposee', expiresOn: '2026-11-10' }, '2026-11-11'),
+    ).toBe('expiree');
+    expect(
+      selectProposalStatus({ status: 'proposee', expiresOn: '2026-11-11' }, '2026-11-11'),
+    ).toBe('proposee');
+    expect(
+      selectProposalStatus({ status: 'acceptee', expiresOn: '2026-11-10' }, '2026-11-11'),
+    ).toBe('acceptee');
   });
 });

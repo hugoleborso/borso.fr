@@ -5,6 +5,7 @@ import { ApiError, api, readFailureBody } from '../api.client';
 import { useMutationToasts } from '../toast.hook';
 import { replaceBySlug, setStatusBySlug } from './cache-updates.core';
 import { DECISION_CANCELLED_TOAST, selectDecisionToast } from './mutation-toasts.core';
+import { routineKeys } from './routine.queries';
 import { todayKeys } from './today.queries';
 
 const PROPOSALS_WRITE_SCOPE = { id: 'proposals-writes' } as const;
@@ -110,6 +111,7 @@ export function useDecideProposal() {
         onAction: () => cancelDecision.mutate({ slug: variables.slug }),
       });
       storeSavedProposal(queryClient, savedProposal);
+      void queryClient.invalidateQueries({ queryKey: routineKeys.runs() });
     },
     onError: (failure, _variables, snapshot) => {
       toasts.fail(failure, 'proposals.error');
