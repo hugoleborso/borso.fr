@@ -20,6 +20,7 @@ import {
 } from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
+import { selectLogGroupRemovalPolicy } from '../internal/stage-wiring.utils.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -77,6 +78,7 @@ export class DsqlAgentReader extends Construct {
     const logGroup = new LogGroup(this, 'Logs', {
       logGroupName: `/aws/lambda/${this.functionName}`,
       retention: RetentionDays.ONE_MONTH,
+      removalPolicy: selectLogGroupRemovalPolicy(props.stage),
     });
 
     const handler = new NodejsFunction(this, 'Fn', {

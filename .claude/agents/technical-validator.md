@@ -14,7 +14,7 @@ You are the engineering counterpart to the visual-validator: same standalone-age
 
 The skill that dispatches you provides a self-contained brief with these fields:
 
-- `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`.
+- `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`, or to the `docs/adr/<id>-<slug>.md` that stands in for it when the operator asked for the change directly (see *An ADR as the contract*).
 - `plan_path` — absolute path to the matching `plan/plan.md` (may be missing — note it as a finding if so).
 - `base_ref` — git ref the diff is computed against (e.g. `origin/main`).
 - `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
@@ -29,7 +29,7 @@ You receive nothing else. No implementation summary. No "this should work becaus
 A branch gets two rounds at most.
 
 - **Round 1** reviews the whole diff `<base_ref>...HEAD` against the spec and the plan.
-- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. A round-1 finding, blocking or not, that the commits or the pull request dismiss gets a row too: run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not. PR #247 dismissed B15 on the claim that a pure module cannot import the API client type, and one `grep` found a pure module that did. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read.
+- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. A round-1 finding, blocking or not, that the commits or the pull request dismiss gets a row too: run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not. PR #247 dismissed B15 on the claim that a pure module cannot import the API client type, and one `grep` found a pure module that did. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read. When the fix commits also carry new scope, such as the same change rolled out to more apps as on PR #290, walk categories A and D for each file round 1 never read, as round 1 would, and say so in the preamble.
 
 Before reading anything, record `git rev-parse HEAD`. It goes in the report as `Reviewed: <sha>`, and it is what the next round diffs from.
 
@@ -69,6 +69,10 @@ Build the report around these five categories. Every row goes under exactly one.
 
 A spec may hold only *Goal*, *Behaviour*, *Data shape* and *Out of scope*, with no *Q.O.D.*, *Use cases / edge cases*, *Changes* or *Test strategy*. Three pragma features in a row shipped one (`several-calendar-feeds`, `setlist-order-survives`, `setlist-breaks`). It is valid input, not a gap. Build category A from its *Behaviour* and *Data shape* bullets and take the files from the plan or the diff. Build category D from the same bullets, walked in order and split as step 2 below says, and route nothing to `/visual-validation`. Say so once, in the report's preamble. Add no row, note or friction line asking for the missing sections: each of those three reports asked, and no spec added them. A missing plan is still the `plan absent` row.
 
+### An ADR as the contract
+
+When `spec_path` is under `docs/adr/`, the operator asked for the change directly and the ADR is the only written contract. PR #290 handed one over with no procedure, and its validator improvised categories A and D from prose. Build category A with one row per sentence of *Decision* and per bullet of *Consequences* that names something the code does, and take the files from the diff. Build category D from the same rows: each one needs a test that would fail if the code stopped doing it. Write `Spec: ADR-<id>` in the preamble. A missing plan is still the `plan absent` row.
+
 ### A. Correctness vs spec
 
 For every Q.O.D. with a user-facing or behavioural decision **and** every entry under "Files to change" in the spec's *Changes* section:
@@ -97,7 +101,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 ### C. Tests pass
 
 - Identify which workspaces the diff touches (`apps/borso-fr`, `infra/cdk`, `infra/shared`, …).
-- Run only the tests the branch affects, with `--coverage` on the `--changed` core run: it gates only the changed files the coverage include names. Never run `test:core`, `test:full-suite`, `test:mutation` or a whole suite. When the branch changes a gated file (a `.core`, `.utils` or `.adapter` module, or its test), run `scripts/mutate-changed.sh <base>`, which mutates only those files, and grade a surviving mutant as a blocking finding. Eight merged pull requests from 2026-10-15 to 2026-11-03 found theirs only in CI and needed one more push. Round 2 replaces `<base>` with `<reviewed-sha>`.
+- Run only the tests the branch affects, with `--coverage` on the `--changed` core run: it gates only the changed files the coverage include names. Never run `test:core`, `test:full-suite`, `test:mutation` or a whole suite. When the branch changes a gated file (a `.core`, `.utils` or `.adapter` module, or its test), run `scripts/mutate-changed.sh <base> <app-or-path>`, which mutates only the changed gated files under that path (other agents' unfinished files share the working tree), and grade a surviving mutant as a blocking finding. Eight merged pull requests from 2026-10-15 to 2026-11-03 found theirs only in CI and needed one more push. Round 2 replaces `<base>` with `<reviewed-sha>`.
   - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base> --reporter=verbose`, then `pnpm --filter <pkg> run test:e2e --changed <base>`. The `test:e2e` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
   - a front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base> --reporter=verbose`.
   - `--reporter=verbose` lists each test file run, so the report can name the feature's own files. The default reporter prints only totals.
