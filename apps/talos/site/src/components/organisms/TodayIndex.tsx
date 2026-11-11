@@ -16,6 +16,7 @@ export interface TodayIndexProps {
   readonly readyDraftCount: number;
   readonly reconnectCount: number;
   readonly dueRecurringTaskCount: number | undefined;
+  readonly latePageCount: number | undefined;
 }
 
 interface Tile {
@@ -37,6 +38,7 @@ export function TodayIndex({
   readyDraftCount,
   reconnectCount,
   dueRecurringTaskCount,
+  latePageCount,
 }: TodayIndexProps): JSX.Element {
   const { t } = useTranslation();
   const tiles: readonly Tile[] = [
@@ -117,6 +119,15 @@ export function TodayIndex({
       label: t('today.shortcuts.history'),
       isAlert: false,
       subject: { kind: 'folder', path: 'journal' },
+    },
+    {
+      key: 'memory',
+      to: '/brain',
+      icon: 'brain',
+      ...(latePageCount === undefined ? {} : { count: latePageCount }),
+      label: t('today.index.memory'),
+      isAlert: false,
+      subject: { kind: 'folder', path: 'second-brain' },
     },
   ];
   return (

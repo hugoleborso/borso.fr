@@ -5,6 +5,7 @@ import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.contro
 import { buildCommitmentsRouter } from './commitments/commitments.controller';
 import { buildDraftsRouter } from './drafts/drafts.controller';
 import { buildFocusRouter } from './focus/focus.controller';
+import { buildFreshnessRouter } from './freshness/freshness.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { isUnexpectedFailure, selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnhandledError } from './helpers/observability/error-reporting.adapter';
@@ -49,6 +50,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/commitments', buildCommitmentsRouter())
     .route('/api/relations', buildRelationsRouter())
     .route('/api/recurring-tasks', buildRecurringTasksRouter())
+    .route('/api/freshness', buildFreshnessRouter())
     .route('/api/drafts', buildDraftsRouter())
     .route('/api/history', buildHistoryRouter())
     .route('/api/graph', buildGraphRouter())

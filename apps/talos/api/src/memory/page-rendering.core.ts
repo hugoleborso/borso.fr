@@ -23,6 +23,11 @@ export interface RelationLine extends DatedLine {
   readonly toSlug: string;
 }
 
+export interface ComputedSection {
+  readonly heading: string;
+  readonly lines: readonly string[];
+}
+
 export interface RenderableEntity {
   readonly kind: string;
   readonly body: string;
@@ -151,6 +156,7 @@ export function renderEntityPage(
   entity: RenderableEntity,
   facts: readonly FactLine[],
   relations: readonly RelationLine[],
+  computedSections: readonly ComputedSection[] = [],
 ): string {
   const sorted = facts.toSorted(byPosition);
   const factLines = sorted
@@ -164,7 +170,11 @@ export function renderEntityPage(
     .map((relation) => relation.raw ?? composeRelationRaw(relation));
   const withFacts = insertSectionLines(entity.body, FACTS_HEADING, factLines);
   const withHistory = insertSectionLines(withFacts, HISTORY_HEADING, historyLines);
-  const body = insertSectionLines(withHistory, RELATIONS_HEADING, relationLines);
+  const withRelations = insertSectionLines(withHistory, RELATIONS_HEADING, relationLines);
+  const body = computedSections.reduce(
+    (rendered, section) => insertSectionLines(rendered, section.heading, section.lines),
+    withRelations,
+  );
   return `${renderFrontMatter(entity)}${LINE_BREAK}${body}`;
 }
 

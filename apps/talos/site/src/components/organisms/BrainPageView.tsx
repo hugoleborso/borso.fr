@@ -11,17 +11,40 @@ import { type PageLink, PageLinkList } from '../molecules/PageLinkList';
 import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { openActionSheet } from '../../lib/action-sheet.hook';
+import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
 import { useInAppLinkClick } from '../../lib/in-app-link.hook';
 import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
 import { renderMarkdownToSafeHtml } from '../../lib/markdown.utils';
 import { usePage } from '../../lib/queries/brain.queries';
+import { useFreshness } from '../../lib/queries/freshness.queries';
 import { buildPageHref, selectPageLabel, selectPageName } from '../../lib/wikilinks.core';
 import { selectFrontMatterEntries } from './front-matter-chips.core';
+import { isPageLate, splitTitleLine } from './late-pages.core';
 
 const NOT_FOUND_STATUS = 404;
 
 function toPageLinks(paths: readonly string[]): PageLink[] {
   return paths.map((path) => ({ href: buildPageHref(path), path, label: selectPageName(path) }));
+}
+
+interface SummaryLineProps {
+  readonly summarizedOn: string;
+  readonly isLate: boolean;
+}
+
+function SummaryLine({ summarizedOn, isLate }: SummaryLineProps): JSX.Element {
+  const { t } = useTranslation();
+  const day = formatShortDay(summarizedOn, DISPLAY_LOCALE);
+  return (
+    <p
+      className={composeClassName(
+        'm-0 mb-3 text-caption',
+        isLate ? 'font-semibold text-danger' : 'text-ink-muted',
+      )}
+    >
+      {t(isLate ? 'brain.page.summarized-late' : 'brain.page.summarized', { day })}
+    </p>
+  );
 }
 
 function discussLinkedPage(link: PageLink): void {
@@ -37,6 +60,7 @@ export function BrainPageView({ path }: BrainPageViewProps): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const page = usePage(path);
+  const freshness = useFreshness();
   const onLinkClick = useInAppLinkClick();
   const press = usePressGesture({
     onLongPress: () => {
@@ -46,6 +70,7 @@ export function BrainPageView({ path }: BrainPageViewProps): JSX.Element {
       });
     },
   });
+  const { title, rest } = splitTitleLine(page.data?.markdown ?? '');
   const isNotFound =
     page.error !== null && 'status' in page.error && page.error.status === NOT_FOUND_STATUS;
 
@@ -73,10 +98,14 @@ export function BrainPageView({ path }: BrainPageViewProps): JSX.Element {
         <>
           <FrontMatterChips entries={selectFrontMatterEntries(page.data.frontMatter)} />
           <Card padding="lg">
-            <MarkdownContent
-              html={renderMarkdownToSafeHtml(page.data.markdown)}
-              onClick={onLinkClick}
-            />
+            <MarkdownContent html={renderMarkdownToSafeHtml(title)} onClick={onLinkClick} />
+            {page.data.summarizedOn === null ? null : (
+              <SummaryLine
+                summarizedOn={page.data.summarizedOn}
+                isLate={isPageLate(freshness.data?.pages, path)}
+              />
+            )}
+            <MarkdownContent html={renderMarkdownToSafeHtml(rest)} onClick={onLinkClick} />
           </Card>
           <PageLinkList
             label={t('brain.page.incoming')}

@@ -86,6 +86,18 @@ describe('planEntityUpsert', () => {
     });
   });
 
+  it('stores a received body without the lines of the computed sections, their headings kept', () => {
+    const body =
+      '# Alice\n\n## Comprend\n\n- [[second-brain/projets/potager]]\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | fèves commandées\n';
+    const stored = '# Alice\n\n## Comprend\n\n## Faits récents\n\n';
+    expect(planEntityUpsert(null, { ...UPSERT, body }, NOW)).toMatchObject({
+      values: { body: stored },
+    });
+    expect(planEntityUpsert(EXISTING, { ...UPSERT, body }, NOW)).toMatchObject({
+      values: { body: stored },
+    });
+  });
+
   it('refuses a stale expected version, and expects version 1 on creation', () => {
     expect(planEntityUpsert(EXISTING, { ...UPSERT, expectedVersion: 3 }, NOW)).toEqual({
       kind: 'version-conflict',
