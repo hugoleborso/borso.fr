@@ -28,9 +28,6 @@ interface LocalConfig {
 }
 
 let cachedDatabase: Database | null = null;
-let probedQueries = 0;
-const PROBED_QUERY_LIMIT = 6;
-const PROBED_QUERY_PREVIEW_LENGTH = 40;
 
 function readEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -60,24 +57,10 @@ function createDsqlClient(config: DatabaseConfig): Sql {
     database: DSQL_DATABASE,
     user: config.roleName,
     ssl: 'require',
-    password: async () => {
-      const startedAt = performance.now();
-      const token = await signer.getDbConnectAuthToken();
-      process.stdout.write(
-        `${JSON.stringify({ probe: 'dsql.token', at_ms: Math.round(performance.now()), duration_ms: Math.round(performance.now() - startedAt) })}\n`,
-      );
-      return token;
-    },
+    password: () => signer.getDbConnectAuthToken(),
     types: { bigint: postgres.BigInt },
     connection: { search_path: config.schemaName },
     fetch_types: false,
-    debug: (_connection, query) => {
-      if (probedQueries >= PROBED_QUERY_LIMIT) return;
-      probedQueries += 1;
-      process.stdout.write(
-        `${JSON.stringify({ probe: 'dsql.query_sent', at_ms: Math.round(performance.now()), query: query.trim().slice(0, PROBED_QUERY_PREVIEW_LENGTH) })}\n`,
-      );
-    },
   });
 }
 
@@ -89,7 +72,7 @@ function createLocalClient(config: LocalConfig): Sql {
  * @Blueprint database-client
  * @BlueprintName Database Client Singleton
  * @BlueprintUsage Use for the one module a repository imports to reach the database.
- * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be.
+ * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be. Both clients turn `fetch_types` off, because postgres.js otherwise sends one `pg_catalog` query on every new connection to learn the array types, 313 ms of a 716 ms first connection on DSQL; the price is that an array comes back as its text form, so a schema that gains an array column turns it back on.
  */
 export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;
