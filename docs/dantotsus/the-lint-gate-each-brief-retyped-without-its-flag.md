@@ -86,4 +86,8 @@ apps/talos/api/src/helpers/observability/wide-event.adapter.test.ts:108:5: error
 
 **Similar instances:** `grep -rn "oxlint" scripts .husky .github` lists every
 caller. Each already passed `--type-aware` or a configuration of its own; the
-flag stays on them as harmless.
+flag stays on them as harmless. One caller ran oxlint bare on purpose:
+`eslint-rules/disable-directives.test.js` lints planted fixtures, and its
+`@api` fixture assigned an import the site cannot resolve, which the
+type-aware `typescript/no-unsafe-assignment` now reports. The pre-push run of
+the tooling tests caught it; the fixture re-exports the import instead.

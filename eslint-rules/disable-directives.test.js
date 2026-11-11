@@ -39,7 +39,7 @@ const CASES = [
     directiveLine: 0,
     lines: [
       "import { normalizeJoinCode } from '@api/games/join-code.utils';",
-      'export const normalizedProbe = normalizeJoinCode;',
+      'export { normalizeJoinCode };',
     ],
   },
   {
