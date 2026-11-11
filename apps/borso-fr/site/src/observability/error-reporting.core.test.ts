@@ -8,6 +8,7 @@ describe('selectErrorReportingSettings', () => {
     expect(selectErrorReportingSettings({ dsn: DSN, stage })).toEqual({
       dsn: DSN,
       environment: stage,
+      tracesSampleRate: 1,
     });
   });
 
