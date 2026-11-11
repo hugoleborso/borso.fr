@@ -69,6 +69,7 @@ describe('startErrorReporting', () => {
         databaseQueryData: false,
         stackFrameVariables: false,
       },
+      enableRuntimeChannelInjection: false,
       integrations: [
         { name: 'NodeFetch', options: { ignoreOutgoingRequests: isUnrecordedOutgoingRequest } },
       ],

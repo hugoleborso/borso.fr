@@ -47,6 +47,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
     dataCollection: PRIVATE_DATA_COLLECTION,
+    enableRuntimeChannelInjection: false,
     integrations: [
       Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: isUnrecordedOutgoingRequest }),
     ],
