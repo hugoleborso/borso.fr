@@ -21,6 +21,10 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import {
+  buildSourceMapUploadHooks,
+  type SourceMapUpload,
+} from '../internal/source-map-upload.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
 
@@ -33,7 +37,6 @@ const ERROR_ALARM_PERIOD_MINUTES = 5;
 const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
   "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
-
 export interface LambdaApiProps {
   readonly app: string;
   readonly stage: Stage;
@@ -43,6 +46,7 @@ export interface LambdaApiProps {
   readonly timeoutSeconds?: number;
   readonly reservedConcurrency?: number;
   readonly environment?: Readonly<Record<string, string>>;
+  readonly sourceMapUpload?: SourceMapUpload;
   readonly dsqlSchema?: DsqlSchema;
   readonly customDomain?: {
     readonly hostname: string;
@@ -100,11 +104,14 @@ export class LambdaApi extends Construct {
       },
       bundling: {
         minify: true,
-        sourceMap: true,
+        sourceMap: props.sourceMapUpload !== undefined,
         target: 'node22',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
         banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
+        ...(props.sourceMapUpload === undefined
+          ? {}
+          : { commandHooks: buildSourceMapUploadHooks(props.sourceMapUpload) }),
       },
     });
 

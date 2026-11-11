@@ -23,6 +23,7 @@ import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlAgentReader } from './dsql-agent-reader.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
+import type { SourceMapUpload } from '../internal/source-map-upload.utils.js';
 import { DEFAULT_API_PATH_PATTERNS, StaticSite } from './static-site.js';
 
 export interface PreviewableAppProps {
@@ -42,6 +43,7 @@ export interface PreviewableAppProps {
     readonly environment?: Readonly<Record<string, string>>;
     readonly extraPathPatterns?: readonly string[];
     readonly requestHeaders?: readonly string[];
+    readonly sourceMapUpload?: SourceMapUpload;
   };
   readonly database?: {
     readonly migrationsPath: string;
@@ -128,6 +130,9 @@ export class PreviewableApp extends Construct {
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
         appRequestHeaders: props.api.requestHeaders,
+        ...(props.api.sourceMapUpload === undefined
+          ? {}
+          : { sourceMapUpload: props.api.sourceMapUpload }),
         environment: {
           ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,

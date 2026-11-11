@@ -40,5 +40,9 @@ export const handler = async (
     await runScheduledStreakReminder(new Date());
     return;
   }
-  return await httpHandler(event, lambdaContext);
+  try {
+    return await httpHandler(event, lambdaContext);
+  } finally {
+    await flushErrorReports();
+  }
 };

@@ -111,5 +111,4 @@ export async function traceIncomingRequest(
       answerInRequestSpan(request, answer),
     ),
   );
-  await Sentry.flush(FLUSH_TIMEOUT_MILLISECONDS);
 }

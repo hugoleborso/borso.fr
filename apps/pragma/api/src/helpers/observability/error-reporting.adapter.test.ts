@@ -151,7 +151,7 @@ describe('traceIncomingRequest', () => {
     expect(sentry.flush).not.toHaveBeenCalled();
   });
 
-  it('answers inside a server span continuing the caller trace, then flushes before the Lambda freezes', async () => {
+  it('answers inside a server span continuing the caller trace, and leaves the flush to the invocation', async () => {
     sentry.isInitialized.mockReturnValueOnce(true);
     const answer = vi.fn(() => Promise.resolve({ route: '/api/songs/:songId', status: 404 }));
 
@@ -174,6 +174,6 @@ describe('traceIncomingRequest', () => {
     expect(sentry.updateSpanName).toHaveBeenCalledWith(requestSpan, 'GET /api/songs/:songId');
     expect(requestSpan.setAttribute).toHaveBeenCalledWith('http.route', '/api/songs/:songId');
     expect(sentry.setHttpStatus).toHaveBeenCalledWith(requestSpan, 404);
-    expect(sentry.flush).toHaveBeenCalledWith(2_000);
+    expect(sentry.flush).not.toHaveBeenCalled();
   });
 });

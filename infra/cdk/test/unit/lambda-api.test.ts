@@ -105,4 +105,22 @@ describe('LambdaApi', () => {
   it('rejects bad app slug', () => {
     expect(() => synth({ app: 'Bad_Slug' })).toThrow();
   });
+
+  it('ships no source map and sets no NODE_OPTIONS when nothing uploads it', () => {
+    const tpl = synth();
+    tpl.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: { Variables: Match.not(Match.objectLike({ NODE_OPTIONS: Match.anyValue() })) },
+    });
+  });
+
+  it('synthesizes with an upload target, whose commands run at bundling time', () => {
+    const tpl = synth({
+      sourceMapUpload: { organization: 'borsofr', project: 'borso-fr', release: 'abc123' },
+    });
+    tpl.resourceCountIs('AWS::Lambda::Function', 1);
+    tpl.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'test-app-prod-api',
+      Environment: { Variables: Match.not(Match.objectLike({ NODE_OPTIONS: Match.anyValue() })) },
+    });
+  });
 });
