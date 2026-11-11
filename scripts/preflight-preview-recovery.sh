@@ -53,6 +53,10 @@ if ! command -v aws >/dev/null 2>&1; then
 fi
 
 # --- 1. Stuck stack states ------------------------------------------------
+# A log group or bucket is an orphan only when no stack owns it. A live stack
+# owns its own, and deleting them leaves its Lambda writing into a log group
+# that no longer exists, so steps 2 and 3 run only once no stack is left.
+IS_STACK_LEFT=1
 STACK_STATUS="$(aws cloudformation describe-stacks \
   --stack-name "$STACK_NAME" \
   --region "$REGION" \
@@ -69,14 +73,22 @@ case "$STACK_STATUS" in
       --stack-name "$STACK_NAME" \
       --region "$REGION"
     log "deleted"
+    IS_STACK_LEFT=0
     ;;
   '')
-    log "stack $STACK_NAME does not exist — nothing to clean"
+    log "stack $STACK_NAME does not exist — cleaning orphans it may have left"
+    IS_STACK_LEFT=0
     ;;
   *)
     log "stack $STACK_NAME is $STACK_STATUS — leaving in place"
     ;;
 esac
+
+if [ "$IS_STACK_LEFT" -eq 1 ]; then
+  log "stack $STACK_NAME owns its log groups and bucket — no orphan to clean"
+  log "preflight complete"
+  exit 0
+fi
 
 # --- 2. Orphan Lambda log groups ------------------------------------------
 mapfile -t ORPHAN_LOG_GROUPS < <(
