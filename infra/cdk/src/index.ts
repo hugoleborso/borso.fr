@@ -13,6 +13,7 @@ export { DsqlClusterStack } from './constructs/dsql-cluster-stack.js';
 export type { DsqlSchemaCloneFromConfig, DsqlSchemaProps } from './constructs/dsql-schema.js';
 export { DsqlSchema } from './constructs/dsql-schema.js';
 export type { LambdaApiProps } from './constructs/lambda-api.js';
+export type { SourceMapUpload } from './internal/source-map-upload.utils.js';
 export { LambdaApi } from './constructs/lambda-api.js';
 export type { PhotosCdnProps } from './constructs/photos-cdn.js';
 export { PhotosCdn } from './constructs/photos-cdn.js';
