@@ -1,14 +1,15 @@
-import { Route, BrowserRouter, Routes } from 'react-router-dom';
+import { Route, BrowserRouter } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { CreateGamePage } from './routes/CreateGamePage';
 import { GamePage } from './routes/GamePage';
 import { HomePage } from './routes/HomePage';
+import { TracedRoutes } from './observability/error-reporting.adapter';
 
 // @FollowsBlueprint organism-shell
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <TracedRoutes>
         <Route
           path="/"
           element={
@@ -26,7 +27,7 @@ export function App() {
           }
         />
         <Route path="/partie/:code" element={<GamePage />} />
-      </Routes>
+      </TracedRoutes>
     </BrowserRouter>
   );
 }

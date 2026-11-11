@@ -9,6 +9,7 @@ import { buildFreshnessRouter } from './freshness/freshness.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { isUnexpectedFailure, selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnhandledError } from './helpers/observability/error-reporting.adapter';
+import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { buildHistoryRouter } from './history/history.controller';
 import { buildMessagesRouter } from './messages/messages.controller';
@@ -31,6 +32,7 @@ export interface CreateAppOptions {
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { sessionRouter, ceremonyRouter, passkeysRouter } = buildAuthRouter(options.auth);
   return new Hono()
+    .use('*', traceRequests)
     .use('*', recordWideEvents)
     .onError(async (failure, context) => {
       const answer = selectErrorResponse(failure);

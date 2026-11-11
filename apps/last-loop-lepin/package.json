@@ -33,7 +33,7 @@
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "catalog:",
     "@sentry/aws-serverless": "catalog:",
-    "@sentry/react": "catalog:sentry8",
+    "@sentry/react": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",

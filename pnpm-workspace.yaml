@@ -63,7 +63,5 @@ catalog:
   ws: 8.22.1
 
 catalogs:
-  sentry8:
-    '@sentry/react': '^8.50.0'
   zod4:
     zod: '^4.6.7'

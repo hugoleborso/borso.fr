@@ -54,6 +54,16 @@ describe('readDefectDot', () => {
     expect(dot?.stage).toBeNull();
   });
 
+  it.each(['none', "'none'"])('reads weak-point %s as no weak point', (field) => {
+    const dot = readDefectDot(
+      readDantotsuDocument(
+        's',
+        `---\ndate: 2026-10-07\nzone: CLAUDE.md\nweak-point: ${field}\n---\n`,
+      ),
+    );
+    expect(dot?.weakPoint).toBeNull();
+  });
+
   it('places nothing for an entry with no date or no zone', () => {
     expect(readDefectDot(readDantotsuDocument('s', '---\nzone: CLAUDE.md\n---\n'))).toBeNull();
     expect(readDefectDot(readDantotsuDocument('s', '---\ndate: 2026-10-07\n---\n'))).toBeNull();
