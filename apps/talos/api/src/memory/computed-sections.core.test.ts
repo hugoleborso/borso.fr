@@ -183,6 +183,21 @@ describe('composeComputedSections', () => {
     ]);
   });
 
+  it('lists no fact whose learned_on is not a full day, even when it sorts inside the window', () => {
+    const [, recent] = sections({
+      descendantFacts: [
+        fact(VEGETABLES, { learnedOn: '2026-11', value: 'mois seul' }),
+        fact(VEGETABLES, { learnedOn: '2026', value: 'année seule' }),
+        fact(VEGETABLES, { learnedOn: '~2026-12', value: 'approximatif' }),
+        fact(VEGETABLES, { learnedOn: '2026-11-02 env.', value: 'jour annoté' }),
+        fact(VEGETABLES, { learnedOn: '2026-1x-01', value: 'jour illisible' }),
+        fact(VEGETABLES, { learnedOn: '20261-1-05', value: 'tirets déplacés' }),
+        fact(VEGETABLES, { learnedOn: '2026-11-03', value: 'jour entier' }),
+      ],
+    });
+    expect(recent?.lines).toStrictEqual([`2026-11-03 | [[${VEGETABLES}]] | jour entier`]);
+  });
+
   it('keeps ten facts at most, the most recent', () => {
     const days = Array.from({ length: 12 }, (_unused, index) => `2026-11-${String(index + 10)}`);
     const [, recent] = sections({
@@ -242,8 +257,19 @@ describe('dropComputedLines', () => {
     );
   });
 
+  it.each(['Faits', 'Historique', 'Relations', 'Comprend', 'Faits récents'])(
+    'drops the lines under « %s » and keeps its heading and the hand-written lines',
+    (heading) => {
+      expect(
+        dropComputedLines(
+          `# Jardin\n\n## ${heading}\n\n- ligne calculée\n- autre ligne\nUne phrase.\n\n## Chronologie\n- gardée\n`,
+        ),
+      ).toBe(`# Jardin\n\n## ${heading}\n\nUne phrase.\n\n## Chronologie\n- gardée\n`);
+    },
+  );
+
   it('leaves a body without a computed heading as written', () => {
-    const body = '# Alice\n\n## Faits\n\n- ville: Lyon\n## Comprendre\n- a\n### Comprend\n- b\n';
+    const body = '# Alice\n\n## En bref\n\n- ville: Lyon\n## Comprendre\n- a\n### Comprend\n- b\n';
     expect(dropComputedLines(body)).toBe(body);
     expect(dropComputedLines('')).toBe('');
     expect(dropComputedLines('- une note\n## Chronologie\n- gardée')).toBe(

@@ -80,26 +80,62 @@ describe('GET /api/agent/page, the computed sections', () => {
   });
 
   it('stores no computed line when a page read is written back, the headings kept in place', async () => {
+    await writeMemory(
+      [
+        {
+          op: 'fact.add',
+          slug: GARDEN,
+          section: 'history',
+          value: 'ancien verger',
+          learnedOn: '2025-03-01',
+        },
+      ],
+      'history',
+    );
     const page = await readAgentPage(GARDEN);
     const body = page.markdown.slice(FRONT_MATTER.length);
-    expect(body).toContain(CONTAINED_LINES);
-    expect(body).toContain(RECENT_FACT_LINES);
+    const tableLines = [
+      '- surface: 300 m²\n',
+      '- ancien verger\n',
+      `- comprend → [[${VEGETABLES}]] | depuis: 2026-03\n`,
+      `- comprend → [[${GREENHOUSE}]] | depuis: 2026-05\n`,
+      `- comprend → [[${ORCHARD}]] | depuis: 2026-03 | jusqu'à: 2026-09\n`,
+      CONTAINED_LINES,
+      RECENT_FACT_LINES,
+    ];
+    expect(tableLines.map((line) => body.split(line).length)).toStrictEqual(
+      tableLines.map(() => 2),
+    );
     await writeMemory(
       [{ op: 'entity.upsert', slug: GARDEN, kind: 'domaine', title: 'Jardin', body }],
       'write-back',
     );
     const stored = await readStoredBody(GARDEN);
-    expect(stored).not.toContain(`[[${VEGETABLES}]] | statut`);
-    expect(stored).not.toContain(`[[${GREENHOUSE}]] | statut`);
-    expect(stored).not.toContain('2026-11-05 |');
-    expect(stored).not.toContain('2026-11-02 |');
-    expect(stored).toContain('\n## Comprend\n\n\n## Faits récents\n\n');
-    expect(stored).toContain('## Projets liés');
+    expect(stored).toBe(`${STORED_BODY}\n## Historique\n\n\n## Comprend\n\n\n## Faits récents\n\n`);
     const again = await readAgentPage(GARDEN);
     expect(again.markdown).toContain(`\n## Comprend\n\n${CONTAINED_LINES}\n## Faits récents\n\n`);
-    expect(again.markdown.split(CONTAINED_LINES)).toHaveLength(2);
-    expect(again.markdown.split(RECENT_FACT_LINES)).toHaveLength(2);
+    expect(tableLines.map((line) => again.markdown.split(line).length)).toStrictEqual(
+      tableLines.map(() => 2),
+    );
   });
+
+  it.each(['~2026-12', '2026-11', '2026-1x-01', '20261-1-05'])(
+    'lists no fact whose learned_on is %s, not a full day, and ten of them take no place among the ten',
+    async (learnedOn) => {
+      await writeMemory(
+        Array.from({ length: 10 }, (_unused, index) => ({
+          op: 'fact.add',
+          slug: COMPOST,
+          value: `date partielle ${String(index)}`,
+          learnedOn,
+        })),
+        'partial-days',
+      );
+      const page = await readAgentPage(GARDEN);
+      expect(page.markdown).toContain(`\n## Faits récents\n\n${RECENT_FACT_LINES}`);
+      expect(page.markdown).not.toContain('date partielle');
+    },
+  );
 
   it('leaves the stored body of the seed untouched by a read', async () => {
     await readAgentPage(GARDEN);

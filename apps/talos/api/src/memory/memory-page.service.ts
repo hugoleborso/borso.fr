@@ -3,6 +3,7 @@ import { TalosError } from '../helpers/errors/talos-error.types';
 import {
   composeComputedSections,
   type ContainmentRelation,
+  RECENT_FACT_LIMIT,
   selectContainedSlugs,
   selectDescendantSlugs,
   selectRecentWindowStart,
@@ -11,7 +12,7 @@ import {
 import { decodeAttributes } from './memory-changes.core';
 import {
   listEntitiesIn,
-  listFactsOfEntities,
+  listRecentFactsOfEntities,
   listRelationsFrom,
 } from './memory-containment.repository';
 import {
@@ -48,8 +49,11 @@ async function readComputedSections(
     listEntitiesIn(containedSlugs),
     listRelationsFrom(containedSlugs),
   ]);
-  const descendantFacts = await listFactsOfEntities(
+  const windowStart = selectRecentWindowStart(summarizedOn, formatParisDate(new Date()));
+  const descendantFacts = await listRecentFactsOfEntities(
     selectDescendantSlugs(slug, containedSlugs, relationsOfContained),
+    windowStart,
+    RECENT_FACT_LIMIT,
   );
   return composeComputedSections({
     containedSlugs,
@@ -58,7 +62,7 @@ async function readComputedSections(
       attributes: decodeAttributes(contained.attributes),
     })),
     descendantFacts,
-    windowStart: selectRecentWindowStart(summarizedOn, formatParisDate(new Date())),
+    windowStart,
   });
 }
 

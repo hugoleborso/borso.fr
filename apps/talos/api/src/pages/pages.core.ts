@@ -1,4 +1,5 @@
 import { readSection, summarizePage } from '@domain/markdown-page.core';
+import { CONTAINED_HEADING, HEADING_PREFIXES } from '../memory/computed-sections.core';
 
 export interface Page {
   readonly path: string;
@@ -20,8 +21,6 @@ export interface StoredPageView {
 }
 
 const LINE_BREAK = '\n';
-const HEADING_PREFIXES = ['# ', '## '] as const;
-const CONTAINED_HEADING = 'Comprend';
 const HAND_WRITTEN_COPY_HEADING = 'Projets liés';
 
 function isHeading(line: string): boolean {

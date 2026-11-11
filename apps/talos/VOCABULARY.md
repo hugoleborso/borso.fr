@@ -113,8 +113,10 @@ A section of a rendered entity whose lines come from the tables at every read an
 
 Lives in: `api/src/memory/computed-sections.core.ts`
 
+Held by: `api/src/agent/agent-page.controller.test.ts` › stores no computed line when a page read is written back, the headings kept in place
+
 - Code: `ComputedSection` (`heading`, `lines`), `Containment` (what the two sections are built from). A page **contains** another through an open relation of verb `comprend`; the **contained** pages are one level down, the **descendants** two.
-- `dropComputedLines` removes their lines from a body an `entity.upsert` receives; `hideHandWrittenCopy` (`api/src/pages/pages.core.ts`) removes « Projets liés » from what the PWA reads.
+- `dropComputedLines` removes their lines, and those of « Faits », « Historique » and « Relations », from a body an `entity.upsert` receives; `hideHandWrittenCopy` (`api/src/pages/pages.core.ts`) removes « Projets liés » from what the PWA reads.
 
 Not to be confused with: « Faits », « Historique » and « Relations », whose lines are rows of the page itself.
 

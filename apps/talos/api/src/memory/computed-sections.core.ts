@@ -5,6 +5,9 @@ import {
   composeFactRaw,
   type ComputedSection,
   type FactLine,
+  FACTS_HEADING,
+  HISTORY_HEADING,
+  RELATIONS_HEADING,
 } from './page-rendering.core';
 
 export interface ContainmentRelation {
@@ -41,14 +44,15 @@ const PROJECT_LINE_ATTRIBUTES = ['statut', 'meteo', 'prochaine_etape', 'echeance
 const SUMMARY_DAY_ATTRIBUTES = ['resume_le', 'maj'] as const;
 const ISO_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_WINDOW_DAYS = 30;
-const RECENT_FACT_LIMIT = 10;
+export const RECENT_FACT_LIMIT = 10;
 const LINE_BREAK = '\n';
 const LIST_ITEM_PREFIX = '- ';
-const HEADING_PREFIXES = ['# ', '## '] as const;
-const COMPUTED_HEADING_LINES: ReadonlySet<string> = new Set([
-  `## ${CONTAINED_HEADING}`,
-  `## ${RECENT_FACTS_HEADING}`,
-]);
+export const HEADING_PREFIXES = ['# ', '## '] as const;
+const COMPUTED_HEADING_LINES: ReadonlySet<string> = new Set(
+  [FACTS_HEADING, HISTORY_HEADING, RELATIONS_HEADING, CONTAINED_HEADING, RECENT_FACTS_HEADING].map(
+    (heading) => `## ${heading}`,
+  ),
+);
 
 // @FollowsBlueprint core-decision
 export function selectContainedSlugs(relations: readonly ContainmentRelation[]): string[] {
@@ -69,7 +73,7 @@ export function selectDescendantSlugs(
   return [...descendants];
 }
 
-function isIsoDay(value: AttributeValue | undefined): value is string {
+function isIsoDay(value: AttributeValue | null | undefined): value is string {
   return typeof value === 'string' && ISO_DAY_PATTERN.test(value);
 }
 
@@ -93,15 +97,18 @@ function composeContainedLine(slug: string, entity: ContainedEntity | undefined)
   return `${link}${segments.join('')}`;
 }
 
+function isLearnedOnADay(fact: ContainedFact): fact is ContainedFact & { learnedOn: string } {
+  return isIsoDay(fact.learnedOn);
+}
+
 function composeRecentFactLines(facts: readonly ContainedFact[], windowStart: string): string[] {
   return facts
-    .map((fact) => ({ learnedOn: fact.learnedOn ?? '', fact }))
-    .filter(({ learnedOn }) => learnedOn >= windowStart)
+    .filter(isLearnedOnADay)
+    .filter((fact) => fact.learnedOn >= windowStart)
     .toSorted((left, right) => right.learnedOn.localeCompare(left.learnedOn))
     .slice(0, RECENT_FACT_LIMIT)
     .map(
-      ({ learnedOn, fact }) =>
-        `${learnedOn} | [[${fact.entitySlug}]] | ${fact.raw ?? composeFactRaw(fact)}`,
+      (fact) => `${fact.learnedOn} | [[${fact.entitySlug}]] | ${fact.raw ?? composeFactRaw(fact)}`,
     );
 }
 

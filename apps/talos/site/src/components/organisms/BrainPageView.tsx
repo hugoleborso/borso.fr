@@ -19,7 +19,8 @@ import { usePage } from '../../lib/queries/brain.queries';
 import { useFreshness } from '../../lib/queries/freshness.queries';
 import { buildPageHref, selectPageLabel, selectPageName } from '../../lib/wikilinks.core';
 import { selectFrontMatterEntries } from './front-matter-chips.core';
-import { isPageLate, splitTitleLine } from './late-pages.core';
+import { splitTitleLine } from './brain-page-title.core';
+import { isPageLate } from './late-pages.core';
 
 const NOT_FOUND_STATUS = 404;
 

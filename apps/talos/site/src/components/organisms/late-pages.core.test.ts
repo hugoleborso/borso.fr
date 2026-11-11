@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPageLate, orderLatePages, selectLatePageCount, splitTitleLine } from './late-pages.core';
+import { isPageLate, orderLatePages, selectLatePageCount } from './late-pages.core';
 
 const PAGES = [
   { slug: 'second-brain/personnes/alice-martin', lateness: 12 },
@@ -32,21 +32,5 @@ describe('isPageLate', () => {
     expect(isPageLate(PAGES, 'second-brain/projets/compost')).toBe(false);
     expect(isPageLate([], 'second-brain/projets/serre')).toBe(false);
     expect(isPageLate(undefined, 'second-brain/projets/serre')).toBe(false);
-  });
-});
-
-describe('splitTitleLine', () => {
-  it('separates the first-level heading that opens a page from the rest', () => {
-    expect(splitTitleLine('# Jardin\n\n## En bref\n')).toStrictEqual({
-      title: '# Jardin',
-      rest: '\n## En bref\n',
-    });
-    expect(splitTitleLine('# Jardin')).toStrictEqual({ title: '# Jardin', rest: '' });
-  });
-
-  it('finds no title when the page opens on anything else', () => {
-    expect(splitTitleLine('Texte\n# Jardin')).toStrictEqual({ title: '', rest: 'Texte\n# Jardin' });
-    expect(splitTitleLine('## En bref\n')).toStrictEqual({ title: '', rest: '## En bref\n' });
-    expect(splitTitleLine('')).toStrictEqual({ title: '', rest: '' });
   });
 });

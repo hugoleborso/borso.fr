@@ -45,13 +45,13 @@ interface Freshness { generatedAt: string | null; lateCount: number; pages: Late
 ## C2. A page shows what moved below it
 
 - C2.1 The same entities carry a section `## Faits récents`, after `## Comprend`.
-- C2.2 It lists facts of the pages the entity contains, down two levels of open `comprend` relations, whose `learned_on` is on or after the date of the entity's summary (`resume_le`, else `maj`, else the day of `updated_at`). When none of the three gives a day, the window is the last 30 days.
+- C2.2 It lists facts of the pages the entity contains, down two levels of open `comprend` relations, whose `learned_on` is on or after the date of the entity's summary (`resume_le`, else `maj`, else the day of `updated_at`). When none of the three gives a day, the window is the last 30 days. A fact whose `learned_on` is not a full ISO day (null, or a partial date such as `2026-09`) is not listed.
 - C2.3 At most 10 facts, the most recent `learned_on` first. A line is `- <learned_on> | [[<slug of the page the fact is on>]] | <the fact as « Faits » renders it>`.
 - C2.4 The entity's own facts are not listed there. With no fact in the window the section is absent.
 
 ## C3. Writing ignores the computed sections
 
-- C3.1 `entity.upsert` drops the lines under `## Comprend` and `## Faits récents` of the body it receives, as it does for « Faits », « Historique » and « Relations », and keeps the headings in place. A page read then written back does not store the computed lines.
+- C3.1 `entity.upsert` drops, from the body it receives, the lines under the five computed headings `## Faits`, `## Historique`, `## Relations`, `## Comprend` and `## Faits récents`, by one rule, and keeps the headings in place. A page read then written back does not store the computed lines, and the next read shows each of them once.
 - C3.2 `## Comprend` and `## Faits récents` are reserved headings. `MEMORY-CONTRACT.md` says so in its section 3, with the line formats and the position rule.
 
 ## C4. The PWA does not show the hand-written copy

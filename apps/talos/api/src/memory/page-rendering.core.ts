@@ -45,9 +45,9 @@ const UNTIL_LABEL = "jusqu'à";
 const INFERRED_MARK = ' (inféré)';
 const NEEDS_QUOTES_PATTERN = /^[[\]{}"'&*!|>%@`#-]|: | #|^\s|\s$/;
 const UNTIL_SEGMENT_PATTERN = /\s*\|\s*jusqu'à\s*:[^|]*?(?=\s*\||\s*\(inféré\)\s*$|$)/;
-const FACTS_HEADING = 'Faits';
-const HISTORY_HEADING = 'Historique';
-const RELATIONS_HEADING = 'Relations';
+export const FACTS_HEADING = 'Faits';
+export const HISTORY_HEADING = 'Historique';
+export const RELATIONS_HEADING = 'Relations';
 
 function renderScalar(value: string): string {
   return NEEDS_QUOTES_PATTERN.test(value) ? JSON.stringify(value) : value;
@@ -148,6 +148,30 @@ export function insertSectionLines(
   ].join(LINE_BREAK);
 }
 
+function insertComputedSection(
+  body: string,
+  section: ComputedSection,
+  laterHeadings: readonly string[],
+): string {
+  const bodyLines = body.split(LINE_BREAK);
+  const headingLines = bodyLines.map((line) => line.trimEnd());
+  const laterIndex = headingLines.findIndex((line) =>
+    laterHeadings.some((heading) => line === `## ${heading}`),
+  );
+  const isPlacedByItsHeading = headingLines.includes(`## ${section.heading}`);
+  if (section.lines.length === 0 || isPlacedByItsHeading || laterIndex === -1) {
+    return insertSectionLines(body, section.heading, section.lines);
+  }
+  return [
+    ...bodyLines.slice(0, laterIndex),
+    `## ${section.heading}`,
+    '',
+    ...renderLines(section.lines),
+    '',
+    ...bodyLines.slice(laterIndex),
+  ].join(LINE_BREAK);
+}
+
 function byPosition(left: DatedLine, right: DatedLine): number {
   return left.position - right.position;
 }
@@ -172,7 +196,12 @@ export function renderEntityPage(
   const withHistory = insertSectionLines(withFacts, HISTORY_HEADING, historyLines);
   const withRelations = insertSectionLines(withHistory, RELATIONS_HEADING, relationLines);
   const body = computedSections.reduce(
-    (rendered, section) => insertSectionLines(rendered, section.heading, section.lines),
+    (rendered, section, index) =>
+      insertComputedSection(
+        rendered,
+        section,
+        computedSections.slice(index + 1).map((later) => later.heading),
+      ),
     withRelations,
   );
   return `${renderFrontMatter(entity)}${LINE_BREAK}${body}`;

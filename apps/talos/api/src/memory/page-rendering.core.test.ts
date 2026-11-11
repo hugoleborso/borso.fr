@@ -182,6 +182,8 @@ describe('insertSectionLines', () => {
   });
 });
 
+const EMPTY_SECTION = { heading: 'Vide', lines: [] };
+
 describe('renderEntityPage', () => {
   it('rebuilds the file: facts, history and relations in position order, raw first', () => {
     const markdown = renderEntityPage(
@@ -215,7 +217,7 @@ describe('renderEntityPage', () => {
       { ...ENTITY, body: '# Jardin\n\n## Relations\n' },
       [],
       [relation({})],
-      computed,
+      computed.slice(0, 2),
     );
     expect(
       appended.endsWith(
@@ -223,14 +225,30 @@ describe('renderEntityPage', () => {
       ),
     ).toBe(true);
     const placed = renderEntityPage(
-      { ...ENTITY, body: '# Jardin\n\n## Faits récents\n\n## Comprend\n\n## Chronologie\n' },
+      { ...ENTITY, body: '# Jardin\n\n## Faits récents\n\n## Comprend  \n\n## Chronologie\n' },
       [],
       [],
       computed,
     );
     expect(
       placed.endsWith(
-        '# Jardin\n\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | semis\n## Comprend\n\n- [[second-brain/projets/potager]]\n## Chronologie\n',
+        '# Jardin\n\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | semis\n## Comprend  \n\n- [[second-brain/projets/potager]]\n## Chronologie\n',
+      ),
+    ).toBe(true);
+  });
+
+  it('puts a computed section whose heading the body lacks before the heading of a later one', () => {
+    const contained = { heading: 'Comprend', lines: ['[[second-brain/projets/potager]]'] };
+    const recent = { heading: 'Faits récents', lines: ['2026-11-02 | semis'] };
+    const body = '# Jardin\n\n## Faits récents  \n\n## Chronologie\n';
+    expect(
+      renderEntityPage({ ...ENTITY, body }, [], [], [contained, recent, EMPTY_SECTION]).endsWith(
+        '# Jardin\n\n## Comprend\n\n- [[second-brain/projets/potager]]\n\n## Faits récents  \n\n- 2026-11-02 | semis\n## Chronologie\n',
+      ),
+    ).toBe(true);
+    expect(
+      renderEntityPage({ ...ENTITY, body }, [], [], [{ ...contained, lines: [] }, recent]).endsWith(
+        '# Jardin\n\n## Faits récents  \n\n- 2026-11-02 | semis\n## Chronologie\n',
       ),
     ).toBe(true);
   });
