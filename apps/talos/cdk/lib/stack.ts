@@ -19,6 +19,7 @@ export interface BuildTalosAppStackProps {
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
   readonly errorReportingDsn?: string;
+  readonly release?: string;
 }
 
 // @FollowsBlueprint app-cdk-stack
@@ -36,6 +37,9 @@ export function buildTalosAppStack(props: BuildTalosAppStackProps): void {
         TALOS_SSM_PREFIX: SECRETS_PARAMETER_PREFIX,
         TALOS_RP_ID: props.domainName,
         ...(props.errorReportingDsn === undefined ? {} : { SENTRY_DSN: props.errorReportingDsn }),
+        ...(props.errorReportingDsn === undefined || props.release === undefined
+          ? {}
+          : { SENTRY_RELEASE: props.release }),
       },
     },
     database: { migrationsPath: props.migrationsPath, cluster: props.cluster },

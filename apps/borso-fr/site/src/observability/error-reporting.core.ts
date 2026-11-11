@@ -1,5 +1,7 @@
 const REPORTING_STAGES = ['preview', 'prod'] as const;
 
+const TRACE_SAMPLE_RATE = 1;
+
 export type ReportingStage = (typeof REPORTING_STAGES)[number];
 
 export interface ErrorReportingInputs {
@@ -10,6 +12,7 @@ export interface ErrorReportingInputs {
 export interface ErrorReportingSettings {
   readonly dsn: string;
   readonly environment: ReportingStage;
+  readonly tracesSampleRate: number;
 }
 
 function isReportingStage(stage: unknown): stage is ReportingStage {
@@ -25,5 +28,5 @@ export function selectErrorReportingSettings(
   inputs: ErrorReportingInputs,
 ): ErrorReportingSettings | undefined {
   if (!isConfiguredText(inputs.dsn) || !isReportingStage(inputs.stage)) return undefined;
-  return { dsn: inputs.dsn, environment: inputs.stage };
+  return { dsn: inputs.dsn, environment: inputs.stage, tracesSampleRate: TRACE_SAMPLE_RATE };
 }

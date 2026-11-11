@@ -26,6 +26,7 @@ function readOptionalSetting(name: string): string | undefined {
 }
 
 const errorReportingDsn = readOptionalSetting('TALOS_SENTRY_DSN');
+const release = readOptionalSetting('GITHUB_SHA');
 
 const app = new App();
 const env = { account, region: REGION };
@@ -56,4 +57,5 @@ buildTalosAppStack({
   migrationsPath: path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations'),
   cluster: clusterStack.cluster,
   ...(errorReportingDsn === undefined ? {} : { errorReportingDsn }),
+  ...(release === undefined ? {} : { release }),
 });

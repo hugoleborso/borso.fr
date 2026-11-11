@@ -131,5 +131,16 @@ export const bananaRushManifest: ArchitectureManifest = {
       access: 'credential',
       realisedBy: 'socket',
     },
+    {
+      id: 'sentry',
+      icon: '🚨',
+      name: 'Sentry',
+      technology:
+        'Error monitoring SaaS, @sentry/react in the browser and @sentry/aws-serverless in the Lambda',
+      description:
+        "Receives the errors nobody saw and one trace per page load and per API request. The API's request span carries the wide event's fields, and the site sends the sentry-trace and baggage headers to its own API and nowhere else. Personal data collection stays off.",
+      boundary: 'third-party',
+      access: 'account',
+    },
   ],
 };

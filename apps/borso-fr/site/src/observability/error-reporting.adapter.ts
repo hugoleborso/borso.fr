@@ -15,6 +15,8 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   urlQueryParams: false,
 };
 
+const NO_OWN_API_TO_PROPAGATE_TRACES_TO: RegExp[] = [];
+
 const SHARED_PROJECT_APP_TAGS = { app: 'borso-fr' } as const;
 
 // @FollowsBlueprint adapter-external-service
@@ -24,5 +26,8 @@ export function startErrorReporting(settings: ErrorReportingSettings): void {
     environment: settings.environment,
     initialScope: { tags: SHARED_PROJECT_APP_TAGS },
     dataCollection: PRIVATE_DATA_COLLECTION,
+    tracesSampleRate: settings.tracesSampleRate,
+    tracePropagationTargets: NO_OWN_API_TO_PROPAGATE_TRACES_TO,
+    integrations: [Sentry.browserTracingIntegration()],
   });
 }

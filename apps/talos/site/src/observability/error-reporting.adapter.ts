@@ -2,12 +2,17 @@
  * @DependsOnExternal sentry
  */
 
-import { type ErrorReportingSettings, withoutPrivateContent } from '@domain/error-reporting.core';
+import { type BrowserReportingSettings, withoutPrivateContent } from '@domain/error-reporting.core';
 import * as Sentry from '@sentry/react';
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from 'react-router-dom';
 
 const NO_BREADCRUMBS = 0;
-
-const OUTGOING_TRACE_PROPAGATION_TARGETS: string[] = [];
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 
@@ -22,7 +27,7 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
 const SHARED_PROJECT_APP_TAGS = { app: 'talos' } as const;
 
 // @FollowsBlueprint adapter-external-service
-export function startErrorReporting(settings: ErrorReportingSettings | undefined): void {
+export function startErrorReporting(settings: BrowserReportingSettings | undefined): void {
   if (settings === undefined) return;
   Sentry.init({
     dsn: settings.dsn,
@@ -30,7 +35,18 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     initialScope: { tags: SHARED_PROJECT_APP_TAGS },
     dataCollection: PRIVATE_DATA_COLLECTION,
     maxBreadcrumbs: NO_BREADCRUMBS,
-    tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
+    tracesSampleRate: settings.tracesSampleRate,
+    tracePropagationTargets: [...settings.tracePropagationTargets],
+    integrations: [
+      Sentry.reactRouterBrowserTracingIntegration({
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
+    ],
     beforeSend: withoutPrivateContent,
   });
 }
+
+export const TracedRoutes = Sentry.wrapReactRouterRouting(Routes);

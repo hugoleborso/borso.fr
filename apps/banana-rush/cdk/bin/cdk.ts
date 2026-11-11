@@ -35,6 +35,7 @@ function readOptionalSetting(name: string): string | undefined {
 }
 
 const errorReportingDsn = readOptionalSetting('BANANA_RUSH_SENTRY_DSN');
+const release = readOptionalSetting('GITHUB_SHA');
 
 const prNumber = stage === 'preview' ? requirePrNumber() : undefined;
 const stackSuffix = stage === 'prod' ? 'prod' : `pr-${prNumber}`;
@@ -58,5 +59,12 @@ buildBananaRushAppStack({
   websocketEntry: WEBSOCKET_ENTRY,
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
-  ...(errorReportingDsn === undefined ? {} : { errorReportingDsn }),
+  ...(errorReportingDsn === undefined
+    ? {}
+    : {
+        errorReporting: {
+          dsn: errorReportingDsn,
+          ...(release === undefined ? {} : { release }),
+        },
+      }),
 });

@@ -72,15 +72,18 @@ describe('buildFailureFields', () => {
 });
 
 describe('buildServiceFields', () => {
-  it('names the service and its stage', () => {
-    expect(buildServiceFields('prod')).toStrictEqual({
+  it('names the service, its stage and its version', () => {
+    expect(buildServiceFields({ stage: 'prod', version: '0123abcd' })).toStrictEqual({
       'service.name': 'banana-rush-api',
       'service.stage': 'prod',
+      'service.version': '0123abcd',
     });
   });
 
-  it('leaves out a stage the environment does not set', () => {
-    expect(buildServiceFields(undefined)).toStrictEqual({ 'service.name': 'banana-rush-api' });
+  it('leaves out a stage and a version the environment does not set', () => {
+    expect(buildServiceFields({ stage: undefined, version: undefined })).toStrictEqual({
+      'service.name': 'banana-rush-api',
+    });
   });
 });
 
@@ -88,7 +91,7 @@ describe('buildOpeningFields', () => {
   it('opens the first event of an instance with the service and the base fields', () => {
     expect(
       buildOpeningFields(
-        { stage: 'prod', isColdStart: true },
+        { service: { stage: 'prod', version: undefined }, isColdStart: true },
         { 'event.kind': 'http', 'request.id': REQUEST_ID, 'lambda.request_id': undefined },
       ),
     ).toStrictEqual({
@@ -101,7 +104,12 @@ describe('buildOpeningFields', () => {
   });
 
   it('marks a warm event as no cold start', () => {
-    expect(buildOpeningFields({ stage: undefined, isColdStart: false }, {})).toStrictEqual({
+    expect(
+      buildOpeningFields(
+        { service: { stage: undefined, version: undefined }, isColdStart: false },
+        {},
+      ),
+    ).toStrictEqual({
       'service.name': 'banana-rush-api',
       'lambda.cold_start': false,
     });

@@ -36,13 +36,18 @@ const SOURCE_MAPPED_STACK_TRACES = '--enable-source-maps';
 
 export interface ErrorReportingProject {
   readonly dsn: string;
+  readonly release?: string;
 }
 
 function buildErrorReportingEnvironment(
   project: ErrorReportingProject | undefined,
 ): Record<string, string> {
   if (project === undefined) return {};
-  return { SENTRY_DSN: project.dsn, NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES };
+  return {
+    SENTRY_DSN: project.dsn,
+    NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES,
+    ...(project.release === undefined ? {} : { SENTRY_RELEASE: project.release }),
+  };
 }
 
 export interface BuildLastLoopLepinAppStackProps {

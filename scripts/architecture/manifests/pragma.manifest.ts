@@ -239,6 +239,26 @@ export const pragmaManifest: ArchitectureManifest = {
       realisedBy: 'uploads-bucket',
     },
     {
+      id: 'aws-apigateway-management',
+      icon: '📡',
+      name: 'API Gateway management API',
+      technology: 'AWS SDK, PostToConnection',
+      description:
+        'The only way a Lambda reaches an open WebSocket connection. The API uses it to tell every connected member which reads went stale after a write.',
+      boundary: 'aws',
+      access: 'credential',
+    },
+    {
+      id: 'browser-websocket',
+      icon: '🔌',
+      name: 'WebSocket',
+      technology: 'Browser WebSocket API',
+      description:
+        'Holds the live connection, opened with a ticket the API grants, and refreshes the queries that went stale after a write.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-local-storage',
       icon: '💾',
       name: 'localStorage',

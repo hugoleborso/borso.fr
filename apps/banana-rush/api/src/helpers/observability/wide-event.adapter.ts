@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { recordAttributesOnActiveSpan } from './error-reporting.adapter';
 import {
   buildFailureFields,
   buildOpeningFields,
@@ -8,7 +9,7 @@ import {
   serializeWideEvent,
   type WideEventFields,
 } from './wide-event.core';
-import { readServiceStage } from './wide-event.environment';
+import { readServiceIdentity } from './wide-event.environment';
 
 export type { WideEventFields, WideEventValue } from './wide-event.core';
 
@@ -22,6 +23,7 @@ let isColdStart = true;
 
 function emitWideEvent(fields: WideEventFields): void {
   process.stdout.write(serializeWideEvent(fields));
+  recordAttributesOnActiveSpan(fields);
 }
 
 // @FollowsBlueprint adapter-external-service
@@ -33,7 +35,7 @@ export async function runInWideEvent<Answer>(
   isColdStart = false;
   const scope: WideEventScope = {
     fields: buildOpeningFields(
-      { stage: readServiceStage(), isColdStart: isFirstEventOfInstance },
+      { service: readServiceIdentity(), isColdStart: isFirstEventOfInstance },
       baseFields,
     ),
   };

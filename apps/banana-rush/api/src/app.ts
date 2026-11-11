@@ -4,6 +4,7 @@ import { buildConfigRouter } from './config/config.controller';
 import { buildGamesRouter } from './games/games.controller';
 import { selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnexpectedFailure } from './helpers/observability/error-reporting.adapter';
+import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 
 /**
@@ -14,6 +15,7 @@ import { recordWideEvents } from './helpers/observability/wide-event.middleware'
  */
 function buildAppRouter() {
   return new Hono()
+    .use('*', traceRequests)
     .use('*', recordWideEvents)
     .use('*', cors())
     .onError((failure, context) => {
