@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import catalogue from '../i18n/fr.json';
 import { selectClosenessNameKey } from './closeness-name.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -21,4 +22,15 @@ describe('selectClosenessNameKey', () => {
       expect(selectClosenessNameKey(level)).toBeNull();
     },
   );
+
+  it.each([
+    [0, 'Contacts'],
+    [1, 'Bonnes relations'],
+    [2, 'Copains'],
+    [3, 'Amis'],
+    [4, 'Proches'],
+    [5, 'Intimes'],
+  ] as const)('reads level %i as « %s » in the catalogue', (level, name) => {
+    expect(catalogue[`closeness.name.${level}`]).toBe(name);
+  });
 });
