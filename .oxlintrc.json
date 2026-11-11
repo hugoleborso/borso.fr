@@ -977,6 +977,32 @@
       "plugins": ["vitest", "typescript"]
     },
     {
+      "files": ["apps/*/api/src/**/*.test.ts", "apps/*/test/**/*.test.ts"],
+      "rules": {
+        "eslint/no-restricted-properties": [
+          "error",
+          {
+            "object": "vi",
+            "property": "mock",
+            "message": "This file runs in a back-e2e project with isolate: false, where every file shares one module cache, so a module an earlier file already loaded ignores this hoisted mock and the test passes alone but fails in the suite. Inject the dependency as a parameter, call vi.resetModules() then vi.doMock() and import dynamically, or move the file into the isolated core project. See docs/dantotsus/a-module-mock-in-a-shared-module-cache.md."
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "apps/*/api/src/**/*.core.test.ts",
+        "apps/*/api/src/**/*.utils.test.ts",
+        "apps/*/api/src/**/*.adapter.test.ts",
+        "apps/*/api/src/**/*.schema.test.ts",
+        "apps/pragma/api/src/main.test.ts",
+        "apps/talos/api/src/main.export.test.ts"
+      ],
+      "rules": {
+        "eslint/no-restricted-properties": "off"
+      }
+    },
+    {
       "files": ["apps/*/site/src/components/atoms/*Glyphs.tsx"],
       "rules": {
         "max-lines": "off"
