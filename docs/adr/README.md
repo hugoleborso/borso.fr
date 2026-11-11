@@ -110,7 +110,7 @@ No:
 | [2026-11-04T1200](./2026-11-04T1200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 | [2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
 | [2026-11-05T0445](./2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
-| [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | proposed | 2026-11-11 |
+| [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
 
 ### Data layer
 
