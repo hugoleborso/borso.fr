@@ -168,6 +168,7 @@ describe('the application shell', () => {
       expect(text).toContain(expected);
     }
     expect(text).not.toContain('Ranger le garage');
+    expect(text).not.toContain('Accepter');
     const awaited = tree.container.querySelector('details');
     expect(awaited?.open).toBe(false);
     expect(awaited?.querySelector('summary')?.textContent).toBe('En attente · 1');

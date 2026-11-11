@@ -17,7 +17,6 @@ import { TodayBirthdays } from './TodayBirthdays';
 import { TodayBrief } from './TodayBrief';
 import { TodayCounters } from './TodayCounters';
 import { TodayFocus } from './TodayFocus';
-import { TodayProposal } from './TodayProposal';
 
 // @FollowsBlueprint organism-query-owning
 export function TodayOverview(): JSX.Element {
@@ -54,7 +53,6 @@ export function TodayOverview(): JSX.Element {
           <NotificationsPrompt />
           <TodayBirthdays birthdays={today.data.soonBirthdays} />
           {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
-          <TodayProposal today={date} />
           <TodayAgenda todos={today.data.todos} commitments={commitments.scheduled} today={date} />
           <TodayAwaited commitments={commitments.awaited} today={date} />
           <TodayCounters

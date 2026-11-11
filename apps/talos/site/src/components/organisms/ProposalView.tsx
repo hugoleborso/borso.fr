@@ -64,7 +64,6 @@ export function ProposalView({ slug }: ProposalViewProps): JSX.Element {
           proposal={proposal}
           isWriting={isWriting}
           startsCommenting={wasTouchedHere}
-          showsDraft
           onDecide={(payload) => {
             setWasTouchedHere(true);
             decideProposal.mutate({ slug, ...payload });

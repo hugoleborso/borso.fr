@@ -31,6 +31,13 @@ Two families of slugs arrive: `AAAA-MM-JJ-faits` (title « Déjà faits ? », a 
 - S3.3 A decision fires the routine with `proposition: etat/propositions/<slug>`, as for any proposal.
 - S3.4 Code is added only if something breaks.
 
+## S4. Decisions are taken in one place
+
+The owner decided on 2026-11-11, after seeing the first three changes, that a proposal card on the today screen duplicates the « Décider » tab.
+
+- S4.1 The today screen shows no proposal card. Its « À décider » pill, with the pending count, still leads to the proposals.
+- S4.2 A proposal is decided on the « Décider » tab or on its direct link, where the card always shows its draft.
+
 ## Out of scope
 
 Any change to the API contract, the memory formats or the agent repository.
