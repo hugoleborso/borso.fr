@@ -317,8 +317,9 @@ jobs:
       # Clean state left by previous failed runs (stack stuck in
       # ROLLBACK_COMPLETE, orphan log groups, orphan named buckets).
       # Idempotent — no-op on a clean account.
+      # Runs on a skipped deploy too: a live stack whose own log group was
+      # lost gets it back without waiting for a change to its app.
       - name: Preflight recovery
-        if: steps.plan.outputs.skip != 'true'
         run: ./scripts/preflight-preview-recovery.sh "${{ matrix.app }}" "$PR_NUMBER"
       - if: steps.plan.outputs.skip != 'true'
         run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy

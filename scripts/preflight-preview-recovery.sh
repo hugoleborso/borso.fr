@@ -84,7 +84,35 @@ case "$STACK_STATUS" in
     ;;
 esac
 
+# --- 1b. Log groups a live stack owns but CloudWatch lost ----------------
+# Before 2026-11-11 step 2 ran against live stacks too and deleted their own
+# log groups. CloudFormation still lists them, so it never recreates them,
+# and the Lambda writes into nothing. Recreate each one with the retention
+# the stack's template gives it.
+restore_owned_log_groups() {
+  local logical physical retention
+  while IFS=$'\t' read -r logical physical; do
+    [ -z "$physical" ] && continue
+    if aws logs describe-log-groups --log-group-name-prefix "$physical" --region "$REGION" \
+      --query "logGroups[?logGroupName=='$physical'].logGroupName" --output text | grep -qx "$physical"; then
+      continue
+    fi
+    log "restoring log group $physical, which $STACK_NAME owns but CloudWatch lost"
+    aws logs create-log-group --log-group-name "$physical" --region "$REGION" ||
+      { log "  (create failed — non-fatal)"; continue; }
+    retention="$(aws cloudformation get-template --stack-name "$STACK_NAME" --region "$REGION" \
+      --query "TemplateBody.Resources.$logical.Properties.RetentionInDays" --output text 2>/dev/null || true)"
+    if [[ "$retention" =~ ^[0-9]+$ ]]; then
+      aws logs put-retention-policy --log-group-name "$physical" \
+        --retention-in-days "$retention" --region "$REGION" || log "  (retention failed — non-fatal)"
+    fi
+  done < <(aws cloudformation list-stack-resources --stack-name "$STACK_NAME" --region "$REGION" \
+    --query "StackResourceSummaries[?ResourceType=='AWS::Logs::LogGroup'].[LogicalResourceId,PhysicalResourceId]" \
+    --output text)
+}
+
 if [ "$IS_STACK_LEFT" -eq 1 ]; then
+  restore_owned_log_groups
   log "stack $STACK_NAME owns its log groups and bucket — no orphan to clean"
   log "preflight complete"
   exit 0
