@@ -88,7 +88,9 @@ The total is 56% of 5M, so a sample rate of 1.0 keeps every trace even at this b
 - `-` At the worst-case bound, the quota margin is less than two times. Traffic growing by 1.8 times at the bound, or the Sentry stats page nearing 5M, is the signal to lower the browser rate on borso-fr and pragma first. They carry the most spans.
 - `-` Every API response in the three apps now waits for the flush that ADR-2026-10-10T0457 accepted for pragma. Before, they flushed only on a 500.
 - `-` borso-fr's and borsouvertures's lazily loaded Sentry chunk grows from 93.68 kB to 165.56 kB minified, and from 32.24 kB to 56.64 kB gzip (measured with `vite build`). Their main chunks do not change, because Sentry loads after first paint.
-- `~` last-loop-lepin's site stays on `@sentry/react` 8 through the `sentry8` catalog. Version 8 has no `dataCollection` option, so its existing PII-off settings stay.
+- `~` last-loop-lepin's site stays on `@sentry/react` 8 through the `sentry8` catalog. Version 8 has no `dataCollection` option, so it keeps `sendDefaultPii: false`. Its `http.client` spans would keep a query string, and today the site sends none to its API (grep, measured). Its page loads are named by path, because it has no router.
+- `~` Only the API spans carry a release. pragma's site gets its release from `@sentry/vite-plugin`, which runs only with `SENTRY_AUTH_TOKEN`, and CI hands that token to pragma alone. The other sites send none.
+- `~` banana-rush keeps `Sentry.wrapHandler` around its handlers. That wrapper already flushes after every invocation (read in the 11.6.0 source), so its request span does not flush a second time. Its WebSocket events get no request span, and their wide events go to stdout only.
 - `~` No new dependency, secret or CI variable. `GITHUB_SHA` is set by Actions, and `LambdaApi` already allows `sentry-trace` and `baggage` in its CORS preflight.
 - `~` A static site sends no trace header, so its traces end in the browser.
 
