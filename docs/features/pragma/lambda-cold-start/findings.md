@@ -16,12 +16,14 @@ Do not re-run the dead ends. Each is recorded with the numbers that killed it.
 
 | | before | after PR 293 | how |
 | --- | --- | --- | --- |
-| init, median | 1260 ms | 892 ms | prod `REPORT` lines, 226 then 6 cold starts |
-| first request, median | 1072 ms | 1017 ms | same |
-| total, median | 2404 ms | 2229 ms | same |
+| init, median | 1260 ms | 891 ms | prod `REPORT` lines, 226 then 6 cold starts |
+| first request, median | 1072 ms | 1012 ms | same |
+| total, median | 2404 ms | 2105 ms | same |
 
 PR 298 is measured on its preview, which runs without Sentry, by bursts of 12
 parallel unauthenticated `GET /api/me`. Each burst starts 8 to 10 containers.
+The column for PR 293's code is the fifth of 8 sorted values, because its log
+group went with its stack before the median could be recomputed.
 
 | | PR 293's code, 8 cold starts | PR 298's code, 13 cold starts |
 | --- | --- | --- |
@@ -76,7 +78,7 @@ node_modules/.bin/esbuild apps/pragma/api/src/main.ts --bundle --minify \
 
 Importing that file locally takes about 290 ms net of an empty bundle, so the
 local-to-prod factor was taken as 2.99. It undershot: PR 293 was inferred at
-270 ms and measured at 368 ms on the init.
+270 ms and measured at 369 ms on the init.
 
 ## Bytes are not milliseconds
 
@@ -152,9 +154,10 @@ costs 111 ms of extra evaluation locally, to buy a 22 ms overlap window.
 
 **Opening the DSQL connection at the end of the init.** A top-level `await`
 after the imports costs nothing by itself: 315 ms against 318 ms locally. But
-the connection took 716 ms in the init against about 740 ms in the first
-request, medians of 10 cold starts on the preview. Its phases are waits on the
-network and on DSQL, not CPU, so the init phase has nothing to give it.
+the connection took 716 ms in the init, median of 10 cold starts on PR 298's
+preview, where the whole first request took 757 ms on PR 293's preview with
+the connection inside it. Its phases are waits on the network and on DSQL, not
+CPU, so the init phase has nothing to give it.
 
 **A V8 compile cache shipped in the asset.** Locally it is the biggest single
 gain, 298 ms to 205 ms. It cannot ship. Node names the cache directory after
@@ -182,14 +185,18 @@ Measured on the preview, same code, 10 cold starts at 1024 MB against 13 at
 
 | | 512 MB | 1024 MB |
 | --- | --- | --- |
-| init, median | 747 ms | 738 ms |
-| first request, median | 538 ms | 424 ms |
+| init, median | 747 ms | 736 ms |
+| first request, median | 538 ms | 418 ms |
 
 The init does not move, so it already runs unthrottled, and the claim that
-more memory would halve it is wrong. An invocation does scale: about 115 ms of
+more memory would halve it is wrong. An invocation does scale: about 120 ms of
 a cold start for twice the memory. The preview has no Sentry, and production's
 cold flush costs 180 ms after the handler, part of it CPU, so production may
-gain more (guess). It is the operator's call.
+gain more (guess).
+
+The operator refused it on 2026-11-11: pragma has five users, the members of
+one band, and 120 ms is not worth a higher bill. Do not propose it again
+without a new fact.
 
 ## Untested leads, most promising first
 
@@ -222,7 +229,12 @@ to 227 ms locally.
 it from the database on every gated request. It returns a singleton row that
 changes only on a password rotation. A warm-path win.
 
-**6. What kills an idle connection.** In production a request arriving after
+**6. The agent reader's own client.** `infra/cdk/src/internal/agent-reader/index.ts`
+builds its own postgres.js client with the default, so it pays the array-type
+query on each connection. It answers agents, not band members, and turning the
+query off would hand them arrays as text.
+
+**7. What kills an idle connection.** In production a request arriving after
 more than 8 idle minutes pays a full reconnection. On the preview no
 connection died within 4 idle minutes. After PR 298 a reconnection costs about
 360 ms instead of 670 ms.

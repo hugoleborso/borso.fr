@@ -32,6 +32,26 @@ describe('listDuplicatedResolutions', () => {
     expect(listDuplicatedResolutions(lockfile, NAMES)).toEqual([]);
   });
 
+  it('counts a version once when its snapshot is written on the same line as an empty object', () => {
+    const lockfile = [
+      'packages:',
+      "  '@smithy/core@3.36.0':",
+      'snapshots:',
+      "  '@smithy/core@3.36.0': {}",
+      '',
+    ].join('\n');
+
+    expect(listDuplicatedResolutions(lockfile, NAMES)).toEqual([]);
+  });
+
+  it('reads a key that nothing closes', () => {
+    const lockfile = ['packages:', '  postgres@3.4.9', '  postgres@3.4.8', ''].join('\n');
+
+    expect(listDuplicatedResolutions(lockfile, ['postgres'])).toEqual([
+      { name: 'postgres', versions: ['3.4.8', '3.4.9'] },
+    ]);
+  });
+
   it('reads an unscoped and unquoted key too', () => {
     const lockfile = lockfileOf('postgres@3.4.9', 'postgres@3.4.8');
 

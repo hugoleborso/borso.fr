@@ -32,9 +32,10 @@ killed it.
 Two more levers were tried and are dead. Both are recorded in
 `docs/features/pragma/lambda-cold-start/findings.md` with their numbers.
 
-- **Opening the database connection during init.** It took 716 ms there
-  against about 740 ms in the first request, medians of 10 cold starts on
-  this preview. The init phase has no CPU to spare for it.
+- **Opening the database connection during init.** It took 716 ms there,
+  median of 10 cold starts on this preview, where the whole first request
+  took 757 ms on PR 293's preview. The connection waits on the network and on
+  DSQL, not on CPU, so the init phase has nothing to give it.
 - **Shipping a V8 compile cache in the asset.** Node keys the cache
   directory on its exact version, the architecture and the uid, so a cache
   built on an x64 runner is rejected by an arm64 Lambda.
@@ -45,8 +46,9 @@ Two more levers were tried and are dead. Both are recorded in
   refused that.
 - It does not strip zod's locales. Removing all 267 KB of them changes the
   import by 0 ms.
-- It does not raise memory or buy provisioned concurrency. Both are the
-  operator's call.
+- It does not raise memory. Measured at 1024 MB, it buys about 120 ms of a
+  cold start, and the operator refused it for an app of five users.
+- It does not buy provisioned concurrency.
 
 ## Assertions
 
@@ -70,5 +72,5 @@ The baseline, on PR 293's preview, is an init median of 1028 ms and a duration
 median of 757 ms over 8 cold starts, 1785 ms in total.
 
 Lever 1 cannot be judged there, because a preview runs without Sentry. It is
-judged on production's `Init Duration` after the merge, against the 892 ms
+judged on production's `Init Duration` after the merge, against the 891 ms
 median of the 6 cold starts that followed PR 293's deploy.

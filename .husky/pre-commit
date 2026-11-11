@@ -211,6 +211,8 @@ queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yam
 
 # A package every Lambda bundles resolves to one version, or each bundle
 # carries both copies and evaluates them at every cold start.
+# Earning the run: it would have run on 16 of the last 100 commits, and 76
+# commits ever touched the lockfile it guards (measured 2026-11-11).
 queue_node_check single-resolutions '^. (pnpm-lock\.yaml|scripts/dependencies/)' \
   scripts/dependencies/check-single-resolutions.ts
 
