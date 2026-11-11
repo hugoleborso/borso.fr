@@ -111,6 +111,7 @@ No:
 | [2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
 | [2026-11-05T0445](./2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
 | [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
+| [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | proposed | 2026-11-11 |
 
 ### Data layer
 
@@ -169,6 +170,8 @@ No:
 - 2026-10-10T0457. pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
 - 2026-11-11T1318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
+
+- 2026-11-11T1903. every app traces to Sentry at sample rate 1.0 with pragma's request span and browser tracing, and each API's wide event lands on its span, because the measured worst case is 2.8M spans a month against the free plan's 5M.
 
 ### Tooling / DevX
 

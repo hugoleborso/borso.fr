@@ -16,7 +16,10 @@ const FAKE_ASSETS_DIR = path.join(WORKSPACE_ROOT, 'site');
 const FAKE_API_ENTRY = path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts');
 const FAKE_MIGRATIONS_DIR = path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations');
 const PREVIEW_PR_NUMBER = 1;
-const PROD_ERROR_REPORTING = { dsn: 'https://public-key@o1.ingest.de.sentry.io/2' };
+const PROD_ERROR_REPORTING = {
+  dsn: 'https://public-key@o1.ingest.de.sentry.io/2',
+  release: '0123abcd',
+};
 
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
@@ -260,12 +263,14 @@ describe('last-loop-lepin app stack', () => {
     }
   });
 
-  it('hands the error reporting project to the API only when one is configured', () => {
+  it('hands the error reporting project and release to the API only when one is configured', () => {
     expect(readApiVariables('prod')).toMatchObject({
       SENTRY_DSN: PROD_ERROR_REPORTING.dsn,
+      SENTRY_RELEASE: PROD_ERROR_REPORTING.release,
       NODE_OPTIONS: '--enable-source-maps',
     });
     expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_DSN');
+    expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_RELEASE');
     expect(readApiVariables('preview')).not.toHaveProperty('NODE_OPTIONS');
   });
 });

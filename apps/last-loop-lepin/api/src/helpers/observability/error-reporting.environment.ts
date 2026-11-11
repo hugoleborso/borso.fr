@@ -7,5 +7,9 @@ function readOptional(variableName: string): string | undefined {
 
 // @FollowsBlueprint environment-reader
 export function readErrorReportingInputs(): ErrorReportingInputs {
-  return { dsn: readOptional('SENTRY_DSN'), stage: readOptional('STAGE') };
+  return {
+    dsn: readOptional('SENTRY_DSN'),
+    stage: readOptional('STAGE'),
+    release: readOptional('SENTRY_RELEASE'),
+  };
 }

@@ -17,6 +17,12 @@ const DSQL_ENDPOINT_VARIABLE = 'DSQL_ENDPOINT';
 const DSQL_SCHEMA_VARIABLE = 'DSQL_SCHEMA';
 const DSQL_ROLE_VARIABLE = 'DSQL_ROLE';
 const ERROR_REPORTING_DSN_VARIABLE = 'SENTRY_DSN';
+const ERROR_REPORTING_RELEASE_VARIABLE = 'SENTRY_RELEASE';
+
+export interface ErrorReportingProject {
+  readonly dsn: string;
+  readonly release?: string;
+}
 
 export interface BuildBananaRushAppStackProps {
   readonly scope: Construct;
@@ -28,17 +34,25 @@ export interface BuildBananaRushAppStackProps {
   readonly websocketEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
-  readonly errorReportingDsn?: string;
+  readonly errorReporting?: ErrorReportingProject;
 }
 
-function buildErrorReportingEnvironment(dsn: string | undefined): Record<string, string> {
-  return dsn === undefined ? {} : { [ERROR_REPORTING_DSN_VARIABLE]: dsn };
+function buildErrorReportingEnvironment(
+  project: ErrorReportingProject | undefined,
+): Record<string, string> {
+  if (project === undefined) return {};
+  return {
+    [ERROR_REPORTING_DSN_VARIABLE]: project.dsn,
+    ...(project.release === undefined
+      ? {}
+      : { [ERROR_REPORTING_RELEASE_VARIABLE]: project.release }),
+  };
 }
 
 // @FollowsBlueprint app-cdk-stack
 export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): void {
   const isProduction = isProductionStage(props.stage);
-  const errorReportingEnvironment = buildErrorReportingEnvironment(props.errorReportingDsn);
+  const errorReportingEnvironment = buildErrorReportingEnvironment(props.errorReporting);
   const previewableApp = new PreviewableApp(props.scope, APP_CONSTRUCT_ID, {
     app: APP_SLUG,
     stage: props.stage,

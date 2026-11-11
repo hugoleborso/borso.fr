@@ -4,6 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const spanRecorder = vi.hoisted(() => ({ recordAttributesOnActiveSpan: vi.fn() }));
+
+vi.mock('./error-reporting.adapter', () => spanRecorder);
+
 type WideEventAdapter = typeof import('./wide-event.adapter');
 
 async function importFreshAdapter(): Promise<WideEventAdapter> {
@@ -24,16 +28,18 @@ function readWrittenEvents(write: ReturnType<typeof captureWrittenLines>): unkno
 
 beforeEach(() => {
   vi.stubEnv('STAGE', 'preview');
+  vi.stubEnv('SENTRY_RELEASE', '0123abcd');
 });
 
 afterEach(() => {
+  vi.clearAllMocks();
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
 // @FollowsBlueprint test-node-adapter
 describe('runInWideEvent', () => {
-  it('writes one line holding the opening fields, the added ones and the outcome', async () => {
+  it('writes one line holding the opening fields, the added ones and the outcome, then sets them on the span', async () => {
     const write = captureWrittenLines();
     const { addWideEventFields, runInWideEvent } = await importFreshAdapter();
 
@@ -44,27 +50,33 @@ describe('runInWideEvent', () => {
       return 'done';
     });
 
+    const expectedEvent = {
+      'service.name': 'banana-rush-api',
+      'service.stage': 'preview',
+      'service.version': '0123abcd',
+      'lambda.cold_start': true,
+      'event.kind': 'scheduled',
+      'job.failed_steps': ['first', 'second'],
+      outcome: 'success',
+    };
     expect(answer).toBe('done');
-    expect(readWrittenEvents(write)).toStrictEqual([
-      {
-        'service.name': 'banana-rush-api',
-        'service.stage': 'preview',
-        'lambda.cold_start': true,
-        'event.kind': 'scheduled',
-        'job.failed_steps': ['first', 'second'],
-        outcome: 'success',
-      },
-    ]);
+    expect(readWrittenEvents(write)).toStrictEqual([expectedEvent]);
+    expect(spanRecorder.recordAttributesOnActiveSpan).toHaveBeenCalledExactlyOnceWith(
+      expectedEvent,
+    );
   });
 
-  it('leaves the stage out when the environment sets an empty one', async () => {
+  it('leaves the stage and the version out when the environment sets empty ones', async () => {
     vi.stubEnv('STAGE', '');
+    vi.stubEnv('SENTRY_RELEASE', '');
     const write = captureWrittenLines();
     const { runInWideEvent } = await importFreshAdapter();
 
     await runInWideEvent({}, () => Promise.resolve());
 
-    expect(readWrittenEvents(write)[0]).not.toHaveProperty('service.stage');
+    const [event] = readWrittenEvents(write);
+    expect(event).not.toHaveProperty('service.stage');
+    expect(event).not.toHaveProperty('service.version');
   });
 
   it('marks only the first event of an instance as a cold start', async () => {

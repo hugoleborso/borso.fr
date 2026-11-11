@@ -1,7 +1,8 @@
 import { type JSX, lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
+import { TracedRoutes } from './observability/error-reporting.adapter';
 import { TODO_LIST_ROUTES } from './lib/wikilinks.core';
 import {
   loadBrainEntryPage,
@@ -57,7 +58,7 @@ export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Suspense fallback={null}>
-        <Routes>
+        <TracedRoutes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<RequireSession />}>
             <Route element={<AppShell />}>
@@ -89,7 +90,7 @@ export function App(): JSX.Element {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>
-        </Routes>
+        </TracedRoutes>
       </Suspense>
     </BrowserRouter>
   );

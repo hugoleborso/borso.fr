@@ -38,5 +38,16 @@ export const borsouverturesManifest: ArchitectureManifest = {
       hosting: 'Runs in CI, never at runtime',
     },
   ],
-  externals: [],
+  externals: [
+    {
+      id: 'sentry',
+      icon: '🚨',
+      name: 'Sentry',
+      technology: 'Error monitoring SaaS, @sentry/react in the browser',
+      description:
+        'Receives the errors nobody saw and one trace per page load. The site sends no trace header to any host, because it has no API. Personal data collection stays off.',
+      boundary: 'third-party',
+      access: 'account',
+    },
+  ],
 };
