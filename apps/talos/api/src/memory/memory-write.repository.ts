@@ -1,4 +1,4 @@
-import { eq, like, sql } from 'drizzle-orm';
+import { and, eq, like, sql } from 'drizzle-orm';
 import type { PgColumn } from 'drizzle-orm/pg-core';
 import { getDatabase } from '../database/client';
 import {
@@ -181,6 +181,20 @@ export async function upsertProposal(
     .insert(memoryProposalTable)
     .values(values)
     .onConflictDoUpdate({ target: memoryProposalTable.slug, set: changes });
+}
+
+export async function didChangeProposalFromStatus(
+  executor: MemoryExecutor,
+  expectedStatus: string,
+  values: typeof memoryProposalTable.$inferInsert,
+): Promise<boolean> {
+  const { slug, ...changes } = values;
+  const changedRows = await executor
+    .update(memoryProposalTable)
+    .set(changes)
+    .where(and(eq(memoryProposalTable.slug, slug), eq(memoryProposalTable.status, expectedStatus)))
+    .returning({ slug: memoryProposalTable.slug });
+  return changedRows.length > 0;
 }
 
 export async function upsertDraft(

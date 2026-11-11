@@ -108,6 +108,7 @@ No:
 | [202611041200](./202611041200-the-quality-dashboard-is-a-private-artifact-a-session-refreshes.md) | The quality dashboard is a private artifact a session refreshes | accepted | 2026-11-04 |
 | [202611050106](./202611050106-the-harness-lives-in-claude-with-no-plugin.md) | The harness lives in .claude/ with no plugin | accepted | 2026-11-05 |
 | [202611050445](./202611050445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
+| [202611111306](./202611111306-talos-keeps-the-conversation-of-each-routine-run.md) | Talos keeps the conversation of each routine run in a table of its own database | proposed | 2026-11-11 |
 
 ### Data layer
 
@@ -121,6 +122,7 @@ No:
 - 0049. the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
 - 0050. a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
 - 0052. pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
+- 202611111306. each successful fire of the talos routine is one row of `routine_run` in the app's own database, with the Claude Code address the fire answered, kept only under `https://claude.ai/code/`; the HTTP answer alone lost it on reload and the memory files would have changed the agent's contract.
 
 ### App architecture
 

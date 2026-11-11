@@ -15,6 +15,13 @@
       "when": 1792116746041,
       "tag": "0001_memory_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794401950087,
+      "tag": "0002_routine_run",
+      "breakpoints": true
     }
   ]
 }
