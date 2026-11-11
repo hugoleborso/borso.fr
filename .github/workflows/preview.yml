@@ -415,11 +415,9 @@ jobs:
           else
             note="Updated from <code>${HEAD_SHA::7}</code>"
           fi
-          # A preview job names no environment, so vars.SENTRY_DSN reads as
-          # empty and nothing a preview does reaches Sentry. PR #295 planned
-          # to prove tracing on its preview before it learned that. The
-          # comment is where a reader checks a preview, so it says so.
-          # See docs/dantotsus/the-preview-that-could-not-prove-tracing.md.
+          # The comment is where a reader checks a preview, so it says when
+          # Sentry is off. See
+          # docs/dantotsus/the-preview-that-could-not-prove-tracing.md.
           if [ -z "$VITE_SENTRY_DSN" ]; then
             note="$note · Sentry off, so no error or trace from this preview reaches Sentry"
           fi
