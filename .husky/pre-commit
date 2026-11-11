@@ -135,7 +135,7 @@ list_existing_subjects() {
 }
 
 run_oxfmt() {
-  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check
+  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern
 }
 
 run_oxlint() {
