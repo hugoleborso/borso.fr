@@ -170,6 +170,6 @@ apps/pragma/VOCABULARY.md                               UPDATE
 
 ### Zero-defect strategy
 
-- `CalendarFeedNeedsReconnecting` and `CalendarFeedUnavailable` are logged with `memberId` and the status code, never the address.
+- A feed that needs reconnecting or is unavailable adds its kind, its member id and its status code to the request's wide event (`calendar_feed.failures`, `calendar_feed.failed_member_ids`, `calendar_feed.failed_statuses`), never the address.
 - The p90 of `free_slots.duration_ms` on the `GET /api/free-slots` wide event is watched in the CloudWatch logs. Its threshold is set from the first measurements and is not guessed here.
 - A database authentication failure after the role cutover makes the whole API return 5xx. The preview deploy runs the same role path as production, so it fails first, before the merge.
