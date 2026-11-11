@@ -21,30 +21,14 @@ session does once it has measured the result.
 
 | Found in | Task | Right it needs | How to check it is done |
 | --- | --- | --- | --- |
-| #294 | Delete the orphan `/aws/lambda/<app>-pr-<N>-*` log groups whose stack is gone. The script below skips every live `<app>-pr-<N>` stack. About 930 on 2026-11-11 (measured). | AWS `logs:DeleteLogGroup` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-prefix /aws/lambda/` lists `-pr-` groups only for open pull requests |
-| #292, which holds the closed #286 and #289 | Create the SecureStrings `/talos/fire-url`, `/talos/fire-token` and `/talos/secret-phrase`, and make the talos agent routine read the `message:` line. | AWS SSM write, and the operator's Claude account, where the routine and its fire token live | `aws ssm get-parameters --region eu-west-3 --names /talos/fire-url /talos/fire-token /talos/secret-phrase` returns no `InvalidParameters` |
-
-### Deleting the orphan preview log groups
-
-```bash
-live=$(aws cloudformation list-stacks --region eu-west-3 \
-  --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE CREATE_IN_PROGRESS UPDATE_IN_PROGRESS ROLLBACK_COMPLETE \
-  --query "StackSummaries[?contains(StackName,'-pr-')].StackName" --output text | tr '\t' '\n')
-aws logs describe-log-groups --region eu-west-3 --log-group-name-prefix /aws/lambda/ \
-  --query 'logGroups[].logGroupName' --output text | tr '\t' '\n' \
-  | grep -E '^/aws/lambda/[a-z-]+-pr-[0-9]+-' \
-  | while read -r g; do
-      s=$(sed -E 's|^/aws/lambda/([a-z-]+-pr-[0-9]+)-.*|\1|' <<<"$g")
-      grep -qx "$s" <<<"$live" || echo "$g"
-    done > orphans.txt
-wc -l orphans.txt
-while read -r g; do aws logs delete-log-group --region eu-west-3 --log-group-name "$g"; done < orphans.txt
-```
+| #303 | Delete `banana-rush-pr-295-AppDbProviderLogsD76CF8C5-1R9yfz2OLeSS` and `last-loop-lepin-pr-295-AppDbProviderLogsD76CF8C5-gAGOqy0o9Kqy`. The teardown of #295 left them after the cleanup below, and both stacks are `DELETE_COMPLETE` (measured on 2026-11-12). Each group was created after its stack finished deleting: `banana-rush-pr-295` reached `DELETE_COMPLETE` at 22:59:28 UTC and its group was created at 22:59:51, from one log event stamped 22:59:42 (measured). So the provider Lambda's last write creates the group again, and every teardown of an app with a database can leave one until `infra/cdk/src/constructs/dsql-schema.ts` stops it. | AWS `logs:DeleteLogGroup` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-pattern pr-295` lists nothing |
 
 ## Done
 
 | Found in | Task | Done | Evidence |
 | --- | --- | --- | --- |
+| #294 | Delete the orphan preview log groups whose stack is gone | 2026-11-11 | The operator deleted 1,577 groups with the `borso-admin` profile and none failed (their count): 924 `/aws/lambda/<app>-pr-<N>-*`, and 653 `<app>-pr-<N>-AppDbMigrationRunnerLogs*` or `<app>-pr-<N>-AppDbProviderLogs*`, a family the row did not name. On 2026-11-12, `aws logs describe-log-groups --region eu-west-3` listed 25 `-pr-` groups (measured): 23 for the live stacks of #298 and #302, and the 2 in the open row. |
+| #292, which holds the closed #286 and #289 | Create the SecureStrings `/talos/fire-url`, `/talos/fire-token` and `/talos/secret-phrase`, and make the talos agent routine read the `message:` line | 2026-11-11 | `aws ssm get-parameters --region eu-west-3 --names /talos/fire-url /talos/fire-token /talos/secret-phrase` returned the three as `SecureString` and an empty `InvalidParameters` (measured on 2026-11-12). `/talos/fire-url` matches `https://api.anthropic.com/…/fire` (measured). It is the API trigger of the routine "Talos : message", created the same day on the talos repository in the "Talos build" environment (operator's account, not read here). The routine reads the `message:` line since commit `dc66bcb` of `hugoleborso/talos`. Not verified: a real fire from the PWA to the routine. |
 | #283 | Dispatch `shared-deploy` for the SPF, DMARC and null MX records | by 2026-11-11 | Route 53 holds `borso.fr TXT "v=spf1 -all"`, `MX 0 .` and `_dmarc` |
 | #236 | Store a fine-grained token with Administration write as the `ENVIRONMENTS_ADMIN_TOKEN` secret | by 2026-11-11 | The teardown of run 43088554711 sent its `DELETE` to `environments/preview-talos-pr-294` |
 | #199, #218, #221 | Narrow `Explicit-write-deny` on `AI-Dev-ReadOnly` and grant invoke on the agent-reader Lambdas | by 2026-11-11 | `APP=pragma scripts/db-read.sh "SELECT 1 AS ok"` returned `{"ok":1}` |
