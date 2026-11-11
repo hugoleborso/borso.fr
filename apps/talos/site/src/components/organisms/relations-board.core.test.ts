@@ -3,12 +3,12 @@ import { selectBirthdayDayKey, selectBirthdayTone, selectCloseness } from './rel
 
 describe('selectCloseness', () => {
   it.each([
-    [0, 'contact', 'closeness.name.0'],
-    [1, 'faint', 'closeness.name.1'],
-    [2, 'light', 'closeness.name.2'],
-    [3, 'medium', 'closeness.name.3'],
-    [4, 'strong', 'closeness.name.4'],
-    [5, 'full', 'closeness.name.5'],
+    [0, 'contact', 'closeness.name.person.0'],
+    [1, 'faint', 'closeness.name.person.1'],
+    [2, 'light', 'closeness.name.person.2'],
+    [3, 'medium', 'closeness.name.person.3'],
+    [4, 'strong', 'closeness.name.person.4'],
+    [5, 'full', 'closeness.name.person.5'],
   ] as const)('gives the level %s its own look and its name', (rank, level, nameKey) => {
     expect(selectCloseness(rank)).toStrictEqual({
       level,

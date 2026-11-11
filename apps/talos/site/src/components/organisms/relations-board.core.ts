@@ -1,3 +1,4 @@
+import { PERSON_KIND } from '@domain/closeness.core';
 import type { ParseKeys } from 'i18next';
 import { selectClosenessNameKey } from '../../lib/closeness-name.core';
 import type { ChipTone } from '../atoms/chip.variants';
@@ -35,7 +36,7 @@ const NO_CLOSENESS: Closeness = {
 function selectScoredCloseness(rank: number): Closeness {
   const level = SCORED_LEVELS[Math.min(HIGHEST_RANK, Math.max(LOWEST_RANK, Math.round(rank)))];
   if (level === undefined) return NO_CLOSENESS;
-  const nameKey = selectClosenessNameKey(rank);
+  const nameKey = selectClosenessNameKey(rank, PERSON_KIND);
   return {
     level,
     rank,

@@ -47,8 +47,18 @@ const FRESHNESS = {
       slug: 'second-brain/projets/potager',
       title: 'Potager',
       kind: 'projet',
+      closeness: null,
       summarizedOn: '2026-10-01',
       lateness: 30,
+    },
+    {
+      ...LATE_PAGE,
+      slug: 'second-brain/domaines/cuisine',
+      title: 'Cuisine',
+      kind: 'domaine',
+      closeness: 2,
+      summarizedOn: '2026-10-05',
+      lateness: 20,
     },
   ],
 };
@@ -197,7 +207,7 @@ describe('the memory, its late pages made visible', () => {
     tree.unmount();
   });
 
-  it('lists the late pages above the search, folded until tapped, the most late first, each opening its page', async () => {
+  it('lists the late pages above the search, folded until tapped, the most late first, each with the name of its level by its kind and none without a closeness, each opening its page', async () => {
     const tree = await openApp(
       '/brain',
       (shown) => shown.container.querySelector('summary') !== null,
@@ -210,9 +220,10 @@ describe('the memory, its late pages made visible', () => {
     if (search === null) throw new Error('no search');
     expect(section.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     expect([...section.querySelectorAll('li')].map((row) => row.textContent)).toStrictEqual([
-      'Serreprojet · Résumé du sam. 12 sept.',
+      'Serreprojet · Important · Résumé du sam. 12 sept.',
       'Potagerprojet · Résumé du jeu. 1 oct.',
-      'Alice Martinpersonne · Résumé du ven. 16 oct.',
+      'Cuisinedomaine · Secondaire · Résumé du lun. 5 oct.',
+      'Alice Martinpersonne · Proches · Résumé du ven. 16 oct.',
     ]);
     const first = section.querySelector('a');
     if (first === null) throw new Error('no late page');

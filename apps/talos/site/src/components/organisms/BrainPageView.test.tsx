@@ -13,6 +13,7 @@ import { BrainPageView } from './BrainPageView';
 
 const PERSON = 'second-brain/personnes/agathe-roussel';
 const DOMAIN = 'second-brain/domaines/jardin';
+const ORGANISATION = 'second-brain/organisations/atelier-des-saules';
 const FRESHNESS = { generatedAt: null, lateCount: 0, pages: [] };
 
 function buildPage(title: string, frontMatter: Record<string, string>) {
@@ -29,6 +30,10 @@ function buildPage(title: string, frontMatter: Record<string, string>) {
 const PAGES: Record<string, unknown> = {
   [`/api/pages/${PERSON}`]: buildPage('Agathe Roussel', { type: 'personne', proximite: '4' }),
   [`/api/pages/${DOMAIN}`]: buildPage('Jardin', { type: 'domaine', proximite: '4' }),
+  [`/api/pages/${ORGANISATION}`]: buildPage('Atelier des Saules', {
+    type: 'organisation',
+    proximite: '0',
+  }),
 };
 
 // @FollowsBlueprint test-component-render
@@ -64,7 +69,17 @@ describe('a page of the second brain', () => {
     ]);
   });
 
-  it('leaves the closeness chip of a domain as its number alone', async () => {
-    expect(await readChips(DOMAIN, 'Jardin')).toStrictEqual(['typedomaine', 'proximite4']);
+  it('names the closeness of a domain after its number, in the names of what is not a person', async () => {
+    expect(await readChips(DOMAIN, 'Jardin')).toStrictEqual([
+      'typedomaine',
+      'proximite4 · Important',
+    ]);
+  });
+
+  it('names a closeness of 0 on an organisation', async () => {
+    expect(await readChips(ORGANISATION, 'Atelier des Saules')).toStrictEqual([
+      'typeorganisation',
+      'proximite0 · Périphérie',
+    ]);
   });
 });

@@ -8,6 +8,7 @@ export interface LatePageRowProps {
   readonly href: string;
   readonly title: string;
   readonly kind: string;
+  readonly levelName: string | null;
   readonly summarized: string;
   readonly onLongPress: () => void;
 }
@@ -17,6 +18,7 @@ export function LatePageRow({
   href,
   title,
   kind,
+  levelName,
   summarized,
   onLongPress,
 }: LatePageRowProps): JSX.Element {
@@ -34,7 +36,8 @@ export function LatePageRow({
         <div className="min-w-0 flex-1">
           <p className="m-0 text-body-sm font-bold truncate">{title}</p>
           <p className="m-0 mt-0.5 text-caption text-ink-muted truncate">
-            {kind} · {summarized}
+            {kind}
+            {levelName === null ? null : ` · ${levelName}`} · {summarized}
           </p>
         </div>
         <Icon name="chevron" size={16} className="text-ink-faint" />

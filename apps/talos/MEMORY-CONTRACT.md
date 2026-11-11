@@ -41,9 +41,9 @@ Index (async): `memory_fact(entity_slug)`, `memory_relation(from_slug)`, `memory
 
 ### Closeness
 
-`closeness` is an integer from 0 to 5, or null when the entity has no score. A 0 is a score, not an absence: it is stored, rendered as `proximite: 0`, sorted above null and below 1, and the lint code `missing-closeness` fires on null only.
+`closeness` is an integer from 0 to 5, or null when the entity has no score, for an entity of every kind. No kind is refused a 0. A 0 is a score, not an absence: it is stored, rendered as `proximite: 0`, sorted above null and below 1, and the lint code `missing-closeness` fires on null only.
 
-For an entity of kind `personne` the six levels have names, which the PWA shows:
+Each level has a name, which the PWA shows. For an entity of kind `personne`:
 
 | Level | Name | Meaning |
 |---|---|---|
@@ -54,7 +54,16 @@ For an entity of kind `personne` the six levels have names, which the PWA shows:
 | 1 | Bonnes relations | A useful contact he gets on with, no personal bond |
 | 0 | Contacts | A useful relation, neutral or distant |
 
-For every other kind the scale is an interest from 1 to 5, without names. `entity.upsert` therefore refuses a `closeness` of 0 when the `kind` the operation carries is not `personne`: the call answers 400 `{ error }` and writes nothing, as an unknown verb does. `kind` is required on every `entity.upsert`, so the stored kind is never consulted. A stored row is never rewritten by this rule.
+For an entity of any other kind the score says how much the page matters to the owner, and 0 is the furthest:
+
+| Level | Name | Meaning |
+|---|---|---|
+| 5 | Au cœur | At the centre of his priorities |
+| 4 | Important | He thinks about it every week |
+| 3 | Suivi | He follows it regularly |
+| 2 | Secondaire | Useful, in the background |
+| 1 | Contexte | It helps understand the rest |
+| 0 | Périphérie | Known, with no stake for him |
 
 ## 3. Rendering a page (the wiki view)
 
@@ -135,7 +144,7 @@ Operations (`op` field; other fields camelCase):
 
 | op | fields | effect |
 |---|---|---|
-| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch; 400 on a `closeness` of 0 when `kind` is not `personne` (§2, Closeness). The `body` is stored without the lines of the five computed sections (§3, Writing) |
+| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch; `closeness` is 0 to 5 for every `kind` (§2, Closeness). The `body` is stored without the lines of the five computed sections (§3, Writing) |
 | `entity.archive` | `slug` | `archived = true` |
 | `entity.rename` | `from`, `to` | moves the slug in every table that references it, and rewrites `[[from]]` to `[[to]]` in bodies |
 | `alias.add` | `slug`, `kind`, `value` | idempotent |

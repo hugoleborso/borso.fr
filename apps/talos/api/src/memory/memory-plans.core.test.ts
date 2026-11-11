@@ -97,25 +97,22 @@ describe('planEntityUpsert', () => {
     });
   });
 
-  it('refuses a closeness of 0 on any kind but a person, by the kind the operation carries', () => {
-    const domain = { ...UPSERT, kind: 'domaine' as const };
-    expect(planEntityUpsert(null, { ...domain, closeness: 0 }, NOW)).toStrictEqual({
-      kind: 'closeness-refused',
-    });
-    expect(planEntityUpsert(EXISTING, { ...domain, closeness: 0 }, NOW)).toStrictEqual({
-      kind: 'closeness-refused',
-    });
-    expect(planEntityUpsert(null, { ...domain, closeness: 1 }, NOW)).toMatchObject({
-      kind: 'write',
-      values: { closeness: 1 },
-    });
-    expect(
-      planEntityUpsert({ ...EXISTING, kind: 'domaine', closeness: 0 }, domain, NOW),
-    ).toMatchObject({ kind: 'write', values: { closeness: 0 } });
-    expect(
-      planEntityUpsert({ ...EXISTING, kind: 'domaine' }, { ...UPSERT, closeness: 0 }, NOW),
-    ).toMatchObject({ kind: 'write', values: { kind: 'personne', closeness: 0 } });
-  });
+  it.each(['organisation', 'domaine'] as const)(
+    'writes a closeness of 0 on a page of kind %s, new or stored, as on a person',
+    (kind) => {
+      const upsert = { ...UPSERT, kind, closeness: 0 };
+      expect(planEntityUpsert(null, upsert, NOW)).toMatchObject({
+        kind: 'write',
+        status: 'created',
+        values: { kind, closeness: 0 },
+      });
+      expect(planEntityUpsert({ ...EXISTING, kind }, upsert, NOW)).toMatchObject({
+        kind: 'write',
+        status: 'updated',
+        values: { kind, closeness: 0 },
+      });
+    },
+  );
 
   it('stores a received body without the lines of the computed sections, their headings kept', () => {
     const body =

@@ -2,35 +2,44 @@ import { describe, expect, it } from 'vitest';
 import catalogue from '../i18n/fr.json';
 import { selectClosenessNameKey } from './closeness-name.core';
 
+const LEVELS = [0, 1, 2, 3, 4, 5] as const;
+
 // @FollowsBlueprint test-pure-unit
 describe('selectClosenessNameKey', () => {
-  it.each([
-    [0, 'closeness.name.0'],
-    [1, 'closeness.name.1'],
-    [2, 'closeness.name.2'],
-    [3, 'closeness.name.3'],
-    [4, 'closeness.name.4'],
-    [5, 'closeness.name.5'],
-    ['4', 'closeness.name.4'],
-  ])('names the level %s', (level, nameKey) => {
-    expect(selectClosenessNameKey(level)).toBe(nameKey);
+  it.each(LEVELS)('names the level %i of a person in the set of persons', (level) => {
+    expect(selectClosenessNameKey(level, 'personne')).toBe(`closeness.name.person.${level}`);
+    expect(selectClosenessNameKey(String(level), 'personne')).toBe(
+      `closeness.name.person.${level}`,
+    );
   });
 
-  it.each([6, -1, 2.5, Number.NaN, '', 'proche', 'constructor'])(
-    'gives no name to %s, which is outside the scale',
+  it.each(LEVELS)('names the level %i of any other kind in the other set', (level) => {
+    expect(selectClosenessNameKey(level, 'organisation')).toBe(`closeness.name.other.${level}`);
+    expect(selectClosenessNameKey(String(level), 'domaine')).toBe(`closeness.name.other.${level}`);
+    expect(selectClosenessNameKey(level, 'inconnu')).toBe(`closeness.name.other.${level}`);
+    expect(selectClosenessNameKey(level, '')).toBe(`closeness.name.other.${level}`);
+  });
+
+  it.each([null, 6, -1, 2.5, Number.NaN, '', 'proche', 'constructor'])(
+    'gives no name to %s, which is outside the scale, whatever the kind',
     (level) => {
-      expect(selectClosenessNameKey(level)).toBeNull();
+      expect(selectClosenessNameKey(level, 'personne')).toBeNull();
+      expect(selectClosenessNameKey(level, 'domaine')).toBeNull();
     },
   );
 
   it.each([
-    [0, 'Contacts'],
-    [1, 'Bonnes relations'],
-    [2, 'Copains'],
-    [3, 'Amis'],
-    [4, 'Proches'],
-    [5, 'Intimes'],
-  ] as const)('reads level %i as « %s » in the catalogue', (level, name) => {
-    expect(catalogue[`closeness.name.${level}`]).toBe(name);
-  });
+    [0, 'Contacts', 'Périphérie'],
+    [1, 'Bonnes relations', 'Contexte'],
+    [2, 'Copains', 'Secondaire'],
+    [3, 'Amis', 'Suivi'],
+    [4, 'Proches', 'Important'],
+    [5, 'Intimes', 'Au cœur'],
+  ] as const)(
+    'reads level %i as « %s » for a person and « %s » for any other kind in the catalogue',
+    (level, personName, otherName) => {
+      expect(catalogue[`closeness.name.person.${level}`]).toBe(personName);
+      expect(catalogue[`closeness.name.other.${level}`]).toBe(otherName);
+    },
+  );
 });
