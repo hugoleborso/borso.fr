@@ -160,6 +160,7 @@ const NO_PREVIEW_REASON = 'no preview deployed';
 const NO_PRODUCTION_API_REASON = 'no production API deployed';
 const NO_SENTRY_REASON = 'no Sentry';
 const NO_BUG_REPORTS_REASON = 'pragma only';
+const NO_ISSUE_ROW_REASON = 'no issue count collected for this app';
 
 export const METRIC_KINDS = ['latencyP50', 'latencyP95', 'serverErrors', 'throttles'] as const;
 type MetricKind = (typeof METRIC_KINDS)[number];
@@ -492,6 +493,12 @@ export function buildSentryIssueIndicators(
       };
     if (reading.kind === 'unavailable') return { ...base, current: null, status: reading };
     const own = reading.value.filter((count) => count.app === app);
+    if (own.length === 0)
+      return {
+        ...base,
+        current: null,
+        status: { kind: 'unavailable', reason: NO_ISSUE_ROW_REASON },
+      };
     return {
       ...base,
       current: own.reduce((total, count) => total + count.count, 0),
