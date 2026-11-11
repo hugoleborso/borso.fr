@@ -33,6 +33,7 @@ function readOptionalSetting(name: string): string | undefined {
 }
 
 const errorReportingDsn = readOptionalSetting('LAST_LOOP_LEPIN_SENTRY_DSN');
+const release = readOptionalSetting('GITHUB_SHA');
 
 const prNumber = stage === 'preview' ? requirePrNumber() : undefined;
 const stackSuffix = stage === 'prod' ? 'prod' : `pr-${prNumber}`;
@@ -55,5 +56,12 @@ buildLastLoopLepinAppStack({
   apiEntry: API_ENTRY,
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
-  ...(errorReportingDsn === undefined ? {} : { errorReporting: { dsn: errorReportingDsn } }),
+  ...(errorReportingDsn === undefined
+    ? {}
+    : {
+        errorReporting: {
+          dsn: errorReportingDsn,
+          ...(release === undefined ? {} : { release }),
+        },
+      }),
 });

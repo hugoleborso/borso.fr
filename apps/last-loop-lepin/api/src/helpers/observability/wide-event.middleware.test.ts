@@ -1,8 +1,15 @@
 import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { findActiveTraceId } from './error-reporting.adapter';
 import { addWideEventFields } from './wide-event.adapter';
 import { recordWideEvents } from './wide-event.middleware';
 
+vi.mock('./error-reporting.adapter', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./error-reporting.adapter')>()),
+  findActiveTraceId: vi.fn(() => null),
+}));
+
+const TRACE_ID = '0123456789abcdef0123456789abcdef';
 const UUID_PATTERN = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/;
 const INTERNAL_SERVER_ERROR_STATUS = 500;
 
@@ -94,5 +101,17 @@ describe('recordWideEvents', () => {
         'error.stack': expect.stringContaining('TypeError: cannot read the row'),
       },
     ]);
+  });
+
+  it('carries the id of the trace the request span belongs to, and leaves it out when none is active', async () => {
+    const write = captureWrittenLines();
+    vi.mocked(findActiveTraceId).mockReturnValueOnce(TRACE_ID);
+
+    await buildRecordedApp().request('/api/rows/42');
+    await buildRecordedApp().request('/api/rows/42');
+
+    const [tracedEvent, untracedEvent] = readWrittenEvents(write);
+    expect(tracedEvent).toMatchObject({ 'trace.id': TRACE_ID });
+    expect(untracedEvent).not.toHaveProperty('trace.id');
   });
 });

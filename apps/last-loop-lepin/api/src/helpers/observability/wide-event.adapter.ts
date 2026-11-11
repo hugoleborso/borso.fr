@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { recordAttributesOnActiveSpan } from './error-reporting.adapter';
 import {
   buildFailureFields,
   buildOpeningFields,
@@ -22,6 +23,7 @@ let isColdStart = true;
 
 function emitWideEvent(fields: WideEventFields): void {
   process.stdout.write(serializeWideEvent(fields));
+  recordAttributesOnActiveSpan(fields);
 }
 
 // @FollowsBlueprint adapter-external-service

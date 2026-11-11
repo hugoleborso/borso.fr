@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 import { matchedRoutes } from 'hono/route';
+import { findActiveTraceId } from './error-reporting.adapter';
 import { selectRouteName } from './route-name.core';
 import { addWideEventFields, runInWideEvent } from './wide-event.adapter';
 import { buildHttpEndingFields, selectLambdaRequestId } from './wide-event.core';
@@ -15,6 +16,7 @@ export const recordWideEvents: MiddlewareHandler = async (context, next) => {
       'request.id': crypto.randomUUID(),
       'http.request.method': context.req.method,
       'lambda.request_id': selectLambdaRequestId(environment),
+      'trace.id': findActiveTraceId() ?? undefined,
     },
     async () => {
       const startedAt = performance.now();
