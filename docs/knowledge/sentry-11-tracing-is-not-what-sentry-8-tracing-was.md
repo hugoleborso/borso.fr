@@ -1,5 +1,5 @@
 ---
-summary: 'Sentry 11 sends browser spans as span v2 envelope items, not transactions, and turns its Postgres integrations on with any tracesSampleRate, yet the bundled Lambdas send no database span; count span v2 items, and check database spans in prod only.'
+summary: "Sentry 11 sends browser spans as span v2 envelope items, and a bundled Lambda sends a database span only with `postgresJsIntegration()` listed by hand and Sentry's esbuild plugin in the bundle; count span v2 items, and check database spans in prod."
 triggers:
   paths:
     - 'apps/*/api/src/helpers/observability/error-reporting.adapter.ts'
@@ -7,13 +7,16 @@ triggers:
   output:
     - 'vnd\.sentry\.items\.span\.v2'
     - 'postgresJsIntegration'
+    - 'Failed to register diagnostics-channel injection hooks'
 ---
 
 # Sentry 11 tracing is not what Sentry 8 tracing was
 
 PR #295 moved every app to tracing on `@sentry/react` and `@sentry/aws-serverless`
-11. Three behaviours differed from what the agents expected, each measured on
-that pull request.
+11. Two behaviours differed from what the agents expected, measured on that
+pull request and in its kaizen sweep. One agent also believed tracing turns
+the Postgres integration on by default; on `@sentry/aws-serverless` it does
+not, as the second section shows.
 
 ## Browser spans travel as span v2 items
 
@@ -24,28 +27,45 @@ A page load in Sentry 11 sends its spans as envelope items of type
 seventeen (measured on borso-fr, 17 spans, and borsouvertures, 18). Count the
 span v2 items when you budget spans against the plan's quota.
 
-## Postgres spans turn on with the sample rate
-
-Setting `tracesSampleRate` turns on `postgresJsIntegration` and the other
-database integrations by default. Each span is named after the sanitized SQL
-text. talos runs the agent's own SQL through `POST /api/agent/sql`, so its
-adapter drops those integrations by name with `selectTracedIntegrations`
-(`apps/talos/api/src/helpers/observability/error-reporting.adapter.ts`).
-pragma, last-loop-lepin and banana-rush keep them, as
-[ADR-2026-11-11T1903](../adr/2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md)
-records. Read the default integration list before you trust that a span holds
-only what you wrote.
-
-## The bundled Lambdas send no database span at all
+## No database span reaches Sentry, for two reasons
 
 Sentry's search over prod spans with `span.op:db*` returned nothing for the 7
 days before 2026-11-11 23:10 UTC, while pragma's API sent 33 `http.server`
 spans in the last hour of that window (measured with the Sentry
-`search_traces` tool). pragma has traced at 1.0 since ADR-2026-10-10T0457, so
-the integration that the sample rate turns on yields no span from the bundled
-`postgres` driver. Why is inferred, not measured: the Lambdas are bundled, and
-the integration instruments the driver as a module it loads, which a bundle
-does not load. So the talos filter above is defence for the day spans appear,
-and a spec that promises database timing in a trace promises something no app
-has. Only prod has a DSN, so prod is the only place to check it, with that same
-query after a deploy.
+`search_traces` tool). A local probe found why, on 2026-11-11, with
+`@sentry/aws-serverless` 11.6.0, `postgres` and esbuild 0.28.2 bundling as
+`LambdaApi` does (ESM, `node22`, minified). Each line is one probe run against
+the local Postgres, counting the spans `beforeSendSpan` saw:
+
+| `postgresJsIntegration()` in `integrations` | Sentry's esbuild plugin | Spans |
+| --- | --- | --- |
+| no, the default list | no, as deployed | `http.server` only |
+| no | yes | `http.server` only |
+| yes | no | `http.server` only |
+| yes | yes | `http.server`, and two `db` spans named `select` |
+
+1. **The integration is never installed.** `Sentry.init` from
+   `@sentry/aws-serverless` builds its defaults from
+   `getDefaultIntegrationsWithoutPerformance()` plus the two AWS integrations
+   (`build/npm/esm/init.js:27`). The debug log lists no Postgres integration.
+   Only `@sentry/aws-serverless/awslambda-auto` adds the performance ones. So
+   an app must list `postgresJsIntegration()` itself, and talos's filter in
+   `selectTracedIntegrations` removes nothing today.
+2. **The driver is never instrumented.** Sentry 11 instruments `postgres`
+   through Orchestrion. Orchestrion rewrites `postgres/src/query.js` and
+   `connection.js` to publish on diagnostics channels
+   (`@sentry/server-utils/build/esm/orchestrion/config/postgres.js`). The
+   rewrite happens in a runtime `--import` hook, which cannot see a module
+   esbuild already inlined, or in a bundler plugin, which CDK's
+   `NodejsFunction` cannot take. Sentry says so at startup: `Failed to
+   register diagnostics-channel injection hooks, so channel-based
+   integrations will not record spans.`
+
+Sentry's plugin added 9,890 bytes to the minified probe bundle (381,079
+against 390,969, measured).
+
+With `databaseQueryData: false` the span is named after the statement kind
+only, `select`, with no table and no value.
+
+Only prod has a DSN, so prod is the only place to check a change to this,
+with the same `span.op:db*` query after a deploy.
