@@ -31,7 +31,7 @@ TypeError: ts.parseConfigFileTextToJson is not a function
    `@stryker-mutator/core` 9.6.1 nor 10.1.1 declares `typescript` as a
    dependency or a peer, so `pnpm why typescript` does not list Stryker.
 3. TypeScript 7 has no such functions: its package has no stable JavaScript
-   API ([ADR-0046](../adr/0046-typescript-7-replaces-typescript-5-9.md)).
+   API ([ADR-2026-10-27T2321](../adr/2026-10-27T2321-typescript-7-replaces-typescript-5-9.md)).
 4. No `tsconfig.json` in this repository has `extends` or `references`, so the
    rewrite had nothing to change.
 

@@ -2,7 +2,7 @@
 #
 # `/open-pr` uploads a passing run's PNG and GIF files, and any WebM or MP4
 # recording, to the previews bucket under
-# `screenshots/pr-<n>/<folder>/` (ADR-0023). The pull request body can only
+# `screenshots/pr-<n>/<folder>/` (ADR-2026-09-21T0819). The pull request body can only
 # link that folder: the GitHub MCP server rewrites an image in a body or in a
 # comment it posts, so an agent cannot put a picture in front of the reviewer
 # itself. A comment written here, with GITHUB_TOKEN, never passes through that

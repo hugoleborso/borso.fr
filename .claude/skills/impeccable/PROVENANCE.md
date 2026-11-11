@@ -6,7 +6,7 @@ This folder is a verbatim copy of the impeccable design skill by Paul Bakaus, pu
 - Upstream commit: `c63b8dd7dd5a5f3c32eaabe1af76d0694f863ed2` (2026-10-11)
 - Skill version: 4.5.2, engine version 0.1.14
 
-We keep every file unchanged, so an update is a file copy and not a merge. Anything about how the skill applies to this repository goes in this file. The decision to vendor it, and what was left out, is [ADR-0032](../../../docs/adr/0032-impeccable-is-vendored-as-a-project-skill.md).
+We keep every file unchanged, so an update is a file copy and not a merge. Anything about how the skill applies to this repository goes in this file. The decision to vendor it, and what was left out, is [ADR-2026-10-12T2337](../../../docs/adr/2026-10-12T2337-impeccable-is-vendored-as-a-project-skill.md).
 
 ## Updating
 

@@ -2,7 +2,7 @@
 
 Private PWA at `pragma.borso.fr` for the band's catalog / setlists / sessions / CRM.
 
-Single-stakeholder app — five band members behind a shared password (ADR-0004). Full-stack triplet (`site` / `api` / `cdk`) modelled on `last-loop-lepin`.
+Single-stakeholder app — five band members behind a shared password (ADR-2026-05-19T1955). Full-stack triplet (`site` / `api` / `cdk`) modelled on `last-loop-lepin`.
 
 ## Scripts
 

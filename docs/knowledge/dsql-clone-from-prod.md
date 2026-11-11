@@ -100,9 +100,9 @@ data + decide what to clone vs blocklist.
 ## last-loop-lepin blocks `admin_credentials`, and a fresh preview is admin-locked
 
 `last-loop-lepin` makes the opposite call to `pragma` (see
-[ADR-0009](../adr/0009-pragma-previews-clone-production.md)): it **blocks**
+[ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md)): it **blocks**
 `admin_credentials` from the clone. A preview is a public URL and must not hold
-production's PIN hash. ADR-0004 moved that PIN out of a stage-shared Secrets
+production's PIN hash. ADR-2026-05-19T1955 moved that PIN out of a stage-shared Secrets
 Manager entry into a per-schema row precisely so each stage would carry its own,
 and cloning the row from prod would put the sharing back by another route.
 

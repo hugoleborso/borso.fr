@@ -7,7 +7,7 @@ triggers:
 
 # ical.js relates exceptions without checking the UID
 
-[ADR-0038](../adr/0038-ical-js-parses-calendar-feeds.md) chose `ical.js` to
+[ADR-2026-10-02T1353](../adr/2026-10-02T1353-ical-js-parses-calendar-feeds.md) chose `ical.js` to
 read the members' calendar feeds. Two of its behaviours cost PR #118 a
 mutation-testing round and a validation round.
 

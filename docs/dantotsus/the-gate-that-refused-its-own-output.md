@@ -40,7 +40,7 @@ for `convention-drift.ts`, whose real reason was a naming decision
    tree now produces is new. The copy on disk was written at session start.
 3. **Why is a stale copy a refusal?** The comparison was written when the index
    was committed, and a stale committed copy was a real mistake.
-4. **Why did it outlive that?** ADR-0014 stopped committing generated files and
+4. **Why did it outlive that?** ADR-2026-08-20T1031 stopped committing generated files and
    CLAUDE.md now says "`--check` validates; it does not compare". Two
    generators whose check was only a comparison were taken off the commit. This
    one also checks annotations, so it stayed, with its comparison inside it.
@@ -54,7 +54,7 @@ that added a source file made it fail.
 - **CI:** CI regenerates every output before checking, so the comparison always
   passes there. Only a local commit, where the output is as old as the session,
   could ever see it fail.
-- **Code review of ADR-0014:** the review looked for generators whose check did
+- **Code review of ADR-2026-08-20T1031:** the review looked for generators whose check did
   nothing but compare, and removed those from pre-commit. A check that did two
   things was kept whole.
 
@@ -96,4 +96,4 @@ a comparison in their own `--check`, but pre-commit runs the first without
 ## See also
 
 - [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md)
-- [ADR-0014](../adr/0014-generated-files-are-not-committed.md)
+- [ADR-2026-08-20T1031](../adr/2026-08-20T1031-generated-files-are-not-committed.md)

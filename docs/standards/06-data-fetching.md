@@ -168,7 +168,7 @@ fixes those in one place and takes the event name as a closed union, so a name
 that does not exist is a type error rather than an event nobody finds.
 
 That module is named `<vendor>.adapter.ts`, so the folder and
-[ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) agree rather
+[ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md) agree rather
 than compete. They are answering different questions: the folder is a *scope*,
 and it is the narrower rule, because a reporting SDK is the one outbound
 dependency whose call sites are the whole application rather than one bounded
@@ -211,7 +211,7 @@ pragma sent a request per song, and the API refused 193 requests in one minute
 
 pragma folds the reads issued in one tick into one `POST /api/read-batch`, with
 at most 10 reads per batch and 2 read requests in flight per tab
-([ADR-202611050445](../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md)).
+([ADR-2026-11-05T0445](../adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md)).
 The batch does not make a fan-out free. A list longer than 10 becomes several
 batches, and each item still costs its own database read in the Lambda. The other
 full-stack apps have no batch, so there each item is a request of its own.

@@ -32,7 +32,7 @@
 # reads a precomputed lookup with jq, and rebuilds that lookup only when an
 # entry is newer than it. `knowledge-triggers.py check` is the gate.
 #
-# See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+# See docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
 
 command -v jq >/dev/null 2>&1 || exit 0
 

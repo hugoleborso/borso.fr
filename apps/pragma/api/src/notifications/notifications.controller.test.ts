@@ -112,10 +112,20 @@ async function listStoredEndpoints(): Promise<string[]> {
   return rows.map((row) => row.endpoint).sort();
 }
 
+function captureWrittenLines() {
+  return vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+}
+
+function readWrittenEvents(): unknown[] {
+  return captureWrittenLines().mock.calls.map(([line]) => {
+    const writtenEvent: unknown = JSON.parse(String(line));
+    return writtenEvent;
+  });
+}
+
 beforeEach(async () => {
   await truncateAllTables(testDatabase());
-  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-  vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  captureWrittenLines();
 });
 
 afterEach(() => {
@@ -388,8 +398,12 @@ describe('notifications controller (back-e2e)', () => {
       expect((await postTake(hugo, songId)).status).toBe(201);
 
       expect(await listStoredEndpoints()).toHaveLength(4);
-      expect(console.warn).toHaveBeenCalledWith(
-        JSON.stringify({ event: 'PushSendFailed', host: 'web.push.apple.com', status: '503' }),
+      expect(readWrittenEvents()).toContainEqual(
+        expect.objectContaining({
+          'push.failures': ['PushSendFailed', 'PushSendFailed', 'PushSendFailed'],
+          'push.failed_hosts': ['web.push.apple.com', 'web.push.apple.com', 'web.push.apple.com'],
+          'push.failed_statuses': ['503', '503', '503'],
+        }),
       );
     });
 
@@ -408,9 +422,11 @@ describe('notifications controller (back-e2e)', () => {
         );
       }
       expect(send).not.toHaveBeenCalled();
-      expect(console.warn).toHaveBeenCalledWith(
-        JSON.stringify({ event: 'NotifyBandFailed', kind: 'take-created' }),
-        expect.anything(),
+      expect(readWrittenEvents()).toContainEqual(
+        expect.objectContaining({
+          'push.notify_failed_kinds': ['take-created'],
+          'push.notify_failure_types': [expect.any(String)],
+        }),
       );
     });
 
@@ -423,8 +439,8 @@ describe('notifications controller (back-e2e)', () => {
       expect((await postTake(hugo, songId)).status).toBe(201);
 
       expect(Date.now() - startedAt).toBeGreaterThanOrEqual(PUSH_SEND_DEADLINE_MILLISECONDS);
-      expect(console.warn).toHaveBeenCalledWith(
-        JSON.stringify({ event: 'PushSendTimedOut', recipients: 3 }),
+      expect(readWrittenEvents()).toContainEqual(
+        expect.objectContaining({ 'push.timed_out_recipient_counts': ['3'] }),
       );
     });
 

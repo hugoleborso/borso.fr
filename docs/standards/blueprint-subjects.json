@@ -5042,7 +5042,7 @@
     "TodayProposal": "organism-mutation-panel"
   },
   "apps/talos/site/src/components/organisms/TodoBoard.tsx": {
-    "TodoBoard": "organism-mutation-panel"
+    "TodoBoard": "organism-presentational"
   },
   "apps/talos/site/src/components/organisms/TodoDetail.tsx": {
     "TodoDetail": "organism-mutation-panel"

@@ -55,7 +55,7 @@ than degrading.
 5. **Why was the throwing call the one nobody looked at?** It lives in
    `parameter-store.client.ts`, the `*.client.ts` suffix this same pull request
    introduced as the escape hatch from the outbound-call rule
-   ([ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md), revision
+   ([ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md), revision
    2026-09-15). The suffix exists precisely because such a file cannot take an
    injected fetcher, so it carries neither the coverage nor the mutation gate
    every `.adapter.ts` carries. The one file exempt from the gates was the one
@@ -151,9 +151,9 @@ the suffix today, so the rule lands with the first two.
 
 ## See also
 
-- [ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) — the
+- [ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md) — the
   revision that created the `*.client.ts` escape hatch this defect hid in.
-- [ADR-0017](../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) —
+- [ADR-2026-09-15T2023](../adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md) —
   its consequence about the credential failing silently now names the exception
   and records that the first implementation did not implement the silence.
 - [`a-green-mutation-gate-is-not-a-green-coverage-gate`](./a-green-mutation-gate-is-not-a-green-coverage-gate.md)

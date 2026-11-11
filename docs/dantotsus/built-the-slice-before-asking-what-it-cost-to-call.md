@@ -72,7 +72,7 @@ it, so it was answered last instead of first.
 ## Countermeasure
 
 The slice was rewritten against OpenStreetMap's Nominatim, which needs no
-account, and [ADR-0018](../adr/0018-nominatim-answers-the-bar-search.md)
+account, and [ADR-2026-09-15T0015](../adr/2026-09-15T0015-nominatim-answers-the-bar-search.md)
 records the choice with the billing-account prerequisite as the criterion
 that decided it.
 

@@ -201,7 +201,7 @@ queue_node_check convention-drift "$blueprint_scope" \
   scripts/standards/convention-drift.ts --check
 
 # The dantotsu record's front matter. See
-# docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
+# docs/adr/2026-10-10T0141-weak-point-management-from-the-dantotsu-record.md.
 queue_node_check dantotsu-front-matter '^. (docs/dantotsus/|scripts/quality/)|^D ' \
   scripts/quality/check-dantotsu-front-matter.ts --staged
 
@@ -289,7 +289,7 @@ run_check_on_files pwa-assets '^apps/[^/]+/site/' scripts/check-pwa-assets.sh
 
 # A knowledge entry saying a tool is broken carries a date, and every entry
 # declares the moment a hook delivers it. See
-# docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+# docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
 run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
   scripts/check-negative-claims-are-dated.sh
 run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
@@ -310,7 +310,7 @@ run_check_on_files no-racy-pipelines '(\.sh$|^\.husky/)' scripts/check-no-racy-p
 # Two lists that have to say the same thing. Rung-2 eradication of
 # docs/dantotsus/two-copies-that-had-to-agree-and-nothing-made-them.md.
 run_check coupled-lists \
-  '^. (docs/knowledge/|eslint-rules/impurity\.js$|apps/[^/]+/vitest\.config\.ts$|apps/[^/]+/api/src/database/migrations/|apps/[^/]+/test/(setup-postgres|database-utils)\.ts$|apps/pragma/cdk/lib/stack\.ts$|docs/adr/0009-|scripts/check-coupled-lists\.sh$)' \
+  '^. (docs/knowledge/|eslint-rules/impurity\.js$|apps/[^/]+/vitest\.config\.ts$|apps/[^/]+/api/src/database/migrations/|apps/[^/]+/test/(setup-postgres|database-utils)\.ts$|apps/pragma/cdk/lib/stack\.ts$|docs/adr/2026-08-09T1654-|scripts/check-coupled-lists\.sh$)' \
   scripts/check-coupled-lists.sh
 
 # Each number in a sequence is claimed once, and an ADR's heading, filename and

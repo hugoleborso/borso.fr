@@ -11,7 +11,7 @@ eradication-paths: [apps/pragma/api/src/__test/test-seed.repository.ts, apps/pra
 time-to-detect: hours
 tags: [pragma, testing, preview, dsql]
 zone: apps/pragma/api/src/__test/test-seed.repository.ts
-recurs: none (the first entry about pragma's test seed; the clone lists of ADR-0009 are a different list with a gate of their own)
+recurs: none (the first entry about pragma's test seed; the clone lists of ADR-2026-08-09T1654 are a different list with a gate of their own)
 ---
 
 # The seed wipe that knew only the tables of its day

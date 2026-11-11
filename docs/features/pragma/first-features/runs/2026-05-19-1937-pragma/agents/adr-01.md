@@ -1,7 +1,7 @@
 ---
 status: done
 summary: |
-  ADR-0004 written at docs/adr/0004-pragma-shared-password-auth.md.
+  ADR-2026-05-19T1955 written at docs/adr/2026-05-19T1955-pragma-shared-password-auth.md.
   Slug `pragma-shared-password-auth`, status `proposed`. No conflict
   with existing slugs. Index updated under "App architecture". Two
   alternatives evaluated (shared password vs individual accounts) with
@@ -9,7 +9,7 @@ summary: |
   multiple-alternatives + diverges-from-convention (last-loop-lepin
   uses JWT+PIN; pragma is the first deliberately-lighter auth).
 artifacts:
-  - docs/adr/0004-pragma-shared-password-auth.md
+  - docs/adr/2026-05-19T1955-pragma-shared-password-auth.md
   - docs/adr/README.md
 ---
 
@@ -30,7 +30,7 @@ Highest existing ADR number is 0003 → new number is 0004. Slug
 
 ## Index update
 
-- Added row `| [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |` to the main table.
+- Added row `| [2026-05-19T1955](./2026-05-19T1955-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |` to the main table.
 - Added one-line entry under *App architecture* heading.
 - No existing entries reordered.
 

@@ -53,6 +53,10 @@ if ! command -v aws >/dev/null 2>&1; then
 fi
 
 # --- 1. Stuck stack states ------------------------------------------------
+# A log group or bucket is an orphan only when no stack owns it. A live stack
+# owns its own, and deleting them leaves its Lambda writing into a log group
+# that no longer exists, so steps 2 and 3 run only once no stack is left.
+IS_STACK_LEFT=1
 STACK_STATUS="$(aws cloudformation describe-stacks \
   --stack-name "$STACK_NAME" \
   --region "$REGION" \
@@ -69,14 +73,54 @@ case "$STACK_STATUS" in
       --stack-name "$STACK_NAME" \
       --region "$REGION"
     log "deleted"
+    IS_STACK_LEFT=0
     ;;
   '')
-    log "stack $STACK_NAME does not exist — nothing to clean"
+    log "stack $STACK_NAME does not exist — cleaning orphans it may have left"
+    IS_STACK_LEFT=0
     ;;
   *)
     log "stack $STACK_NAME is $STACK_STATUS — leaving in place"
     ;;
 esac
+
+# --- 1b. Log groups a live stack owns but CloudWatch lost ----------------
+# Before 2026-11-11 step 2 ran against live stacks too and deleted their own
+# log groups. CloudFormation still lists them, so it never recreates them,
+# and the Lambda writes into nothing. Recreate each one with the retention
+# the stack's template gives it.
+restore_owned_log_groups() {
+  local logical physical present retention current
+  while IFS=$'\t' read -r logical physical; do
+    [ -z "$physical" ] && continue
+    present="$(aws logs describe-log-groups --log-group-name-prefix "$physical" --region "$REGION" \
+      --query "logGroups[?logGroupName=='$physical'].[logGroupName,retentionInDays]" --output text)"
+    if [ -z "$present" ]; then
+      log "restoring log group $physical, which $STACK_NAME owns but CloudWatch lost"
+      aws logs create-log-group --log-group-name "$physical" --region "$REGION" ||
+        { log "  (create failed — non-fatal)"; continue; }
+    fi
+    # A group the Lambda recreated on its own has no retention, so it is
+    # checked against the template whether or not this run recreated it.
+    current="$(printf '%s' "$present" | cut -f2)"
+    retention="$(aws cloudformation get-template --stack-name "$STACK_NAME" --region "$REGION" \
+      --query "TemplateBody.Resources.$logical.Properties.RetentionInDays" --output text 2>/dev/null || true)"
+    if [[ "$retention" =~ ^[0-9]+$ ]] && [ "$current" != "$retention" ]; then
+      log "setting $physical retention to $retention days"
+      aws logs put-retention-policy --log-group-name "$physical" \
+        --retention-in-days "$retention" --region "$REGION" || log "  (retention failed — non-fatal)"
+    fi
+  done < <(aws cloudformation list-stack-resources --stack-name "$STACK_NAME" --region "$REGION" \
+    --query "StackResourceSummaries[?ResourceType=='AWS::Logs::LogGroup'].[LogicalResourceId,PhysicalResourceId]" \
+    --output text)
+}
+
+if [ "$IS_STACK_LEFT" -eq 1 ]; then
+  restore_owned_log_groups
+  log "stack $STACK_NAME owns its log groups and bucket — no orphan to clean"
+  log "preflight complete"
+  exit 0
+fi
 
 # --- 2. Orphan Lambda log groups ------------------------------------------
 mapfile -t ORPHAN_LOG_GROUPS < <(

@@ -19,7 +19,7 @@ recurs: none (the first entry about an operator preference the procedure did not
 
 ## Symptom
 
-A day after ADR-0049 was written and its implementation merged, the operator
+A day after ADR-2026-10-28T2126 was written and its implementation merged, the operator
 read the pull request and asked:
 
 > One function per application : je croyais avoir dit que je voulais un shared,
@@ -32,7 +32,7 @@ They had said it. During the `/adr` walk their input was:
 
 That was treated as a question to rebut. Three reasons were written into the
 ADR under *Why one function per application*, the walk continued, and their
-next message — *"Oui, il le remplace"* — was about ADR-0044 being superseded,
+next message — *"Oui, il le remplace"* — was about ADR-2026-10-25T0054 being superseded,
 not about this. Per-app shipped with no ratification of any kind.
 
 ## Root-cause chain
@@ -120,12 +120,12 @@ The asymmetry is deliberate. An author-raised alternative is rejected by the
 rubric, which is what the rubric is for. An operator-raised one is rejected by
 the operator.
 
-**Sibling defects swept:** ADR-0049 itself. Its *Why one function per
+**Sibling defects swept:** ADR-2026-10-28T2126 itself. Its *Why one function per
 application* section now records that the operator raised the shared variant,
 and the answer they gave when asked again a day later — *"Ok on garde par
 app"* — which is the ratification the walk never collected.
 
 ## See also
 
-- [`docs/adr/0049-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+- [`docs/adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
 - [`docs/quality/weak-points.md`](../quality/weak-points.md) — `prose-stands-in-for-a-check`.

@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
 import { testSeedRouter } from './__test/test-seed.controller';
 import { authRouter } from './auth/auth.controller';
 import { adminEditionRouter, editionRouter } from './edition/edition.controller';
+import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { mediaRouter } from './media/media.controller';
 import { adminPunchRouter } from './punch/punch.controller';
 import { selfPunchRouter } from './punch/self-punch.controller';
@@ -16,7 +16,7 @@ const TEST_SEED_FLAG_ON = '1';
 // @FollowsBlueprint api-composition-root
 function buildAppRouter() {
   return new Hono()
-    .use('*', logger())
+    .use('*', recordWideEvents)
     .use('*', cors())
     .get('/api/health', (context) => context.json({ ok: true }))
     .route('/api/editions', editionRouter)

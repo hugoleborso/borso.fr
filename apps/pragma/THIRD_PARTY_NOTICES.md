@@ -50,7 +50,7 @@ SOFTWARE.
 
 ## Newsreader
 
-The display face is Newsreader, by Production Type, under the SIL Open Font License 1.1, self-hosted from `@fontsource-variable/newsreader` ([ADR-0048](../../docs/adr/0048-newsreader-replaces-instrument-serif.md)).
+The display face is Newsreader, by Production Type, under the SIL Open Font License 1.1, self-hosted from `@fontsource-variable/newsreader` ([ADR-2026-10-27T1116](../../docs/adr/2026-10-27T1116-newsreader-replaces-instrument-serif.md)).
 
 ## YouTube mark
 

@@ -1,9 +1,14 @@
 import type { WrittenRoot } from '@domain/stale-scope.core';
+import {
+  describeThrownValue,
+  type WideEventFields,
+} from '../helpers/observability/wide-event.core';
 import { selectFailureCode } from '../mcp/tool-result.core';
 
 export const BROADCAST_FAILED = 'RealtimeBroadcastFailed';
 export const BROADCAST_LATE = 'RealtimeBroadcastLate';
 const WRITTEN_TAG_SEPARATOR = ',';
+const OUTCOME_FIELD = 'realtime.broadcast_outcome';
 
 export type BroadcastOutcome =
   | { readonly kind: 'delivered' }
@@ -37,5 +42,15 @@ export function selectBroadcastFailure(
   return {
     name: BROADCAST_FAILED,
     tags: { 'realtime.written': writtenTag, 'realtime.code': selectFailureCode(outcome.error) },
+  };
+}
+
+export function buildBroadcastOutcomeFields(outcome: BroadcastOutcome): WideEventFields {
+  if (outcome.kind !== 'failed') return { [OUTCOME_FIELD]: outcome.kind };
+  const failure = describeThrownValue(outcome.error);
+  return {
+    [OUTCOME_FIELD]: outcome.kind,
+    'realtime.broadcast_failure': [failure.type],
+    'realtime.broadcast_failure_message': [failure.message],
   };
 }

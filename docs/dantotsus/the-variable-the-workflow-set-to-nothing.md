@@ -133,4 +133,4 @@ no gate.
   the same off switch before any workflow named the variable.
 - [the-connection-parameter-no-mock-could-refuse](./the-connection-parameter-no-mock-could-refuse.md),
   another property that only the deploy job can check.
-- `docs/adr/0031-pragma-reports-errors-and-traces-to-sentry-eu.md`
+- `docs/adr/2026-10-10T0457-pragma-reports-errors-and-traces-to-sentry-eu.md`

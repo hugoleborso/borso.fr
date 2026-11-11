@@ -113,7 +113,7 @@ are two caches, and only one of them is updated.
 ## Countermeasure
 
 The operator chose option E of
-[ADR-202611011313](../adr/202611011313-pragma-offline-reads-through-the-query-cache.md),
+[ADR-2026-11-01T1313](../adr/2026-11-01T1313-pragma-offline-reads-through-the-query-cache.md),
 which removes the second cache instead of keeping it in step.
 
 - The worker caches the app shell, the fingerprinted assets and push, and

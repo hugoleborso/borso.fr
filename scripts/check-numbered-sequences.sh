@@ -32,6 +32,10 @@ SEQUENCE_GLOBS=(
   'docs/adr:md:architecture decision record'
 )
 
+# An ADR id is a UTC minute, `2026-11-11T1318`. A migration id is a plain
+# number. check-adr-numbers-resolve.sh refuses an ADR named by a number.
+ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}|[0-9]+'
+
 failed=0
 
 for entry in "${SEQUENCE_GLOBS[@]}"; do
@@ -45,7 +49,7 @@ for entry in "${SEQUENCE_GLOBS[@]}"; do
 
     duplicates="$(
       find "$directory" -maxdepth 1 -name "*.${extension}" |
-        sed -n 's|^.*/\([0-9][0-9]*\)[-_][^/]*$|\1|p' |
+        sed -En "s#^.*/(${ID_PATTERN})[-_][^/]*\$#\\1#p" |
         sort | uniq -d
     )"
 
@@ -65,7 +69,7 @@ if [ "$failed" -ne 0 ]; then
   echo "  before running them (makeIdempotent in" >&2
   echo "  infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts), so the file" >&2
   echo "  runs again as a no-op under its new name, and the SQL needs no edit." >&2
-  echo "  A new ADR is named after the UTC minute it was written (date -u +%Y%m%d%H%M)," >&2
+  echo "  A new ADR is named after the UTC minute it was written (date -u +%Y-%m-%dT%H%M)," >&2
   echo "  so two of them collide only within one minute: move the second to the next" >&2
   echo "  minute. An ADR id is safe to change until it is merged, after which it is" >&2
   echo "  cited elsewhere and never recycled." >&2

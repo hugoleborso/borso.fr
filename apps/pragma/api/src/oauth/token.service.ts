@@ -1,3 +1,4 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { readCredentialOfMember } from '../auth/credentials.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
@@ -190,7 +191,7 @@ async function recordGrantUse(grant: AccessGrant, now: Date): Promise<void> {
     await updateGrantLastUse(grant.id, now);
   } catch (error) {
     if (!isConflictAbort(error)) throw error;
-    console.warn('assistant grant last use lost a write conflict', grant.id);
+    addWideEventFields({ 'oauth.last_use_conflict_grant_id': grant.id });
   }
 }
 

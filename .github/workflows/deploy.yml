@@ -119,7 +119,7 @@ jobs:
       # Error reporting, for every app. The DSN, the org and the project are
       # variables of the prod environment; the upload token is a secret and
       # reaches only pragma's build. One Sentry project serves the monorepo
-      # (ADR-0031), and each app tags its events with `app`. Unset values
+      # (ADR-2026-10-10T0457), and each app tags its events with `app`. Unset values
       # leave Sentry off: every site and API treats an empty DSN as no project.
       VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN }}
       PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
@@ -132,7 +132,7 @@ jobs:
     steps:
       # A `vars.X` that does not exist reads as an empty string, and an empty
       # DSN is the designed off switch, so pragma ran in prod with Sentry off
-      # for 17 days after #163 and nothing said so. ADR-0031 has it on in prod.
+      # for 17 days after #163 and nothing said so. ADR-2026-10-10T0457 has it on in prod.
       # See docs/dantotsus/the-variable-the-workflow-set-to-nothing.md.
       - name: Refuse to deploy with Sentry off
         run: |

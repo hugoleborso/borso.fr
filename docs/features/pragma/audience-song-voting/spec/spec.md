@@ -4,7 +4,7 @@
 
 - [x] **Client / business** — the operator chose audience participation as the single success metric, measured as ballots per round against the concert's `capacity` column, over "the band reopens a round" and "elected songs get played".
 - [x] **Product** — the operator settled the pool, the ballot rule, the live feedback, the round mechanic, the tie rule, the empty round, and whether a suggestion is votable in the round it arrives in.
-- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md)) and the polling cadence, then withdrew the QR code entirely ([ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated).
+- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-2026-09-16T1931](../../../../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md)) and the polling cadence, then withdrew the QR code entirely ([ADR-2026-08-26T1739](../../../../adr/2026-08-26T1739-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated).
 - [x] **Developer** — the operator was asked how a thirty-second round becomes assertable and chose to let the validator wait the full thirty seconds rather than add a duration parameter or a server-side clock switch. The cost is recorded in *Questions, Options and Decisions*.
 - [x] **Designer** — the operator chose both entry points, QR code and short address, chose live counters with visible numbers, and required that audience suggestions read as not necessarily concert-ready.
 
@@ -36,7 +36,7 @@ POST   /api/audience/concerts/:sessionId/ballot        public   mint a ballot to
 GET    /api/audience/concerts/:sessionId/state         public   round, countdown, pool with counts, this ballot's votes
 POST   /api/audience/rounds/:roundId/votes             public   { songId }
 DELETE /api/audience/rounds/:roundId/votes/:songId     public   retract
-GET    /api/audience/search?q=                         public   picked-result search on Deezer, see ADR-0015
+GET    /api/audience/search?q=                         public   picked-result search on Deezer, see ADR-2026-09-16T1931
 POST   /api/audience/concerts/:sessionId/suggestions   public   { trackId }
 POST   /api/audience/concerts/:sessionId/rounds        gated    open a round
 GET    /api/audience/concerts/:sessionId/rounds        gated    history
@@ -90,7 +90,7 @@ sequenceDiagram
 **Error cases.**
 - A vote on a closed or already-settled round is refused with a conflict, not silently dropped.
 - A vote on a song outside the current pool is refused.
-- The upstream search is throttled or unreachable, through a status or through an error Deezer states inside a 200. The visitor sees a stated failure, not an empty result list. Reporting a refusal as emptiness is one of the two defects [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md) exists to fix.
+- The upstream search is throttled or unreachable, through a status or through an error Deezer states inside a 200. The visitor sees a stated failure, not an empty result list. Reporting a refusal as emptiness is one of the two defects [ADR-2026-09-16T1931](../../../../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md) exists to fix.
 - A picked result names a track the provider no longer knows. The suggestion is refused as unknown rather than written blind, because the server re-reads the track before writing and a catalogue row must not be shaped by a request body.
 - A round is opened on a session whose `kind` is `practice`. Refused: rounds belong to concerts.
 - Two members open a round at the same instant. The second is refused while one is open on that concert.
@@ -107,12 +107,12 @@ sequenceDiagram
 | Tie at the close? | Earliest to reach the score; band arbitrates; both enter | Among the songs sharing the top count, the one whose latest surviving vote is earliest. Deterministic from the rows that remain, so retractions cannot make it ambiguous, and still sayable at the microphone as "it got there first". |
 | No votes at the close? | Blank round; random pick | Blank round. |
 | What is stored from a free-text suggestion? | A picked search result only; free text with band approval; free text shown as typed | A picked search result only. Nothing arbitrary is ever displayed, so no moderation has to be built. |
-| Which search source? | (settled outside this feature) | **Deezer**, as [ADR-0017](../../../../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) and the catalogue search already decided: no key, and a song carries `deezer_track_id`. What this feature adds is what a *room* needs from that search, recorded in [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md): one row per song rather than one per master, and a refusal that reads as a refusal. |
+| Which search source? | (settled outside this feature) | **Deezer**, as [ADR-2026-09-15T2023](../../../../adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md) and the catalogue search already decided: no key, and a song carries `deezer_track_id`. What this feature adds is what a *room* needs from that search, recorded in [ADR-2026-09-16T1931](../../../../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md): one row per song rather than one per master, and a refusal that reads as a refusal. |
 | Where does a winning suggestion live? | A nullable `song_id` on the entry; a catalogue song | A catalogue song with status `idea`. Forced, not chosen: `setlist_entry.song_id` is `NOT NULL` and DSQL accepts no `ALTER COLUMN DROP NOT NULL` (compat gaps §10). |
 | Polling cadence? | 2 s always; 1 s always; 1 s in-round only | One second while a round is open, nothing at rest, plus a refresh control. There is no streaming transport: API Gateway HTTP API buffers the response. |
 | When is the audience-choice setlist created? | At concert creation with a backfill; at concert creation only; at the first round | At the opening of the first round. No empty setlist is ever left on a concert that never ran a vote. |
 | How is a thirty-second round asserted? | A bounded duration parameter; a preview-only server clock; the validator waits | The validator waits the real thirty seconds. **Accepted cost:** every closure assertion spends half a minute of suite time and becomes sensitive to a slow machine. Revisit if the visual-validation run gets flaky. |
-| How does the audience reach the vote page? | A QR code the band shows; a short address announced at the microphone; both | **The short address alone**, `pragma.borso.fr/vote`. The QR code is withdrawn: it encoded the long per-concert URL rather than the address people should reach, and twenty-two characters that never change do not need a dependency and a screen to display them. The library comparison survives in [ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated. |
+| How does the audience reach the vote page? | A QR code the band shows; a short address announced at the microphone; both | **The short address alone**, `pragma.borso.fr/vote`. The QR code is withdrawn: it encoded the long per-concert URL rather than the address people should reach, and twenty-two characters that never change do not need a dependency and a screen to display them. The library comparison survives in [ADR-2026-08-26T1739](../../../../adr/2026-08-26T1739-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated. |
 
 **Out of scope.** Promoting an audience-suggested song beyond `idea` status. Any record that a song was actually played. Moderating or removing a suggestion. Voting during a practice. Any protection against a visitor who clears local storage to vote twice — see *Zero-defect strategy*.
 
@@ -122,8 +122,8 @@ The two decisions this feature could not take on its own, each ratified and comm
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md) | The room's search shows one row per song, and a refusal reaches the caller as a refusal | `collapseTracksOfOneSong` merges rows that read the same after the ranking has ordered them. `searchExternal` returns an outcome union and reads the error Deezer states inside a 200. Accepting a suggestion re-reads the picked track from the provider, matches the catalogue on `deezer_track_id`, and falls back to a folded title and artist when the row carries none. |
-| [ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md) | Withdrawn — the QR code is gone, so its library is too | This feature adds no third-party dependency at all. |
+| [ADR-2026-09-16T1931](../../../../adr/2026-09-16T1931-the-room-search-collapses-masters-into-songs.md) | The room's search shows one row per song, and a refusal reaches the caller as a refusal | `collapseTracksOfOneSong` merges rows that read the same after the ranking has ordered them. `searchExternal` returns an outcome union and reads the error Deezer states inside a 200. Accepting a suggestion re-reads the picked track from the provider, matches the catalogue on `deezer_track_id`, and falls back to a folded title and artist when the row carries none. |
+| [ADR-2026-08-26T1739](../../../../adr/2026-08-26T1739-qrcode-react-for-the-audience-vote-qr-code.md) | Withdrawn — the QR code is gone, so its library is too | This feature adds no third-party dependency at all. |
 
 ## Changes
 
@@ -148,7 +148,7 @@ type PoolEntry = { songId: string; title: string; artist: string; status: SongSt
 
 ### Database changes
 
-Every constraint is declared on `CREATE TABLE`: DSQL accepts none afterwards. No `DEFAULT now()` on a business column, which `migrations.audit.test.ts` already gates. No foreign keys, per ADR-0006. Indexes are emitted plain and the migration runner rewrites them to `CREATE INDEX ASYNC`.
+Every constraint is declared on `CREATE TABLE`: DSQL accepts none afterwards. No `DEFAULT now()` on a business column, which `migrations.audit.test.ts` already gates. No foreign keys, per ADR-2026-06-06T1326. Indexes are emitted plain and the migration runner rewrites them to `CREATE INDEX ASYNC`.
 
 ```sql
 -- 0004_audience_voting.sql

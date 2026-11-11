@@ -65,7 +65,7 @@ describe('decideDeployFanout', () => {
 
   it('deploys nothing when the diff touches neither applications nor shared inputs', () => {
     const fanout = decideDeployFanout(
-      ['docs/adr/0044-read-only-production-database-access.md'],
+      ['docs/adr/2026-10-25T0054-read-only-production-database-access.md'],
       SLUGS,
     );
 

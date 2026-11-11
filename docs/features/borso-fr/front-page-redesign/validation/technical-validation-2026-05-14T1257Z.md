@@ -2,7 +2,7 @@
 
 - Spec: [`../spec/spec.md`](../spec/spec.md)
 - Plan: [`../plan/plan.md`](../plan/plan.md)
-- ADR: [`docs/adr/0002-vendor-react-bits-galaxy-shader.md`](../../../../adr/0002-vendor-react-bits-galaxy-shader.md)
+- ADR: [`docs/adr/2026-05-14T1300-vendor-react-bits-galaxy-shader.md`](../../../../adr/2026-05-14T1300-vendor-react-bits-galaxy-shader.md)
 - Branch: `claude/tech-lead-orchestrator-skill-dVKSm`
 - Base: `origin/main`
 - Run at: 2026-05-14T12:57Z
@@ -25,7 +25,7 @@ the working-tree changes must be committed first. Validated surface:
 ~ apps/borso-fr/site/style.css
 + apps/borso-fr/site/shader-bg.js
 ~ knip.json
-+ docs/adr/0002-vendor-react-bits-galaxy-shader.md
++ docs/adr/2026-05-14T1300-vendor-react-bits-galaxy-shader.md
 + docs/features/borso-fr/front-page-redesign/
 ```
 
@@ -44,7 +44,7 @@ non-DOM/non-runtime claims the spec makes.
 | A03 | Q.O.D. "Mobile shader" → identique | No viewport branching in shader, DPR cap kept at 2 | `shader-bg.js:153,238` | `const DPR_CAP = 2;` and `const pixelRatio = Math.min(window.devicePixelRatio || 1, DPR_CAP);` | PASS |
 | A04 | Q.O.D. "Police du titre" → Major Mono Display | Google Fonts loaded; `.title` uses `--font-display` | `index.html:10-13`, `style.css:6,69-70` | `family=Major+Mono+Display&family=Space+Mono` link; `--font-display: 'Major Mono Display', ui-monospace, monospace;` then `.title { font-family: var(--font-display); }` | PASS |
 | A05 | Q.O.D. "Fallback WebGL" → rien (body bg) | `init()` early-returns on missing `gl`, body bg `#05070d` stays visible | `shader-bg.js:176-181`, `style.css:1-2,13-14` | `if (!gl) { console.warn('WebGL unavailable'); return; }` + `:root { --bg: #05070d; } html, body { background: var(--bg); }` | PASS |
-| A06 | Q.O.D. "Source du shader" → vendor + MIT header (ADR 0002 load-bearing) | MIT attribution block at top of shader-bg.js | `shader-bg.js:1-12` | `// Galaxy background — vanilla WebGL fragment shader.` then `// SPDX-License-Identifier: MIT`, `// Source:   https://github.com/DavidHDev/react-bits`, `// Copyright (c) 2024 David Haz`, `// Do not strip this header` | PASS |
+| A06 | Q.O.D. "Source du shader" → vendor + MIT header (ADR 2026-05-14T1300 load-bearing) | MIT attribution block at top of shader-bg.js | `shader-bg.js:1-12` | `// Galaxy background — vanilla WebGL fragment shader.` then `// SPDX-License-Identifier: MIT`, `// Source:   https://github.com/DavidHDev/react-bits`, `// Copyright (c) 2024 David Haz`, `// Do not strip this header` | PASS |
 | A07 | Q.O.D. "Tweaks panel" → supprimé | No `BgController` export anywhere | grep | `grep -rn BgController apps/borso-fr/site/` → **0 hits** | PASS |
 | A08 | Q.O.D. "Tracking analytics" → aucun | No plausible, gtag, GA, or analytics snippet in HTML | `grep` on `index.html` | `grep -n 'plausible\|gtag\|analytics' apps/borso-fr/site/index.html` → 0 hits | PASS |
 | A09 | Q.O.D. "Build pipeline" — spec says "garder `cp -R site dist`" | Implementation uses Vite | `apps/borso-fr/package.json:8` shows `"build": "vite build"`; implementation report explicitly notes spec/realit drift | The drift is documented in the implementation report ("DÉRIVE SPEC/RÉALITÉ"). The app was already on Vite before this PR (pre-existing for `art/mondrian` React subroute). Vanilla JS files are consumed unchanged by Vite (it bundles them, but they are vanilla JS source). No new dependency was added. Functional outcome equivalent. | PASS_EXCEPT_UNVERIFIABLE |
@@ -59,16 +59,16 @@ non-DOM/non-runtime claims the spec makes.
 
 | # | Rule | Check | Evidence | Verdict |
 |---|---|---|---|---|
-| B01 | No abbreviations / 1-letter locals (outside `for (let i = 0; …)`) | Read of `script.js` + `shader-bg.js` JS harness | `applyMenuState`, `menuItems`, `prefersReducedMotion`, `pointerTarget`, `pointerSmooth`, `vertexBuffer`, `pixelRatio`, `compileShader` are all descriptive. GLSL helpers `Hash21`, `tri`, `Star`, `StarLayer` are upstream verbatim (load-bearing per ADR 0002). | PASS |
+| B01 | No abbreviations / 1-letter locals (outside `for (let i = 0; …)`) | Read of `script.js` + `shader-bg.js` JS harness | `applyMenuState`, `menuItems`, `prefersReducedMotion`, `pointerTarget`, `pointerSmooth`, `vertexBuffer`, `pixelRatio`, `compileShader` are all descriptive. GLSL helpers `Hash21`, `tri`, `Star`, `StarLayer` are upstream verbatim (load-bearing per ADR 2026-05-14T1300). | PASS |
 | B02 | Magic numbers / strings extracted to named constants | grep on `script.js` and `shader-bg.js` | `script.js`: `STAGGER_BASE_MS = 80`, `STAGGER_STEP_MS = 60`, `MENU_OPEN_CLASS`, `BURGER_OPEN_CLASS`, `ANIMATE_IN_CLASS`, `LABEL_OPEN_MENU`, `LABEL_CLOSE_MENU`. `shader-bg.js`: `PARAMS` block (frozen shader settings), `DPR_CAP = 2`, `MOUSE_LERP = 0.05`. | PASS |
-| B03 | Comments document the WHY only | Read | `script.js:42-44` comments WHY pageshow gate (hidden tabs would freeze title at 0). `shader-bg.js:1-12` MIT attribution (load-bearing per ADR 0002), `:257-258` WHY synchronous first draw, `:264-265` WHY reduced-motion early return. No WHAT-comments. | PASS |
+| B03 | Comments document the WHY only | Read | `script.js:42-44` comments WHY pageshow gate (hidden tabs would freeze title at 0). `shader-bg.js:1-12` MIT attribution (load-bearing per ADR 2026-05-14T1300), `:257-258` WHY synchronous first draw, `:264-265` WHY reduced-motion early return. No WHAT-comments. | PASS |
 | B04 | Function names describe the result | Read | `applyMenuState` (vs `toggle`), `compileShader`, `pushUniforms`, `resize`, `frame` — all describe outcome. | PASS |
 | B05 | Type assertions limited to `as const`/`as unknown` | N/A — no TS in changed files | Vanilla JS only. | PASS |
 | B06 | No `any` | `grep -nP '\bany\b' apps/borso-fr/site/script.js apps/borso-fr/site/shader-bg.js` | 0 hits | PASS |
 | B07 | `noUncheckedIndexedAccess` honoured | N/A — no TS | Vanilla JS. | PASS |
 | B08 | Biome lint clean on changed files | `pnpm exec biome lint apps/borso-fr/site/{index.html,style.css,script.js,shader-bg.js}` | `Checked 4 files in 2s. No fixes applied.` exit 0. One `// biome-ignore lint/correctness/useHookAtTopLevel` on `gl.useProgram(program)` — justified inline (WebGL API name collision with React hook regex). | PASS |
 | B09 | No `useEffect` (smell) | `grep -nE '\buseEffect\(' apps/borso-fr/site/*.js` | 0 hits (vanilla JS — no React in scope) | PASS |
-| B10 | No React/JSX/Babel in vanilla port | `grep -in 'react\|babel\|jsx' apps/borso-fr/site/script.js apps/borso-fr/site/shader-bg.js` | Only 3 hits, all in the MIT attribution comment header of `shader-bg.js` referencing "react-bits" upstream — load-bearing per ADR 0002. `script.js` is clean. | PASS |
+| B10 | No React/JSX/Babel in vanilla port | `grep -in 'react\|babel\|jsx' apps/borso-fr/site/script.js apps/borso-fr/site/shader-bg.js` | Only 3 hits, all in the MIT attribution comment header of `shader-bg.js` referencing "react-bits" upstream — load-bearing per ADR 2026-05-14T1300. `script.js` is clean. | PASS |
 | B11 | No removed selectors lingering | `grep -rn 'gradient-canvas\|BgController\|nav-icon\|nav-menu' apps/borso-fr/site/` | 0 hits | PASS |
 
 ## C. Tests pass

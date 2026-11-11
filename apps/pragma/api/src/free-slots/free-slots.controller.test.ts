@@ -65,6 +65,17 @@ async function postFeed(
   });
 }
 
+function captureWrittenLines() {
+  return vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+}
+
+function readWrittenEvents(write: ReturnType<typeof captureWrittenLines>): unknown[] {
+  return write.mock.calls.map(([line]) => {
+    const writtenEvent: unknown = JSON.parse(String(line));
+    return writtenEvent;
+  });
+}
+
 function answerEveryFeedWithItsName(): void {
   vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
     Promise.resolve(namedCalendarOf(new Request(input).url)),
@@ -388,7 +399,6 @@ describe('calendar feeds and free slots (back-e2e)', () => {
         new Response(null, { status: new Request(input).url.includes('gone') ? 404 : 503 }),
       ),
     );
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const freeSlots = await readJson(
       await jsonRequest(first.app, '/api/free-slots', { cookieHeader: first.cookieHeader }),
       freeSlotsSchema,
@@ -421,7 +431,6 @@ describe('calendar feeds and free slots (back-e2e)', () => {
         new Response(null, { status: new Request(input).url.includes('unnamed') ? 503 : 404 }),
       ),
     );
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const freeSlots = await readJson(
       await jsonRequest(app, '/api/free-slots', { cookieHeader }),
       freeSlotsSchema,
@@ -429,6 +438,46 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     expect(freeSlots.excludedMembers).toStrictEqual([
       { memberId, reason: 'needs-reconnecting', calendarName: 'Work', calendarPosition: 1 },
       { memberId, reason: 'unavailable', calendarName: null, calendarPosition: 2 },
+    ]);
+  });
+
+  it('writes the signed-in member, each failed calendar and the free slots counts on the request event', async () => {
+    const first = await buildAuthenticatedApp('First');
+    const second = await buildAuthenticatedApp('Second');
+    await postFeed(first.app, first.cookieHeader, 'https://gone.example.com/feed.ics');
+    await postFeed(second.app, second.cookieHeader, 'https://garbled.example.com/feed.ics');
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
+      Promise.resolve(
+        new Request(input).url.includes('gone')
+          ? new Response(null, { status: 404 })
+          : new Response('not a calendar', { status: 200 }),
+      ),
+    );
+    const write = captureWrittenLines();
+
+    const freeSlots = await readJson(
+      await jsonRequest(first.app, '/api/free-slots', { cookieHeader: first.cookieHeader }),
+      freeSlotsSchema,
+    );
+
+    expect(readWrittenEvents(write)).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'http',
+        'http.route': '/api/free-slots',
+        'member.id': first.memberId,
+        'calendar_feed.failures': expect.arrayContaining(['needs-reconnecting', 'unavailable']),
+        'calendar_feed.failed_member_ids': expect.arrayContaining([
+          first.memberId,
+          second.memberId,
+        ]),
+        'calendar_feed.failed_statuses': expect.arrayContaining(['404', 'unknown']),
+        'free_slots.members': 2,
+        'free_slots.feeds_read': 0,
+        'free_slots.feeds_failed': 2,
+        'free_slots.excluded': 2,
+        'free_slots.slots': freeSlots.slots.length,
+        'free_slots.duration_ms': expect.any(Number),
+      }),
     ]);
   });
 });
