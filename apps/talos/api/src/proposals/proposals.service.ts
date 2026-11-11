@@ -13,8 +13,8 @@ import {
 } from '../content/content.service';
 import { formatParisMinute } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
-import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
 import { recordPwaChanges, renderMemoryProposal } from '../memory/memory-pwa.service';
+import { launchProposalRun } from '../routine/routine.service';
 import {
   buildProposalPath,
   type CancellationOutcome,
@@ -26,7 +26,6 @@ import {
 } from './proposals.core';
 
 const PROPOSALS_DIRECTORY = 'etat/propositions';
-const ROUTINE_TRIGGER = 'proposition';
 
 function readDecidedProposal(outcome: DecisionOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
@@ -92,7 +91,7 @@ export async function decideProposal(params: {
     now: params.now,
   });
   const proposal = readDecidedProposal(outcome);
-  await fireRoutine(ROUTINE_TRIGGER, stripMarkdownExtension(buildProposalPath(params.slug)));
+  await launchProposalRun(stripMarkdownExtension(buildProposalPath(params.slug)), params.now);
   return proposal;
 }
 

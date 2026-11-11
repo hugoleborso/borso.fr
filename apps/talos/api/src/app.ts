@@ -16,6 +16,7 @@ import { buildPagesRouter } from './pages/pages.controller';
 import { buildProposalsRouter } from './proposals/proposals.controller';
 import { buildPushRouter } from './push/push.controller';
 import { buildRelationsRouter } from './relations/relations.controller';
+import { buildRoutineRouter } from './routine/routine.controller';
 import { buildSearchRouter } from './search/search.controller';
 import { buildTodayRouter } from './today/today.controller';
 import { buildTodosRouter } from './todos/todos.controller';
@@ -52,6 +53,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/pages', buildPagesRouter())
     .route('/api/search', buildSearchRouter())
     .route('/api/messages', buildMessagesRouter())
+    .route('/api/routine', buildRoutineRouter())
     .route('/api/push', buildPushRouter())
     .route('/api/notify', buildNotifyRouter())
     .route('/api/agent', buildAgentRouter());

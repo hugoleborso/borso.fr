@@ -7,7 +7,7 @@ The file formats below are those the memory tables render and keep, with the key
 ## Principles
 
 - **The database is the truth.** Every content route reads the memory tables ([`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md)), and every write goes through the same validation as `POST /api/agent/changes` and records one `memory_event` per operation with the actor `pwa` and a French summary, such as `pwa : todo cochée …`; that summary is what the routes below call the commit message. No git repository is read or written. The git storage mode, with its `cutover` switch, was removed on 2026-10-28 ([ADR-0039](../../docs/adr/0039-talos-memory-in-the-database.md)).
-- **What is not content lives in the database**: passkeys, WebAuthn challenges, push subscriptions, sessions and sign-in attempts. It follows [`docs/standards/11-database.md`](../../docs/standards/11-database.md): an Aurora DSQL cluster of its own, `talos-cluster` (`DsqlClusterStack`), and the `prod` schema (`DsqlSchema` through `PreviewableApp`), as pragma does. Drizzle tables live in each slice's `<slice>.schema.ts`; `pnpm --filter @borso-app/talos run db:generate` writes the migrations into `api/src/database/migrations/`, and the migration runner of `@borso/infra` applies them on deploy. Only `*.repository.ts` files reach the database.
+- **What is not content lives in the database**: passkeys, WebAuthn challenges, push subscriptions, sessions, sign-in attempts and routine runs. It follows [`docs/standards/11-database.md`](../../docs/standards/11-database.md): an Aurora DSQL cluster of its own, `talos-cluster` (`DsqlClusterStack`), and the `prod` schema (`DsqlSchema` through `PreviewableApp`), as pragma does. Drizzle tables live in each slice's `<slice>.schema.ts`; `pnpm --filter @borso-app/talos run db:generate` writes the migrations into `api/src/database/migrations/`, and the migration runner of `@borso/infra` applies them on deploy. Only `*.repository.ts` files reach the database.
 - **Secrets** are SSM Parameter Store SecureStrings under the `/talos/` prefix (`TALOS_SSM_PREFIX`; the Lambda may read `/talos/*` and nothing wider): `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, the agent tokens `agent-token-lecture`, `agent-token-build` and `agent-token-mac`, and optionally `fire-url`, `fire-token`, `secret-phrase`. Two settings that are not secret live under the same prefix as plain `String` parameters, so that this public repository holds neither: `claude-environment-talos` and `claude-environment-build`, the ids of the two Claude Code environments the Message screen opens.
 - **One user.** Sign-in is by passkey (WebAuthn, `@simplewebauthn/server` 13, relying party `TALOS_RP_ID` = `talos.borso.fr`). The first registration requires the bootstrap code read from SSM. Once a passkey exists, registration closes; a second passkey is added from a signed-in session.
 - **The interface is in French only**, from one catalogue, `site/src/i18n/fr.json`. Identifiers, routes and API JSON fields are in English, per `borso/no-french-identifiers`. [`VOCABULARY.md`](./VOCABULARY.md) maps each French file key to its English name.
@@ -160,7 +160,9 @@ The relation decides how long a link wants to be: short for couple and family (`
 
 ### Messages to Talos
 
-A message is not a file. The Message screen opens a new Claude Code session on the private repository, with the message as its prompt:
+A message is not a file. The main « Talos » button of the Message screen sends it to `POST /api/routine/runs`, which fires the routine with the line `message: <the whole text>` (see « Firing a run »). The agent's routine reads that line; that part lives in the agent repository.
+
+While `fire-url` is not set, the route answers 503 and the screen replaces the button with the link below, which the owner taps. The « Construire » link is always that link, on the build environment. The link opens a new Claude Code session on the private repository, with the message as its prompt:
 
 ```
 https://claude.ai/code/new?repo=<GITHUB_REPO>&environment=<environment id>&q=<preamble, a blank line, the message>
@@ -225,6 +227,8 @@ The two registration routes also accept a session: that is how a second passkey 
 | GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type, proximity? }[], edges: { source, target, relation, since?, until?, seen?, isClosed }[] }`: `proximity` is the page's valid `proximite`, absent otherwise; with `date`, only the relations begun by that date, and `isClosed` when their `jusqua` ended before it; without `date`, `isClosed` for every relation with a `jusqua` |
 | GET | `/pages/*` (path without `.md`, under `second-brain/`, `engagements/`, `objectifs/`, `journal/` or `sources/`, or `index`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
+| POST | `/routine/runs` | `{ text }` (1 to 4000 characters after trimming) | `RoutineRun`, status 201: the routine is fired with `message: <text>` and the run is stored. 503 `{ "error": "Talos n'est pas encore configuré." }` without `fire-url`, 502 `{ "error": "Talos n'a pas pu être lancé." }` when the fire fails (network, or a status outside 2xx); neither stores anything |
+| GET | `/routine/runs` | | `{ items: RoutineRun[] }`: the 20 most recent runs, newest first |
 | GET | `/messages/claude-code` | | `{ repository, environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO` (the repository Claude Code opens) and the two environment settings, `null` when a setting is missing |
 | GET | `/push/public-key` | | `{ key }` (public VAPID key) |
 | POST | `/push/subscriptions` | `PushSubscriptionJSON` | `{ ok: true }` |
@@ -244,6 +248,7 @@ type RunReport = { at: string; trigger?: string; failedSources: string[] };
 type Proposal = { slug: string; category: string; status: string; title: string; priority: string; createdOn: string; expiresOn?: string; why: string; draft: string; decisions: string[] };
 type PersonToReconnect = { page: string; title: string; closeness: number | null; lastContactOn: string | null; silentDays: number };
 type UpcomingBirthday = { page: string; title: string; date: string; daysUntil: number; age: number | null };
+type RoutineRun = { id: string; firedAt: string; trigger: 'proposition' | 'message'; subject: string; sessionUrl: string | null };
 type Draft = { slug: string; channel: string; recipients: { name: string; page?: string }[]; subject?: string; link?: string; status: string; createdOn: string; source?: string; proposal?: string; sentOn?: string; body: string };
 ```
 
@@ -279,7 +284,13 @@ The routes above answer from the memory tables; what the files alone did not say
 
 ### Firing a run
 
-A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <slug>" }`, such as `proposition: etat/propositions/<slug>`. Without `fire-url`, the decision is still recorded and the next scheduled run picks it up. Cancelling a decision fires nothing.
+A decision on a proposal and a message from the Message screen each call `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<trigger>: <subject or message>" }`. The line is `proposition: etat/propositions/<slug>` for a decision and `message: <the whole text>` for a message.
+
+The endpoint answers `{ "type": "routine_fire", "claude_code_session_id": "session_…", "claude_code_session_url": "https://claude.ai/code/session_…" }` (read in the Claude Code documentation on 2026-11-11; the endpoint is a research preview).
+
+Each successful fire is stored as a **routine run**, one row of the `routine_run` table: `id` (uuid), `fired_at`, `trigger` (`proposition` or `message`), `subject` (the proposal's memory slug, or the message cut to 200 characters) and `session_url`. The address is kept only when it starts with `https://claude.ai/code/`; anything else, or an answer that is not JSON, is stored as null. Decision record: [ADR-202611111306](../../docs/adr/202611111306-talos-keeps-the-conversation-of-each-routine-run.md).
+
+For a decision, the answer and the status never depend on the fire. Without `fire-url`, or when the fire fails, the decision is still recorded, no run is stored, and the next scheduled run picks the decision up. A run that cannot be stored is reported and does not fail the decision. Cancelling a decision fires nothing and stores nothing.
 
 ## Discussing an item with Talos
 
@@ -300,7 +311,7 @@ No screen explains its interface: only data, one- or two-word labels and icons. 
 - **Historique** (from the pills): the past briefs and the weekly reviews, two filters, newest first, each read as rendered markdown.
 - **Propositions** (tab « Décider »; the tabs read Jour, Todo, Taff, Décider, Mémoire, Message; with a badge of the pending count, mirrored on the installed app icon through the Badging API where it exists): cards with the reason, the draft, and Accept, Refuse, Comment buttons, for the pending proposals only, under the same rule as the counter (`proposee` and not past `expire`). Expired ones fold under « Expirées » without buttons; decided ones under « Historique », where one not yet `faite` shows « Revenir sur ma décision », after which its card is decidable again with the comment field open. A decision takes the card off at once, and its toast names it (« Acceptée : <titre> ») and carries « Annuler » for six seconds, which does the same.
 - **Second brain** (tab « Mémoire »): search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.
-- **Message**: one field with a placeholder, the main « Talos » button (the reading environment) and a discreet « Construire » link (the build environment). Each opens Claude Code in a new tab with the message prefilled; nothing is written to the repository.
+- **Message**: one field with a placeholder, the main « Talos » button and a discreet « Construire » link (the build environment). « Talos » fires the routine with the message; it is off while the field is empty or holds more than 4000 characters. On success the field empties, a toast confirms, and the run shows first in the list. While the routine is not configured (503), the button becomes the link that opens Claude Code in a new tab with the message prefilled, on the reading environment, as « Construire » does on the build one. Under the composer, « Lancements » lists the 20 most recent routine runs: what started each (« Message » or « Décision »), its subject, its age, and a link « Ouvrir » to its Claude Code conversation, a plain link the owner taps. A run without an address shows no link, and the list is hidden while it is empty. After a decision, the list is read again the next time the screen is shown.
 - **Réglages** (from the header of Aujourd'hui): registered passkeys (date added, add one, remove any but the last), notifications (state, test, turn off), sign out.
 - Every write confirms or reports its failure with a toast, one at a time, an error staying until closed.
 - Installable (manifest, icons, service worker), push notifications after a user gesture (iOS requires it), readable offline on the last loaded state.

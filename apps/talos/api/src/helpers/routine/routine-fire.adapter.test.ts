@@ -16,6 +16,8 @@ const CONFIGURED = readsSecrets({
   'secret-phrase': 'phrase',
 });
 
+const SESSION_URL = 'https://claude.ai/code/session_01ExempleInvente';
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -35,13 +37,22 @@ describe('fireRoutine', () => {
   });
 
   it('posts the file to the routine with the contract headers', async () => {
-    const fetcher = vi.fn(async () => await Promise.resolve(new Response('{}', { status: 200 })));
+    const fetcher = vi.fn(
+      async () =>
+        await Promise.resolve(
+          Response.json({
+            type: 'routine_fire',
+            claude_code_session_id: 'session_01ExempleInvente',
+            claude_code_session_url: SESSION_URL,
+          }),
+        ),
+    );
     expect(
       await fireRoutine('proposition', 'etat/propositions/p.md', {
         fetcher,
         readSecret: CONFIGURED,
       }),
-    ).toEqual({ kind: 'fired' });
+    ).toEqual({ kind: 'fired', sessionUrl: SESSION_URL });
     expect(fetcher).toHaveBeenCalledWith('https://api.anthropic.com/v1/routines/r1/fire', {
       method: 'POST',
       headers: {
@@ -52,6 +63,18 @@ describe('fireRoutine', () => {
       },
       body: JSON.stringify({ text: 'phrase\nproposition: etat/propositions/p.md' }),
     });
+  });
+
+  it('reports a fire whose answer is not JSON as fired without an address', async () => {
+    const fetcher = vi.fn(async () => await Promise.resolve(new Response('ok', { status: 200 })));
+    expect(await fireRoutine('message', 'Bonjour', { fetcher, readSecret: CONFIGURED })).toEqual({
+      kind: 'fired',
+      sessionUrl: null,
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      'https://api.anthropic.com/v1/routines/r1/fire',
+      expect.objectContaining({ body: JSON.stringify({ text: 'phrase\nmessage: Bonjour' }) }),
+    );
   });
 
   it('reports a refused call', async () => {
@@ -80,6 +103,7 @@ describe('fireRoutine', () => {
     vi.stubGlobal('fetch', fetcher);
     expect(await fireRoutine('proposition', 'p.md', { readSecret: CONFIGURED })).toEqual({
       kind: 'fired',
+      sessionUrl: null,
     });
     expect(fetcher).toHaveBeenCalledOnce();
   });

@@ -1,6 +1,8 @@
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { canSendMessage } from '@domain/routine-run.core';
+import { Button } from '../atoms/Button';
 import { buttonVariants } from '../atoms/button.variants';
 import { Icon, type IconName } from '../atoms/Icon';
 import { Notice } from '../atoms/Notice';
@@ -10,6 +12,8 @@ import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE } from '../../lib/calendar-day.utils';
 import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
+import { useLaunchMessageRun } from '../../lib/queries/routine.queries';
+import { isRoutineUnconfigured } from '../../lib/routine-run.core';
 import {
   buildClaudeCodeAddress,
   type ClaudeCodeEnvironment,
@@ -17,7 +21,11 @@ import {
   selectClaudeCodeLinkTarget,
 } from '../../lib/claude-code-address.core';
 import { detectClaudeCodeOpener } from '../../lib/claude-code-opener.adapter';
-import { isMessageTooLong, LONG_MESSAGE_THRESHOLD } from './message-composer.core';
+import {
+  isEnvironmentLinked,
+  isMessageTooLong,
+  LONG_MESSAGE_THRESHOLD,
+} from './message-composer.core';
 
 interface EnvironmentChoice {
   readonly environment: ClaudeCodeEnvironment;
@@ -54,7 +62,14 @@ export function MessageComposer(): JSX.Element {
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
   const opener = detectClaudeCodeOpener();
-  const form = useForm({ defaultValues: { text: '' } });
+  const launch = useLaunchMessageRun();
+  const isUnconfigured = isRoutineUnconfigured(launch.error);
+  const form = useForm({
+    defaultValues: { text: '' },
+    onSubmit: ({ value, formApi }) => {
+      launch.mutate({ text: value.text }, { onSuccess: () => formApi.reset() });
+    },
+  });
 
   return (
     <>
@@ -89,11 +104,24 @@ export function MessageComposer(): JSX.Element {
                     })}
                   </Notice>
                 ) : null}
+                {isUnconfigured ? null : (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    disabled={!canSendMessage(text) || launch.isPending}
+                    onClick={() => void form.handleSubmit()}
+                  >
+                    <Icon name="send" size={MAIN_ICON_SIZE} />
+                    {t('message.open-talos')}
+                  </Button>
+                )}
                 {target.data === undefined ? (
                   <QueryState isPending={target.isPending} onRetry={() => void target.refetch()} />
                 ) : (
                   <div className="flex flex-col gap-1">
-                    {ENVIRONMENT_CHOICES.map((choice) => (
+                    {ENVIRONMENT_CHOICES.filter((choice) =>
+                      isEnvironmentLinked(choice.environment, isUnconfigured),
+                    ).map((choice) => (
                       <a
                         key={choice.environment}
                         href={buildClaudeCodeAddress(
