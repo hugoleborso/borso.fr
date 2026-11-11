@@ -2,7 +2,7 @@
 -- id is chosen by the device that recorded it, so a retried create after
 -- a lost answer lands on the same row instead of a second one.
 --
--- No foreign keys (ADR-0006) and no DEFAULT now(): created_at comes from
+-- No foreign keys (ADR-2026-06-06T1326) and no DEFAULT now(): created_at comes from
 -- the service's injected clock, which migrations.audit.test.ts gates. The
 -- indexes are emitted plain and the migration runner rewrites them to
 -- CREATE INDEX ASYNC.
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "take_comment" (
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "take_comment_take_created_idx" ON "take_comment" ("take_id","created_at");
 --> statement-breakpoint
--- One device of one member that accepted notifications. ADR-0040 keeps
+-- One device of one member that accepted notifications. ADR-2026-10-23T0932 keeps
 -- this table out of every preview clone, so a preview never pushes to the
 -- band's phones. The endpoint is the primary key, because DSQL builds a
 -- unique index asynchronously and two concurrent subscribes of the same

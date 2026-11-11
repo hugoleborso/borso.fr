@@ -2,7 +2,7 @@
 
 - Spec: [`../spec/spec.md`](../spec/spec.md) — SHA pinned in `runs/.../state.json`.
 - Plan: [`../plan/plan.md`](../plan/plan.md)
-- ADR: [`../../../../adr/0004-pragma-shared-password-auth.md`](../../../../adr/0004-pragma-shared-password-auth.md)
+- ADR: [`../../../../adr/2026-05-19T1955-pragma-shared-password-auth.md`](../../../../adr/2026-05-19T1955-pragma-shared-password-auth.md)
 - Branch: `claude/pragma-erp-specification-k41Mg`
 - Base: `origin/main`
 - HEAD: `7de18da` (round-2 impl commit is `ff6657e`; the three commits on top are docs-only — orchestrator checkpoint, standard-amendment, prior verdict)
@@ -21,7 +21,7 @@
 | # | Spec ref | Claim | Code (file:line) | Evidence | Verdict |
 |---|---|---|---|---|---|
 | A01 | Q.O.D. *App-workspace slug* = `pragma` | Workspace lives at `apps/pragma/` with `@borso-app/pragma` name | `apps/pragma/package.json` | `"name": "@borso-app/pragma"` | PASS |
-| A02 | Q.O.D. *Auth model* = shared password (ADR-0004) | Hono middleware verifies signed HttpOnly cookie + argon2id hash in `app_config`; rate-limit 5/15min/ip_hash; rotate-password endpoint behind session | `apps/pragma/api/src/auth/shared-password.middleware.ts`, `auth.controller.ts:rotate-password` | `app.use('/api/admin/rotate-password', sharedPasswordMiddleware)` (fixed in round-1.5) | PASS |
+| A02 | Q.O.D. *Auth model* = shared password (ADR-2026-05-19T1955) | Hono middleware verifies signed HttpOnly cookie + argon2id hash in `app_config`; rate-limit 5/15min/ip_hash; rotate-password endpoint behind session | `apps/pragma/api/src/auth/shared-password.middleware.ts`, `auth.controller.ts:rotate-password` | `app.use('/api/admin/rotate-password', sharedPasswordMiddleware)` (fixed in round-1.5) | PASS |
 | A03 | Q.O.D. *Concurrency* = last-write-wins | Plain UPDATE without version column | `apps/pragma/api/src/songs/songs.controller.ts:145` | `database.update(songTable).set(input).where(eq(songTable.id, id))` — no version check | PASS |
 | A04 | Q.O.D. *Mastery* hybrid (default ?? override) | `mastery.core.ts:effective` returns `override ?? default` (treats override=0 correctly) | `apps/pragma/api/src/mastery/mastery.core.ts:42-44` | `const override = overrides[songId]?.[memberId]?.[instrumentId]; if (override !== undefined) return override;` | PASS |
 | A05 | Q.O.D. *Transition warning rule* — no harmonic kept by same member across pair → warn | `evaluateTransition` intersects harmonic-member sets on each side | `apps/pragma/api/src/setlists/transition.core.ts:43-62` | `if (overlap.length > 0) return { kind: 'safe' };` | PASS |
@@ -44,7 +44,7 @@
 | A22 | Spec route `/sessions/<id>/setlist` | Setlist editor is **embedded** inside `/sessions/<id>` rather than a dedicated route | `apps/pragma/site/src/App.tsx:31` | `<Route path="/sessions/:sessionId" element={<SessionDetailPage />} />` (no `/setlist` subroute) | Note (functionally equivalent; deviation from spec verbatim) — **PASS with note** |
 | A23 | Domain model: MASTERY_DEFAULT + MASTERY_OVERRIDE unique indexes | Drizzle schema + back-e2e | `apps/pragma/api/src/database/schema.ts`; back-e2e `mastery.controller.test.ts` | constraint verified in tests | PASS |
 | A24 | Domain model: SETLIST_ENTRY position index | Drizzle index `(setlist_id, position)` | `apps/pragma/api/src/database/schema.ts` | drizzle migration includes the index | PASS |
-| A25 | Files-to-change: `apps/pragma/cdk/` — composes PreviewableApp + DsqlCluster + uploads bucket | Stack composes PreviewableApp + S3 + CORS PUT/GET; DsqlCluster is its own stack in `bin/cdk.ts`; no SecretsManager (ADR-0004) | `apps/pragma/cdk/lib/stack.ts:50-96`, `cdk/bin/cdk.ts:52` | `new PreviewableApp(...)`, `new Bucket(...)`, `new DsqlClusterStack(...)` | PASS |
+| A25 | Files-to-change: `apps/pragma/cdk/` — composes PreviewableApp + DsqlCluster + uploads bucket | Stack composes PreviewableApp + S3 + CORS PUT/GET; DsqlCluster is its own stack in `bin/cdk.ts`; no SecretsManager (ADR-2026-05-19T1955) | `apps/pragma/cdk/lib/stack.ts:50-96`, `cdk/bin/cdk.ts:52` | `new PreviewableApp(...)`, `new Bucket(...)`, `new DsqlClusterStack(...)` | PASS |
 | A26 | Files-to-change: `apps/pragma/site/src/sw/` — service worker | SW file present at `site/public/sw.js`; `register-sw.ts` registers it | `apps/pragma/site/public/sw.js`, `apps/pragma/site/src/sw/register-sw.ts` | both present | PASS |
 | A27 | Plan: `apps/pragma/api/src/auth/bootstrap.handler.ts` for `set-password` first-time | Implemented inline on `auth.controller.ts` as `POST /api/admin/set-password`, gated by "row absent" | `apps/pragma/api/src/auth/auth.controller.ts` | back-e2e: 2nd set-password attempt 401s | PASS |
 
@@ -108,7 +108,7 @@ Numbered happy-path steps (use cases 1, 1bis, 2, 3, 4, 5) are routed by the spec
 | D15 | Mastery defaults CRUD via API | `apps/pragma/api/src/mastery/mastery.controller.test.ts` | PASS |
 | D16 | Members CRUD via API | `apps/pragma/api/src/members/members.controller.test.ts` | PASS |
 | D17 | Instruments CRUD + `isHarmonic` toggle effect | `apps/pragma/api/src/instruments/instruments.controller.test.ts` | PASS |
-| D18 | CDK stack — no Secrets Manager resources (ADR-0004) + uploads bucket shape + CORS pair + custom prod domain alias | `apps/pragma/cdk/test/stack.test.ts` (8 tests covering each assertion) | PASS |
+| D18 | CDK stack — no Secrets Manager resources (ADR-2026-05-19T1955) + uploads bucket shape + CORS pair + custom prod domain alias | `apps/pragma/cdk/test/stack.test.ts` (8 tests covering each assertion) | PASS |
 | D19 | SW cache key — same chart with new `uploadedAt` produces different key (Risk-register row) | `apps/pragma/site/src/sw/sw-cache.utils.test.ts` | PASS |
 | D20 | Plan: "next-session selector" — `manifest.utils.ts` empty/multiple/past-only fixtures | **Test file absent.** Plan row §Q.O.D. *Offline cache scope* required `manifest.utils.ts` with these fixtures; neither file nor test exists. Rolled up with A10. | **FAIL** |
 | D21 | Plan: `embed.utils.ts` — Spotify/Deezer/YouTube → iframe URL; unknown → plain link | **Test file absent.** Rolled up with A13. | **FAIL** |
@@ -132,7 +132,7 @@ Numbered happy-path steps (use cases 1, 1bis, 2, 3, 4, 5) are routed by the spec
 Positives worth noting:
 - Auth path is now correctly gated end-to-end (round-1's bypass on `rotate-password` is fixed and tested).
 - The Q.O.D. user-language pair (FR + EN) ships with the gated i18n-parity test from day 1 — a piece of infrastructure that prevents the silent drift the plan's risk register named.
-- 151 core + 51 back-e2e tests all green, including CDK stack tests that lock the ADR-0004 "no SecretsManager resource" assertion into a regression gate.
+- 151 core + 51 back-e2e tests all green, including CDK stack tests that lock the ADR-2026-05-19T1955 "no SecretsManager resource" assertion into a regression gate.
 
 ---
 

@@ -92,7 +92,7 @@ describe.
 | Part | Optional | Without it |
 | ---- | -------- | ---------- |
 | `@DependsOnExternal <id>` | Yes | Level 1 draws the actor and the system alone, and no third party appears anywhere |
-| An `.adapter.ts` per outbound call | Yes | The tag is the only evidence an external exists, so a `fetch` written without one makes level 1 quietly wrong (ADR-0012) |
+| An `.adapter.ts` per outbound call | Yes | The tag is the only evidence an external exists, so a `fetch` written without one makes level 1 quietly wrong (ADR-2026-08-15T0234) |
 | `@Feature <id>` | Yes | Level 3 falls back to the folder, which mixes the granularity axis with the feature axis on the front end |
 | Blueprints | Yes | Blocks carry no pattern pill, and the Blueprints tab is empty |
 | Standards documents | Yes | The Standards tab is empty. Nothing else on the map changes; they are what makes the conventions above hold |

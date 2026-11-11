@@ -26,7 +26,7 @@ runs from. Its verdict table held this row:
 ```
 
 There is no Biome in this repository.
-[ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
+[ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md)
 replaced it with ESLint on 2026-08-08. The dependency went, `biome.jsonc`
 went, the hooks were rewritten. Eleven tracked files under `.claude/` went on
 naming it.
@@ -53,7 +53,7 @@ fall into, and the rule as written pointed at neither of them.
 ## Root-cause chain
 
 1. **Why did the skills still name Biome?**
-   ADR-0007's change swept the code: the manifest, the config, the hooks, the
+   ADR-2026-08-08T1538's change swept the code: the manifest, the config, the hooks, the
    workflows. It did not sweep `.claude/`.
 
 2. **Why not?**
@@ -95,7 +95,7 @@ the instruction surface is the one surface with no compiler.
 - **CI:** no job reads `.claude/` for anything but the hook-decision contract,
   which checks hooks, not skills.
 - **The enforcement ledger:** scoped to `docs/standards/`, by design.
-- **Code review:** ADR-0007's diff was large and touched the things that
+- **Code review:** ADR-2026-08-08T1538's diff was large and touched the things that
   break. A reviewer checking that the build is green is checking exactly the
   set of files this defect is not in.
 - **The agents themselves:** four hit it and each absorbed it, because an
@@ -123,7 +123,7 @@ runs rather than deleted and left vague:
   [`orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md).
 - **The four `docs/knowledge/biome-*.md` entries** keep their content, which
   is a set of true facts about Biome, and gain a banner saying Biome is not
-  installed here and pointing at ADR-0007. A reader searching for
+  installed here and pointing at ADR-2026-08-08T1538. A reader searching for
   `biome-ignore` was landing on a page that read as current guidance.
 
 ## Eradication (mandatory — code-level)
@@ -167,6 +167,6 @@ entries' banners.
 
 ## See also
 
-- [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md) — the decision whose sweep stopped at the code.
+- [ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md) — the decision whose sweep stopped at the code.
 - [`the-formatter-was-a-detector-with-no-writer.md`](./the-formatter-was-a-detector-with-no-writer.md) — the other half of the formatter story.
 - [`orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md) — the dispatch rule, now written as the lesson rather than the tool.

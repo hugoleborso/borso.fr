@@ -103,8 +103,8 @@ being wrong.
   heading corrected from `ADR-0016:` to `ADR-0020:`, and the stale 0015 row
   removed from the index.
 - **Rewritten, not renamed:** the branch's 0015 argued for MusicBrainz as the
-  search source, which `main`'s ADR-0017 had already settled otherwise. It was
-  rewritten as ADR-0019 about what the room's search actually needed, and says
+  search source, which `main`'s ADR-2026-09-15T2023 had already settled otherwise. It was
+  rewritten as ADR-2026-09-16T1931 about what the room's search actually needed, and says
   so in its own Context section rather than leaving a reader to wonder why
   0019 is dated after 0017 decided the same area.
 
@@ -144,7 +144,7 @@ with no index row, and an index row linking a record that is gone:
 Verified against the defect itself: restoring `# ADR-0016:` at the top of
 `0020-qrcode-react-…` exits 1 and names it. Its index half fired immediately
 on the tree it was written against — nine of twenty records had no row,
-having accumulated since ADR-0011 in a table whose comment says *manually
+having accumulated since ADR-2026-08-14T1116 in a table whose comment says *manually
 curated*.
 
 Both are wired into `.husky/pre-commit` and `ci.yml`, and cited in

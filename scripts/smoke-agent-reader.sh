@@ -11,7 +11,7 @@
 # every environment variable the construct set.
 #
 # An application with no reader exits 0: its stack publishes no function name,
-# which is the normal state for the three ADR-0049 does not cover.
+# which is the normal state for the three ADR-2026-10-28T2126 does not cover.
 #
 #   scripts/smoke-agent-reader.sh pragma
 #   scripts/smoke-agent-reader.sh --payload recorded-response.json

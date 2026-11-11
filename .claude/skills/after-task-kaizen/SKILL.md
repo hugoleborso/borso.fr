@@ -23,10 +23,10 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 **In a new conversation, never in the session that shipped the PR.**
 That session ends at merge: it archives its friction log, proposes the
-kaizen, and once the operator approves calls `spawn_task` with a prompt
-naming the merged PR, the archived `kaizen.md` and this skill (`/open-pr`'s
-*After the merge*). The operator starts the task from its card, and this skill runs there with
-a context that did not do the work it audits.
+kaizen, and once the operator approves starts it with whatever tool it holds
+for opening a new session, passing a prompt that names the merged PR, the
+archived `kaizen.md` and this skill (`/open-pr`'s *After the merge*). This
+skill then runs there with a context that did not do the work it audits.
 
 - A kaizen task started from that card.
 - The user says any of: "/after-task-kaizen", "kaizen pass",
@@ -310,9 +310,11 @@ For each surviving subject:
    squash merge.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible level of the ladder (1 = structural impossibility, 5 =
-   knowledge as last resort). The frontmatter records
-   `eradication-level`. Each entry links the commit SHA + diff
+   feasible level of the ladder: 1 structural impossibility, 2 DevX
+   check, 3 vendor patch, 4 detection, 5 knowledge as last resort.
+   The frontmatter records `eradication-level` as the number alone;
+   everywhere a person reads it, the *Eradication* block and the pull
+   request's *Shipped* table, write the name beside the number. Each entry links the commit SHA + diff
    snippet of the eradication.
    **A new check proves it can fail, here, once.** Reintroduce the
    defect on a scratch copy, run the check, paste its refusal into the

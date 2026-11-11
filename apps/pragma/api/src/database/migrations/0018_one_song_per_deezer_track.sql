@@ -1,4 +1,4 @@
--- One catalogue song per Deezer track (ADR-0043). Two audience members
+-- One catalogue song per Deezer track (ADR-2026-10-24T0932). Two audience members
 -- suggesting the same unknown track at the same moment both read it absent,
 -- so the read cannot hold the rule and the table does. The import catches
 -- the violation and answers with the song that was written first.

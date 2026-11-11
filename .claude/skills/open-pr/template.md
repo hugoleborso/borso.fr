@@ -14,7 +14,7 @@ flowchart LR
 
 | Decision | Alternative | Why | Consequences | ADR |
 | --- | --- | --- | --- | --- |
-| What was chosen | What was not | What made the difference | What the reader now lives with | [ADR-0017](../../../docs/adr/0017-a-slug.md) |
+| What was chosen | What was not | What made the difference | What the reader now lives with | [ADR-2026-09-15T2023](../../../docs/adr/2026-09-15T2023-a-slug.md) |
 
 ## Before merge
 

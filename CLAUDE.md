@@ -81,7 +81,7 @@ They cover replies, documents, commits and PR bodies.
 ## Commits, pull requests, merges
 
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
-- Write ADRs with `/adr`. They are named `docs/adr/<YYYYMMDDHHMM>-<slug>.md`, in UTC.
+- Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos`.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.
@@ -94,7 +94,7 @@ Log friction as it happens, the problem only, with `scripts/kaizen.sh "<one sent
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
 1. If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch `shared-deploy`.
-2. Start the kaizen in a new conversation, never in this one. Propose it with a self-contained prompt that names the merged PR, the archived `kaizen.md` path and `/after-task-kaizen`, and pastes any line logged after the archive. Call `spawn_task` only once the operator approves. Without that tool, give the operator the same prompt to paste.
+2. Start the kaizen in a new conversation, never in this one. Propose it with a self-contained prompt that names the merged PR, the archived `kaizen.md` path and `/after-task-kaizen`, and pastes any line logged after the archive. Once the operator approves, start it with whatever tool this session has for opening a new session or queueing a task. Which one that is changes between sessions, so look at the tools you hold rather than reaching for a name. With none, give the operator the same prompt to paste.
 
 ## Checking a screen
 

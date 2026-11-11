@@ -459,6 +459,7 @@ describe('Sentry issues', () => {
         value: [
           { app: 'pragma', count: 5 },
           { app: 'pragma', count: 1 },
+          { app: 'talos', count: 0 },
         ],
       },
       ['pragma', 'talos', 'nowhere'],
@@ -473,10 +474,24 @@ describe('Sentry issues', () => {
       current: 6,
       status: { kind: 'ok' },
     });
-    expect(find(indicators, 'sentry-issues-open', 'talos')?.current).toBe(0);
+    expect(find(indicators, 'sentry-issues-open', 'talos')).toMatchObject({
+      current: 0,
+      status: { kind: 'ok' },
+    });
     expect(find(indicators, 'sentry-issues-open', 'nowhere')).toMatchObject({
       current: null,
       status: { kind: 'not-applicable', reason: 'no Sentry' },
+    });
+  });
+
+  it('refuses to read a missing row as zero, because the call that fills it can fail', () => {
+    const indicators = buildSentryIssueIndicators(
+      { kind: 'ok', value: [{ app: 'pragma', count: 5 }] },
+      ['pragma', 'talos'],
+    );
+    expect(find(indicators, 'sentry-issues-open', 'talos')).toMatchObject({
+      current: null,
+      status: { kind: 'unavailable', reason: 'no issue count collected for this app' },
     });
   });
 

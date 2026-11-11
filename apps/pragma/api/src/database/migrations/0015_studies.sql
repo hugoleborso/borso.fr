@@ -8,7 +8,7 @@
 -- a score move. Every override write appends one row here in the same
 -- transaction.
 --
--- No foreign keys (ADR-0006) and no DEFAULT now(): created_at and
+-- No foreign keys (ADR-2026-06-06T1326) and no DEFAULT now(): created_at and
 -- changed_at come from the service's injected clock, which
 -- migrations.audit.test.ts gates. The index is emitted plain and the
 -- migration runner rewrites it to CREATE INDEX ASYNC.

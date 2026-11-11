@@ -536,7 +536,7 @@ describe('takes controller (back-e2e)', () => {
       const songId = await createSong(band);
       const takeId = await createTake(band, { id: randomUUID(), songId });
       stubStorage(() => Promise.reject(new Error('network down')));
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       const response = await jsonRequest(band.app, `/api/takes/${takeId}`, {
         method: 'DELETE',
@@ -545,11 +545,11 @@ describe('takes controller (back-e2e)', () => {
 
       expect(response.status).toBe(200);
       expect(await listTakes(band, songId)).toEqual([]);
-      expect(warn).toHaveBeenCalledWith(
-        JSON.stringify({
-          event: 'TakeObjectDeleteFailed',
-          objectKeys: [`take/${songId}/${takeId}.webm`],
-          failure: 'Error',
+      const writtenEvents = write.mock.calls.map(([line]): unknown => JSON.parse(String(line)));
+      expect(writtenEvents).toContainEqual(
+        expect.objectContaining({
+          'take.audio_delete_failed_keys': [`take/${songId}/${takeId}.webm`],
+          'take.audio_delete_failures': ['Error'],
         }),
       );
     });

@@ -40,7 +40,7 @@ reading them.
 
 ## The read path for pragma, last-loop-lepin and banana-rush `prod`
 
-[ADR-0044](../adr/0044-read-only-production-database-access-for-agents.md)
+[ADR-2026-10-25T0054](../adr/2026-10-25T0054-read-only-production-database-access-for-agents.md)
 added one path, for the `prod` schema of pragma, last-loop-lepin and banana-rush:
 
 ```bash
@@ -55,10 +55,10 @@ APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"
   pragma's `app_config` and `vapid_key_pair` or last-loop-lepin's
   `admin_sessions`. The script refuses a query naming one, using the list in
   the deployed stack's template, and the database refuses it anyway with
-  `permission denied for table`. ADR-0044 lists them per application; a
+  `permission denied for table`. ADR-2026-10-25T0054 lists them per application; a
   migration that adds a secret-bearing table should add it to the
   application's reader blocklist in `cdk/lib/stack.ts`. Since
-  [ADR-0049](../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+  [ADR-2026-10-28T2126](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
   `AI-Dev-ReadOnly` holds no DSQL right at all: the script invokes the
   application's `<app>-prod-agent-reader` Lambda, and that function's role is
   what the database maps.
@@ -113,7 +113,7 @@ output into a `load.sql`. Two limits shape it:
 
 `APP=talos` is refused by the script, and the IAM grant does not name its
 cluster. Its data is private. Agents read it through `POST /api/agent/sql`
-with an agent token ([ADR-0039](../adr/0039-talos-memory-in-the-database.md)).
+with an agent token ([ADR-2026-10-16T0716](../adr/2026-10-16T0716-talos-memory-in-the-database.md)).
 
 ## Everything else: hand the query to a local session
 

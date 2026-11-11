@@ -83,7 +83,7 @@ Happy path.
 2. The same member reopens within 7 days. The persisted cache renders at once. The ticket leaves alone. Mounted queries older than 5 minutes refetch in one batch.
 3. The member hides the tab and comes back. The ticket and any focus refetch leave in one group. When the socket opens, the `all` invalidation refetches the mounted queries in one more batch.
 4. Another member reorders a setlist. The stale message names `setlists`. The mounted `setlists` keys refetch in one batch.
-5. Offline, the restored cache answers the catalogue and the next session's setlist and entries, as ADR-202611011313 promises. The offline preload fills them with plain query reads, grouped by the transport.
+5. Offline, the restored cache answers the catalogue and the next session's setlist and entries, as ADR-2026-11-01T1313 promises. The offline preload fills them with plain query reads, grouped by the transport.
 
 Edge cases.
 
@@ -131,7 +131,7 @@ Error cases.
 
 | ADR | Decision | What it constrains downstream |
 | --- | --- | --- |
-| to write, `pragma-reads-leave-in-one-batch-per-tick` | pragma's site sends every API read through one transport. Reads issued in the same tick leave as one `POST /api/read-batch`, answered by one Lambda that runs each read through the app with per-read status, at most 10 reads per batch and at most 2 read requests in flight per tab. It amends ADR-202611011313, whose offline manifest it deletes. | A new screen or read needs nothing to stay under the ceiling. A read must go through `api`. A new GET route returns text or JSON, since an answer body travels as text. A per-call header must be listed in `PRAGMA_REQUEST_HEADERS` to ride a batch. |
+| to write, `pragma-reads-leave-in-one-batch-per-tick` | pragma's site sends every API read through one transport. Reads issued in the same tick leave as one `POST /api/read-batch`, answered by one Lambda that runs each read through the app with per-read status, at most 10 reads per batch and at most 2 read requests in flight per tab. It amends ADR-2026-11-01T1313, whose offline manifest it deletes. | A new screen or read needs nothing to stay under the ceiling. A read must go through `api`. A new GET route returns text or JSON, since an answer body travels as text. A per-call header must be listed in `PRAGMA_REQUEST_HEADERS` to ride a batch. |
 
 Inputs for `/adr`, piloted mode.
 

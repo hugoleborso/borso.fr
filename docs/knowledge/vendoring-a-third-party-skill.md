@@ -8,7 +8,7 @@ triggers:
 
 # Vendoring a third-party skill
 
-`plain-writing` and `impeccable` are copied from upstream unchanged, so an update stays a file copy ([ADR-0032](../adr/0032-impeccable-is-vendored-as-a-project-skill.md)). Anything about how the skill applies here goes in a `PROVENANCE.md` beside it, never in its own files.
+`plain-writing` and `impeccable` are copied from upstream unchanged, so an update stays a file copy ([ADR-2026-10-12T2337](../adr/2026-10-12T2337-impeccable-is-vendored-as-a-project-skill.md)). Anything about how the skill applies here goes in a `PROVENANCE.md` beside it, never in its own files.
 
 Upstream files do not follow this repository's rules, and four gates read every file under `.claude/`. Vendoring impeccable on PR #174 failed the commit four times, one gate at a time:
 

@@ -56,7 +56,7 @@ if (query === '') {
   fail(
     'usage: scripts/db-read.sh "<one SELECT or WITH … SELECT statement>"\n' +
       `  APP (pragma, last-loop-lepin or banana-rush; default ${DEFAULT_APP}) and STAGE (default ${DEFAULT_STAGE}) pick the schema.\n` +
-      "  The statement is assessed and run inside the application's reader Lambda (ADR-0049), never here.",
+      "  The statement is assessed and run inside the application's reader Lambda (ADR-2026-10-28T2126), never here.",
     USAGE_EXIT_CODE,
   );
 }

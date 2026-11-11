@@ -79,7 +79,6 @@ async function prepareBand(): Promise<FanOutContext> {
 
 beforeEach(async () => {
   await truncateAllTables(testDatabase());
-  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
   vi.useFakeTimers({ toFake: ['Date'] });
 });

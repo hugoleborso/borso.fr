@@ -15,6 +15,9 @@ import {
 } from '../../../test/push-utils';
 import { pushSubscriptionTable } from '../notifications/notifications.schema';
 import { studyTable } from '../studies/studies.schema';
+import { STREAK_REMINDER_JOB } from '@domain/scheduled-job.core';
+import { runInWideEvent } from '../helpers/observability/wide-event.adapter';
+import { handler } from '../main';
 import { runStreakReminder } from './streak-reminder.service';
 
 const PARIS_EVENING = new Date('2026-10-29T19:30:00.000Z');
@@ -29,12 +32,7 @@ interface Band {
   readonly lea: AuthenticatedApp;
   readonly tom: AuthenticatedApp;
   readonly send: ReturnType<typeof stubPushService>;
-  readonly warnings: ReturnType<typeof silenceWarnings>;
   readonly productEvents: ReturnType<typeof silenceProductEvents>;
-}
-
-function silenceWarnings() {
-  return vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 }
 
 function silenceProductEvents() {
@@ -56,7 +54,6 @@ async function logStudies(memberId: string, days: readonly string[]): Promise<vo
 }
 
 async function prepareBand(): Promise<Band> {
-  const warnings = silenceWarnings();
   const productEvents = silenceProductEvents();
   const send = stubPushService();
   const hugo = await buildAuthenticatedApp('Hugo');
@@ -67,7 +64,7 @@ async function prepareBand(): Promise<Band> {
   await subscribeDevice(tom, 'tom-phone');
   await logStudies(hugo.memberId, LAST_THREE_DAYS);
   await logStudies(lea.memberId, [TODAY]);
-  return { hugo, lea, tom, send, warnings, productEvents };
+  return { hugo, lea, tom, send, productEvents };
 }
 
 function failPushTo(band: Band, device: string, statusCode: number): void {
@@ -198,15 +195,40 @@ describe('the 20:00 streak reminder (back-e2e)', () => {
     const band = await prepareBand();
     failPushTo(band, 'tom-phone', SERVER_ERROR_STATUS);
 
-    await runStreakReminder(PARIS_EVENING);
+    await runInWideEvent({}, async () => {
+      await runStreakReminder(PARIS_EVENING);
+    });
 
     expect(band.send).toHaveBeenCalledTimes(2);
-    expect(readLoggedEvents(band.warnings)).toContainEqual({
-      event: 'streak_push_failed',
-      host: 'web.push.apple.com',
-      status: '500',
-    });
+    expect(readLoggedEvents(band.productEvents)).toContainEqual(
+      expect.objectContaining({
+        'push.failures': ['streak_push_failed'],
+        'push.failed_hosts': ['web.push.apple.com'],
+        'push.failed_statuses': ['500'],
+      }),
+    );
     expect(await listStoredEndpoints()).toHaveLength(3);
+  });
+
+  it('writes a scheduled run as one event holding its outcome and every push fact', async () => {
+    const band = await prepareBand();
+    failPushTo(band, 'tom-phone', SERVER_ERROR_STATUS);
+    band.productEvents.mockClear();
+
+    await handler({ job: STREAK_REMINDER_JOB });
+
+    const scheduledEvents = readLoggedEvents(band.productEvents).filter(
+      (logged) => typeof logged === 'object' && logged !== null && 'event.kind' in logged,
+    );
+    expect(scheduledEvents).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'scheduled',
+        'scheduled.job': 'streak-reminder',
+        outcome: 'success',
+        'push.failures': ['streak_push_failed'],
+        'push.failed_statuses': ['500'],
+      }),
+    ]);
   });
 
   it('sends nothing at 00:30 Paris, when a late retry would speak of the next day', async () => {

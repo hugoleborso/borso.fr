@@ -19,7 +19,7 @@ recurs: [an-adr-that-never-listed-doing-nothing]
 ## User impact
 
 The operator asked for a component library. The kaizen of PRs #246 and
-#247 answered with ADR-202611031438. The operator read it and wrote back
+#247 answered with ADR-2026-11-03T1438. The operator read it and wrote back
 that its template does not list the criteria. They named the two that
 mattered: does it change the app, and how much of it the library covers.
 
@@ -73,11 +73,11 @@ docs demos sit beside pragma's own 16 screens in the gallery.
 
 The template now opens with `## Criteria` before `## Decision`, and each row
 says who raised it. `scripts/check-adr-criteria.sh` runs in pre-commit on
-any `docs/adr/` change. It refuses an ADR from 202611031438 on with no
+any `docs/adr/` change. It refuses an ADR from 2026-11-03T1438 on with no
 criteria section before the decision, no *Raised by* column, or no row
 raised by the operator. It refused the first version of the ADR (measured,
 2026-11-03):
 
 ```
-[check-adr-criteria] docs/adr/202611031438-pragma-interactive-primitives-come-from-react-aria-components.md: no ## Criteria section before ## Decision
+[check-adr-criteria] docs/adr/2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md: no ## Criteria section before ## Decision
 ```

@@ -32,7 +32,7 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
 
    **`gh pr edit --attach` does not work from a hosted session, whatever the `gh` version.** The flag is real — 2.99.0 added it on 2026-09-01 — but the upload needs `POST /user/assets`, and every `*.github.com` host here is intercepted by the Claude Code proxy, which answers `403 sessions are bound to their configured repositories`; `gh pr create` also needs GraphQL, which answers `403 GitHub GraphQL is not available from Claude Code sessions`. Screenshots reach the body through step 5b instead.
 
-5b. **Publish the pending screenshots, now that the number exists.** `/visual-validation` left a passing run's PNG screenshots and GIF recordings in `<validation_dir>/.pending-upload/<timestamp>/`, gitignored and uncommitted, per [ADR-0023](../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md). Upload them. **Leave the report alone:** it keeps the literal `<n>` it was written with, because a dated report under `validation/` is append-only and `scripts/check-dated-records-are-append-only.sh` refuses the edit in pre-commit and CI. The number lives in the folder URL the body and the *Screenshots* comment carry. PR #206's open-pr stage followed the old instruction here and was refused.
+5b. **Publish the pending screenshots, now that the number exists.** `/visual-validation` left a passing run's PNG screenshots and GIF recordings in `<validation_dir>/.pending-upload/<timestamp>/`, gitignored and uncommitted, per [ADR-2026-09-21T0819](../../../docs/adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md). Upload them. **Leave the report alone:** it keeps the literal `<n>` it was written with, because a dated report under `validation/` is append-only and `scripts/check-dated-records-are-append-only.sh` refuses the edit in pre-commit and CI. The number lives in the folder URL the body and the *Screenshots* comment carry. PR #206's open-pr stage followed the old instruction here and was refused.
 
    ```sh
    bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
@@ -96,13 +96,13 @@ Once the pull request is open and green: say once that it waits on its reviewers
 The session that shipped the feature ends at merge. It does not run the kaizen sweep itself, because the sweep is a fresh look at the work and this session's context is the thing it audits. The merge reply carries two follow-ups, and says so when either is not needed.
 
 1. **`shared-deploy`.** If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch it.
-2. **The kaizen task.** Propose it in the merge reply, and call `spawn_task` (`mcp__ccd_session__spawn_task`) only after the operator approves. Called before, it timed out after 60 s on PR #228. The card it shows starts a new conversation. Its prompt stands alone and names:
+2. **The kaizen task.** Propose it in the merge reply, and start it only after the operator approves. Started before, it timed out after 60 s on PR #228. Use whatever tool this session holds for opening a new session or queueing a task: the set changes between sessions, so read your own tools rather than reaching for a name you remember. Whichever it is, it starts a new conversation. Its prompt stands alone and names:
    - the merged pull request, as `owner/repo#N` with its URL;
    - the archived friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`, which step 3b committed;
    - the instruction to run `/after-task-kaizen` on that pull request;
    - any line logged after the archive, pasted verbatim, since the local `KAIZEN.md` dies with this container.
 
-   Title it `Kaizen sweep for PR #N`. When the session has no `spawn_task` tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
+   Title it `Kaizen sweep for PR #N`. When the session holds no such tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
 
 ## What the budget leaves out
 

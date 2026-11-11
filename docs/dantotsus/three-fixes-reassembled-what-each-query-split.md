@@ -136,6 +136,6 @@ Reverted after. Stryker on the two changed modules scores 100 (277 killed,
 --include=*.tsx` finds no other site whose requests are grouped below the
 query layer. The other apps send one request per query, so a per-query retry
 is the right owner there. The batch itself is
-[ADR 202611050445](../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md),
+[ADR 2026-11-05T0445](../adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md),
 shipped against
 [`forty-requests-at-a-ten-seat-function.md`](./forty-requests-at-a-ten-seat-function.md).

@@ -21,7 +21,7 @@ recurs: [an-adr-number-goes-to-whoever-writes-it-first]
 A coordinator running twelve agents reserved ADR numbers by message: 0028
 for Sentry, 0029 for weak point management, 0030 for knowledge triggers. In
 the meantime a kaizen pull request, #167, which never saw the message, merged
-its own `0028-tailwind-merge-resolves-class-conflicts.md`. The Sentry branch
+its own `2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md`. The Sentry branch
 renumbered to 0031, and #118's three ADRs moved to 0032 to 0034. Each move
 touches the file name, its heading and every citation.
 
@@ -58,9 +58,9 @@ take or hand out numbers by message.
 
 > **Superseded mechanism.** `next-adr-number.sh` was removed on 2026-10-29.
 > A new ADR is now named after the UTC minute it was written,
-> `YYYYMMDDHHMM-<slug>.md`, so parallel branches take different ids without
+> `YYYY-MM-DDTHHMM-<slug>.md`, so parallel branches take different ids without
 > reading each other and there is nothing left to allocate. The `/adr` skill's
-> id step runs `date -u +%Y%m%d%H%M`, and `check-numbered-sequences.sh` still
+> id step runs `date -u +%Y-%m-%dT%H%M`, and `check-numbered-sequences.sh` still
 > refuses two records that land in the same minute. Records `0001` to `0049`
 > kept their numbers.
 

@@ -134,4 +134,4 @@ will not tell you which.**
   — four gates that ran and asserted nothing. This one is the inverse: gates
   that asserted correctly, about the wrong thing.
 - [`docs/dantotsus/a-green-mutation-gate-is-not-a-green-coverage-gate.md`](./a-green-mutation-gate-is-not-a-green-coverage-gate.md)
-- [`docs/adr/0010-pragma-domain-folder-for-cross-boundary-rules.md`](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md)
+- [`docs/adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md`](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md)

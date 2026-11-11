@@ -4,7 +4,7 @@
 --
 -- Every constraint is declared on CREATE TABLE: Aurora DSQL accepts no
 -- ADD CONSTRAINT afterwards, and no foreign keys are declared at all
--- (ADR-0006). No business column carries DEFAULT now(), which
+-- (ADR-2026-06-06T1326). No business column carries DEFAULT now(), which
 -- migrations.audit.test.ts gates: opened_at, closes_at, cast_at and
 -- suggested_at are all written by the service from one injected clock.
 --

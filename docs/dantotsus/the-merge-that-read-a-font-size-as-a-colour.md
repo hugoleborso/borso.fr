@@ -11,7 +11,7 @@ eradication-paths: [apps/talos/site/src/components/atoms/class-name.utils.test.t
 time-to-detect: days
 tags: [talos, react, frontend, testing, drift]
 zone: apps/talos/site/src/components/atoms/class-name.utils.ts
-recurs: none (ADR-0028 fixed classes that did not merge; this is a merge that removed a class it should have kept)
+recurs: none (ADR-2026-10-12T0032 fixed classes that did not merge; this is a merge that removed a class it should have kept)
 ---
 
 # The merge that read a font size as a colour
@@ -34,7 +34,7 @@ While the red-figure palette of PR #171 was being checked in a browser, the sign
 - **Typing:** class strings are strings.
 - **Linter / static analysis:** nothing compares the merge configuration with the tokens.
 - **Functional validation locally:** the button worked; only its colour was wrong, and on the old palette barely.
-- **Code review:** ADR-0028 switched `twMerge` on for the conflicts it was meant to fix and checked those.
+- **Code review:** ADR-2026-10-12T0032 switched `twMerge` on for the conflicts it was meant to fix and checked those.
 
 ## Countermeasure
 
@@ -66,5 +66,5 @@ The test reads every `--text-<name>` from `tokens.css` and fails when one is mis
 ## See also
 
 - [`../knowledge/conflicting-tailwind-classes-are-not-merged.md`](../knowledge/conflicting-tailwind-classes-are-not-merged.md)
-- [ADR-0028](../adr/0028-tailwind-merge-resolves-class-conflicts.md)
+- [ADR-2026-10-12T0032](../adr/2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md)
 - [`two-copies-that-had-to-agree-and-nothing-made-them.md`](./two-copies-that-had-to-agree-and-nothing-made-them.md): the token list in the merge configuration is a second copy of `tokens.css`, and the test is what makes the two agree.

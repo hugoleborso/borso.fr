@@ -51,7 +51,7 @@ follow it yet, is in [`install.md`](./install.md). Suffixes beyond the ones in
 | `.queries.ts`  | TanStack Query keys and hooks for one bounded context         |
 | `.hook.ts`     | A React hook that is not a component                          |
 | `.store.ts`    | Module-level state a component subscribes to                  |
-| `.adapter.ts`  | The only place an outbound call may live (ADR-0012)           |
+| `.adapter.ts`  | The only place an outbound call may live (ADR-2026-08-15T0234)           |
 | `.client.ts`   | The typed client for an API this repository owns              |
 | `.setup.ts`    | Boot-time wiring, run once for its side effect                |
 | `.variants.ts` | A `cva` variant table for one component                       |
@@ -77,7 +77,7 @@ and 0 at the context and container levels too.
 ELK is deterministic, so the model stays byte-identical between runs and
 `--check` needs no tolerance. `elkjs` is a devDependency of the generator
 and never reaches the browser. See
-[ADR-0011](../adr/0011-elk-lays-out-the-architecture-graph-at-generation-time.md).
+[ADR-2026-08-14T1116](../adr/2026-08-14T1116-elk-lays-out-the-architecture-graph-at-generation-time.md).
 
 Each diagram opens showing the whole graph: the canvas is fitted to the stage,
 and the stage takes the height that fitted graph needs rather than a fixed one,

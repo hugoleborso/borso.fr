@@ -6,7 +6,7 @@ summary: |
   Q.O.D. row, every domain-model entity, every "Files to change" entry,
   every "Out of scope" item, and the four cross-cutting concerns (i18n
   parity test, PWA SW versioning, design-tokens.css single source,
-  ADR-0004 backlink) to a code location with a self-check. Section 2
+  ADR-2026-05-19T1955 backlink) to a code location with a self-check. Section 2
   records 13 risks, each with a detection path (incl. mastery
   sparse-override leak, PWA stale chart, i18n drift, DSQL pool
   exhaustion, offline-write UI bug, 100% coverage slip, oversized

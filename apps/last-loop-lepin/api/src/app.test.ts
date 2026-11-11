@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
@@ -51,5 +51,31 @@ describe('createApp — test-seed routing flag', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toEqual({ ok: true });
+  });
+});
+
+describe('createApp — wide event', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('writes one wide event for a request through the composition root', async () => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    await createApp().request('/api/health');
+
+    const writtenEvents = write.mock.calls.map(([line]) => {
+      const writtenEvent: unknown = JSON.parse(String(line));
+      return writtenEvent;
+    });
+    expect(writtenEvents).toEqual([
+      expect.objectContaining({
+        'service.name': 'last-loop-lepin-api',
+        'event.kind': 'http',
+        'http.route': '/api/health',
+        'http.response.status_code': 200,
+        outcome: 'success',
+      }),
+    ]);
   });
 });

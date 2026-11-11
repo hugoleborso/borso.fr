@@ -52,7 +52,7 @@ the same way, and the cap is per policy. Golfing identifiers buys a hundred
 characters once and makes the document unreadable for as long as it lives.
 
 Two corollaries for this repository. The budget is a reason to delete a grant
-rather than add one: ADR-0049 dropped `AI-Dev-ReadOnly`'s `dsql:DbConnect`
+rather than add one: ADR-2026-10-28T2126 dropped `AI-Dev-ReadOnly`'s `dsql:DbConnect`
 break-glass under this cap, and the result was tighter than the plan. And the
 deployed policies are unreadable from a hosted session, because `iam:*` is
 inside the deny — so the budget can only be measured from a session holding
@@ -65,5 +65,5 @@ reader ARN both bare and `:*` would have spent 2515, so each became one ARN endi
 ## See also
 
 - [`docs/aws-setup.md`](../aws-setup.md) §12.7 — the policies this bit.
-- [`docs/adr/0049-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+- [`docs/adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
 - [`the-auto-mode-classifier-refuses-guard-probes.md`](./the-auto-mode-classifier-refuses-guard-probes.md) — the other wall between a session and this user's policies.

@@ -16,11 +16,11 @@ const READABLE_TARGETS_LABEL = [...READABLE_SCHEMA_BY_TARGET.keys()]
   .join(', ');
 const PRIVATE_APP = 'talos';
 const PRIVATE_APP_REFUSAL =
-  'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
+  'talos holds private data and has no read-only role by design (ADR-2026-10-25T0054). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-2026-10-16T0716).';
 
 export const READER_NOT_PROVISIONED_REFUSAL =
   `the deployed stack carries no ${AGENT_READER_FUNCTION_NAME_OUTPUT} output, so this application has no reader function to invoke. ` +
-  'The production deploy that provisions the reader has not run for this application yet (ADR-0049).';
+  'The production deploy that provisions the reader has not run for this application yet (ADR-2026-10-28T2126).';
 
 export type TargetDecision =
   | {
@@ -38,7 +38,7 @@ export function decideReadTarget(app: string, stage: string): TargetDecision {
   if (schemaName === undefined) {
     return {
       accepted: false,
-      reason: `no read-only role exists for APP=${app} STAGE=${stage}. Readable: ${READABLE_TARGETS_LABEL} (ADR-0044).`,
+      reason: `no read-only role exists for APP=${app} STAGE=${stage}. Readable: ${READABLE_TARGETS_LABEL} (ADR-2026-10-25T0054).`,
     };
   }
   return { accepted: true, app, schemaName, stackName: `${app}-${stage}` };
