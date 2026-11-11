@@ -90,19 +90,23 @@ esac
 # and the Lambda writes into nothing. Recreate each one with the retention
 # the stack's template gives it.
 restore_owned_log_groups() {
-  local logical physical retention
+  local logical physical present retention current
   while IFS=$'\t' read -r logical physical; do
     [ -z "$physical" ] && continue
-    if aws logs describe-log-groups --log-group-name-prefix "$physical" --region "$REGION" \
-      --query "logGroups[?logGroupName=='$physical'].logGroupName" --output text | grep -qx "$physical"; then
-      continue
+    present="$(aws logs describe-log-groups --log-group-name-prefix "$physical" --region "$REGION" \
+      --query "logGroups[?logGroupName=='$physical'].[logGroupName,retentionInDays]" --output text)"
+    if [ -z "$present" ]; then
+      log "restoring log group $physical, which $STACK_NAME owns but CloudWatch lost"
+      aws logs create-log-group --log-group-name "$physical" --region "$REGION" ||
+        { log "  (create failed — non-fatal)"; continue; }
     fi
-    log "restoring log group $physical, which $STACK_NAME owns but CloudWatch lost"
-    aws logs create-log-group --log-group-name "$physical" --region "$REGION" ||
-      { log "  (create failed — non-fatal)"; continue; }
+    # A group the Lambda recreated on its own has no retention, so it is
+    # checked against the template whether or not this run recreated it.
+    current="$(printf '%s' "$present" | cut -f2)"
     retention="$(aws cloudformation get-template --stack-name "$STACK_NAME" --region "$REGION" \
       --query "TemplateBody.Resources.$logical.Properties.RetentionInDays" --output text 2>/dev/null || true)"
-    if [[ "$retention" =~ ^[0-9]+$ ]]; then
+    if [[ "$retention" =~ ^[0-9]+$ ]] && [ "$current" != "$retention" ]; then
+      log "setting $physical retention to $retention days"
       aws logs put-retention-policy --log-group-name "$physical" \
         --retention-in-days "$retention" --region "$REGION" || log "  (retention failed — non-fatal)"
     fi
