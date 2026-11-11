@@ -7,9 +7,9 @@ related-pr: '#290'
 fix-pr: '#290'
 fix-commits: [2d59df1c1, self]
 eradication-level: 1
-eradication-paths: [apps/last-loop-lepin/test/dev-database.setup.ts, scripts/check-app-registration.sh]
+eradication-paths: [apps/last-loop-lepin/test/dev-database.setup.ts, apps/last-loop-lepin/package.json]
 time-to-detect: days
-tags: [last-loop-lepin, pnpm, local-dev, gates]
+tags: [last-loop-lepin, pnpm, local-dev]
 zone: apps/last-loop-lepin/package.json
 recurs: [pnpm-dev-served-an-empty-database]
 ---
@@ -42,8 +42,8 @@ shared shape gets the fixes.*
 
 `docs/dantotsus/pnpm-dev-served-an-empty-database.md` gave pragma and
 banana-rush `test/dev-database.setup.ts`, and `check-app-registration.sh`
-accepted `test/dev-database.setup.ts` or `dev-db.sh`. Accepting the second
-name kept the one copy nobody else maintained.
+accepted `test/dev-database.setup.ts` or `dev-db.sh`, so nothing moved the
+third app onto the shared shape, and its copy got none of the shared fixes.
 
 ## Detection failure causes
 
@@ -62,8 +62,10 @@ back as `1|scrypt$6ccc66e` from the dev database (run 2026-11-11).
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). The bash seed is gone, and the
-registration gate no longer accepts its name.
+**Type:** structural impossibility (level 1). The JavaScript-in-bash seed is
+deleted. The PIN hash is now a query parameter in TypeScript, so no shell
+parses its `$`, and the database name sits in the `dev:db` line beside
+`dev:api`'s, as in the other two apps.
 
 **Reference:** the kaizen branch for PR #290, commit `self`.
 
@@ -74,20 +76,16 @@ registration gate no longer accepts its name.
 +    "dev:db": "DATABASE_URL=$(../../scripts/local-postgres.sh start last-loop-lepin dev) tsx test/dev-database.setup.ts",
 ```
 
-```diff
--    if ! grep -qE '^[[:space:]]*"dev:db":[[:space:]]*"[^"]*(test/dev-database\.setup\.ts|dev-db\.sh)' \
-+    if ! grep -qE '^[[:space:]]*"dev:db":[[:space:]]*"[^"]*test/dev-database\.setup\.ts' \
-```
-
 This drops a property the script had: it stopped the local cluster when
 `pnpm dev` exited. The other two apps never did, and `local-postgres.sh stop`
 still does.
 
-**Proof it can fail:** `dev:db` set back to `./dev-db.sh`:
+No check is added. `check-app-registration.sh` tests only that `dev:db` names
+a seed file, so tightening the names it accepts would not catch a broken seed.
+The operator rejected that as a fix. Nothing yet runs `pnpm dev` in CI, so a
+seed that dies at start is still found by the next person who runs it.
 
-```
-[check-app-registration] last-loop-lepin owns migrations but its dev:db does not apply them.
-    Point dev:db at test/dev-database.setup.ts, which runs test/setup-postgres.ts first.
-```
+**Proof it can fail:** not applicable, no new check. `pnpm dev:db` seeded the
+dev database on 2026-11-11, as the countermeasure records.
 
 **Similar instances:** `ls apps/*/dev-db.sh` finds none left.
