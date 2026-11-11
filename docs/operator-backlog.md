@@ -21,7 +21,7 @@ session does once it has measured the result.
 
 | Found in | Task | Right it needs | How to check it is done |
 | --- | --- | --- | --- |
-| this pull request | Delete `banana-rush-pr-295-AppDbProviderLogsD76CF8C5-1R9yfz2OLeSS` and `last-loop-lepin-pr-295-AppDbProviderLogsD76CF8C5-gAGOqy0o9Kqy`. The teardown of #295 left them after the cleanup below, and both stacks are `DELETE_COMPLETE` (measured on 2026-11-12). The provider Lambda probably logged its own delete after CloudFormation removed the group, which creates it again (inferred). | AWS `logs:DeleteLogGroup` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-pattern pr-295` lists nothing |
+| #303 | Delete `banana-rush-pr-295-AppDbProviderLogsD76CF8C5-1R9yfz2OLeSS` and `last-loop-lepin-pr-295-AppDbProviderLogsD76CF8C5-gAGOqy0o9Kqy`. The teardown of #295 left them after the cleanup below, and both stacks are `DELETE_COMPLETE` (measured on 2026-11-12). The provider Lambda probably logged its own delete after CloudFormation removed the group, which creates it again (inferred). | AWS `logs:DeleteLogGroup` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-pattern pr-295` lists nothing |
 
 ## Done
 
