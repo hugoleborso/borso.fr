@@ -19,8 +19,9 @@ means cutting about 700 ms from every cold start.
 
 1. The handler's source map is uploaded to Sentry at bundling time and deleted
    from the asset once the upload succeeded. `--enable-source-maps` stays, so a
-   failed upload leaves exactly today's behaviour. Keeping the flag costs 20 ms
-   of the 330, so the saving is roughly 310 ms, inferred from a local ratio.
+   failed upload leaves exactly today's behaviour. Keeping the flag costs 60 ms
+   of the 333 once scaled, so the saving is roughly 270 ms, inferred from a
+   local ratio: 91 ms for the map and 20 ms for the flag, both times 2.99.
 2. `Sentry.flush` moves from the request middleware to the invocation. It cost
    38 ms at warm p50 and 246 ms at warm p95, and a read-batch of 11 reads
    performed 12 sequential flushes in one invocation.

@@ -48,8 +48,8 @@ The construct is shared by `banana-rush`, `last-loop-lepin`, `pragma` and
 asset once the upload succeeded.** Sentry resolves frames
 server-side from the uploaded map through the debug ids that
 `sentry-cli sourcemaps inject` writes into the bundle, so the shipped map
-becomes dead weight. `--enable-source-maps` stays set. It costs 20 ms against
-the map's 91 ms, and it is what makes a failed upload degrade to today's
+becomes dead weight. `--enable-source-maps` stays set. It costs 60 ms of the
+333 once scaled, and it is what makes a failed upload degrade to today's
 behaviour instead of shipping minified frames silently: the map is still there
 and the flag still reads it. An app that configures no upload is untouched.
 
@@ -58,9 +58,10 @@ drops the other.
 
 ## Consequences
 
-- `+` Removes roughly 310 ms from every cold start, inferred from the local
-  ratio against a measured 1060 ms of prod module load. The map is 91 ms of the
-  local 355 ms and the flag a further 20 ms; keeping the flag gives up that 20.
+- `+` Removes roughly 270 ms from every cold start, inferred from the local
+  ratio against a measured 1060 ms of prod module load. Locally the map is 91 ms
+  and the flag a further 20 ms; scaled by 2.99 that is 272 ms and 60 ms, so
+  keeping the flag gives up 60 of the 333, not 20.
 - `+` Sentry frames stay readable, and gain debug ids, which survive a release
   the uploader forgot to tag.
 - `~` The three other apps are untouched. `last-loop-lepin` still sets
@@ -137,7 +138,7 @@ drops the other.
 
 |  | Option A | Option B | Option C |
 |---|---|---|---|
-| Does it change the app for its users | ✓ roughly 310 ms off every cold start of the app that uploads | ✓ 330 ms, by also dropping the flag | ✓ roughly 530 ms, by a different lever |
+| Does it change the app for its users | ✓ roughly 270 ms off every cold start of the app that uploads | ✓ 330 ms, by also dropping the flag | ✓ roughly 530 ms, by a different lever |
 | A production exception stays diagnosable | ✓ Sentry resolves frames from the uploaded map | ✗ minified frames only | ✓ unchanged |
 | Deploy keeps working for the three other apps | ✗ a command hook they all run, unproven until a deploy | ✓ removes a setting, adds nothing | ✓ pragma's stack only |
 | Cost in new surface | ✗ one dependency, one credential path, one network call | ✓ nothing added | ✓ nothing added, money instead |
