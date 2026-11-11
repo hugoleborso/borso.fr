@@ -1,8 +1,8 @@
 # Handoff: prove the production read path from a hosted session
 
-ADR-0044's read path has never been exercised end to end. PR #199 recorded that
+ADR-2026-10-25T0054's read path has never been exercised end to end. PR #199 recorded that
 as its validation gap, PR #202's sweep could not close it, and
-[ADR-0049](../../../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+[ADR-2026-10-28T2126](../../../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
 then replaced the transport because the gap turned out to be structural. This
 is the brief for the session that can close it.
 
@@ -11,7 +11,7 @@ is the brief for the session that can close it.
 The first version of this handoff asked a hosted session to run
 `scripts/db-read.sh` against port 5432. That cannot work: the sandbox a hosted
 session runs in refuses outbound 5432, and Aurora DSQL has no HTTP data API to
-fall back on. ADR-0049 moved the connection into a reader Lambda per
+fall back on. ADR-2026-10-28T2126 moved the connection into a reader Lambda per
 application. The script now invokes `<app>-prod-agent-reader` over
 `lambda.eu-west-3.amazonaws.com`, which that sandbox does reach.
 
@@ -30,11 +30,11 @@ work around a refusal; see
 
 ## What is already true, so you do not re-check it
 
-- The IAM half of ADR-0044 is applied and verified. `Prod-db-read` allows
+- The IAM half of ADR-2026-10-25T0054 is applied and verified. `Prod-db-read` allows
   `dsql:DbConnect` on the three cluster ARNs; `Explicit-write-deny` denies
   `dsql:*` everywhere else and every DSQL action but `DbConnect` on those three.
   Confirmed with `iam simulate-principal-policy` on 2026-10-27.
-- ADR-0049's IAM half — `lambda:InvokeFunction` on the three function ARNs, and
+- ADR-2026-10-28T2126's IAM half — `lambda:InvokeFunction` on the three function ARNs, and
   the matching narrowing of the blanket `lambda:Invoke*` deny — is in
   [`docs/aws-setup.md`](../../../aws-setup.md) §12.7. Check it was applied
   before concluding anything from an `AccessDeniedException`.
@@ -65,19 +65,19 @@ Record what came back, verbatim. Expected, in order:
 | --- | --- |
 | 1 | One row, and a line on stderr naming the function and `ai_reader_prod`. Anything else means the role mapping is not what the function thinks. |
 | 2, 3, 4 | One number each. These are the three reads nobody has ever obtained. |
-| 5 | Refused by the script, before any call, naming ADR-0039 and the talos agent API. |
+| 5 | Refused by the script, before any call, naming ADR-2026-10-16T0716 and the talos agent API. |
 | 6, 7 | Refused **by the function**, naming the table. pragma blocks ten tables, last-loop-lepin blocks `admin_credentials`, `admin_sessions` and `auth_attempts`. |
 | 8 | Refused by the function, for naming `UPDATE`. |
 
 Lines 6 to 8 are the ones worth the exercise: they are the first evidence that
-the guard runs where ADR-0049 put it rather than where the caller is.
+the guard runs where ADR-2026-10-28T2126 put it rather than where the caller is.
 
 ## Reading a failure
 
 - `AccessDeniedException` on `lambda:InvokeFunction` — §12.7's deny narrowing
   was not applied, or the allow names a function ARN that does not match.
 - `refused: the deployed stack carries no AgentReaderFunctionName output` — the
-  production deploy of that application has not run since ADR-0049 landed.
+  production deploy of that application has not run since ADR-2026-10-28T2126 landed.
 - `the reader function failed with …` naming a missing environment variable —
   the construct and the handler disagree about a name. That is a defect, not a
   deployment gap.

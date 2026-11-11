@@ -1,3 +1,4 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import { readBusyTimeOfEveryFeed } from '../calendar-feeds/calendar-feeds.service';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { SEARCH_DAYS, selectFreeSlots } from './free-slots.core';
@@ -10,7 +11,6 @@ import {
 import type { FreeSlotsResult } from './free-slots.types';
 
 const MILLISECONDS_PER_DAY = 86_400_000;
-const COMPUTED_EVENT = 'free_slots_computed';
 
 // @FollowsBlueprint service-orchestration
 export async function computeFreeSlots(now: Date): Promise<FreeSlotsResult> {
@@ -23,18 +23,14 @@ export async function computeFreeSlots(now: Date): Promise<FreeSlotsResult> {
   const memberIds = members.map((member) => member.id);
   const excludedMembers = selectExcludedMembers(memberIds, busyTimes);
   const slots = selectFreeSlots(now, collectBusyIntervals(busyTimes));
-  // eslint-disable-next-line no-console -- free_slots_computed is the input metric the spec's production strategy reads from CloudWatch; it carries counts and a duration, never an address
-  console.info(
-    JSON.stringify({
-      event: COMPUTED_EVENT,
-      members: memberIds.length,
-      feedsRead: countReadFeeds(busyTimes),
-      feedsFailed: countFailedFeeds(busyTimes),
-      excluded: excludedMembers.length,
-      slots: slots.length,
-      durationMs: Date.now() - startedAt,
-    }),
-  );
+  addWideEventFields({
+    'free_slots.members': memberIds.length,
+    'free_slots.feeds_read': countReadFeeds(busyTimes),
+    'free_slots.feeds_failed': countFailedFeeds(busyTimes),
+    'free_slots.excluded': excludedMembers.length,
+    'free_slots.slots': slots.length,
+    'free_slots.duration_ms': Date.now() - startedAt,
+  });
   return { slots, excludedMembers };
 }
 

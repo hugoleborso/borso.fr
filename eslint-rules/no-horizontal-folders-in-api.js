@@ -5,7 +5,7 @@ const MESSAGE =
   "bounded context, so move this file into `api/src/<context>/` beside that context's " +
   'controller, service, repository and schema. A helper that belongs to no context goes to ' +
   '`api/src/helpers/<topic>/`, and a rule both sides of the application read goes to the ' +
-  'workspace level `apps/<app>/domain/` of ADR-0010, which is a different folder from this ' +
+  'workspace level `apps/<app>/domain/` of ADR-2026-08-13T0026, which is a different folder from this ' +
   'one. See docs/standards/04-backend-architecture.md.';
 
 const API_SOURCE_FOLDER_PATTERN = /(^|\/)apps\/[^/]+\/api\/src\/([^/]+)\/[^/]/;

@@ -532,6 +532,12 @@
       }
     },
     {
+      "files": ["apps/*/api/src/**/*.ts"],
+      "rules": {
+        "no-console": ["error", { "allow": [] }]
+      }
+    },
+    {
       "files": ["apps/*/site/**/*.{ts,tsx}"],
       "rules": {
         "borso/no-use-effect": "error",
@@ -617,7 +623,7 @@
                   "../site/*",
                   "../../site/*"
                 ],
-                "message": "A domain rule reaches into neither side. See ADR-0010: the folder exists because both sides read it."
+                "message": "A domain rule reaches into neither side. See ADR-2026-08-13T0026: the folder exists because both sides read it."
               },
               {
                 "group": ["@aws-sdk/*", "aws-cdk-lib", "pg", "postgres"],

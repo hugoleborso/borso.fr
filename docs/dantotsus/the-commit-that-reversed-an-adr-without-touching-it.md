@@ -35,7 +35,7 @@ accept production's accounts.
 3. **Why were they blocklisted?** Commit `03bd354` moved them there to keep
    production's secrets out of previews. Its message even named the
    consequence: previews would start with no credential.
-4. **Why was that a defect and not a decision?** [ADR-0009](../adr/0009-pragma-previews-clone-production.md)
+4. **Why was that a defect and not a decision?** [ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md)
    had decided the opposite, and said why: a preview is useful only with
    real data, and production's own credential is the only one that is
    neither published nor in need of distribution. The commit changed the
@@ -69,7 +69,7 @@ decision that no longer holds.
 - **Code:** commit `a0cf303` — `app_config` and `member_credential` moved
   to `tablesToReplace`, so they are copied and replaced on every deploy;
   `member_passkey` and `webauthn_challenge` stay blocklisted, because a
-  passkey is bound to production's relying-party id. ADR-0009 gained an
+  passkey is bound to production's relying-party id. ADR-2026-08-09T1654 gained an
   amendment and both lists in its table, and the knowledge entry was
   rewritten.
 
@@ -81,7 +81,7 @@ decision that no longer holds.
 pre-commit and in CI.
 
 **What changed:** each of `tableBlocklist` and `tablesToReplace` in the
-pragma stack has to name exactly the tables on ADR-0009's row of the same
+pragma stack has to name exactly the tables on ADR-2026-08-09T1654's row of the same
 name, in both directions. Moving a table between lists fails until the ADR
 moves it too, so a commit that changes what a preview copies is the commit
 that amends the decision. Run against the stack as it was before

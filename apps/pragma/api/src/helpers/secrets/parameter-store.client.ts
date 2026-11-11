@@ -3,6 +3,8 @@
  */
 
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
+import { addWideEventFields } from '../observability/wide-event.adapter';
+import { describeThrownValue } from '../observability/wide-event.core';
 
 const DEFAULT_REGION = 'eu-west-3';
 
@@ -21,7 +23,10 @@ export async function readSecureParameter(parameterName: string): Promise<string
     );
     return answer.Parameter?.Value;
   } catch (error) {
-    console.warn(`the parameter ${parameterName} could not be read`, error);
+    addWideEventFields({
+      'parameter_store.failed_parameters': [parameterName],
+      'parameter_store.failure_types': [describeThrownValue(error).type],
+    });
     return undefined;
   }
 }

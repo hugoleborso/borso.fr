@@ -10,7 +10,7 @@ triggers:
 
 Operator runbook for `/feature-pipeline` — the Claude Code Dynamic Workflow
 that drives `plan → ship` for a ratified feature spec. The substrate
-choice is in [ADR-0005](../adr/0005-dynamic-workflows-for-orchestration.md);
+choice is in [ADR-2026-06-05T2337](../adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md);
 the stage-by-stage contract is in
 [`.claude/commands/feature-pipeline.md`](../../.claude/commands/feature-pipeline.md).
 
@@ -126,7 +126,7 @@ regenerated script honours.
 
 ## See also
 
-- [ADR-0005](../adr/0005-dynamic-workflows-for-orchestration.md)
+- [ADR-2026-06-05T2337](../adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md)
 - [`.claude/commands/feature-pipeline.md`](../../.claude/commands/feature-pipeline.md)
 - [`.claude/skills/tech-lead-orchestrator/standard.md`](../../.claude/skills/tech-lead-orchestrator/standard.md)
 - [`docs/knowledge/orchestrator-dispatch-hygiene.md`](./orchestrator-dispatch-hygiene.md)

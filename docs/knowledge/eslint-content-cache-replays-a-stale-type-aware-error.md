@@ -8,7 +8,7 @@ triggers:
 # The ESLint content cache replays a type-aware error after you fixed it
 
 This repository stopped running ESLint on 2026-10-27, when oxlint replaced it
-([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
+([ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
 oxlint keeps no cache. The entry stays for the repositories that use the
 harness and still lint with ESLint, and its trigger matches only a line of
 ESLint's own report, because a grep of the standards printing a rule name is

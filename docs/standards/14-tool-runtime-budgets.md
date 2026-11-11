@@ -79,9 +79,9 @@ replaced by a faster one that checks the same thing. ESLint was the largest
 case: it built a TypeScript program for the whole workspace before it read the
 one staged file, 21 s for one changed file in pragma. oxlint replaced it and
 oxfmt replaced Prettier
-([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
+([ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
 TypeScript 7 runs the type checks
-([ADR-0046](../adr/0046-typescript-7-replaces-typescript-5-9.md)), so
+([ADR-2026-10-27T2321](../adr/2026-10-27T2321-typescript-7-replaces-typescript-5-9.md)), so
 the checks that had left the commit came back.
 
 Three tools have a named budget rather than the 300 ms of a check, each set
@@ -111,7 +111,7 @@ touched workspace's `tsconfig.json` lists only the staged files it includes,
 and runs the JavaScript plugins and tsgolint side by side, so the same file
 takes about 2 s. The commit budget went from 3 s to 4 s to make room for
 them, the operator's decision of 2026-10-27, recorded in
-[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md). It
+[ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md). It
 was 3.5 s first; the same fixture commit on CI's runner then took 1.8 to 3.4 s
 over seven runs, and 3.6 s once before the cuts described below, so a 3.5 s
 budget failed on the runner's spread rather than on a slower hook.

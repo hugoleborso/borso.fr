@@ -15,7 +15,7 @@ triggers:
 # A committed generator output needs a machine-read marker
 
 Almost every generated file in this repository is gitignored —
-[ADR-0014](../adr/0014-generated-files-are-not-committed.md) is the decision
+[ADR-2026-08-20T1031](../adr/2026-08-20T1031-generated-files-are-not-committed.md) is the decision
 and the measurements behind it. A handful are committed anyway, because they
 are inputs a person accepted or because a build step needs them present.
 
@@ -44,7 +44,7 @@ the line, so the marker cannot drift from the file it marks.
 
 Only for an output that is **committed**. A gitignored generated file needs
 nothing — it is not in the tree a reader browses. If you find yourself adding
-`@generated` to a file, ask first whether ADR-0014 says it should be committed
+`@generated` to a file, ask first whether ADR-2026-08-20T1031 says it should be committed
 at all; the marker is for the exceptions, and the exceptions are listed in
 `.gitignore` by their absence.
 

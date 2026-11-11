@@ -85,7 +85,7 @@ docs/quality/dashboard.html
 
 # A passing validation's screenshots wait here between /visual-validation and
 # /open-pr, which uploads them to the previews CDN once the pull request number
-# exists. They are never committed; ADR-0023 has the reasoning, and the point of
+# exists. They are never committed; ADR-2026-09-21T0819 has the reasoning, and the point of
 # the ignore is that an intervening `git add` cannot undo it.
 docs/features/*/*/validation/.pending-upload/
 

@@ -80,7 +80,7 @@ done <<<"$unindexed"
 # agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier
 # is gone and oxfmt replaced it. A Prettier call is now refused before it runs,
 # by .claude/hooks/pretool-no-prettier.sh. See
-# docs/adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
+# docs/adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
 
 # 4. The tables a migration creates, and the two lists the back-e2e harness
 #    keeps of them.
@@ -128,7 +128,7 @@ done
 
 # 5. pragma's preview clone and the decision that sets it.
 #
-# ADR-0009 says which production tables a preview copies and which it leaves
+# ADR-2026-08-09T1654 says which production tables a preview copies and which it leaves
 # behind, and `apps/pragma/cdk/lib/stack.ts` is what actually does it. Commit
 # 03bd354 moved `app_config` and `member_credential` from one list to the other
 # without touching the ADR, and every preview lost its credentials for three
@@ -137,10 +137,10 @@ done
 # so moving a table between lists fails until the ADR moves it too. See
 # docs/dantotsus/the-commit-that-reversed-an-adr-without-touching-it.md.
 pragma_stack=apps/pragma/cdk/lib/stack.ts
-pragma_clone_adr=docs/adr/0009-pragma-previews-clone-production.md
+pragma_clone_adr=docs/adr/2026-08-09T1654-pragma-previews-clone-production.md
 
 # A list may spread a named constant (`[...SECRET_TABLES, 'take']`), which the
-# stack shares with the reader blocklist of ADR-0044, so each `...NAME` is
+# stack shares with the reader blocklist of ADR-2026-10-25T0054, so each `...NAME` is
 # resolved to the `const NAME = [...]` it names. A name that resolves to nothing
 # stands in the list as `unresolved_<name>`, so the comparison below fails
 # rather than reading it as an empty list.

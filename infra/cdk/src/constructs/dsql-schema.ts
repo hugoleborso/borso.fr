@@ -102,7 +102,7 @@ function assertCredentialTablesDecided(
   throw new Error(
     `DsqlSchema: cloneFromSchema does not say what to do with ${undecided.join(', ')}. ` +
       `Add each to tableBlocklist (the preview gets no credential) or to tablesToReplace ` +
-      `(the preview shares the source's credential — see docs/adr/0009-pragma-previews-clone-production.md).`,
+      `(the preview shares the source's credential — see docs/adr/2026-08-09T1654-pragma-previews-clone-production.md).`,
   );
 }
 

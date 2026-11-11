@@ -33,7 +33,7 @@ silent regression you only notice if you test on a phone.
 
 `apps/borso-fr/site/components/Galaxy.tsx` is our local copy of the
 component (ADR
-[`0003`](../adr/0003-react-bits-galaxy-as-react-component.md) — we
+[`0003`](../adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md) — we
 vendor the file rather than installing from a registry). We patched
 the listeners to use **pointer events**:
 
@@ -89,7 +89,7 @@ the slide as a scroll/zoom gesture mid-drag:
 
 ## See also
 
-- [`docs/adr/0003-react-bits-galaxy-as-react-component.md`](../adr/0003-react-bits-galaxy-as-react-component.md)
+- [`docs/adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md`](../adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md)
   — why we vendor this component instead of installing from a
   registry.
 - [`docs/knowledge/agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md)

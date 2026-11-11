@@ -239,7 +239,7 @@ Lives in: `api/src/calendar-feeds/`
 
 - Up to ten per member (`CALENDAR_FEEDS_PER_MEMBER_MAX`), each with its
   own `id`, in their own table, `calendar_feed`, so no read of `member`
-  carries them (ADR-0037). One member never holds the same address twice.
+  carries them (ADR-2026-10-02T1352). One member never holds the same address twice.
   `member_calendar_feed`, the one-per-member table before it, is left
   empty and unread, because DSQL cannot change a primary key.
 - Carries the `name` its feed declares in `X-WR-CALNAME` (Google Calendar
@@ -721,7 +721,7 @@ Lives in: `api/src/notifications/` (`push_subscription`)
   replaces its row rather than adding one. A member with two devices has
   two rows and is notified on both.
 - Kept out of every preview's copy of the production schema, so a preview
-  never pushes to the band's phones (ADR-0040).
+  never pushes to the band's phones (ADR-2026-10-23T0932).
 - Deleted with the member, and when the push service answers that the
   endpoint is gone.
 
@@ -733,7 +733,7 @@ Held by: `api/src/notifications/notifications.controller.test.ts` › takes thei
 ## Realtime connection
 
 One open WebSocket from one browser tab of a signed-in member, used only to
-hear that band data went stale (live invalidation, ADR-0021's channel).
+hear that band data went stale (live invalidation, ADR-2026-09-19T2140's channel).
 
 Lives in: `api/src/realtime/` (`realtime_connection`)
 
@@ -837,7 +837,7 @@ Lives in: `api/src/notifications/` (`vapid_key_pair`)
 - One row, always under id 1. The API generates the pair with `web-push`
   the first time push needs it, inserts it with `ON CONFLICT DO NOTHING`
   and reads back what was stored, so two first uses at the same moment
-  keep one pair (ADR-0040, revision 2026-10-24).
+  keep one pair (ADR-2026-10-23T0932, revision 2026-10-24).
 - Kept out of every preview's copy of the production schema, so a preview
   generates its own pair and never signs as production.
 - Replacing the pair would orphan every subscription made with the old
@@ -871,7 +871,7 @@ Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes
 
 Up to ten API reads sent as one `POST /api/read-batch`, so one tab never
 needs more of the API's ten seats than it has batches in flight
-(ADR-202611050445).
+(ADR-2026-11-05T0445).
 
 Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read-batch.adapter.ts`
 
@@ -1014,7 +1014,7 @@ Lives in: `api/src/songs/` (the `spotify_track_id` column), read by
   so an id can never outlive the Deezer track it was found for.
 - Distinct from the **Deezer track**: the two name the same recorded song on
   two services, and the ISRC is what joins them. See
-  [ADR-0017](../../docs/adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md).
+  [ADR-2026-09-15T2023](../../docs/adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md).
 
 Held by: `site/src/routes/catalog/song-draft.core.test.ts` › overwrites the metadata fields and leaves the rest of the draft alone
 Held by: `site/src/lib/listen-links.utils.test.ts` › falls back to a search when the song names no track

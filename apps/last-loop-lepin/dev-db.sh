@@ -8,7 +8,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 APP_SLUG="last-loop-lepin"
-DATABASE_URL="$(../../scripts/local-postgres.sh start ${APP_SLUG})"
+DATABASE_URL="$(../../scripts/local-postgres.sh start ${APP_SLUG} dev)"
 export DATABASE_URL
 
 echo "[dev:db] cluster at ${DATABASE_URL}"
@@ -28,7 +28,7 @@ for (const file of readdirSync(dir).filter((n) => n.endsWith('.sql')).toSorted()
     await sql.unsafe(stmt);
   }
 }
-await sql.unsafe(\"INSERT INTO admin_credentials (id, scrypt_hash) VALUES (1, 'scrypt\\$6ccc66eb93981b9b83e8817f584ca8f5\\$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107') ON CONFLICT (id) DO NOTHING\");
+await sql.unsafe(\"INSERT INTO admin_credentials (id, scrypt_hash) VALUES (1, 'scrypt\$6ccc66eb93981b9b83e8817f584ca8f5\$60191a1c31f18e88590e0e5c6995d1d6f7f0f053b6ffce8e3ea4288c56bd0e790d6a340ad59de2d29792c9d471ad144907d5d10e05ef03d0aea5f6383f734107') ON CONFLICT (id) DO NOTHING\");
 await sql.end();
 console.log('[dev:db] migrations applied + admin PIN seeded (PIN=lastloop)');
 "

@@ -14,7 +14,7 @@ summary: |
   `*.core.ts` / `*.utils.ts` is 100% (gated perFile by the workspace's
   vitest.workspace.ts). Local gates green: typecheck, biome lint,
   knip, vitest core + back-e2e, vite build. CDK stack is a placeholder
-  output (no Secrets Manager — ADR-0004) — full LambdaApi + StaticSite
+  output (no Secrets Manager — ADR-2026-05-19T1955) — full LambdaApi + StaticSite
   + DsqlCluster + DsqlSchema + S3 wiring deferred to the next PR.
 artifacts:
   - apps/pragma/package.json
@@ -105,8 +105,8 @@ bb2bdca feat(pragma): scaffold workspace, CDK placeholder, path filters
 **Shipped (priority items 1-5 + the domain rule core for items 7-10):**
 
 1. Workspace scaffold — `package.json`, two `tsconfig` files, `biome.jsonc` (extends root + type-assertion grit plugin), `vite.config.ts`, `vitest.config.ts`, `vitest.workspace.ts` (with the 100%-perFile gate on `*.core.ts`/`*.utils.ts`), `drizzle.config.ts`, `cdk.json`, `.gitignore`, `README.md`. Path filter registered for CI; commitlint already lists `pragma`.
-2. **DB schema** — `app_config` singleton (ADR-0004) + `member`, `instrument`, `song`, `mastery_default`, `mastery_override`, `session`, `setlist`, `setlist_entry`, `transition_comment`, `bar`, `auth_attempt`. Indexes day-1 (`mastery_default` composite PK on `(member, instrument)`; `mastery_override` on `(member, instrument, song)`; unique index `transition_comment_ordered_pair` on `(song_a_id, song_b_id)`; `setlist_entry` index on `(setlist_id, position)`). Initial migration SQL at `api/src/database/migrations/0000_initial.sql`. Drizzle client mirrors last-loop-lepin's pattern.
-3. **Auth** — argon2id password hash + 30-day HMAC-signed `HttpOnly; Secure; SameSite=Strict` session cookie, **storage in `pragma.app_config` row, not Secrets Manager** (ADR-0004). Three handlers: `POST /api/auth/login`, `POST /api/admin/set-password` (bootstrap, gated by row-absent), `POST /api/admin/rotate-password` (rotates both `password_hash` + `hmac_key`, invalidating every existing cookie). Rate-limit: 5/15 min per `ip_hash` (sha256 of the first x-forwarded-for hop) via in-memory token bucket. Pure helpers 100% gated; controller covered by 7 back-e2e tests.
+2. **DB schema** — `app_config` singleton (ADR-2026-05-19T1955) + `member`, `instrument`, `song`, `mastery_default`, `mastery_override`, `session`, `setlist`, `setlist_entry`, `transition_comment`, `bar`, `auth_attempt`. Indexes day-1 (`mastery_default` composite PK on `(member, instrument)`; `mastery_override` on `(member, instrument, song)`; unique index `transition_comment_ordered_pair` on `(song_a_id, song_b_id)`; `setlist_entry` index on `(setlist_id, position)`). Initial migration SQL at `api/src/database/migrations/0000_initial.sql`. Drizzle client mirrors last-loop-lepin's pattern.
+3. **Auth** — argon2id password hash + 30-day HMAC-signed `HttpOnly; Secure; SameSite=Strict` session cookie, **storage in `pragma.app_config` row, not Secrets Manager** (ADR-2026-05-19T1955). Three handlers: `POST /api/auth/login`, `POST /api/admin/set-password` (bootstrap, gated by row-absent), `POST /api/admin/rotate-password` (rotates both `password_hash` + `hmac_key`, invalidating every existing cookie). Rate-limit: 5/15 min per `ip_hash` (sha256 of the first x-forwarded-for hop) via in-memory token bucket. Pure helpers 100% gated; controller covered by 7 back-e2e tests.
 4. **i18n** — `react-i18next` with `en.json` + `fr.json`, default locale FR, key-parity gate (`i18n-parity.core.ts`) asserts `flattenKeys(en) === flattenKeys(fr)` and fails CI on drift.
 5. **Design tokens + shell** — `design-tokens.css` declares `--accent` (blue: `#2d5fa0` light / `#6b9bd6` dark), member palette (coral / teal / mustard / plum / sage), paper background, Instrument Serif + Geist + JetBrains Mono type scale, dark mode opt-in via `prefers-color-scheme` ONLY (no in-app toggle in v1 per spec). Minimal shell (`App.tsx` + `main.tsx`).
 6. **Domain core** — five `*.core.ts` modules with 100% test coverage at write time:
@@ -125,14 +125,14 @@ bb2bdca feat(pragma): scaffold workspace, CDK placeholder, path filters
 - Setlist editor with drag-reorder, transition warning gutter, energy slider, transition-comment form (item 10 UI; rules in `transition.core.ts` + `energy-curve.core.ts` + `lineup.core.ts`).
 - Bars CRM + kanban (item 11).
 - PWA service worker (item 12 — none of the offline pieces are stubbed).
-- Full CDK stack — LambdaApi + StaticSite + DsqlCluster + DsqlSchema + S3 uploads bucket (item 13 — the current `cdk/lib/stack.ts` is a `CfnOutput` placeholder with a paired test asserting "no Secrets Manager resource" per ADR-0004).
+- Full CDK stack — LambdaApi + StaticSite + DsqlCluster + DsqlSchema + S3 uploads bucket (item 13 — the current `cdk/lib/stack.ts` is a `CfnOutput` placeholder with a paired test asserting "no Secrets Manager resource" per ADR-2026-05-19T1955).
 
 ## Validator hints
 
 The next stage of the orchestrator chain will dispatch `/visual-validation` and `/technical-validation`.
 
 - **`/visual-validation` will FAIL on this PR's slice.** The spec's *Use cases / edge cases* section names six visual scenarios (catalog new-song, members mastery matrix, setlist drag/warning/energy, sessions detail, bars kanban, offline PWA). None of those route surfaces exist yet — the site renders only a single scaffold screen showing the i18n'd "Pragma — squelette prêt" message. The orchestrator should treat the visual verdict as expected-FAIL and replan on the deferred UI surfaces rather than escalate.
-- **`/technical-validation` should PASS** on the slice that landed: every Q.O.D. row whose target is a `*.core.ts` / `*.utils.ts` is covered at 100%; the auth row matches ADR-0004 verbatim (argon2id + HMAC cookie + `app_config` storage + rotation endpoint + rate-limit). The deferred-UI rows are explicitly out of scope for this PR.
+- **`/technical-validation` should PASS** on the slice that landed: every Q.O.D. row whose target is a `*.core.ts` / `*.utils.ts` is covered at 100%; the auth row matches ADR-2026-05-19T1955 verbatim (argon2id + HMAC cookie + `app_config` storage + rotation endpoint + rate-limit). The deferred-UI rows are explicitly out of scope for this PR.
 
 ## Open-question resolutions applied (per orchestrator brief)
 

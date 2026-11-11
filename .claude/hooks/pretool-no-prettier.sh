@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook that refuses Prettier in a repository that formats with oxfmt.
 #
-# borso.fr replaced Prettier with oxfmt (ADR 0045), and the two disagree on
+# borso.fr replaced Prettier with oxfmt (ADR 2026-10-27T2320), and the two disagree on
 # enough lines that `prettier --write` over a folder reformats files nobody
 # meant to touch. Agents reach for Prettier by habit: PR #251 and PR #252 each
 # ran it on the same day and each committed a cleanup of the unrelated files it

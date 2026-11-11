@@ -50,7 +50,7 @@ The validator agent could not be dispatched, because this session has no Agent t
 | A29 | Result, the downbeat | Only `transform` and `opacity` animate | apps/pragma/site/src/styles/tokens.css | Every property inside the `@keyframes downbeat*` blocks is `transform`, `opacity` or `animation-timing-function` (awk over the blocks: 21, 12, 14) | PASS |
 | A30 | D10, D11, I3 | Rule B refuses a mapping fan-out and an awaited read in a loop, with the two messages, in every site | eslint-rules/no-request-fan-out-in-site.js:3-11, 222-239; .oxlintrc.json | Measured. A planted `Promise.all(ids.map((id) => queryClient.query(songQueryOptions(id))))` and an awaited `$get` in a `for…of` in `apps/pragma/site/src/lib/queries/` each drew the rule's error. File removed after. | PASS |
 | A31 | Changes, VOCABULARY | Read batch and Opening screen in, Offline manifest out | apps/pragma/VOCABULARY.md | `## Read batch`, `## Opening screen`, `-## Offline manifest` | PASS |
-| A32 | Changes, docs | Standard 06 and the ADR are written | docs/standards/06-data-fetching.md; docs/adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md | both in `git diff --name-status` | PASS |
+| A32 | Changes, docs | Standard 06 and the ADR are written | docs/standards/06-data-fetching.md; docs/adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md | both in `git diff --name-status` | PASS |
 
 ## B. Code cleanliness
 

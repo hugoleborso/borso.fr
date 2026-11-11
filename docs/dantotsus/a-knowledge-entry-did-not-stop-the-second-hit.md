@@ -128,7 +128,7 @@ symptom argues against the cause. When it does, level 5 is not enough.
 The level-5 entry above was one of nine. An audit of the corpus found the same
 event recorded nine times: an entry existed, was correct, and the trap hit
 anyway. The class fix is
-[ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md): every knowledge
+[ADR-2026-10-10T0122](../adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md): every knowledge
 entry now declares `triggers:`, `knowledge-triggers.sh` prints the matching
 entry at that moment, and `scripts/check-knowledge-triggers.sh` refuses an
 entry with no trigger. A triggered entry is now what rung 5 means.

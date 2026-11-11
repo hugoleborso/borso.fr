@@ -109,7 +109,6 @@ describe('read batch controller (back-e2e)', () => {
   it('answers 500 for a read that throws while the others answer 200', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     vi.spyOn(songsService, 'getSongs').mockRejectedValue(new Error('songs unavailable'));
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     const response = await sendBatch(
       app,

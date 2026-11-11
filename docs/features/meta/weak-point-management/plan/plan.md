@@ -13,7 +13,7 @@ Spec: [`../spec/spec.md`](../spec/spec.md).
 | 5. Engaged weak points | `docs/quality/weak-points.md` |
 | 6. Working-conditions board | `docs/quality/working-conditions.md` declares the walls; `scripts/quality/working-conditions.core.ts`, `scripts/quality/working-conditions-page.core.ts`, `scripts/quality/working-conditions.ts` |
 | 7. Skills | `docs/dantotsus/_template.md`, `.claude/skills/dantotsu/SKILL.md`, `.claude/skills/dantotsu/standard.md`, `.claude/skills/after-task-dantotsus/SKILL.md` |
-| 8. ADR | `docs/adr/0029-weak-point-management-from-the-dantotsu-record.md` and its index line |
+| 8. ADR | `docs/adr/2026-10-10T0141-weak-point-management-from-the-dantotsu-record.md` and its index line |
 
 The two page renderers share `scripts/quality/quality-page.core.ts`, and
 every core reads a capture group or a cell through
@@ -27,7 +27,7 @@ so no unreachable fallback branch stands between a file and 100% coverage.
 | A shallow clone resolves no old commit | the check names `git fetch --unshallow` in its error | CI's build job checks out the full history; pre-commit resolves staged entries only |
 | A local `origin/main` older than a just-merged fix | the commit does not resolve | the error names `git fetch origin main` |
 | A rename orphans a zone or an eradication path | pre-commit runs the checks on any staged deletion or rename | CI runs them on every push |
-| `zone:` is wrong but exists | nothing mechanical | the reviewer reads it; ADR-0029 names the limit |
+| `zone:` is wrong but exists | nothing mechanical | the reviewer reads it; ADR-2026-10-10T0141 names the limit |
 | Every new entry shares two tags with an old one | the recurs rule fires often | `recurs: none (<reason>)` is a one-line answer, and asking the question is the point |
 
 ## Pre-flight gates

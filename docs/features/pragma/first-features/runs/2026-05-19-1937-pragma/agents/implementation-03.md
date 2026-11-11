@@ -28,7 +28,7 @@ summary: |
   network-only on mutations; cache classifier ported as a 100%-covered
   pure TS util; OfflineBanner component on online/offline events).
   Item 9 — Full CDK (PreviewableApp + uploads S3 bucket with CORS,
-  no Secrets Manager per ADR-0004, 7 stack tests).
+  no Secrets Manager per ADR-2026-05-19T1955, 7 stack tests).
   Also: moved 5 core files out of api/src/domain/ into their bounded
   contexts to comply with the new CLAUDE.md vertical-slice rule
   introduced mid-run.

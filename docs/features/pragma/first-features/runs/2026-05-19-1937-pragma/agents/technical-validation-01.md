@@ -13,7 +13,7 @@ summary: |
   `app.ts:38` `app.route('/api/admin', adminRouter)` with no session middleware
   upstream. The back-e2e test at `auth.controller.test.ts:124` confirms it by
   rotating the password without a cookie and expecting 200. This contradicts
-  ADR-0004's operator-action framing and the controller's own header comment
+  ADR-2026-05-19T1955's operator-action framing and the controller's own header comment
   ("the rotate endpoint IS gated by the session middleware"). Anyone reachable
   from the public internet can rotate the band's password + HMAC key, locking
   every member out. Fix is isolated: gate the rotate route with

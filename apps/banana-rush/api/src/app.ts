@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
 import { buildConfigRouter } from './config/config.controller';
 import { buildGamesRouter } from './games/games.controller';
 import { selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnexpectedFailure } from './helpers/observability/error-reporting.adapter';
+import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 
 /**
  * @Blueprint api-composition-root-with-one-error-translation
@@ -14,7 +14,7 @@ import { reportUnexpectedFailure } from './helpers/observability/error-reporting
  */
 function buildAppRouter() {
   return new Hono()
-    .use('*', logger())
+    .use('*', recordWideEvents)
     .use('*', cors())
     .onError((failure, context) => {
       reportUnexpectedFailure(failure);

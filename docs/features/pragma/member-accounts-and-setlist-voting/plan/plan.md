@@ -2,7 +2,7 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all, or named it correctly and the defect comes from elsewhere.
 
-Ships in two commit series on one branch: **A. member accounts** (deployable on its own), then **B. setlist voting** (needs A). Decisions come from [ADR-0015](../../../../adr/0015-per-member-credentials-replace-the-shared-password.md) and [ADR-0016](../../../../adr/0016-simplewebauthn-carries-the-passkey-flow.md).
+Ships in two commit series on one branch: **A. member accounts** (deployable on its own), then **B. setlist voting** (needs A). Decisions come from [ADR-2026-09-14T1903](../../../../adr/2026-09-14T1903-per-member-credentials-replace-the-shared-password.md) and [ADR-2026-09-14T1904](../../../../adr/2026-09-14T1904-simplewebauthn-carries-the-passkey-flow.md).
 
 ## How each spec decision becomes code
 
@@ -40,7 +40,7 @@ Ships in two commit series on one branch: **A. member accounts** (deployable on 
 ### Pattern coherence pass
 
 - **Drag.** `@dnd-kit` is already a dependency for the setlist reorder, but the deck does **not** use it: `docs/knowledge/dnd-kit-pointersensor-loses-touch-to-page-scroll.md` records the sensor losing touch to page scroll, and a card deck needs a free-form gesture with a release position rather than a sortable list. The deck uses native Pointer Events with `touch-action: none` on the card. That is a second drag idiom in the app, deliberately, and it is written here so the reviewer does not read it as an oversight.
-- **Auth.** No second session notion survives this change, which is the whole point of ADR-0015.
+- **Auth.** No second session notion survives this change, which is the whole point of ADR-2026-09-14T1903.
 - **Forms.** Login, enrolment, password change and the target-count field all go through `@tanstack/react-form`; no new form idiom.
 - **Argon2.** The hashing already in `auth.service.ts` is reused as is; no new crypto dependency beyond `@simplewebauthn`.
 
@@ -49,7 +49,7 @@ Ships in two commit series on one branch: **A. member accounts** (deployable on 
 | Risk | Severity | Mitigation in plan | Detection if it slips |
 |---|---|---|---|
 | A DSQL-only DDL rejection at preview deploy | high | Only `ADD COLUMN name type` on existing tables, every constraint on freshly created tables, no `jsonb`, no `ALTER COLUMN`; every statement re-runnable, per migration `0003`'s header | the preview stack fails at the migration custom resource; local Postgres will **not** catch it, so the migration is read against the DSQL grammar by eye before push |
-| Every live cookie dies at deploy | medium | Intended and named in ADR-0015 and in the commit body | the band sees one sign-in prompt; `session-invalid` spikes once and settles |
+| Every live cookie dies at deploy | medium | Intended and named in ADR-2026-09-14T1903 and in the commit body | the band sees one sign-in prompt; `session-invalid` spikes once and settles |
 | Passkey verifies on preview, fails in production | medium | Relying-party id and origin read per stage through `auth.environment.ts`, never hard-coded | a production `passkey-verification-failed` with a preview host in the log field |
 | The swipe passes with clicks and fails with thumbs | high | `scripts/argent.sh gesture-drag` is in the validation loop, one run per zone at 375 px; a synthetic click is explicitly not accepted as evidence. `gesture-swipe` is a no-op on Chromium that reports success, so it is not used | the repo has hit this twice across six audit rounds; the visual-validation report must carry argent output. A touch-specific failure stays unreachable from this sandbox and ships as a named gap |
 | Optimistic scoring reverted by a stale DSQL read | medium | No invalidation after a score; reconcile from the mutation response | `borso/no-refetch-of-optimistically-written-query` fails the lint; visually, a point that lands then jumps back |

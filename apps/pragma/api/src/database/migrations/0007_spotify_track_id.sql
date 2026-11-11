@@ -1,6 +1,6 @@
 -- A song linked to Deezer also names a Spotify track, so the listen dialog can
 -- open the recording rather than a search. The value is resolved once, by the
--- ISRC Deezer already returned, and stored here; see ADR-0017.
+-- ISRC Deezer already returned, and stored here; see ADR-2026-09-15T2023.
 --
 -- Nullable, and ordinarily so: Spotify carries no track for every ISRC Deezer
 -- does, a song typed in by hand names no ISRC at all, and every song that

@@ -129,7 +129,7 @@ and `lg:` for wider screens. See
   `.variants.ts` table, and a colour set through `style` anywhere but `Avatar`
   and `MemberMark`, the two places a member's stored colour reaches the screen.
   Every value the design uses has a name in `tokens.css`
-  ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md)).
+  ([ADR-2026-10-27T1115](../adr/2026-10-27T1115-pragma-design-system-is-notebook-with-grafts.md)).
 - `oxlint:borso/no-vertical-scroll-container (pragma/site)` rejects
   `overflow-auto`, `overflow-y-auto`, `overflow-scroll` and `overflow-y-scroll`
   outside `Sheet` and the two scene views. The document scrolls; a list that

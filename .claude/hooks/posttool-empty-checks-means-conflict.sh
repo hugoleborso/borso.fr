@@ -31,7 +31,7 @@
 #
 # It answers with `additionalContext`: plain stdout from a PostToolUse hook
 # reaches the debug log and not the model, which is what this hook printed into
-# until 2026-10-10. See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+# until 2026-10-10. See docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0

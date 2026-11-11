@@ -6,7 +6,7 @@ A band member who reorders a setlist and comes back sees the order they
 saved, and the next drag never writes an older order back. Offline reading
 of the catalog and the next session keeps working.
 
-Decision: [ADR-202611011313](../../../../adr/202611011313-pragma-offline-reads-through-the-query-cache.md),
+Decision: [ADR-2026-11-01T1313](../../../../adr/2026-11-01T1313-pragma-offline-reads-through-the-query-cache.md),
 option E. Cause: [the dantotsu](../../../../dantotsus/the-offline-cache-that-answered-first-online.md).
 
 ## Behaviour

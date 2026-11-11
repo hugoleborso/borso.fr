@@ -19,7 +19,7 @@ recurs: none (the earlier gate entries are about a check not running; this one r
 
 ## Symptom
 
-ADR-0044 gives an agent a read path into production and keeps it off the tables
+ADR-2026-10-25T0054 gives an agent a read path into production and keeps it off the tables
 that hold credentials, keys and tokens. `scripts/db-read.sh` refuses a query
 naming one, and §12.7 of `aws-setup.md` documents the probe:
 
@@ -124,7 +124,7 @@ blocklist, and a stack with no reader is refused outright.
 
 ### Where this guard lives now
 
-ADR-0049 moved the assessment out of the calling script and into each
+ADR-2026-10-28T2126 moved the assessment out of the calling script and into each
 application's reader Lambda, so the reading above no longer exists in that
 shape. The property it defended survives in a stronger form: the blocklist is
 an environment variable the construct sets at synth time from the same list the
@@ -136,6 +136,6 @@ cannot be ambiguous.
 
 ## See also
 
-- [`docs/adr/0044-read-only-production-database-access-for-agents.md`](../adr/0044-read-only-production-database-access-for-agents.md)
+- [`docs/adr/2026-10-25T0054-read-only-production-database-access-for-agents.md`](../adr/2026-10-25T0054-read-only-production-database-access-for-agents.md)
 - [`the-production-database-is-out-of-reach-of-a-hosted-session.md`](../knowledge/the-production-database-is-out-of-reach-of-a-hosted-session.md)
 - [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md)

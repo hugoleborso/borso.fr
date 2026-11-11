@@ -9,6 +9,7 @@ import { GONE_STATUS_CODE } from './broadcast.adapter';
 import { useConnectionPoster } from './connection-poster.setup';
 import { realtimeConnectionTable } from './realtime.schema';
 import { buildRealtimeTicket, REALTIME_TICKET_TTL_MS } from './realtime-ticket.utils';
+import { handler as answerSocketEvent } from '../main.websocket';
 import { buildSocketReply } from './realtime.service';
 
 const ticketGrantSchema = z.object({ url: z.string().nullable(), ticket: z.string() }).strict();
@@ -31,6 +32,28 @@ function buildRecordingPoster(answer: (connectionId: string) => Promise<unknown>
     },
   });
   return posts;
+}
+
+function captureWrittenLines() {
+  return vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+}
+
+function readWriteEvents(write: ReturnType<typeof captureWrittenLines>): unknown[] {
+  return write.mock.calls.flatMap(([line]) => {
+    const writtenEvent: unknown = JSON.parse(String(line));
+    const isWriteEvent =
+      typeof writtenEvent === 'object' &&
+      writtenEvent !== null &&
+      'http.request.method' in writtenEvent &&
+      writtenEvent['http.request.method'] === 'POST';
+    return isWriteEvent ? [writtenEvent] : [];
+  });
+}
+
+async function settlePendingWork(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
 }
 
 function buildReportingApp(budgetMilliseconds = 1_000) {
@@ -145,6 +168,32 @@ describe('the socket routes (back-e2e)', () => {
     });
   });
 
+  it('writes each socket event as one event holding its route, status and outcome', async () => {
+    const { memberId } = await buildAuthenticatedApp();
+    const forged = buildRealtimeTicket(Buffer.alloc(32), memberId, Date.now());
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    const reply = await answerSocketEvent({
+      requestContext: { connectionId: 'c1', routeKey: '$connect' },
+      queryStringParameters: { ticket: forged, client: READER_TAB },
+    });
+
+    const writtenEvents = write.mock.calls.map(([line]) => {
+      const writtenEvent: unknown = JSON.parse(String(line));
+      return writtenEvent;
+    });
+    write.mockRestore();
+    expect(reply).toStrictEqual({ statusCode: 401 });
+    expect(writtenEvents).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'socket',
+        'socket.route_key': '$connect',
+        'socket.status_code': 401,
+        outcome: 'refused',
+      }),
+    ]);
+  });
+
   it('refuses a session cookie offered as a ticket', async () => {
     const { cookieHeader } = await buildAuthenticatedApp();
     const cookieValue = cookieHeader.slice(cookieHeader.indexOf('=') + 1);
@@ -177,6 +226,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
 
   afterEach(() => {
     useConnectionPoster(null);
+    vi.restoreAllMocks();
   });
 
   it('posts the root the write touched to every tab but the writer’s own', async () => {
@@ -185,6 +235,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     const { app, reportFailure } = buildReportingApp();
     await connectTab('reader', memberId, READER_TAB);
     await connectTab('writer', memberId, WRITER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -192,6 +243,9 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       { connectionId: 'reader', data: { kind: 'stale', written: ['tasks'] } },
     ]);
     expect(reportFailure).not.toHaveBeenCalled();
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'delivered' }),
+    ]);
   });
 
   it('tells every tab when the write carries no tab id', async () => {
@@ -248,11 +302,11 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
   });
 
   it('reports a send that fails and still answers the write', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     buildRecordingPoster(() => Promise.reject(new RangeError('gateway down')));
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp();
     await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -260,8 +314,14 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       name: 'RealtimeBroadcastFailed',
       tags: { 'realtime.written': 'tasks', 'realtime.code': 'AggregateError' },
     });
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({
+        'realtime.broadcast_outcome': 'failed',
+        'realtime.broadcast_failure': ['AggregateError'],
+        'realtime.broadcast_failure_message': ['RealtimeBroadcastFailed'],
+      }),
+    ]);
     expect(await listConnectionIds()).toStrictEqual(['reader']);
-    vi.restoreAllMocks();
   });
 
   it('reports a send that outlives its budget and answers the write without waiting for it', async () => {
@@ -269,6 +329,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp(SHORT_BUDGET_MILLISECONDS);
     await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -276,5 +337,40 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       name: 'RealtimeBroadcastLate',
       tags: { 'realtime.written': 'tasks' },
     });
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'late' }),
+    ]);
+  });
+
+  it('keeps a send that fails after its budget as late and writes no second line for it', async () => {
+    const pendingRejections: ((reason: Error) => void)[] = [];
+    const failLateSend = () => {
+      for (const reject of pendingRejections) reject(new RangeError('gateway down'));
+    };
+    buildRecordingPoster(
+      async () =>
+        await new Promise((_resolve, reject) => {
+          pendingRejections.push(reject);
+        }),
+    );
+    const { cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { app, reportFailure } = buildReportingApp(SHORT_BUDGET_MILLISECONDS);
+    reportFailure.mockImplementation(() => {
+      failLateSend();
+    });
+    await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
+
+    expect((await createTask(app, cookieHeader)).status).toBe(201);
+    const linesAtAnswer = write.mock.calls.length;
+    failLateSend();
+    await settlePendingWork();
+
+    expect(write).toHaveBeenCalledTimes(linesAtAnswer);
+    const writeEvents = readWriteEvents(write);
+    expect(writeEvents).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'late' }),
+    ]);
+    expect(writeEvents[0]).not.toHaveProperty('realtime.broadcast_failure');
   });
 });

@@ -3,7 +3,7 @@ status: done
 summary: |
   Wrote the engineering plan for the setlist lineup column, mapping every
   decisions-table row and every Changes entry in the spec to a file, and
-  binding it to ADR-0021. Twelve risks carry a detection path. Two are
+  binding it to ADR-2026-09-18T2339. Twelve risks carry a detection path. Two are
   findings the spec could not have: replaceMemberInstruments is a delete
   then insert, so adding is_primary silently wipes the column on every
   member save, and the instrument reorder is the exact shape of the
@@ -65,7 +65,7 @@ Two ambiguities appeared when the spec was projected onto the code. Neither is a
 product question, so both were settled in the plan and recorded there.
 
 - Primacy lives on the link, which only the member route writes, while the spec
-  and ADR-0021 both put its editor on the instruments page. Settled by keeping
+  and ADR-2026-09-18T2339 both put its editor on the instruments page. Settled by keeping
   one write path and giving the instruments page a toggle that calls it.
 - The spec says the column drops slots from the right without saying what
   measures the width. Settled as a breakpoint budget through the existing

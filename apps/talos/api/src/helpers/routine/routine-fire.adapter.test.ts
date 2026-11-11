@@ -3,6 +3,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { runInWideEvent } from '../observability/wide-event.adapter';
 import { type SecretName, useSecretReader } from '../secrets/secrets.setup';
 import { fireRoutine } from './routine-fire.adapter';
 
@@ -62,17 +63,18 @@ describe('fireRoutine', () => {
     });
   });
 
-  it('reports a network failure without throwing, since the file is already committed', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const fetcher = vi.fn(async () => await Promise.reject(new Error('réseau coupé')));
-    expect(await fireRoutine('proposition', 'p.md', { fetcher, readSecret: CONFIGURED })).toEqual({
-      kind: 'failed',
-      status: 0,
+  it('reports a network failure without throwing, since the file is already committed, and names it on the wide event', async () => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const fetcher = vi.fn(async () => await Promise.reject(new TypeError('réseau coupé')));
+    expect(
+      await runInWideEvent({}, () =>
+        fireRoutine('proposition', 'p.md', { fetcher, readSecret: CONFIGURED }),
+      ),
+    ).toEqual({ kind: 'failed', status: 0 });
+    expect(write).toHaveBeenCalledOnce();
+    expect(JSON.parse(String(write.mock.calls[0]?.[0]))).toMatchObject({
+      'routine.fire_failure': 'TypeError',
     });
-    expect(warn).toHaveBeenCalledWith(
-      'the routine could not be fired, the next scheduled run will pick it up',
-      expect.any(Error),
-    );
   });
 
   it('uses the global fetch by default', async () => {

@@ -157,7 +157,7 @@ function addRealtimeChannel(props: BuildPragmaAppStackProps, previewableApp: Pre
 
 function scheduleStreakReminder(scope: Construct, apiHandler: IFunction): void {
   new Schedule(scope, 'StreakReminderSchedule', {
-    description: 'Pushes the 20:00 Europe/Paris streak reminder (ADR-202610291139)',
+    description: 'Pushes the 20:00 Europe/Paris streak reminder (ADR-2026-10-29T1139)',
     schedule: ScheduleExpression.cron({
       minute: STREAK_REMINDER_MINUTE,
       hour: STREAK_REMINDER_HOUR,

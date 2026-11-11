@@ -1,3 +1,5 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
+import { describeThrownValue } from '../helpers/observability/wide-event.core';
 import { StreamableHTTPTransport } from '@hono/mcp';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { toJsonSchemaCompat } from '@modelcontextprotocol/sdk/server/zod-json-schema-compat.js';
@@ -28,11 +30,9 @@ export interface McpSession {
 }
 
 function answerTool(tool: ToolDefinition, answer: ToolAnswer): ToolResult {
-  recordProductEvent({
-    event: TOOL_CALLED_EVENT,
-    tool: tool.name,
-    outcome: selectToolOutcome(answer),
-  });
+  const outcome = selectToolOutcome(answer);
+  recordProductEvent({ event: TOOL_CALLED_EVENT, tool: tool.name, outcome });
+  addWideEventFields({ 'mcp.tools': [tool.name], 'mcp.tool_outcomes': [outcome] });
   return shapeToolResult(answer);
 }
 
@@ -46,7 +46,13 @@ async function runTool(
   } catch (error) {
     const refusal = selectThrownRefusal(error);
     if (refusal !== null) return answerTool(tool, refusal);
-    console.error(error);
+    const failure = describeThrownValue(error);
+    addWideEventFields({
+      'mcp.tools': [tool.name],
+      'mcp.tool_outcomes': ['failed'],
+      'mcp.failure_types': [failure.type],
+      'mcp.failure_messages': [failure.message],
+    });
     session.reportFailure({
       name: TOOL_FAILURE,
       tags: { 'mcp.tool': tool.name, 'mcp.code': selectFailureCode(error) },

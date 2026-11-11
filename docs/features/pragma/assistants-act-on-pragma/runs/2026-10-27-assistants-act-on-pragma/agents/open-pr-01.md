@@ -1,7 +1,7 @@
 ---
 status: done
 verdict: DRAFT_PR_OPENED
-summary: Branch pushed through the pre-push gates (all passed) and draft PR 206 opened with ADR-0041 and ADR-0042 in the decisions table, one before-merge block (review D2, smoke test Claude Code and Vibe on the preview) and the four unverifiable visual rows as gaps. Body checked by check-pr-body.ts and read back unchanged. The nine screenshots are uploaded to screenshots-pr-206.preview.borso.fr/2026-10-27-1440/.
+summary: Branch pushed through the pre-push gates (all passed) and draft PR 206 opened with ADR-2026-10-23T0227 and ADR-2026-10-23T0228 in the decisions table, one before-merge block (review D2, smoke test Claude Code and Vibe on the preview) and the four unverifiable visual rows as gaps. Body checked by check-pr-body.ts and read back unchanged. The nine screenshots are uploaded to screenshots-pr-206.preview.borso.fr/2026-10-27-1440/.
 prUrl: https://github.com/hugoleborso/borso.fr/pull/206
 prNumber: 206
 blockers: []

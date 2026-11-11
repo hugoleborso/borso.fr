@@ -3,7 +3,7 @@
 -- instrument, so an instrument changing hands between two songs reads
 -- without any text. Three facts the database did not hold make that
 -- possible — which glyph marks an instrument, where it sits in the fixed
--- order, and which instruments deserve a slot at all. See ADR-0022.
+-- order, and which instruments deserve a slot at all. See ADR-2026-09-18T2339.
 --
 -- Aurora DSQL accepts `ADD COLUMN column_name data_type` and no
 -- constraint clause at all, so all three columns land nullable and stay

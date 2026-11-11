@@ -46,7 +46,7 @@ that it required a human prompt is the defect.
    The orchestrator's `ship` stage in `standard.md` did three things:
    commit run artefacts, push, issue the deploy reminder. It did not
    touch the PR title or body. So when the work scope shifted mid-branch
-   — orchestrator's `arbitrate → fix → retry`, ADR 0002→0003 supersession,
+   — orchestrator's `arbitrate → fix → retry`, ADR 2026-05-14T1300→2026-05-14T1341 supersession,
    merge against `main` — the PR body never caught up.
 
 2. **Why** wasn't "update the PR body" part of `ship`?

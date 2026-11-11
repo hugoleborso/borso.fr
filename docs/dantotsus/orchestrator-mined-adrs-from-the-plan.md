@@ -147,7 +147,7 @@ populated and each entry is referenced in the plan)
 
 Plus the matching updates to `SKILL.md` (operating mode lists `adrs` as
 stage 2, `plan` as stage 3), to the spec + plan addendums, and to the
-test scenarios under `docs/features/meta/tech-lead-orchestrator/`. ADR-0001
+test scenarios under `docs/features/meta/tech-lead-orchestrator/`. ADR-2026-05-13T1510
 itself ("`/tech-lead-orchestrator` replaces the linear skill auto-chain")
 gets a wording pass to reflect the corrected ordering.
 
@@ -156,13 +156,13 @@ state machine literally can't go to `implement` without going through
 `adrs` first.
 
 **Sibling defects swept:** none — this is a pure state-machine ordering
-correction. The PR ships ADR-0002 + ADR-0003 (front-page-redesign) with
+correction. The PR ships ADR-2026-05-14T1300 + ADR-2026-05-14T1341 (front-page-redesign) with
 the *correct* ordering (ADRs ratified pre-plan, plan references them).
 Going forward, every orchestrator-piloted run inherits the fix.
 
 ## See also
 
-- [`docs/adr/0001-tech-lead-orchestrator-replaces-auto-chain.md`](../adr/0001-tech-lead-orchestrator-replaces-auto-chain.md) —
+- [`docs/adr/2026-05-13T1510-tech-lead-orchestrator-replaces-auto-chain.md`](../adr/2026-05-13T1510-tech-lead-orchestrator-replaces-auto-chain.md) —
   the canonical statement of why the orchestrator exists at all.
 - [`docs/dantotsus/skills-tried-to-be-typescript-workspaces.md`](./skills-tried-to-be-typescript-workspaces.md) —
   same PR, same kind of architectural correction. Different surface

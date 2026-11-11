@@ -102,7 +102,7 @@ No package script carries it, so local runs never collect coverage.
 
 The first two are pure. The third is not, and it is on the list anyway: an
 adapter is the one file in a bounded context that leaves the process
-([ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md)), which makes
+([ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md)), which makes
 it both the highest-risk file in the slice and, by its own blueprint, the
 easiest impure file to drive — the fetcher, the clock and the cache are
 arguments. An adapter that cannot be covered without a mock of its own vendor
@@ -142,7 +142,7 @@ second is why it can be written at all.
 
 `.schema.ts` was the case that tested the criterion: it qualifies, and it was
 not gated, which made the rule name its own exception. It is gated now — see
-[ADR-0013](../adr/0013-input-schemas-carry-the-coverage-gate.md) — and the
+[ADR-2026-08-15T0958](../adr/2026-08-15T0958-input-schemas-carry-the-coverage-gate.md) — and the
 sixteen sibling tests that closed it cost less than feared, because a Zod schema
 executes at import and reaches full statement coverage as soon as a test imports
 it. The work is writing assertions that name a rule rather than restate a shape.

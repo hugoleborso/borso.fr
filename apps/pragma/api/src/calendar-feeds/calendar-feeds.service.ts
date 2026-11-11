@@ -1,3 +1,4 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import { readCalendarFeed } from './calendar-feed.adapter';
 import type { DatabaseExecutor } from '../database/client';
 import {
@@ -11,6 +12,8 @@ import type { BusyInterval, CalendarFeedSummary, FeedFailure } from './calendar-
 import { judgeFeedAddress } from './feed-address.core';
 import { numberFeedsOfEachMember, type PositionedCalendarFeed } from './feed-position.core';
 import { readBusyIntervals, readCalendarName } from './ics.core';
+
+const UNKNOWN_STATUS = 'unknown';
 
 export type SaveCalendarFeedOutcome =
   | { readonly kind: 'saved'; readonly calendarFeeds: readonly CalendarFeedSummary[] }
@@ -71,19 +74,16 @@ export async function listCalendarFeeds(memberId: string): Promise<CalendarFeedS
   return await listCalendarFeedsOfMember(memberId);
 }
 
-const FAILURE_EVENT_BY_KIND: Readonly<Record<FeedFailure, string>> = {
-  'needs-reconnecting': 'CalendarFeedNeedsReconnecting',
-  unavailable: 'CalendarFeedUnavailable',
-};
-
 function reportFeedFailure(
   feed: PositionedCalendarFeed,
   kind: FeedFailure,
   status: number | null,
 ): FeedBusyTime {
-  console.warn(
-    JSON.stringify({ event: FAILURE_EVENT_BY_KIND[kind], memberId: feed.memberId, status }),
-  );
+  addWideEventFields({
+    'calendar_feed.failures': [kind],
+    'calendar_feed.failed_member_ids': [feed.memberId],
+    'calendar_feed.failed_statuses': [status === null ? UNKNOWN_STATUS : String(status)],
+  });
   return {
     memberId: feed.memberId,
     kind,

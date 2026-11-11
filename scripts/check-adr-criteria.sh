@@ -2,13 +2,13 @@
 # An ADR lists its criteria before its options, and the operator named at
 # least one of them.
 #
-# ADR-202611031438 was first written with criteria the author chose, in a
+# ADR-2026-11-03T1438 was first written with criteria the author chose, in a
 # rubric placed after the options. The operator read it and named the two
 # that mattered, whether the choice changes the app and how much of it the
 # library covers, and neither was there. Criteria written after the options
 # justify a choice rather than test it.
 #
-# This refuses an ADR, from 202611031438 on, that has no `## Criteria`
+# This refuses an ADR, from 2026-11-03T1438 on, that has no `## Criteria`
 # section before `## Decision`, no `Raised by` column, or no row raised by
 # the operator. Older records keep their shape.
 #
@@ -17,12 +17,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-readonly FIRST_CHECKED_ID=202611031438
+readonly FIRST_CHECKED_ID=2026-11-03T1438
+readonly MINUTE_ID='^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4})-'
 failures=0
 
 for record in docs/adr/[0-9]*.md; do
-  id="$(basename "$record" | cut -d- -f1)"
-  [[ ${#id} -eq 12 && "$id" -ge "$FIRST_CHECKED_ID" ]] || continue
+  [[ "$(basename "$record")" =~ $MINUTE_ID ]] || continue
+  id="${BASH_REMATCH[1]}"
+  [[ "$id" < "$FIRST_CHECKED_ID" ]] && continue
   criteria_line="$(grep -n '^## Criteria$' "$record" | head -1 | cut -d: -f1 || true)"
   decision_line="$(grep -n '^## Decision$' "$record" | head -1 | cut -d: -f1 || true)"
   if [[ -z "$criteria_line" || -z "$decision_line" || "$criteria_line" -gt "$decision_line" ]]; then

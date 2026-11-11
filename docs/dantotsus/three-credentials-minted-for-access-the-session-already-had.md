@@ -44,7 +44,7 @@ The operator stopped it in one sentence on 2026-11-04 ("pas sûr qu'on veuille l
 
 ## Countermeasure
 
-PR #263 rebuilt the board as a private artifact a session refreshes (ADR 202611041200).
+PR #263 rebuilt the board as a private artifact a session refreshes (ADR 2026-11-04T1200).
 
 ## Eradication
 
