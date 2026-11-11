@@ -139,11 +139,11 @@ The total is 56% of 5M, so a sample rate of 1.0 keeps every trace even at this b
 
 ## Implementation pointers
 
-- Spec: none; requested directly by the operator.
+- Spec: [`docs/features/meta/sentry-tracing-all-apps/spec/spec.md`](../features/meta/sentry-tracing-all-apps/spec/spec.md), written from the operator's request.
 - Plan: none.
 - Commit: {{SHA, stamped on merge}}
 - Files:
-  - APIs: `apps/{last-loop-lepin,banana-rush,talos}/api/src/helpers/observability/` (`error-reporting.adapter.ts`, `request-tracing.middleware.ts`, `wide-event.adapter.ts`, `wide-event.middleware.ts`), and each `api/src/app.ts`.
+  - APIs: `apps/{last-loop-lepin,banana-rush,talos}/api/src/helpers/observability/` (`error-reporting.adapter.ts`, `request-tracing.middleware.ts`, `wide-event.adapter.ts`, `wide-event.middleware.ts`, which takes the trace-id reader as a parameter so its test needs no module mock), and each `api/src/app.ts`.
   - Sample rate and release: `apps/last-loop-lepin/api/src/helpers/observability/error-reporting.core.ts` and `apps/{banana-rush,talos}/domain/error-reporting.core.ts`.
   - Sites: `apps/*/site/src/observability/error-reporting.{adapter,core}.ts`, and `apps/last-loop-lepin/site/src/observability/sentry.ts`.
   - Stacks: `apps/{last-loop-lepin,banana-rush,talos}/cdk/{bin/cdk.ts,lib/stack.ts}`.
