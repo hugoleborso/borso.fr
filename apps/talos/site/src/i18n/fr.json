@@ -116,6 +116,7 @@
   "message.open-talos": "Talos",
   "message.open-build": "Construire",
   "message.too-long": "{{length}} / {{limit}} caractères",
+  "message.too-long-to-send": "Message trop long pour être envoyé à Talos ({{limit}} caractères au plus).",
   "message.preamble": "Tu es Talos. Réponds à ce message de Hugo :",
   "message.runs.title": "Lancements",
   "message.runs.trigger.message": "Message",

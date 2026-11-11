@@ -60,11 +60,23 @@ describe('readSessionUrl', () => {
     ['plain http', { claude_code_session_url: 'http://claude.ai/code/session_1' }],
     ['the prefix further in', { claude_code_session_url: ' https://claude.ai/code/session_1' }],
     ['another page of the site', { claude_code_session_url: 'https://claude.ai/chat/1' }],
+    ['a NUL character', { claude_code_session_url: 'https://claude.ai/code/session_1\u0000' }],
+    ['a line break', { claude_code_session_url: 'https://claude.ai/code/session_1\nx' }],
+    ['no session after the prefix', { claude_code_session_url: 'https://claude.ai/code/' }],
+    [
+      'an address too long',
+      { claude_code_session_url: `https://claude.ai/code/${'x'.repeat(278)}` },
+    ],
     ['a value that is not text', { claude_code_session_url: 42 }],
     ['no address', { type: 'routine_fire' }],
     ['an answer that is not an object', null],
   ])('stores nothing for %s', (_case, answer) => {
     expect(readSessionUrl(answer)).toBeNull();
+  });
+
+  it('keeps an address exactly as long as allowed', () => {
+    const address = `https://claude.ai/code/${'x'.repeat(277)}`;
+    expect(readSessionUrl({ claude_code_session_url: address })).toBe(address);
   });
 });
 

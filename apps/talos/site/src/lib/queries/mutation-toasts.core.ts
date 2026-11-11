@@ -4,7 +4,7 @@ import {
   READY_DRAFT_STATUS,
 } from '@domain/draft-status.core';
 import type { ProposalDecision } from '@domain/proposal.core';
-import { isRoutineUnconfigured } from '../routine-run.core';
+import { isRoutineConfigured } from '../routine-run.core';
 import type { TranslatableToast } from '../toast.core';
 import type { TodoPatch } from './cache-updates.core';
 
@@ -99,7 +99,7 @@ export function selectPushTestToast(delivered: number): TranslatableToast {
 }
 
 export function selectLaunchFailureToast(failure: unknown): TranslatableToast {
-  return isRoutineUnconfigured(failure) ? ROUTINE_UNCONFIGURED_TOAST : ROUTINE_LAUNCH_FAILED_TOAST;
+  return isRoutineConfigured(failure) ? ROUTINE_LAUNCH_FAILED_TOAST : ROUTINE_UNCONFIGURED_TOAST;
 }
 
 export function selectTodoReversal(

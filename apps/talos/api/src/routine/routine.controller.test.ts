@@ -139,6 +139,7 @@ describe('POST /api/routine/runs', () => {
   it.each([
     ['an empty message', { text: '  ' }],
     ['a message of more than 4000 characters', { text: 'a'.repeat(4001) }],
+    ['a message holding a NUL character', { text: 'a\u0000b' }],
   ])('refuses %s without firing', async (_label, body) => {
     const fetcher = answerFireWithSession(SESSION_URL);
     const { app } = buildTestContext();
@@ -150,6 +151,7 @@ describe('POST /api/routine/runs', () => {
     });
     expect(response.status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
+    expect(await getDatabase().select().from(routineRunTable)).toEqual([]);
   });
 
   it('refuses a caller without a session', async () => {

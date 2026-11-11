@@ -1,3 +1,4 @@
+import { MESSAGE_TEXT_LIMIT } from '@domain/routine-run.core';
 import type { ClaudeCodeEnvironment } from '../../lib/claude-code-address.core';
 
 export const LONG_MESSAGE_THRESHOLD = 6000;
@@ -11,7 +12,11 @@ export function isMessageTooLong(text: string): boolean {
 
 export function isEnvironmentLinked(
   environment: ClaudeCodeEnvironment,
-  isRoutineUnconfigured: boolean,
+  isRoutineConfigured: boolean,
 ): boolean {
-  return environment === ALWAYS_LINKED_ENVIRONMENT || isRoutineUnconfigured;
+  return environment === ALWAYS_LINKED_ENVIRONMENT || !isRoutineConfigured;
+}
+
+export function isMessageTooLongToSend(text: string, isRoutineConfigured: boolean): boolean {
+  return isRoutineConfigured && text.trim().length > MESSAGE_TEXT_LIMIT;
 }

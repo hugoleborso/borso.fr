@@ -101,8 +101,18 @@ function renderStoredRecord(
   return row === null ? null : renderRecordPage(decodeAttributes(row.attributes), row.body);
 }
 
-export async function renderMemoryProposal(slug: string): Promise<string | null> {
-  return renderStoredRecord(await findProposal(readExecutor(), slug));
+export interface StoredMemoryProposal {
+  readonly markdown: string;
+  readonly status: string;
+}
+
+export async function readMemoryProposal(slug: string): Promise<StoredMemoryProposal | null> {
+  const row = await findProposal(readExecutor(), slug);
+  if (row === null) return null;
+  return {
+    markdown: renderRecordPage(decodeAttributes(row.attributes), row.body),
+    status: row.status,
+  };
 }
 
 export async function renderMemoryDraft(slug: string): Promise<string | null> {

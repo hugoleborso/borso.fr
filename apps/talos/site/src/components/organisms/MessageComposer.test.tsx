@@ -84,6 +84,23 @@ describe('MessageComposer', () => {
     expect(screen.getByRole('button', { name: 'Talos' })).toHaveProperty('disabled', true);
   });
 
+  it('says why the button is off for a message too long to send but short enough for a link', async () => {
+    fetchStub = serveComposer(null);
+    renderComposer();
+    const field = screen.getByLabelText('Ton message');
+    field.focus();
+    await userEvent.paste('x'.repeat(4000));
+    expect(screen.queryByText(/trop long/)).toBeNull();
+    await userEvent.paste('x');
+    expect(
+      await screen.findByText(
+        'Message trop long pour être envoyé à Talos (4 000 caractères au plus).',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/ \/ /)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Talos' })).toHaveProperty('disabled', true);
+  });
+
   it('falls back to the Claude Code link, with the text kept, while the routine is not configured', async () => {
     fetchStub = serveComposer('env_construction');
     renderComposer();

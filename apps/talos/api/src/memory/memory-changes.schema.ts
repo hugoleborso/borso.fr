@@ -182,6 +182,7 @@ export const changeOperationSchema = z.discriminatedUnion('op', [
     slug: slugSchema,
     status: shortTextSchema.min(1),
     decisionLine: shortTextSchema.optional(),
+    expectedStatus: shortTextSchema.min(1).optional(),
   }),
   z.object({
     op: z.literal('draft.upsert'),

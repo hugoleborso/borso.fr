@@ -26,7 +26,7 @@ Fire text: `<secret-phrase>\n<trigger>: <subject or message>`. For a message it 
 
 ## R1. A message starts the routine
 
-- R1.1 `POST /api/routine/runs` with `{ text }` (1 to 4000 characters after trimming, session required) fires the routine with `message: <text>`.
+- R1.1 `POST /api/routine/runs` with `{ text }` (1 to 4000 characters after trimming, session required) fires the routine with `message: <text>`. A text holding a NUL character (U+0000) is refused with 400 and fires nothing, because Postgres cannot store it.
 - R1.2 On success it stores a routine run and answers 201 with it.
 - R1.3 Without `fire-url` it answers 503 with the existing `not-configured` error and stores nothing.
 - R1.4 When the fire fails (network, or a status outside 2xx) it answers 502 and stores nothing.
@@ -49,7 +49,7 @@ Fire text: `<secret-phrase>\n<trigger>: <subject or message>`. For a message it 
 
 ## R4. Only an address of Claude Code is stored
 
-- R4.1 `sessionUrl` is kept only when it starts with `https://claude.ai/code/`. Anything else is stored as null.
+- R4.1 `sessionUrl` is kept only when it is `https://claude.ai/code/` followed by letters, digits, `_`, `-` or `/`, 300 characters at most. Anything else is stored as null.
 
 ## R5. Documents
 

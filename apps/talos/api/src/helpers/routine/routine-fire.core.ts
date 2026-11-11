@@ -13,10 +13,14 @@ const ROUTINE_BETA_HEADER = 'experimental-cc-routine-2026-04-01';
 const ANTHROPIC_VERSION = '2023-06-01';
 const FIRST_SUCCESS_STATUS = 200;
 const FIRST_REDIRECT_STATUS = 300;
-const CLAUDE_CODE_ADDRESS_PREFIX = 'https://claude.ai/code/';
+const CLAUDE_CODE_ADDRESS_PATTERN = /^https:\/\/claude\.ai\/code\/[\w/-]+$/;
+const MAXIMUM_ADDRESS_LENGTH = 300;
 
 const fireAnswerSchema = z.object({
-  claude_code_session_url: z.string().startsWith(CLAUDE_CODE_ADDRESS_PREFIX),
+  claude_code_session_url: z
+    .string()
+    .max(MAXIMUM_ADDRESS_LENGTH)
+    .regex(CLAUDE_CODE_ADDRESS_PATTERN),
 });
 
 export function buildFireHeaders(token: string | undefined): Record<string, string> {

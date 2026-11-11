@@ -30,6 +30,7 @@ describe('routineMessageSchema', () => {
     ['spaces alone', { text: '   ' }],
     ['more than 4000 characters', { text: 'a'.repeat(4001) }],
     ['a text that is not a string', { text: 12 }],
+    ['a text holding a NUL character', { text: 'a\u0000b' }],
   ])('refuses %s', (_label, candidate) => {
     expect(routineMessageSchema.safeParse(candidate).success).toBe(false);
   });

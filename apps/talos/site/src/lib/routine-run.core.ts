@@ -10,9 +10,9 @@ const TRIGGER_LABEL_KEY = {
 export type RoutineRunTrigger = keyof typeof TRIGGER_LABEL_KEY;
 
 // @FollowsBlueprint core-decision
-export function isRoutineUnconfigured(failure: unknown): boolean {
-  if (typeof failure !== 'object' || failure === null || !('status' in failure)) return false;
-  return failure.status === ROUTINE_UNCONFIGURED_STATUS;
+export function isRoutineConfigured(failure: unknown): boolean {
+  if (typeof failure !== 'object' || failure === null || !('status' in failure)) return true;
+  return failure.status !== ROUTINE_UNCONFIGURED_STATUS;
 }
 
 export function placeNewestRunFirst<Run>(runs: readonly Run[], newestRun: Run): Run[] {

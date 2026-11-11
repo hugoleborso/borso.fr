@@ -22,6 +22,7 @@ import {
   type MemoryExecutor,
 } from './memory.repository';
 import {
+  didChangeProposalFromStatus,
   upsertCommitment,
   upsertDocument,
   upsertDraft,
@@ -161,6 +162,21 @@ export async function upsertProposalOperation(
   return { status: before === null ? 'created' : 'updated', before, after };
 }
 
+async function writeProposalStatus(
+  executor: MemoryExecutor,
+  operation: OperationOf<'proposal.status'>,
+  after: Parameters<typeof upsertProposal>[1],
+): Promise<void> {
+  if (operation.expectedStatus === undefined) {
+    await upsertProposal(executor, after);
+    return;
+  }
+  if (await didChangeProposalFromStatus(executor, operation.expectedStatus, after)) return;
+  throw new TalosError('memory-conflict', {
+    message: `statut attendu périmé : ${operation.slug}`,
+  });
+}
+
 export async function changeProposalStatusOperation(
   context: OperationContext,
   operation: OperationOf<'proposal.status'>,
@@ -179,7 +195,7 @@ export async function changeProposalStatusOperation(
     body,
     updatedAt: context.now,
   };
-  await upsertProposal(context.executor, after);
+  await writeProposalStatus(context.executor, operation, after);
   return { status: 'updated', before, after };
 }
 

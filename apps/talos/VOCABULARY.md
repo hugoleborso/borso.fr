@@ -144,7 +144,7 @@ Lives in: `api/src/routine/`, `api/src/messages/`, `site/src/lib/claude-code-add
 - Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
 - The repository Claude Code opens is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
 
-Not to be confused with: a run, which Talos starts on a schedule or after a proposal decision.
+Not to be confused with: a routine run, which a message or a proposal decision starts and which is what the API keeps; nor a run report, which says when a scheduled scan last went through.
 
 ## Routine run
 
@@ -154,8 +154,9 @@ Lives in: `api/src/routine/`, `site/src/lib/routine-run.core.ts`
 
 - Code: `routineRunTable` and its row `RoutineRunRow` (`firedAt`, `trigger`, `subject`, `sessionUrl`), answered by the API as `RoutineRun`; `RoutineTrigger` (`proposition` or `message`, the word that starts the fired line, so it stays in French for a decision).
 - `subject` is the proposal's memory slug, or the message cut to 200 characters (`cutMessageSubject`).
-- `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it starts with `https://claude.ai/code/` (`readSessionUrl`), `null` otherwise.
+- `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it is `https://claude.ai/code/` followed by a plain path (`readSessionUrl`), `null` otherwise.
 - A fire that fails, or that is skipped because no `fire-url` is set, leaves no run.
+  Held by: `api/src/routine/routine.controller.test.ts` › answers 503 and stores nothing while no fire url is configured
 
 Not to be confused with: a run report, which says when a scheduled scan last went through; a routine run is started by the owner and has a conversation to open.
 

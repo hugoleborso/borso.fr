@@ -3,16 +3,10 @@ import { RECENT_ROUTINE_RUN_LIMIT } from '@domain/routine-run.core';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { reportUnhandledError } from '../helpers/observability/error-reporting.adapter';
 import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
-import type { RoutineTrigger } from '../helpers/routine/routine-fire.core';
 import { cutMessageSubject } from './routine.core';
 import { insertRoutineRun, listNewestRoutineRuns, type RoutineRunRow } from './routine.repository';
 
-interface FiredRun {
-  readonly trigger: RoutineTrigger;
-  readonly subject: string;
-  readonly sessionUrl: string | null;
-  readonly firedAt: Date;
-}
+type FiredRun = Omit<RoutineRunRow, 'id'>;
 
 async function storeRoutineRun(firedRun: FiredRun): Promise<RoutineRunRow> {
   const run = { id: randomUUID(), ...firedRun };

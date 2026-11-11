@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  isRoutineUnconfigured,
+  isRoutineConfigured,
   placeNewestRunFirst,
   selectTriggerLabelKey,
 } from './routine-run.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('isRoutineUnconfigured', () => {
-  it('recognises the 503 the API answers while no fire url is set', () => {
-    expect(isRoutineUnconfigured({ status: 503 })).toBe(true);
+describe('isRoutineConfigured', () => {
+  it('reads the 503 the API answers while no fire url is set as a routine not configured', () => {
+    expect(isRoutineConfigured({ status: 503 })).toBe(false);
   });
 
   it.each([
@@ -16,8 +16,8 @@ describe('isRoutineUnconfigured', () => {
     ['a failure without a status', new Error('réseau coupé')],
     ['no failure', null],
     ['a failure that is not an object', '503'],
-  ])('leaves %s as it is', (_case, failure) => {
-    expect(isRoutineUnconfigured(failure)).toBe(false);
+  ])('keeps the routine configured after %s', (_case, failure) => {
+    expect(isRoutineConfigured(failure)).toBe(true);
   });
 });
 

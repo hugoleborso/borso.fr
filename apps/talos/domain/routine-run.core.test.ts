@@ -21,6 +21,7 @@ describe('canSendMessage', () => {
     ['nothing', ''],
     ['spaces alone', ' \n\t '],
     ['4001 characters', 'a'.repeat(4001)],
+    ['a NUL character', 'a\u0000b'],
   ])('refuses %s', (_case, text) => {
     expect(canSendMessage(text)).toBe(false);
   });

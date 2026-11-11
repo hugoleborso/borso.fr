@@ -13,6 +13,6 @@ export async function listNewestRoutineRuns(limit: number): Promise<RoutineRunRo
   return await getDatabase()
     .select()
     .from(routineRunTable)
-    .orderBy(desc(routineRunTable.firedAt))
+    .orderBy(desc(routineRunTable.firedAt), desc(routineRunTable.id))
     .limit(limit);
 }

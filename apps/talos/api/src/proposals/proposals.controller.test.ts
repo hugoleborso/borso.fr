@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn, useTestSecrets } from '../../../test/app-utils';
 import { truncateAllTables } from '../../../test/database-utils';
@@ -42,6 +43,35 @@ async function readStoredProposalPage(): Promise<string> {
   );
   const page: { markdown: string } = await response.json();
   return page.markdown;
+}
+
+async function sendTogether(send: () => Promise<Response>): Promise<number[]> {
+  const answers = await Promise.all([send(), send()]);
+  return answers.map((answer) => answer.status).toSorted((left, right) => left - right);
+}
+
+async function countPwaStatusChanges(): Promise<number> {
+  return (await readMemoryEvents()).filter((event) => event.actor === 'pwa').length;
+}
+
+async function changeStatusAsAgent(expectedStatus: string | undefined): Promise<Response> {
+  const { app } = buildTestContext();
+  return await requestJson(app, '/api/agent/changes', {
+    method: 'POST',
+    headers: { authorization: 'Bearer jeton-agent-mac' },
+    body: {
+      idempotencyKey: `statut-${String(expectedStatus)}`,
+      actor: 'talos-test',
+      operations: [
+        {
+          op: 'proposal.status',
+          slug: `etat/propositions/${STORED_PROPOSAL}`,
+          status: 'traitee',
+          ...(expectedStatus === undefined ? {} : { expectedStatus }),
+        },
+      ],
+    },
+  });
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -115,6 +145,67 @@ describe('the proposal routes', () => {
     expect(again.status).toBe(409);
   });
 
+  it('lets one of two decisions sent together win, and refuses the other without firing', async () => {
+    const fetcher = vi.fn(async () => await answerSession(SESSION_URL));
+    vi.stubGlobal('fetch', fetcher);
+    const { app } = buildTestContext();
+    configureRoutine();
+    const cookie = await signIn();
+    const statuses = await sendTogether(
+      async () =>
+        await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {
+          method: 'POST',
+          body: { decision: 'acceptee' },
+          cookie,
+        }),
+    );
+    expect(statuses).toEqual([200, 409]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(await getDatabase().select().from(routineRunTable)).toHaveLength(1);
+    expect((await readStoredProposalPage()).match(/ : acceptée/g)).toHaveLength(1);
+    expect(await countPwaStatusChanges()).toBe(1);
+  });
+
+  it('lets one of two cancellations sent together win, and refuses the other', async () => {
+    const { app } = buildTestContext();
+    const cookie = await signIn();
+    await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {
+      method: 'POST',
+      body: { decision: 'refusee' },
+      cookie,
+    });
+    const statuses = await sendTogether(
+      async () =>
+        await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {
+          method: 'DELETE',
+          cookie,
+        }),
+    );
+    expect(statuses).toEqual([200, 409]);
+    const page = await readStoredProposalPage();
+    expect(page).toContain('statut: proposee');
+    expect(page.match(/ : décision annulée/g)).toHaveLength(1);
+    expect(await countPwaStatusChanges()).toBe(2);
+  });
+
+  it('refuses a status change whose expected status is stale, and writes nothing', async () => {
+    const response = await changeStatusAsAgent('acceptee');
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: `statut attendu périmé : etat/propositions/${STORED_PROPOSAL}`,
+    });
+    expect(await readStoredProposalPage()).toContain('statut: proposee');
+  });
+
+  it.each([
+    ['the expected status is the stored one', 'proposee'],
+    ['no expected status is given', undefined],
+  ])('changes the status when %s', async (_case, expectedStatus) => {
+    const response = await changeStatusAsAgent(expectedStatus);
+    expect(response.status).toBe(200);
+    expect(await readStoredProposalPage()).toContain('statut: traitee');
+  });
+
   it('cancels a decision in the memory without firing anything', async () => {
     const fetcher = vi.fn(async () => await Promise.resolve(new Response('{}', { status: 200 })));
     vi.stubGlobal('fetch', fetcher);
@@ -177,10 +268,6 @@ describe('the proposal routes', () => {
       async () => await Promise.resolve(new Response('{}', { status: 500 })),
     ],
     ['the network fails', async () => await Promise.reject(new Error('réseau coupé'))],
-    [
-      'the run cannot be stored',
-      async () => await answerSession('https://claude.ai/code/session_\u0000'),
-    ],
   ])('answers the decision unchanged and stores no run when %s', async (_case, answer) => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     answerFireWith(answer);
@@ -191,6 +278,29 @@ describe('the proposal routes', () => {
       body: { decision: 'acceptee' },
       cookie: await signIn(),
     });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject(DECIDED_PROPOSAL);
+    expect(await readStoredProposalPage()).toContain('statut: acceptee');
+    expect(await getDatabase().select().from(routineRunTable)).toEqual([]);
+    vi.restoreAllMocks();
+  });
+
+  it('answers the decision unchanged when the run cannot be stored', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    answerFireWith(async () => await answerSession('https://claude.ai/code/session_1'));
+    const { app } = buildTestContext();
+    configureRoutine();
+    const cookie = await signIn();
+    await getDatabase().execute(sql`alter table routine_run rename to routine_run_away`);
+    const decide = async (): Promise<Response> =>
+      await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {
+        method: 'POST',
+        body: { decision: 'acceptee' },
+        cookie,
+      });
+    const response = await decide().catch((error: unknown) => error);
+    await getDatabase().execute(sql`alter table routine_run_away rename to routine_run`);
+    if (!(response instanceof Response)) throw response;
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject(DECIDED_PROPOSAL);
     expect(await readStoredProposalPage()).toContain('statut: acceptee');
