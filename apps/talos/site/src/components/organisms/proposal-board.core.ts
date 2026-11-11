@@ -12,6 +12,7 @@ export interface ProposalShape {
   readonly expiresOn?: string;
 }
 
+const EXPIRED_STATUS = 'expiree';
 const PRIORITY_RANK: Readonly<Record<string, number>> = { haute: 0, normale: 1, basse: 2 };
 const UNKNOWN_PRIORITY_RANK = 1;
 
@@ -43,6 +44,26 @@ export function partitionProposals<Proposal extends ProposalShape>(
       .filter((proposal) => !isPending(proposal) && !isExpired(proposal))
       .toSorted(compareNewestFirst),
   };
+}
+
+export const PROPOSALS_PATH = '/proposals';
+
+export function buildProposalHref(slug: string): string {
+  return `${PROPOSALS_PATH}/${slug}`;
+}
+
+export function findProposal<Proposal extends { readonly slug: string }>(
+  proposals: readonly Proposal[],
+  slug: string,
+): Proposal | null {
+  return proposals.find((proposal) => proposal.slug === slug) ?? null;
+}
+
+export function selectProposalStatus(
+  proposal: Pick<ProposalShape, 'status' | 'expiresOn'>,
+  today: string,
+): string {
+  return isProposalExpired(proposal, today) ? EXPIRED_STATUS : proposal.status;
 }
 
 const PRIORITY_TONE: Readonly<Record<string, ChipTone>> = {

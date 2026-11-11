@@ -8,6 +8,16 @@ describe('notifySchema', () => {
     ).toEqual({ title: 'Brief', message: 'Prêt', urgent: true, url: '/aujourdhui' });
   });
 
+  it('accepts the direct link to one proposal card', () => {
+    expect(
+      notifySchema.parse({
+        title: 'Déjà faits ?',
+        message: '3 engagements',
+        url: '/proposals/2026-11-11-faits',
+      }).url,
+    ).toBe('/proposals/2026-11-11-faits');
+  });
+
   it.each([
     ['an empty title', { title: ' ', message: 'x' }],
     ['a title too long', { title: 'x'.repeat(201), message: 'x' }],

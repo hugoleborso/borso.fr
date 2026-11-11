@@ -15,6 +15,7 @@ import {
   loadLoginPage,
   loadMessagePage,
   loadPastBriefPage,
+  loadProposalPage,
   loadProposalsPage,
   loadRelationsPage,
   loadSettingsPage,
@@ -28,6 +29,7 @@ const LoginPage = lazy(async () => ({ default: (await loadLoginPage()).LoginPage
 const TodayPage = lazy(async () => ({ default: (await loadTodayPage()).TodayPage }));
 const TodosPage = lazy(async () => ({ default: (await loadTodosPage()).TodosPage }));
 const ProposalsPage = lazy(async () => ({ default: (await loadProposalsPage()).ProposalsPage }));
+const ProposalPage = lazy(async () => ({ default: (await loadProposalPage()).ProposalPage }));
 const CommitmentsPage = lazy(async () => ({
   default: (await loadCommitmentsPage()).CommitmentsPage,
 }));
@@ -65,6 +67,7 @@ export function App(): JSX.Element {
               <Route path={TODO_LIST_ROUTES.main} element={<TodosPage list="main" />} />
               <Route path={TODO_LIST_ROUTES.work} element={<TodosPage list="work" />} />
               <Route path="/proposals" element={<ProposalsPage />} />
+              <Route path="/proposals/:slug" element={<ProposalPage />} />
               <Route
                 path={`${TODO_LIST_ROUTES.main}/:id`}
                 element={<TodoDetailPage list="main" />}
