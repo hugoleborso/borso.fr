@@ -22,6 +22,7 @@ import {
 } from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
+import { selectLogGroupRemovalPolicy } from '../internal/stage-wiring.utils.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -160,6 +161,7 @@ export class DsqlSchema extends Construct {
 
     const runnerLogGroup = new LogGroup(this, 'MigrationRunnerLogs', {
       retention: RetentionDays.ONE_WEEK,
+      removalPolicy: selectLogGroupRemovalPolicy(props.stage),
     });
     this.runnerFn = new NodejsFunction(this, 'MigrationRunner', {
       entry: resolveRunnerEntry(),
@@ -185,6 +187,7 @@ export class DsqlSchema extends Construct {
 
     const providerLogGroup = new LogGroup(this, 'ProviderLogs', {
       retention: RetentionDays.ONE_WEEK,
+      removalPolicy: selectLogGroupRemovalPolicy(props.stage),
     });
     const provider = new Provider(this, 'Provider', {
       onEventHandler: this.runnerFn,

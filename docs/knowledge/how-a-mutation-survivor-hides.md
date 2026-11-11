@@ -1,5 +1,5 @@
 ---
-summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, dead code to delete, a call made at `describe` level that per-test coverage credits to no test, and `toHaveBeenCalledWith` reading a property set to `undefined` as absent.'
+summary: 'Ways a mutant survives a test that looks sufficient: a one-line `Stryker disable`, `toContain` blind to a prepended digit, an equivalent mutant, dead code, a call at `describe` level credited to no test, `toHaveBeenCalledWith` blind to `undefined`, and a `vi.resetModules` re-import that makes ignored static constants live.'
 triggers:
   output:
     - '#\d+\.\s*\[Survived\]'
@@ -154,3 +154,24 @@ that made the streaks report send `{ body: undefined }` for a plain `Error`
 survived, because the test expected the call without `body` (commit
 `4a12e46`). Compare the call with `toStrictEqual` on `mock.calls[0]`, which
 tells the two apart.
+
+## A test that re-imports a module turns its constants into live mutants
+
+A constant declared at the top of a module is evaluated once, when the module
+loads, which Stryker calls a static mutant. `stryker.shared.js` sets
+`ignoreStatic: true`, so those are normally skipped. A test that calls
+`vi.resetModules()` and imports the module again evaluates the constant inside
+that test, so per-test coverage credits the constant to it and Stryker runs
+the mutant against that test alone (inferred from `ignoreStatic` and the
+two log lines below).
+
+On PR #290 the adapter test re-imported `wide-event.core.ts`. Its constants
+were then tested only by the adapter test, which never read them, and they
+survived though the core test asserted their values (logged by `wide-events`
+and `wide-events-rollout`). They passed once the one function that read them,
+`selectRouteName`, moved to a module the adapter does not import.
+
+Read a surviving constant as a question about which test loads its module.
+Keep `vi.resetModules()` out of a test of a module that imports a gated one,
+or move the constant beside the function that reads it, in a module that
+test does not load.

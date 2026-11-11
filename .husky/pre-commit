@@ -362,5 +362,6 @@ done
 
 if [ -n "$failed" ]; then
   echo "[pre-commit] ERROR: these checks refused the commit; each printed its reason above:${failed}" >&2
+  echo "[pre-commit] Everything you staged is still staged. A later git add then git commit carries it too; commit the next change with git commit -- <paths>." >&2
   exit 1
 fi

@@ -1,3 +1,4 @@
+import { RemovalPolicy } from 'aws-cdk-lib';
 import { isProductionStage, type Stage } from './naming.utils.js';
 
 export const ALLOW_TEST_SEED_ENV_VAR = 'ALLOW_TEST_SEED';
@@ -26,4 +27,10 @@ export function selectSameOriginApiDomainName(
 
 export function isApiServedThroughCloudFront(stage: Stage, hasApi: boolean): boolean {
   return hasApi && isProductionStage(stage);
+}
+
+// @FollowsBlueprint construct-stage-selector
+export function selectLogGroupRemovalPolicy(stage: Stage): RemovalPolicy {
+  if (isProductionStage(stage)) return RemovalPolicy.RETAIN;
+  return RemovalPolicy.DESTROY;
 }
