@@ -105,6 +105,50 @@ describe('pre-push-range.sh', () => {
     });
   });
 
+  it('gates neither main nor the work already pushed when the push rebases onto main', () => {
+    const repository = createRepository();
+    const pushed = repository.commitFiles('feature', nineFiles());
+    repository.runGit('checkout', '-q', 'main');
+    repository.commitFiles('one line on main', { 'main.txt': 'm\n' });
+    repository.publishMain();
+    repository.runGit('checkout', '-q', 'feature');
+    repository.runGit('rebase', '-q', 'main');
+    repository.commitFiles('after the rebase', { 'extra.txt': 'x\n' });
+
+    expect(repository.gatedRange(pushed)).toEqual({
+      label:
+        'this push, minus what it replayed from the branch as last pushed and from origin/main',
+      files: ['extra.txt'],
+    });
+  });
+
+  it('gates a file both sides changed when the push rebases onto main', () => {
+    const repository = createRepository();
+    const pushed = repository.commitFiles('feature', { 'shared.txt': 'ONE\ntwo\nthree\n' });
+    repository.runGit('checkout', '-q', 'main');
+    repository.commitFiles('main', { 'shared.txt': 'one\ntwo\nTHREE\n' });
+    repository.publishMain();
+    repository.runGit('checkout', '-q', 'feature');
+    repository.runGit('rebase', '-q', 'main');
+
+    expect(repository.gatedRange(pushed).files).toEqual(['shared.txt']);
+  });
+
+  it('gates the branch since main when it restarts after its work was squash-merged', () => {
+    const repository = createRepository();
+    const pushed = repository.commitFiles('feature', nineFiles());
+    repository.runGit('checkout', '-q', 'main');
+    repository.commitFiles('the squash of feature', nineFiles());
+    repository.publishMain();
+    repository.runGit('checkout', '-q', '-B', 'feature', 'main');
+    repository.commitFiles('next piece', { 'next.txt': 'n\n' });
+
+    expect(repository.gatedRange(pushed)).toEqual({
+      label: 'the whole branch since main (the push rewrites the branch)',
+      files: ['next.txt'],
+    });
+  });
+
   it('gates neither main nor the work already pushed when the push merges main in', () => {
     const repository = createRepository();
     const pushed = repository.commitFiles('feature', nineFiles());

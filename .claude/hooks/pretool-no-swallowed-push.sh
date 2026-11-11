@@ -71,6 +71,18 @@ if grep -qE '(^|[[:space:]])(HUSKY=0[[:space:]]+)?git[[:space:]]+(commit|push)([
   exit 2
 fi
 
+# A force-push without a lease overwrites whatever the remote branch holds,
+# another session's commits included. With a lease it fails instead when the
+# remote moved since the last fetch, so the operator allows it with no
+# confirmation (CLAUDE.md) and the bare form is refused here.
+if grep -qE '(^|[|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?[[:space:]](--force|-f)([[:space:]]|$)' <<<"$PIPELINES"; then
+  echo "[no-swallowed-push] a force-push without a lease overwrites commits it never fetched." >&2
+  echo "[no-swallowed-push] Push with a lease instead, which refuses when the remote moved:" >&2
+  echo "[no-swallowed-push]   git push --force-with-lease -u origin <branch>" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "force-pushed without --force-with-lease"
+  exit 2
+fi
+
 # A pipeline already made safe by an explicit `pipefail` keeps the real status.
 if grep -qE '(^|[|[:space:]])git[[:space:]]+(push|commit)([[:space:]][^|]*)?>[[:space:]]*/dev/null' <<<"$PIPELINES"; then
   echo "[no-swallowed-push] git's errors and every pre-commit or pre-push refusal go to stderr, and" >&2

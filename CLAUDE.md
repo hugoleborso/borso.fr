@@ -5,7 +5,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 ## Principles
 
 - **Restate the goal first.** Your first message, every subagent brief and every PR's Why state the goal and the smallest change that meets it. If the evidence rules out the requested change, show the evidence and stop.
-- **Never block on the human.** Do reversible work, then present it. Settle a question whose answer can be observed with a prototype or a command. Ask only for product calls and irreversible actions (merge, delete, force-push, an external message).
+- **Never block on the human.** Do reversible work, then present it. Settle a question whose answer can be observed with a prototype or a command. Ask only for product calls and irreversible actions (merge, delete, a force-push without lease, an external message).
 - **Log what you lack the rights for.** A task that needs AWS write, IAM, repository settings, a secret, an operator dispatch or a third-party console goes in a row of `docs/operator-backlog.md`, in the pull request that found it.
 - **Attack the premise.** When two fixes that rest on one premise fail the same gate, write the premise down and test it before a third fix.
 - **Encode lessons in structure, subtract first.** A lesson a hook, a type or a gate can hold ships as that alone. The written instruction is the symptom. A kaizen removes something before it adds anything.
@@ -81,6 +81,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Commits, pull requests, merges
 
+- Bring `main` into a branch by rebasing onto it, then `git push --force-with-lease`. A push with a lease needs no confirmation. A bare `--force` is refused by `pretool-no-swallowed-push.sh`.
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos`.

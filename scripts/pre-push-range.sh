@@ -28,12 +28,28 @@ if [ -z "$remote_sha" ]; then
 fi
 
 # A remote sha that HEAD does not descend from means the push rewrites the
-# branch: a force push after `git checkout -B <branch> origin/main`, which is
-# how a branch whose pull request was squash-merged starts its next piece of
-# work. Such a branch is new work on main, so its base is main. See
-# docs/dantotsus/a-force-push-re-gated-everything-main-had-merged.md.
+# branch. Two rewrites look alike here and need opposite bases.
+#
+# A rebase replays the branch as last pushed onto a newer main, so HEAD still
+# holds all of that work: merging the remote sha into HEAD changes nothing.
+# Both of the states it combines were gated, so it takes the same base as a
+# push that merges main in, below. Rebasing with --force-with-lease is the
+# repository's way to bring main in (CLAUDE.md), and gating the whole branch
+# on every rebase would undo what that base saves.
+#
+# A restart is `git checkout -B <branch> origin/main` after the pull request
+# was squash-merged, or a branch abandoned for a new start. Its earlier work is
+# either in main already or gone, so it is new work on main and its base is
+# main. See docs/dantotsus/a-force-push-re-gated-everything-main-had-merged.md.
+combined_label="this push, minus the commits it merged from origin/main"
 if ! git merge-base --is-ancestor "$remote_sha" HEAD 2>/dev/null; then
-  report "$whole_branch" "the whole branch since main (the push rewrites the branch)"
+  holds_pushed=$(git merge-tree --write-tree --no-messages "$remote_sha" HEAD 2>/dev/null) || true
+  main_holds_pushed=$(git merge-tree --write-tree --no-messages "$remote_sha" "$main_merged" 2>/dev/null) || true
+  if [ "${holds_pushed%%$'\n'*}" != "$(git rev-parse 'HEAD^{tree}')" ] ||
+    [ "${main_holds_pushed%%$'\n'*}" = "$(git rev-parse "$main_merged^{tree}")" ]; then
+    report "$whole_branch" "the whole branch since main (the push rewrites the branch)"
+  fi
+  combined_label="this push, minus what it replayed from the branch as last pushed and from origin/main"
 fi
 
 # An ordinary push: main is already behind what the branch last pushed, so the
@@ -60,7 +76,7 @@ fork=$(git merge-base "$remote_sha" "$main_merged")
 merged=$(git merge-tree --write-tree --no-messages "$remote_sha" "$main_merged" 2>/dev/null) || true
 merged_tree=${merged%%$'\n'*}
 if ! git cat-file -e "$merged_tree^{tree}" 2>/dev/null; then
-  report "$main_merged" "this push, minus the commits it merged from origin/main (git cannot merge without a worktree here, so the branch's earlier work is gated again)"
+  report "$main_merged" "$combined_label (git cannot merge without a worktree here, so the branch's earlier work is gated again)"
 fi
 
 index=$(mktemp)
@@ -84,4 +100,4 @@ base=$(
     commit-tree --no-gpg-sign "$base_tree" -p "$remote_sha" -p "$main_merged" \
     -m "pre-push: the branch as last pushed, combined with the main it merged"
 )
-report "$base" "this push, minus the commits it merged from origin/main"
+report "$base" "$combined_label"

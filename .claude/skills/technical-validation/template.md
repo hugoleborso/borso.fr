@@ -35,7 +35,7 @@ Read the spec, read the plan if present, resolve the diff against base_ref, and 
 
 Every FAIL row states a concrete failing case: this input leads to this wrong result, and is typed blocking or non-blocking. A concern without one goes in Notes as a question.
 
-Round 2 reviews only `git diff <Reviewed sha of previous_report>..HEAD` and re-checks each round-1 blocking finding.
+Round 2 reviews only `git diff <Reviewed sha of previous_report>..HEAD`, or the replayed form your definition gives when the branch was rebased, and re-checks each round-1 blocking finding.
 
 Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL (blocking) / FAIL (non-blocking) / UNVERIFIABLE. Aggregate to PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 

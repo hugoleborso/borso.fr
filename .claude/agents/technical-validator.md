@@ -145,7 +145,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 ## Procedure
 
 1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first.
-2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding.
+2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding. When `git merge-base --is-ancestor <reviewed-sha> HEAD` fails, the branch was rebased onto main between rounds, and that diff would carry main's commits. Diff from the reviewed state replayed onto main instead: `git diff --name-status "$(git merge-tree --write-tree <reviewed-sha> <base_ref> | head -1)" HEAD`.
 3. **Walk category A** — correctness vs spec. One row per Q.O.D. user-visible decision + one row per Files-to-change entry. Quote 2–4 lines of evidence per row.
 4. **Walk category B** — code cleanliness. Run lint, search for forbidden patterns, sample 3–5 representative names from the changed code, then read each changed source file in full against the standards checklist.
 5. **Walk category C** — tests pass. Identify workspaces, run their test scripts, capture results.

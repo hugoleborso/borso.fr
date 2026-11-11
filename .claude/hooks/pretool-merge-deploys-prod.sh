@@ -35,7 +35,7 @@
 # Best-effort by contract: it exits 0 and never asks for a confirmation — the
 # operator's instruction is the gate. The one refusal is not a confirmation:
 # when main moved after CI started and both sides changed a file, it exits 2
-# and names a reversible step (merge main in, wait for CI) the session takes
+# and names a reversible step (rebase onto main, push with a lease, wait for CI) the session takes
 # on its own, because a notice in additionalContext is read only after the
 # merge has run.
 
@@ -147,7 +147,7 @@ if [[ "$PR" =~ ^[0-9]+$ ]] && [ -n "$COMPARED_HEAD" ] && command -v gh >/dev/nul
           printf '%s\n' "$SUBJECTS"
           echo "[merge-on-moved-base] Files both sides changed:"
           printf '%s\n' "$BOTH"
-          echo "[merge-on-moved-base] Merge $BASE_BRANCH into the branch, push, wait for the check_suite event, then merge."
+          echo "[merge-on-moved-base] Rebase the branch onto $BASE_BRANCH, git push --force-with-lease, wait for the check_suite event, then merge."
         } >&2
         "$(dirname "$0")/kaizen-refusal.sh" merge-on-moved-base "tried to merge a pull request beside base commits no CI run tested with it"
         exit 2
