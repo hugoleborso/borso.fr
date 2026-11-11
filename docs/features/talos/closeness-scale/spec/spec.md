@@ -26,7 +26,7 @@ The owner decided on 2026-11-11, after seeing the first version, that a page tha
 | 1 | Contexte | It helps understand the rest |
 | 0 | Périphérie | Known, with no stake for him |
 
-These six names are a proposal, put to the owner in the pull request. The field keeps its name `proximite` everywhere.
+The owner validated these six names on 2026-11-11. The field keeps its name `proximite` everywhere.
 
 ## What the code does today (read on 2026-11-11)
 
