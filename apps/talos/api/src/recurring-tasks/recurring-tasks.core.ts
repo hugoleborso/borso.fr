@@ -14,7 +14,7 @@ export interface RecurringTask {
 
 export interface RecurringTasks {
   readonly generatedAt: string | null;
-  readonly tasks: RecurringTask[];
+  readonly tasks: readonly RecurringTask[];
 }
 
 const TITLE_FIELD = 'titre';

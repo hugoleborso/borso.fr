@@ -89,6 +89,7 @@ Lives in: `api/src/recurring-tasks/`
 - Code: `RecurringTasks` (`generatedAt` for `genere`, `tasks` for `taches`), `RecurringTask` (`id`, `title` for `titre`, `cadence`, `routine`, `what` for `quoi`, `lastRunOn` for `dernier`, `nextRunOn` for `prochain`, `isDue` for `due`).
 - The values of `cadence` (`hebdomadaire`, `mensuelle`, `trimestrielle`) and of `routine` (`nuit`, `dimanche`, `collecte-mac`) stay in French: they are data.
 - Read only. The app never writes the state.
+Held by: `api/src/recurring-tasks/recurring-tasks.controller.test.ts` › answers 404 to a POST, a PUT and a DELETE and leaves the state as written
 
 Not to be confused with: a routine run, which is one firing of the routine by a decision or a message; a todo, which the owner does himself.
 
@@ -168,7 +169,7 @@ Lives in: `api/src/routine/`, `site/src/lib/routine-run.core.ts`
 - `subject` is the proposal's memory slug, or the message cut to 200 characters (`cutMessageSubject`).
 - `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it is `https://claude.ai/code/` followed by a plain path (`readSessionUrl`), `null` otherwise.
 - A fire that fails, or that is skipped because no `fire-url` is set, leaves no run.
-  Held by: `api/src/routine/routine.controller.test.ts` › answers 503 and stores nothing while no fire url is configured
+Held by: `api/src/routine/routine.controller.test.ts` › answers 503 and stores nothing while no fire url is configured
 
 Not to be confused with: a run report, which says when a scheduled scan last went through; a routine run is started by the owner and has a conversation to open.
 

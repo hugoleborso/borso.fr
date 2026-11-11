@@ -75,6 +75,16 @@ describe('the index of the day', () => {
     expect(tiles.some((tile) => tile.className.includes(ALERT_CLASS))).toBe(false);
   });
 
+  it('shows no count on the recurring tile until its count is known, the tile kept in place', () => {
+    const tiles = renderIndex({ ...COUNTS, dueRecurringTaskCount: undefined });
+    expect(tiles.map((tile) => tile.textContent).slice(5, 8)).toStrictEqual([
+      '6Relations',
+      'Récurrentes',
+      'Lancements',
+    ]);
+    expect(tiles[6]?.className).not.toContain(ALERT_CLASS);
+  });
+
   it('raises the alert only on the overdue and the recurring tiles when they are not zero', () => {
     const tiles = renderIndex(COUNTS);
     expect(

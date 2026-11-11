@@ -9,7 +9,7 @@ import { DISPLAY_LOCALE, formatLongDay, toIsoDay } from '../../lib/calendar-day.
 import { useRecurringTasks } from '../../lib/queries/recurring-tasks.queries';
 import { useToday } from '../../lib/queries/today.queries';
 import { NotificationsPrompt } from './NotificationsPrompt';
-import { countDueTasks } from './recurring-task-board.core';
+import { countDueTasksOnceLoaded } from './recurring-task-board.core';
 import { ScanStatus } from './ScanStatus';
 import { countOverdueTodos, splitAwaitedCommitments } from './today-agenda.core';
 import { TodayActivity } from './TodayActivity';
@@ -60,7 +60,7 @@ export function TodayOverview(): JSX.Element {
             awaitedCommitmentCount={today.data.commitmentCounts.awaited}
             readyDraftCount={today.data.readyDraftCount}
             reconnectCount={today.data.reconnectCount}
-            dueRecurringTaskCount={countDueTasks(recurring.data?.tasks ?? [])}
+            dueRecurringTaskCount={countDueTasksOnceLoaded(recurring.data?.tasks)}
           />
           <NotificationsPrompt />
           <TodayBirthdays birthdays={today.data.soonBirthdays} />

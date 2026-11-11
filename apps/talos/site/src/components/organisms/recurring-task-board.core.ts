@@ -14,3 +14,9 @@ export function orderRecurringTasks<Task extends ScheduledTask>(tasks: readonly 
 export function countDueTasks(tasks: readonly ScheduledTask[]): number {
   return tasks.filter((task) => task.isDue).length;
 }
+
+export function countDueTasksOnceLoaded(
+  tasks: readonly ScheduledTask[] | undefined,
+): number | undefined {
+  return tasks === undefined ? undefined : countDueTasks(tasks);
+}

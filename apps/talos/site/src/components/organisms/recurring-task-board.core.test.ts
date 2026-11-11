@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { countDueTasks, orderRecurringTasks } from './recurring-task-board.core';
+import {
+  countDueTasks,
+  countDueTasksOnceLoaded,
+  orderRecurringTasks,
+} from './recurring-task-board.core';
 
 const TASKS = [
   { id: 'calm-late', isDue: false, nextRunOn: '2026-12-01' },
@@ -33,5 +37,16 @@ describe('countDueTasks', () => {
   it('counts the tasks whose next run is reached', () => {
     expect(countDueTasks(TASKS)).toBe(2);
     expect(countDueTasks([])).toBe(0);
+  });
+});
+
+describe('countDueTasksOnceLoaded', () => {
+  it('answers no count while the tasks are not loaded', () => {
+    expect(countDueTasksOnceLoaded(undefined)).toBeUndefined();
+  });
+
+  it('counts the due tasks once they are loaded, zero included', () => {
+    expect(countDueTasksOnceLoaded(TASKS)).toBe(2);
+    expect(countDueTasksOnceLoaded([])).toBe(0);
   });
 });

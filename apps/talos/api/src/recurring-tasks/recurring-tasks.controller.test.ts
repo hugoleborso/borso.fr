@@ -39,6 +39,24 @@ describe('GET /api/recurring-tasks', () => {
     expect(await response.json()).toEqual({ generatedAt: null, tasks: [] });
   });
 
+  it('answers 404 to a POST, a PUT and a DELETE and leaves the state as written', async () => {
+    await seedMemoryInDatabase();
+    const { app } = buildTestContext();
+    const cookie = await signIn();
+    const before = await (await requestJson(app, '/api/recurring-tasks', { cookie })).text();
+    for (const method of ['POST', 'PUT', 'DELETE'] as const) {
+      const response = await requestJson(app, '/api/recurring-tasks', {
+        method,
+        cookie,
+        body: { generatedAt: null, tasks: [] },
+      });
+      expect(response.status).toBe(404);
+    }
+    const after = await (await requestJson(app, '/api/recurring-tasks', { cookie })).text();
+    expect(after).toBe(before);
+    expect(after).toContain('veille-meteo');
+  });
+
   it('refuses a request without a session', async () => {
     const { app } = buildTestContext();
     expect((await requestJson(app, '/api/recurring-tasks')).status).toBe(401);

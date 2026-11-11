@@ -14,7 +14,7 @@ export interface TodayIndexProps {
   readonly awaitedCommitmentCount: number;
   readonly readyDraftCount: number;
   readonly reconnectCount: number;
-  readonly dueRecurringTaskCount: number;
+  readonly dueRecurringTaskCount: number | undefined;
 }
 
 interface Tile {
@@ -97,7 +97,7 @@ export function TodayIndex({
       key: 'recurring',
       to: '/recurring',
       icon: 'scan',
-      count: dueRecurringTaskCount,
+      ...(dueRecurringTaskCount === undefined ? {} : { count: dueRecurringTaskCount }),
       label: t('today.counters.recurring'),
       isAlert: true,
       subject: { kind: 'recurring' },
@@ -106,7 +106,7 @@ export function TodayIndex({
       key: 'runs',
       to: ROUTINE_RUN_LIST_PATH,
       icon: 'send',
-      label: t('message.runs.title'),
+      label: t('today.index.runs'),
       isAlert: false,
     },
     {
