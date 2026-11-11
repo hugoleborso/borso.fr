@@ -4,6 +4,7 @@ triggers:
   commands:
     - 'workflow_dispatch|actions_run_trigger'
     - 'gh auth status'
+    - 'gh pr (view|checks|status|list)\b'
   output:
     - 'The token in GH_TOKEN is invalid'
     - 'GitHub GraphQL is not available'
