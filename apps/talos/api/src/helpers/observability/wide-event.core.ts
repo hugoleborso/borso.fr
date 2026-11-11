@@ -26,9 +26,7 @@ const SERVICE_NAME = 'talos-api';
 const FIRST_REFUSED_STATUS = 400;
 const FIRST_FAILED_STATUS = 500;
 const NON_ERROR_TYPE = 'NonErrorThrown';
-const REQUEST_ID_FIELD = 'request.id';
 const OUTCOME_FIELD = 'outcome';
-const DETACHED_KIND = 'detached';
 
 function isPresent(
   entry: readonly [string, WideEventValue | undefined],
@@ -111,24 +109,6 @@ export function mergeWideEventFields(
     merged[key] = isStringList(held) && isStringList(value) ? [...held, ...value] : value;
   }
   return merged;
-}
-
-export function buildDetachedFields(
-  stage: string | undefined,
-  requestId: string | undefined,
-  fields: WideEventFields,
-): WideEventFields {
-  return dropAbsentValues({
-    ...buildServiceFields(stage),
-    'event.kind': DETACHED_KIND,
-    [REQUEST_ID_FIELD]: requestId,
-    ...fields,
-  });
-}
-
-export function selectRequestId(fields: WideEventFields): string | undefined {
-  const requestId = fields[REQUEST_ID_FIELD];
-  return typeof requestId === 'string' ? requestId : undefined;
 }
 
 export function serializeWideEvent(fields: WideEventFields): string {
