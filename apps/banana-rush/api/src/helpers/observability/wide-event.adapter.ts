@@ -1,12 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import {
-  buildDetachedFields,
   buildFailureFields,
   buildOpeningFields,
   buildReturnedFields,
   mergeWideEventFields,
   type OptionalWideEventFields,
-  selectRequestId,
   serializeWideEvent,
   type WideEventFields,
 } from './wide-event.core';
@@ -16,7 +14,6 @@ export type { WideEventFields, WideEventValue } from './wide-event.core';
 
 interface WideEventScope {
   fields: WideEventFields;
-  isEmitted: boolean;
 }
 
 const openScopes = new AsyncLocalStorage<WideEventScope>();
@@ -39,7 +36,6 @@ export async function runInWideEvent<Answer>(
       { stage: readServiceStage(), isColdStart: isFirstEventOfInstance },
       baseFields,
     ),
-    isEmitted: false,
   };
   let endingFields: WideEventFields = {};
   try {
@@ -51,24 +47,12 @@ export async function runInWideEvent<Answer>(
     throw error;
   } finally {
     scope.fields = mergeWideEventFields(scope.fields, endingFields);
-    scope.isEmitted = true;
     emitWideEvent(scope.fields);
   }
 }
 
-function findOpenScope(): WideEventScope | null {
-  const scope = openScopes.getStore();
-  return scope?.isEmitted === false ? scope : null;
-}
-
 export function addWideEventFields(fields: WideEventFields): void {
-  const openScope = findOpenScope();
-  if (openScope !== null) {
-    openScope.fields = mergeWideEventFields(openScope.fields, fields);
-    return;
-  }
-  const requestId = selectRequestId(openScopes.getStore()?.fields ?? {});
-  process.stdout.write(
-    serializeWideEvent(buildDetachedFields(readServiceStage(), requestId, fields)),
-  );
+  const scope = openScopes.getStore();
+  if (scope === undefined) return;
+  scope.fields = mergeWideEventFields(scope.fields, fields);
 }
