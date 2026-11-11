@@ -153,19 +153,15 @@ describe('recordWideEvents', () => {
     expect(batchEvent).not.toHaveProperty('member.id');
   });
 
-  it('writes a field added after the answer left on a detached line naming the request', async () => {
+  it('writes nothing for a field added after the answer left, so the request keeps one line', async () => {
     const write = captureWrittenLines();
     const { app, settleLateWork } = buildRecordedApp();
 
     await app.request('/api/late');
     await settleLateWork();
 
-    const [requestEvent, detachedEvent] = readWrittenEvents(write);
-    expect(requestEvent).not.toHaveProperty('realtime.broadcast_failure');
-    expect(detachedEvent).toMatchObject({
-      'event.kind': 'detached',
-      'request.id': readRequestId(requestEvent),
-      'realtime.broadcast_failure': ['AggregateError'],
-    });
+    const events = readWrittenEvents(write);
+    expect(events).toStrictEqual([expect.objectContaining({ 'http.route': '/api/late' })]);
+    expect(events[0]).not.toHaveProperty('realtime.broadcast_failure');
   });
 });

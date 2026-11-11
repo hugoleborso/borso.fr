@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildDetachedFields,
   buildFailureFields,
   buildHttpEndingFields,
   buildOpeningFields,
@@ -239,33 +238,6 @@ describe('mergeWideEventFields', () => {
     mergeWideEventFields(held, { 'product.events': ['push_sent'] });
 
     expect(held).toStrictEqual({ 'product.events': ['take_created'] });
-  });
-});
-
-describe('buildDetachedFields', () => {
-  it('sends a late field on its own line, naming the request it belonged to', () => {
-    expect(
-      buildDetachedFields(SERVICE, REQUEST_ID, {
-        'realtime.broadcast_failure': ['AggregateError'],
-      }),
-    ).toStrictEqual({
-      'service.name': 'pragma-api',
-      'service.stage': 'prod',
-      'service.version': 'abc123',
-      'event.kind': 'detached',
-      'request.id': REQUEST_ID,
-      'realtime.broadcast_failure': ['AggregateError'],
-    });
-  });
-
-  it('leaves the request out when the field was added outside any request', () => {
-    expect(
-      buildDetachedFields(ANONYMOUS_SERVICE, undefined, { 'spotify.failure': ['TypeError'] }),
-    ).toStrictEqual({
-      'service.name': 'pragma-api',
-      'event.kind': 'detached',
-      'spotify.failure': ['TypeError'],
-    });
   });
 });
 

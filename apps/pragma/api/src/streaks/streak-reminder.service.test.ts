@@ -16,6 +16,7 @@ import {
 import { pushSubscriptionTable } from '../notifications/notifications.schema';
 import { studyTable } from '../studies/studies.schema';
 import { STREAK_REMINDER_JOB } from '@domain/scheduled-job.core';
+import { runInWideEvent } from '../helpers/observability/wide-event.adapter';
 import { handler } from '../main';
 import { runStreakReminder } from './streak-reminder.service';
 
@@ -194,7 +195,9 @@ describe('the 20:00 streak reminder (back-e2e)', () => {
     const band = await prepareBand();
     failPushTo(band, 'tom-phone', SERVER_ERROR_STATUS);
 
-    await runStreakReminder(PARIS_EVENING);
+    await runInWideEvent({}, async () => {
+      await runStreakReminder(PARIS_EVENING);
+    });
 
     expect(band.send).toHaveBeenCalledTimes(2);
     expect(readLoggedEvents(band.productEvents)).toContainEqual(

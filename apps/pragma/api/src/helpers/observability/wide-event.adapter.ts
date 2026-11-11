@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { recordAttributesOnActiveSpan } from './error-reporting.adapter';
 import { readErrorReportingInputs } from './error-reporting.environment';
 import {
-  buildDetachedFields,
   buildFailureFields,
   buildOpeningFields,
   buildReturnedFields,
@@ -18,7 +17,6 @@ export type { WideEventFields, WideEventValue } from './wide-event.core';
 
 interface WideEventScope {
   fields: WideEventFields;
-  isEmitted: boolean;
 }
 
 const openScopes = new AsyncLocalStorage<WideEventScope>();
@@ -48,7 +46,6 @@ export async function runInWideEvent<Answer>(
       { service: readServiceIdentity(), isColdStart: isFirstEventOfInstance, parentRequestId },
       baseFields,
     ),
-    isEmitted: false,
   };
   let endingFields: WideEventFields = {};
   try {
@@ -60,30 +57,12 @@ export async function runInWideEvent<Answer>(
     throw error;
   } finally {
     scope.fields = mergeWideEventFields(scope.fields, endingFields);
-    scope.isEmitted = true;
     emitWideEvent(scope.fields);
   }
 }
 
-function findOpenScope(): WideEventScope | null {
-  const scope = openScopes.getStore();
-  return scope?.isEmitted === false ? scope : null;
-}
-
 export function addWideEventFields(fields: WideEventFields): void {
-  const openScope = findOpenScope();
-  if (openScope !== null) {
-    openScope.fields = mergeWideEventFields(openScope.fields, fields);
-    return;
-  }
-  const requestId = selectRequestId(openScopes.getStore()?.fields ?? {});
-  process.stdout.write(
-    serializeWideEvent(buildDetachedFields(readServiceIdentity(), requestId, fields)),
-  );
-}
-
-export function addFieldsToOpenWideEvent(fields: WideEventFields): void {
-  const openScope = findOpenScope();
-  if (openScope === null) return;
-  openScope.fields = mergeWideEventFields(openScope.fields, fields);
+  const scope = openScopes.getStore();
+  if (scope === undefined) return;
+  scope.fields = mergeWideEventFields(scope.fields, fields);
 }

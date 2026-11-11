@@ -34,6 +34,28 @@ function buildRecordingPoster(answer: (connectionId: string) => Promise<unknown>
   return posts;
 }
 
+function captureWrittenLines() {
+  return vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+}
+
+function readWriteEvents(write: ReturnType<typeof captureWrittenLines>): unknown[] {
+  return write.mock.calls.flatMap(([line]) => {
+    const writtenEvent: unknown = JSON.parse(String(line));
+    const isWriteEvent =
+      typeof writtenEvent === 'object' &&
+      writtenEvent !== null &&
+      'http.request.method' in writtenEvent &&
+      writtenEvent['http.request.method'] === 'POST';
+    return isWriteEvent ? [writtenEvent] : [];
+  });
+}
+
+async function settlePendingWork(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 function buildReportingApp(budgetMilliseconds = 1_000) {
   const reportFailure = vi.fn<(failure: TaggedFailure) => void>();
   return { app: createApp({ realtime: { reportFailure, budgetMilliseconds } }), reportFailure };
@@ -204,6 +226,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
 
   afterEach(() => {
     useConnectionPoster(null);
+    vi.restoreAllMocks();
   });
 
   it('posts the root the write touched to every tab but the writer’s own', async () => {
@@ -212,6 +235,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     const { app, reportFailure } = buildReportingApp();
     await connectTab('reader', memberId, READER_TAB);
     await connectTab('writer', memberId, WRITER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -219,6 +243,9 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       { connectionId: 'reader', data: { kind: 'stale', written: ['tasks'] } },
     ]);
     expect(reportFailure).not.toHaveBeenCalled();
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'delivered' }),
+    ]);
   });
 
   it('tells every tab when the write carries no tab id', async () => {
@@ -279,6 +306,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp();
     await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -286,8 +314,14 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       name: 'RealtimeBroadcastFailed',
       tags: { 'realtime.written': 'tasks', 'realtime.code': 'AggregateError' },
     });
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({
+        'realtime.broadcast_outcome': 'failed',
+        'realtime.broadcast_failure': ['AggregateError'],
+        'realtime.broadcast_failure_message': ['RealtimeBroadcastFailed'],
+      }),
+    ]);
     expect(await listConnectionIds()).toStrictEqual(['reader']);
-    vi.restoreAllMocks();
   });
 
   it('reports a send that outlives its budget and answers the write without waiting for it', async () => {
@@ -295,6 +329,7 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
     const { cookieHeader, memberId } = await buildAuthenticatedApp();
     const { app, reportFailure } = buildReportingApp(SHORT_BUDGET_MILLISECONDS);
     await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
 
     expect((await createTask(app, cookieHeader)).status).toBe(201);
 
@@ -302,5 +337,40 @@ describe('telling the other tabs a write made their data stale (back-e2e)', () =
       name: 'RealtimeBroadcastLate',
       tags: { 'realtime.written': 'tasks' },
     });
+    expect(readWriteEvents(write)).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'late' }),
+    ]);
+  });
+
+  it('keeps a send that fails after its budget as late and writes no second line for it', async () => {
+    const pendingRejections: ((reason: Error) => void)[] = [];
+    const failLateSend = () => {
+      for (const reject of pendingRejections) reject(new RangeError('gateway down'));
+    };
+    buildRecordingPoster(
+      async () =>
+        await new Promise((_resolve, reject) => {
+          pendingRejections.push(reject);
+        }),
+    );
+    const { cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { app, reportFailure } = buildReportingApp(SHORT_BUDGET_MILLISECONDS);
+    reportFailure.mockImplementation(() => {
+      failLateSend();
+    });
+    await connectTab('reader', memberId, READER_TAB);
+    const write = captureWrittenLines();
+
+    expect((await createTask(app, cookieHeader)).status).toBe(201);
+    const linesAtAnswer = write.mock.calls.length;
+    failLateSend();
+    await settlePendingWork();
+
+    expect(write).toHaveBeenCalledTimes(linesAtAnswer);
+    const writeEvents = readWriteEvents(write);
+    expect(writeEvents).toStrictEqual([
+      expect.objectContaining({ 'realtime.broadcast_outcome': 'late' }),
+    ]);
+    expect(writeEvents[0]).not.toHaveProperty('realtime.broadcast_failure');
   });
 });

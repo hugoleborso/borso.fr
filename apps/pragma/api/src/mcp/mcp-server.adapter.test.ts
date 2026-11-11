@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
+import { runInWideEvent } from '../helpers/observability/wide-event.adapter';
 import { answerMcpRequest } from './mcp-server.adapter';
 import type { ToolActor, ToolDefinition } from './mcp.types';
 import { ToolRefusedError } from './tool-refusal.core';
@@ -72,7 +73,8 @@ async function connectClient(app: Hono): Promise<Client> {
   const client = new Client({ name: 'adapter-test', version: '1.0.0' });
   await client.connect(
     new StreamableHTTPClientTransport(new URL(SERVER_URL), {
-      fetch: async (url, init) => await app.request(url.toString(), init),
+      fetch: async (url, init) =>
+        await runInWideEvent({}, async () => await app.request(url.toString(), init)),
     }),
   );
   return client;

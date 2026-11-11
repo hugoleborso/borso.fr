@@ -1,5 +1,4 @@
 import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
-import { describeThrownValue } from '../helpers/observability/wide-event.core';
 import { buildStaleMessage, type WrittenRoot } from '@domain/stale-scope.core';
 import { getAppConfig } from '../auth/auth.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
@@ -7,6 +6,7 @@ import { postToConnection } from './broadcast.adapter';
 import {
   BROADCAST_FAILED,
   type BroadcastOutcome,
+  buildBroadcastOutcomeFields,
   listRejectionReasons,
   selectBroadcastFailure,
 } from './broadcast-outcome.core';
@@ -79,14 +79,7 @@ async function settleWithinBudget(
   });
   const settled = delivery.then(
     (): BroadcastOutcome => ({ kind: 'delivered' }),
-    (error: unknown): BroadcastOutcome => {
-      const failure = describeThrownValue(error);
-      addWideEventFields({
-        'realtime.broadcast_failure': [failure.type],
-        'realtime.broadcast_failure_message': [failure.message],
-      });
-      return { kind: 'failed', error };
-    },
+    (error: unknown): BroadcastOutcome => ({ kind: 'failed', error }),
   );
   try {
     return await Promise.race([settled, deadline]);
@@ -105,6 +98,7 @@ export async function announceWrittenRoots(
     deliverStaleMessage(written, writerClientId),
     settings.budgetMilliseconds,
   );
+  addWideEventFields(buildBroadcastOutcomeFields(outcome));
   const failure = selectBroadcastFailure(outcome, written);
   if (failure !== null) settings.reportFailure(failure);
 }

@@ -134,25 +134,17 @@ describe('runInWideEvent', () => {
 });
 
 describe('addWideEventFields', () => {
-  it('writes a field added outside any event on a detached line of its own', async () => {
+  it('writes nothing for a field added outside any event', async () => {
     const write = captureWrittenLines();
     const { addWideEventFields } = await importFreshAdapter();
 
     addWideEventFields({ 'spotify.failure': ['TypeError'] });
 
-    expect(readWrittenEvents(write)).toStrictEqual([
-      {
-        'service.name': 'pragma-api',
-        'service.stage': 'preview',
-        'service.version': 'abc123',
-        'event.kind': 'detached',
-        'spotify.failure': ['TypeError'],
-      },
-    ]);
+    expect(write).not.toHaveBeenCalled();
     expect(spanRecorder.recordAttributesOnActiveSpan).not.toHaveBeenCalled();
   });
 
-  it('writes a field added after its event left on a detached line naming the request', async () => {
+  it('writes nothing for a field added after its event left, so the request keeps one line', async () => {
     const write = captureWrittenLines();
     const { addWideEventFields, runInWideEvent } = await importFreshAdapter();
     let lateWork: Promise<void> = Promise.resolve();
@@ -167,59 +159,9 @@ describe('addWideEventFields', () => {
     });
     await lateWork;
 
-    expect(readWrittenEvents(write)).toMatchObject([
-      { 'request.id': 'answered', outcome: 'success' },
-      {
-        'event.kind': 'detached',
-        'request.id': 'answered',
-        'realtime.broadcast_failure': ['AggregateError'],
-      },
-    ]);
-    expect(readWrittenEvents(write)[0]).not.toHaveProperty('realtime.broadcast_failure');
-  });
-});
-
-describe('addFieldsToOpenWideEvent', () => {
-  it('adds fields to the open event', async () => {
-    const write = captureWrittenLines();
-    const { addFieldsToOpenWideEvent, runInWideEvent } = await importFreshAdapter();
-
-    await runInWideEvent({}, () => {
-      addFieldsToOpenWideEvent({ 'product.events': ['take_created'] });
-      addFieldsToOpenWideEvent({ 'product.events': ['push_sent'] });
-      return Promise.resolve();
-    });
-
-    expect(readWrittenEvents(write)).toMatchObject([
-      { 'product.events': ['take_created', 'push_sent'] },
-    ]);
-  });
-
-  it('writes nothing when no event is open', async () => {
-    const write = captureWrittenLines();
-    const { addFieldsToOpenWideEvent } = await importFreshAdapter();
-
-    addFieldsToOpenWideEvent({ 'product.events': ['take_created'] });
-
-    expect(write).not.toHaveBeenCalled();
-  });
-
-  it('writes nothing once the event has left', async () => {
-    const write = captureWrittenLines();
-    const { addFieldsToOpenWideEvent, runInWideEvent } = await importFreshAdapter();
-    let lateWork: Promise<void> = Promise.resolve();
-
-    await runInWideEvent({}, () => {
-      lateWork = new Promise<void>((resolve) => {
-        setTimeout(resolve, 0);
-      }).then(() => {
-        addFieldsToOpenWideEvent({ 'product.events': ['push_sent'] });
-      });
-      return Promise.resolve();
-    });
-    await lateWork;
-
-    expect(write).toHaveBeenCalledOnce();
-    expect(readWrittenEvents(write)[0]).not.toHaveProperty('product.events');
+    const writtenEvents = readWrittenEvents(write);
+    expect(writtenEvents).toMatchObject([{ 'request.id': 'answered', outcome: 'success' }]);
+    expect(writtenEvents[0]).not.toHaveProperty('realtime.broadcast_failure');
+    expect(spanRecorder.recordAttributesOnActiveSpan).toHaveBeenCalledOnce();
   });
 });
