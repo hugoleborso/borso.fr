@@ -1,4 +1,5 @@
-import type { ICommandHooks } from 'aws-cdk-lib/aws-lambda-nodejs';
+import type { BundlingOptions, ICommandHooks } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 export interface SourceMapUpload {
   readonly organization: string;
@@ -7,15 +8,22 @@ export interface SourceMapUpload {
 }
 
 const SENTRY_CLI = 'pnpm exec sentry-cli';
+const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
+  "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
+
+function quote(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
+}
 
 export function buildSourceMapUploadCommands(
   upload: SourceMapUpload,
   outputDirectory: string,
 ): readonly string[] {
+  const directory = quote(outputDirectory);
+  const target = `--org ${quote(upload.organization)} --project ${quote(upload.project)} --release ${quote(upload.release)}`;
   return [
-    `${SENTRY_CLI} sourcemaps inject ${outputDirectory} || true`,
-    `${SENTRY_CLI} sourcemaps upload --org ${upload.organization} --project ${upload.project} --release ${upload.release} ${outputDirectory} || true`,
-    `rm -f ${outputDirectory}/*.map`,
+    `${SENTRY_CLI} sourcemaps inject ${directory} || true`,
+    `${SENTRY_CLI} sourcemaps upload ${target} ${directory} && rm -f ${directory}/*.map || true`,
   ];
 }
 
@@ -26,5 +34,17 @@ export function buildSourceMapUploadHooks(upload: SourceMapUpload): ICommandHook
     afterBundling: (_inputDirectory: string, outputDirectory: string) => [
       ...buildSourceMapUploadCommands(upload, outputDirectory),
     ],
+  };
+}
+
+export function buildHandlerBundling(upload: SourceMapUpload | undefined): BundlingOptions {
+  return {
+    minify: true,
+    sourceMap: true,
+    target: 'node22',
+    format: OutputFormat.ESM,
+    mainFields: ['module', 'main'],
+    banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
+    ...(upload === undefined ? {} : { commandHooks: buildSourceMapUploadHooks(upload) }),
   };
 }

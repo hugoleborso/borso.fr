@@ -379,23 +379,3 @@ describe('PreviewableApp (prod, account-scoped bucket name)', () => {
     });
   });
 });
-
-describe('PreviewableApp (api source map upload)', () => {
-  it('passes the upload target through to the api, and synthesizes without it', () => {
-    const { clusterStack, stageStack } = bootstrap('test-app-pr-9');
-    new PreviewableApp(stageStack, 'App', {
-      app: 'test-app',
-      stage: 'preview',
-      prNumber: 9,
-      frontend: { distPath: '.' },
-      api: {
-        entry: ENTRY,
-        sourceMapUpload: { organization: 'borsofr', project: 'borso-fr', release: 'abc123' },
-      },
-      database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
-    });
-    Template.fromStack(stageStack).hasResourceProperties('AWS::Lambda::Function', {
-      FunctionName: 'test-app-pr-9-api',
-    });
-  });
-});

@@ -48,9 +48,10 @@ The construct is shared by `banana-rush`, `last-loop-lepin`, `pragma` and
 asset ships, and stop setting `--enable-source-maps`.** Sentry resolves frames
 server-side from the uploaded map through the debug ids that
 `sentry-cli sourcemaps inject` writes into the bundle, so the runtime flag and
-the shipped map both become dead weight. An app with no upload credentials gets
-`sourceMap: false` instead, because a map nobody reads is 91 ms of cold start
-for nothing.
+the shipped map both become dead weight. The delete runs only when the upload
+succeeded, so a bad token or a network blip degrades to today's behaviour
+rather than losing the map everywhere at once. An app that configures no upload
+is untouched: it still builds and ships its map.
 
 This keeps both high-weight criteria. The rejected alternative keeps one and
 drops the other.
@@ -61,8 +62,11 @@ drops the other.
   ratio against a measured 1060 ms of prod module load.
 - `+` Sentry frames stay readable, and gain debug ids, which survive a release
   the uploader forgot to tag.
-- `+` The three other apps stop shipping a 13.7 MB map that nothing ever read,
-  because they never set `--enable-source-maps` without a Sentry project.
+- `~` The three other apps are untouched. `last-loop-lepin` still sets
+  `--enable-source-maps` and still reads its map, so dropping it there would
+  have cost readable frames for nothing. `banana-rush` and `talos` ship a map
+  they never read, which is the same dead weight, and removing it is a separate
+  change this one does not make.
 - `-` `@sentry/cli` becomes a build-time dependency of every full-stack deploy.
   It is smaller than it reads: `@sentry/vite-plugin` already pulled
   `@sentry/cli@2.58.6` into the lockfile, so this pins the version already
@@ -81,10 +85,9 @@ drops the other.
 
 - **Raised by:** author
 - **Summary:** `lambda-api.ts` takes an optional upload target. When it is
-  present the bundle keeps `sourceMap: true`, and an `afterBundling` command
-  hook injects debug ids, uploads the map and deletes it from the output
-  directory. When it is absent, `sourceMap` is false. `--enable-source-maps`
-  goes away in both cases.
+  present, an `afterBundling` command hook injects debug ids, uploads the map
+  and, only on a successful upload, deletes it from the output directory.
+  `--enable-source-maps` goes away for the app that uploads.
 - **Strengths:**
   - Takes the full 330 ms, both the map read and the flag.
   - Keeps readable frames, which is the only reason the map was ever shipped.
@@ -132,7 +135,7 @@ drops the other.
 
 |  | Option A | Option B | Option C |
 |---|---|---|---|
-| Does it change the app for its users | ✓ roughly 330 ms off every cold start | ✓ the same 330 ms | ✓ roughly 530 ms, by a different lever |
+| Does it change the app for its users | ✓ roughly 330 ms off every cold start of the app that uploads | ✓ the same 330 ms | ✓ roughly 530 ms, by a different lever |
 | A production exception stays diagnosable | ✓ Sentry resolves frames from the uploaded map | ✗ minified frames only | ✓ unchanged |
 | Deploy keeps working for the three other apps | ✗ a command hook they all run, unproven until a deploy | ✓ removes a setting, adds nothing | ✓ pragma's stack only |
 | Cost in new surface | ✗ one dependency, one credential path, one network call | ✓ nothing added | ✓ nothing added, money instead |
@@ -143,9 +146,10 @@ drops the other.
   as a Tier 1 chain with this ADR, not through `/specification`.
 - Plan: none, same reason.
 - Commit: pending
-- Files: `infra/cdk/src/constructs/lambda-api.ts:102` (the `sourceMap` flag and
-  the new command hook), `apps/pragma/cdk/lib/stack.ts:102` (the
-  `--enable-source-maps` constant), `apps/pragma/vite.config.ts:37` (the site's
-  existing upload, which this mirrors)
+- Files: `infra/cdk/src/internal/source-map-upload.utils.ts` (the commands and
+  the bundling options), `infra/cdk/src/constructs/lambda-api.ts` (the prop),
+  `apps/pragma/cdk/lib/stack.ts` (where the `--enable-source-maps` constant
+  was), `apps/pragma/vite.config.ts:37` (the site's existing upload, which this
+  mirrors)
 - Related ADRs: ADR-0031 (one Sentry project serves the monorepo, each app tags
   its events with `app`)

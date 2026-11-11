@@ -10,7 +10,7 @@ import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
@@ -21,10 +21,7 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
-import {
-  buildSourceMapUploadHooks,
-  type SourceMapUpload,
-} from '../internal/source-map-upload.utils.js';
+import { buildHandlerBundling, type SourceMapUpload } from '../internal/source-map-upload.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
 
@@ -34,8 +31,6 @@ const DEFAULT_RESERVED_CONCURRENCY = 10;
 const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
 const CORS_ALLOWED_REQUEST_HEADERS = ['content-type', 'authorization', 'sentry-trace', 'baggage'];
 const ERROR_ALARM_PERIOD_MINUTES = 5;
-const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
-  "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
 export interface LambdaApiProps {
   readonly app: string;
@@ -46,7 +41,7 @@ export interface LambdaApiProps {
   readonly timeoutSeconds?: number;
   readonly reservedConcurrency?: number;
   readonly environment?: Readonly<Record<string, string>>;
-  readonly sourceMapUpload?: SourceMapUpload;
+  readonly sourceMapUpload?: SourceMapUpload | undefined;
   readonly dsqlSchema?: DsqlSchema;
   readonly customDomain?: {
     readonly hostname: string;
@@ -102,17 +97,7 @@ export class LambdaApi extends Construct {
           : {}),
         ...props.environment,
       },
-      bundling: {
-        minify: true,
-        sourceMap: props.sourceMapUpload !== undefined,
-        target: 'node22',
-        format: OutputFormat.ESM,
-        mainFields: ['module', 'main'],
-        banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
-        ...(props.sourceMapUpload === undefined
-          ? {}
-          : { commandHooks: buildSourceMapUploadHooks(props.sourceMapUpload) }),
-      },
+      bundling: buildHandlerBundling(props.sourceMapUpload),
     });
 
     const apiDomainName = props.customDomain

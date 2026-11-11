@@ -43,7 +43,7 @@ export interface PreviewableAppProps {
     readonly environment?: Readonly<Record<string, string>>;
     readonly extraPathPatterns?: readonly string[];
     readonly requestHeaders?: readonly string[];
-    readonly sourceMapUpload?: SourceMapUpload;
+    readonly sourceMapUpload?: SourceMapUpload | undefined;
   };
   readonly database?: {
     readonly migrationsPath: string;
@@ -130,9 +130,7 @@ export class PreviewableApp extends Construct {
         memoryMb: props.api.memoryMb,
         timeoutSeconds: props.api.timeoutSeconds,
         appRequestHeaders: props.api.requestHeaders,
-        ...(props.api.sourceMapUpload === undefined
-          ? {}
-          : { sourceMapUpload: props.api.sourceMapUpload }),
+        sourceMapUpload: props.api.sourceMapUpload,
         environment: {
           ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,
