@@ -4,6 +4,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const spanRecorder = vi.hoisted(() => ({ recordAttributesOnActiveSpan: vi.fn() }));
+
+vi.mock('./error-reporting.adapter', () => spanRecorder);
+
 type WideEventAdapter = typeof import('./wide-event.adapter');
 
 async function importFreshAdapter(): Promise<WideEventAdapter> {
@@ -28,6 +32,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.clearAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -44,17 +49,19 @@ describe('runInWideEvent', () => {
       return 'done';
     });
 
+    const expectedEvent = {
+      'service.name': 'talos-api',
+      'service.stage': 'preview',
+      'lambda.cold_start': true,
+      'event.kind': 'scheduled',
+      'job.failed_steps': ['first', 'second'],
+      outcome: 'success',
+    };
     expect(answer).toBe('done');
-    expect(readWrittenEvents(write)).toStrictEqual([
-      {
-        'service.name': 'talos-api',
-        'service.stage': 'preview',
-        'lambda.cold_start': true,
-        'event.kind': 'scheduled',
-        'job.failed_steps': ['first', 'second'],
-        outcome: 'success',
-      },
-    ]);
+    expect(readWrittenEvents(write)).toStrictEqual([expectedEvent]);
+    expect(spanRecorder.recordAttributesOnActiveSpan).toHaveBeenCalledExactlyOnceWith(
+      expectedEvent,
+    );
   });
 
   it('leaves the stage out when the environment sets an empty one', async () => {
@@ -127,6 +134,7 @@ describe('addWideEventFields', () => {
     addWideEventFields({ 'late.failure': 'TypeError' });
 
     expect(write).not.toHaveBeenCalled();
+    expect(spanRecorder.recordAttributesOnActiveSpan).not.toHaveBeenCalled();
   });
 
   it('writes nothing for a field added after its event left, so the request keeps one line', async () => {
