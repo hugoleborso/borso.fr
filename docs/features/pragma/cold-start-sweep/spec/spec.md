@@ -25,16 +25,19 @@ killed it.
    of `@smithy/core`, `@aws-sdk/core` and `@aws-sdk/nested-clients`, so the
    bundle holds each twice. Forcing one copy takes the local import from about
    312 ms to 279 ms. The SDK stays; nothing is rewritten.
-3. **The database connection opens during init.** Today the first request
-   pays it: about 640 ms on a preview at 512 MB. A top-level `await` at the end
-   of the entry point moves it into the init phase. It gains only if init runs
-   on more CPU than an invocation, which is the premise this lever tests.
-4. **postgres.js stops fetching array types.** Its default issues one catalog
+3. **postgres.js stops fetching array types.** Its default issues one catalog
    query on every new connection. The schema holds no array column and no
    query passes an array parameter.
-5. **A V8 compile cache ships in the asset.** Locally it takes the import from
-   298 ms to 205 ms. Whether a Lambda accepts a cache built elsewhere is
-   unknown.
+
+Two more levers were tried and are dead. Both are recorded in
+`docs/features/pragma/lambda-cold-start/findings.md` with their numbers.
+
+- **Opening the database connection during init.** It took 716 ms there
+  against about 740 ms in the first request, medians of 10 cold starts on
+  this preview. The init phase has no CPU to spare for it.
+- **Shipping a V8 compile cache in the asset.** Node keys the cache
+  directory on its exact version, the architecture and the uid, so a cache
+  built on an x64 runner is rejected by an arm64 Lambda.
 
 ## What it deliberately does not do
 
@@ -49,15 +52,12 @@ killed it.
 
 - `Sentry.init` receives `enableRuntimeChannelInjection: false` and every
   other option it received before.
-- A warm-up that fails or runs out of time never fails the init. The first
-  request then connects by itself, exactly as today.
-- The warm-up is bounded well under Lambda's 10 second init limit.
-- The first invocation of an instance is still reported as a cold start.
-- The scheduled streak reminder and the HTTP path both keep one flush per
-  invocation.
-- A compile cache that the runtime rejects leaves today's behaviour and fails
-  nothing.
+- Both database clients turn `fetch_types` off, and a test fails when either
+  turns it back on.
+- The entry point is the one `main` had: no warm-up, no top-level `await`.
 - No temporary timing probe is left in the code once the sweep ends.
+- pragma's API bundle holds one version each of `@smithy/core`,
+  `@aws-sdk/core` and `@aws-sdk/nested-clients`.
 
 ## How it will be judged
 
@@ -70,5 +70,5 @@ The baseline, on PR 293's preview, is an init median of 1028 ms and a duration
 median of 757 ms over 8 cold starts, 1785 ms in total.
 
 Lever 1 cannot be judged there, because a preview runs without Sentry. It is
-judged on production's `Init Duration` after the merge, against the 1260 ms
-median of the week before.
+judged on production's `Init Duration` after the merge, against the 892 ms
+median of the 6 cold starts that followed PR 293's deploy.

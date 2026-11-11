@@ -209,6 +209,11 @@ queue_node_check dantotsu-front-matter '^. (docs/dantotsus/|scripts/quality/)|^D
 queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yaml)$' \
   scripts/dependencies/check-dependency-catalog.ts
 
+# A package every Lambda bundles resolves to one version, or each bundle
+# carries both copies and evaluates them at every cold start.
+queue_node_check single-resolutions '^. (pnpm-lock\.yaml|scripts/dependencies/)' \
+  scripts/dependencies/check-single-resolutions.ts
+
 # The template a PR body is drafted from fits the budget the same script
 # enforces on the body.
 queue_node_check pr-body-template '^. (\.claude/skills/open-pr/template\.md|scripts/pr/)' \
