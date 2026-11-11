@@ -87,6 +87,18 @@ export function buildAgenda<Todo extends SchedulableTodo, Commitment extends Sch
   return [...days.values()].toSorted(compareDays);
 }
 
+const AWAITED_DIRECTION = 'awaited';
+
+export function splitAwaitedCommitments<Commitment extends { readonly direction: string | null }>(
+  commitments: readonly Commitment[],
+): { readonly scheduled: Commitment[]; readonly awaited: Commitment[] } {
+  const isAwaited = (commitment: Commitment): boolean => commitment.direction === AWAITED_DIRECTION;
+  return {
+    scheduled: commitments.filter((commitment) => !isAwaited(commitment)),
+    awaited: commitments.filter(isAwaited),
+  };
+}
+
 const BUCKETS_DUE_BY_TODAY: ReadonlySet<AgendaBucket> = new Set(['overdue', 'today']);
 
 export function keepDueByToday<Day extends { readonly bucket: AgendaBucket }>(

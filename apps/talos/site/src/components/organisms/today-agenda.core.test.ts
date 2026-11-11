@@ -10,6 +10,7 @@ import {
   selectMeanderTone,
   selectOverdueDay,
   selectStationEmphasis,
+  splitAwaitedCommitments,
 } from './today-agenda.core';
 
 const TODAY = '2026-10-08';
@@ -189,5 +190,17 @@ describe('keepDueByToday', () => {
       { key: 'undated', bucket: 'undated' as const },
     ];
     expect(keepDueByToday(days).map((day) => day.key)).toEqual(['overdue', '2026-10-05']);
+  });
+});
+
+describe('splitAwaitedCommitments', () => {
+  it('takes what others owe the owner out of the agenda and keeps the rest in order', () => {
+    const owed = { path: 'engagements/devis', direction: 'owed' };
+    const awaited = { path: 'engagements/retour-contrat', direction: 'awaited' };
+    const undirected = { path: 'engagements/sans-sens', direction: null };
+    expect(splitAwaitedCommitments([owed, awaited, undirected])).toEqual({
+      scheduled: [owed, undirected],
+      awaited: [awaited],
+    });
   });
 });

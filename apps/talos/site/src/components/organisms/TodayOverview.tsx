@@ -9,20 +9,21 @@ import { DISPLAY_LOCALE, formatLongDay, toIsoDay } from '../../lib/calendar-day.
 import { useToday } from '../../lib/queries/today.queries';
 import { NotificationsPrompt } from './NotificationsPrompt';
 import { ScanStatus } from './ScanStatus';
-import { countOverdueTodos } from './today-agenda.core';
+import { countOverdueTodos, splitAwaitedCommitments } from './today-agenda.core';
 import { TodayActivity } from './TodayActivity';
 import { TodayAgenda } from './TodayAgenda';
+import { TodayAwaited } from './TodayAwaited';
 import { TodayBirthdays } from './TodayBirthdays';
 import { TodayBrief } from './TodayBrief';
 import { TodayCounters } from './TodayCounters';
 import { TodayFocus } from './TodayFocus';
-import { TodayProposal } from './TodayProposal';
 
 // @FollowsBlueprint organism-query-owning
 export function TodayOverview(): JSX.Element {
   const { t } = useTranslation();
   const today = useToday();
   const date = today.data?.date ?? toIsoDay(new Date());
+  const commitments = splitAwaitedCommitments(today.data?.commitments ?? []);
   return (
     <>
       <PageTitle
@@ -52,8 +53,8 @@ export function TodayOverview(): JSX.Element {
           <NotificationsPrompt />
           <TodayBirthdays birthdays={today.data.soonBirthdays} />
           {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
-          <TodayProposal today={date} />
-          <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
+          <TodayAgenda todos={today.data.todos} commitments={commitments.scheduled} today={date} />
+          <TodayAwaited commitments={commitments.awaited} today={date} />
           <TodayCounters
             pendingProposalCount={today.data.pendingProposalCount}
             overdueTodoCount={countOverdueTodos(today.data.todos, date)}

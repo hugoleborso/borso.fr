@@ -8,9 +8,8 @@ import { useToday } from '../../lib/queries/today.queries';
 import { TODO_LIST_ROUTES } from '../../lib/wikilinks.core';
 import { type BottomTab, BottomTabBar } from './BottomTabBar';
 import { ActionSheet } from './ActionSheet';
+import { PROPOSALS_PATH } from './proposal-board.core';
 import { ToastViewport } from './ToastViewport';
-
-const PROPOSALS_PATH = '/proposals';
 
 const TABS: readonly BottomTab[] = [
   { to: '/', labelKey: 'nav.today', icon: 'today' },

@@ -122,6 +122,14 @@ describe('the application shell', () => {
             direction: 'owed',
             dueDate: '2026-10-08',
           },
+          {
+            path: 'engagements/2026-10-01-contrat',
+            title: 'Retour du contrat',
+            direction: 'awaited',
+            counterpartName: 'Camille Durand',
+            action: 'Renvoyer le contrat signé',
+            dueDate: '2026-10-08',
+          },
         ],
         commitmentCounts: { owed: 4, awaited: 2 },
         activity: [{ date: '2026-10-08', heading: 'Scan (07:00)' }],
@@ -160,6 +168,16 @@ describe('the application shell', () => {
       expect(text).toContain(expected);
     }
     expect(text).not.toContain('Ranger le garage');
+    expect(text).not.toContain('Accepter');
+    const awaited = tree.container.querySelector('details');
+    expect(awaited?.open).toBe(false);
+    expect(awaited?.querySelector('summary')?.textContent).toBe('En attente · 1');
+    expect(awaited?.textContent).toContain('Camille · Renvoyer le contrat signé');
+    const agendaText = [...tree.container.querySelectorAll('section[aria-label]')]
+      .map((section) => section.textContent)
+      .join(' ');
+    expect(agendaText).toContain('Rendre le dossier');
+    expect(agendaText).not.toContain('Renvoyer le contrat signé');
     const scanLink = tree.container.querySelector('a[aria-label="Scanner"]');
     expect(scanLink?.getAttribute('href')).toContain('environment=env_lecture');
     expect(scanLink?.getAttribute('href')).toContain('talos-scan');
