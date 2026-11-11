@@ -13,8 +13,12 @@ import { ToastViewport } from './ToastViewport';
 
 const TABS: readonly BottomTab[] = [
   { to: '/', labelKey: 'nav.today', icon: 'today' },
-  { to: TODO_LIST_ROUTES.main, labelKey: 'nav.todo', icon: 'todo' },
-  { to: TODO_LIST_ROUTES.work, labelKey: 'nav.work-todo', icon: 'briefcase' },
+  {
+    to: TODO_LIST_ROUTES.main,
+    labelKey: 'nav.todo',
+    icon: 'todo',
+    aliases: [TODO_LIST_ROUTES.work],
+  },
   { to: PROPOSALS_PATH, labelKey: 'nav.proposals', icon: 'proposals' },
   { to: '/brain', labelKey: 'nav.brain', icon: 'brain' },
   { to: '/message', labelKey: 'nav.message', icon: 'message' },

@@ -128,13 +128,58 @@ export function selectTodoEmptyLabelKey(filter: TodoFilter): ParseKeys {
   return EMPTY_LABEL_KEY[filter];
 }
 
-const LIST_TITLE_KEY: Readonly<Record<TodoListName, ParseKeys>> = {
-  main: 'todo.title',
-  work: 'todo.work-title',
+export type TodoListChoice = TodoListName | 'both';
+
+export const TODO_LIST_CHOICES: readonly TodoListChoice[] = ['main', 'work', 'both'];
+
+const DEFAULT_LIST_CHOICE: TodoListChoice = 'main';
+
+function findListChoice(raw: string | null): TodoListChoice | undefined {
+  return TODO_LIST_CHOICES.find((choice) => choice === raw);
+}
+
+export function readTodoListChoice(requested: string | null, kept: string | null): TodoListChoice {
+  return findListChoice(requested) ?? findListChoice(kept) ?? DEFAULT_LIST_CHOICE;
+}
+
+const CHOSEN_LISTS: Readonly<Record<TodoListChoice, readonly TodoListName[]>> = {
+  main: ['main'],
+  work: ['work'],
+  both: ['main', 'work'],
 };
 
-export function selectTodoListTitleKey(list: TodoListName): ParseKeys {
-  return LIST_TITLE_KEY[list];
+export function selectChosenTodoLists(choice: TodoListChoice): readonly TodoListName[] {
+  return CHOSEN_LISTS[choice];
+}
+
+const QUICK_ADD_LIST: Readonly<Record<TodoListChoice, TodoListName>> = {
+  main: 'main',
+  work: 'work',
+  both: 'main',
+};
+
+export function selectQuickAddList(choice: TodoListChoice): TodoListName {
+  return QUICK_ADD_LIST[choice];
+}
+
+const QUICK_ADD_PLACEHOLDER_KEY: Readonly<Record<TodoListChoice, ParseKeys>> = {
+  main: 'todo.add.placeholder',
+  work: 'todo.add.placeholder',
+  both: 'todo.add.placeholder-main',
+};
+
+export function selectQuickAddPlaceholderKey(choice: TodoListChoice): ParseKeys {
+  return QUICK_ADD_PLACEHOLDER_KEY[choice];
+}
+
+const LIST_CHOICE_LABEL_KEY: Readonly<Record<TodoListChoice, ParseKeys>> = {
+  main: 'todo.list.main',
+  work: 'todo.list.work',
+  both: 'todo.list.both',
+};
+
+export function selectTodoListChoiceLabelKey(choice: TodoListChoice): ParseKeys {
+  return LIST_CHOICE_LABEL_KEY[choice];
 }
 
 export function hasTodoTextChanged(original: string, draft: string): boolean {

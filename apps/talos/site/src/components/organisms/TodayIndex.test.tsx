@@ -45,7 +45,7 @@ describe('the index of the day', () => {
     const tiles = renderIndex(COUNTS);
     expect(tiles.map((tile) => [tile.textContent, tile.getAttribute('href')])).toStrictEqual([
       ['3À décider', '/proposals'],
-      ['2En retard', '/todos'],
+      ['2En retard', '/todos?list=main'],
       ['4Je dois', '/commitments?direction=owed'],
       ['1On me doit', '/commitments?direction=awaited'],
       ['5Brouillons', '/drafts'],

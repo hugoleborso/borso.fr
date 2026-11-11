@@ -5,6 +5,7 @@ import { IndexTile } from '../molecules/IndexTile';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import type { DiscussionSubjectReference } from '../../lib/discussion-subject.core';
 import { ROUTINE_RUN_LIST_PATH } from '../../lib/routine-run.core';
+import { buildTodoListHref } from '../../lib/wikilinks.core';
 import { PROPOSALS_PATH } from './proposal-board.core';
 
 export interface TodayIndexProps {
@@ -50,7 +51,7 @@ export function TodayIndex({
     },
     {
       key: 'overdue',
-      to: '/todos',
+      to: buildTodoListHref('main'),
       icon: 'clock',
       count: overdueTodoCount,
       label: t('today.counters.overdue'),

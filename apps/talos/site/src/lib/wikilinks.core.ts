@@ -7,6 +7,7 @@ export const TODO_LIST_ROUTES = {
   main: '/todos',
   work: '/work-todos',
 } as const satisfies Record<TodoListName, string>;
+export const TODO_LIST_PARAMETER = 'list';
 const MARKDOWN_EXTENSION = '.md';
 const WIKILINK_PATTERN = /\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
@@ -33,6 +34,10 @@ export function buildCommitmentHref(commitmentPath: string): string {
 
 export function buildTodoHref(todoId: string, list: TodoListName): string {
   return `${TODO_LIST_ROUTES[list]}${PATH_SEPARATOR}${encodeURIComponent(todoId)}`;
+}
+
+export function buildTodoListHref(list: TodoListName): string {
+  return `${TODO_LIST_ROUTES.main}?${TODO_LIST_PARAMETER}=${list}`;
 }
 
 export function selectPageLabel(pagePath: string): string {

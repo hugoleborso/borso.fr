@@ -3,6 +3,7 @@ import {
   buildCommitmentHref,
   buildPageHref,
   buildTodoHref,
+  buildTodoListHref,
   convertWikilinksToMarkdown,
   normalisePagePath,
   selectInAppPath,
@@ -116,5 +117,12 @@ describe('selectPageName', () => {
     expect(selectPageName('second-brain/personnes/alice-martin')).toBe('Alice Martin');
     expect(selectPageName('second-brain/organisations/acme--sa.md')).toBe('Acme Sa');
     expect(selectPageName('index')).toBe('Index');
+  });
+});
+
+describe('buildTodoListHref', () => {
+  it('points at the todo screen on the list asked for', () => {
+    expect(buildTodoListHref('work')).toBe('/todos?list=work');
+    expect(buildTodoListHref('main')).toBe('/todos?list=main');
   });
 });
