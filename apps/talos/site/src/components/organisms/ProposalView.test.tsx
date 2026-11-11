@@ -19,6 +19,9 @@ const LEARNED_SLUG = '2026-11-11-appris-relances-le-lundi';
 const DONE_DRAFT = '- Envoyer le devis à Acme\n- Rappeler le plombier\n- Réserver la salle';
 const LEARNED_DRAFT = '```diff\n- Relancer le vendredi\n+ Relancer le lundi matin\n```';
 
+const DECIDED_SLUG = '2026-11-09-salle';
+const EXPIRED_SLUG = '2026-11-01-vieille';
+
 function buildProposal(slug: string, title: string, draft: string) {
   return {
     slug,
@@ -40,6 +43,12 @@ function serveApp(): FetchStub {
   const proposals = [
     buildProposal(DONE_SLUG, 'Déjà faits ?', DONE_DRAFT),
     buildProposal(LEARNED_SLUG, 'Relancer le lundi', LEARNED_DRAFT),
+    {
+      ...buildProposal(DECIDED_SLUG, 'Réserver la salle', 'Un message.'),
+      status: 'refusee',
+      decisions: ['2026-11-10 09:30 : refusée — pas cette semaine'],
+    },
+    { ...buildProposal(EXPIRED_SLUG, 'Vieille idée', 'Un message.'), expiresOn: '2026-11-02' },
   ];
   return stubFetch(async (request) => {
     const path = new URL(request.url).pathname;
@@ -84,6 +93,7 @@ describe('the direct link to a proposal card', () => {
       'Déjà faits ?',
     ]);
     expect(findButton(tree, 'Refuser')).toBeDefined();
+    expect(tree.container.querySelector('button[aria-label="Commenter"]')).not.toBeNull();
     act(() => {
       findButton(tree, 'Accepter')?.click();
     });
@@ -113,6 +123,29 @@ describe('the direct link to a proposal card', () => {
     expect(tree.container.querySelector('pre')?.textContent.split('\n')).toEqual(
       expect.arrayContaining(['- Relancer le vendredi', '+ Relancer le lundi matin']),
     );
+    tree.unmount();
+  });
+
+  it('shows the status and the decision lines of a decided proposal, with the way back', async () => {
+    fetchStub = serveApp();
+    const tree = openLink(`/proposals/${DECIDED_SLUG}`);
+    await flushUntil(() => findButton(tree, 'Revenir sur ma décision') !== undefined);
+    const row = tree.container.querySelector('li');
+    expect(row?.textContent).toContain('Réserver la salle');
+    expect(row?.textContent).toContain('Refusée');
+    expect(row?.textContent).toContain('2026-11-10 09:30 : refusée — pas cette semaine');
+    expect(findButton(tree, 'Accepter')).toBeUndefined();
+    tree.unmount();
+  });
+
+  it('shows an expired proposal as expired, with nothing left to decide or take back', async () => {
+    fetchStub = serveApp();
+    const tree = openLink(`/proposals/${EXPIRED_SLUG}`);
+    await flushUntil(() => tree.container.textContent.includes('Vieille idée'));
+    expect(tree.container.textContent).toContain('Expirée');
+    expect(findButton(tree, 'Accepter')).toBeUndefined();
+    expect(findButton(tree, 'Refuser')).toBeUndefined();
+    expect(findButton(tree, 'Revenir sur ma décision')).toBeUndefined();
     tree.unmount();
   });
 

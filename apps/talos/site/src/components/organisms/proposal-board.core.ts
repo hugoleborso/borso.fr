@@ -48,10 +48,6 @@ export function partitionProposals<Proposal extends ProposalShape>(
 
 export const PROPOSALS_PATH = '/proposals';
 
-export function buildProposalHref(slug: string): string {
-  return `${PROPOSALS_PATH}/${slug}`;
-}
-
 export function findProposal<Proposal extends { readonly slug: string }>(
   proposals: readonly Proposal[],
   slug: string,

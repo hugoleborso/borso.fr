@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildProposalHref,
   findProposal,
   selectProposalStatus,
   buildDecisionPayload,
@@ -144,10 +143,6 @@ describe('PROPOSAL_SHEET_ACTION', () => {
 });
 
 describe('the direct link to a proposal', () => {
-  it('addresses a proposal by its file slug', () => {
-    expect(buildProposalHref('2026-11-11-faits')).toBe('/proposals/2026-11-11-faits');
-  });
-
   it('finds the proposal a link names, or nothing', () => {
     const proposals = [{ slug: '2026-11-11-faits' }, { slug: '2026-11-11-appris-relances' }];
     expect(findProposal(proposals, '2026-11-11-appris-relances')).toBe(proposals[1]);

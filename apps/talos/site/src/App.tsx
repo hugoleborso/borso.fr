@@ -1,6 +1,7 @@
 import { type JSX, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
+import { PROPOSALS_PATH } from './components/organisms/proposal-board.core';
 import { RequireSession } from './components/organisms/RequireSession';
 import { TODO_LIST_ROUTES } from './lib/wikilinks.core';
 import {
@@ -66,8 +67,8 @@ export function App(): JSX.Element {
               <Route path="/" element={<TodayPage />} />
               <Route path={TODO_LIST_ROUTES.main} element={<TodosPage list="main" />} />
               <Route path={TODO_LIST_ROUTES.work} element={<TodosPage list="work" />} />
-              <Route path="/proposals" element={<ProposalsPage />} />
-              <Route path="/proposals/:slug" element={<ProposalPage />} />
+              <Route path={PROPOSALS_PATH} element={<ProposalsPage />} />
+              <Route path={`${PROPOSALS_PATH}/:slug`} element={<ProposalPage />} />
               <Route
                 path={`${TODO_LIST_ROUTES.main}/:id`}
                 element={<TodoDetailPage list="main" />}
