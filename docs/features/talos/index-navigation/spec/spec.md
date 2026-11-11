@@ -65,7 +65,7 @@ interface RecurringTasks { generatedAt: string | null; tasks: RecurringTask[] }
 ## T3. Every secondary screen leads back
 
 - T3.1 Engagements and « Tâches récurrentes » get the back link to « Jour » that Brouillons, Relations and Historique already have.
-- T3.2 The tab bar keeps its six tabs. Removing or merging a tab is a product decision, asked in the pull request, not taken here.
+- T3.2 Removing or merging a tab is a product decision, asked in the pull request. The owner answered it on 2026-11-11: see T6.
 
 ## T4. The scan prompt names the current skill
 
@@ -74,6 +74,20 @@ interface RecurringTasks { generatedAt: string | null; tasks: RecurringTask[] }
 ## T5. Documents
 
 - T5.1 `CONTRAT.md` describes the route, the screen and the new « Jour ». `MEMORY-CONTRACT.md` lists the `recurring` state key. `VOCABULARY.md` gains « Recurring task ».
+
+## T6. One todo tab with a switch
+
+The owner answered the tab question on 2026-11-11: merge « Todo » and « Taff », with a switch between work, personal and both.
+
+- T6.1 The tab bar has five tabs: Jour, Todo, Décider, Mémoire, Message. The « Taff » tab is gone.
+- T6.2 The Todo screen (`/todos`) carries a switch with three choices, in this order: « Perso » (`todo.md`), « Taff » (`todo-taff.md`), « Les deux ».
+- T6.3 « Perso » and « Taff » each show their list exactly as the two former screens did: check, swipes, done filter, detail on tap, quick add into that list.
+- T6.4 « Les deux » shows both lists on one screen, each under its name, « Perso » first. Every row keeps its actions and acts on its own list. The quick add writes to « Perso », and its placeholder says so.
+- T6.5 The choice is kept on the device and is the one shown the next time the tab opens. Without a kept choice the screen opens on « Perso ».
+- T6.6 The address `/work-todos` still works: it opens the Todo screen on « Taff ». The detail addresses `/todos/:id` and `/work-todos/:id` are unchanged, and the back link of a work todo returns to the Todo screen on « Taff ».
+- T6.7 The « En retard » tile of « Jour » still opens the Todo screen. It counts personal todos, as before.
+- T6.8 No API change: the two lists keep their two routes.
+- T6.9 `CONTRAT.md` describes the one tab and its switch.
 
 ## Evidence asked by the owner
 
