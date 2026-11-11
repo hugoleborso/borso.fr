@@ -1,6 +1,6 @@
 # ADR-2026-11-11T1903: every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-11
 - **Deciders:** Hugo Borsoni
 - **Tags:** sentry-tracing-all-apps, observability
