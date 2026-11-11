@@ -3,7 +3,6 @@ import { createApp } from './app';
 import { startErrorReporting } from './helpers/observability/error-reporting.adapter';
 import { selectErrorReportingSettings } from './helpers/observability/error-reporting.core';
 import { readErrorReportingInputs } from './helpers/observability/error-reporting.environment';
-import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 
 /**
  * @Blueprint api-lambda-entrypoint
@@ -13,6 +12,6 @@ import { answerUnhandledError } from './helpers/observability/unhandled-error.mi
  */
 startErrorReporting(selectErrorReportingSettings(readErrorReportingInputs()));
 
-const app = createApp().onError(answerUnhandledError);
+const app = createApp();
 
 export const handler = handle(app);

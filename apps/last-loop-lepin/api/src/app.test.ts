@@ -78,4 +78,24 @@ describe('createApp — wide event', () => {
       }),
     ]);
   });
+
+  it('answers 500 and records the failure when a route throws past every middleware', async () => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const app = createApp();
+    app.get('/api/always-fails', () => {
+      throw new Error('route failed');
+    });
+
+    const response = await app.request('/api/always-fails');
+
+    expect(response.status).toBe(500);
+    expect(await response.text()).toBe('Internal Server Error');
+    const writtenEvents = write.mock.calls.map(([line]) => {
+      const writtenEvent: unknown = JSON.parse(String(line));
+      return writtenEvent;
+    });
+    expect(writtenEvents).toEqual([
+      expect.objectContaining({ 'http.response.status_code': 500, outcome: 'failed' }),
+    ]);
+  });
 });
