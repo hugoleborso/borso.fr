@@ -178,8 +178,9 @@ function checkFixCommits(document: DantotsuDocument, facts: SchemaFacts): readon
 function checkEradicationPaths(document: DantotsuDocument, facts: SchemaFacts): readonly string[] {
   const paths = readListValue(readField(document, 'eradication-paths'));
   if (paths === null) return [];
+  const verified = facts.verifiedSlugs === null || facts.verifiedSlugs.has(document.slug);
   const problems = paths
-    .filter((path) => !facts.trackedPaths.has(path))
+    .filter((path) => verified && !facts.trackedPaths.has(path))
     .map((path) => `${document.slug}: eradication path ${path} was never in the repository`);
   const level = readField(document, 'eradication-level');
   const namesCode = paths.some((path) => !path.endsWith(MARKDOWN_EXTENSION));
