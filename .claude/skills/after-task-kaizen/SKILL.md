@@ -310,9 +310,11 @@ For each surviving subject:
    squash merge.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible level of the ladder (1 = structural impossibility, 5 =
-   knowledge as last resort). The frontmatter records
-   `eradication-level`. Each entry links the commit SHA + diff
+   feasible level of the ladder: 1 structural impossibility, 2 DevX
+   check, 3 vendor patch, 4 detection, 5 knowledge as last resort.
+   The frontmatter records `eradication-level` as the number alone;
+   everywhere a person reads it, the *Eradication* block and the pull
+   request's *Shipped* table, write the name beside the number. Each entry links the commit SHA + diff
    snippet of the eradication.
    **A new check proves it can fail, here, once.** Reintroduce the
    defect on a scratch copy, run the check, paste its refusal into the
