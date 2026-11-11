@@ -24,3 +24,6 @@ Session: d4b94070-98b8-5170-ae92-3efe97db76a9
 - [2026-11-11 17:56] `technical-validator` The validator cannot check whether SENTRY_ORG and SENTRY_PROJECT are set for the preview job, because gh variable list and the environments API are both blocked by the proxy, so a deploy-time branch stays unverifiable.
 - [2026-11-11 18:18] `technical-validator` vitest path filters are workspace-relative, so a repo-root-relative test path through pnpm --filter matches nothing and exits 1 with 'No test files found'
 - [2026-11-11 18:18] `technical-validator` gh pr view returns HTTP 403 because it goes through GraphQL, so reading a PR body needs the REST route instead
+- [2026-11-11 18:38] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-11 18:40] `main` Starting an async connection before the heavy imports gains nothing on its own, because module evaluation is synchronous and the connect is never issued: 884 ms after, 873 ms before, against 568 ms when the loop is yielded once between the two.
+- [2026-11-11 18:56] `main` Warming the DSQL connection before the heavy imports is a net loss: the dynamic-import restructure the yield requires costs 111 ms of extra module evaluation locally and postgres.js only issues the socket 22 ms before evaluation ends, so it buys a 22 ms overlap window for a 111 ms penalty.
