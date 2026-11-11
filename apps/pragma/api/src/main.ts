@@ -43,5 +43,9 @@ export const handler = async (
     );
     return;
   }
-  return await httpHandler(event, lambdaContext);
+  try {
+    return await httpHandler(event, lambdaContext);
+  } finally {
+    await flushErrorReports();
+  }
 };
