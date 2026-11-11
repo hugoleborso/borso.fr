@@ -4,8 +4,13 @@ export type OptionalWideEventFields = Readonly<Record<string, WideEventValue | u
 
 export type RequestOutcome = 'success' | 'refused' | 'failed';
 
-export interface OpeningFacts {
+export interface ServiceIdentity {
   readonly stage: string | undefined;
+  readonly version: string | undefined;
+}
+
+export interface OpeningFacts {
+  readonly service: ServiceIdentity;
   readonly isColdStart: boolean;
 }
 
@@ -66,8 +71,12 @@ export function buildFailureFields(thrown: unknown): WideEventFields {
   });
 }
 
-export function buildServiceFields(stage: string | undefined): WideEventFields {
-  return dropAbsentValues({ 'service.name': SERVICE_NAME, 'service.stage': stage });
+export function buildServiceFields(service: ServiceIdentity): WideEventFields {
+  return dropAbsentValues({
+    'service.name': SERVICE_NAME,
+    'service.stage': service.stage,
+    'service.version': service.version,
+  });
 }
 
 export function buildOpeningFields(
@@ -75,7 +84,7 @@ export function buildOpeningFields(
   baseFields: OptionalWideEventFields,
 ): WideEventFields {
   return dropAbsentValues({
-    ...buildServiceFields(facts.stage),
+    ...buildServiceFields(facts.service),
     'lambda.cold_start': facts.isColdStart,
     ...baseFields,
   });
