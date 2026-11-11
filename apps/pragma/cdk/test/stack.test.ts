@@ -424,10 +424,13 @@ describe('pragma app stack', () => {
     expect(readApiVariables('prod')).toMatchObject({
       SENTRY_DSN: PROD_ERROR_REPORTING.dsn,
       SENTRY_RELEASE: PROD_ERROR_REPORTING.release,
-      NODE_OPTIONS: '--enable-source-maps',
     });
     expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_DSN');
     expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_RELEASE');
+  });
+
+  it('asks Node to read no source map, at either stage, since none ships', () => {
+    expect(readApiVariables('prod')).not.toHaveProperty('NODE_OPTIONS');
     expect(readApiVariables('preview')).not.toHaveProperty('NODE_OPTIONS');
   });
 
