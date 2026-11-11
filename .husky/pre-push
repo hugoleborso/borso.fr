@@ -74,8 +74,14 @@ if git rev-parse --verify --quiet origin/main >/dev/null; then
   if [ -n "$merge_base" ] &&
     git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
     echo "[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it." >&2
-    echo "  Rebase onto main, resolve, then push with a lease:" >&2
-    echo "    git rebase origin/main && git push --force-with-lease" >&2
+    if [ -n "$(git rev-list --merges -n 1 origin/main..HEAD 2>/dev/null)" ]; then
+      echo "  This branch already merged main once, and a rebase would drop what that merge resolved" >&2
+      echo "  (docs/knowledge/a-rebase-cannot-see-what-a-merge-decided.md). Merge main in again:" >&2
+      echo "    git merge origin/main" >&2
+    else
+      echo "  Rebase onto main, resolve, then push with a lease:" >&2
+      echo "    git rebase origin/main && git push --force-with-lease" >&2
+    fi
     .claude/hooks/kaizen-refusal.sh pre-push-conflict "pre-push refused a branch that conflicts with origin/main"
     exit 1
   fi

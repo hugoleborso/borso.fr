@@ -148,6 +148,7 @@ if [[ "$PR" =~ ^[0-9]+$ ]] && [ -n "$COMPARED_HEAD" ] && command -v gh >/dev/nul
           echo "[merge-on-moved-base] Files both sides changed:"
           printf '%s\n' "$BOTH"
           echo "[merge-on-moved-base] Rebase the branch onto $BASE_BRANCH, git push --force-with-lease, wait for the check_suite event, then merge."
+          echo "[merge-on-moved-base] A branch that already holds a merge commit merges $BASE_BRANCH in instead: a rebase drops what its merges resolved."
         } >&2
         "$(dirname "$0")/kaizen-refusal.sh" merge-on-moved-base "tried to merge a pull request beside base commits no CI run tested with it"
         exit 2

@@ -81,7 +81,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Commits, pull requests, merges
 
-- Bring `main` into a branch by rebasing onto it, then `git push --force-with-lease`. A push with a lease needs no confirmation. A bare `--force` is refused by `pretool-no-swallowed-push.sh`.
+- Bring `main` into a branch by rebasing onto it, then `git push --force-with-lease`. A push with a lease needs no confirmation. A bare `--force` is refused by `pretool-no-swallowed-push.sh`. A branch that already holds a merge commit keeps merging, because a rebase drops what its merges resolved.
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos`.
