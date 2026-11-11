@@ -219,7 +219,6 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     api: {
       entry: props.apiEntry,
       timeoutSeconds: API_TIMEOUT_SECONDS,
-      memoryMb: 1024,
       extraPathPatterns: ASSISTANT_PATH_PATTERNS,
       requestHeaders: PRAGMA_REQUEST_HEADER_NAMES,
       ...(props.sourceMapUpload === undefined ? {} : { sourceMapUpload: props.sourceMapUpload }),
