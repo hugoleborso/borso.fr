@@ -44,7 +44,7 @@ for app_directory in apps/*/; do
   if [ -d "${app_directory}api/src/database/migrations" ]; then
     # One grep on the manifest's `dev:db` line, which oxfmt keeps on a line of
     # its own: a node process per application cost 200 ms of CPU a commit.
-    if ! grep -qE '^[[:space:]]*"dev:db":[[:space:]]*"[^"]*(test/dev-database\.setup\.ts|dev-db\.sh)' \
+    if ! grep -qE '^[[:space:]]*"dev:db":[[:space:]]*"[^"]*test/dev-database\.setup\.ts' \
       "${app_directory}package.json"; then
       echo "[check-app-registration] $slug owns migrations but its dev:db does not apply them." >&2
       echo "    Point dev:db at test/dev-database.setup.ts, which runs test/setup-postgres.ts first." >&2

@@ -523,8 +523,8 @@ review.
   filter naming an application that is not there. Both failures are silent
   otherwise: the application simply never gets a preview deploy, and no
   workflow reports it. It also fails an application that owns
-  `api/src/database/migrations/` while its `dev:db` script neither runs
-  `test/dev-database.setup.ts` nor `dev-db.sh`: booting the cluster alone
+  `api/src/database/migrations/` while its `dev:db` script does not run
+  `test/dev-database.setup.ts`: booting the cluster alone
   serves an API against an empty schema, which pragma did and banana-rush
   copied ([dantotsu](../dantotsus/pnpm-dev-served-an-empty-database.md)).
   And it fails an application, other than the five that already own their
