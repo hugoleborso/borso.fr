@@ -19,6 +19,17 @@
 # is-present? then delete" pattern). Per-PR scope only — refuses to act
 # on the prod stack.
 #
+# Preview teardown runs it again once the stack is destroyed. The shared
+# constructs delete their own log groups with a preview stack, but the Lambdas
+# CDK adds for its custom resources, such as BucketDeployment, create theirs at
+# first invocation with no retention, and those outlive the stack. On
+# 2026-11-11, 934 preview log groups were left in the account, 728 of them
+# set never to expire (measured).
+#
+# A live stack is never touched. Before 2026-11-11 step 2 deleted a healthy
+# stack's own log groups on every redeploy. See
+# docs/dantotsus/a-preview-stack-lost-its-logs-to-its-own-preflight.md.
+#
 # Usage: preflight-preview-recovery.sh <app-slug> <pr-number>
 #
 # This is the eradication for the two failures listed above. The dantotsu it
@@ -84,39 +95,7 @@ case "$STACK_STATUS" in
     ;;
 esac
 
-# --- 1b. Log groups a live stack owns but CloudWatch lost ----------------
-# Before 2026-11-11 step 2 ran against live stacks too and deleted their own
-# log groups. CloudFormation still lists them, so it never recreates them,
-# and the Lambda writes into nothing. Recreate each one with the retention
-# the stack's template gives it.
-restore_owned_log_groups() {
-  local logical physical present retention current
-  while IFS=$'\t' read -r logical physical; do
-    [ -z "$physical" ] && continue
-    present="$(aws logs describe-log-groups --log-group-name-prefix "$physical" --region "$REGION" \
-      --query "logGroups[?logGroupName=='$physical'].[logGroupName,retentionInDays]" --output text)"
-    if [ -z "$present" ]; then
-      log "restoring log group $physical, which $STACK_NAME owns but CloudWatch lost"
-      aws logs create-log-group --log-group-name "$physical" --region "$REGION" ||
-        { log "  (create failed — non-fatal)"; continue; }
-    fi
-    # A group the Lambda recreated on its own has no retention, so it is
-    # checked against the template whether or not this run recreated it.
-    current="$(printf '%s' "$present" | cut -f2)"
-    retention="$(aws cloudformation get-template --stack-name "$STACK_NAME" --region "$REGION" \
-      --query "TemplateBody.Resources.$logical.Properties.RetentionInDays" --output text 2>/dev/null || true)"
-    if [[ "$retention" =~ ^[0-9]+$ ]] && [ "$current" != "$retention" ]; then
-      log "setting $physical retention to $retention days"
-      aws logs put-retention-policy --log-group-name "$physical" \
-        --retention-in-days "$retention" --region "$REGION" || log "  (retention failed — non-fatal)"
-    fi
-  done < <(aws cloudformation list-stack-resources --stack-name "$STACK_NAME" --region "$REGION" \
-    --query "StackResourceSummaries[?ResourceType=='AWS::Logs::LogGroup'].[LogicalResourceId,PhysicalResourceId]" \
-    --output text)
-}
-
 if [ "$IS_STACK_LEFT" -eq 1 ]; then
-  restore_owned_log_groups
   log "stack $STACK_NAME owns its log groups and bucket — no orphan to clean"
   log "preflight complete"
   exit 0

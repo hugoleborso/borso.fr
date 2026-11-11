@@ -1,7 +1,9 @@
+import { RemovalPolicy } from 'aws-cdk-lib';
 import { describe, expect, it } from 'vitest';
 import {
   ALLOW_TEST_SEED_ENV_VAR,
   isApiServedThroughCloudFront,
+  selectLogGroupRemovalPolicy,
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
 } from './stage-wiring.utils.js';
@@ -35,5 +37,16 @@ describe('isApiServedThroughCloudFront', () => {
     expect(isApiServedThroughCloudFront('prod', false)).toBe(false);
     expect(isApiServedThroughCloudFront('preview', true)).toBe(false);
     expect(isApiServedThroughCloudFront('integ', true)).toBe(false);
+  });
+});
+
+describe('selectLogGroupRemovalPolicy', () => {
+  it('keeps prod logs when the stack goes', () => {
+    expect(selectLogGroupRemovalPolicy('prod')).toBe(RemovalPolicy.RETAIN);
+  });
+
+  it("deletes a disposable stack's logs with it, so a redeploy finds no orphan", () => {
+    expect(selectLogGroupRemovalPolicy('preview')).toBe(RemovalPolicy.DESTROY);
+    expect(selectLogGroupRemovalPolicy('integ')).toBe(RemovalPolicy.DESTROY);
   });
 });
