@@ -5,6 +5,7 @@ import {
   type IDsqlCluster,
   isProductionStage,
   PreviewableApp,
+  type SourceMapUpload,
   type Stage,
   WebSocketChannel,
 } from '@borso/infra';
@@ -92,6 +93,7 @@ export interface BuildPragmaAppStackProps {
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
   readonly errorReporting?: ErrorReportingProject;
+  readonly sourceMapUpload?: SourceMapUpload | undefined;
 }
 
 interface SiteOrigin {
@@ -219,6 +221,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       timeoutSeconds: API_TIMEOUT_SECONDS,
       extraPathPatterns: ASSISTANT_PATH_PATTERNS,
       requestHeaders: PRAGMA_REQUEST_HEADER_NAMES,
+      ...(props.sourceMapUpload === undefined ? {} : { sourceMapUpload: props.sourceMapUpload }),
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
