@@ -23,6 +23,7 @@
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
+    "@sentry/cli": "catalog:",
     "@stryker-mutator/core": "catalog:",
     "@stryker-mutator/vitest-runner": "catalog:",
     "@types/node": "catalog:",

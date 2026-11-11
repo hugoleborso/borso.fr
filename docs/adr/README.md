@@ -154,6 +154,7 @@ No:
 - [`2026-09-19T2140-api-gateway-websocket-pushes-banana-rush-round-state.md`](./2026-09-19T2140-api-gateway-websocket-pushes-banana-rush-round-state.md). an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
 - 2026-10-06T2302. talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
 - 2026-10-29T1139. pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
+- [`2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md`](./2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md). a Lambda API uploads its source map to Sentry at bundling time and deletes it from the asset once the upload succeeded, instead of carrying 13.7 MB that Node parses on every cold start; chosen over simply dropping the map because minified frames make a production exception a guess, and the cost is `@sentry/cli` in every full-stack deploy.
 
 ### Harness
 

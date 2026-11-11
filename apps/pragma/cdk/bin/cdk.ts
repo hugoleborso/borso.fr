@@ -7,6 +7,7 @@ import {
   requireAwsAccount,
   requireDeployStage,
   requirePrNumber,
+  type SourceMapUpload,
 } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { buildPragmaAppStack } from '../lib/stack.js';
@@ -42,6 +43,17 @@ function readOptionalSetting(name: string): string | undefined {
 const errorReportingDsn = readOptionalSetting('PRAGMA_SENTRY_DSN');
 const release = readOptionalSetting('GITHUB_SHA');
 
+function readSourceMapUpload(): SourceMapUpload | undefined {
+  const organization = readOptionalSetting('SENTRY_ORG');
+  const project = readOptionalSetting('SENTRY_PROJECT');
+  const token = readOptionalSetting('SENTRY_AUTH_TOKEN');
+  if (organization === undefined || project === undefined) return undefined;
+  if (token === undefined || release === undefined) return undefined;
+  return { organization, project, release };
+}
+
+const sourceMapUpload = readSourceMapUpload();
+
 const prNumber = stage === 'preview' ? requirePrNumber() : undefined;
 const stackSuffix = stage === 'prod' ? 'prod' : `pr-${prNumber}`;
 const appStackName = `${APP_SLUG}-${stackSuffix}`;
@@ -72,4 +84,5 @@ buildPragmaAppStack({
           ...(release === undefined ? {} : { release }),
         },
       }),
+  ...(sourceMapUpload === undefined ? {} : { sourceMapUpload }),
 });
