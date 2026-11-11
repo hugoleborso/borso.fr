@@ -97,6 +97,7 @@ decision.
 - [`github-scheduled-workflows-fire-late.md`](./github-scheduled-workflows-fire-late.md) — measured: this repo's nightly cron fires 1h01m–2h45m after its declared time, every day observed. Never key a wait on the cron expression; read the last few `created_at` values instead. Includes the monitor-that-cannot-report-its-own-failure trap.
 - [`github-oidc-sub-claim-per-trigger.md`](./github-oidc-sub-claim-per-trigger.md) — the OIDC `sub` claim describes the *event*, not the workflow, so adding a `schedule:` trigger changes the credential presented; claim-per-trigger table, why `environment:` wins, and how to trust several.
 - [`github-environments-outlive-their-pull-requests.md`](./github-environments-outlive-their-pull-requests.md) — deleting an environment needs Administration write, which `GITHUB_TOKEN` cannot get, and leaves its deployments; a 404 on delete proves nothing about the token; how to read GitHub's permission tables as markdown.
+- [`a-queued-run-github-will-neither-cancel-nor-rerun.md`](./a-queued-run-github-will-neither-cancel-nor-rerun.md) — during a GitHub Actions incident a run stuck `queued` or `in_progress` answers 409 to a cancel and 403 to a rerun and holds its concurrency group; read githubstatus.com first, wait, and only a push with a real change starts a new run. Seen on PR #292.
 
 ### Operator / shell
 
@@ -191,7 +192,7 @@ decision.
 
 - [`pragma-calendar-fixtures-attach-only-on-a-preview.md`](./pragma-calendar-fixtures-attach-only-on-a-preview.md) — why `pnpm dev` seeds no calendar feed, and where calendar screens can be checked.
 - [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, ids that change on every seed, the `pragma.session-seen` marker a cookie alone lacks, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
-- [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — every talos screen but sign-in sits behind a passkey: the fictional memory `dev:db` seeds, a CDP virtual authenticator, and a wiped local database before each new browser context, or every screenshot is the login screen.
+- [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — talos `pnpm dev` prints a seeded sign-in cookie that `agent-browser cookies set` takes, and replays a seed that changed; the passkey route with a CDP virtual authenticator is only for the login screen itself. Rewritten by the sweep of PR #292.
 
 ### Spec & metrics framing
 

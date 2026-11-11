@@ -75,6 +75,12 @@ for vocabulary in apps/*/VOCABULARY.md; do
     fi
   done < <(grep -E '^Held by:' "$vocabulary" || true)
 
+  while IFS= read -r indented; do
+    [ -n "$indented" ] || continue
+    echo "  $vocabulary has an indented Held by line, which the check above never reads; start it at column 0: $indented" >&2
+    failed=1
+  done < <(grep -nE '^[[:space:]]+Held by:' "$vocabulary" || true)
+
   while IFS= read -r citation; do
     [ -n "$citation" ] || continue
     echo "  $vocabulary sources a claim from a comment: $citation" >&2

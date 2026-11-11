@@ -1,2 +1,7 @@
 # Every kaizen sweep appends one row to this table, so parallel sweeps conflicted on it.
 docs/quality/feature-cost.md merge=union
+# Every pull request that adds a decision appends one row to the table and one line to the
+# list, so a branch integrating main conflicted on it: three times in four merges on PR #292.
+# A union merge keeps both sides. It also keeps a row main renamed, which
+# scripts/check-adr-numbers-resolve.sh refuses at commit and in CI.
+docs/adr/README.md merge=union
