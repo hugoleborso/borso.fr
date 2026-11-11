@@ -18,6 +18,12 @@ suppresses nothing, and oxlint reports it:
 error: Unused eslint-disable directive (no problems were reported).
 ```
 
+`.oxlintrc.json` sets `"typeAware": true` since the kaizen of PR #295, so a
+bare `oxlint` runs every rule. The report still appears where a configuration
+turns type information off, such as the plugin half of
+`scripts/lint-staged-files.sh`, or a `-c` file of your own. See
+[the dantotsu](../dantotsus/the-lint-gate-each-brief-retyped-without-its-flag.md).
+
 The directive is not stale. Lint the same file with `--type-aware` before
 deleting it:
 

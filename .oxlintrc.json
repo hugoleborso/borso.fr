@@ -31,7 +31,7 @@
     "correctness": "off"
   },
   "options": {
-    "typeAware": false,
+    "typeAware": true,
     "reportUnusedDisableDirectives": "error",
     "denyWarnings": true
   },
