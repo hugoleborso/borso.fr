@@ -18,7 +18,7 @@ human-bound and stay as chat Skills. Before running `/feature-pipeline`, confirm
 
 If any pre-condition is missing, **do not** run this workflow — the runtime
 can't pause for mid-run human input, so it would either over-decide
-(round-16 anti-pattern, see [ADR-0005](../../docs/adr/0005-dynamic-workflows-for-orchestration.md))
+(round-16 anti-pattern, see [ADR-2026-06-05T2337](../../docs/adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md))
 or strand state for a forced exit-and-resume.
 
 ## What the workflow does
@@ -216,14 +216,14 @@ nothing.
 If the workflow exited with `outcome: needs-human-adr-ratification`:
 
 1. Run `/adr` in chat (piloted mode) with the trigger from
-   `state.json::pendingAdr`. Commit the resulting `docs/adr/<NNNN>-<slug>.md`.
+   `state.json::pendingAdr`. Commit the resulting `docs/adr/<id>-<slug>.md`.
 2. Re-launch `/feature-pipeline <spec-path>`. The script reads `state.json`,
    sees `pendingAdr.status === 'ratified'`, clears the pending marker, and
    continues from the stage where it stopped.
 
 ## See also
 
-- [ADR-0005](../../docs/adr/0005-dynamic-workflows-for-orchestration.md) — the substrate decision.
+- [ADR-2026-06-05T2337](../../docs/adr/2026-06-05T2337-dynamic-workflows-for-orchestration.md) — the substrate decision.
 - [`docs/knowledge/dynamic-workflow-feature-pipeline.md`](../../docs/knowledge/dynamic-workflow-feature-pipeline.md) — full operator runbook including dogfooding + saving the generated `.js`.
 - [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../docs/knowledge/orchestrator-dispatch-hygiene.md) — the dispatch knobs (`model: 'opus'`, `isolation: 'worktree'`, both halves of the lint gate).
 - [`.claude/skills/tech-lead-orchestrator/standard.md`](../skills/tech-lead-orchestrator/standard.md) — the durable contract the workflow honours; updated in PR #30 to reflect the new substrate boundary.

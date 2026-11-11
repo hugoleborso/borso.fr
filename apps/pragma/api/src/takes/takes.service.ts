@@ -1,3 +1,4 @@
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
@@ -53,8 +54,6 @@ import type {
 
 export { defineDeletion, defineTool, pageItems } from '../mcp/mcp.service';
 export { resolveSongId } from '../songs/songs.service';
-
-const TAKE_OBJECT_DELETE_FAILED = 'TakeObjectDeleteFailed';
 
 interface ActorCommand {
   readonly memberId: string;
@@ -163,13 +162,10 @@ async function deleteAudioOfDeletedTakes(objectKeys: readonly string[]): Promise
   if (objectKeys.length === 0) return;
   const deletion = await deleteStoredObjects(objectKeys);
   if (deletion.failedObjectKeys.length === 0) return;
-  console.warn(
-    JSON.stringify({
-      event: TAKE_OBJECT_DELETE_FAILED,
-      objectKeys: deletion.failedObjectKeys,
-      failure: deletion.failureName,
-    }),
-  );
+  addWideEventFields({
+    'take.audio_delete_failed_keys': [...deletion.failedObjectKeys],
+    'take.audio_delete_failures': [String(deletion.failureName)],
+  });
 }
 
 export async function removeTake(id: string): Promise<DeletionOutcome> {

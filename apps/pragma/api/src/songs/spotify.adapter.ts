@@ -3,6 +3,8 @@
  * @DependsOnExternal aws-ssm
  */
 
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
+import { describeThrownValue } from '../helpers/observability/wide-event.core';
 import { readSecureParameter } from '../helpers/secrets/parameter-store.client';
 import {
   basicAuthorization,
@@ -86,7 +88,11 @@ export async function resolveSpotifyTrackId(
   try {
     return await askSpotifyForTrackId(isrcs, options);
   } catch (error) {
-    console.warn('spotify track resolution failed, leaving the song unlinked', error);
+    const failure = describeThrownValue(error);
+    addWideEventFields({
+      'spotify.failure': [failure.type],
+      'spotify.failure_message': [failure.message],
+    });
     return null;
   }
 }

@@ -97,6 +97,6 @@ describe('isAgentReaderFunctionName', () => {
 describe('READER_NOT_PROVISIONED_REFUSAL', () => {
   it('names the output it looked for and the decision that creates it', () => {
     expect(READER_NOT_PROVISIONED_REFUSAL).toContain(AGENT_READER_FUNCTION_NAME_OUTPUT);
-    expect(READER_NOT_PROVISIONED_REFUSAL).toContain('ADR-0049');
+    expect(READER_NOT_PROVISIONED_REFUSAL).toContain('ADR-2026-10-28T2126');
   });
 });

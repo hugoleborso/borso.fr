@@ -1,6 +1,6 @@
 # Plan — Song takes and web push
 
-> Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) and [ADR-0040](../../../../adr/0040-pragma-sends-web-push-like-talos.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, did not name it at all (planning gap), or named it correctly and the defect comes from elsewhere.
+> Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) and [ADR-2026-10-23T0932](../../../../adr/2026-10-23T0932-pragma-sends-web-push-like-talos.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, did not name it at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
 Intent: add takes (one recording of one song, optionally from one session) with comments, and web push for four categories, to `apps/pragma`, sending push inline from the API Lambda exactly as `apps/talos/api/src/push/` does.
 
@@ -13,7 +13,7 @@ Read from `apps/pragma/` on 2026-10-23, not from the spec. Each line is a correc
 - **`DEFAULT now()` is refused** by `api/src/database/migrations.audit.test.ts` for any column outside its allowlist. `created_at` gets no default; the service passes `now`.
 - **DSQL has no foreign keys** ([`docs/knowledge/dsql-postgres-compat-gaps.md`](../../../../knowledge/dsql-postgres-compat-gaps.md)), so every cascade is code: the owning service exports `…OfDeletedSong(transaction, id)`, called inside the existing `deleteSongWithCascade` / `deleteSessionWithCascade` / `deleteMemberWithLinks` transactions, as `deleteStudiesOfDeletedSong` already is.
 - **The uploads adapter cannot delete and does not bind the length.** `presignPutObject` signs no `ContentLength`, so the 10 MiB chart cap is only checked in Zod; and the Lambda role has `grantPut` + `grantRead` only. Takes need both: the 50 MiB cap enforced by S3, and object deletion on song deletion.
-- **The VAPID key pair lives in the database** (ADR-0040, revision 2026-10-24). The API generates it with `webPush.generateVAPIDKeys()` the first time push needs it and stores it in the `vapid_key_pair` singleton under id 1, with an `ON CONFLICT DO NOTHING` insert so two first uses keep one pair. The table is in the preview clone's `tableBlocklist`, so each preview generates a pair of its own and keeps it across deploys, and no preview signs with the production key. There is no SSM parameter, no environment variable and no operator step.
+- **The VAPID key pair lives in the database** (ADR-2026-10-23T0932, revision 2026-10-24). The API generates it with `webPush.generateVAPIDKeys()` the first time push needs it and stores it in the `vapid_key_pair` singleton under id 1, with an `ON CONFLICT DO NOTHING` insert so two first uses keep one pair. The table is in the preview clone's `tableBlocklist`, so each preview generates a pair of its own and keeps it across deploys, and no preview signs with the production key. There is no SSM parameter, no environment variable and no operator step.
 - **`web-push`'s `timeout` option is a socket idle timeout**, not a deadline (`@types/web-push` 3.6.4, lines 247 to 255). The send is bounded by that option *and* by a `Promise.race` deadline.
 
 ## How each spec decision becomes code
@@ -45,7 +45,7 @@ Read from `apps/pragma/` on 2026-10-23, not from the spec. Each line is a correc
 | Error "over 50 MiB or not audio" | Refused before upload | `validateTakeFile(file)` in `domain/take-upload.core.ts`, read by the form and by the API schema | unit |
 | Error "storage full" | Offer a download | `take-queue.adapter.ts` returns `{ kind: 'quota-exceeded' }`; sheet renders a download link over `URL.createObjectURL(blob)` | unit on the core; `TakeQueueWriteFailed` reported |
 | Error "404 / 410" | Delete that subscription | copy of talos `classifyPushFailure` + `selectExpiredEndpoints` in `notifications.core.ts` | unit; back-e2e with the fake answering 410 |
-| ADR-0040 | One adapter, catalog version, per-stage keys, blocklist | `web-push.adapter.ts` only importer; `pnpm-workspace.yaml` catalog `web-push: 3.6.7`, `@types/web-push: 3.6.4`; `talos` and `pragma` both `catalog:`; the pair in `vapid_key_pair`, generated on first use; `tableBlocklist` gains `push_subscription`, `take`, `take_comment`, `vapid_key_pair` | `grep -rn "from 'web-push'" apps/*/api/src` lists two adapters; `stack.test.ts` asserts the blocklist and that no VAPID parameter is named or granted |
+| ADR-2026-10-23T0932 | One adapter, catalog version, per-stage keys, blocklist | `web-push.adapter.ts` only importer; `pnpm-workspace.yaml` catalog `web-push: 3.6.7`, `@types/web-push: 3.6.4`; `talos` and `pragma` both `catalog:`; the pair in `vapid_key_pair`, generated on first use; `tableBlocklist` gains `push_subscription`, `take`, `take_comment`, `vapid_key_pair` | `grep -rn "from 'web-push'" apps/*/api/src` lists two adapters; `stack.test.ts` asserts the blocklist and that no VAPID parameter is named or granted |
 | Changes → `app.ts` | Mount two routers | `.route('/api/takes', buildTakesRouter())`, `.route('/api/notifications', buildNotificationsRouter())` inside the one chain | `tsc --noEmit` on the site sees `api.api.takes` |
 | Analytics | Input events | API: one structured `console.info({ event: 'take_created', source, queued })` per event through a named helper in `helpers/observability/`; site: Sentry breadcrumbs. No new pipeline; the output metric is read from `take.session_id` | grep for each event name in the diff |
 | Zero-defect | Four alerts | site: `reportTakeFailure(stage, error)` added to `site/src/observability/error-reporting.adapter.ts`, tags `take.stage`; API: `PushSendFailed` through `reportUnhandledError`-style capture with host and status tags, 404/410 skipped | unit on tag selection core |
@@ -53,7 +53,7 @@ Read from `apps/pragma/` on 2026-10-23, not from the spec. Each line is a correc
 
 ## Pattern Coherence pass
 
-- **New dependency:** `web-push` only, ratified by ADR-0040. No `idb`, no `fake-indexeddb`: the queue adapter is written over the raw IndexedDB API behind an injected `TakeQueueStorage` interface, and its tests run against an in-memory implementation of that interface. Adding a fake would be an ADR trigger for a test convenience.
+- **New dependency:** `web-push` only, ratified by ADR-2026-10-23T0932. No `idb`, no `fake-indexeddb`: the queue adapter is written over the raw IndexedDB API behind an injected `TakeQueueStorage` interface, and its tests run against an in-memory implementation of that interface. Adding a fake would be an ADR trigger for a test convenience.
 - **Reused, not rebuilt:** `uploads.adapter.ts` (presign, extended with `contentLength` and a delete), `scene-wake-lock.adapter.ts` (screen lock, renamed only if its `SURFACE` constant needs it), `online-status.hook.ts`, `FileDropZone`, `parameter-store.client.ts`, the talos push core and site `push-subscription.adapter.ts` / `vapid-key.utils.ts` / `notifications-offer.core.ts` (copied, since cross-app imports are banned).
 - **Two playback URL paths?** Takes reuse `POST /api/uploads/sign-get` through a new `useTakePlaybackUrl` in `takes.queries.ts` instead of embedding a URL in the list, so one signing path exists and the list stays cacheable.
 - **State patterns:** server state stays in TanStack Query; the queue is an external store read through `useSyncExternalStore` (blueprint `hook-external-store`), not `useEffect` + `useState`.
@@ -113,7 +113,7 @@ Run, in order, before push:
 
 ## Operator steps (before push works on a stage)
 
-- None since the 2026-10-24 revision of ADR-0040: each stage generates its VAPID pair the first time push needs it.
+- None since the 2026-10-24 revision of ADR-2026-10-23T0932: each stage generates its VAPID pair the first time push needs it.
 
 ## Open questions / unknowns
 

@@ -142,7 +142,7 @@ function readSchemaReader(template: Template): unknown {
   return undefined;
 }
 
-describe('pragma read-only agent access (ADR-0044)', () => {
+describe('pragma read-only agent access (ADR-2026-10-25T0054)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');
@@ -219,7 +219,7 @@ describe('pragma app stack', () => {
     });
   });
 
-  it('declares no Secrets Manager resources — auth state lives in the DB (ADR-0004)', () => {
+  it('declares no Secrets Manager resources — auth state lives in the DB (ADR-2026-05-19T1955)', () => {
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);
       expect(template.findResources('AWS::SecretsManager::Secret')).toEqual({});
@@ -394,7 +394,7 @@ describe('pragma app stack', () => {
     );
   });
 
-  it('lets a preview API read takes, and nothing else, from the production uploads bucket (ADR-0052)', () => {
+  it('lets a preview API read takes, and nothing else, from the production uploads bucket (ADR-2026-10-29T1115)', () => {
     expect(readApiVariables('preview').PRODUCTION_UPLOADS_BUCKET).toBe('pragma-prod-uploads');
     const policies = synthAppStack('preview').findResources('AWS::IAM::Policy');
     const statements = Object.values(policies).flatMap(
@@ -477,7 +477,7 @@ function readStatementsOfRole(roleId: string): unknown[] {
     .flatMap((policy) => policy.PolicyDocument.Statement);
 }
 
-describe('pragma streak reminder schedule (ADR-202610291139)', () => {
+describe('pragma streak reminder schedule (ADR-2026-10-29T1139)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');
@@ -522,7 +522,7 @@ function readFunctionVariables(stage: 'prod' | 'preview', logicalIdFragment: str
   return found === undefined ? {} : readEnvVars(found);
 }
 
-describe('pragma live invalidation channel (ADR-0021)', () => {
+describe('pragma live invalidation channel (ADR-2026-09-19T2140)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');

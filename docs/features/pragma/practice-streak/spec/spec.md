@@ -125,7 +125,7 @@ flowchart LR
 
 | ADR | Decision | What it constrains downstream |
 | --- | --- | --- |
-| [ADR-202610291139](../../../../adr/202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | EventBridge Scheduler at 20:00 `Europe/Paris`, production only, invoking the API Lambda with `{ "job": "streak-reminder" }` | `apps/pragma/cdk/lib/stack.ts`, the routing guard in `apps/pragma/api/src/main.ts`, and the 100% coverage of `apps/pragma/cdk` tests |
+| [ADR-2026-10-29T1139](../../../../adr/2026-10-29T1139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | EventBridge Scheduler at 20:00 `Europe/Paris`, production only, invoking the API Lambda with `{ "job": "streak-reminder" }` | `apps/pragma/cdk/lib/stack.ts`, the routing guard in `apps/pragma/api/src/main.ts`, and the 100% coverage of `apps/pragma/cdk` tests |
 
 ## Changes
 

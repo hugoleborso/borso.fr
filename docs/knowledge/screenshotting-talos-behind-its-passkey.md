@@ -8,7 +8,7 @@ triggers:
 
 # Screenshotting talos behind its passkey
 
-talos has no preview stage ([ADR-0027](../adr/0027-talos-deploys-to-prod-only.md)), so a screenshot of a screen comes from `pnpm dev` on the machine, and every screen but `/login` sits behind a passkey.
+talos has no preview stage ([ADR-2026-10-06T2302](../adr/2026-10-06T2302-talos-deploys-to-prod-only.md)), so a screenshot of a screen comes from `pnpm dev` on the machine, and every screen but `/login` sits behind a passkey.
 
 ## The recipe that worked on PR #171
 

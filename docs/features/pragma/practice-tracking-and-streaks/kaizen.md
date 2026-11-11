@@ -25,4 +25,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [02:05] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [02:07] `technical-validator-2` The spec's Test strategy routes every happy-path step and every edge case to visual validation while also naming unit and back-e2e for the same cases, so the category D split had to be inferred again on the second pass.
 - [02:27] `technical-validator-3` The spec's Test strategy says a concert today counts as past while its Use cases say the next concert is strictly after now, and nothing flagged the contradiction before validation
-- [02:29] `main` Uploading validation screenshots to the previews bucket was refused with AccessDenied for AI-Dev-ReadOnly, so the ADR-0023 path is not available from this hosted session
+- [02:29] `main` Uploading validation screenshots to the previews bucket was refused with AccessDenied for AI-Dev-ReadOnly, so the ADR-2026-09-21T0819 path is not available from this hosted session

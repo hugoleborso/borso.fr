@@ -2,7 +2,7 @@
 
 - Spec: [`../spec/spec.md`](../spec/spec.md)
 - Plan: [`../plan/plan.md`](../plan/plan.md)
-- ADR: [`../../../../adr/0004-pragma-shared-password-auth.md`](../../../../adr/0004-pragma-shared-password-auth.md)
+- ADR: [`../../../../adr/2026-05-19T1955-pragma-shared-password-auth.md`](../../../../adr/2026-05-19T1955-pragma-shared-password-auth.md)
 - Branch: `claude/pragma-erp-specification-k41Mg`
 - Base: `origin/main`
 - HEAD: `3267f91` (impl tip: `283e174` — round-3 unified fix; `3267f91` is docs-only verdict checkpoint)
@@ -23,7 +23,7 @@ The 6 previously-failing technical rows are the spotlight; every one is re-check
 | # | Spec ref | Claim | Code (file:line) | Evidence | Verdict |
 |---|---|---|---|---|---|
 | A01 | Q.O.D. *App-workspace slug* = `pragma` | Workspace lives at `apps/pragma/` with `@borso-app/pragma` name | `apps/pragma/package.json` | `"name": "@borso-app/pragma"` | PASS |
-| A02 | Q.O.D. *Auth model* = shared password (ADR-0004) | Hono middleware verifies signed HttpOnly cookie + argon2id hash in `app_config`; rate-limit 5/15min/ip_hash; rotate-password endpoint behind session | `apps/pragma/api/src/auth/shared-password.middleware.ts`, `auth.controller.ts` | `mountGated(app, '/api/admin/rotate-password', ...)` plus back-e2e tests | PASS |
+| A02 | Q.O.D. *Auth model* = shared password (ADR-2026-05-19T1955) | Hono middleware verifies signed HttpOnly cookie + argon2id hash in `app_config`; rate-limit 5/15min/ip_hash; rotate-password endpoint behind session | `apps/pragma/api/src/auth/shared-password.middleware.ts`, `auth.controller.ts` | `mountGated(app, '/api/admin/rotate-password', ...)` plus back-e2e tests | PASS |
 | A03 | Q.O.D. *Concurrency* = last-write-wins | Plain UPDATE without version column | `apps/pragma/api/src/songs/songs.repository.ts` | Drizzle update via repository; no optimistic lock | PASS |
 | A04 | Q.O.D. *Mastery* hybrid (default ?? override) | `mastery.core.ts:effective` returns `override ?? default` | `apps/pragma/api/src/mastery/mastery.core.ts` | branch test covers `override = 0` falsy trap | PASS |
 | A05 | Q.O.D. *Transition warning rule* — no harmonic kept by same member | `transition.core.ts:evaluateTransition` intersects harmonic-member sets | `apps/pragma/api/src/setlists/transition.core.ts` | `if (overlap.length > 0) return { kind: 'safe' };` | PASS |
@@ -46,7 +46,7 @@ The 6 previously-failing technical rows are the spotlight; every one is re-check
 | A22 | Spec route `/sessions/<id>/setlist` | Setlist editor is embedded inside `/sessions/<id>` rather than a dedicated route | `apps/pragma/site/src/App.tsx` | functional equivalent (unchanged from round-2) | PASS-with-note |
 | A23 | Domain model: MASTERY_DEFAULT + MASTERY_OVERRIDE unique indexes | Drizzle schema + back-e2e | `apps/pragma/api/src/mastery/mastery.schema.ts` + `mastery.controller.test.ts` | constraint verified | PASS |
 | A24 | Domain model: SETLIST_ENTRY position index | Drizzle index `(setlist_id, position)` | `apps/pragma/api/src/setlists/setlists.schema.ts` | drizzle migration includes the index | PASS |
-| A25 | Files-to-change: `apps/pragma/cdk/` — composes PreviewableApp + DsqlCluster + uploads bucket | Stack composes PreviewableApp + S3 + CORS PUT/GET; DsqlCluster is its own stack; no SecretsManager (ADR-0004) | `apps/pragma/cdk/lib/stack.ts`, `cdk/bin/cdk.ts` | unchanged from round-2 PASS | PASS |
+| A25 | Files-to-change: `apps/pragma/cdk/` — composes PreviewableApp + DsqlCluster + uploads bucket | Stack composes PreviewableApp + S3 + CORS PUT/GET; DsqlCluster is its own stack; no SecretsManager (ADR-2026-05-19T1955) | `apps/pragma/cdk/lib/stack.ts`, `cdk/bin/cdk.ts` | unchanged from round-2 PASS | PASS |
 | A26 | Files-to-change: `apps/pragma/site/src/sw/` — service worker | SW + `register-sw.ts` + `manifest.utils.ts` + `sw-cache.utils.ts` | `apps/pragma/site/src/sw/` | all present | PASS |
 | A27 | Plan: bootstrap `set-password` first-time | Implemented inline on `auth.controller.ts` as `POST /api/admin/set-password` | `apps/pragma/api/src/auth/auth.controller.ts` | back-e2e: 2nd set-password attempt 401s | PASS |
 

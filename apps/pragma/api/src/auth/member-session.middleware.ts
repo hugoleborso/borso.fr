@@ -1,5 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { getCookie } from 'hono/cookie';
+import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import { getAppConfig } from './auth.service';
 import { findCredentialByMemberId } from './credentials.repository';
 import { judgeMemberSession } from './member-session.core';
@@ -38,6 +39,7 @@ export const requireMemberSession: MiddlewareHandler = async (context, next) => 
 
 export function rememberMemberId(context: Context, memberId: string): void {
   context.set(MEMBER_ID_KEY, memberId);
+  addWideEventFields({ 'member.id': memberId });
 }
 
 export function readMemberId(context: Context): string {

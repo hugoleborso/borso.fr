@@ -155,7 +155,7 @@ with no visible affordance, a licence attribution, an error.
 ## Interactive primitives come from React Aria
 
 pragma's interactive primitives wrap React Aria Components
-([ADR-202611031438](../adr/202611031438-pragma-interactive-primitives-come-from-react-aria-components.md)).
+([ADR-2026-11-03T1438](../adr/2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md)).
 The library owns the behaviour: dismissal, focus, keyboard and press handling.
 pragma's Tailwind classes own the look, set on each part through `className`,
 so a migrated primitive draws the same pixels as the one it replaced.

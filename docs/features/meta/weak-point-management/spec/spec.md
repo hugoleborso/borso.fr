@@ -13,7 +13,7 @@ claiming a level their eradication did not ship, and one eradication that
 was never committed.
 
 The operator approved building it in one pull request.
-[ADR-0029](../../../../adr/0029-weak-point-management-from-the-dantotsu-record.md)
+[ADR-2026-10-10T0141](../../../../adr/2026-10-10T0141-weak-point-management-from-the-dantotsu-record.md)
 records the choice of the dantotsu front matter as the defect record.
 
 ## What ships
@@ -33,7 +33,7 @@ records the choice of the dantotsu front matter as the defect record.
    and inventories, filed under Build, Observe and Ship.
 7. The dantotsu skill and template, and `/after-task-dantotsus`, updated so
    new entries fill the new fields.
-8. ADR-0029.
+8. ADR-2026-10-10T0141.
 
 ## Decisions
 
@@ -45,7 +45,7 @@ records the choice of the dantotsu front matter as the defect record.
 | What about the entry's own fix, which a squash merge renames? | `fix-commits: [self]` names the commit that adds the entry. |
 | When is `recurs:` required? | For an entry dated 2026-10-10 or later that shares two or more tags with an earlier entry. `recurs: none (<reason>)` answers it. |
 | What is the weekly count read from? | The `date:` of each entry naming the weak point, per ISO week, from its first occurrence to the week of the run. No cron. |
-| Where do the maps go? | `docs/quality/*.html`, gitignored per ADR-0014, built by `scripts/reports.sh standards`, published by `pages.yml`. |
+| Where do the maps go? | `docs/quality/*.html`, gitignored per ADR-2026-08-20T1031, built by `scripts/reports.sh standards`, published by `pages.yml`. |
 
 ## Use cases and edge cases
 

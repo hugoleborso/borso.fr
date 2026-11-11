@@ -16,7 +16,7 @@ apps/<slug>/
 ├── site/            Vite + React. Source under site/src/, index.html at site/.
 ├── api/             Hono on Lambda. One folder per bounded context under api/src/.
 ├── cdk/             The stack, composing the constructs from @borso/infra.
-├── domain/          Optional. Only rules BOTH site/ and api/ read. See ADR-0010.
+├── domain/          Optional. Only rules BOTH site/ and api/ read. See ADR-2026-08-13T0026.
 ├── test/            Back-end end-to-end, against a real Postgres.
 ├── VOCABULARY.md    The application's nouns. See docs/standards/01-naming.md.
 ├── vitest.config.ts Two projects, `core` and `back-e2e`. See below.

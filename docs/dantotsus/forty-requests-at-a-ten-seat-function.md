@@ -18,7 +18,7 @@ recurs: none (rate-limits-keyed-on-a-header-the-client-writes shares lambda and 
 
 > Status: shipped on branch claude/wizardly-mendel-0nq8qs. The operator
 > chose options A and B, and A grew into a generic read batch
-> (ADR 202611050445). A scheduled check reads production on 2026-11-12.
+> (ADR 2026-11-05T0445). A scheduled check reads production on 2026-11-12.
 
 ## User impact
 
@@ -124,7 +124,7 @@ and CLAUDE.md says to lower the water, not raise the boat.
 
 **Shipped.** The operator chose A and B on 2026-11-05, and every route had to
 meet the target. A became a generic read batch,
-[ADR 202611050445](../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md).
+[ADR 2026-11-05T0445](../adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md).
 The site's Hono client sends every GET issued in one task as one
 `POST /api/read-batch`, at most 10 reads, at most 2 requests in flight.
 One client therefore holds at most 2 of the 10 seats, whatever a screen

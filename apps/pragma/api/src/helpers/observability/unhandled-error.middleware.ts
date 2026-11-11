@@ -13,7 +13,6 @@ export function buildUnhandledErrorAnswer(reportFailure: ReportFailure): ErrorHa
       const refusal = error.getResponse();
       return context.newResponse(refusal.body, refusal);
     }
-    console.error(error);
     reportFailure(error);
     return context.text(INTERNAL_SERVER_ERROR_BODY, INTERNAL_SERVER_ERROR_STATUS);
   };

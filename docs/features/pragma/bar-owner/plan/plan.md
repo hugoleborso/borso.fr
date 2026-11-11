@@ -44,13 +44,13 @@ switches the default too.
 | Layer | File | Change |
 | --- | --- | --- |
 | Core | `api/src/bars/bar-search.core.ts` | Parses the Nominatim body with Zod into `BarSearchHit`, walking the city keys OpenStreetMap uses and the two phone tags. 100% coverage. |
-| Adapter | `api/src/bars/bar-search.adapter.ts` | The one outbound call, per ADR-0012, carrying the usage policy in code: one request per second, an hour of caching, and an identifying User-Agent. |
+| Adapter | `api/src/bars/bar-search.adapter.ts` | The one outbound call, per ADR-2026-08-15T0234, carrying the usage policy in code: one request per second, an hour of caching, and an identifying User-Agent. |
 | Controller | `api/src/bars/bars.controller.ts` | `GET /api/bars/search?query=`, behind the member session. |
 | Query | `site/src/lib/queries/bars.queries.ts` | `useBarPlaceSearch`, disabled on an empty query. |
 | Organism | `site/src/components/organisms/BarPlaceSearch.tsx` | The search box, 600 ms debounce, the OpenStreetMap attribution link, one sentence when the service does not answer. |
 | Front core | `site/src/routes/bars/bar-form.core.ts` | `buildBarFormFromPlace`, which always prepares a new bar. |
 | i18n | `site/src/i18n/{en,fr}.json` | The search labels. |
-| ADR | `docs/adr/0018-…md` | Why Nominatim rather than Google, and what its usage policy costs. |
+| ADR | `docs/adr/2026-09-15T0015-…md` | Why Nominatim rather than Google, and what its usage policy costs. |
 
 Risks: Nominatim is run for openstreetmap.org and serves everyone else on
 spare capacity, so a slow or refused answer is normal rather than an

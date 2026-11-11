@@ -60,7 +60,7 @@ This replaces the button the operator found ugly. That one was a flat blue recta
 
 ### Icons
 
-Lucide, ISC licence, at 2 px stroke (2.2 to 2.6 at small sizes so they hold up next to bold text). Pragma's own bass glyph stays, because Lucide has none. To avoid a new dependency, the Lucide path data is copied into `atoms/Icon.tsx` as ADR-0022 already does for five instrument glyphs; the mockups were generated the same way from the `lucide-react` 1.52.0 package already in the tree.
+Lucide, ISC licence, at 2 px stroke (2.2 to 2.6 at small sizes so they hold up next to bold text). Pragma's own bass glyph stays, because Lucide has none. To avoid a new dependency, the Lucide path data is copied into `atoms/Icon.tsx` as ADR-2026-09-18T2339 already does for five instrument glyphs; the mockups were generated the same way from the `lucide-react` 1.52.0 package already in the tree.
 
 ### Where actions go
 

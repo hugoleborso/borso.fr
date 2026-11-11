@@ -312,7 +312,7 @@ describe('decideTableAccess', () => {
     expect(decideTableAccess('SELECT id FROM admin_sessions', ['admin_sessions'])).toStrictEqual({
       accepted: false,
       reason:
-        'the query names admin_sessions, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-0044).',
+        'the query names admin_sessions, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-2026-10-25T0054).',
     });
   });
 

@@ -120,7 +120,7 @@ function readSchemaReader(template: Template): unknown {
   return undefined;
 }
 
-describe('banana-rush read-only agent access (ADR-0044)', () => {
+describe('banana-rush read-only agent access (ADR-2026-10-25T0054)', () => {
   beforeAll(() => {
     synthAppStack('prod');
     synthAppStack('preview');

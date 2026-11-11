@@ -70,7 +70,7 @@ The `GET /api/songs/:id` and `GET /api/songs` handlers select the same `PROJECTI
 ## Countermeasure
 
 - The offline load fetches the song list once and puts each listed song into its detail cache. It still fetches a song the list lacks, or one it cannot reach.
-- Queries stay fresh for 5 minutes instead of 30 s. Going back to the app within 5 minutes refetches nothing. A change another member made reaches the other open tabs over the WebSocket channel of ADR-202611040227, which invalidates exactly the queries reading it.
+- Queries stay fresh for 5 minutes instead of 30 s. Going back to the app within 5 minutes refetches nothing. A change another member made reaches the other open tabs over the WebSocket channel of ADR-2026-11-04T0227, which invalidates exactly the queries reading it.
 
 Verified by the new test `takes the songs the catalogue list already carries instead of fetching each one`, and by the existing offline tests, which still pass.
 

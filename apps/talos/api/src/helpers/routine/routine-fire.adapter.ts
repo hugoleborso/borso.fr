@@ -2,6 +2,8 @@
  * @DependsOnExternal claude-routine
  */
 
+import { addWideEventFields } from '../observability/wide-event.adapter';
+import { describeThrownValue } from '../observability/wide-event.core';
 import { readTalosSecret, type SecretReader } from '../secrets/secrets.setup';
 import {
   buildFireBody,
@@ -42,7 +44,7 @@ export async function fireRoutine(
     });
     return readFireOutcome(response.status);
   } catch (error) {
-    console.warn('the routine could not be fired, the next scheduled run will pick it up', error);
+    addWideEventFields({ 'routine.fire_failure': describeThrownValue(error).type });
     return { kind: 'failed', status: NETWORK_FAILURE_STATUS };
   }
 }

@@ -23,7 +23,7 @@ These choices sit inside the spec's frame, so they are decided here rather than 
 
 | # | Decision | Why |
 |---|---|---|
-| D1 | `paris-day.core.ts` moves from `api/src/studies/` to `apps/pragma/domain/`. Its functions, its test and its `@FollowsBlueprint core-projection` stay the same. | `domain/practice-flame.core.ts` needs `shiftCalendarDay` and `mondayOfWeek`, and `domain/` must not import from `api/` (ADR-0010, `no-restricted-imports`). `api/src/helpers/paris-time/paris-time.core.ts` stays. It has another shape (`{ year, month, day }`) and other callers (free slots, calendar feeds). Unifying the two is not this feature's job (Pattern Coherence pass: the duplication is deliberate and named here). |
+| D1 | `paris-day.core.ts` moves from `api/src/studies/` to `apps/pragma/domain/`. Its functions, its test and its `@FollowsBlueprint core-projection` stay the same. | `domain/practice-flame.core.ts` needs `shiftCalendarDay` and `mondayOfWeek`, and `domain/` must not import from `api/` (ADR-2026-08-13T0026, `no-restricted-imports`). `api/src/helpers/paris-time/paris-time.core.ts` stays. It has another shape (`{ year, month, day }`) and other callers (free slots, calendar feeds). Unifying the two is not this feature's job (Pattern Coherence pass: the duplication is deliberate and named here). |
 | D2 | Naming. **Flame** is the computed count, personal and band. **Streak** names the feature surface: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the `streak` push category and the `streak-reminder` job. | The spec and ADR fix every one of these surface names. VOCABULARY gets a **Flame** entry, and its **Streak** entry is rewritten to point at it. |
 | D3 | The walk never spends a joker unless the whole gap is bridged. On a missed day it measures the gap back to the next older active day and counts the jokers each Monday-to-Sunday week needs. It spends them only when every week can pay. Otherwise the walk ends and spends nothing. | This is the spec's "a joker bridges only a gap with an active day on both sides". It also makes `jokersLeftThisWeek` count only jokers that kept the flame alive. |
 | D4 | Duplicate pushes are blocked with an insert-only claim on `notification_dispatch` (`hasClaimedFirstDispatch`, now exported). The 10-minute regroup claim (`hasClaimedGroup`) is not used. | `hasClaimedGroup` claims a key again once 10 minutes have passed (`isGroupDue`). A Scheduler or Lambda retry 15 minutes later would push a second time. |
@@ -164,7 +164,7 @@ interface StreaksInput {
 | `site/src/components/organisms/NotificationSettings.tsx` | `CATEGORY_LABEL_KEY.streak`. The `Record<NotificationCategory, …>` makes this a type error until it is added. | |
 | `site/src/i18n/en.json`, `fr.json` | `notifications.categories.streak`: "Daily flame reminder at 20:00" / "Rappel de flamme chaque jour à 20 h" | |
 | `cdk/lib/stack.ts` | inside `if (isProduction && previewableApp.api !== undefined)`, a `Schedule` with `ScheduleExpression.cron({ minute: '0', hour: '20', timeZone: TimeZone.EUROPE_PARIS })` and the target `new LambdaInvoke(previewableApp.api.handler, { input: ScheduleTargetInput.fromObject({ job: 'streak-reminder' }), maxEventAge: Duration.hours(1), retryAttempts: 2 })`. It imports from `aws-cdk-lib/aws-scheduler` and `aws-cdk-lib/aws-scheduler-targets`, both in aws-cdk-lib 2.272.0 (measured in `apps/pragma/node_modules`). The job's payload string is one exported constant shared by `stack.ts` and `lambda-event.core.ts`, through `domain/scheduled-job.core.ts` (`STREAK_REMINDER_JOB = 'streak-reminder'`, blueprint `core-lookup-table`). That keeps the guard and the schedule from drifting. | `app-cdk-stack` |
-| `cdk/test/stack.test.ts` | new `describe('pragma streak reminder schedule (ADR-202610291139)')` | `test-cdk-synth` |
+| `cdk/test/stack.test.ts` | new `describe('pragma streak reminder schedule (ADR-2026-10-29T1139)')` | `test-cdk-synth` |
 
 **Data shapes**
 
@@ -346,7 +346,7 @@ Run these after slice 4, in order, before the PR goes up. The per-slice gates ab
 
 - **Q-A** is settled as lenient (2026-10-29). The spec states the rule under its personal flame rules.
 - Scheduler's invocation mode for a Lambda target (async or sync) is unknown, so whether Lambda's own async retries add to Scheduler's is unknown. D4 and D5 make the outcome the same either way, so this does not block.
-- ADR-202610291139 is `proposed`. The main session ratifies it before the PR, and it does not block the plan.
+- ADR-2026-10-29T1139 is `proposed`. The main session ratifies it before the PR, and it does not block the plan.
 
 ## Missing technical skills
 

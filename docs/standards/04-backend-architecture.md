@@ -25,7 +25,7 @@ An outbound call — a `fetch`, a vendor SDK client — lives in
 `<domain>.adapter.ts`, never in the service or the repository. A repository is
 database access and a service is orchestration; neither also means "and
 sometimes the network". `borso/no-outbound-call-outside-adapter` enforces it,
-and [ADR-0012](../adr/0012-outbound-calls-live-in-adapter-files.md) records why.
+and [ADR-2026-08-15T0234](../adr/2026-08-15T0234-outbound-calls-live-in-adapter-files.md) records why.
 
 ## Reason
 
@@ -216,7 +216,7 @@ two concurrent requests cannot both read the old count. See the
   `services/`, `repositories/` and `routes/` inside `api/src/`, where every rule
   has an owning bounded context. It does not touch `apps/<app>/domain/`, which
   sits beside `api/` rather than inside it and holds only what both sides read.
-  See [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
+  See [ADR-2026-08-13T0026](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md).
 - `oxlint:borso/no-client-supplied-address-header` rejects `X-Forwarded-For`,
   `X-Real-IP`, `Forwarded` and the other client-written address headers as
   string literals in API source, and the trusted viewer address header outside
@@ -227,7 +227,7 @@ two concurrent requests cannot both read the old count. See the
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
 - `oxlint:no-restricted-imports` keeps `apps/<app>/domain/` free of React, Hono,
-  Drizzle, the AWS SDKs and either side's own modules. ADR-0010 justifies that
+  Drizzle, the AWS SDKs and either side's own modules. ADR-2026-08-13T0026 justifies that
   folder entirely on both sides reading it, and one framework import ends that.
 - `reviewer` checks that a repository returns rows, arrays and counts rather
   than a shape it derived, because a repository that projects is a service.

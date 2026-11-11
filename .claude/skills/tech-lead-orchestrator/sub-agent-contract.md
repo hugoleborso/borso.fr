@@ -117,7 +117,7 @@ next:
 ---
 status: blocked
 summary: |
-  Slug `cache-invalidation-strategy` already exists as ADR 0004
+  Slug `cache-invalidation-strategy` already exists as ADR 2026-05-19T1955
   (accepted). The new decision contradicts it without declaring
   supersedes. Human must arbitrate.
 artifacts: []

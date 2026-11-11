@@ -121,7 +121,7 @@ done <<<"$documents"
 #    skill, an agent brief, a command. These are read by a model that will open
 #    what it is told to open.
 # The vendored impeccable references and agents are upstream's text, kept
-# verbatim (ADR-0032); they name paths of a project that installs its hook.
+# verbatim (ADR-2026-10-12T2337); they name paths of a project that installs its hook.
 paths="$(
   list_subject_files 'CLAUDE.md' '.claude/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
     { grep -E '\.md$' || true; } |

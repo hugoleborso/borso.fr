@@ -12,7 +12,7 @@ The apex landing site at `https://borso.fr`. Plain HTML / CSS / JS for now; swit
 
 ## Third-party attribution
 
-The galaxy background is the react-bits Galaxy component, copied into this repository rather than installed ([ADR-0003](../../docs/adr/0003-react-bits-galaxy-as-react-component.md)). Two files carry it, and this notice is the licence compliance surface for both:
+The galaxy background is the react-bits Galaxy component, copied into this repository rather than installed ([ADR-2026-05-14T1341](../../docs/adr/2026-05-14T1341-react-bits-galaxy-as-react-component.md)). Two files carry it, and this notice is the licence compliance surface for both:
 
 - `site/src/components/organisms/galaxy-shaders.ts` — the GLSL, byte for byte as upstream wrote it.
 - `site/src/components/organisms/Galaxy.tsx` — the harness, retyped as TSX.

@@ -77,7 +77,7 @@ The branch also carries earlier commits of the same pull request outside this sp
 
 | # | Use case | Covering test | Verdict |
 |---|---|---|---|
-| D01 | Data shapes: the table is blocked on preview clones and from the reader | `pragma read-only agent access (ADR-0044)` and `pragma preview schema cloning` at apps/pragma/cdk/test/stack.test.ts:162,197, lists containing `'realtime_connection'` | PASS |
+| D01 | Data shapes: the table is blocked on preview clones and from the reader | `pragma read-only agent access (ADR-2026-10-25T0054)` and `pragma preview schema cloning` at apps/pragma/cdk/test/stack.test.ts:162,197, lists containing `'realtime_connection'` | PASS |
 | D02 | Ticket endpoint is behind the member session | `refuses a ticket to a request without a session` at api/src/realtime/realtime.controller.test.ts:83; `expect((await jsonRequest(app, '/api/realtime/ticket')).status).toBe(401);` | PASS |
 | D03 | Ticket answers `{ url, ticket }` and the ticket opens a connection for that member | `answers the socket address and a ticket that opens it for the member` at realtime.controller.test.ts:97; `toStrictEqual([['c1', memberId, READER_TAB]])` | PASS |
 | D04 | Ticket expiry 60 s ahead | `lives sixty seconds and not one millisecond more` at api/src/realtime/realtime-ticket.utils.test.ts:36; `expect(verifyRealtimeTicket(ticket, HMAC_KEY, NOW + REALTIME_TICKET_TTL_MS)).toStrictEqual({ ok: false, reason: 'expired' })` | PASS |
@@ -139,6 +139,6 @@ The branch also carries earlier commits of the same pull request outside this sp
 - `onToolRan` runs in a `finally` (mcp-server.adapter.ts:56-57), so a write tool that failed still sends `all`. This over-invalidates and does not under-invalidate.
 - `/api/me/contact` sends `members` and `/api/me/calendar-feeds` sends `free-slots`, while `GET /api/me` (key root `me`) shows the member's own contact and calendar feeds. The same member's other device keeps its profile screen stale. Does the spec mean "other members" only?
 - In `main.dev.ts`, a rejected `$connect` promise (local database down) is unhandled, and the matching `$disconnect` never runs. This is development only.
-- The preview clones production's `app_config` HMAC key (ADR-0009), so a ticket minted on a preview verifies on production's `$connect`, just as a session cookie already does. Nothing new is exposed, since the socket carries only scope names.
+- The preview clones production's `app_config` HMAC key (ADR-2026-08-09T1654), so a ticket minted on a preview verifies on production's `$connect`, just as a session cookie already does. Nothing new is exposed, since the socket carries only scope names.
 
 ## Verdict: FAIL

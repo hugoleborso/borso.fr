@@ -32,7 +32,7 @@ Round 1 had no blocking finding. Each non-blocking finding and each Notes questi
 | R03 | E02 (no concurrent proof of the push claim) | `0febe997` `it('sends one push per open member when two runs fire at the same time')` at apps/pragma/api/src/streaks/streak-reminder.service.test.ts:114, `await Promise.all([runStreakReminder(PARIS_EVENING), runStreakReminder(PARIS_EVENING)]);` then `expect(sentEndpoints.sort()).toEqual([deviceEndpoint('hugo-phone'), deviceEndpoint('tom-phone')]);`. Ran green. | PASS |
 | R04 | Notes, B21 (a refetch on another DSQL connection can miss the study) | `0febe997` A02-A04 above. The back-e2e test pins the in-transaction read: on local Postgres a read on another connection before commit would not see the row, and `expect(streaks.mine).toEqual({ days: 1, isTodayCounted: true });` at studies.controller.test.ts:114 passes. | PASS |
 | R05 | Notes, D30 (the Home 500 test did not wait for the failed query) | `0febe997` apps/pragma/site/src/routes/home/HomePage.test.tsx:248, `await waitFor(() => expect(queryClient.getQueryState(streakKeys.all)?.status).toBe('error'));` before the absence assertion | PASS |
-| R06 | Notes, ADR-202610291139 `Status: proposed` | Not changed; the commit message defers the stamp to `/after-task-kaizen` at merge. `docs/adr/202610291139*.md:3` reads `- **Status:** proposed`. Not a code finding. | PASS |
+| R06 | Notes, ADR-2026-10-29T1139 `Status: proposed` | Not changed; the commit message defers the stamp to `/after-task-kaizen` at merge. `docs/adr/2026-10-29T1139*.md:3` reads `- **Status:** proposed`. Not a code finding. | PASS |
 
 ## B. Code cleanliness
 

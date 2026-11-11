@@ -11,6 +11,7 @@ import {
   reportUnhandledError,
   startErrorReporting,
 } from './helpers/observability/error-reporting.adapter';
+import { runInWideEvent } from './helpers/observability/wide-event.adapter';
 import { runStreakReminder } from './streaks/streak-reminder.service';
 
 startErrorReporting(selectErrorReportingSettings(readErrorReportingInputs()));
@@ -37,7 +38,9 @@ export const handler = async (
 ) => {
   const isScheduledStreakReminder = isStreakReminderEvent(event);
   if (isScheduledStreakReminder) {
-    await runScheduledStreakReminder(new Date());
+    await runInWideEvent({ 'event.kind': 'scheduled', 'scheduled.job': 'streak-reminder' }, () =>
+      runScheduledStreakReminder(new Date()),
+    );
     return;
   }
   try {

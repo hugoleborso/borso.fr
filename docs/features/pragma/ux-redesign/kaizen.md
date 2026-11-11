@@ -102,8 +102,8 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [22:45] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
 - [23:14] `main` CI lint failed on two find-named harness functions that pre-push let through, after a merge of origin/main into the slice 1 branch
 - [23:21] `ship` /open-pr step 5b says to replace the literal <n> in the visual report with the PR number, but check-dated-records-are-append-only refuses any edit to a dated validation report, so the two instructions cannot both be followed
-- [23:21] `ship` the only pending-upload screenshots belonged to a FAIL visual round (2026-10-27-1609) while the passing round 6 committed its PNGs in git, so the ADR-0023 staging rule was followed by one round and not the other
-- [23:23] `ship` main merged #197 (oxlint replaces ESLint, ADR-0045 and 0046 taken) while slice 1 was being shipped, so PR 207 conflicts on eslint.config.js and on four ADR numbers the branch had claimed
+- [23:21] `ship` the only pending-upload screenshots belonged to a FAIL visual round (2026-10-27-1609) while the passing round 6 committed its PNGs in git, so the ADR-2026-09-21T0819 staging rule was followed by one round and not the other
+- [23:23] `ship` main merged #197 (oxlint replaces ESLint, ADR numbers 0045 and 0046 taken) while slice 1 was being shipped, so PR 207 conflicts on eslint.config.js and on four ADR numbers the branch had claimed
 - [23:29] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
 - [23:51] `merge-main` the numbered-sequence pre-commit gate refuses a merge commit that brings in a colliding ADR number, so ADR renumbering cannot be a separate commit after the merge as the task asked
 - [23:51] `merge-main` the audit holds no plain before screenshots of the app, only compare-*.png mockup composites whose left half is the before shot, so a before/after page has to crop them
@@ -175,7 +175,7 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [02:59] `merge-main-2` Merging main renumbered nothing in a dated validation report but the append-only gate still refuses fixing a stale migration path there, so the report keeps citing 0020_task_session.sql after the rename
 - [03:22] `main` an implementing agent answered 'why only one or two member pills' by adding an unrequested 'Played by' feature instead of asking or removing; operator review rounds keep surfacing additions nobody asked for
 - [03:30] `hook:no-discarding-reset` ran a discarding git command on a checkout the hook could not read
-- [03:31] `build-timeout` ci build and architecture.yml each ran architecture-graph.ts twice back to back (generate, then --check) although --check has had nothing to compare against since ADR-0014, so the ELK layout cost was paid twice and build hit its 10-minute timeout once pragma's journey graphs grew
+- [03:31] `build-timeout` ci build and architecture.yml each ran architecture-graph.ts twice back to back (generate, then --check) although --check has had nothing to compare against since ADR-2026-08-20T1031, so the ELK layout cost was paid twice and build hit its 10-minute timeout once pragma's journey graphs grew
 - [03:31] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
 - [03:35] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
 - [04:03] `review3-sessions` SessionDetail.tsx sits at the 300-line cap, so adding the practice Songs tab forced extracting a hook and slimming sheet props before lint passed.
@@ -190,7 +190,7 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [05:45] `review4` pre-commit runs only some tests, so the i18n parity test broken by a label change in U3 passed the commit and only failed in the next full core run
 - [07:32] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
 - [08:03] `sessions-takes` pre-commit checks read the working tree, so committing one item of several with a partially staged index needs the deleted file restored on disk or convention-drift fails with ENOENT
-- [08:03] `sessions-takes` check-coupled-lists parses backticked table names out of ADR-0009 prose, so a sentence explaining a removed blocklist entry kept it in the list until the backticks went
+- [08:03] `sessions-takes` check-coupled-lists parses backticked table names out of ADR-2026-08-09T1654 prose, so a sentence explaining a removed blocklist entry kept it in the list until the backticks went
 - [08:03] `sessions-takes` stryker reports a survivor for some() vs every() over a one-element constant list, an equivalent mutant only removable by dropping the list
 - [2026-10-29 08:23] `merge-main` scripts/reports.sh all failed on main: c54e32da removed scripts/browser.sh, argent.sh and four gate scripts but left eight dantotsu zones naming them, so weak-points.ts exited 1
 - [2026-10-29 09:32] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share

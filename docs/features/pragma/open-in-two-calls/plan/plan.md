@@ -1,6 +1,6 @@
 # Plan — pragma never asks the API for more than two things at once
 
-> Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) (SHA-256 `25433b7d…df63`) and [ADR-202611050445](../../../../adr/202611050445-pragma-reads-leave-in-one-batch-per-tick.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
+> Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) (SHA-256 `25433b7d…df63`) and [ADR-2026-11-05T0445](../../../../adr/2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
 Goal. One pragma tab never has more than 2 read requests in flight, on any route, so `pragma-prod-api` (reserved concurrency 10) is never filled by one member. The smallest change is in the transport under `api`, not in the screens. Raising the concurrency is excluded.
 

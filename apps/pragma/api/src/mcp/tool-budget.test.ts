@@ -215,7 +215,6 @@ describe('assistant tool budget (back-e2e)', () => {
     await truncateAllTables(testDatabase());
     stubPushService();
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     for (const [name, value] of Object.entries(PRESIGNER_ENV)) vi.stubEnv(name, value);
   });
 

@@ -224,7 +224,7 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'SSM Parameter Store',
       technology: 'AWS SDK, GetParameter with decryption',
       description:
-        'Holds the Spotify client credentials as a SecureString, read through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
+        'Holds the Spotify client credentials as a SecureString, read through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-2026-09-15T2023.',
       boundary: 'aws',
       access: 'credential',
     },

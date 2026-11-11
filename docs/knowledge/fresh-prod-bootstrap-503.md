@@ -23,7 +23,7 @@ deliberate.
 
 ## Why
 
-Pragma uses shared-password auth (ADR-0004). The password's argon2id
+Pragma uses shared-password auth (ADR-2026-05-19T1955). The password's argon2id
 hash + the HMAC session-signing key live in a single `app_config` row
 in the database. A fresh prod DB has **no** `app_config` row, so the
 auth middleware returns `503 auth-not-bootstrapped` on every gated

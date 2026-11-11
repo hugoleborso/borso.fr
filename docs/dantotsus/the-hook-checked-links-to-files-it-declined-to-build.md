@@ -41,7 +41,7 @@ running that one surfaced these.
    CI failure that motivated it.
 3. **Why was it absent?**
    Nothing had generated it in that tree. Merging `main` into a branch
-   that predated ADR-0014 deletes the last committed copies of every
+   that predated ADR-2026-08-20T1031 deletes the last committed copies of every
    generated file, mid-session, after SessionStart's background
    generation has already run.
 4. **Why did the hook not simply generate it?**
@@ -113,5 +113,5 @@ it: *"Anything that reads one regenerates it first."*
 ## See also
 
 - [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md)
-- [ADR-0014](../adr/0014-generated-files-are-not-committed.md) — the
+- [ADR-2026-08-20T1031](../adr/2026-08-20T1031-generated-files-are-not-committed.md) — the
   decision that made every one of these outputs absent by default.
