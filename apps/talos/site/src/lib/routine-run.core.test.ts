@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
   isRoutineConfigured,
+  isRunListAddressed,
   placeNewestRunFirst,
+  ROUTINE_RUN_LIST_ID,
+  ROUTINE_RUN_LIST_PATH,
   selectTriggerLabelKey,
 } from './routine-run.core';
 
 // @FollowsBlueprint test-pure-unit
+describe('the address of the run list', () => {
+  it('points at the list of the Message screen', () => {
+    expect(ROUTINE_RUN_LIST_ID).toBe('runs');
+    expect(ROUTINE_RUN_LIST_PATH).toBe('/message#runs');
+    expect(isRunListAddressed('#runs')).toBe(true);
+    expect(isRunListAddressed('')).toBe(false);
+  });
+});
+
 describe('isRoutineConfigured', () => {
   it('reads the 503 the API answers while no fire url is set as a routine not configured', () => {
     expect(isRoutineConfigured({ status: 503 })).toBe(false);

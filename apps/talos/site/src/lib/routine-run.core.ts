@@ -2,6 +2,13 @@ import { RECENT_ROUTINE_RUN_LIMIT } from '@domain/routine-run.core';
 
 const ROUTINE_UNCONFIGURED_STATUS = 503;
 
+export const ROUTINE_RUN_LIST_ID = 'runs';
+export const ROUTINE_RUN_LIST_PATH = `/message#${ROUTINE_RUN_LIST_ID}`;
+
+export function isRunListAddressed(hash: string): boolean {
+  return hash === `#${ROUTINE_RUN_LIST_ID}`;
+}
+
 const TRIGGER_LABEL_KEY = {
   message: 'message.runs.trigger.message',
   proposition: 'message.runs.trigger.proposition',

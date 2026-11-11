@@ -1,42 +1,44 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IconName } from '../atoms/Icon';
-import { CounterPill } from '../molecules/CounterPill';
+import { IndexTile } from '../molecules/IndexTile';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import type { DiscussionSubjectReference } from '../../lib/discussion-subject.core';
+import { ROUTINE_RUN_LIST_PATH } from '../../lib/routine-run.core';
 import { PROPOSALS_PATH } from './proposal-board.core';
-import { keepNonZeroCounters } from './today-counters.core';
 
-export interface TodayCountersProps {
+export interface TodayIndexProps {
   readonly pendingProposalCount: number;
   readonly overdueTodoCount: number;
   readonly owedCommitmentCount: number;
   readonly awaitedCommitmentCount: number;
   readonly readyDraftCount: number;
   readonly reconnectCount: number;
+  readonly dueRecurringTaskCount: number;
 }
 
-interface Counter {
+interface Tile {
   readonly key: string;
   readonly to: string;
   readonly icon: IconName;
   readonly count?: number;
   readonly label: string;
   readonly isAlert: boolean;
-  readonly subject: DiscussionSubjectReference;
+  readonly subject?: DiscussionSubjectReference;
 }
 
 // @FollowsBlueprint organism-presentational
-export function TodayCounters({
+export function TodayIndex({
   pendingProposalCount,
   overdueTodoCount,
   owedCommitmentCount,
   awaitedCommitmentCount,
   readyDraftCount,
   reconnectCount,
-}: TodayCountersProps): JSX.Element {
+  dueRecurringTaskCount,
+}: TodayIndexProps): JSX.Element {
   const { t } = useTranslation();
-  const counters: readonly Counter[] = [
+  const tiles: readonly Tile[] = [
     {
       key: 'proposals',
       to: PROPOSALS_PATH,
@@ -92,6 +94,22 @@ export function TodayCounters({
       subject: { kind: 'relations' },
     },
     {
+      key: 'recurring',
+      to: '/recurring',
+      icon: 'scan',
+      count: dueRecurringTaskCount,
+      label: t('today.counters.recurring'),
+      isAlert: true,
+      subject: { kind: 'recurring' },
+    },
+    {
+      key: 'runs',
+      to: ROUTINE_RUN_LIST_PATH,
+      icon: 'send',
+      label: t('message.runs.title'),
+      isAlert: false,
+    },
+    {
       key: 'history',
       to: '/history',
       icon: 'activity',
@@ -101,24 +119,25 @@ export function TodayCounters({
     },
   ];
   return (
-    <nav aria-label={t('today.counters.title')} className="flex flex-wrap gap-2">
-      {keepNonZeroCounters(counters).map((counter) => (
-        <CounterPill
-          key={counter.key}
-          to={counter.to}
-          icon={counter.icon}
-          {...(counter.count === undefined ? {} : { count: counter.count })}
-          label={counter.label}
-          isAlert={counter.isAlert}
-          onLongPress={() => {
-            openActionSheet({
-              title:
-                counter.count === undefined
-                  ? counter.label
-                  : `${counter.label} · ${String(counter.count)}`,
-              subject: counter.subject,
-            });
-          }}
+    <nav aria-label={t('today.counters.title')} className="grid grid-cols-3 gap-2">
+      {tiles.map(({ key, to, icon, count, label, isAlert, subject }) => (
+        <IndexTile
+          key={key}
+          to={to}
+          icon={icon}
+          {...(count === undefined ? {} : { count })}
+          label={label}
+          isAlert={isAlert}
+          {...(subject === undefined
+            ? {}
+            : {
+                onLongPress: () => {
+                  openActionSheet({
+                    title: count === undefined ? label : `${label} · ${String(count)}`,
+                    subject,
+                  });
+                },
+              })}
         />
       ))}
     </nav>

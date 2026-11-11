@@ -8,6 +8,7 @@ describe('selectSubjectPhraseKey', () => {
     expect(selectSubjectPhraseKey('commitment')).toBe('discuss.subject.commitment');
     expect(selectSubjectPhraseKey('folder')).toBe('discuss.subject.folder');
     expect(selectSubjectPhraseKey('draft')).toBe('discuss.subject.draft');
+    expect(selectSubjectPhraseKey('recurring')).toBe('discuss.subject.recurring');
   });
 });
 

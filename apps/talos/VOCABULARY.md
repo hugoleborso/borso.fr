@@ -80,6 +80,18 @@ Lives in: `api/src/relations/`
 
 Not to be confused with: a relation of the graph, which links two pages.
 
+## Recurring task
+
+A task Talos redoes at a fixed cadence, such as a weekly watch, read from the memory state `recurring` (`etat/recurrentes.json`), which the runs write.
+
+Lives in: `api/src/recurring-tasks/`
+
+- Code: `RecurringTasks` (`generatedAt` for `genere`, `tasks` for `taches`), `RecurringTask` (`id`, `title` for `titre`, `cadence`, `routine`, `what` for `quoi`, `lastRunOn` for `dernier`, `nextRunOn` for `prochain`, `isDue` for `due`).
+- The values of `cadence` (`hebdomadaire`, `mensuelle`, `trimestrielle`) and of `routine` (`nuit`, `dimanche`, `collecte-mac`) stay in French: they are data.
+- Read only. The app never writes the state.
+
+Not to be confused with: a routine run, which is one firing of the routine by a decision or a message; a todo, which the owner does himself.
+
 ## Draft
 
 A message Talos prepared for the owner to send by hand, one file under `etat/brouillons/`.

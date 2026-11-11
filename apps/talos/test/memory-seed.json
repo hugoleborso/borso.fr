@@ -171,5 +171,144 @@
       }
     }
   },
+  {
+    "op": "state.set",
+    "key": "recurring",
+    "value": {
+      "genere": "2026-11-11T18:06:25+01:00",
+      "taches": [
+        {
+          "id": "veille-meteo",
+          "titre": "Veille météo",
+          "cadence": "hebdomadaire",
+          "routine": "nuit",
+          "quoi": "Relever les prévisions de la semaine et signaler un épisode de gel.",
+          "dernier": "2026-11-05",
+          "prochain": "2026-11-12",
+          "due": false
+        },
+        {
+          "id": "bilan-budget",
+          "titre": "Bilan du budget",
+          "cadence": "mensuelle",
+          "routine": "dimanche",
+          "quoi": "Comparer les dépenses du mois au budget et lister les écarts.",
+          "dernier": "2026-10-04",
+          "prochain": "2026-11-08",
+          "due": true
+        },
+        {
+          "id": "tri-photos",
+          "titre": "Tri des photos",
+          "cadence": "mensuelle",
+          "routine": "collecte-mac",
+          "quoi": "Classer les photos du mois par album et retirer les doublons.",
+          "dernier": "2026-10-10",
+          "prochain": "2026-11-10",
+          "due": true
+        },
+        {
+          "id": "revue-abonnements",
+          "titre": "Revue des abonnements",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Lister les abonnements actifs et repérer ceux qui ne servent plus.",
+          "dernier": null,
+          "prochain": "2026-11-15",
+          "due": false
+        },
+        {
+          "id": "veille-acme",
+          "titre": "Veille Acme",
+          "cadence": "hebdomadaire",
+          "routine": "nuit",
+          "quoi": "Nouvelles publiques d'Acme depuis la dernière veille.",
+          "dernier": "2026-11-06",
+          "prochain": "2026-11-13",
+          "due": false
+        },
+        {
+          "id": "sauvegarde-notes",
+          "titre": "Contrôle des sauvegardes",
+          "cadence": "hebdomadaire",
+          "routine": "collecte-mac",
+          "quoi": "Vérifier que la dernière sauvegarde des notes se relit.",
+          "dernier": "2026-11-07",
+          "prochain": "2026-11-14",
+          "due": false
+        },
+        {
+          "id": "anniversaires-mois",
+          "titre": "Anniversaires du mois",
+          "cadence": "mensuelle",
+          "routine": "nuit",
+          "quoi": "Préparer la liste des anniversaires du mois suivant.",
+          "dernier": "2026-11-01",
+          "prochain": "2026-12-01",
+          "due": false
+        },
+        {
+          "id": "revue-objectifs",
+          "titre": "Revue des objectifs",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Relire les objectifs du trimestre et noter l'avancement.",
+          "dernier": "2026-10-01",
+          "prochain": "2027-01-01",
+          "due": false
+        },
+        {
+          "id": "entretien-velo",
+          "titre": "Entretien du vélo",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Rappeler la révision du vélo et proposer un créneau.",
+          "dernier": "2026-09-20",
+          "prochain": "2026-12-20",
+          "due": false
+        },
+        {
+          "id": "lectures-semaine",
+          "titre": "Lectures de la semaine",
+          "cadence": "hebdomadaire",
+          "routine": "dimanche",
+          "quoi": "Résumer les articles mis de côté pendant la semaine.",
+          "dernier": "2026-11-08",
+          "prochain": "2026-11-15",
+          "due": false
+        },
+        {
+          "id": "factures-atelier",
+          "titre": "Factures de l'atelier",
+          "cadence": "mensuelle",
+          "routine": "nuit",
+          "quoi": "Relever les factures reçues et celles qui restent à payer.",
+          "dernier": "2026-10-28",
+          "prochain": "2026-11-28",
+          "due": false
+        },
+        {
+          "id": "menage-todo",
+          "titre": "Ménage de la todo",
+          "cadence": "hebdomadaire",
+          "routine": "dimanche",
+          "quoi": "Repérer les tâches ouvertes depuis plus d'un mois.",
+          "dernier": "2026-11-08",
+          "prochain": "2026-11-16",
+          "due": false
+        },
+        {
+          "id": "carnet-contacts",
+          "titre": "Carnet de contacts",
+          "cadence": "mensuelle",
+          "routine": "collecte-mac",
+          "quoi": "Rapprocher les nouveaux contacts des pages de la mémoire.",
+          "dernier": "2026-10-20",
+          "prochain": "2026-11-20",
+          "due": false
+        }
+      ]
+    }
+  },
   { "op": "state.set", "key": "cutover", "value": "database" }
 ]

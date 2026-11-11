@@ -2,7 +2,7 @@ import type { JSX, ReactNode } from 'react';
 
 export interface PageTitleProps {
   readonly children: ReactNode;
-  readonly subtitle?: string;
+  readonly subtitle?: ReactNode;
   readonly trailing?: ReactNode;
 }
 

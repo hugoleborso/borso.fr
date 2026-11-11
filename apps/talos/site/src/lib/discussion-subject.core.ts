@@ -5,6 +5,7 @@ export type DiscussionSubjectReference =
   | { readonly kind: 'focus' }
   | { readonly kind: 'scan' }
   | { readonly kind: 'relations' }
+  | { readonly kind: 'recurring' }
   | { readonly kind: 'proposal' | 'draft'; readonly slug: string }
   | { readonly kind: 'review'; readonly week: string }
   | { readonly kind: 'journal'; readonly date: string }
@@ -13,7 +14,7 @@ export type DiscussionSubjectReference =
 
 export type DiscussionSubjectKind = DiscussionSubjectReference['kind'];
 
-const STATE_KEYS = { scan: 'last_scan', relations: 'relations' } as const;
+const STATE_KEYS = { scan: 'last_scan', relations: 'relations', recurring: 'recurring' } as const;
 
 // @FollowsBlueprint core-view-intent
 export function selectSubjectReference(subject: DiscussionSubjectReference): string {
@@ -25,6 +26,7 @@ export function selectSubjectReference(subject: DiscussionSubjectReference): str
       return 'focus';
     case 'scan':
     case 'relations':
+    case 'recurring':
       return `état: ${STATE_KEYS[subject.kind]}`;
     case 'proposal':
       return `proposition: etat/propositions/${subject.slug}`;

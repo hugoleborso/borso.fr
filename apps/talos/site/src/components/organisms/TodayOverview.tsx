@@ -6,8 +6,10 @@ import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE, formatLongDay, toIsoDay } from '../../lib/calendar-day.utils';
+import { useRecurringTasks } from '../../lib/queries/recurring-tasks.queries';
 import { useToday } from '../../lib/queries/today.queries';
 import { NotificationsPrompt } from './NotificationsPrompt';
+import { countDueTasks } from './recurring-task-board.core';
 import { ScanStatus } from './ScanStatus';
 import { countOverdueTodos, splitAwaitedCommitments } from './today-agenda.core';
 import { TodayActivity } from './TodayActivity';
@@ -15,13 +17,14 @@ import { TodayAgenda } from './TodayAgenda';
 import { TodayAwaited } from './TodayAwaited';
 import { TodayBirthdays } from './TodayBirthdays';
 import { TodayBrief } from './TodayBrief';
-import { TodayCounters } from './TodayCounters';
 import { TodayFocus } from './TodayFocus';
+import { TodayIndex } from './TodayIndex';
 
 // @FollowsBlueprint organism-query-owning
 export function TodayOverview(): JSX.Element {
   const { t } = useTranslation();
   const today = useToday();
+  const recurring = useRecurringTasks();
   const date = today.data?.date ?? toIsoDay(new Date());
   const commitments = splitAwaitedCommitments(today.data?.commitments ?? []);
   return (
@@ -50,19 +53,20 @@ export function TodayOverview(): JSX.Element {
         <QueryState isPending={today.isPending} onRetry={() => void today.refetch()} />
       ) : (
         <div className="flex flex-col gap-4">
-          <NotificationsPrompt />
-          <TodayBirthdays birthdays={today.data.soonBirthdays} />
-          {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
-          <TodayAgenda todos={today.data.todos} commitments={commitments.scheduled} today={date} />
-          <TodayAwaited commitments={commitments.awaited} today={date} />
-          <TodayCounters
+          <TodayIndex
             pendingProposalCount={today.data.pendingProposalCount}
             overdueTodoCount={countOverdueTodos(today.data.todos, date)}
             owedCommitmentCount={today.data.commitmentCounts.owed}
             awaitedCommitmentCount={today.data.commitmentCounts.awaited}
             readyDraftCount={today.data.readyDraftCount}
             reconnectCount={today.data.reconnectCount}
+            dueRecurringTaskCount={countDueTasks(recurring.data?.tasks ?? [])}
           />
+          <NotificationsPrompt />
+          <TodayBirthdays birthdays={today.data.soonBirthdays} />
+          {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
+          <TodayAgenda todos={today.data.todos} commitments={commitments.scheduled} today={date} />
+          <TodayAwaited commitments={commitments.awaited} today={date} />
           <TodayFocus items={today.data.focus.items} today={date} />
           <TodayActivity entries={today.data.activity} today={date} />
         </div>

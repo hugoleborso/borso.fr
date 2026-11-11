@@ -1,7 +1,7 @@
 import { act, cleanup, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../i18n/i18n.setup';
 import { ToastViewport } from '../components/organisms/ToastViewport';
 import {
@@ -109,6 +109,31 @@ describe('the Message screen', () => {
     expect(oldest?.textContent).toContain('Décision · 3 h');
     expect(oldest?.textContent).toContain('etat/propositions/2026-10-04-atelier');
     expect(within(oldest ?? document.body).queryByRole('link')).toBeNull();
+  });
+
+  it('lands on the list when the address names it, and stays put otherwise', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    fetchStub = serveMessageScreen(() => [
+      {
+        id: 'run-1',
+        firedAt: firedAgo(MINUTE_MS),
+        trigger: 'message',
+        subject: 'Rappelle Julie',
+        sessionUrl: null,
+      },
+    ]);
+    const first = renderMessageScreen();
+    await screen.findAllByRole('listitem');
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    first.unmount();
+    window.history.replaceState(null, '', '/message#runs');
+    renderMessageScreen();
+    await screen.findAllByRole('listitem');
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('#runs')?.textContent).toContain('Lancements');
+    window.history.replaceState(null, '', '/');
+    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   });
 
   it('hides the list while no run was fired', async () => {

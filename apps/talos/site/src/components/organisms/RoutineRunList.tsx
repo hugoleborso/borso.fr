@@ -6,8 +6,17 @@ import { selectClaudeCodeLinkTarget } from '../../lib/claude-code-address.core';
 import { detectClaudeCodeOpener } from '../../lib/claude-code-opener.adapter';
 import { useRoutineRuns } from '../../lib/queries/routine.queries';
 import { measureAge } from '../../lib/relative-age.utils';
-import { selectTriggerLabelKey } from '../../lib/routine-run.core';
+import {
+  isRunListAddressed,
+  ROUTINE_RUN_LIST_ID,
+  selectTriggerLabelKey,
+} from '../../lib/routine-run.core';
 import { selectAgeLabelKey } from './scan-status.core';
+
+function showWhenAddressed(section: HTMLElement | null): void {
+  const isAddressed = isRunListAddressed(window.location.hash);
+  if (isAddressed) section?.scrollIntoView();
+}
 
 // @FollowsBlueprint organism-query-owning
 export function RoutineRunList(): JSX.Element | null {
@@ -18,7 +27,7 @@ export function RoutineRunList(): JSX.Element | null {
   const recentRuns = runs.data?.items ?? [];
   if (recentRuns.length === 0) return null;
   return (
-    <section className="mt-6">
+    <section id={ROUTINE_RUN_LIST_ID} ref={showWhenAddressed} className="mt-6">
       <SectionTitle>{t('message.runs.title')}</SectionTitle>
       <Card padding="none">
         <ul className="m-0 px-3 list-none">

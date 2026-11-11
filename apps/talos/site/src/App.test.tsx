@@ -180,7 +180,7 @@ describe('the application shell', () => {
     expect(agendaText).not.toContain('Renvoyer le contrat signé');
     const scanLink = tree.container.querySelector('a[aria-label="Scanner"]');
     expect(scanLink?.getAttribute('href')).toContain('environment=env_lecture');
-    expect(scanLink?.getAttribute('href')).toContain('talos-scan');
+    expect(scanLink?.getAttribute('href')).toContain('skill%20scan%20sur');
     const row = [...tree.container.querySelectorAll('button')].find((button) =>
       button.textContent.includes('Appeler Bruno'),
     )?.parentElement;

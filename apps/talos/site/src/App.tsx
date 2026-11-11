@@ -18,6 +18,7 @@ import {
   loadPastBriefPage,
   loadProposalPage,
   loadProposalsPage,
+  loadRecurringTasksPage,
   loadRelationsPage,
   loadSettingsPage,
   loadTodayPage,
@@ -48,6 +49,9 @@ const GraphPage = lazy(async () => ({ default: (await loadGraphPage()).GraphPage
 const MessagePage = lazy(async () => ({ default: (await loadMessagePage()).MessagePage }));
 const SettingsPage = lazy(async () => ({ default: (await loadSettingsPage()).SettingsPage }));
 const RelationsPage = lazy(async () => ({ default: (await loadRelationsPage()).RelationsPage }));
+const RecurringTasksPage = lazy(async () => ({
+  default: (await loadRecurringTasksPage()).RecurringTasksPage,
+}));
 const DraftsPage = lazy(async () => ({ default: (await loadDraftsPage()).DraftsPage }));
 const DraftPage = lazy(async () => ({ default: (await loadDraftPage()).DraftPage }));
 const HistoryPage = lazy(async () => ({ default: (await loadHistoryPage()).HistoryPage }));
@@ -80,6 +84,7 @@ export function App(): JSX.Element {
               <Route path="/commitments" element={<CommitmentsPage />} />
               <Route path="/commitments/*" element={<CommitmentDetailPage />} />
               <Route path="/relations" element={<RelationsPage />} />
+              <Route path="/recurring" element={<RecurringTasksPage />} />
               <Route path="/drafts" element={<DraftsPage />} />
               <Route path="/drafts/:slug" element={<DraftPage />} />
               <Route path="/history" element={<HistoryPage />} />

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../atoms/Card';
 import { PageTitle } from '../atoms/PageTitle';
+import { BackLink } from '../molecules/BackLink';
 import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { SegmentedFilter } from '../molecules/SegmentedFilter';
@@ -29,6 +30,7 @@ export function CommitmentBoard(): JSX.Element {
   const today = toIsoDay(new Date());
   return (
     <>
+      <BackLink to="/" label={t('common.back')} />
       <PageTitle subtitle={String(visible.length)}>{t('commitments.title')}</PageTitle>
       <div className="flex flex-col gap-4">
         <SegmentedFilter

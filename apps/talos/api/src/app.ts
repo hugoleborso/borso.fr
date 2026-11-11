@@ -15,6 +15,7 @@ import { buildNotifyRouter } from './notify/notify.controller';
 import { buildPagesRouter } from './pages/pages.controller';
 import { buildProposalsRouter } from './proposals/proposals.controller';
 import { buildPushRouter } from './push/push.controller';
+import { buildRecurringTasksRouter } from './recurring-tasks/recurring-tasks.controller';
 import { buildRelationsRouter } from './relations/relations.controller';
 import { buildRoutineRouter } from './routine/routine.controller';
 import { buildSearchRouter } from './search/search.controller';
@@ -47,6 +48,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/proposals', buildProposalsRouter())
     .route('/api/commitments', buildCommitmentsRouter())
     .route('/api/relations', buildRelationsRouter())
+    .route('/api/recurring-tasks', buildRecurringTasksRouter())
     .route('/api/drafts', buildDraftsRouter())
     .route('/api/history', buildHistoryRouter())
     .route('/api/graph', buildGraphRouter())
