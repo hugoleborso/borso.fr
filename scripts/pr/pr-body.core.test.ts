@@ -15,7 +15,9 @@ import {
   renderBody,
   stripAttribution,
   validateBody,
+  withoutCommentLines,
   withoutFencedLines,
+  withoutHiddenLines,
   countableLines,
   readBlocks,
   readHeadingBlocks,
@@ -174,6 +176,37 @@ describe('readFencedBlocks and withoutFencedLines', () => {
 
   it('drops the fenced lines and keeps the prose', () => {
     expect(withoutFencedLines(['prose', '```', 'code', '```'])).toEqual(['prose']);
+  });
+});
+
+describe('withoutCommentLines and withoutHiddenLines', () => {
+  it('drops a comment block, because a reader of the body never sees it', () => {
+    expect(withoutCommentLines(['prose', '<!--', 'the budget', 'and why', '-->', 'more'])).toEqual([
+      'prose',
+      'more',
+    ]);
+  });
+
+  it('drops a comment opened after indentation', () => {
+    expect(withoutCommentLines(['  <!--', 'hidden', '-->', 'prose'])).toEqual(['prose']);
+  });
+
+  it('keeps a one-line comment, which the character count already ignores', () => {
+    expect(withoutCommentLines(['<!-- a note -->', 'prose'])).toEqual(['<!-- a note -->', 'prose']);
+  });
+
+  it('drops an unterminated comment to the end', () => {
+    expect(withoutCommentLines(['prose', '<!--', 'hidden'])).toEqual(['prose']);
+  });
+
+  it('drops a comment whose first line already carries text', () => {
+    expect(withoutCommentLines(['<!-- the budget', 'and why', '-->', 'prose'])).toEqual(['prose']);
+  });
+
+  it('drops both a fence and a comment', () => {
+    expect(withoutHiddenLines(['prose', '```', 'code', '```', '<!--', 'note', '-->'])).toEqual([
+      'prose',
+    ]);
   });
 });
 
