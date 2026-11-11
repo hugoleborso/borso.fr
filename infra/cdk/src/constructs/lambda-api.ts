@@ -23,6 +23,7 @@ import {
 } from '../internal/naming.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
+import { selectLogGroupRemovalPolicy } from '../internal/stage-wiring.utils.js';
 
 const DEFAULT_MEMORY_MIB = 512;
 const DEFAULT_TIMEOUT_SECONDS = 10;
@@ -74,6 +75,7 @@ export class LambdaApi extends Construct {
     const logGroup = new LogGroup(this, 'Logs', {
       logGroupName: `/aws/lambda/${lambdaFunctionName(props, handlerSlug)}`,
       retention: RetentionDays.ONE_WEEK,
+      removalPolicy: selectLogGroupRemovalPolicy(props.stage),
     });
 
     this.handler = new NodejsFunction(this, 'Fn', {

@@ -20,11 +20,16 @@
 # The changed set is the branch's commits plus the working tree, untracked files
 # included, so a local run grades the same files CI will once they are committed.
 #
-# Usage: scripts/mutate-changed.sh <base-ref>
+# Paths after the base keep only the changed files under them. Parallel agents
+# share one working tree, so an agent grading its own app mutated the others'
+# unfinished files too, on PR #290.
+#
+# Usage: scripts/mutate-changed.sh <base-ref> [<path>...]
 
 set -euo pipefail
 
-base="${1:?usage: scripts/mutate-changed.sh <base-ref>}"
+base="${1:?usage: scripts/mutate-changed.sh <base-ref> [<path>...]}"
+shift
 # The commits, and the working tree on top of them. Reading the commits alone
 # declared a run clean while a brand-new gated file sat untracked beside it, and
 # CI mutated the same file once it was committed and found a survivor: PR #281's
@@ -34,6 +39,11 @@ base="${1:?usage: scripts/mutate-changed.sh <base-ref>}"
 committed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
 uncommitted=$(git status --porcelain=v1 --untracked-files=all | sed 's/^...//;s/.* -> //')
 changed=$(printf '%s\n%s\n' "$committed" "$uncommitted" | sed '/^$/d' | sort -u)
+if [ "$#" -gt 0 ]; then
+  changed=$(for scope in "$@"; do
+    echo "$changed" | awk -v prefix="${scope%/}/" 'index($0, prefix) == 1'
+  done | sort -u)
+fi
 failed=()
 runs=0
 incremental=(--incremental --incrementalFile reports/mutation/incremental.json)

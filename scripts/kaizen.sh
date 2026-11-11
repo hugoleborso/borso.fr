@@ -185,22 +185,38 @@ case "${1:-}" in
       exit 0
     fi
     total=0
+    swept=0
     while IFS= read -r archive; do
       [ -n "$archive" ] || continue
-      added="$(git -C "$REPO_ROOT" diff "$merge^" "$merge" -- "$archive" |
-        sed -n 's/^+\(- \[.*\)/\1/p')"
+      # A line the merge rewrote shows as one removed and one added. Its stamp,
+      # the time and the writer, did not move, so an added line whose stamp a
+      # removed line carries is an edit of a line an earlier sweep read. PR
+      # #290 renamed every ADR id, and the rewrite put 9 such lines in front of
+      # its sweep as new friction.
+      added="$(git -C "$REPO_ROOT" diff "$merge^" "$merge" -- "$archive" | awk '
+        /^-- \[/ { match($0, /^-- \[[^]]*\] `[^`]*`/); removed[substr($0, 2, RLENGTH - 1)]++; next }
+        /^\+- \[/ { lines[++count] = substr($0, 2) }
+        END {
+          for (each = 1; each <= count; each++) {
+            match(lines[each], /^- \[[^]]*\] `[^`]*`/)
+            stamp = substr(lines[each], 1, RLENGTH)
+            if (removed[stamp] > 0) { removed[stamp]--; continue }
+            print lines[each]
+          }
+        }')"
       count="$(printf '%s' "$added" | grep -c '^- \[' || true)"
       carried="$(git -C "$REPO_ROOT" show "$merge:$archive" | grep -c '^- \[' || true)"
       total=$((total + count))
+      [ "$count" -eq 0 ] && continue
+      swept=$((swept + 1))
       printf '\n\033[36m%s\033[0m — %s line(s) this merge added, of %s in the file\n' \
         "$archive" "$count" "$carried"
-      [ "$count" -eq 0 ] || printf '%s\n' "$added"
+      printf '%s\n' "$added"
       [ "$count" -eq "$carried" ] ||
-        printf '  the other %s line(s) came with an earlier pull request that reused this slug; they were swept with it\n' \
+        printf '  the other %s line(s) came with an earlier pull request that reused this slug, or this merge only edited them; they were swept with it\n' \
           "$((carried - count))"
     done <<< "$archives"
-    printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' \
-      "$total" "$(printf '%s\n' "$archives" | grep -c . || true)"
+    printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' "$total" "$swept"
     ;;
   init)
     park_another_sessions_log
