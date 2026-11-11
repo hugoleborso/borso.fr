@@ -96,13 +96,13 @@ Once the pull request is open and green: say once that it waits on its reviewers
 The session that shipped the feature ends at merge. It does not run the kaizen sweep itself, because the sweep is a fresh look at the work and this session's context is the thing it audits. The merge reply carries two follow-ups, and says so when either is not needed.
 
 1. **`shared-deploy`.** If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch it.
-2. **The kaizen task.** Propose it in the merge reply, and call `spawn_task` (`mcp__ccd_session__spawn_task`) only after the operator approves. Called before, it timed out after 60 s on PR #228. The card it shows starts a new conversation. Its prompt stands alone and names:
+2. **The kaizen task.** Propose it in the merge reply, and start it only after the operator approves. Started before, it timed out after 60 s on PR #228. Use whatever tool this session holds for opening a new session or queueing a task: the set changes between sessions, so read your own tools rather than reaching for a name you remember. Whichever it is, it starts a new conversation. Its prompt stands alone and names:
    - the merged pull request, as `owner/repo#N` with its URL;
    - the archived friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`, which step 3b committed;
    - the instruction to run `/after-task-kaizen` on that pull request;
    - any line logged after the archive, pasted verbatim, since the local `KAIZEN.md` dies with this container.
 
-   Title it `Kaizen sweep for PR #N`. When the session has no `spawn_task` tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
+   Title it `Kaizen sweep for PR #N`. When the session holds no such tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
 
 ## What the budget leaves out
 

@@ -23,10 +23,10 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 **In a new conversation, never in the session that shipped the PR.**
 That session ends at merge: it archives its friction log, proposes the
-kaizen, and once the operator approves calls `spawn_task` with a prompt
-naming the merged PR, the archived `kaizen.md` and this skill (`/open-pr`'s
-*After the merge*). The operator starts the task from its card, and this skill runs there with
-a context that did not do the work it audits.
+kaizen, and once the operator approves starts it with whatever tool it holds
+for opening a new session, passing a prompt that names the merged PR, the
+archived `kaizen.md` and this skill (`/open-pr`'s *After the merge*). This
+skill then runs there with a context that did not do the work it audits.
 
 - A kaizen task started from that card.
 - The user says any of: "/after-task-kaizen", "kaizen pass",
