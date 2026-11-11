@@ -11,7 +11,7 @@ const SENTRY_CLI = 'pnpm exec sentry-cli';
 const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
   "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
 
-function quote(value: string): string {
+function shellQuote(value: string): string {
   return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
@@ -19,8 +19,8 @@ export function buildSourceMapUploadCommands(
   upload: SourceMapUpload,
   outputDirectory: string,
 ): readonly string[] {
-  const directory = quote(outputDirectory);
-  const target = `--org ${quote(upload.organization)} --project ${quote(upload.project)} --release ${quote(upload.release)}`;
+  const directory = shellQuote(outputDirectory);
+  const target = `--org ${shellQuote(upload.organization)} --project ${shellQuote(upload.project)} --release ${shellQuote(upload.release)}`;
   return [
     `${SENTRY_CLI} sourcemaps inject ${directory} || true`,
     `${SENTRY_CLI} sourcemaps upload ${target} ${directory} && rm -f ${directory}/*.map || true`,

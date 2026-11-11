@@ -18,8 +18,9 @@ means cutting about 700 ms from every cold start.
 ## What this change does
 
 1. The handler's source map is uploaded to Sentry at bundling time and deleted
-   from the asset, and `--enable-source-maps` is dropped for the app that
-   uploads. Worth roughly 330 ms of a cold start, inferred from a local ratio.
+   from the asset once the upload succeeded. `--enable-source-maps` stays, so a
+   failed upload leaves exactly today's behaviour. Keeping the flag costs 20 ms
+   of the 330, so the saving is roughly 310 ms, inferred from a local ratio.
 2. `Sentry.flush` moves from the request middleware to the invocation. It cost
    38 ms at warm p50 and 246 ms at warm p95, and a read-batch of 11 reads
    performed 12 sequential flushes in one invocation.
@@ -42,8 +43,10 @@ means cutting about 700 ms from every cold start.
 - An app that configures no upload builds and ships its map exactly as before.
   `last-loop-lepin` reads its own map, so losing it would have cost readable
   frames for nothing.
-- The map is deleted only when the upload succeeded. A bad token or a network
-  blip degrades to today's behaviour rather than leaving the map nowhere.
+- The map is deleted only when the upload succeeded, and `--enable-source-maps`
+  stays set. A bad token or a network blip therefore leaves the map in the
+  bundle and the flag reading it, which is exactly today's behaviour. Dropping
+  the flag as well would have shipped minified frames silently.
 - Neither `sentry-cli` call may fail a deploy.
 - Every interpolated value is shell-quoted, since a checkout path may hold a
   space.
@@ -53,6 +56,10 @@ means cutting about 700 ms from every cold start.
 
 ## How it will be judged
 
-The preview deploy this opens. Compare a cold start's `InitDuration` against
-the 1259 ms recorded on 2026-11-11. The prod saving in this change is inferred
-from local ratios, so the preview is where it becomes a number.
+Not the preview. `.github/workflows/preview.yml` says in place that
+`SENTRY_ORG` and `SENTRY_PROJECT` are variables of the prod environment, which
+the preview job does not name, so `readSourceMapUpload()` returns undefined
+there: a preview installs no hook and ships its map as before. The measurement
+lands on the prod deploy, by comparing a cold start's `InitDuration` against the
+1259 ms recorded on 2026-11-11, unless the operator exposes those two variables
+to the preview job first.

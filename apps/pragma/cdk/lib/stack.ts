@@ -101,12 +101,15 @@ interface SiteOrigin {
   readonly hostname: string;
 }
 
+const SOURCE_MAPPED_STACK_TRACES = '--enable-source-maps';
+
 function buildErrorReportingEnvironment(
   project: ErrorReportingProject | undefined,
 ): Record<string, string> {
   if (project === undefined) return {};
   return {
     SENTRY_DSN: project.dsn,
+    NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES,
     ...(project.release === undefined ? {} : { SENTRY_RELEASE: project.release }),
   };
 }
@@ -218,7 +221,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       timeoutSeconds: API_TIMEOUT_SECONDS,
       extraPathPatterns: ASSISTANT_PATH_PATTERNS,
       requestHeaders: PRAGMA_REQUEST_HEADER_NAMES,
-      sourceMapUpload: props.sourceMapUpload,
+      ...(props.sourceMapUpload === undefined ? {} : { sourceMapUpload: props.sourceMapUpload }),
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,

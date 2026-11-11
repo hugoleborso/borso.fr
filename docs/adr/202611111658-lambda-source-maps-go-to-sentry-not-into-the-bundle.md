@@ -44,22 +44,23 @@ The construct is shared by `banana-rush`, `last-loop-lepin`, `pragma` and
 
 ## Decision
 
-**Produce the map, upload it to Sentry at bundling time, delete it before the
-asset ships, and stop setting `--enable-source-maps`.** Sentry resolves frames
+**Produce the map, upload it to Sentry at bundling time, and delete it from the
+asset once the upload succeeded.** Sentry resolves frames
 server-side from the uploaded map through the debug ids that
-`sentry-cli sourcemaps inject` writes into the bundle, so the runtime flag and
-the shipped map both become dead weight. The delete runs only when the upload
-succeeded, so a bad token or a network blip degrades to today's behaviour
-rather than losing the map everywhere at once. An app that configures no upload
-is untouched: it still builds and ships its map.
+`sentry-cli sourcemaps inject` writes into the bundle, so the shipped map
+becomes dead weight. `--enable-source-maps` stays set. It costs 20 ms against
+the map's 91 ms, and it is what makes a failed upload degrade to today's
+behaviour instead of shipping minified frames silently: the map is still there
+and the flag still reads it. An app that configures no upload is untouched.
 
 This keeps both high-weight criteria. The rejected alternative keeps one and
 drops the other.
 
 ## Consequences
 
-- `+` Removes roughly 330 ms from every cold start, inferred from the local
-  ratio against a measured 1060 ms of prod module load.
+- `+` Removes roughly 310 ms from every cold start, inferred from the local
+  ratio against a measured 1060 ms of prod module load. The map is 91 ms of the
+  local 355 ms and the flag a further 20 ms; keeping the flag gives up that 20.
 - `+` Sentry frames stay readable, and gain debug ids, which survive a release
   the uploader forgot to tag.
 - `~` The three other apps are untouched. `last-loop-lepin` still sets
@@ -87,7 +88,8 @@ drops the other.
 - **Summary:** `lambda-api.ts` takes an optional upload target. When it is
   present, an `afterBundling` command hook injects debug ids, uploads the map
   and, only on a successful upload, deletes it from the output directory.
-  `--enable-source-maps` goes away for the app that uploads.
+  `--enable-source-maps` stays, so a failed upload leaves the old behaviour
+  intact.
 - **Strengths:**
   - Takes the full 330 ms, both the map read and the flag.
   - Keeps readable frames, which is the only reason the map was ever shipped.
@@ -135,7 +137,7 @@ drops the other.
 
 |  | Option A | Option B | Option C |
 |---|---|---|---|
-| Does it change the app for its users | ✓ roughly 330 ms off every cold start of the app that uploads | ✓ the same 330 ms | ✓ roughly 530 ms, by a different lever |
+| Does it change the app for its users | ✓ roughly 310 ms off every cold start of the app that uploads | ✓ 330 ms, by also dropping the flag | ✓ roughly 530 ms, by a different lever |
 | A production exception stays diagnosable | ✓ Sentry resolves frames from the uploaded map | ✗ minified frames only | ✓ unchanged |
 | Deploy keeps working for the three other apps | ✗ a command hook they all run, unproven until a deploy | ✓ removes a setting, adds nothing | ✓ pragma's stack only |
 | Cost in new surface | ✗ one dependency, one credential path, one network call | ✓ nothing added | ✓ nothing added, money instead |
