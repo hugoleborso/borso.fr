@@ -4,6 +4,7 @@ import type { IconName } from '../atoms/Icon';
 import { CounterPill } from '../molecules/CounterPill';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import type { DiscussionSubjectReference } from '../../lib/discussion-subject.core';
+import { PROPOSALS_PATH } from './proposal-board.core';
 import { keepNonZeroCounters } from './today-counters.core';
 
 export interface TodayCountersProps {
@@ -38,7 +39,7 @@ export function TodayCounters({
   const counters: readonly Counter[] = [
     {
       key: 'proposals',
-      to: '/proposals',
+      to: PROPOSALS_PATH,
       icon: 'proposals',
       count: pendingProposalCount,
       label: t('today.counters.proposals'),

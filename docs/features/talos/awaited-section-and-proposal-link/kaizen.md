@@ -18,3 +18,5 @@ Session: 2ad21149-51d3-5fff-98e8-0e9474b187e4
 
 - [2026-11-11 12:12] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-11 12:12] `main` talos pnpm dev seeds no sign-in and no awaited commitment or grouped proposal, so the 375 px screen check ran on the real site with a stubbed API
+- [2026-11-11 12:14] `hook:api-validation` opened a pull request changing an API without a technical-validation report
+- [2026-11-11 12:19] `technical-validator` vitest --changed --coverage prints an empty per-file coverage table when every gated file is at 100%, so the report cannot name which changed files the coverage gate actually read

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { SectionTitle } from '../atoms/SectionTitle';
 import { useDecideProposal, useProposals } from '../../lib/queries/proposals.queries';
 import { PendingProposal } from './PendingProposal';
-import { partitionProposals } from './proposal-board.core';
+import { partitionProposals, PROPOSALS_PATH } from './proposal-board.core';
 
 export interface TodayProposalProps {
   readonly today: string;
@@ -23,7 +23,7 @@ export function TodayProposal({ today }: TodayProposalProps): JSX.Element | null
       <SectionTitle
         trailing={
           <Link
-            to="/proposals"
+            to={PROPOSALS_PATH}
             className="inline-flex items-center min-h-11 px-1 text-caption text-ink-muted no-underline"
           >
             {t('today.proposals.all', { count: pending.length })}
