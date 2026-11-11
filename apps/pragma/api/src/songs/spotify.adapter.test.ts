@@ -238,8 +238,8 @@ describe('resolveSpotifyTrackId', () => {
     const failureLine: unknown = JSON.parse(String(failureLines.mock.calls[0]?.[0]));
     expect(failureLine).toMatchObject({
       'event.kind': 'detached',
-      'spotify.failure': 'Error',
-      'spotify.failure_message': 'ParameterNotFound',
+      'spotify.failure': ['Error'],
+      'spotify.failure_message': ['ParameterNotFound'],
     });
   });
 

@@ -9,6 +9,7 @@ import { GONE_STATUS_CODE } from './broadcast.adapter';
 import { useConnectionPoster } from './connection-poster.setup';
 import { realtimeConnectionTable } from './realtime.schema';
 import { buildRealtimeTicket, REALTIME_TICKET_TTL_MS } from './realtime-ticket.utils';
+import { handler as answerSocketEvent } from '../main.websocket';
 import { buildSocketReply } from './realtime.service';
 
 const ticketGrantSchema = z.object({ url: z.string().nullable(), ticket: z.string() }).strict();
@@ -143,6 +144,32 @@ describe('the socket routes (back-e2e)', () => {
     expect(await connect('c1', { ticket: expired, client: READER_TAB })).toStrictEqual({
       statusCode: 401,
     });
+  });
+
+  it('writes each socket event as one event holding its route, status and outcome', async () => {
+    const { memberId } = await buildAuthenticatedApp();
+    const forged = buildRealtimeTicket(Buffer.alloc(32), memberId, Date.now());
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    const reply = await answerSocketEvent({
+      requestContext: { connectionId: 'c1', routeKey: '$connect' },
+      queryStringParameters: { ticket: forged, client: READER_TAB },
+    });
+
+    const writtenEvents = write.mock.calls.map(([line]) => {
+      const writtenEvent: unknown = JSON.parse(String(line));
+      return writtenEvent;
+    });
+    write.mockRestore();
+    expect(reply).toStrictEqual({ statusCode: 401 });
+    expect(writtenEvents).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'socket',
+        'socket.route_key': '$connect',
+        'socket.status_code': 401,
+        outcome: 'refused',
+      }),
+    ]);
   });
 
   it('refuses a session cookie offered as a ticket', async () => {

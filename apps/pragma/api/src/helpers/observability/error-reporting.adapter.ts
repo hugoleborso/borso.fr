@@ -79,8 +79,8 @@ export function recordAttributesOnActiveSpan(
   }
 }
 
-export function findActiveTraceId(): string | undefined {
-  return Sentry.getActiveSpan()?.spanContext().traceId;
+export function findActiveTraceId(): string | null {
+  return Sentry.getActiveSpan()?.spanContext().traceId ?? null;
 }
 
 export interface TaggedFailure {

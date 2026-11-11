@@ -13,6 +13,8 @@ import { judgeFeedAddress } from './feed-address.core';
 import { numberFeedsOfEachMember, type PositionedCalendarFeed } from './feed-position.core';
 import { readBusyIntervals, readCalendarName } from './ics.core';
 
+const UNKNOWN_STATUS = 'unknown';
+
 export type SaveCalendarFeedOutcome =
   | { readonly kind: 'saved'; readonly calendarFeeds: readonly CalendarFeedSummary[] }
   | { readonly kind: 'invalid-address' }
@@ -80,7 +82,7 @@ function reportFeedFailure(
   addWideEventFields({
     'calendar_feed.failures': [kind],
     'calendar_feed.failed_member_ids': [feed.memberId],
-    'calendar_feed.failed_statuses': [String(status)],
+    'calendar_feed.failed_statuses': [status === null ? UNKNOWN_STATUS : String(status)],
   });
   return {
     memberId: feed.memberId,

@@ -176,10 +176,10 @@ describe('findActiveTraceId', () => {
     expect(findActiveTraceId()).toBe('0123456789abcdef0123456789abcdef');
   });
 
-  it('answers undefined when no span is active', () => {
+  it('answers null when no span is active', () => {
     sentry.getActiveSpan.mockReturnValueOnce(undefined);
 
-    expect(findActiveTraceId()).toBeUndefined();
+    expect(findActiveTraceId()).toBeNull();
   });
 });
 

@@ -15,6 +15,8 @@ import {
 } from '../../../test/push-utils';
 import { pushSubscriptionTable } from '../notifications/notifications.schema';
 import { studyTable } from '../studies/studies.schema';
+import { STREAK_REMINDER_JOB } from '@domain/scheduled-job.core';
+import { handler } from '../main';
 import { runStreakReminder } from './streak-reminder.service';
 
 const PARIS_EVENING = new Date('2026-10-29T19:30:00.000Z');
@@ -203,6 +205,27 @@ describe('the 20:00 streak reminder (back-e2e)', () => {
       }),
     );
     expect(await listStoredEndpoints()).toHaveLength(3);
+  });
+
+  it('writes a scheduled run as one event holding its outcome and every push fact', async () => {
+    const band = await prepareBand();
+    failPushTo(band, 'tom-phone', SERVER_ERROR_STATUS);
+    band.productEvents.mockClear();
+
+    await handler({ job: STREAK_REMINDER_JOB });
+
+    const scheduledEvents = readLoggedEvents(band.productEvents).filter(
+      (logged) => typeof logged === 'object' && logged !== null && 'event.kind' in logged,
+    );
+    expect(scheduledEvents).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'scheduled',
+        'scheduled.job': 'streak-reminder',
+        outcome: 'success',
+        'push.failures': ['streak_push_failed'],
+        'push.failed_statuses': ['500'],
+      }),
+    ]);
   });
 
   it('sends nothing at 00:30 Paris, when a late retry would speak of the next day', async () => {

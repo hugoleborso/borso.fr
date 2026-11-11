@@ -90,8 +90,8 @@ export async function resolveSpotifyTrackId(
   } catch (error) {
     const failure = describeThrownValue(error);
     addWideEventFields({
-      'spotify.failure': failure.type,
-      'spotify.failure_message': failure.message,
+      'spotify.failure': [failure.type],
+      'spotify.failure_message': [failure.message],
     });
     return null;
   }

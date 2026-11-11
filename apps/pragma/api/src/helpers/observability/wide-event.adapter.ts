@@ -65,14 +65,14 @@ export async function runInWideEvent<Answer>(
   }
 }
 
-function findOpenScope(): WideEventScope | undefined {
+function findOpenScope(): WideEventScope | null {
   const scope = openScopes.getStore();
-  return scope?.isEmitted === false ? scope : undefined;
+  return scope?.isEmitted === false ? scope : null;
 }
 
 export function addWideEventFields(fields: WideEventFields): void {
   const openScope = findOpenScope();
-  if (openScope !== undefined) {
+  if (openScope !== null) {
     openScope.fields = mergeWideEventFields(openScope.fields, fields);
     return;
   }
@@ -84,6 +84,6 @@ export function addWideEventFields(fields: WideEventFields): void {
 
 export function addFieldsToOpenWideEvent(fields: WideEventFields): void {
   const openScope = findOpenScope();
-  if (openScope === undefined) return;
+  if (openScope === null) return;
   openScope.fields = mergeWideEventFields(openScope.fields, fields);
 }

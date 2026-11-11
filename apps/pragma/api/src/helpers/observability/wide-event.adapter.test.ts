@@ -138,7 +138,7 @@ describe('addWideEventFields', () => {
     const write = captureWrittenLines();
     const { addWideEventFields } = await importFreshAdapter();
 
-    addWideEventFields({ 'spotify.failure': 'TypeError' });
+    addWideEventFields({ 'spotify.failure': ['TypeError'] });
 
     expect(readWrittenEvents(write)).toStrictEqual([
       {
@@ -146,7 +146,7 @@ describe('addWideEventFields', () => {
         'service.stage': 'preview',
         'service.version': 'abc123',
         'event.kind': 'detached',
-        'spotify.failure': 'TypeError',
+        'spotify.failure': ['TypeError'],
       },
     ]);
     expect(spanRecorder.recordAttributesOnActiveSpan).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe('addWideEventFields', () => {
       lateWork = new Promise<void>((resolve) => {
         setTimeout(resolve, 0);
       }).then(() => {
-        addWideEventFields({ 'realtime.broadcast_failure': 'AggregateError' });
+        addWideEventFields({ 'realtime.broadcast_failure': ['AggregateError'] });
       });
       return Promise.resolve();
     });
@@ -172,7 +172,7 @@ describe('addWideEventFields', () => {
       {
         'event.kind': 'detached',
         'request.id': 'answered',
-        'realtime.broadcast_failure': 'AggregateError',
+        'realtime.broadcast_failure': ['AggregateError'],
       },
     ]);
     expect(readWrittenEvents(write)[0]).not.toHaveProperty('realtime.broadcast_failure');

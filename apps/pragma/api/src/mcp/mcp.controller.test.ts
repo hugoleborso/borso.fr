@@ -242,6 +242,28 @@ describe('mcp controller (back-e2e)', () => {
     expect(expired.status).toBe(401);
   });
 
+  it('writes the member the bearer token belongs to on the event of an assistant call', async () => {
+    const harness = buildAssistantHarness();
+    const owner = await signInOwner(harness);
+    const tokens = await connectAssistant(harness.app, owner);
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    write.mockClear();
+
+    await postToMcp(harness.app, INITIALIZE_MESSAGE, `Bearer ${tokens.accessToken}`);
+
+    const writtenEvents = write.mock.calls.map(([line]) => {
+      const writtenEvent: unknown = JSON.parse(String(line));
+      return writtenEvent;
+    });
+    expect(writtenEvents).toStrictEqual([
+      expect.objectContaining({
+        'event.kind': 'http',
+        'http.route': '/mcp',
+        'member.id': owner.memberId,
+      }),
+    ]);
+  });
+
   it('records the last use of a grant at most once every five minutes', async () => {
     const harness = buildAssistantHarness();
     const owner = await signInOwner(harness);

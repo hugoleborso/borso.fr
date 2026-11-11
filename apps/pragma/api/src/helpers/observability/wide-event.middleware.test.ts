@@ -48,7 +48,7 @@ function buildRecordedApp(): RecordedApp {
         new Promise<void>((resolve) => {
           setTimeout(resolve, 0);
         }).then(() => {
-          addWideEventFields({ 'realtime.broadcast_failure': 'AggregateError' });
+          addWideEventFields({ 'realtime.broadcast_failure': ['AggregateError'] });
         }),
       );
       return context.json({ ok: true });
@@ -165,7 +165,7 @@ describe('recordWideEvents', () => {
     expect(detachedEvent).toMatchObject({
       'event.kind': 'detached',
       'request.id': readRequestId(requestEvent),
-      'realtime.broadcast_failure': 'AggregateError',
+      'realtime.broadcast_failure': ['AggregateError'],
     });
   });
 });

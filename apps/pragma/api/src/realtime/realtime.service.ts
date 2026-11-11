@@ -82,8 +82,8 @@ async function settleWithinBudget(
     (error: unknown): BroadcastOutcome => {
       const failure = describeThrownValue(error);
       addWideEventFields({
-        'realtime.broadcast_failure': failure.type,
-        'realtime.broadcast_failure_message': failure.message,
+        'realtime.broadcast_failure': [failure.type],
+        'realtime.broadcast_failure_message': [failure.message],
       });
       return { kind: 'failed', error };
     },
