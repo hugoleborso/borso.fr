@@ -259,13 +259,17 @@ decision.
 - [`generated-reports-are-rebuilt-not-committed.md`](./generated-reports-are-rebuilt-not-committed.md) — a generated report is gitignored and rebuilt with `scripts/reports.sh` before it is read; only inputs a person accepted are committed (ADR-0014).
 - [`reading-another-sessions-transcript-with-list-events.md`](./reading-another-sessions-transcript-with-list-events.md) — `get_session` answers what a session cost in one call; `list_events` pages land inline and a hook-heavy session is thousands of them.
 - [`the-service-worker-grows-by-importscripts.md`](./the-service-worker-grows-by-importscripts.md) — Pragma's `sw.js` is at the line cap; split it with `importScripts` and register the file in the test harness.
+- [`sentry-search-tools-rewrite-the-query-before-sentry-sees-it.md`](./sentry-search-tools-rewrite-the-query-before-sentry-sees-it.md) — `search_issues` and `search_errors` run an agent over `query` first, which sometimes rewrites a bare tag value into a project filter and returns `400 Project(s) X do not exist`; quote every tag value, and read a 400 as a missing measurement, never a zero.
 
 ## Adding a new entry
 
-Knowledge entries don't need YAML frontmatter or a fixed structure —
-write whatever helps the next reader. Keep it concrete and short
-(short enough to re-read every time you suspect it applies). Title
-should hint at the lesson, not the symptom.
+Every entry needs the `summary:` and `triggers:` front matter described
+under *Every entry has a trigger* above, because
+[`check-knowledge-triggers.sh`](../../scripts/check-knowledge-triggers.sh)
+fails an entry without them in pre-commit and in CI. The body below the
+front matter has no fixed structure — write whatever helps the next
+reader. Keep it concrete and short (short enough to re-read every time you
+suspect it applies). Title should hint at the lesson, not the symptom.
 
 If the entry is the result of a `/after-task-kaizen` sweep that
 classified a subject as "vendor surprise" or "operator confusion",
