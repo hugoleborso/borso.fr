@@ -69,7 +69,7 @@ interface RecurringTasks { generatedAt: string | null; tasks: RecurringTask[] }
 
 ## T4. The scan prompt names the current skill
 
-- T4.1 The « Scanner » prompt says `scan` instead of `talos-scan` (inferred from « no more `talos-` prefix »; the agent session confirms the name).
+- T4.1 The « Scanner » prompt says `scanner-sources` instead of `talos-scan` (the name the agent session gave on 2026-11-11).
 
 ## T5. Documents
 
