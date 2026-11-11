@@ -15,7 +15,8 @@ vi.mock('./app', () => ({ createApp: () => ({}) }));
 vi.mock('./streaks/streak-reminder.service', () => ({
   runStreakReminder: (now: Date) => runStreakReminder(now),
 }));
-vi.mock('./helpers/observability/error-reporting.adapter', () => ({
+vi.mock(import('./helpers/observability/error-reporting.adapter'), async (importOriginal) => ({
+  ...(await importOriginal()),
   flushErrorReports: () => flushErrorReports(),
   reportUnhandledError: (error: unknown) => {
     reportUnhandledError(error);
