@@ -6,6 +6,7 @@ export const HIGHEST_CLOSENESS = Math.max(...CLOSENESS_SCALE);
 
 export type ClosenessScore = (typeof CLOSENESS_SCALE)[number];
 
+// @FollowsBlueprint core-parse-untrusted
 export function findClosenessScore(value: number | string | null): ClosenessScore | null {
   return CLOSENESS_SCALE.find((score) => String(score) === String(value)) ?? null;
 }

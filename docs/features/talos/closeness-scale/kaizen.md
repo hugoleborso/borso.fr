@@ -22,3 +22,4 @@ Session: 2ad21149-51d3-5fff-98e8-0e9474b187e4
 - [2026-11-11 23:03] `hook:merge-on-moved-base` tried to merge a pull request beside base commits no CI run tested with it
 - [2026-11-11 23:43] `closeness-all-kinds` The no-magic-numbers rule flags the literals 2 to 5 of a const tuple that is itself the named scale, so a shared closeness scale typed as a union needed a disable comment in domain/closeness.core.ts.
 - [2026-11-11 23:43] `closeness-all-kinds` GET /api/agent/export returns memory_entity rows in no stated order, so the closeness e2e test had to sort them itself before asserting on two rows.
+- [2026-11-11 23:50] `technical-validator` Round 2 is defined as the diff since the reviewed SHA, but two merges of origin/main sit between the two rounds, so that diff lists every app's Sentry files and the commit's parent had to stand in as the base for vitest --changed and mutate-changed.sh.

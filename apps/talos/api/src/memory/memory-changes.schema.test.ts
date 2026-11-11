@@ -49,7 +49,7 @@ describe('changeOperationSchema', () => {
     expect(changeOperationSchema.safeParse(upsert).success).toBe(isAccepted);
   });
 
-  it('accepts an entity upsert with a known kind and a closeness from 1 to 5', () => {
+  it('accepts an entity upsert with a known kind and a closeness from 0 to 5', () => {
     const upsert = {
       op: 'entity.upsert',
       slug: 'second-brain/personnes/alice-martin',
