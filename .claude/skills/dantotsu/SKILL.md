@@ -127,6 +127,11 @@ by `## Eradication`.
   check, paste its refusal here, revert.
 - Subtract first: a mechanism whose removal makes the defect impossible
   beats a new check.
+- A list kept by hand is not an eradication. When a check needs a fact
+  another file already holds, such as which tests run in an isolated project,
+  read it from that file or remove the need for it. A second copy drifts: the
+  `vi.mock` exemption list of PR #295's sweep was wrong within the hour, and
+  removing `isolate: false` made the whole list unnecessary.
 - Do not shy away from the largest option. A new endpoint, a reshaped API or
   a migration often stops the whole class for good. It also speeds up every
   change that follows. Weigh each option by what it removes, not by its size,

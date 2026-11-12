@@ -8,6 +8,7 @@ import {
   startErrorReporting,
   traceIncomingRequest,
 } from './error-reporting.adapter';
+import { redactDatabaseSpan } from './database-span.core';
 
 const requestSpan = vi.hoisted(() => ({
   setAttribute: vi.fn(),
@@ -27,6 +28,7 @@ const sentry = vi.hoisted(() => ({
   updateSpanName: vi.fn(),
   getActiveSpan: vi.fn((): typeof requestSpan | undefined => requestSpan),
   setHttpStatus: vi.fn(),
+  postgresJsIntegration: vi.fn(() => ({ name: 'PostgresJs' })),
 }));
 
 vi.mock('@sentry/aws-serverless', () => sentry);
@@ -46,7 +48,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('traces under the release with every personal data category off and no trace header sent outward', () => {
+  it('traces under the release with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
     startErrorReporting({
       dsn: DSN,
       environment: 'preview',
@@ -70,6 +72,9 @@ describe('startErrorReporting', () => {
         databaseQueryData: false,
         stackFrameVariables: false,
       },
+      enableRuntimeChannelInjection: false,
+      integrations: [{ name: 'PostgresJs' }],
+      beforeSendSpan: redactDatabaseSpan,
     });
   });
 

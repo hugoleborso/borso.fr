@@ -6,10 +6,8 @@ import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { retryingConflictAbortsOf } from '../helpers/persistence/conflict-abort.core';
+import { buildDsqlClientOptions, buildLocalClientOptions } from './client-options.core';
 import * as schema from './schema';
-
-const DSQL_PORT = 5432;
-const DSQL_DATABASE = 'postgres';
 
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 export type Database = DrizzleClient;
@@ -51,21 +49,11 @@ function readLocalConfig(): LocalConfig | null {
 
 function createDsqlClient(config: DatabaseConfig): Sql {
   const signer = new DsqlSigner({ hostname: config.endpoint, region: config.region });
-  return postgres({
-    host: config.endpoint,
-    port: DSQL_PORT,
-    database: DSQL_DATABASE,
-    user: config.roleName,
-    ssl: 'require',
-    password: () => signer.getDbConnectAuthToken(),
-    types: { bigint: postgres.BigInt },
-    connection: { search_path: config.schemaName },
-    fetch_types: false,
-  });
+  return postgres(buildDsqlClientOptions(config, () => signer.getDbConnectAuthToken()));
 }
 
 function createLocalClient(config: LocalConfig): Sql {
-  return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt }, fetch_types: false });
+  return postgres(config.databaseUrl, buildLocalClientOptions());
 }
 
 /**

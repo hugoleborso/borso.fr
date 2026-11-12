@@ -45,6 +45,9 @@ catalogs:
     '@sentry/react':
       specifier: ^11.6.0
       version: 11.6.0
+    '@sentry/server-utils':
+      specifier: ^11.6.0
+      version: 11.6.0
     '@sentry/vite-plugin':
       specifier: ^5.4.1
       version: 5.4.1
@@ -1095,6 +1098,12 @@ importers:
       '@aws-sdk/dsql-signer':
         specifier: 'catalog:'
         version: 3.1130.0
+      '@sentry/server-utils':
+        specifier: 'catalog:'
+        version: 11.6.0
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       postgres:
         specifier: 'catalog:'
         version: 3.4.9
@@ -1117,9 +1126,6 @@ importers:
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
-      esbuild:
-        specifier: 'catalog:'
-        version: 0.28.2
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

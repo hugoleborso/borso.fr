@@ -68,7 +68,6 @@ export default defineConfig({
           globalSetup: ['./test/setup-postgres.ts'],
           pool: 'forks',
           maxWorkers: 1,
-          isolate: false,
           fileParallelism: false,
           sequence: { groupOrder: 1 },
           testTimeout: 30_000,

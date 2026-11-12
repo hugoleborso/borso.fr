@@ -46,10 +46,6 @@ export function selectVisibleTodos<Todo extends SchedulableTodo>(
   return todos.filter(FILTER_PREDICATE[filter]).toSorted(compareTodos);
 }
 
-export function countOpenTodos(todos: readonly SchedulableTodo[]): number {
-  return todos.filter(FILTER_PREDICATE.open).length;
-}
-
 export function selectDueStatus(
   todo: Pick<SchedulableTodo, 'done' | 'dueDate'>,
   today: string,

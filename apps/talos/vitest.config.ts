@@ -72,7 +72,6 @@ export default defineConfig({
           setupFiles: CLOCK_AT_THE_PARIS_DAY_BOUNDARY,
           pool: 'forks',
           maxWorkers: 1,
-          isolate: false,
           fileParallelism: false,
           sequence: { groupOrder: 1 },
           testTimeout: 30_000,

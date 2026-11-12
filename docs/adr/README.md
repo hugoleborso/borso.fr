@@ -115,6 +115,8 @@ No:
 | [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
 | [2026-11-11T1658](./2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md) | Lambda source maps go to Sentry, not into the bundle | accepted | 2026-11-11 |
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | proposed | 2026-11-11 |
+| [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | accepted | 2026-11-11 |
+| [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | proposed | 2026-11-12 |
 
 ### Data layer
 
@@ -176,6 +178,7 @@ No:
 - 2026-11-11T1318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
 
 - 2026-11-11T1903. every app traces to Sentry at sample rate 1.0 with pragma's request span and browser tracing, and each API's wide event lands on its span, because the measured worst case is 2.8M spans a month against the free plan's 5M.
+- [`2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md`](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) — `LambdaApi` bundles with esbuild's JS API and Sentry's Orchestrion plugin, because the inlined `postgres` driver yields database spans only when rewritten at bundle time.
 
 ### Tooling / DevX
 

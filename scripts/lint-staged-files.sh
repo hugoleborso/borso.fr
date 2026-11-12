@@ -18,9 +18,10 @@
 # runs report the same thing for it.
 #
 # With no TypeScript file staged there is no program to narrow, and the
-# JavaScript files get the plain pass without type information. That pass
-# turns the unused-directive report off: a directive naming a type-aware rule
-# would read as unused there. See
+# JavaScript files get one pass with .oxlintrc.json as it stands, type-aware
+# included. That pass keeps the unused-directive report off, because a
+# JavaScript file sits in no tsconfig.json and tsgolint lints it in an
+# inferred program the whole-tree run in CI judges instead. See
 # docs/knowledge/oxlint-without-type-aware-reads-type-aware-directives-as-unused.md.
 #
 # usage: scripts/lint-staged-files.sh <path>...   (paths relative to the root)
@@ -156,7 +157,11 @@ node --input-type=module -e '
       rules: keepRules(override.rules, wantsPluginRules),
     })),
   });
-  writeFileSync(".oxlintrc.plugins.json", JSON.stringify({ ...half(true, "plugins"), plugins: [] }));
+  const pluginsHalf = half(true, "plugins");
+  writeFileSync(
+    ".oxlintrc.plugins.json",
+    JSON.stringify({ ...pluginsHalf, plugins: [], options: { ...pluginsHalf.options, typeAware: false } }),
+  );
   writeFileSync(".oxlintrc.native.json", JSON.stringify(half(false, "jsPlugins")));
 '
 

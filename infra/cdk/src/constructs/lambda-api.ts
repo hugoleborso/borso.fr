@@ -1,4 +1,7 @@
-import { CfnOutput, Duration, Stack } from 'aws-cdk-lib';
+import { execFileSync, execSync } from 'node:child_process';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { AssetHashType, CfnOutput, Duration, type ILocalBundling, Stack } from 'aws-cdk-lib';
 import {
   CorsHttpMethod,
   type CorsPreflightOptions,
@@ -9,8 +12,13 @@ import {
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
-import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import {
+  Architecture,
+  Code,
+  Function as LambdaFunction,
+  Runtime,
+  Tracing,
+} from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
@@ -21,7 +29,12 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
-import { buildHandlerBundling, type SourceMapUpload } from '../internal/source-map-upload.utils.js';
+import {
+  BUNDLED_HANDLER,
+  buildAfterBundlingCommands,
+  buildHandlerBundlerArguments,
+} from '../internal/handler-bundle.utils.js';
+import type { SourceMapUpload } from '../internal/source-map-upload.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { DsqlSchema } from './dsql-schema.js';
 import { selectLogGroupRemovalPolicy } from '../internal/stage-wiring.utils.js';
@@ -33,6 +46,42 @@ const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
 const CORS_ALLOWED_REQUEST_HEADERS = ['content-type', 'authorization', 'sentry-trace', 'baggage'];
 const ERROR_ALARM_PERIOD_MINUTES = 5;
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
+const HANDLER_RUNTIME = Runtime.NODEJS_22_X;
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const HANDLER_BUNDLER_SCRIPT = path.join(HERE, '..', 'internal', 'handler-bundler.mjs');
+
+class OrchestrionHandlerBundling implements ILocalBundling {
+  public readonly entry: string;
+  public readonly sourceMapUpload: SourceMapUpload | undefined;
+
+  constructor(entry: string, sourceMapUpload: SourceMapUpload | undefined) {
+    this.entry = entry;
+    this.sourceMapUpload = sourceMapUpload;
+  }
+
+  public tryBundle(outputDirectory: string): boolean {
+    const request = { entry: this.entry, outputDirectory, sourceMapUpload: this.sourceMapUpload };
+    execFileSync(process.execPath, buildHandlerBundlerArguments(HANDLER_BUNDLER_SCRIPT, request), {
+      stdio: ['ignore', process.stderr, 'inherit'],
+    });
+    for (const command of buildAfterBundlingCommands(request)) {
+      execSync(command, { stdio: ['ignore', process.stderr, 'inherit'] });
+    }
+    return true;
+  }
+}
+
+function bundleHandlerCode(entry: string, sourceMapUpload: SourceMapUpload | undefined): Code {
+  const absoluteEntry = path.resolve(entry);
+  return Code.fromAsset(path.dirname(absoluteEntry), {
+    assetHashType: AssetHashType.OUTPUT,
+    bundling: {
+      image: HANDLER_RUNTIME.bundlingImage,
+      local: new OrchestrionHandlerBundling(absoluteEntry, sourceMapUpload),
+    },
+  });
+}
+
 export interface LambdaApiProps {
   readonly app: string;
   readonly stage: Stage;
@@ -58,7 +107,7 @@ export interface LambdaApiProps {
 // @FollowsBlueprint reusable-cdk-construct
 export class LambdaApi extends Construct {
   public readonly httpApi: HttpApi;
-  public readonly handler: NodejsFunction;
+  public readonly handler: LambdaFunction;
   public readonly url: string;
 
   constructor(scope: Construct, id: string, props: LambdaApiProps) {
@@ -77,10 +126,11 @@ export class LambdaApi extends Construct {
       removalPolicy: selectLogGroupRemovalPolicy(props.stage),
     });
 
-    this.handler = new NodejsFunction(this, 'Fn', {
+    this.handler = new LambdaFunction(this, 'Fn', {
       functionName: lambdaFunctionName(props, handlerSlug),
-      entry: props.entry,
-      runtime: Runtime.NODEJS_22_X,
+      code: bundleHandlerCode(props.entry, props.sourceMapUpload),
+      handler: BUNDLED_HANDLER,
+      runtime: HANDLER_RUNTIME,
       architecture: Architecture.ARM_64,
       memorySize: props.memoryMb ?? DEFAULT_MEMORY_MIB,
       timeout: Duration.seconds(props.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS),
@@ -99,7 +149,6 @@ export class LambdaApi extends Construct {
           : {}),
         ...props.environment,
       },
-      bundling: buildHandlerBundling(props.sourceMapUpload),
     });
 
     const apiDomainName = props.customDomain
