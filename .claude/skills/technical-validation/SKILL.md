@@ -30,8 +30,11 @@ Agent({
   subagent_type: "technical-validator",
   description: "Technical validation against spec + plan",
   prompt: <self-contained brief — see template.md>,
+  run_in_background: false,
 })
 ```
+
+`run_in_background: false` is required, and `pretool-validator-runs-in-the-foreground.sh` refuses the call without it. The review reads the branch at one commit, so nothing is committed until it hands back.
 
 ## When to invoke
 

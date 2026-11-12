@@ -20,8 +20,11 @@ Agent({
   subagent_type: "visual-validator",
   description: "Visual validation against spec",
   prompt: <self-contained brief — see template.md>,
+  run_in_background: false,
 })
 ```
+
+`run_in_background: false` is required, and `pretool-validator-runs-in-the-foreground.sh` refuses the call without it. The validator drives the working tree's dev server, so nothing is edited until it hands back.
 
 The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
 
