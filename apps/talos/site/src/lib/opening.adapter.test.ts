@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   hasOpeningPlayed,
-  hideDockTarget,
+  shouldOpenThisLoad,
   isMotionReduced,
   didRecordOpening,
   measureDockTarget,
   type OpeningStorage,
   readSessionStorage,
   readViewport,
+  setDockTargetHidden,
 } from './opening.adapter';
 
 function buildStorage(): OpeningStorage & { readonly storedFlags: Map<string, string> } {
@@ -56,6 +57,21 @@ describe('the opening session flag', () => {
       },
     };
     expect(didRecordOpening(storage)).toBe(false);
+  });
+});
+
+describe('shouldOpenThisLoad', () => {
+  it('plays on the first load of a session and never again on a reload', () => {
+    const storage = buildStorage();
+    expect(shouldOpenThisLoad(storage, false)).toBe(true);
+    expect(storage.storedFlags.get('talos.opening-played')).toBe('1');
+    expect(shouldOpenThisLoad(storage, false)).toBe(false);
+  });
+
+  it('does not play under reduced motion, and still records the session', () => {
+    const storage = buildStorage();
+    expect(shouldOpenThisLoad(storage, true)).toBe(false);
+    expect(hasOpeningPlayed(storage)).toBe(true);
   });
 });
 
@@ -113,15 +129,15 @@ describe('the dock target', () => {
 
   it('hides the header logo while the coin flies to it, then shows it again', () => {
     const logo = mountDockTarget();
-    hideDockTarget(true);
+    setDockTargetHidden(true);
     expect(logo.style.visibility).toBe('hidden');
-    hideDockTarget(false);
+    setDockTargetHidden(false);
     expect(logo.style.visibility).toBe('');
   });
 
   it('does nothing to hide when no header logo is on screen', () => {
     expect(() => {
-      hideDockTarget(true);
+      setDockTargetHidden(true);
     }).not.toThrow();
   });
 });

@@ -100,10 +100,10 @@ describe('the opening overlay', () => {
     }
   });
 
-  it('goes away at the first tap', () => {
+  it('goes away at the first tap, taking the click so it never reaches the app beneath', () => {
     render(<OpeningOverlay />);
     act(() => {
-      fireEvent.pointerDown(screen.getByTestId('opening'));
+      fireEvent.click(screen.getByTestId('opening'));
     });
     expect(screen.queryByTestId('opening')).toBeNull();
   });

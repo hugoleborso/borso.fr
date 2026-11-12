@@ -172,6 +172,9 @@ describe('the application shell', () => {
     expect(tree.container.querySelector('h1')?.textContent).toBe(
       formatLongDay(toIsoDay(new Date()), DISPLAY_LOCALE),
     );
+    const headerLogo = tree.container.querySelector('header img[data-opening-dock]');
+    expect(headerLogo?.getAttribute('src')).toBe('/icons/coin-face.webp');
+    expect(headerLogo?.nextElementSibling?.textContent).toBe('Talos');
     tree.unmount();
   });
 

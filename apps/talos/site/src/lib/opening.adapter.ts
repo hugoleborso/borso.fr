@@ -1,6 +1,6 @@
 /** @DependsOnExternal browser-session-storage */
 
-import type { DockTargetBox, ViewportSize } from './opening.core';
+import { type DockTargetBox, shouldPlayOpening, type ViewportSize } from './opening.core';
 
 const PLAYED_KEY = 'talos.opening-played';
 const PLAYED_VALUE = '1';
@@ -40,6 +40,12 @@ export function didRecordOpening(storage: OpeningStorage): boolean {
   }
 }
 
+export function shouldOpenThisLoad(storage: OpeningStorage, isMotionReducedNow: boolean): boolean {
+  const hasPlayed = hasOpeningPlayed(storage);
+  didRecordOpening(storage);
+  return shouldPlayOpening(hasPlayed, isMotionReducedNow);
+}
+
 export function isMotionReduced(): boolean {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches;
 }
@@ -59,7 +65,7 @@ export function measureDockTarget(): DockTargetBox | null {
   return { left, top, width, height };
 }
 
-export function hideDockTarget(isHidden: boolean): void {
+export function setDockTargetHidden(isHidden: boolean): void {
   const target = findDockTarget();
   if (target === null) return;
   target.style.visibility = isHidden ? HIDDEN : '';

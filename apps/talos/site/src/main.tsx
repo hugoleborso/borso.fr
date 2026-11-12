@@ -6,13 +6,7 @@ import { App } from './App';
 import { OpeningOverlay } from './components/organisms/OpeningOverlay';
 import './i18n/i18n.setup';
 import './styles/tokens.css';
-import {
-  hasOpeningPlayed,
-  isMotionReduced,
-  didRecordOpening,
-  readSessionStorage,
-} from './lib/opening.adapter';
-import { shouldPlayOpening } from './lib/opening.core';
+import { shouldOpenThisLoad, isMotionReduced, readSessionStorage } from './lib/opening.adapter';
 import { queryClient } from './lib/query-client.setup';
 import { preloadScreensWhenIdle } from './screen-loaders.setup';
 import { registerServiceWorker } from './sw/service-worker.setup';
@@ -20,9 +14,7 @@ import { registerServiceWorker } from './sw/service-worker.setup';
 registerServiceWorker();
 preloadScreensWhenIdle();
 
-const openingStorage = readSessionStorage();
-const playsOpening = shouldPlayOpening(hasOpeningPlayed(openingStorage), isMotionReduced());
-didRecordOpening(openingStorage);
+const playsOpening = shouldOpenThisLoad(readSessionStorage(), isMotionReduced());
 
 // @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');

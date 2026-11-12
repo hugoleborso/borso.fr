@@ -1,6 +1,6 @@
 import { type AnimationEvent, type CSSProperties, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { hideDockTarget, measureDockTarget, readViewport } from '../../lib/opening.adapter';
+import { setDockTargetHidden, measureDockTarget, readViewport } from '../../lib/opening.adapter';
 import {
   computeDockMove,
   type DockMove,
@@ -27,14 +27,14 @@ export function OpeningOverlay(): JSX.Element | null {
   if (isOver) return null;
 
   function finish(): void {
-    hideDockTarget(false);
+    setDockTargetHidden(false);
     setIsOver(true);
   }
 
   function aimAtDock(event: AnimationEvent): void {
     const isAiming = isDockAimingAnimation(event.animationName);
     if (!isAiming) return;
-    hideDockTarget(true);
+    setDockTargetHidden(true);
     setDockMove(computeDockMove(measureDockTarget(), readViewport()));
   }
 
@@ -48,7 +48,7 @@ export function OpeningOverlay(): JSX.Element | null {
       aria-hidden="true"
       data-testid="opening"
       className="fixed inset-0 z-50 overflow-hidden motion-reduce:hidden"
-      onPointerDown={finish}
+      onClick={finish}
       onAnimationStart={aimAtDock}
       onAnimationEnd={finishOnLanding}
     >

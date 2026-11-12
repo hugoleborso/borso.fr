@@ -29,9 +29,9 @@ The owner chose a new mark for the Talos PWA: a didrachm of Phaistos showing Tal
    - The coin arrives spinning twice, so the BORSO back, the thick edge and the Talos face each show. It slows down and stops facing the screen on Talos.
    - A raking light sweeps the relief, a bronze halo appears, and "TALOS" settles under the coin.
    - The app opens in a circle growing from the coin. The coin then flies onto the header logo, whose position is measured when the reveal starts and again when the flight starts.
-4. A tap anywhere skips it.
+4. A tap anywhere skips it. The skip runs on `click`, so the tap is spent on the overlay and never reaches the app beneath.
 5. The app loads behind it and is never blocked. The overlay leaves the DOM when the coin lands.
-6. No `opacity`, `filter` or `mix-blend-mode` reaches the 3D coin or its layers, because each one flattens `preserve-3d` and the back then shows as a mirrored face. The fade-in is on the wrapper that carries the perspective.
+6. No `opacity`, `filter` or `mix-blend-mode` reaches the element that holds the 3D context (`preserve-3d`), because each one flattens it and the back then shows as a mirrored face. The fade-in is on the wrapper that carries the perspective. The coin's layers are flat leaves with no children, so the gleam layer may fade its own opacity, as in the validated prototype.
 
 ## Out of scope
 
