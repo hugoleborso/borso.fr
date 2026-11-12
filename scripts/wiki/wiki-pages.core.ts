@@ -49,6 +49,34 @@ const SPEC_FILE = /\/spec\/spec\.md$/;
 const FEATURE_FOLDER = /^docs\/features\/[^/]+\/[^/]+\//;
 const FEATURE_FOLDER_DEPTH = 4;
 
+export const GENERATED_REPORTS: readonly (readonly [string, string])[] = [
+  ['docs/standards/hotspots.md', 'Hotspots: the files that change most'],
+  ['docs/standards/temporal-coupling.md', 'Temporal coupling: files that change together'],
+  ['docs/standards/convention-drift.md', 'Convention drift: where the code leaves its blueprints'],
+  ['docs/standards/rule-provenance.md', 'Rule provenance: which defect each rule answers'],
+  ['docs/standards/blueprint-defects.md', 'Blueprint defects'],
+  [
+    '.claude/skills/blueprint/blueprint-index.md',
+    'Blueprint index: the canonical example of each layer',
+  ],
+];
+
+const PUBLISHED_PAGES: readonly (readonly [string, string])[] = [
+  ['', 'Architecture maps: every app at five levels, interactive'],
+  ['reports/blueprint-coverage.html', 'Blueprint coverage heatmap'],
+  ['reports/weak-points.html', 'Weak points'],
+  ['reports/working-conditions.html', 'Working conditions'],
+];
+
+const REPORTS_PAGE = 'Reports';
+const REPORTS_HEADING = 'Reports';
+const REPORTS_INTRODUCTION =
+  'Generated from the code on every merge to `main`, so they describe the commit in the footer.';
+const PUBLISHED_HEADING = '## Interactive, on GitHub Pages';
+const PUBLISHED_INTRODUCTION =
+  'These are HTML pages the wiki cannot hold. They are rebuilt only when someone runs the `architecture` workflow from the Actions tab, so they can be older than this page.';
+const HIDDEN_PREFIX = '.';
+
 const START_HERE: readonly (readonly [string, string])[] = [
   ['docs/how-it-is-built.md', 'How it is built'],
   ['docs/architecture.md', 'Architecture'],
@@ -115,7 +143,10 @@ export function isWikiSource(path: string): boolean {
 
 export function pageNameFor(path: string): string {
   if (path === HOME_PATH) return HOME_PAGE;
-  const withoutDocs = path.startsWith(DOCS_DIRECTORY) ? path.slice(DOCS_DIRECTORY.length) : path;
+  const visible = path.startsWith(HIDDEN_PREFIX) ? path.slice(HIDDEN_PREFIX.length) : path;
+  const withoutDocs = visible.startsWith(DOCS_DIRECTORY)
+    ? visible.slice(DOCS_DIRECTORY.length)
+    : visible;
   return withoutDocs.slice(0, -MARKDOWN_EXTENSION.length).replaceAll('/', '-');
 }
 
@@ -267,6 +298,7 @@ function renderSidebar(documents: readonly SourceDocument[]): string {
   const sections = [
     ...INDEX_SECTIONS.map((section) => `- [${section.heading}](${section.name})`),
     `- [${FEATURES_HEADING}](${FEATURES_PAGE})`,
+    `- [${REPORTS_HEADING}](${REPORTS_PAGE})`,
   ];
   return (
     [
@@ -279,9 +311,33 @@ function renderSidebar(documents: readonly SourceDocument[]): string {
   );
 }
 
+export function pagesUrlFor(repository: string): string {
+  const slash = repository.indexOf('/');
+  return `https://${repository.slice(0, slash).toLowerCase()}.github.io/${repository.slice(slash + 1)}/`;
+}
+
+export function renderReports(documents: readonly SourceDocument[], source: WikiSource): string {
+  const present = new Set(documents.map((document) => document.path));
+  const reports = GENERATED_REPORTS.filter(([path]) => present.has(path)).map(
+    ([path, label]) => `- [${label}](${pageNameFor(path)})`,
+  );
+  const pagesUrl = pagesUrlFor(source.repository);
+  const published = PUBLISHED_PAGES.map(([path, label]) => `- [${label}](${pagesUrl}${path})`);
+  return (
+    [
+      `# ${REPORTS_HEADING}`,
+      REPORTS_INTRODUCTION,
+      reports.join('\n'),
+      PUBLISHED_HEADING,
+      PUBLISHED_INTRODUCTION,
+      published.join('\n'),
+    ].join('\n\n') + '\n'
+  );
+}
+
 function renderFooter(source: WikiSource): string {
   const commitUrl = `https://github.com/${source.repository}/commit/${source.commit}`;
-  return `Generated from the repository at [\`${source.commit.slice(0, 9)}\`](${commitUrl}). Edit the markdown in the repository, not here: every merge to \`main\` that touches it rewrites the wiki.\n`;
+  return `Generated from the repository at [\`${source.commit.slice(0, 9)}\`](${commitUrl}). Edit the markdown in the repository, not here: every merge to \`main\` rewrites the wiki.\n`;
 }
 
 export function buildWiki(documents: readonly SourceDocument[], source: WikiSource): WikiPage[] {
@@ -291,11 +347,16 @@ export function buildWiki(documents: readonly SourceDocument[], source: WikiSour
     name: pageNameFor(document.path),
     content: rewriteLinks(document, pageNames, source),
   }));
+  const generated = new Set(GENERATED_REPORTS.map(([path]) => path));
+  const written = published.filter((document) => !generated.has(document.path));
   const indexes = INDEX_SECTIONS.map((section) => ({
     name: section.name,
-    content: renderIndex(section, published),
+    content: renderIndex(section, written),
   }));
-  indexes.push({ name: FEATURES_PAGE, content: renderFeatureIndex(documents, source) });
+  indexes.push(
+    { name: FEATURES_PAGE, content: renderFeatureIndex(documents, source) },
+    { name: REPORTS_PAGE, content: renderReports(published, source) },
+  );
   const reserved = new Set(indexes.map((index) => index.name.toLowerCase()));
   const clash = pages.find((page) => reserved.has(page.name.toLowerCase()));
   if (clash !== undefined) throw new Error(`The page ${clash.name} clashes with a generated index`);

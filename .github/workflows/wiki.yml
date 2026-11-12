@@ -1,6 +1,6 @@
-# Publishes the repository's markdown to the GitHub wiki, so the architecture,
-# the decisions and the lessons read as a site with a sidebar instead of a
-# folder tree.
+# Publishes the repository's markdown and its generated reports to the GitHub
+# wiki, so the architecture, the decisions, the lessons and the state of the
+# code read as a site with a sidebar instead of a folder tree.
 #
 # The repository stays the source. `scripts/wiki/build-wiki.ts` turns the
 # tracked README, CLAUDE.md, `docs/` and each app's top-level markdown into
@@ -8,26 +8,21 @@
 # and the footer. Feature folders are listed, not copied: each line of the
 # Features page opens the folder in the repository.
 #
+# The markdown reports (hotspots, temporal coupling, convention drift, rule
+# provenance, blueprint defects, the blueprint index) describe the code, so
+# this runs on every push to `main` and not only when a document changes. They
+# take seconds to build. The architecture maps are interactive HTML a wiki
+# cannot hold, and take minutes, so they stay on GitHub Pages, built when
+# someone dispatches `architecture`; the Reports page links them.
+#
 # Every run replaces every page, so an edit made in the wiki's web editor is
 # lost at the next merge. The footer of each page says so.
-#
-# This needs two repository settings the workflow cannot make (see
-# docs/operator-backlog.md): Settings → General → Features → Wikis on, and one
-# page saved by hand so the wiki's git repository exists. Until then the clone
-# step fails and nothing else breaks.
 
 name: wiki
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'README.md'
-      - 'CLAUDE.md'
-      - 'docs/**'
-      - 'apps/*/*.md'
-      - 'scripts/wiki/**'
-      - '.github/workflows/wiki.yml'
   workflow_dispatch: {}
 
 # Each run writes the whole wiki from one commit, so a newer push makes an
@@ -46,13 +41,26 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      # Whole history: hotspots and temporal coupling read the git log, and
+      # against a shallow clone they describe the last commit as the churn.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
+      # Temporal coupling reads the module graph to tell a pair no import
+      # connects from one that is connected. `--skip-layout` writes that model
+      # without laying out the HTML maps, which is the slow part.
+      - name: Build the reports
+        run: |
+          pnpm exec tsx scripts/architecture/architecture-graph.ts --skip-layout
+          scripts/reports.sh blueprints
+          scripts/reports.sh standards
 
       - name: Clone the wiki
         env:
