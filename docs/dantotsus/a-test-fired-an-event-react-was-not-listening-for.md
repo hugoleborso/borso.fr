@@ -26,9 +26,10 @@ cycle, and the test that came out of it speaks an event name no browser sends.
 | A test fires `animationstart` on the overlay | the handler never runs, and the test fails on its assertion with no error | the handler runs, as it does in every browser |
 | The fix the test settled on | a map from `animationStart` to `webkitAnimationStart` | the standard event name |
 
-Pragma's `OpeningScreen.test.tsx` had hit the same wall before and written
-the same map (`JSDOM_ANIMATION_EVENT_TYPES`). Two apps, two writers, one trap
-(measured with `grep -rn webkitAnimation apps/*/site/src`).
+Pragma's `OpeningScreen.test.tsx` and `RequireSession.test.tsx` had hit the
+same wall before and each written the same map (`JSDOM_ANIMATION_EVENT_TYPES`).
+Two apps, three tests, one trap (measured with
+`grep -rln webkitAnimation apps/*/site/src` on `main`).
 
 ## Causal chain
 
@@ -52,7 +53,7 @@ constructors too, and React reads that absence to choose its event names.*
 ## Countermeasure
 
 Define `AnimationEvent` before react-dom loads, in a Vitest `setupFiles`
-entry shared by both apps' `core` project. Both tests now fire
+entry shared by both apps' `core` project. The three tests now fire
 `new AnimationEvent('animationstart', …)`. The prefixed maps are gone.
 
 ## Eradication
@@ -72,8 +73,11 @@ either app's test environment.
 **Proof it can fail:** with the `setupFiles` line removed from
 `apps/talos/vitest.config.ts`, `OpeningOverlay.test.tsx` fails 4 of 7 tests
 with `ReferenceError: AnimationEvent is not defined`. With it, 7 of 7 pass,
-and pragma's `OpeningScreen.test.tsx` passes 7 of 7 (measured).
+and pragma's `OpeningScreen.test.tsx` passes 7 of 7 (measured). The setup
+file also proved the other way: before `RequireSession.test.tsx` moved to
+the standard names, the pre-push gate failed it with `expected undefined to
+be 'leaving'`, because React no longer listened for the prefixed event.
 
-**Similar instances:** `grep -rn webkitAnimation apps/*/site/src` found the
-two tests above and nothing else. `TransitionEvent` has the same shape in
+**Similar instances:** `grep -rln 'webkitAnimation\|webkitTransition'
+apps/*/site/src` found the three tests above and now finds nothing. `TransitionEvent` has the same shape in
 react-dom, and no test in the repository fires a transition event yet.

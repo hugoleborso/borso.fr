@@ -65,16 +65,15 @@ function readOverlay(): HTMLElement | null {
   return document.querySelector<HTMLElement>('[data-opening-phase]');
 }
 
-const JSDOM_ANIMATION_EVENT_TYPES = {
-  start: 'webkitAnimationStart',
-  end: 'webkitAnimationEnd',
+const ANIMATION_EVENT_TYPES = {
+  start: 'animationstart',
+  end: 'animationend',
 } as const;
 
 function fireAnimation(moment: 'start' | 'end', animationName: string): void {
   const leftNote = document.querySelector('[data-mark-part=left-note]');
   if (leftNote === null) throw new Error('no left note');
-  const event = new Event(JSDOM_ANIMATION_EVENT_TYPES[moment], { bubbles: true });
-  Object.defineProperty(event, 'animationName', { value: animationName });
+  const event = new AnimationEvent(ANIMATION_EVENT_TYPES[moment], { bubbles: true, animationName });
   act(() => {
     leftNote.dispatchEvent(event);
   });
