@@ -94,6 +94,32 @@ Held by: `api/src/recurring-tasks/recurring-tasks.controller.test.ts` › answer
 
 Not to be confused with: a routine run, which is one firing of the routine by a decision or a message; a todo, which the owner does himself.
 
+## Freshness
+
+How late the summaries of the pages are, read from the memory state `freshness` (`etat/fraicheur.json`), which the agent writes every night.
+
+Lives in: `api/src/freshness/`
+
+- Code: `Freshness` (`generatedAt` for `genere`, `lateCount` for `en_retard`, `pages`), `LatePage` (`slug`, `title` for `titre`, `kind` for `type`, `closeness` for `proximite`, `summarizedOn` for `resume_le`, `factCount` for `faits`, `containedFactCount` for `faits_englobes`, `lateness` for `retard`).
+- A page is **late** when it is among the `pages` of the state. The **summary day** of an entity (`summarizedOn`) is `resume_le`, else `maj`, else the day of its last update (`selectSummaryDay`, `api/src/memory/computed-sections.core.ts`).
+- Read only. The app never writes the state.
+Held by: `api/src/freshness/freshness.controller.test.ts` › answers 404 to a POST, a PUT and a DELETE and leaves the state as written
+
+Not to be confused with: an overdue todo, which the « En retard » tile counts; a recurring task that is due.
+
+## Computed section
+
+A section of a rendered entity whose lines come from the tables at every read and are never stored. There are five: « Faits », « Historique », « Relations », « Comprend » and « Faits récents ».
+
+Lives in: `api/src/memory/computed-sections.core.ts`
+
+Held by: `api/src/agent/agent-page.controller.test.ts` › stores no computed line when a page read is written back, the headings kept in place
+
+- Code: `ComputedSection` (`heading`, `lines`), `Containment` (what « Comprend » and « Faits récents » are built from). A page **contains** another through an open relation of verb `comprend`; the **contained** pages are one level down, the **descendants** two.
+- `dropComputedLines` removes their lines, and those of « Faits », « Historique » and « Relations », from a body an `entity.upsert` receives; `hideHandWrittenCopy` (`api/src/pages/pages.core.ts`) removes « Projets liés » from what the PWA reads.
+
+Not to be confused with: « Faits », « Historique » and « Relations », whose lines are rows of the page itself.
+
 ## Draft
 
 A message Talos prepared for the owner to send by hand, one file under `etat/brouillons/`.
@@ -146,7 +172,7 @@ One markdown file of the private repository's notes.
 
 Lives in: `api/src/pages/`
 
-- Code: `Page` (`path`, `title`, `type`, `frontMatter`, `markdown`, `outgoingLinks`, `incomingLinks`).
+- Code: `Page` (`path`, `title`, `type`, `frontMatter`, `markdown`, `outgoingLinks`, `incomingLinks`, `summarizedOn` for the summary day of an entity, null otherwise).
 - A page's title is its first `# ` heading (`domain/markdown-page.core.ts`).
 
 ## Message
@@ -190,6 +216,7 @@ The owner's memory once it lives in the database: the `memory_*` tables of [`MEM
 Lives in: `api/src/memory/`
 
 - Code: `memory_entity` rows are **entities** (a page of `second-brain/`: a person, an organisation, a project…; `kind` for the front-matter `type`, `closeness` for `proximite`), with their **aliases**, **facts** (a dated line of « Faits » or « Historique », `section` `facts` or `history`) and **relations** (a dated line of « Relations », `verb` from the **verb** table). A **source** is an immutable file of `sources/`, a **citation** links an entity to the source reference it cites, a **journal entry** is a file of `journal/`, and a **memory document** is any other file kept whole (`preferences/…`, `etat/questions`…).
+- The **closeness** of an entity (`proximite` in the front matter) is an integer or nothing. It runs from 0 to 5 for every kind (`CLOSENESS_SCALE`, `domain/closeness.core.ts`), and each level has a name the owner sees (`selectClosenessNameKey`, `site/src/lib/closeness-name.core.ts`). For a person: 0 « Contacts », 1 « Bonnes relations », 2 « Copains », 3 « Amis », 4 « Proches », 5 « Intimes ». For every other kind, where the score says how much the page matters to him: 0 « Périphérie », 1 « Contexte », 2 « Secondaire », 3 « Suivi », 4 « Important », 5 « Au cœur ». A 0 is a score, and no closeness is the absence of one.
 - A **slug** is the repository path without `.md`, so every `[[…]]` link stays valid.
 - A **memory event** records one applied operation (actor, token, run, before and after); a **change batch** remembers the answer to one idempotency key. Nothing is deleted: an entity is archived, a todo is removed by a flag.
 - `renderEntityPage` (`page-rendering.core.ts`) writes an entity back as the markdown file it came from.

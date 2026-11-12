@@ -98,7 +98,21 @@ const INPUT: LintInput = {
   knownSlugs: [ALICE, ACME, LONELY, 'engagements/devis', 'second-brain/concepts/lie'],
 };
 
+function buildEntity(slug: string, closeness: number | null) {
+  return { slug, body: '', closeness, archived: false };
+}
+
 describe('listMemoryIssues', () => {
+  it('reports a missing closeness on an absent one only, never on a 0', () => {
+    const issues = listMemoryIssues(
+      { ...INPUT, entities: [buildEntity('zero', 0), buildEntity('none', null)], relations: [] },
+      '2026-10-16',
+    );
+    expect(issues.filter((issue) => issue.code === 'missing-closeness')).toStrictEqual([
+      { code: 'missing-closeness', slug: 'none', message: 'proximite absente' },
+    ]);
+  });
+
   it('reports each rule once where it applies', () => {
     expect(listMemoryIssues(INPUT, '2026-10-16')).toEqual([
       { code: 'missing-closeness', slug: ALICE, message: 'proximite absente' },

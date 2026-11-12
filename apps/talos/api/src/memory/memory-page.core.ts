@@ -9,11 +9,18 @@ export interface MemoryPageView {
   readonly incoming: string[];
 }
 
+export interface SummarizedPageView extends MemoryPageView {
+  readonly summarizedOn: string | null;
+}
+
 export interface RenderedPage {
   readonly type: MemoryObjectType;
   readonly markdown: string;
   readonly targets: readonly string[];
+  readonly summarizedOn: string | null;
 }
+
+const NOT_AN_ENTITY = { targets: [], summarizedOn: null } as const;
 
 interface RecordWithBody {
   readonly attributes: string;
@@ -45,9 +52,9 @@ export function selectContentPage(
   journal: ContentRow | null,
   document: ContentRow | null,
 ): RenderedPage | null {
-  if (source !== null) return { type: 'source', markdown: source.content, targets: [] };
-  if (journal !== null) return { type: 'journal', markdown: journal.content, targets: [] };
-  if (document !== null) return { type: 'document', markdown: document.content, targets: [] };
+  if (source !== null) return { type: 'source', markdown: source.content, ...NOT_AN_ENTITY };
+  if (journal !== null) return { type: 'journal', markdown: journal.content, ...NOT_AN_ENTITY };
+  if (document !== null) return { type: 'document', markdown: document.content, ...NOT_AN_ENTITY };
   return null;
 }
 

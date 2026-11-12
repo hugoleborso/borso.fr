@@ -12,6 +12,7 @@ const COUNTS: TodayIndexProps = {
   readyDraftCount: 5,
   reconnectCount: 6,
   dueRecurringTaskCount: 7,
+  latePageCount: 67,
 };
 
 const NO_COUNTS: TodayIndexProps = {
@@ -22,6 +23,7 @@ const NO_COUNTS: TodayIndexProps = {
   readyDraftCount: 0,
   reconnectCount: 0,
   dueRecurringTaskCount: 0,
+  latePageCount: 0,
 };
 
 const ALERT_CLASS = 'bg-danger-soft';
@@ -41,7 +43,7 @@ describe('the index of the day', () => {
     cleanup();
   });
 
-  it('shows the nine tiles in their fixed order, each a door with its counter', () => {
+  it('shows the ten tiles in their fixed order, each a door with its counter', () => {
     const tiles = renderIndex(COUNTS);
     expect(tiles.map((tile) => [tile.textContent, tile.getAttribute('href')])).toStrictEqual([
       ['3À décider', '/proposals'],
@@ -53,6 +55,7 @@ describe('the index of the day', () => {
       ['7Récurrentes', '/recurring'],
       ['Lancements', '/message#runs'],
       ['Historique', '/history'],
+      ['67Mémoire', '/brain'],
     ]);
   });
 
@@ -68,6 +71,7 @@ describe('the index of the day', () => {
       '0Récurrentes',
       'Lancements',
       'Historique',
+      '0Mémoire',
     ]);
     expect(
       screen.getAllByText('0').every((count) => count.className.includes('text-ink-faint')),
@@ -83,6 +87,11 @@ describe('the index of the day', () => {
       'Lancements',
     ]);
     expect(tiles[6]?.className).not.toContain(ALERT_CLASS);
+  });
+
+  it('shows no count on the memory tile until the late pages are known, the tile kept in place', () => {
+    const tiles = renderIndex({ ...COUNTS, latePageCount: undefined });
+    expect(tiles.map((tile) => tile.textContent).slice(8)).toStrictEqual(['Historique', 'Mémoire']);
   });
 
   it('raises the alert only on the overdue and the recurring tiles when they are not zero', () => {

@@ -1,3 +1,4 @@
+import { findClosenessScore } from '@domain/closeness.core';
 import { buildGraph, type Graph, type GraphNode, type GraphRelation } from '@domain/graph.core';
 import { readPageTitle } from '@domain/markdown-page.core';
 
@@ -25,13 +26,7 @@ export interface StoredGraphSource {
 }
 
 const COMMITMENT_TYPE = 'engagement';
-const HIGHEST_PROXIMITY = 5;
-const VALID_PROXIMITIES = Array.from({ length: HIGHEST_PROXIMITY }, (_unused, index) => index + 1);
 const PATH_SEPARATOR = '/';
-
-function readProximity(closeness: number | null): number | undefined {
-  return VALID_PROXIMITIES.find((level) => level === closeness);
-}
 
 function readSlugTail(slug: string): string {
   return slug.slice(slug.lastIndexOf(PATH_SEPARATOR) + 1);
@@ -42,12 +37,12 @@ export function projectStoredGraph(source: StoredGraphSource, date: string | nul
   const entityNodes = source.entities
     .filter((entity) => !entity.archived)
     .map((entity): GraphNode => {
-      const proximity = readProximity(entity.closeness);
+      const proximity = findClosenessScore(entity.closeness);
       return {
         id: entity.slug,
         title: entity.title,
         type: entity.kind,
-        ...(proximity === undefined ? {} : { proximity }),
+        ...(proximity === null ? {} : { proximity }),
       };
     });
   const commitmentNodes = source.commitments.map((commitment): GraphNode => ({

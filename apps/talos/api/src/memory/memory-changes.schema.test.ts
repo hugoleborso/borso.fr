@@ -32,7 +32,24 @@ describe('changeRequestSchema', () => {
 });
 
 describe('changeOperationSchema', () => {
-  it('accepts an entity upsert with a known kind and a closeness from 1 to 5', () => {
+  it.each([
+    [0, true],
+    [5, true],
+    [-1, false],
+    [6, false],
+    [2.5, false],
+  ])('reads a closeness of %s on an entity upsert as accepted: %s', (closeness, isAccepted) => {
+    const upsert = {
+      op: 'entity.upsert',
+      slug: 'second-brain/personnes/alice-martin',
+      kind: 'personne',
+      title: 'Alice Martin',
+      closeness,
+    };
+    expect(changeOperationSchema.safeParse(upsert).success).toBe(isAccepted);
+  });
+
+  it('accepts an entity upsert with a known kind and a closeness from 0 to 5', () => {
     const upsert = {
       op: 'entity.upsert',
       slug: 'second-brain/personnes/alice-martin',

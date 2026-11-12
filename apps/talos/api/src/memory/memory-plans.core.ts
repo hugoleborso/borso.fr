@@ -1,3 +1,4 @@
+import { dropComputedLines } from './computed-sections.core';
 import { decodeAttributes } from './memory-changes.core';
 import type { ChangeOperation } from './memory-changes.schema';
 import type { memoryTodoTable } from './memory-records.schema';
@@ -42,7 +43,8 @@ export function planEntityUpsert(
       kind: operation.kind,
       title: operation.title,
       summary: operation.summary ?? existing?.summary ?? null,
-      body: operation.body ?? existing?.body ?? '',
+      body:
+        operation.body === undefined ? (existing?.body ?? '') : dropComputedLines(operation.body),
       attributes:
         operation.attributes === undefined
           ? (existing?.attributes ?? JSON.stringify({ type: operation.kind }))

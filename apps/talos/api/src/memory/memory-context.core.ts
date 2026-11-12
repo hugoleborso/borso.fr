@@ -3,6 +3,7 @@ import { measureBytes } from './memory-text.core';
 export const DEFAULT_CONTEXT_BUDGET_BYTES = 80_000;
 const SUMMARY_LIMIT = 80;
 const ELLIPSIS = '…';
+const UNSCORED_SORT_RANK = -1;
 
 export interface ContextDocument {
   readonly slug: string;
@@ -76,7 +77,7 @@ function truncateSummary(summary: string | null): string {
 }
 
 function readCloseness(entity: ContextEntity): number {
-  return entity.closeness ?? 0;
+  return entity.closeness ?? UNSCORED_SORT_RANK;
 }
 
 function compareIndexEntries(left: ContextEntity, right: ContextEntity): number {

@@ -6,8 +6,10 @@ import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE, formatLongDay, toIsoDay } from '../../lib/calendar-day.utils';
+import { useFreshness } from '../../lib/queries/freshness.queries';
 import { useRecurringTasks } from '../../lib/queries/recurring-tasks.queries';
 import { useToday } from '../../lib/queries/today.queries';
+import { selectLatePageCount } from './late-pages.core';
 import { NotificationsPrompt } from './NotificationsPrompt';
 import { countDueTasksOnceLoaded } from './recurring-task-board.core';
 import { ScanStatus } from './ScanStatus';
@@ -25,6 +27,7 @@ export function TodayOverview(): JSX.Element {
   const { t } = useTranslation();
   const today = useToday();
   const recurring = useRecurringTasks();
+  const freshness = useFreshness();
   const date = today.data?.date ?? toIsoDay(new Date());
   const commitments = splitAwaitedCommitments(today.data?.commitments ?? []);
   return (
@@ -61,6 +64,7 @@ export function TodayOverview(): JSX.Element {
             readyDraftCount={today.data.readyDraftCount}
             reconnectCount={today.data.reconnectCount}
             dueRecurringTaskCount={countDueTasksOnceLoaded(recurring.data?.tasks)}
+            latePageCount={selectLatePageCount(freshness.data)}
           />
           <NotificationsPrompt />
           <TodayBirthdays birthdays={today.data.soonBirthdays} />

@@ -2,18 +2,46 @@ import { describe, expect, it } from 'vitest';
 import { selectBirthdayDayKey, selectBirthdayTone, selectCloseness } from './relations-board.core';
 
 describe('selectCloseness', () => {
-  it('keeps a closeness between nothing and five, rounded, with its shade', () => {
-    expect(selectCloseness(5)).toStrictEqual({ level: 'full', rank: 5 });
-    expect(selectCloseness(3.4)).toStrictEqual({ level: 'medium', rank: 3 });
-    expect(selectCloseness(1)).toStrictEqual({ level: 'faint', rank: 1 });
-    expect(selectCloseness(0)).toStrictEqual({ level: 'none', rank: 0 });
+  it.each([
+    [0, 'contact', 'closeness.name.person.0'],
+    [1, 'faint', 'closeness.name.person.1'],
+    [2, 'light', 'closeness.name.person.2'],
+    [3, 'medium', 'closeness.name.person.3'],
+    [4, 'strong', 'closeness.name.person.4'],
+    [5, 'full', 'closeness.name.person.5'],
+  ] as const)('gives the level %s its own look and its name', (rank, level, nameKey) => {
+    expect(selectCloseness(rank)).toStrictEqual({
+      level,
+      rank,
+      labelKey: 'relations.closeness.named',
+      nameKey,
+    });
   });
 
-  it('clamps a closeness out of the scale and reads a missing one as none', () => {
-    expect(selectCloseness(9)).toStrictEqual({ level: 'full', rank: 5 });
-    expect(selectCloseness(-2)).toStrictEqual({ level: 'none', rank: 0 });
-    expect(selectCloseness(null)).toStrictEqual({ level: 'none', rank: 0 });
-    expect(selectCloseness(Number.NaN)).toStrictEqual({ level: 'none', rank: 0 });
+  it('keeps a person with no closeness on the look « none », apart from a 0', () => {
+    const unscored = {
+      level: 'none',
+      rank: null,
+      labelKey: 'relations.closeness.unscored',
+      nameKey: null,
+    };
+    expect(selectCloseness(null)).toStrictEqual(unscored);
+    expect(selectCloseness(Number.NaN)).toStrictEqual(unscored);
+    expect(selectCloseness(0).level).not.toBe(selectCloseness(null).level);
+  });
+
+  it.each([
+    [6, 'full'],
+    [2.5, 'medium'],
+    [3.4, 'medium'],
+    [-2, 'contact'],
+  ] as const)('shows %s, outside the scale, as a number without a name', (rank, level) => {
+    expect(selectCloseness(rank)).toStrictEqual({
+      level,
+      rank,
+      labelKey: 'relations.closeness.unnamed',
+      nameKey: null,
+    });
   });
 });
 
