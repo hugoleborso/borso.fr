@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countOpenTodos,
   hasTodoTextChanged,
   readTodoListChoice,
   selectChosenTodoLists,
@@ -99,12 +98,6 @@ describe('selectVisibleTodos', () => {
     const given = [SOON, LATE];
     selectVisibleTodos(given, 'open');
     expect(listIds(given)).toEqual(['soon', 'late']);
-  });
-});
-
-describe('countOpenTodos', () => {
-  it('counts the todos that are not done', () => {
-    expect(countOpenTodos(ALL)).toBe(3);
   });
 });
 

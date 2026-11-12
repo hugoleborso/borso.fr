@@ -129,7 +129,7 @@ describe('the one todo tab', () => {
       [...tree.container.querySelectorAll('main section[aria-label] > h2')].map(
         (heading) => heading.textContent,
       ),
-    ).toStrictEqual(['Perso · 1 à faire', 'Taff · 1 à faire']);
+    ).toStrictEqual(['Perso', 'Taff']);
     const sections = [...tree.container.querySelectorAll('main section[aria-label]')];
     expect(sections[0]?.textContent).toContain(PERSONAL_TODO.text);
     expect(sections[1]?.textContent).toContain(WORK_TODO.text);
