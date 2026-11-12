@@ -60,18 +60,19 @@ function createDsqlClient(config: DatabaseConfig): Sql {
     password: () => signer.getDbConnectAuthToken(),
     types: { bigint: postgres.BigInt },
     connection: { search_path: config.schemaName },
+    fetch_types: false,
   });
 }
 
 function createLocalClient(config: LocalConfig): Sql {
-  return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt } });
+  return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt }, fetch_types: false });
 }
 
 /**
  * @Blueprint database-client
  * @BlueprintName Database Client Singleton
  * @BlueprintUsage Use for the one module a repository imports to reach the database.
- * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be.
+ * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be. Both clients turn `fetch_types` off, because postgres.js otherwise sends one `pg_catalog` query on every new connection to learn the array types, 313 ms of a 716 ms first connection on DSQL; the price is that an array comes back as its text form, so a schema that gains an array column turns it back on.
  */
 export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;

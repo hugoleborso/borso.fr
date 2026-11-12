@@ -21,6 +21,7 @@ session does once it has measured the result.
 
 | Found in | Task | Right it needs | How to check it is done |
 | --- | --- | --- | --- |
+| #298 | Make `SENTRY_DSN` a repository variable, or give the preview job its own, so a pragma preview runs Sentry. Until then the flush after a cold first request, 165 to 280 ms in production (measured), can only be worked on by merging to find out. | GitHub repository or environment variables | A cold start of `pragma-pr-<n>-api` logs a wide event whose `trace.id` is set |
 | #303 | Confirm that a preview teardown leaves no log group. The two groups the teardown of #295 left are deleted: on 2026-11-12 the account listed `-pr-` groups only for the open #298 and #302 (measured). Lambda had created each one again about 3 seconds after CloudFormation deleted it, from a log event delivered late, and the sweep that follows `cdk destroy` only looked under `/aws/lambda/` (measured in the stack events and the teardown log). `scripts/preflight-preview-recovery.sh` now sweeps `<app>-pr-<N>-*` too. Not measured yet on a real teardown. | AWS read, after a pull request that deployed `pragma`, `last-loop-lepin` or `banana-rush` closes with this fix on `main` | `aws logs describe-log-groups --region eu-west-3 --log-group-name-pattern pr-<N>` lists nothing once the teardown of that pull request has ended. #298 and #302 are the first candidates. |
 
 ## Done

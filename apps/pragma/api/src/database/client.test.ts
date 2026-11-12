@@ -42,3 +42,11 @@ describe('a statement that loses to a deploy migration (back-e2e)', () => {
     expect(runs).toBe(2);
   });
 });
+
+// @FollowsBlueprint test-back-e2e
+describe('a connection that fetches no array types (back-e2e)', () => {
+  it('hands an array back as its text form, since nothing told it what an array is', async () => {
+    const rows = await getDatabase().execute(sql.raw('SELECT ARRAY[1, 2] AS answer'));
+    expect(rows[0]).toEqual({ answer: '{1,2}' });
+  });
+});

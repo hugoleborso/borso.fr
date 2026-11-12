@@ -135,7 +135,7 @@ list_existing_subjects() {
 }
 
 run_oxfmt() {
-  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check
+  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern
 }
 
 run_oxlint() {
@@ -208,6 +208,13 @@ queue_node_check dantotsu-front-matter '^. (docs/dantotsus/|scripts/quality/)|^D
 # One version per dependency lives in pnpm-workspace.yaml.
 queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yaml)$' \
   scripts/dependencies/check-dependency-catalog.ts
+
+# A package every Lambda bundles resolves to one version, or each bundle
+# carries both copies and evaluates them at every cold start.
+# Earning the run: it would have run on 16 of the last 100 commits, and 76
+# commits ever touched the lockfile it guards (measured 2026-11-11).
+queue_node_check single-resolutions '^. (pnpm-lock\.yaml|scripts/dependencies/)' \
+  scripts/dependencies/check-single-resolutions.ts
 
 # The template a PR body is drafted from fits the budget the same script
 # enforces on the body.

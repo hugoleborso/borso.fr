@@ -37,6 +37,7 @@ const COMMENT_MOMENT_SECONDS = 60;
 const PRACTICE_SONG_COUNT = 4;
 const PLANNED_SONG_COUNT = 5;
 const ISO_DAY_LENGTH = 10;
+const NOON_HOUR = 12;
 const SEEDED_MEMBER = SEED_MEMBERS[0];
 
 const TOOL_LIST_CHARACTERS_MAX = 19_000;
@@ -111,6 +112,12 @@ class CallLog {
 
 function daysFrom(now: Date, days: number): Date {
   return new Date(now.getTime() + days * MILLISECONDS_PER_DAY);
+}
+
+function noonUtcOf(instant: Date): Date {
+  return new Date(
+    Date.UTC(instant.getUTCFullYear(), instant.getUTCMonth(), instant.getUTCDate(), NOON_HOUR),
+  );
 }
 
 async function seedTakesOf(songId: string, actor: { memberId: string; now: Date }) {
@@ -260,7 +267,7 @@ describe('assistant tool budget (back-e2e)', () => {
       await log.call('get_take', { song: songWithTakes.title });
     });
     await runTask('plan a practice with five songs', async (log) => {
-      const day = daysFrom(now, NEW_PRACTICE_IN_DAYS).toISOString();
+      const day = noonUtcOf(daysFrom(now, NEW_PRACTICE_IN_DAYS)).toISOString();
       await log.call('save_session', { kind: 'practice', date: day });
       await log.call('save_setlist', {
         name: 'Mardi',
