@@ -46,7 +46,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('starts the SDK tagged with the app in the shared project, with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
+  it('starts the SDK tagged with the app in the shared project, with every personal data category off, no trace header sent outward and no SQL on a database span, and no span per middleware', () => {
     startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1, release: 'abc123' });
 
     expect(sentry.init).toHaveBeenCalledWith({
