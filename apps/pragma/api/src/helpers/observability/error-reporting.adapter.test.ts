@@ -72,6 +72,7 @@ describe('startErrorReporting', () => {
         stackFrameVariables: false,
       },
       enableRuntimeChannelInjection: false,
+      ignoreSpans: [{ op: 'middleware' }],
       integrations: [
         { name: 'NodeFetch', options: { ignoreOutgoingRequests: isUnrecordedOutgoingRequest } },
         { name: 'PostgresJs' },

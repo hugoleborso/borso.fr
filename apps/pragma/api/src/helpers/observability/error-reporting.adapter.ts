@@ -24,6 +24,8 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   stackFrameVariables: false,
 };
 
+const UNREPORTED_SPANS: ReportingOptions['ignoreSpans'] = [{ op: 'middleware' }];
+
 const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
 
 export interface IncomingRequest {
@@ -49,6 +51,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
     dataCollection: PRIVATE_DATA_COLLECTION,
     enableRuntimeChannelInjection: false,
+    ignoreSpans: UNREPORTED_SPANS,
     integrations: [
       Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: isUnrecordedOutgoingRequest }),
       Sentry.postgresJsIntegration(),
