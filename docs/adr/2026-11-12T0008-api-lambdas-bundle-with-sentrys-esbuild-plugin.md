@@ -103,3 +103,19 @@ with the options in one place.
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/*/api/src/helpers/observability/database-span.core.ts`, `infra/cdk/src/constructs/lambda-api.ts`, `infra/cdk/src/internal/handler-bundle.utils.ts`, `infra/cdk/src/internal/handler-bundler.mjs`, `apps/*/api/src/helpers/observability/error-reporting.adapter.ts`
 - Related ADRs: builds on ADR-2026-11-11T1903 and ADR-2026-11-11T1658
+
+## Revisions
+
+### Revision 2026-11-12 — the plugin also instruments Hono
+
+What changed: in the first prod hour, Sentry received 446 `middleware` spans
+(origin `auto.middleware.hono`) against 282 `http.server` spans, named after
+minified functions such as `Fie` and `Xt` (measured with Sentry's span
+search). The plugin rewrites Hono as well as `postgres`, and the default
+Hono integration then records every middleware. Its `instrumentations` option
+only adds to Sentry's list, so it cannot leave Hono out.
+Why: those spans carry no readable name and multiply the span count the
+budget of ADR-2026-11-11T1903 assumed, one per request. Each API now passes
+`ignoreSpans: [{ op: 'middleware' }]`; a local probe built with the plugin
+showed the middleware span gone and the request span kept.
+Implication for the original decision: still valid.
