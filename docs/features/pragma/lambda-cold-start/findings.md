@@ -38,19 +38,20 @@ gain of a hundred milliseconds. The first-request column is clean.
 
 ## PR 298 in production
 
-PR 298 reached production on 2026-11-12 at 00:22 UTC. Five cold starts were
-read on it that night, none of them slower than 1744 ms.
+PR 298 reached production on 2026-11-12 at 00:22 UTC. Seven cold starts were
+read on it in the half hour that followed, none of them slower than 1863 ms.
 
-One is a real one. An assistant connector that has been idle refreshes its
-token first, so its cold start lands on `POST /oauth/token`, the route that
-took 50 of the week's 226 cold starts:
+Three are real ones, on the two routes that took 142 of the week's 226 cold
+starts. Two came from assistant sessions nobody provoked. The third is an idle
+connector refreshing its token before its first call.
 
-| `POST /oauth/token`, cold | the week before, median of 50 | after PR 298, 1 cold start |
-| --- | --- | --- |
-| init | 1255 ms | 773 ms |
-| handler | 853 ms | 564 ms |
-| after the handler | 199 ms | 200 ms |
-| total | 2386 ms | 1538 ms |
+| cold start | init | handler | after the handler | total |
+| --- | --- | --- | --- | --- |
+| `POST /mcp`, the week before, median of 92 | 1266 ms | 837 ms | 226 ms | 2395 ms |
+| `POST /mcp`, 00:43 UTC | 1119 ms | 527 ms | 218 ms | 1863 ms |
+| `POST /mcp`, 00:50 UTC | 752 ms | 577 ms | 160 ms | 1489 ms |
+| `POST /oauth/token`, the week before, median of 50 | 1255 ms | 853 ms | 199 ms | 2386 ms |
+| `POST /oauth/token`, 00:38 UTC | 773 ms | 564 ms | 200 ms | 1538 ms |
 
 The four others were provoked, by four parallel unauthenticated `GET /api/me`
 sent right after the deploy:
@@ -64,25 +65,24 @@ sent right after the deploy:
 
 What they establish:
 
-- The new code is the one running. No cold start of the five logs
+- The new code is the one running. No cold start of the seven logs
   `Failed to register diagnostics-channel injection hooks`, which every cold
   start logged before.
-- The init of the real one is 773 ms against 891 ms after PR 293, 118 ms less.
-  That is one cold start against six, so it agrees with the 110 ms inferred for
-  Sentry's thread without proving it.
+- The handler of a real cold start lost about 290 ms: 527, 577 and 564 ms
+  against medians of 837 and 853 ms. That is the array-type query.
+- The init is bimodal in production too, about 770 ms or about 1100 ms. The
+  slow mode is why one real cold start still takes 1863 ms.
 - The time after the handler did not move, as expected. Nothing touched it.
-- The init is bimodal in production too, about 790 ms or about 1080 ms in the
-  same burst.
 
-What they do not establish: the p95. Five cold starts are not a week, and four
-of them ran a lighter route than real traffic. The week's replay said 700 ms
-off every cold start leaves 4.6% of invocations over the ceiling. The real one
-lost 848 ms.
+What they do not establish: the p95. Seven cold starts are not a week. The
+week's replay said 700 ms off every cold start leaves 4.6% of invocations over
+the ceiling. The three real ones lost 532, 906 and 848 ms.
 
 To provoke a real cold start again: leave production idle, then make one
-assistant tool call. Its containers were all reclaimed within 12 idle minutes.
-Several tool calls in parallel do not help, because the connector sends them
-one after another and they all land on the one warm container.
+assistant tool call. A container was reclaimed after 6 minutes and 20 seconds
+without traffic. Several tool calls in parallel do not help, because the
+connector sends them one after another and they all land on the one warm
+container.
 
 ## The shape of the problem
 
