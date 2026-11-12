@@ -108,3 +108,5 @@ that was fixed and should be removed.
   match: pr body | body checker | budget's limits | second body
 - `page-nobody-renders-here` · Build · A page ships to an artifact store that no dev server, preview or validation renders, so the operator's screen is its first
   match: published page | published in an artifact | artifact type runs | renders it in a browser before | measures page width | a tooltip could hold
+- `unformatted-until-commit` · Build · A file an agent wrote outside the format hook reaches the commit unformatted and the oxfmt gate refuses it
+  match: unformatted | oxfmt gate

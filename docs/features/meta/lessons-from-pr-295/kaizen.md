@@ -21,3 +21,6 @@ Session: c72ce888-8956-58c0-8980-36e03d8aabc2
 - [2026-11-11 23:22] `hook:api-validation` opened a pull request changing an API without a technical-validation report
 - [2026-11-11 23:27] `technical-validator` A kaizen-sweep branch was handed to technical validation with its parent feature's spec as the contract, and the validator procedure names no source for category A on such a branch, so rows were built from the sweep's inventory.md decisions instead.
 - [2026-11-11 23:27] `technical-validator` The plan-absent row forces PASS_EXCEPT_UNVERIFIABLE on a kaizen-sweep branch that by design has no plan, the same A00 the inventory (row 16) already ruled a no-op for PR #295.
+- [2026-11-12 00:02] `implementer` An app bundle that imports Sentry's postgresJsIntegration contains the orchestrion:postgres channel names even without the bundler plugin, so grepping an app bundle for them cannot prove the driver rewrite ran.
+- [2026-11-12 00:02] `implementer` infra/cdk's tsconfig lib is ES2022, so Array.prototype.toSorted fails typecheck in tests while vitest runs it fine.
+- [2026-11-12 00:08] `main` the implementer left two infra/cdk files unformatted, a third time this wall was hit in PR #295's work
