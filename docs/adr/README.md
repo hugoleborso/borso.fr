@@ -113,7 +113,7 @@ No:
 | [2026-11-11T1306](./2026-11-11T1306-talos-keeps-the-conversation-of-each-routine-run.md) | Talos keeps the conversation of each routine run in a table of its own database | accepted | 2026-11-11 |
 | [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | accepted | 2026-11-11 |
-| [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | proposed | 2026-11-12 |
+| [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
 
 ### Data layer
 
