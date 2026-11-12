@@ -24,3 +24,7 @@ Session: c72ce888-8956-58c0-8980-36e03d8aabc2
 - [2026-11-12 00:02] `implementer` An app bundle that imports Sentry's postgresJsIntegration contains the orchestrion:postgres channel names even without the bundler plugin, so grepping an app bundle for them cannot prove the driver rewrite ran.
 - [2026-11-12 00:02] `implementer` infra/cdk's tsconfig lib is ES2022, so Array.prototype.toSorted fails typecheck in tests while vitest runs it fine.
 - [2026-11-12 00:08] `main` the implementer left two infra/cdk files unformatted, a third time this wall was hit in PR #295's work
+- [2026-11-12 00:21] `technical-validator` The validator's round-2 rule grades a false dismissal of a non-blocking finding as blocking, which contradicts its own 'what breaks if it ships' test for typing a finding.
+- [2026-11-12 00:21] `technical-validator` No harness in the repo runs a bundled API against a real Sentry client and Postgres, so checking what a db span carries took hand-built esbuild probes in the scratch folder.
+- [2026-11-12 00:26] `main` the screens-shown stop hook fired on a turn that compared probe outputs before and after a fix, with no screen involved
+- [2026-11-12 00:32] `fixer` Sentry 11 does not re-export StreamedSpanJSON from @sentry/aws-serverless, so typing a beforeSendSpan callback means deriving it through Parameters<typeof init>.

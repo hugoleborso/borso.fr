@@ -64,8 +64,14 @@ the local Postgres, counting the spans `beforeSendSpan` saw:
 Sentry's plugin added 9,890 bytes to the minified probe bundle (381,079
 against 390,969, measured).
 
-With `databaseQueryData: false` the span is named after the statement kind
-only, `select`, with no table and no value.
+`databaseQueryData: false` does not keep SQL out of a database span. It
+drops the values, but the span still carries the whole statement in
+`db.query.text` and its tables in its name and `db.query.summary`: measured on
+2026-11-12 as `select iban from secret_members where email = $1`, in a span
+named `select secret_members`. pragma, last-loop-lepin and banana-rush pass
+`redactDatabaseSpan` from `database-span.core.ts` as `beforeSendSpan`, which
+removes both attributes and names the span after `db.operation.name`, such as
+`SELECT`. A probe on `select 1` shows no table and hides this.
 
 Only prod has a DSN, so prod is the only place to check a change to this,
 with the same `span.op:db*` query after a deploy.

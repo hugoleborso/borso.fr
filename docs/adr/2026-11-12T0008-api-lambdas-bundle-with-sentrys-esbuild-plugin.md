@@ -46,12 +46,14 @@ then runs the existing `sentry-cli` source-map upload. pragma,
 last-loop-lepin and banana-rush list `postgresJsIntegration()`; talos lists
 none, because its agent endpoint runs arbitrary SQL. last-loop-lepin,
 banana-rush and talos set `enableRuntimeChannelInjection: false`, which
-PR #298 sets for pragma. It is the only option that yields database spans
+PR #298 sets for pragma. The three apps that list the integration pass
+`redactDatabaseSpan` as `beforeSendSpan`, so no SQL text or table name reaches
+Sentry. It is the only option that yields database spans
 with the options in one place.
 
 ## Consequences
 
-- `+` A request's trace shows its database time, with the statement kind as the span name and no table or value (`databaseQueryData: false`).
+- `+` A request's trace shows its database time, with the operation as the span name, such as `SELECT`, and no SQL, table or value. `databaseQueryData: false` drops only the values, so each app passes `redactDatabaseSpan` as `beforeSendSpan` to remove `db.query.text` and `db.query.summary` (measured on a probe query naming a table).
 - `+` Sentry's startup warning "Failed to register diagnostics-channel injection hooks" stops, and the three apps lose the runtime hook's worker thread, as pragma does in PR #298.
 - `-` pragma's API bundle grows 20,963 bytes, from 2,028,390 to 2,049,353 (measured). What that costs a cold start is unknown until prod.
 - `-` `LambdaApi` owns its bundling: a CDK upgrade that improves `NodejsFunction` bundling no longer reaches it, and `infra/cdk` now depends on `esbuild` and `@sentry/server-utils` at synth time.
@@ -99,5 +101,5 @@ with the options in one place.
 - Spec: `docs/features/meta/sentry-tracing-all-apps/spec/spec.md` (use case 7)
 - Plan: none; the inventory row is `docs/features/meta/lessons-from-pr-295/inventory.md` row 08
 - Commit: stamped by `/after-task-kaizen` on merge
-- Files: `infra/cdk/src/constructs/lambda-api.ts`, `infra/cdk/src/internal/handler-bundle.utils.ts`, `infra/cdk/src/internal/handler-bundler.mjs`, `apps/*/api/src/helpers/observability/error-reporting.adapter.ts`
+- Files: `apps/*/api/src/helpers/observability/database-span.core.ts`, `infra/cdk/src/constructs/lambda-api.ts`, `infra/cdk/src/internal/handler-bundle.utils.ts`, `infra/cdk/src/internal/handler-bundler.mjs`, `apps/*/api/src/helpers/observability/error-reporting.adapter.ts`
 - Related ADRs: builds on ADR-2026-11-11T1903 and ADR-2026-11-11T1658
