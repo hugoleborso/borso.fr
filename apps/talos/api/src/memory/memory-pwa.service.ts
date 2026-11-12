@@ -17,7 +17,7 @@ import {
 } from './memory.repository';
 import { renderRecordPage } from './page-rendering.core';
 
-export { readMemoryPage } from './memory-page.service';
+export { readSummarizedMemoryPage } from './memory-page.service';
 export { searchMemory } from './memory-read.service';
 
 const PWA_ACTOR = 'pwa';

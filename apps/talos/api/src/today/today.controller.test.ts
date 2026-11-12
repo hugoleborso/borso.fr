@@ -63,7 +63,7 @@ describe('GET /api/today', () => {
       macCollection: null,
     });
     expect(today.pendingProposalCount).toBe(1);
-    expect(today.reconnectCount).toBe(1);
+    expect(today.reconnectCount).toBe(3);
     expect(today.readyDraftCount).toBe(1);
   });
 });

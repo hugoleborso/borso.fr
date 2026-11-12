@@ -76,6 +76,22 @@ describe('listIndexLines', () => {
   });
 });
 
+function buildPerson(title: string, closeness: number | null) {
+  return { ...ENTITY, slug: `second-brain/personnes/${title}`, title, closeness };
+}
+
+describe('listIndexLines, a closeness of 0', () => {
+  it('sorts a 0 above a page with no closeness and below a 1', () => {
+    expect(
+      listIndexLines([buildPerson('aucune', null), buildPerson('zero', 0), buildPerson('une', 1)]),
+    ).toStrictEqual([
+      '- [[second-brain/personnes/une]] (p1) — une : ',
+      '- [[second-brain/personnes/zero]] (p0) — zero : ',
+      '- [[second-brain/personnes/aucune]] (p?) — aucune : ',
+    ]);
+  });
+});
+
 describe('composeContext on a small memory', () => {
   it('writes the exact document', () => {
     const small: ContextInput = {

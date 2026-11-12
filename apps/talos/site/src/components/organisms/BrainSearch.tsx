@@ -13,6 +13,7 @@ import { openActionSheet } from '../../lib/action-sheet.hook';
 import { useDebouncedValue } from '../../lib/debounced-value.hook';
 import { useBrainSearch } from '../../lib/queries/brain.queries';
 import { buildPageHref } from '../../lib/wikilinks.core';
+import { LatePages } from './LatePages';
 import { isSearchableQuery, normaliseSearchQuery, SEARCH_DEBOUNCE_MS } from './brain-search.core';
 
 // @FollowsBlueprint organism-query-owning
@@ -27,6 +28,7 @@ export function BrainSearch(): JSX.Element {
     <>
       <PageTitle>{t('brain.title')}</PageTitle>
       <div className="flex flex-col gap-4">
+        <LatePages />
         <label className="relative block">
           <span className="sr-only">{t('brain.search.label')}</span>
           <Icon

@@ -28,6 +28,7 @@ describe('locateMemoryFile', () => {
       kind: 'state',
       key: 'recurring',
     });
+    expect(locateMemoryFile('etat/fraicheur.json')).toEqual({ kind: 'state', key: 'freshness' });
   });
 
   it('knows no other file than markdown and the state files', () => {

@@ -19,16 +19,19 @@ describe('selectContentPage', () => {
       type: 'source',
       markdown: 'x',
       targets: [],
+      summarizedOn: null,
     });
     expect(selectContentPage(null, content, content)).toEqual({
       type: 'journal',
       markdown: 'x',
       targets: [],
+      summarizedOn: null,
     });
     expect(selectContentPage(null, null, content)).toEqual({
       type: 'document',
       markdown: 'x',
       targets: [],
+      summarizedOn: null,
     });
     expect(selectContentPage(null, null, null)).toBeNull();
   });
@@ -45,6 +48,7 @@ describe('composePageView', () => {
           markdown:
             'Voir [[second-brain/organisations/acme]] et [[second-brain/personnes/alice-martin]]',
           targets: ['second-brain/personnes/bruno-petit'],
+          summarizedOn: '2026-10-20',
         },
         [
           { fromSlug: slug, toSlug: 'second-brain/personnes/bruno-petit' },

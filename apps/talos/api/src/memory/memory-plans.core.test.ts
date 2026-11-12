@@ -86,6 +86,46 @@ describe('planEntityUpsert', () => {
     });
   });
 
+  it('writes a closeness of 0 on a person, and keeps a stored 0 an update leaves out', () => {
+    expect(planEntityUpsert(EXISTING, { ...UPSERT, closeness: 0 }, NOW)).toMatchObject({
+      kind: 'write',
+      values: { closeness: 0 },
+    });
+    expect(planEntityUpsert({ ...EXISTING, closeness: 0 }, UPSERT, NOW)).toMatchObject({
+      kind: 'write',
+      values: { closeness: 0 },
+    });
+  });
+
+  it.each(['organisation', 'domaine'] as const)(
+    'writes a closeness of 0 on a page of kind %s, new or stored, as on a person',
+    (kind) => {
+      const upsert = { ...UPSERT, kind, closeness: 0 };
+      expect(planEntityUpsert(null, upsert, NOW)).toMatchObject({
+        kind: 'write',
+        status: 'created',
+        values: { kind, closeness: 0 },
+      });
+      expect(planEntityUpsert({ ...EXISTING, kind }, upsert, NOW)).toMatchObject({
+        kind: 'write',
+        status: 'updated',
+        values: { kind, closeness: 0 },
+      });
+    },
+  );
+
+  it('stores a received body without the lines of the computed sections, their headings kept', () => {
+    const body =
+      '# Alice\n\n## Faits\n\n- ville: Lyon\n## Comprend\n\n- [[second-brain/projets/potager]]\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | fèves commandées\n';
+    const stored = '# Alice\n\n## Faits\n\n## Comprend\n\n## Faits récents\n\n';
+    expect(planEntityUpsert(null, { ...UPSERT, body }, NOW)).toMatchObject({
+      values: { body: stored },
+    });
+    expect(planEntityUpsert(EXISTING, { ...UPSERT, body }, NOW)).toMatchObject({
+      values: { body: stored },
+    });
+  });
+
   it('refuses a stale expected version, and expects version 1 on creation', () => {
     expect(planEntityUpsert(EXISTING, { ...UPSERT, expectedVersion: 3 }, NOW)).toEqual({
       kind: 'version-conflict',

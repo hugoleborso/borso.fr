@@ -19,7 +19,7 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 
 | Table | Primary key | Columns |
 |---|---|---|
-| `memory_entity` | `slug` | `kind` text (front-matter `type`: personne, organisation, projet, domaine, concept, reunion, carte, moi, objectif, autre), `title` text, `summary` text null (body of « En bref »), `body` text (the page body below the front matter, with the *lines* of « Faits », « Historique » and « Relations » removed but their `## ` headings kept in place), `attributes` jsonb (the whole front matter as parsed: strings, or arrays of strings), `closeness` int null (1–5), `closeness_reason` text null, `confidentiality` text null, `archived` boolean default false, `version` int default 1, `created_at`, `updated_at` |
+| `memory_entity` | `slug` | `kind` text (front-matter `type`: personne, organisation, projet, domaine, concept, reunion, carte, moi, objectif, autre), `title` text, `summary` text null (body of « En bref »), `body` text (the page body below the front matter, stored without the *lines* of the five computed sections « Faits », « Historique », « Relations », « Comprend » and « Faits récents », their `## ` headings kept in place, whoever writes: `entity.upsert` drops them, see §3), `attributes` jsonb (the whole front matter as parsed: strings, or arrays of strings), `closeness` int null (0–5, see « Closeness » below), `closeness_reason` text null, `confidentiality` text null, `archived` boolean default false, `version` int default 1, `created_at`, `updated_at` |
 | `memory_alias` | (`entity_slug`, `kind`, `normalized_value`) | `value` text. `kind` ∈ `name`, `alias`, `email`, `handle`. `normalized_value` = lowercase, accents stripped, whitespace collapsed |
 | `memory_fact` | `id` uuid | `entity_slug`, `section` (`facts` or `history`), `position` int, `key` text null (text before the first `:` when the line is `key: value`), `value` text, `since`, `until`, `seen` (date text, null), `source_ref` text null, `inferred` boolean, `extra` text null (anything after the known attributes, kept verbatim), `raw` text (the original line without `- `), `learned_on` text null (date the line first entered git, from the importer, else creation day), `created_at` |
 | `memory_relation` | `id` uuid | `from_slug`, `verb`, `to_slug`, `position` int, `since`, `until`, `seen`, `source_ref`, `inferred`, `extra`, `raw`, `learned_on`, `created_at` |
@@ -33,11 +33,37 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 | `memory_draft` | `slug` | `channel`, `recipients` text, `subject` null, `link` null, `status`, `created_on`, `sent_on` null, `source_ref` null, `proposal_slug` null, `attributes` jsonb, `body` text, `updated_at` |
 | `memory_journal_entry` | `slug` (`journal/2026-10-08`, `journal/2026-S41-hebdo`) | `kind` (`daily`, `weekly`, `other`), `content` text (whole file), `updated_at` |
 | `memory_document` | `slug` | `content` text (whole file, any format, e.g. `preferences/redaction`, `etat/questions`, `etat/frictions`, `etat/securite`, `archives/…`, `etat/backfill/…`), `content_type` (`markdown`, `json`, `text`), `updated_at`. Everything that is data and not modelled above lands here, so nothing is lost |
-| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"database"` since 2026-10-16; informational only, nothing reads it but `/status`), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `recurring` (the recurring tasks, read by the PWA at `GET /api/recurring-tasks`), `focus.updated_on` |
+| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"database"` since 2026-10-16; informational only, nothing reads it but `/status`), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `recurring` (the recurring tasks, read by the PWA at `GET /api/recurring-tasks`), `freshness` (the late summaries, written by the agent every night and read by the PWA at `GET /api/freshness`; the API never writes it), `focus.updated_on` |
 | `memory_event` | `id` uuid | `occurred_at`, `actor` text (`import`, `pwa`, `routine:nuit`, `session:<id>`, `mac`…), `token_name` text null (`lecture`, `build`, `mac`, null for PWA), `run_id` text null, `operation` text, `object_type` text, `object_id` text, `before` jsonb null, `after` jsonb null, `summary` text |
 | `memory_change_batch` | `idempotency_key` | `run_id`, `actor`, `applied_at`, `result` jsonb. A replayed key returns the stored result without applying again |
 
 Index (async): `memory_fact(entity_slug)`, `memory_relation(from_slug)`, `memory_relation(to_slug)`, `memory_alias(normalized_value)`, `memory_citation(source_ref)`, `memory_todo(list)`, `memory_event(occurred_at)`.
+
+### Closeness
+
+`closeness` is an integer from 0 to 5, or null when the entity has no score, for an entity of every kind. No kind is refused a 0. A 0 is a score, not an absence: it is stored, rendered as `proximite: 0`, sorted above null and below 1, and the lint code `missing-closeness` fires on null only.
+
+Each level has a name, which the PWA shows. For an entity of kind `personne`:
+
+| Level | Name | Meaning |
+|---|---|---|
+| 5 | Intimes | He drops everything for them |
+| 4 | Proches | They know what goes on in his life, they talk for no reason |
+| 3 | Amis | A real bond that holds outside the setting where they met |
+| 2 | Copains | A pleasant bond, tied to a setting (work, sport, class) |
+| 1 | Bonnes relations | A useful contact he gets on with, no personal bond |
+| 0 | Contacts | A useful relation, neutral or distant |
+
+For an entity of any other kind the score says how much the page matters to the owner, and 0 is the furthest:
+
+| Level | Name | Meaning |
+|---|---|---|
+| 5 | Au cœur | At the centre of his priorities |
+| 4 | Important | He thinks about it every week |
+| 3 | Suivi | He follows it regularly |
+| 2 | Secondaire | Useful, in the background |
+| 1 | Contexte | It helps understand the rest |
+| 0 | Périphérie | Known, with no stake for him |
 
 ## 3. Rendering a page (the wiki view)
 
@@ -52,6 +78,25 @@ Index (async): `memory_fact(entity_slug)`, `memory_relation(from_slug)`, `memory
 
 `raw` is authoritative for rendering when present; a fact or relation created through the API without `raw` is rendered from its fields: `- <key>: <value> | depuis: … | jusqu'à: … | vu: … | src: …` (attributes omitted when null, `(inféré)` appended when `inferred`) and relations `- <verb> → [[<to_slug>]] | depuis: … | jusqu'à: … | vu: … | src: …`. Closing a fact or relation sets `until` and rewrites `raw` to append or replace `| jusqu'à: <until>`. A page whose body has no `## Faits` / `## Relations` heading but has rows gets the heading appended at the end.
 
+### Computed sections: `## Comprend` and `## Faits récents`
+
+Two headings are reserved. Their lines are computed at every read from the tables and are never stored.
+
+- **Which pages.** An entity with at least one open outgoing relation whose verb is `comprend` (open means `until` is null). No other verb counts, and the kind of the entity does not matter. An entity with no such relation gets neither section.
+- **`## Comprend`.** One line per contained page, in the `position` order of the relations, each page once:
+  `- [[<slug>]]`
+  When the contained page is an entity of kind `projet`, the line continues with those of its attributes that are present and not empty, in this fixed order:
+  `- [[<slug>]] | statut: <statut> | meteo: <meteo> | prochaine_etape: <prochaine_etape> | echeance: <echeance>`
+  A closed relation is not listed. A contained slug that is no entity is listed by its slug alone.
+- **`## Faits récents`.** The facts (sections `facts` and `history`) of the pages the entity contains, down two levels of open `comprend` relations, whose `learned_on` is a full ISO day (`AAAA-MM-JJ`) on or after the day of the entity's summary. A fact whose `learned_on` is null or a partial date (`2026`, `2026-09`, `~2026-01`) is not listed. The entity's own facts are never listed. At most 10 lines, the most recent `learned_on` first:
+  `- <learned_on> | [[<slug of the page the fact is on>]] | <the fact as « Faits » renders it: raw, else its fields>`
+  With no fact in the window the section is absent.
+- **The day of a summary.** The attribute `resume_le` when it is an ISO day (`AAAA-MM-JJ`), else `maj` when it is one, else the day of `updated_at` in Europe/Paris. When none gives a day, the window of « Faits récents » is the last 30 days.
+- **Position.** As « Faits » and « Relations »: the lines go right under the heading when the body has it, else the heading is appended at the end of the body. `## Comprend` is placed first, `## Faits récents` after it, and both after « Relations ». One exception keeps that order: a body that has a `## Faits récents` heading and no `## Comprend` heading gets `## Comprend` and its lines right above its `## Faits récents` heading, not at the end.
+- **Writing.** `entity.upsert` drops, from the `body` it receives, every line that starts with `- ` between one of the five headings `## Faits`, `## Historique`, `## Relations`, `## Comprend`, `## Faits récents` and the next `# ` or `## ` heading. The headings and any other line stay in place. A page read and written back therefore stores no computed line, and the next read shows each fact, history line and relation once. Lines of these sections are written through the `fact.*` and `relation.*` operations, never through the body: a fact or relation line sent inside the `body` is dropped without an error.
+- **« Relations » is unchanged** and still lists the `comprend` relations with the others.
+- **Routes.** `GET /api/agent/page` returns the rendered markdown with the two sections and with everything the body holds, a hand-written `## Projets liés` included. The PWA route `GET /api/pages/<slug>` returns the same page without its `## Projets liés` section when `## Comprend` has lines, and adds `summarizedOn`, the day of the summary, or null for what is not an entity. The stored body is not rewritten by either.
+
 Commitments, proposals and drafts render the same way from `attributes` + `body`. Sources, journal entries and documents render `content` as is.
 
 ## 4. Authentication
@@ -64,7 +109,7 @@ Commitments, proposals and drafts render the same way from `attributes` + `body`
 | Method | Route | Request | Response |
 |---|---|---|---|
 | GET | `/status` | | `{ cutover: "git" \| "database", counts: { entities, facts, relations, aliases, citations, sources, commitments, todos, proposals, drafts, journalEntries, documents, events }, lastEventAt: string \| null, tokenName }` |
-| GET | `/context?budget=<bytes>` | budget default 80000 | `{ markdown }`: sections in this order — `# Contexte Talos (<ISO now>)`, `## Préférences` (every `preferences/*` document, full), `## Focus`, `## Todo` (open personal todos) and `## Todo taff` (open work todos), `## Engagements ouverts` (slug, title, due), `## État` (cursors, last_scan), `## Derniers événements` (30, `- <occurred_at> <actor> <operation> <object_id> — <summary>`), `## Index` (one line per non-archived entity: `- [[slug]] (p<closeness>) — <title> : <summary truncated to 80 chars>`, sorted by kind then closeness desc). The index is truncated last (whole lines) to fit the budget; a final line says how many entries were cut |
+| GET | `/context?budget=<bytes>` | budget default 80000 | `{ markdown }`: sections in this order — `# Contexte Talos (<ISO now>)`, `## Préférences` (every `preferences/*` document, full), `## Focus`, `## Todo` (open personal todos) and `## Todo taff` (open work todos), `## Engagements ouverts` (slug, title, due), `## État` (cursors, last_scan), `## Derniers événements` (30, `- <occurred_at> <actor> <operation> <object_id> — <summary>`), `## Index` (one line per non-archived entity: `- [[slug]] (p<closeness>) — <title> : <summary truncated to 80 chars>`, sorted by kind then closeness desc, a 0 above an entity with no closeness). The index is truncated last (whole lines) to fit the budget; a final line says how many entries were cut |
 | GET | `/page?slug=<slug>` | | `{ slug, type: "entity" \| "commitment" \| "proposal" \| "draft" \| "source" \| "journal" \| "document", markdown, outgoing: string[], incoming: string[] }`; 404 `{ error }` when unknown. `incoming` = slugs with a relation to it or whose body links `[[slug]]` |
 | GET | `/search?q=<text>&limit=<n≤50>` | | `{ items: { slug, type, title, excerpt, matchedIn: "title" \| "alias" \| "summary" \| "fact" \| "body" \| "content" }[] }`: case- and accent-insensitive `ILIKE` over entity title, aliases, summary, facts, body, commitments, sources, journal, documents; title and alias matches first; excerpt ±80 chars around the first hit |
 | GET | `/graph/neighbours?slug=&date=AAAA-MM-JJ&depth=1..3` | | `{ nodes: { slug, title, kind, closeness }[], edges: { id, from, verb, to, since, until, seen, sourceRef, isClosed }[] }` with the same date rule as `domain/graph.core.ts` (a relation counts at a date when `since` ≤ date; closed when `until` < date) |
@@ -99,7 +144,7 @@ Operations (`op` field; other fields camelCase):
 
 | op | fields | effect |
 |---|---|---|
-| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch |
+| `entity.upsert` | `slug`, `kind`, `title`, `summary?`, `body?`, `attributes?`, `closeness?`, `closenessReason?`, `confidentiality?`, `expectedVersion?` | creates, or replaces the given fields; `version` +1; 409 on `expectedVersion` mismatch; `closeness` is 0 to 5 for every `kind` (§2, Closeness). The `body` is stored without the lines of the five computed sections (§3, Writing) |
 | `entity.archive` | `slug` | `archived = true` |
 | `entity.rename` | `from`, `to` | moves the slug in every table that references it, and rewrites `[[from]]` to `[[to]]` in bodies |
 | `alias.add` | `slug`, `kind`, `value` | idempotent |
