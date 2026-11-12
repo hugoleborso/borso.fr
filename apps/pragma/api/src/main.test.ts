@@ -10,7 +10,7 @@ const runStreakReminder = vi.fn((now: Date) => {
   return Promise.resolve();
 });
 
-vi.mock('hono/aws-lambda', () => ({ handle: () => httpHandler }));
+vi.mock('@hono/aws-lambda', () => ({ handle: () => httpHandler }));
 vi.mock('./app', () => ({ createApp: () => ({}) }));
 vi.mock('./streaks/streak-reminder.service', () => ({
   runStreakReminder: (now: Date) => runStreakReminder(now),
