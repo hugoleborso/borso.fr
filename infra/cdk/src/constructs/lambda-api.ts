@@ -46,7 +46,7 @@ const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
 const CORS_ALLOWED_REQUEST_HEADERS = ['content-type', 'authorization', 'sentry-trace', 'baggage'];
 const ERROR_ALARM_PERIOD_MINUTES = 5;
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
-const HANDLER_RUNTIME = Runtime.NODEJS_22_X;
+const HANDLER_RUNTIME = Runtime.NODEJS_24_X;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const HANDLER_BUNDLER_SCRIPT = path.join(HERE, '..', 'internal', 'handler-bundler.mjs');
 

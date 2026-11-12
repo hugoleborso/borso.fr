@@ -32,13 +32,13 @@ function resolveGeneratorEntry(): string {
 export function createOriginVerifyValue(scope: Construct): string {
   const generator = new NodejsFunction(scope, 'OriginVerifyGenerator', {
     entry: resolveGeneratorEntry(),
-    runtime: Runtime.NODEJS_22_X,
+    runtime: Runtime.NODEJS_24_X,
     architecture: Architecture.ARM_64,
     timeout: Duration.seconds(GENERATOR_TIMEOUT_SECONDS),
     logGroup: new LogGroup(scope, 'OriginVerifyGeneratorLogs', {
       retention: RetentionDays.ONE_WEEK,
     }),
-    bundling: { target: 'node22', format: OutputFormat.ESM },
+    bundling: { target: 'node24', format: OutputFormat.ESM },
   });
   const originVerify = new CustomResource(scope, 'OriginVerify', {
     serviceToken: generator.functionArn,

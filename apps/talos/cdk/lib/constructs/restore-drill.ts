@@ -29,7 +29,7 @@ export class TalosRestoreDrill extends Construct {
     this.handler = new NodejsFunction(this, 'Fn', {
       functionName: RESTORE_DRILL_FUNCTION_NAME,
       entry: props.handlerEntry,
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: DRILL_MEMORY_MIB,
       timeout: Duration.seconds(DRILL_TIMEOUT_SECONDS),
@@ -42,7 +42,7 @@ export class TalosRestoreDrill extends Construct {
       bundling: {
         minify: true,
         sourceMap: true,
-        target: 'node22',
+        target: 'node24',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
         banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,

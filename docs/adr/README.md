@@ -118,6 +118,7 @@ No:
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | accepted | 2026-11-11 |
 | [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
 | [2026-11-12T1724](./2026-11-12T1724-api-lambdas-import-the-hono-adapter-from-hono-aws-lambda.md) | API Lambdas import the Hono adapter from `@hono/aws-lambda` | accepted | 2026-11-12 |
+| [2026-11-12T1838](./2026-11-12T1838-the-monorepo-runs-on-node-24.md) | The monorepo runs on Node 24 locally, in CI and in every Lambda | proposed | 2026-11-12 |
 
 ### Data layer
 
@@ -162,6 +163,7 @@ No:
 - 2026-10-06T2302. talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
 - 2026-10-29T1139. pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
 - [`2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md`](./2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md). a Lambda API uploads its source map to Sentry at bundling time and deletes it from the asset once the upload succeeded, instead of carrying 13.7 MB that Node parses on every cold start; chosen over simply dropping the map because minified frames make a production exception a guess, and the cost is `@sentry/cli` in every full-stack deploy.
+- [`2026-11-12T1838-the-monorepo-runs-on-node-24.md`](./2026-11-12T1838-the-monorepo-runs-on-node-24.md). local, CI and every Lambda move to Node 24 in one pull request, chosen over staying on Node 22 and over Node 26, which `aws-cdk-lib` 2.276.0 cannot deploy yet; the cost is a prod redeploy of every full-stack app at merge.
 
 ### Harness
 

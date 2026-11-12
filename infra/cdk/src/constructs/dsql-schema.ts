@@ -165,13 +165,13 @@ export class DsqlSchema extends Construct {
     });
     this.runnerFn = new NodejsFunction(this, 'MigrationRunner', {
       entry: resolveRunnerEntry(),
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(MIGRATION_RUNNER_TIMEOUT_SECONDS),
       memorySize: MIGRATION_RUNNER_MEMORY_MIB,
       logGroup: runnerLogGroup,
       bundling: {
-        target: 'node22',
+        target: 'node24',
         format: OutputFormat.ESM,
         banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
         externalModules: [LAMBDA_RUNTIME_PROVIDED_MODULES],

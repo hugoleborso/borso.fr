@@ -57,7 +57,7 @@ export class WebSocketChannel extends Construct {
     this.handler = new NodejsFunction(this, 'Fn', {
       functionName: lambdaFunctionName(props, HANDLER_SLUG),
       entry: props.entry,
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: props.memoryMb ?? DEFAULT_MEMORY_MIB,
       timeout: Duration.seconds(props.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS),
@@ -71,7 +71,7 @@ export class WebSocketChannel extends Construct {
       bundling: {
         minify: true,
         sourceMap: true,
-        target: 'node22',
+        target: 'node24',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
         banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,

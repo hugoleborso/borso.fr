@@ -9,7 +9,7 @@ onto serverless AWS that costs about a coffee a month while idle.
 
 [![CI](https://github.com/hugoleborso/borso.fr/actions/workflows/ci.yml/badge.svg)](https://github.com/hugoleborso/borso.fr/actions/workflows/ci.yml)
 [![Deploy](https://github.com/hugoleborso/borso.fr/actions/workflows/deploy.yml/badge.svg)](https://github.com/hugoleborso/borso.fr/actions/workflows/deploy.yml)
-![Node 22](https://img.shields.io/badge/Node-22-339933?logo=nodedotjs&logoColor=white)
+![Node 24](https://img.shields.io/badge/Node-24-339933?logo=nodedotjs&logoColor=white)
 ![pnpm 10](https://img.shields.io/badge/pnpm-10-F69220?logo=pnpm&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -102,7 +102,7 @@ Counts measured on 2026-11-12. The full story is in [How it is built](docs/how-i
 
 ## Quick start
 
-You need Node 22 (see [`.nvmrc`](.nvmrc)) and pnpm 10. With [corepack](https://nodejs.org/api/corepack.html) on, the `packageManager` field picks pnpm for you.
+You need Node 24 (see [`.nvmrc`](.nvmrc)) and pnpm 10. With [corepack](https://nodejs.org/api/corepack.html) on, the `packageManager` field picks pnpm for you.
 
 ```bash
 corepack enable

@@ -4,7 +4,7 @@
 
 | Need | Why |
 | --- | --- |
-| Node 22 (`.nvmrc`) | Lambda runtime parity. |
+| Node 24 (`.nvmrc`) | Lambda runtime parity. |
 | pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work. |
 | `jq` | Required by the Claude Code hooks. Almost always already installed. |
 | PostgreSQL 16 | `pnpm dev` and the e2e tests of a full-stack app start a private local Postgres through `scripts/local-postgres.sh`. |

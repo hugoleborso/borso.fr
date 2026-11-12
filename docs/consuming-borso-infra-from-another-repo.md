@@ -58,7 +58,7 @@ catalog:
   '@aws-sdk/dsql-signer': '^3.1121.0'
   '@stryker-mutator/core': '9.6.1'
   '@stryker-mutator/vitest-runner': '9.6.1'
-  '@types/node': '^22.10.5'
+  '@types/node': '^24.19.2'
   '@vitest/coverage-v8': '^5.0.3'
   aws-cdk: '^2.1142.0'
   aws-cdk-lib: '^2.270.0'

@@ -84,7 +84,7 @@ export class DsqlAgentReader extends Construct {
     const handler = new NodejsFunction(this, 'Fn', {
       functionName: this.functionName,
       entry: resolveReaderEntry(),
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       architecture: Architecture.ARM_64,
       memorySize: READER_MEMORY_MIB,
       timeout: Duration.seconds(READER_TIMEOUT_SECONDS),
@@ -97,7 +97,7 @@ export class DsqlAgentReader extends Construct {
         [BLOCKLIST_VARIABLE]: (props.tableBlocklist ?? []).join(BLOCKLIST_SEPARATOR),
       },
       bundling: {
-        target: 'node22',
+        target: 'node24',
         format: OutputFormat.ESM,
         banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
         externalModules: [LAMBDA_RUNTIME_PROVIDED_MODULES],

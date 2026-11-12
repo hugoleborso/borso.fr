@@ -154,7 +154,7 @@ source file twice. The checks beside oxlint went from 2.6 to 2.8 s of CPU to
 
 TypeScript checks on the commit run under plain `node` with
 `scripts/typescript-resolve.mjs`, which resolves `./x` and `./x.js` to the
-`.ts` file. Node 22 strips the types itself. `pnpm exec tsx` costs about a
+`.ts` file. Node 24 strips the types itself. `pnpm exec tsx` costs about a
 second before the script starts, and `tsx` alone about half of one, so neither
 fits in 300 ms.
 

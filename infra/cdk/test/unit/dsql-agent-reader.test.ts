@@ -44,7 +44,7 @@ describe('DsqlAgentReader', () => {
     const template = synth();
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'test-app-prod-agent-reader',
-      Runtime: 'nodejs22.x',
+      Runtime: 'nodejs24.x',
       Architectures: ['arm64'],
     });
     expect(template.toJSON()).toHaveProperty(
