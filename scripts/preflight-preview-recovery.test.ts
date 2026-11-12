@@ -9,6 +9,13 @@ const STACK_LOG_GROUPS = [
   '/aws/lambda/pragma-pr-7-api',
   '/aws/lambda/pragma-pr-7-websocket',
   '/aws/lambda/pragma-pr-7-CustomCDKBucketDeployment-abc',
+  'pragma-pr-7-AppDbMigrationRunnerLogsB6447066-abc',
+  'pragma-pr-7-AppDbProviderLogsD76CF8C5-abc',
+];
+const LOG_GROUPS_OF_OTHER_STACKS = [
+  '/aws/lambda/pragma-pr-70-api',
+  'pragma-pr-70-AppDbProviderLogsD76CF8C5-abc',
+  'pragma-prod-AppDbProviderLogsD76CF8C5-abc',
 ];
 
 const FAKE_AWS = `#!/usr/bin/env bash
@@ -18,7 +25,15 @@ case "$1 $2" in
     [ -n "$FAKE_STACK_STATUS" ] || exit 255
     printf '%s\\n' "$FAKE_STACK_STATUS" ;;
   "logs describe-log-groups")
-    printf '%s\\n' "$FAKE_LOG_GROUPS" ;;
+    prefix=""
+    while [ $# -gt 0 ]; do
+      [ "$1" = "--log-group-name-prefix" ] && prefix="$2"
+      shift
+    done
+    for log_group in $FAKE_LOG_GROUPS; do
+      case "$log_group" in "$prefix"*) printf '%s\\t' "$log_group" ;; esac
+    done
+    printf '\\n' ;;
   "s3api head-bucket")
     exit 1 ;;
 esac
@@ -38,7 +53,7 @@ function runPreflight(stackStatus: string): string[] {
       PATH: `${directory}:${process.env.PATH ?? ''}`,
       FAKE_AWS_DIRECTORY: directory,
       FAKE_STACK_STATUS: stackStatus,
-      FAKE_LOG_GROUPS: STACK_LOG_GROUPS.join('\t'),
+      FAKE_LOG_GROUPS: [...STACK_LOG_GROUPS, ...LOG_GROUPS_OF_OTHER_STACKS].join(' '),
     },
     encoding: 'utf8',
   });

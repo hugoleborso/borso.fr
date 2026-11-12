@@ -5,10 +5,11 @@
 #   1. A stack in `ROLLBACK_COMPLETE` or `REVIEW_IN_PROGRESS` — CFN
 #      refuses to update such stacks; `cdk deploy` falls into a
 #      changeset-create loop and the job exits 1.
-#   2. Orphan log groups `/aws/lambda/<app>-pr-<N>-*` left behind when
-#      the Lambda was created and AWS auto-provisioned its log group
-#      before the stack rolled back. CDK's explicit `LogGroup` resource
-#      then collides with the auto-created one on the retry:
+#   2. Orphan log groups `/aws/lambda/<app>-pr-<N>-*` and
+#      `<app>-pr-<N>-*` left behind when the Lambda was created and AWS
+#      auto-provisioned its log group before the stack rolled back. CDK's
+#      explicit `LogGroup` resource then collides with the auto-created
+#      one on the retry:
 #      "Resource of type 'AWS::Logs::LogGroup' already exists".
 #   3. Orphan custom-named buckets `<app>-preview-photos-<N>` for the
 #      same reason — CFN explicit-name `Bucket` resource refuses to
@@ -25,6 +26,16 @@
 # first invocation with no retention, and those outlive the stack. On
 # 2026-11-11, 934 preview log groups were left in the account, 728 of them
 # set never to expire (measured).
+#
+# A stack's own log group can outlive it too. Lambda delivers log events a few
+# seconds late, and a function's role may create its log group, so an event
+# that lands after CloudFormation deleted the group creates it again. The
+# teardown of pull request 295 deleted `banana-rush-pr-295-AppDbProviderLogs…`
+# at 22:59:48 UTC and Lambda recreated it at 22:59:51 from an event stamped
+# 22:59:42 (measured). Such a group carries the name CloudFormation gave it,
+# `<app>-pr-<N>-<logical id>`, with no `/aws/lambda/` in front, so step 2
+# sweeps both prefixes. The sweep cannot lose that race: once the stack is
+# gone its roles are gone, and nothing is left that may create a log group.
 #
 # A live stack is never touched. Before 2026-11-11 step 2 deleted a healthy
 # stack's own log groups on every redeploy. See
@@ -47,7 +58,7 @@ fi
 APP_SLUG="$1"
 PR_NUMBER="$2"
 STACK_NAME="${APP_SLUG}-pr-${PR_NUMBER}"
-LOG_GROUP_PREFIX="/aws/lambda/${STACK_NAME}-"
+LOG_GROUP_PREFIXES=("/aws/lambda/${STACK_NAME}-" "${STACK_NAME}-")
 BUCKET_PREFIX="${APP_SLUG}-preview-photos-"
 REGION="${AWS_REGION:-eu-west-3}"
 
@@ -103,11 +114,13 @@ fi
 
 # --- 2. Orphan Lambda log groups ------------------------------------------
 mapfile -t ORPHAN_LOG_GROUPS < <(
-  aws logs describe-log-groups \
-    --log-group-name-prefix "$LOG_GROUP_PREFIX" \
-    --region "$REGION" \
-    --query 'logGroups[].logGroupName' \
-    --output text 2>/dev/null | tr '\t' '\n' | grep -v '^$' || true
+  for log_group_prefix in "${LOG_GROUP_PREFIXES[@]}"; do
+    aws logs describe-log-groups \
+      --log-group-name-prefix "$log_group_prefix" \
+      --region "$REGION" \
+      --query 'logGroups[].logGroupName' \
+      --output text 2>/dev/null | tr '\t' '\n' | grep -v '^$' || true
+  done
 )
 
 for log_group in "${ORPHAN_LOG_GROUPS[@]:-}"; do
