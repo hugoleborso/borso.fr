@@ -4,9 +4,11 @@ import {
   isWikiSource,
   mapPageNames,
   pageNameFor,
+  pagesUrlFor,
   readTitle,
   renderFeatureIndex,
   renderIndex,
+  renderReports,
   rewriteLinks,
   rewriteTarget,
 } from './wiki-pages.core';
@@ -38,6 +40,12 @@ describe('pageNameFor', () => {
 
   it('drops the docs folder and flattens the rest', () => {
     expect(pageNameFor('docs/features/pragma/x/spec/spec.md')).toBe('features-pragma-x-spec-spec');
+  });
+
+  it('drops the dot of a hidden folder', () => {
+    expect(pageNameFor('.claude/skills/blueprint/blueprint-index.md')).toBe(
+      'claude-skills-blueprint-blueprint-index',
+    );
   });
 
   it('keeps the apps folder', () => {
@@ -203,11 +211,48 @@ describe('renderFeatureIndex', () => {
   });
 });
 
+describe('pagesUrlFor', () => {
+  it('lowercases the owner and keeps the repository name', () => {
+    expect(pagesUrlFor('Owner/My.Repo')).toBe('https://owner.github.io/My.Repo/');
+  });
+});
+
+describe('renderReports', () => {
+  it('lists the generated reports present, then the pages on GitHub Pages', () => {
+    const documents = [
+      { path: 'docs/standards/hotspots.md', content: '# Hotspots' },
+      { path: '.claude/skills/blueprint/blueprint-index.md', content: '# Blueprint index' },
+    ];
+    expect(renderReports(documents, SOURCE)).toBe(
+      [
+        '# Reports',
+        '',
+        'Generated from the code on every merge to `main`, so they describe the commit in the footer.',
+        '',
+        '- [Hotspots: the files that change most](standards-hotspots)',
+        '- [Blueprint index: the canonical example of each layer](claude-skills-blueprint-blueprint-index)',
+        '',
+        '## Interactive, on GitHub Pages',
+        '',
+        'These are HTML pages the wiki cannot hold. They are rebuilt only when someone runs the `architecture` workflow from the Actions tab, so they can be older than this page.',
+        '',
+        '- [Architecture maps: every app at five levels, interactive](https://owner.github.io/repo/)',
+        '- [Blueprint coverage heatmap](https://owner.github.io/repo/reports/blueprint-coverage.html)',
+        '- [Weak points](https://owner.github.io/repo/reports/weak-points.html)',
+        '- [Working conditions](https://owner.github.io/repo/reports/working-conditions.html)',
+        '',
+      ].join('\n'),
+    );
+  });
+});
+
 describe('buildWiki', () => {
   const documents = [
     { path: 'README.md', content: '# borso.fr\n[arch](docs/architecture.md)' },
     { path: 'docs/architecture.md', content: '# Architecture' },
     { path: 'CLAUDE.md', content: '# Agents' },
+    { path: 'docs/standards/naming.md', content: '# Naming' },
+    { path: 'docs/standards/hotspots.md', content: '# Hotspots' },
     { path: 'docs/features/pragma/x/spec/spec.md', content: '# X spec' },
   ];
 
@@ -236,10 +281,15 @@ describe('buildWiki', () => {
         '- [Knowledge](Knowledge)',
         '- [Quality](Quality)',
         '- [Features](Features)',
+        '- [Reports](Reports)',
         '',
       ].join('\n'),
     );
     expect(byName.has('features-pragma-x-spec-spec')).toBe(false);
+    expect(byName.get('Standards')).toContain('- [Naming](standards-naming)');
+    expect(byName.get('Standards')).not.toContain('Hotspots');
+    expect(byName.get('standards-hotspots')).toBe('# Hotspots');
+    expect(byName.get('Reports')).toContain('(standards-hotspots)');
     expect(byName.get('Features')).toContain(`[x](${TREE}/docs/features/pragma/x): X spec`);
     expect(byName.get('_Footer')).toContain(
       '[`abcdef012`](https://github.com/owner/repo/commit/abcdef0123456789)',

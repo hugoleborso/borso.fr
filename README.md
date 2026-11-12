@@ -167,7 +167,7 @@ New app? Follow [Adding an app](docs/adding-an-app.md) or [Adding a full-stack a
 
 ## Documentation
 
-The [wiki](https://github.com/hugoleborso/borso.fr/wiki) is the easiest way to read the docs. It is generated from this repository on every merge to `main` by [`scripts/wiki/build-wiki.ts`](scripts/wiki/build-wiki.ts), so edit the markdown here, never in the wiki.
+The [wiki](https://github.com/hugoleborso/borso.fr/wiki) is the easiest way to read the docs. It is generated from this repository on every merge to `main` by [`scripts/wiki/build-wiki.ts`](scripts/wiki/build-wiki.ts), so edit the markdown here, never in the wiki. Its [Reports](https://github.com/hugoleborso/borso.fr/wiki/Reports) page holds the reports built from the code at that merge (hotspots, temporal coupling, convention drift, rule provenance, the blueprint index) and links the interactive [architecture maps](https://hugoleborso.github.io/borso.fr/), which the `architecture` workflow rebuilds on demand.
 
 | Start here | Then |
 | --- | --- |
