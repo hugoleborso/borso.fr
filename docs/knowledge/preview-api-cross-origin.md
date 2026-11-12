@@ -4,6 +4,8 @@ triggers:
   paths:
     - 'apps/*/site/src/api/client.ts'
     - '.github/workflows/preview.yml'
+  commands:
+    - '[a-z]-pr-\d+\.preview\.borso\.fr/api/'
 ---
 
 # Preview API access is cross-origin (custom domain per PR)
@@ -52,7 +54,7 @@ Cross-origin via custom domains is the smaller change. Same-origin via a dedicat
 ## Symptoms if this breaks
 
 - Preview frontend shows _"Le serveur ne répond pas"_ on every endpoint.
-- `curl https://<app>-pr-<n>.preview.borso.fr/api/...` returns 404 + Content-Type `image/jpeg` (the shared S3 404 fallback).
+- `curl https://<app>-pr-<n>.preview.borso.fr/api/...` answers 200 with `text/html`, the single-page app, because the site host has no API behind it. Measured 2026-11-12 on a live preview (`last-loop-lepin-pr-302`) and on a merged one (`pragma-pr-298`). A 200 there says nothing about the API. The API answers at `<app>-pr-<n>-api.preview.borso.fr`.
 - `/aws/lambda/<app>-pr-<n>-api` log group is empty — the Lambda never gets invoked.
 - `aws apigatewayv2 get-domain-names --region eu-west-3` is missing the expected `<app>-pr-<n>-api.preview.borso.fr` entry, or the Route 53 record doesn't exist.
 

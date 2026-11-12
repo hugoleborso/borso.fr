@@ -3,6 +3,7 @@ var INTEG_HOST_PREFIX = 'bp-integ-';
 var INTEG_KEY_PREFIX = 'bp-integ/';
 var PULL_REQUEST_SUBDOMAIN_PATTERN = /^(.+)-pr-([0-9]+)$/;
 var SINGLE_PAGE_APPS = ['banana-rush', 'last-loop-lepin', 'pragma'];
+var API_PATH_PREFIX = '/api/';
 var BAD_REQUEST = { statusCode: 400, statusDescription: 'Bad Request' };
 var NOT_FOUND = { statusCode: 404, statusDescription: 'Not Found' };
 
@@ -50,6 +51,9 @@ function handler(event) {
   var uri = request.uri;
 
   if (isSinglePageApp(app)) {
+    if (uri.indexOf(API_PATH_PREFIX) === 0) {
+      return NOT_FOUND;
+    }
     if (uri === '' || uri === '/' || hasNoExtensionOnLastSegment(uri)) {
       request.uri = keyPrefix + '/index.html';
     } else {

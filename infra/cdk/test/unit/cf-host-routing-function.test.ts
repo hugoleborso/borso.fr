@@ -133,6 +133,28 @@ describe('HOST_ROUTING_FUNCTION_CODE', () => {
     ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
   });
 
+  it('answers 404 to an API path on the site host of a single-page app, whose API is on the -api host', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/api/me',
+        },
+      }),
+    ).toMatchObject({ statusCode: 404 });
+  });
+
+  it('still hands a page whose name starts like the API prefix to the React router', () => {
+    expect(
+      evaluateHandler({
+        request: {
+          headers: { host: { value: 'pragma-pr-26.preview.borso.fr' } },
+          uri: '/apiary',
+        },
+      }),
+    ).toMatchObject({ uri: '/pragma/pr-26/index.html' });
+  });
+
   it('rewrites SPA root and trailing-slash URIs to the bundle index.html for pragma', () => {
     expect(
       evaluateHandler({

@@ -179,7 +179,7 @@ def jq_problems(entries):
         return []
     program = '$ARGS.positional[] | . as $pattern | try ("" | test($pattern) | empty) catch {pattern: $pattern, error: .}'
     completed = subprocess.run(
-        ["jq", "-nc", program, "--args", *patterns],
+        ["jq", "-nc", program, "--args", "--", *patterns],
         capture_output=True,
         text=True,
     )
