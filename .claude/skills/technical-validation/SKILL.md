@@ -49,6 +49,7 @@ Do **not** invoke when:
 
 1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path.
 2. **Locate the plan.** `plan_path = docs/features/<app>/<slug>/plan/plan.md`. If missing, surface that to the user and continue — the validator will tag plan-dependent rows UNVERIFIABLE.
+   A kaizen sweep (`claude/lessons-from-pr-<N>`) has no spec and no plan. Pass `docs/features/meta/lessons-from-pr-<N>/inventory.md` as `spec_path`, whose `fixed:` and `dantotsu:` decisions are the claims category A checks, and no `plan_path`. The sweep of PR #295 passed its parent feature's spec, and its validator built rows from the inventory anyway and marked the absent plan UNVERIFIABLE.
 3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"` for app workspaces; `@borso/infra` for `<app> = infra`. Check `apps/<app>/package.json` exists and whether it has `test:core` (full-stack) or not, which picks the scoped test command.
 4. **Resolve the base ref.** Default to `origin/main`. Surface explicit override via `BASE_REF` env if the user provides one.
 5. **Build the run paths.**
@@ -128,7 +129,3 @@ When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"piloted
 | FAIL (validator crash) | `failed` | `escalate` with `reason: 'validator-crash-<short>'` |
 
 `summary:` is the report's headline (≤ 200 words). `artifacts:` is the path to the full verdict report under `validation/`. The standard report file is still produced — the verdict file is an additional artefact, not a replacement.
-
-## Post-merge: remind to approve the prod deploy
-
-When the merged PR touches infra or app code, prod CI is now waiting on Hugo to approve the `prod` GitHub environment (CLAUDE.md "Deployments"). The agent's first response after the merge webhook is the reminder — *before* the kaizen sweep, since the deploy queue waits on a human.
