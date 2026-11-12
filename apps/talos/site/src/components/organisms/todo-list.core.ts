@@ -50,6 +50,17 @@ export function countOpenTodos(todos: readonly SchedulableTodo[]): number {
   return todos.filter(FILTER_PREDICATE.open).length;
 }
 
+const HEADING_SEPARATOR = ' · ';
+
+export function buildTodoListHeading(
+  filter: TodoFilter,
+  name: string | null,
+  openCount: string,
+): string | null {
+  const parts = [name, filter === 'done' ? null : openCount].filter((part) => part !== null);
+  return parts.length === 0 ? null : parts.join(HEADING_SEPARATOR);
+}
+
 export function selectDueStatus(
   todo: Pick<SchedulableTodo, 'done' | 'dueDate'>,
   today: string,

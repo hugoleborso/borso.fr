@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildTodoListHeading,
   countOpenTodos,
   hasTodoTextChanged,
   readTodoListChoice,
@@ -237,5 +238,26 @@ describe('the choice of todo list', () => {
     expect(selectTodoListChoiceLabelKey('main')).toBe('todo.list.main');
     expect(selectTodoListChoiceLabelKey('work')).toBe('todo.list.work');
     expect(selectTodoListChoiceLabelKey('both')).toBe('todo.list.both');
+  });
+});
+
+describe('buildTodoListHeading', () => {
+  it.each(['open', 'all'] as const)(
+    'shows the name and the open count on the %s filter',
+    (filter) => {
+      expect(buildTodoListHeading(filter, 'Perso', '34 à faire')).toBe('Perso · 34 à faire');
+    },
+  );
+
+  it('shows the open count alone when the list is not named', () => {
+    expect(buildTodoListHeading('open', null, '34 à faire')).toBe('34 à faire');
+  });
+
+  it('drops the open count on the done filter', () => {
+    expect(buildTodoListHeading('done', 'Perso', '34 à faire')).toBe('Perso');
+  });
+
+  it('has no heading on the done filter of one list', () => {
+    expect(buildTodoListHeading('done', null, '34 à faire')).toBeNull();
   });
 });

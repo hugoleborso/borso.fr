@@ -18,6 +18,7 @@ import { useDeleteTodo, useTodos, useUpdateTodo } from '../../lib/queries/todos.
 import { buildTodoHref } from '../../lib/wikilinks.core';
 import { TodoEditForm } from './TodoEditForm';
 import {
+  buildTodoListHeading,
   countOpenTodos,
   describeDue,
   selectDueIcon,
@@ -52,13 +53,11 @@ export function TodoListSection({ list, filter, isNamed }: TodoListSectionProps)
 
   const name = t(selectTodoListChoiceLabelKey(list));
   const openCount = t('todo.open-count', { count: countOpenTodos(allTodos) });
+  const heading = buildTodoListHeading(filter, isNamed ? name : null, openCount);
 
   return (
     <section aria-label={name}>
-      <h2 className={SECTION_LABEL_CLASS_NAME}>
-        {isNamed ? <>{name} · </> : null}
-        {openCount}
-      </h2>
+      {heading === null ? null : <h2 className={SECTION_LABEL_CLASS_NAME}>{heading}</h2>}
       {todos.data === undefined ? (
         <QueryState isPending={todos.isPending} onRetry={() => void todos.refetch()} />
       ) : (
