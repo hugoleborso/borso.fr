@@ -9,6 +9,7 @@ import {
   startErrorReporting,
   traceIncomingRequest,
 } from './error-reporting.adapter';
+import { redactDatabaseSpan } from './database-span.core';
 import { isUnrecordedOutgoingRequest } from './error-reporting.core';
 
 const requestSpan = vi.hoisted(() => ({
@@ -51,7 +52,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('starts the SDK with every personal data category off and no trace header sent outward', () => {
+  it('starts the SDK with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
     startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1, release: 'abc123' });
 
     expect(sentry.init).toHaveBeenCalledWith({
@@ -75,6 +76,7 @@ describe('startErrorReporting', () => {
         { name: 'NodeFetch', options: { ignoreOutgoingRequests: isUnrecordedOutgoingRequest } },
         { name: 'PostgresJs' },
       ],
+      beforeSendSpan: redactDatabaseSpan,
     });
   });
 

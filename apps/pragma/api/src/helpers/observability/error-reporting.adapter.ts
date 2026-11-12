@@ -3,6 +3,7 @@
  */
 
 import * as Sentry from '@sentry/aws-serverless';
+import { redactDatabaseSpan } from './database-span.core';
 import { type ErrorReportingSettings, isUnrecordedOutgoingRequest } from './error-reporting.core';
 
 const FLUSH_TIMEOUT_MILLISECONDS = 2_000;
@@ -52,6 +53,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
       Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: isUnrecordedOutgoingRequest }),
       Sentry.postgresJsIntegration(),
     ],
+    beforeSendSpan: redactDatabaseSpan,
   });
 }
 
