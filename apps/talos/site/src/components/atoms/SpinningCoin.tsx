@@ -12,14 +12,16 @@ const EDGE_DEPTHS_PX = Array.from(
   { length: EDGE_LAYER_COUNT },
   (_, index) => (index + 1) * EDGE_LAYER_STEP_PX,
 );
+const FACE_CLEARANCE_PX = 1;
+const BACK_DEPTH_PX = EDGE_LAYER_COUNT * EDGE_LAYER_STEP_PX + FACE_CLEARANCE_PX;
 const EDGE_BACKGROUND = 'linear-gradient(90deg, #3a200b, #7a4a1e 50%, #3a200b)';
 const FACE_STYLE: CSSProperties = {
   background: 'url(/icons/coin-face.webp) center / cover',
-  transform: 'translateZ(1px)',
+  transform: `translateZ(${String(FACE_CLEARANCE_PX)}px)`,
 };
 const BACK_STYLE: CSSProperties = {
   background: 'url(/icons/coin-back.webp) center / cover',
-  transform: 'translateZ(-11.8px) rotateY(180deg)',
+  transform: `translateZ(-${String(BACK_DEPTH_PX)}px) rotateY(180deg)`,
 };
 const SHADE_STYLE: CSSProperties = {
   background:

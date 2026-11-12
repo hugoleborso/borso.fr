@@ -50,6 +50,17 @@ describe('the spinning coin', () => {
     }
   });
 
+  it('sets the back face behind the deepest edge layer, so the edge never shows through BORSO', () => {
+    render(<SpinningCoin dockX={0} dockY={0} dockScale={0} />);
+    const depths = [...screen.getByTestId('opening-coin').children].map((layer) =>
+      Number(/translateZ\((-?[\d.]+)px\)/.exec(layer.getAttribute('style') ?? '')?.[1]),
+    );
+    const edgeDepths = depths.slice(0, -4);
+    const [backDepth, faceDepth] = depths.slice(-4);
+    expect(backDepth).toBeLessThan(Math.min(...edgeDepths));
+    expect(faceDepth).toBeGreaterThan(0);
+  });
+
   it('carries the dock move as custom properties the dock keyframes read', () => {
     render(<SpinningCoin dockX={-164} dockY={-327.5} dockScale={0.2} />);
     const coin = screen.getByTestId('opening-coin');

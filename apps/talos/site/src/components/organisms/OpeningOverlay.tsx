@@ -6,6 +6,7 @@ import {
   type DockMove,
   isDockAimingAnimation,
   isLandingAnimation,
+  OPENING_COIN_TOP_RATIO,
   SHRINK_IN_PLACE,
 } from '../../lib/opening.core';
 import { SpinningCoin } from '../atoms/SpinningCoin';
@@ -14,9 +15,9 @@ const HALO_STYLE: CSSProperties = {
   background:
     'radial-gradient(circle, rgba(214, 150, 80, 0.35), rgba(120, 70, 30, 0.12) 40%, transparent 68%)',
 };
+const PERCENT = 100;
 const NIGHT_STYLE: CSSProperties = {
-  maskImage:
-    'radial-gradient(circle at 50% 42%, transparent var(--opening-hole), #000 var(--opening-hole))',
+  maskImage: `radial-gradient(circle at 50% ${String(OPENING_COIN_TOP_RATIO * PERCENT)}%, transparent var(--opening-hole), #000 var(--opening-hole))`,
 };
 
 // @FollowsBlueprint molecule-decorative-overlay
