@@ -13,10 +13,6 @@ const LOADING_EN = 'Tuning up…';
 const FAILED_EN = "pragma could not reach the band's data.";
 const OFFLINE_EN = 'You are offline.';
 const RETRY_EN = 'Try again';
-const JSDOM_ANIMATION_EVENT_TYPES = {
-  start: 'webkitAnimationStart',
-  end: 'webkitAnimationEnd',
-} as const;
 
 function ignoreAnimation(): void {
   return undefined;
@@ -119,8 +115,8 @@ describe('OpeningScreen', () => {
     const leftNote = document.querySelector('[data-mark-part=left-note]');
     if (leftNote === null) throw new Error('no left note');
     act(() => {
-      leftNote.dispatchEvent(new Event(JSDOM_ANIMATION_EVENT_TYPES.start, { bubbles: true }));
-      leftNote.dispatchEvent(new Event(JSDOM_ANIMATION_EVENT_TYPES.end, { bubbles: true }));
+      leftNote.dispatchEvent(new AnimationEvent('animationstart', { bubbles: true }));
+      leftNote.dispatchEvent(new AnimationEvent('animationend', { bubbles: true }));
     });
     expect(onAnimationStart).toHaveBeenCalledTimes(1);
     expect(onAnimationEnd).toHaveBeenCalledTimes(1);

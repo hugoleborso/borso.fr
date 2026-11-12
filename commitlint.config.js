@@ -23,6 +23,7 @@ export default {
   rules: {
     'claude-session-is-this-session': [2, 'always'],
     'header-max-length': [2, 'always', 100],
+    'subject-case': [0],
     'body-max-line-length': [0],
     'footer-leading-blank': [0],
     'footer-max-line-length': [0],

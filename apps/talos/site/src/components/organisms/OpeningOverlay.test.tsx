@@ -11,18 +11,17 @@ function mountHeaderLogo(): HTMLImageElement {
   return logo;
 }
 
-const JSDOM_PREFIXED_ANIMATION_EVENTS = {
-  animationStart: 'webkitAnimationStart',
-  animationEnd: 'webkitAnimationEnd',
+const ANIMATION_EVENT_TYPES = {
+  animationStart: 'animationstart',
+  animationEnd: 'animationend',
 } as const;
 
 function fireAnimation(
-  kind: keyof typeof JSDOM_PREFIXED_ANIMATION_EVENTS,
+  kind: keyof typeof ANIMATION_EVENT_TYPES,
   target: HTMLElement,
   animationName: string,
 ): void {
-  const event = new Event(JSDOM_PREFIXED_ANIMATION_EVENTS[kind], { bubbles: true });
-  Object.defineProperty(event, 'animationName', { value: animationName });
+  const event = new AnimationEvent(ANIMATION_EVENT_TYPES[kind], { bubbles: true, animationName });
   act(() => {
     target.dispatchEvent(event);
   });

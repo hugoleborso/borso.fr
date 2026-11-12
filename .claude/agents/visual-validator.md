@@ -52,6 +52,7 @@ If `agent-browser` itself fails, surface it as a single FAIL row at the top of t
    - **Use cases / edge cases — error cases** — each bullet.
    - **Q.O.D.** rows whose decision is user-visible. Skip purely engineering Q.O.D. (build tool, file layout, dependency choice).
    Skip the Production strategy section entirely — that's an observability concern.
+   A spec in the short form has none of those sections, only a goal, a data shape, numbered behaviour sections under any heading (PR #314's were *The icon* and *The opening*) and *Out of scope*. Take one row per bullet of the behaviour sections that only a running browser can show: motion, timing, counts of what is seen, layout at a width. `technical-validator` routes exactly those bullets to you. An empty list from a short-form spec is a misreading, not a result. Eleven short-form features had no visual-validation report when PR #314's sweep counted.
 3. **Open the app.** `agent-browser open <dev_url>`, then `agent-browser wait --load networkidle`, then a 600 ms settle for rAF-driven animations.
 4. **For each assertion:**
    a. Plan the browser action that would prove it.
