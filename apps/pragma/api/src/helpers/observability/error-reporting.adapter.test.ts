@@ -31,6 +31,7 @@ const sentry = vi.hoisted(() => ({
   getActiveSpan: vi.fn((): typeof requestSpan | undefined => requestSpan),
   setHttpStatus: vi.fn(),
   nativeNodeFetchIntegration: vi.fn((options: unknown) => ({ name: 'NodeFetch', options })),
+  postgresJsIntegration: vi.fn(() => ({ name: 'PostgresJs' })),
 }));
 
 vi.mock('@sentry/aws-serverless', () => sentry);
@@ -71,6 +72,7 @@ describe('startErrorReporting', () => {
       },
       integrations: [
         { name: 'NodeFetch', options: { ignoreOutgoingRequests: isUnrecordedOutgoingRequest } },
+        { name: 'PostgresJs' },
       ],
     });
   });

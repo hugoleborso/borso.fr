@@ -49,6 +49,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     dataCollection: PRIVATE_DATA_COLLECTION,
     integrations: [
       Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: isUnrecordedOutgoingRequest }),
+      Sentry.postgresJsIntegration(),
     ],
   });
 }
