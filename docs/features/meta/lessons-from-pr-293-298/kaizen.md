@@ -20,3 +20,4 @@ Session: 24f184c7-9ecb-5d91-bc79-415f3860fdb3
 - [2026-11-12 00:40] `main` the ADR the merge of PR 293 added had a line in the topic list of docs/adr/README.md and no row in the index table, so there was no status cell to stamp, and check-adr-numbers-resolve.sh passed it
 - [2026-11-12 00:40] `main` a clock-shifted run of every workspace read the working tree while the sweep edited a gate, so its control run failed on the sweep's own half-made change
 - [2026-11-12 00:55] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-12 01:49] `main` the sweep built an eradication on a draft pull request deploying its preview, read from preview.yml, and the operator does not want a draft to deploy one
