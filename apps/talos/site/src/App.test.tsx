@@ -174,6 +174,7 @@ describe('the application shell', () => {
     );
     const titleMark = tree.container.querySelector('h1 img[data-opening-dock]');
     expect(titleMark?.getAttribute('src')).toBe('/icons/coin-face.webp');
+    expect(titleMark?.getAttribute('width')).toBe('28');
     expect(tree.container.querySelectorAll('[data-opening-dock]')).toHaveLength(1);
     tree.unmount();
   });
