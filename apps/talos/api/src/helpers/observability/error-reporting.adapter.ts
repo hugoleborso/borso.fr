@@ -37,6 +37,8 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   frameContextLines: NO_SOURCE_CONTEXT_LINES,
 };
 
+const UNREPORTED_SPANS: ReportingOptions['ignoreSpans'] = [{ op: 'middleware' }];
+
 const SHARED_PROJECT_APP_TAGS = { app: 'talos' } as const;
 
 export interface IncomingRequest {
@@ -78,6 +80,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
     enableRuntimeChannelInjection: false,
+    ignoreSpans: UNREPORTED_SPANS,
     integrations: selectTracedIntegrations,
     beforeSend: withoutPrivateContent,
   });

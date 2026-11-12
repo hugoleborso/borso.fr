@@ -52,7 +52,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('starts tracing tagged talos, with every data category, breadcrumb, request field and outgoing trace header off', () => {
+  it('starts tracing tagged talos, with every data category, breadcrumb, request field and outgoing trace header off, and no span per middleware', () => {
     startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1, release: 'abc123' });
 
     expect(sentry.init).toHaveBeenCalledWith({
@@ -77,6 +77,7 @@ describe('startErrorReporting', () => {
       tracesSampleRate: 1,
       tracePropagationTargets: [],
       enableRuntimeChannelInjection: false,
+      ignoreSpans: [{ op: 'middleware' }],
       integrations: selectTracedIntegrations,
       beforeSend: withoutPrivateContent,
     });

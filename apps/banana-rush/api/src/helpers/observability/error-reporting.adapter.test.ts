@@ -48,7 +48,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('traces under the release with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
+  it('traces under the release with every personal data category off, no trace header sent outward and no SQL on a database span, and no span per middleware', () => {
     startErrorReporting({
       dsn: DSN,
       environment: 'preview',
@@ -73,6 +73,7 @@ describe('startErrorReporting', () => {
         stackFrameVariables: false,
       },
       enableRuntimeChannelInjection: false,
+      ignoreSpans: [{ op: 'middleware' }],
       integrations: [{ name: 'PostgresJs' }],
       beforeSendSpan: redactDatabaseSpan,
     });
