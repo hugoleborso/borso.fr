@@ -1,3 +1,4 @@
+import { HIGHEST_CLOSENESS, LOWEST_CLOSENESS } from '@domain/closeness.core';
 import { z } from 'zod';
 
 export const MAXIMUM_OPERATIONS_PER_CALL = 500;
@@ -5,8 +6,6 @@ const MAXIMUM_IDEMPOTENCY_KEY_LENGTH = 200;
 const MAXIMUM_SLUG_LENGTH = 500;
 const MAXIMUM_TEXT_BYTES = 1_048_576;
 const MAXIMUM_FOCUS_ITEMS = 3;
-const LOWEST_CLOSENESS = 1;
-const HIGHEST_CLOSENESS = 5;
 
 const slugSchema = z.string().min(1).max(MAXIMUM_SLUG_LENGTH);
 const longTextSchema = z.string().max(MAXIMUM_TEXT_BYTES);
@@ -182,6 +181,7 @@ export const changeOperationSchema = z.discriminatedUnion('op', [
     slug: slugSchema,
     status: shortTextSchema.min(1),
     decisionLine: shortTextSchema.optional(),
+    expectedStatus: shortTextSchema.min(1).optional(),
   }),
   z.object({
     op: z.literal('draft.upsert'),

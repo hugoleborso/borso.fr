@@ -18,15 +18,20 @@ describe('locateMemoryFile', () => {
     expect(locateMemoryFile(path)).toEqual({ kind, key });
   });
 
-  it('reads the two state files from their state keys', () => {
+  it('reads the state files from their state keys', () => {
     expect(locateMemoryFile('etat/relations.json')).toEqual({ kind: 'state', key: 'relations' });
     expect(locateMemoryFile('etat/dernier-scan.json')).toEqual({
       kind: 'state',
       key: 'last_scan',
     });
+    expect(locateMemoryFile('etat/recurrentes.json')).toEqual({
+      kind: 'state',
+      key: 'recurring',
+    });
+    expect(locateMemoryFile('etat/fraicheur.json')).toEqual({ kind: 'state', key: 'freshness' });
   });
 
-  it('knows no other file than markdown and the two state files', () => {
+  it('knows no other file than markdown and the state files', () => {
     expect(locateMemoryFile('etat/graphe.jsonl')).toBeNull();
   });
 });

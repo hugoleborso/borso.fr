@@ -4547,7 +4547,7 @@
     "composePageView": "core-projection"
   },
   "apps/talos/api/src/memory/memory-page.service.ts": {
-    "readMemoryPage": "service-read-model"
+    "readSummarizedMemoryPage": "service-read-model"
   },
   "apps/talos/api/src/memory/memory-plans.core.ts": {
     "planEntityUpsert": "core-decision"
@@ -5042,7 +5042,7 @@
     "TodayProposal": "organism-mutation-panel"
   },
   "apps/talos/site/src/components/organisms/TodoBoard.tsx": {
-    "TodoBoard": "organism-mutation-panel"
+    "TodoBoard": "organism-presentational"
   },
   "apps/talos/site/src/components/organisms/TodoDetail.tsx": {
     "TodoDetail": "organism-mutation-panel"

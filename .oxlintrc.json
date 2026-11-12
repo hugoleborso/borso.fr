@@ -996,6 +996,7 @@
         "apps/*/api/src/**/*.adapter.test.ts",
         "apps/*/api/src/**/*.schema.test.ts",
         "apps/pragma/api/src/main.test.ts",
+        "apps/pragma/api/src/database/client.options.test.ts",
         "apps/talos/api/src/main.export.test.ts"
       ],
       "rules": {

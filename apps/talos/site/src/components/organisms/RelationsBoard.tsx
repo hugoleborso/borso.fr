@@ -1,3 +1,4 @@
+import { HIGHEST_CLOSENESS } from '@domain/closeness.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -59,7 +60,11 @@ export function RelationsBoard(): JSX.Element {
                       leading={
                         <ClosenessDot
                           level={closeness.level}
-                          label={t('relations.closeness', { level: closeness.rank })}
+                          label={t(closeness.labelKey, {
+                            level: closeness.rank,
+                            highest: HIGHEST_CLOSENESS,
+                            nameKey: closeness.nameKey,
+                          })}
                         />
                       }
                       trailing={

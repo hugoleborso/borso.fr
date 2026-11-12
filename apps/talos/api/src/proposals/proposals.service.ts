@@ -12,9 +12,9 @@ import {
   readContentFiles,
 } from '../content/content.service';
 import { formatParisMinute } from '../helpers/calendar/paris-clock.utils';
-import { TalosError } from '../helpers/errors/talos-error.types';
-import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
-import { recordPwaChanges, renderMemoryProposal } from '../memory/memory-pwa.service';
+import { isTalosError, TalosError } from '../helpers/errors/talos-error.types';
+import { readMemoryProposal, recordPwaChanges } from '../memory/memory-pwa.service';
+import { launchProposalRun } from '../routine/routine.service';
 import {
   buildProposalPath,
   type CancellationOutcome,
@@ -26,7 +26,6 @@ import {
 } from './proposals.core';
 
 const PROPOSALS_DIRECTORY = 'etat/propositions';
-const ROUTINE_TRIGGER = 'proposition';
 
 function readDecidedProposal(outcome: DecisionOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
@@ -43,6 +42,7 @@ function readReopenedProposal(outcome: CancellationOutcome): Proposal {
 interface ProposalEdit<Outcome> {
   readonly slug: string;
   readonly editor: FileEditor<Outcome>;
+  readonly overtaken: Outcome;
   readonly status: string;
   readonly decisionLine: string;
   readonly now: Date;
@@ -50,20 +50,27 @@ interface ProposalEdit<Outcome> {
 
 async function editProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
   const memorySlug = stripMarkdownExtension(buildProposalPath(edit.slug));
-  const fileEdit = edit.editor(await renderMemoryProposal(memorySlug));
-  if (fileEdit.content === null) return fileEdit.outcome;
-  await recordPwaChanges(
-    fileEdit.commitMessage,
-    [
-      {
-        op: 'proposal.status',
-        slug: memorySlug,
-        status: edit.status,
-        decisionLine: edit.decisionLine,
-      },
-    ],
-    edit.now,
-  );
+  const stored = await readMemoryProposal(memorySlug);
+  const fileEdit = edit.editor(stored?.markdown ?? null);
+  if (stored === null || fileEdit.content === null) return fileEdit.outcome;
+  try {
+    await recordPwaChanges(
+      fileEdit.commitMessage,
+      [
+        {
+          op: 'proposal.status',
+          slug: memorySlug,
+          status: edit.status,
+          decisionLine: edit.decisionLine,
+          expectedStatus: stored.status,
+        },
+      ],
+      edit.now,
+    );
+  } catch (error) {
+    if (isTalosError(error) && error.code === 'memory-conflict') return edit.overtaken;
+    throw error;
+  }
   return fileEdit.outcome;
 }
 
@@ -87,12 +94,13 @@ export async function decideProposal(params: {
   const outcome = await editProposal({
     slug: params.slug,
     editor: (current) => decideProposalFile(params.slug, current, record),
+    overtaken: { kind: 'already-decided' },
     status: params.decision,
     decisionLine: formatDecisionLine(record),
     now: params.now,
   });
   const proposal = readDecidedProposal(outcome);
-  await fireRoutine(ROUTINE_TRIGGER, stripMarkdownExtension(buildProposalPath(params.slug)));
+  await launchProposalRun(stripMarkdownExtension(buildProposalPath(params.slug)), params.now);
   return proposal;
 }
 
@@ -104,6 +112,7 @@ export async function cancelProposalDecision(params: {
   const outcome = await editProposal({
     slug: params.slug,
     editor: (current) => cancelProposalDecisionFile(params.slug, current, cancelledAt),
+    overtaken: { kind: 'not-revocable' },
     status: PENDING_PROPOSAL_STATUS,
     decisionLine: formatCancellationLine(cancelledAt),
     now: params.now,

@@ -2,13 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
   countOpenTodos,
   hasTodoTextChanged,
+  readTodoListChoice,
+  selectChosenTodoLists,
+  selectQuickAddList,
+  selectQuickAddPlaceholderKey,
+  selectTodoListChoiceLabelKey,
+  TODO_LIST_CHOICES,
   selectDueStatus,
   selectDueTone,
   describeDue,
   selectDueIcon,
   selectTodoEmptyLabelKey,
   selectTodoFilterLabelKey,
-  selectTodoListTitleKey,
   selectVisibleTodos,
   type SchedulableTodo,
 } from './todo-list.core';
@@ -170,8 +175,6 @@ describe('the filter labels', () => {
     expect(selectTodoFilterLabelKey('open')).toBe('todo.filter.open');
     expect(selectTodoFilterLabelKey('done')).toBe('todo.filter.done');
     expect(selectTodoFilterLabelKey('all')).toBe('todo.filter.all');
-    expect(selectTodoListTitleKey('main')).toBe('todo.title');
-    expect(selectTodoListTitleKey('work')).toBe('todo.work-title');
     expect(selectTodoEmptyLabelKey('open')).toBe('todo.empty.open');
     expect(selectTodoEmptyLabelKey('done')).toBe('todo.empty.done');
     expect(selectTodoEmptyLabelKey('all')).toBe('todo.empty.all');
@@ -189,5 +192,50 @@ describe('hasTodoTextChanged', () => {
 
   it('refuses an empty text', () => {
     expect(hasTodoTextChanged('Envoyer', '   ')).toBe(false);
+  });
+});
+
+describe('the choice of todo list', () => {
+  it('offers the personal list, the work list, then both', () => {
+    expect(TODO_LIST_CHOICES).toStrictEqual(['main', 'work', 'both']);
+  });
+
+  it('takes the choice the address asks for over the kept one', () => {
+    expect(readTodoListChoice('work', 'both')).toBe('work');
+    expect(readTodoListChoice('both', null)).toBe('both');
+  });
+
+  it('falls back on the kept choice when the address asks for none or an unknown one', () => {
+    expect(readTodoListChoice(null, 'both')).toBe('both');
+    expect(readTodoListChoice('archive', 'work')).toBe('work');
+  });
+
+  it('opens on the personal list without a known kept choice', () => {
+    expect(readTodoListChoice(null, null)).toBe('main');
+    expect(readTodoListChoice(null, 'archive')).toBe('main');
+  });
+
+  it('shows one list, or both with the personal one first', () => {
+    expect(selectChosenTodoLists('main')).toStrictEqual(['main']);
+    expect(selectChosenTodoLists('work')).toStrictEqual(['work']);
+    expect(selectChosenTodoLists('both')).toStrictEqual(['main', 'work']);
+  });
+
+  it('adds to the list shown, and to the personal one when both are', () => {
+    expect(selectQuickAddList('main')).toBe('main');
+    expect(selectQuickAddList('work')).toBe('work');
+    expect(selectQuickAddList('both')).toBe('main');
+  });
+
+  it('says where a quick add goes only when both lists are shown', () => {
+    expect(selectQuickAddPlaceholderKey('main')).toBe('todo.add.placeholder');
+    expect(selectQuickAddPlaceholderKey('work')).toBe('todo.add.placeholder');
+    expect(selectQuickAddPlaceholderKey('both')).toBe('todo.add.placeholder-main');
+  });
+
+  it('names each choice', () => {
+    expect(selectTodoListChoiceLabelKey('main')).toBe('todo.list.main');
+    expect(selectTodoListChoiceLabelKey('work')).toBe('todo.list.work');
+    expect(selectTodoListChoiceLabelKey('both')).toBe('todo.list.both');
   });
 });

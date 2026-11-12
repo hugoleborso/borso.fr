@@ -182,6 +182,8 @@ describe('insertSectionLines', () => {
   });
 });
 
+const EMPTY_SECTION = { heading: 'Vide', lines: [] };
+
 describe('renderEntityPage', () => {
   it('rebuilds the file: facts, history and relations in position order, raw first', () => {
     const markdown = renderEntityPage(
@@ -200,6 +202,55 @@ describe('renderEntityPage', () => {
       "## Faits\n\n- travaille chez Acme\n- Lyon\n## Historique\n\n- Paris | jusqu'à: 2025\n## Relations\n\n- ami_de → [[second-brain/personnes/bruno-petit]]\n- client → [[second-brain/organisations/acme]]\n",
     );
     expect(markdown.startsWith('---\ntype: personne\n')).toBe(true);
+  });
+
+  it('places each computed section under its heading of the body, else at the end, in the order given', () => {
+    const computed = [
+      { heading: 'Comprend', lines: ['[[second-brain/projets/potager]]'] },
+      {
+        heading: 'Faits récents',
+        lines: ['2026-11-02 | [[second-brain/projets/potager]] | semis'],
+      },
+      { heading: 'Vide', lines: [] },
+    ];
+    const appended = renderEntityPage(
+      { ...ENTITY, body: '# Jardin\n\n## Relations\n' },
+      [],
+      [relation({})],
+      computed.slice(0, 2),
+    );
+    expect(
+      appended.endsWith(
+        '# Jardin\n\n## Relations\n\n- ami_de → [[second-brain/personnes/bruno-petit]]\n\n## Comprend\n\n- [[second-brain/projets/potager]]\n\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | semis\n',
+      ),
+    ).toBe(true);
+    const placed = renderEntityPage(
+      { ...ENTITY, body: '# Jardin\n\n## Faits récents\n\n## Comprend  \n\n## Chronologie\n' },
+      [],
+      [],
+      computed,
+    );
+    expect(
+      placed.endsWith(
+        '# Jardin\n\n## Faits récents\n\n- 2026-11-02 | [[second-brain/projets/potager]] | semis\n## Comprend  \n\n- [[second-brain/projets/potager]]\n## Chronologie\n',
+      ),
+    ).toBe(true);
+  });
+
+  it('puts a computed section whose heading the body lacks before the heading of a later one', () => {
+    const contained = { heading: 'Comprend', lines: ['[[second-brain/projets/potager]]'] };
+    const recent = { heading: 'Faits récents', lines: ['2026-11-02 | semis'] };
+    const body = '# Jardin\n\n## Faits récents  \n\n## Chronologie\n';
+    expect(
+      renderEntityPage({ ...ENTITY, body }, [], [], [contained, recent, EMPTY_SECTION]).endsWith(
+        '# Jardin\n\n## Comprend\n\n- [[second-brain/projets/potager]]\n\n## Faits récents  \n\n- 2026-11-02 | semis\n## Chronologie\n',
+      ),
+    ).toBe(true);
+    expect(
+      renderEntityPage({ ...ENTITY, body }, [], [], [{ ...contained, lines: [] }, recent]).endsWith(
+        '# Jardin\n\n## Faits récents  \n\n- 2026-11-02 | semis\n## Chronologie\n',
+      ),
+    ).toBe(true);
   });
 });
 

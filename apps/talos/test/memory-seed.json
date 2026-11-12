@@ -154,6 +154,19 @@
           "proximite": 4,
           "dernier_contact": "2026-08-29",
           "jours": 37
+        },
+        {
+          "page": "second-brain/personnes/basile-fontaine",
+          "titre": "Basile Fontaine",
+          "proximite": 0,
+          "dernier_contact": "2026-07-01",
+          "jours": 96
+        },
+        {
+          "page": "second-brain/personnes/colette-marchand",
+          "titre": "Colette Marchand",
+          "dernier_contact": "2026-06-01",
+          "jours": 126
         }
       ],
       "anniversaires": []
@@ -169,6 +182,317 @@
         "sources_ok": 9,
         "sources_ko": ["Strava"]
       }
+    }
+  },
+  {
+    "op": "state.set",
+    "key": "recurring",
+    "value": {
+      "genere": "2026-11-11T18:06:25+01:00",
+      "taches": [
+        {
+          "id": "veille-meteo",
+          "titre": "Veille météo",
+          "cadence": "hebdomadaire",
+          "routine": "nuit",
+          "quoi": "Relever les prévisions de la semaine et signaler un épisode de gel.",
+          "dernier": "2026-11-05",
+          "prochain": "2026-11-12",
+          "due": false
+        },
+        {
+          "id": "bilan-budget",
+          "titre": "Bilan du budget",
+          "cadence": "mensuelle",
+          "routine": "dimanche",
+          "quoi": "Comparer les dépenses du mois au budget et lister les écarts.",
+          "dernier": "2026-10-04",
+          "prochain": "2026-11-08",
+          "due": true
+        },
+        {
+          "id": "tri-photos",
+          "titre": "Tri des photos",
+          "cadence": "mensuelle",
+          "routine": "collecte-mac",
+          "quoi": "Classer les photos du mois par album et retirer les doublons.",
+          "dernier": "2026-10-10",
+          "prochain": "2026-11-10",
+          "due": true
+        },
+        {
+          "id": "revue-abonnements",
+          "titre": "Revue des abonnements",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Lister les abonnements actifs et repérer ceux qui ne servent plus.",
+          "dernier": null,
+          "prochain": "2026-11-15",
+          "due": false
+        },
+        {
+          "id": "veille-acme",
+          "titre": "Veille Acme",
+          "cadence": "hebdomadaire",
+          "routine": "nuit",
+          "quoi": "Nouvelles publiques d'Acme depuis la dernière veille.",
+          "dernier": "2026-11-06",
+          "prochain": "2026-11-13",
+          "due": false
+        },
+        {
+          "id": "sauvegarde-notes",
+          "titre": "Contrôle des sauvegardes",
+          "cadence": "hebdomadaire",
+          "routine": "collecte-mac",
+          "quoi": "Vérifier que la dernière sauvegarde des notes se relit.",
+          "dernier": "2026-11-07",
+          "prochain": "2026-11-14",
+          "due": false
+        },
+        {
+          "id": "anniversaires-mois",
+          "titre": "Anniversaires du mois",
+          "cadence": "mensuelle",
+          "routine": "nuit",
+          "quoi": "Préparer la liste des anniversaires du mois suivant.",
+          "dernier": "2026-11-01",
+          "prochain": "2026-12-01",
+          "due": false
+        },
+        {
+          "id": "revue-objectifs",
+          "titre": "Revue des objectifs",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Relire les objectifs du trimestre et noter l'avancement.",
+          "dernier": "2026-10-01",
+          "prochain": "2027-01-01",
+          "due": false
+        },
+        {
+          "id": "entretien-velo",
+          "titre": "Entretien du vélo",
+          "cadence": "trimestrielle",
+          "routine": "dimanche",
+          "quoi": "Rappeler la révision du vélo et proposer un créneau.",
+          "dernier": "2026-09-20",
+          "prochain": "2026-12-20",
+          "due": false
+        },
+        {
+          "id": "lectures-semaine",
+          "titre": "Lectures de la semaine",
+          "cadence": "hebdomadaire",
+          "routine": "dimanche",
+          "quoi": "Résumer les articles mis de côté pendant la semaine.",
+          "dernier": "2026-11-08",
+          "prochain": "2026-11-15",
+          "due": false
+        },
+        {
+          "id": "factures-atelier",
+          "titre": "Factures de l'atelier",
+          "cadence": "mensuelle",
+          "routine": "nuit",
+          "quoi": "Relever les factures reçues et celles qui restent à payer.",
+          "dernier": "2026-10-28",
+          "prochain": "2026-11-28",
+          "due": false
+        },
+        {
+          "id": "menage-todo",
+          "titre": "Ménage de la todo",
+          "cadence": "hebdomadaire",
+          "routine": "dimanche",
+          "quoi": "Repérer les tâches ouvertes depuis plus d'un mois.",
+          "dernier": "2026-11-08",
+          "prochain": "2026-11-16",
+          "due": false
+        },
+        {
+          "id": "carnet-contacts",
+          "titre": "Carnet de contacts",
+          "cadence": "mensuelle",
+          "routine": "collecte-mac",
+          "quoi": "Rapprocher les nouveaux contacts des pages de la mémoire.",
+          "dernier": "2026-10-20",
+          "prochain": "2026-11-20",
+          "due": false
+        }
+      ]
+    }
+  },
+  { "op": "verb.add", "name": "comprend", "description": "contient", "linkLength": "short" },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/domaines/jardin",
+    "kind": "domaine",
+    "title": "Jardin",
+    "summary": "Le jardin et ses chantiers",
+    "body": "# Jardin\n\n## En bref\n\nLe jardin et ses chantiers.\n\n## Projets liés\n\n- [[second-brain/projets/potager]] : actif\n- [[second-brain/projets/verger]] : à relancer\n\n## Chronologie\n\n- 2026-10-20 : résumé réécrit.\n\n## Faits\n\n## Relations\n",
+    "attributes": { "type": "domaine", "resume_le": "2026-10-20" },
+    "closeness": 4
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/projets/potager",
+    "kind": "projet",
+    "title": "Potager",
+    "body": "# Potager\n\n## Faits\n\n## Relations\n",
+    "attributes": {
+      "type": "projet",
+      "statut": "actif",
+      "meteo": "vert",
+      "prochaine_etape": "Semer les fèves",
+      "echeance": "2026-11-30"
+    },
+    "closeness": 3
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/projets/serre",
+    "kind": "projet",
+    "title": "Serre",
+    "body": "# Serre\n\n## Faits\n",
+    "attributes": {
+      "type": "projet",
+      "statut": "en-pause",
+      "meteo": "orange",
+      "prochaine_etape": "Commander les vitres",
+      "echeance": "",
+      "maj": "2026-09-12"
+    },
+    "closeness": 2
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/projets/compost",
+    "kind": "projet",
+    "title": "Compost",
+    "body": "# Compost\n\n## Faits\n",
+    "attributes": { "type": "projet", "statut": "actif" },
+    "closeness": 2
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/projets/verger",
+    "kind": "projet",
+    "title": "Verger",
+    "body": "# Verger\n\n## Faits\n",
+    "attributes": { "type": "projet", "statut": "abandonne" },
+    "closeness": 1
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/domaines/jardin",
+    "verb": "comprend",
+    "to": "second-brain/projets/potager",
+    "since": "2026-03"
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/domaines/jardin",
+    "verb": "comprend",
+    "to": "second-brain/projets/serre",
+    "since": "2026-05"
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/domaines/jardin",
+    "verb": "comprend",
+    "to": "second-brain/projets/verger",
+    "since": "2026-03",
+    "until": "2026-09"
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/projets/potager",
+    "verb": "comprend",
+    "to": "second-brain/projets/compost",
+    "since": "2026-06"
+  },
+  {
+    "op": "fact.add",
+    "slug": "second-brain/domaines/jardin",
+    "key": "surface",
+    "value": "300 m²",
+    "learnedOn": "2026-11-08"
+  },
+  {
+    "op": "fact.add",
+    "slug": "second-brain/projets/potager",
+    "key": "planches",
+    "value": "6",
+    "learnedOn": "2026-10-10"
+  },
+  {
+    "op": "fact.add",
+    "slug": "second-brain/projets/potager",
+    "value": "fèves commandées",
+    "sourceRef": "journal/2026-10-05",
+    "learnedOn": "2026-11-02"
+  },
+  {
+    "op": "fact.add",
+    "slug": "second-brain/projets/compost",
+    "key": "bac",
+    "value": "le deuxième est plein",
+    "learnedOn": "2026-11-05"
+  },
+  {
+    "op": "fact.add",
+    "slug": "second-brain/projets/verger",
+    "value": "pommier arraché",
+    "learnedOn": "2026-11-09"
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/personnes/basile-fontaine",
+    "kind": "personne",
+    "title": "Basile Fontaine",
+    "summary": "Artisan fictif, contact utile",
+    "body": "# Basile Fontaine\n\nArtisan fictif.\n\n## Relations\n",
+    "attributes": { "type": "personne" },
+    "closeness": 0
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/personnes/colette-marchand",
+    "kind": "personne",
+    "title": "Colette Marchand",
+    "summary": "Voisine fictive, pas encore notée",
+    "body": "# Colette Marchand\n\nVoisine fictive.\n\n## Relations\n",
+    "attributes": { "type": "personne" }
+  },
+  {
+    "op": "state.set",
+    "key": "freshness",
+    "value": {
+      "genere": "2026-11-11T20:10:00+01:00",
+      "en_retard": 7,
+      "pages": [
+        {
+          "slug": "second-brain/personnes/alice-martin",
+          "titre": "Alice Martin",
+          "type": "personne",
+          "proximite": 4,
+          "resume_le": "2026-10-16",
+          "faits": 3,
+          "faits_englobes": 0,
+          "retard": 12
+        },
+        {
+          "slug": "second-brain/projets/serre",
+          "titre": "Serre",
+          "type": "projet",
+          "proximite": 2,
+          "resume_le": "2026-09-12",
+          "faits": 4,
+          "faits_englobes": 20,
+          "retard": 48
+        }
+      ]
     }
   },
   { "op": "state.set", "key": "cutover", "value": "database" }

@@ -19,6 +19,8 @@ const RECORD_DIRECTORIES: readonly (readonly [string, MemoryFileKind])[] = [
 const STATE_FILES: ReadonlyMap<string, string> = new Map([
   ['etat/relations.json', 'relations'],
   ['etat/dernier-scan.json', 'last_scan'],
+  ['etat/recurrentes.json', 'recurring'],
+  ['etat/fraicheur.json', 'freshness'],
 ]);
 
 function isDirectChild(slug: string, directory: string): boolean {

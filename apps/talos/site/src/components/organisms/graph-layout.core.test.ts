@@ -62,8 +62,12 @@ describe('selectTargetRadius', () => {
 
   it('places a page without a valid score as a score of 2', () => {
     expect(selectTargetRadius('projet', undefined)).toBe(215);
-    expect(selectTargetRadius('projet', 0)).toBe(215);
     expect(selectTargetRadius('projet', 9)).toBe(215);
+  });
+
+  it('draws a score of 0 on a circle of its own, further out than a 1 and apart from no score', () => {
+    const radii = [0, 1, undefined].map((score) => selectTargetRadius('personne', score));
+    expect(radii).toStrictEqual([285, 250, 215]);
   });
 });
 

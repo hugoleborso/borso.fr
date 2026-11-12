@@ -1,49 +1,36 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Card } from '../atoms/Card';
 import { PageTitle } from '../atoms/PageTitle';
-import { CommitmentRow } from '../molecules/CommitmentRow';
+import { BackLink } from '../molecules/BackLink';
 import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { SegmentedFilter } from '../molecules/SegmentedFilter';
-import { openActionSheet } from '../../lib/action-sheet.hook';
-import {
-  addDaysToIsoDay,
-  DISPLAY_LOCALE,
-  formatShortDay,
-  toIsoDay,
-} from '../../lib/calendar-day.utils';
+import { toIsoDay } from '../../lib/calendar-day.utils';
 import { useOpenCommitments } from '../../lib/queries/commitments.queries';
-import { buildCommitmentHref, selectPageName } from '../../lib/wikilinks.core';
 import {
   COMMITMENT_FILTERS,
   type CommitmentFilter,
   readCommitmentFilter,
   selectCommitmentFilterLabelKey,
-  selectCommitmentHeadline,
   selectVisibleCommitments,
 } from './commitment-board.core';
-import { describeDue, selectDueStatus, selectDueTone } from './todo-list.core';
+import { OpenCommitmentRow } from './OpenCommitmentRow';
 
 const DIRECTION_PARAMETER = 'direction';
-
-function formatDay(isoDay: string): string {
-  return formatShortDay(isoDay, DISPLAY_LOCALE);
-}
 
 // @FollowsBlueprint organism-query-owning
 export function CommitmentBoard(): JSX.Element {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const commitments = useOpenCommitments();
   const filter = readCommitmentFilter(searchParams.get(DIRECTION_PARAMETER));
   const visible = selectVisibleCommitments(commitments.data?.items ?? [], filter);
   const today = toIsoDay(new Date());
-  const tomorrow = addDaysToIsoDay(today, 1);
   return (
     <>
+      <BackLink to="/" label={t('common.back')} />
       <PageTitle subtitle={String(visible.length)}>{t('commitments.title')}</PageTitle>
       <div className="flex flex-col gap-4">
         <SegmentedFilter
@@ -65,44 +52,9 @@ export function CommitmentBoard(): JSX.Element {
         ) : (
           <Card padding="none" className="px-1">
             <ul className="m-0 p-0 list-none">
-              {visible.map((commitment) => {
-                const href = buildCommitmentHref(commitment.path);
-                const headline = selectCommitmentHeadline(commitment, selectPageName);
-                const status = selectDueStatus(
-                  { done: false, dueDate: commitment.dueDate },
-                  today,
-                  tomorrow,
-                );
-                const dueLabel = describeDue(
-                  commitment.dueDate,
-                  status,
-                  (key, date) => t(key, { date }),
-                  formatDay,
-                );
-                return (
-                  <CommitmentRow
-                    key={commitment.path}
-                    href={href}
-                    variant={headline.variant}
-                    lead={headline.lead}
-                    text={headline.text}
-                    {...(dueLabel === null ? {} : { dueLabel, dueTone: selectDueTone(status) })}
-                    onLongPress={() => {
-                      openActionSheet({
-                        title: commitment.title,
-                        subject: { kind: 'commitment', path: commitment.path },
-                        actions: [
-                          {
-                            labelKey: 'discuss.action.open',
-                            icon: 'open',
-                            onSelect: () => void navigate(href),
-                          },
-                        ],
-                      });
-                    }}
-                  />
-                );
-              })}
+              {visible.map((commitment) => (
+                <OpenCommitmentRow key={commitment.path} commitment={commitment} today={today} />
+              ))}
             </ul>
             {visible.length === 0 ? (
               <EmptyState icon="commitment" label={t('commitments.empty')} />

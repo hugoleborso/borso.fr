@@ -29,6 +29,20 @@ describe('GET /api/relations', () => {
           lastContactOn: '2026-08-29',
           silentDays: 37,
         },
+        {
+          page: 'second-brain/personnes/basile-fontaine',
+          title: 'Basile Fontaine',
+          closeness: 0,
+          lastContactOn: '2026-07-01',
+          silentDays: 96,
+        },
+        {
+          page: 'second-brain/personnes/colette-marchand',
+          title: 'Colette Marchand',
+          closeness: null,
+          lastContactOn: '2026-06-01',
+          silentDays: 126,
+        },
       ],
       birthdays: [],
     });

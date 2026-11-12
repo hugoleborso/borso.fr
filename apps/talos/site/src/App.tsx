@@ -1,9 +1,10 @@
 import { type JSX, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
+import { PROPOSALS_PATH } from './components/organisms/proposal-board.core';
 import { RequireSession } from './components/organisms/RequireSession';
 import { TracedRoutes } from './observability/error-reporting.adapter';
-import { TODO_LIST_ROUTES } from './lib/wikilinks.core';
+import { buildTodoListHref, TODO_LIST_ROUTES } from './lib/wikilinks.core';
 import {
   loadBrainEntryPage,
   loadBrainPage,
@@ -16,7 +17,9 @@ import {
   loadLoginPage,
   loadMessagePage,
   loadPastBriefPage,
+  loadProposalPage,
   loadProposalsPage,
+  loadRecurringTasksPage,
   loadRelationsPage,
   loadSettingsPage,
   loadTodayPage,
@@ -29,6 +32,7 @@ const LoginPage = lazy(async () => ({ default: (await loadLoginPage()).LoginPage
 const TodayPage = lazy(async () => ({ default: (await loadTodayPage()).TodayPage }));
 const TodosPage = lazy(async () => ({ default: (await loadTodosPage()).TodosPage }));
 const ProposalsPage = lazy(async () => ({ default: (await loadProposalsPage()).ProposalsPage }));
+const ProposalPage = lazy(async () => ({ default: (await loadProposalPage()).ProposalPage }));
 const CommitmentsPage = lazy(async () => ({
   default: (await loadCommitmentsPage()).CommitmentsPage,
 }));
@@ -46,6 +50,9 @@ const GraphPage = lazy(async () => ({ default: (await loadGraphPage()).GraphPage
 const MessagePage = lazy(async () => ({ default: (await loadMessagePage()).MessagePage }));
 const SettingsPage = lazy(async () => ({ default: (await loadSettingsPage()).SettingsPage }));
 const RelationsPage = lazy(async () => ({ default: (await loadRelationsPage()).RelationsPage }));
+const RecurringTasksPage = lazy(async () => ({
+  default: (await loadRecurringTasksPage()).RecurringTasksPage,
+}));
 const DraftsPage = lazy(async () => ({ default: (await loadDraftsPage()).DraftsPage }));
 const DraftPage = lazy(async () => ({ default: (await loadDraftPage()).DraftPage }));
 const HistoryPage = lazy(async () => ({ default: (await loadHistoryPage()).HistoryPage }));
@@ -63,9 +70,13 @@ export function App(): JSX.Element {
           <Route element={<RequireSession />}>
             <Route element={<AppShell />}>
               <Route path="/" element={<TodayPage />} />
-              <Route path={TODO_LIST_ROUTES.main} element={<TodosPage list="main" />} />
-              <Route path={TODO_LIST_ROUTES.work} element={<TodosPage list="work" />} />
-              <Route path="/proposals" element={<ProposalsPage />} />
+              <Route path={TODO_LIST_ROUTES.main} element={<TodosPage />} />
+              <Route
+                path={TODO_LIST_ROUTES.work}
+                element={<Navigate to={buildTodoListHref('work')} replace />}
+              />
+              <Route path={PROPOSALS_PATH} element={<ProposalsPage />} />
+              <Route path={`${PROPOSALS_PATH}/:slug`} element={<ProposalPage />} />
               <Route
                 path={`${TODO_LIST_ROUTES.main}/:id`}
                 element={<TodoDetailPage list="main" />}
@@ -77,6 +88,7 @@ export function App(): JSX.Element {
               <Route path="/commitments" element={<CommitmentsPage />} />
               <Route path="/commitments/*" element={<CommitmentDetailPage />} />
               <Route path="/relations" element={<RelationsPage />} />
+              <Route path="/recurring" element={<RecurringTasksPage />} />
               <Route path="/drafts" element={<DraftsPage />} />
               <Route path="/drafts/:slug" element={<DraftPage />} />
               <Route path="/history" element={<HistoryPage />} />

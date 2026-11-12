@@ -10,6 +10,13 @@ describe('proposalSlugSchema', () => {
     expect(proposalSlugSchema.safeParse({ slug: '2026-10-04-cv-bruno' }).success).toBe(true);
   });
 
+  it.each([['2026-11-11-faits'], ['2026-11-11-appris-relances-le-lundi']])(
+    'accepts the grouped proposal slug %s',
+    (slug) => {
+      expect(proposalSlugSchema.safeParse({ slug }).success).toBe(true);
+    },
+  );
+
   it.each([['../secret'], ['-tiret'], ['Majuscule'], ['x'.repeat(121)]])('refuses %s', (slug) => {
     expect(proposalSlugSchema.safeParse({ slug }).success).toBe(false);
   });

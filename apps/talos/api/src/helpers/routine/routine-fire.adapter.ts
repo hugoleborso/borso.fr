@@ -25,7 +25,7 @@ const NETWORK_FAILURE_STATUS = 0;
 // @FollowsBlueprint adapter-outcome-instead-of-a-throw
 export async function fireRoutine(
   trigger: RoutineTrigger,
-  path: string,
+  subject: string,
   options: FireRoutineOptions = {},
 ): Promise<FireOutcome> {
   const readSecret = options.readSecret ?? readTalosSecret;
@@ -40,9 +40,10 @@ export async function fireRoutine(
     const response = await fetcher(fireUrl, {
       method: 'POST',
       headers: buildFireHeaders(token),
-      body: buildFireBody(secretPhrase, trigger, path),
+      body: buildFireBody(secretPhrase, trigger, subject),
     });
-    return readFireOutcome(response.status);
+    const answer: unknown = await response.json().catch(() => undefined);
+    return readFireOutcome(response.status, answer);
   } catch (error) {
     addWideEventFields({ 'routine.fire_failure': describeThrownValue(error).type });
     return { kind: 'failed', status: NETWORK_FAILURE_STATUS };
