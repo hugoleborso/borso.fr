@@ -1,4 +1,5 @@
 import { useQuery, type QueryClient } from '@tanstack/react-query';
+import { waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -212,10 +213,10 @@ describe('RequireSession', () => {
     act(() => {
       retry?.click();
     });
-    await flushTasks();
-    await flushMicrotasks();
+    await waitFor(() => {
+      expect(document.querySelector('[data-testid=songs]')?.textContent).toBe('songs: 1');
+    });
     expect(raw).toEqual([`POST ${READ_BATCH_PATH}`]);
-    expect(document.querySelector('[data-testid=songs]')?.textContent).toBe('songs: 1');
     expect(readStatus()).toBeNull();
   });
 });
