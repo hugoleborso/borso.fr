@@ -12,9 +12,12 @@
 # The hook reads the turn that is ending. When its text claims a visual
 # comparison and the turn neither published an Artifact, sent a file nor
 # embedded an image, the stop is blocked with the reason, once: a second stop
-# in a row passes, so the hook can never trap a turn. Quoted text is skipped:
-# the sweep of PR #249 quoted the old report's "identical by eye" and was
-# blocked for a comparison it never made.
+# in a row passes, so the hook can never trap a turn. Quoted text and
+# blockquote lines are skipped: the sweep of PR #249 quoted the old report's
+# "identical by eye" and was blocked for a comparison it never made. "Before
+# and after" is no claim on its own: it blocked three turns of PR #302 that
+# compared probe output and quoted a kaizen prompt, and PR #249's report is
+# still caught by "by eye" and "pixel channel".
 #
 # Best-effort by contract: any error lets the turn end.
 #
@@ -24,11 +27,11 @@ import re
 import sys
 
 VISUAL_CLAIM = re.compile(
-    r"\b(by eye|side[- ]by[- ]side|before[- ]and[- ]after|pixel (diff|channel|difference)s?"
+    r"\b(by eye|side[- ]by[- ]side|pixel (diff|channel|difference)s?"
     r"|visible differences?|screens? (match|are identical|look the same|unchanged))\b",
     re.IGNORECASE,
 )
-QUOTED_SPAN = re.compile(r'"[^"\n]*"|“[^”\n]*”|`[^`\n]*`')
+QUOTED_SPAN = re.compile(r'"[^"\n]*"|“[^”\n]*”|`[^`\n]*`|^[ \t]*>.*$', re.MULTILINE)
 SHOWING_TOOLS = {"Artifact", "SendUserFile"}
 SHOWN_IN_TEXT = re.compile(r"!\[[^\]]*\]\(|claude\.ai/(code/)?artifact/")
 REASON = (

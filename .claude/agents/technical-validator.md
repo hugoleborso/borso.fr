@@ -15,7 +15,7 @@ You are the engineering counterpart to the visual-validator: same standalone-age
 The skill that dispatches you provides a self-contained brief with these fields:
 
 - `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`, or to the `docs/adr/<id>-<slug>.md` that stands in for it when the operator asked for the change directly (see *An ADR as the contract*).
-- `plan_path` — absolute path to the matching `plan/plan.md` (may be missing — note it as a finding if so).
+- `plan_path` — absolute path to the matching `plan/plan.md` (may be missing — note it as a finding if so). A kaizen sweep has none by design and the skill passes none: write no plan row.
 - `base_ref` — git ref the diff is computed against (e.g. `origin/main`).
 - `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
 - `app_pkg` — workspace name for running tests (`@borso-app/<app>` or `@borso/infra`).
@@ -59,7 +59,7 @@ Every FAIL row has a type, written in its Verdict cell:
 - `FAIL (blocking)` — wrong against the spec, a security hole, a race or a data-integrity defect, a failing test or gate, or a broken standard that is a real defect (a missing coverage gate, a forbidden layer shape, a type assertion).
 - `FAIL (non-blocking)` — style, naming, a nit, a suggestion. Listed in the report and the pull request; it never fails the verdict and never starts a round.
 
-When in doubt, ask what breaks if it ships. Nothing breaks: non-blocking.
+When in doubt, ask what breaks if it ships. Nothing breaks: non-blocking. A dismissal whose claim fails in round 2 is the one exception: the false reason is what ships, in the history the next maintainer reads, so it is blocking whatever the type of the finding it dismissed.
 
 ## Validation categories
 
