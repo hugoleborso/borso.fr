@@ -15,6 +15,12 @@ type TraceRequest = (
   answer: () => Promise<AnsweredRequest>,
 ) => Promise<void>;
 
+/**
+ * @Blueprint middleware-request-tracing
+ * @BlueprintName Middleware Request Tracing
+ * @BlueprintUsage Use for the middleware an API mounts first on `*`, so every request runs inside one Sentry `http.server` span and the wide-event middleware after it can read the trace id.
+ * @BlueprintDescription `buildRequestTracing` takes the tracing function as a parameter, so its test drives a stub and never the SDK. The middleware reads `sentry-trace` and `baggage`, awaits `next` inside the trace, and returns the matched route and status, which the adapter uses to name the span and set its status. The adapter answers without a span when Sentry is off.
+ */
 export function buildRequestTracing(traceRequest: TraceRequest): MiddlewareHandler {
   return async (context, next) => {
     await traceRequest(

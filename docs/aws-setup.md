@@ -605,6 +605,31 @@ entry is still in a statement with `Resource: "*"`. If it is refused with *the d
 carries no `AgentReaderFunctionName` output*, that application's production deploy has not run
 since ADR-2026-10-28T2126 landed.
 
+### 12.8 The admin user for operator tasks
+
+`Borso-Admin` is a second IAM user, created on 2026-11-11. It exists so that a cloud session can do the rows of [`operator-backlog.md`](./operator-backlog.md) that need AWS write.
+
+| | |
+| --- | --- |
+| User name | `Borso-Admin` |
+| Attached | `AdministratorAccess`, with no inline policy and no group (measured on 2026-11-12) |
+| Access keys | one, `Active` |
+| Used by | the Claude cloud environment "Borso Admin" only |
+
+That environment sets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_DEFAULT_REGION` and `AWS_ACCOUNT_ID`. Every other environment keeps the `AI-Dev-ReadOnly` key of §12.3.
+
+**Its blast radius is the whole account.** `AI-Dev-ReadOnly` cannot write even if its key leaks. This key can delete production data, change IAM and create resources that cost money. The trade-off at the top of §12 applies in full: anyone who can edit the environment can read the key.
+
+```bash
+aws --profile borso-admin iam list-attached-user-policies --user-name Borso-Admin
+aws --profile borso-admin iam list-access-keys --user-name Borso-Admin \
+  --query 'AccessKeyMetadata[].[AccessKeyId,Status,CreateDate]' --output table
+```
+
+- **If the key leaks, or the environment is no longer used**, run `aws --profile borso-admin iam delete-access-key --user-name Borso-Admin --access-key-id …`, then clear the variables in the environment.
+- **To pause it**, run `iam update-access-key … --status Inactive`. The user stays and the key stops working.
+- **To remove the user**, delete its key, detach `AdministratorAccess`, then run `iam delete-user --user-name Borso-Admin`.
+
 ## Reference: SSM parameters
 
 ### Published by the shared stack (`/borso/shared/*`)

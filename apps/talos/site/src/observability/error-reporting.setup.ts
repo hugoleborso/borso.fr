@@ -1,5 +1,5 @@
-import { selectErrorReportingSettings } from '@domain/error-reporting.core';
+import { selectBrowserReportingSettings } from '@domain/error-reporting.core';
 import { startErrorReporting } from './error-reporting.adapter';
-import { readErrorReportingDsn } from './error-reporting.environment';
+import { readErrorReportingInputs } from './error-reporting.environment';
 
-startErrorReporting(selectErrorReportingSettings(readErrorReportingDsn()));
+startErrorReporting(selectBrowserReportingSettings(readErrorReportingInputs()));

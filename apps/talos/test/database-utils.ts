@@ -22,6 +22,7 @@ const ALL_TABLES = [
   'memory_verb',
   'passkey',
   'push_subscription',
+  'routine_run',
   'session',
   'webauthn_challenge',
 ];

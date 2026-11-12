@@ -1,6 +1,8 @@
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { canSendMessage, MESSAGE_TEXT_LIMIT } from '@domain/routine-run.core';
+import { Button } from '../atoms/Button';
 import { buttonVariants } from '../atoms/button.variants';
 import { Icon, type IconName } from '../atoms/Icon';
 import { Notice } from '../atoms/Notice';
@@ -10,6 +12,8 @@ import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE } from '../../lib/calendar-day.utils';
 import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
+import { useLaunchMessageRun } from '../../lib/queries/routine.queries';
+import { isRoutineConfigured } from '../../lib/routine-run.core';
 import {
   buildClaudeCodeAddress,
   type ClaudeCodeEnvironment,
@@ -17,7 +21,12 @@ import {
   selectClaudeCodeLinkTarget,
 } from '../../lib/claude-code-address.core';
 import { detectClaudeCodeOpener } from '../../lib/claude-code-opener.adapter';
-import { isMessageTooLong, LONG_MESSAGE_THRESHOLD } from './message-composer.core';
+import {
+  isEnvironmentLinked,
+  isMessageTooLong,
+  isMessageTooLongToSend,
+  LONG_MESSAGE_THRESHOLD,
+} from './message-composer.core';
 
 interface EnvironmentChoice {
   readonly environment: ClaudeCodeEnvironment;
@@ -54,7 +63,14 @@ export function MessageComposer(): JSX.Element {
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
   const opener = detectClaudeCodeOpener();
-  const form = useForm({ defaultValues: { text: '' } });
+  const launch = useLaunchMessageRun();
+  const isConfigured = isRoutineConfigured(launch.error);
+  const form = useForm({
+    defaultValues: { text: '' },
+    onSubmit: ({ value, formApi }) => {
+      launch.mutate({ text: value.text }, { onSuccess: () => formApi.reset() });
+    },
+  });
 
   return (
     <>
@@ -78,6 +94,7 @@ export function MessageComposer(): JSX.Element {
         <form.Subscribe selector={(state) => state.values.text}>
           {(text) => {
             const isTooLong = isMessageTooLong(text);
+            const isTooLongToSend = isMessageTooLongToSend(text, isConfigured);
             const prompt = composeTalosPrompt(t('message.preamble'), text);
             return (
               <>
@@ -89,11 +106,31 @@ export function MessageComposer(): JSX.Element {
                     })}
                   </Notice>
                 ) : null}
+                {isTooLongToSend ? (
+                  <Notice>
+                    {t('message.too-long-to-send', {
+                      limit: new Intl.NumberFormat(DISPLAY_LOCALE).format(MESSAGE_TEXT_LIMIT),
+                    })}
+                  </Notice>
+                ) : null}
+                {isConfigured ? (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    disabled={!canSendMessage(text) || launch.isPending}
+                    onClick={() => void form.handleSubmit()}
+                  >
+                    <Icon name="send" size={MAIN_ICON_SIZE} />
+                    {t('message.open-talos')}
+                  </Button>
+                ) : null}
                 {target.data === undefined ? (
                   <QueryState isPending={target.isPending} onRetry={() => void target.refetch()} />
                 ) : (
                   <div className="flex flex-col gap-1">
-                    {ENVIRONMENT_CHOICES.map((choice) => (
+                    {ENVIRONMENT_CHOICES.filter((choice) =>
+                      isEnvironmentLinked(choice.environment, isConfigured),
+                    ).map((choice) => (
                       <a
                         key={choice.environment}
                         href={buildClaudeCodeAddress(

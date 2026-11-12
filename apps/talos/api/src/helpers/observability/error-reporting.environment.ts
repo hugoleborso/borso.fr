@@ -1,4 +1,6 @@
+import type { ErrorReportingInputs } from '@domain/error-reporting.core';
+
 // @FollowsBlueprint environment-reader
-export function readErrorReportingDsn(): string | undefined {
-  return process.env.SENTRY_DSN;
+export function readErrorReportingInputs(): ErrorReportingInputs {
+  return { dsn: process.env.SENTRY_DSN, release: process.env.SENTRY_RELEASE };
 }

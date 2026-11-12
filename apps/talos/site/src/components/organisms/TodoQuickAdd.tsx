@@ -11,10 +11,11 @@ import { buildTodoCreation, canCreateTodo } from './todo-form.core';
 
 export interface TodoQuickAddProps {
   readonly list: TodoListName;
+  readonly placeholder: string;
 }
 
 // @FollowsBlueprint organism-form
-export function TodoQuickAdd({ list }: TodoQuickAddProps): JSX.Element {
+export function TodoQuickAdd({ list, placeholder }: TodoQuickAddProps): JSX.Element {
   const { t } = useTranslation();
   const createTodo = useCreateTodo(list);
   const form = useForm({
@@ -39,8 +40,8 @@ export function TodoQuickAdd({ list }: TodoQuickAddProps): JSX.Element {
         <form.Field name="text">
           {(field) => (
             <Input
-              aria-label={t('todo.add.placeholder')}
-              placeholder={t('todo.add.placeholder')}
+              aria-label={placeholder}
+              placeholder={placeholder}
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               enterKeyHint="done"

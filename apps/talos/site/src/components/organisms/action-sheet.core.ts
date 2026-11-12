@@ -6,6 +6,7 @@ const SUBJECT_PHRASE_KEYS = {
   focus: 'discuss.subject.focus',
   scan: 'discuss.subject.scan',
   relations: 'discuss.subject.relations',
+  recurring: 'discuss.subject.recurring',
   draft: 'discuss.subject.draft',
   review: 'discuss.subject.review',
   proposal: 'discuss.subject.proposal',

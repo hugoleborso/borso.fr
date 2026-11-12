@@ -46,7 +46,6 @@ export function ProposalBoard(): JSX.Element {
               proposal={proposal}
               isWriting={isWriting}
               startsCommenting={touchedHereSlugs.has(proposal.slug)}
-              showsDraft
               onDecide={(payload) => {
                 rememberTouched(proposal.slug);
                 decideProposal.mutate({ slug: proposal.slug, ...payload });

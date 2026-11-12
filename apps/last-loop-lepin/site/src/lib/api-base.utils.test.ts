@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { composeApiOrigin, composeApiUrl, selectApiBase } from './api-base.utils';
+import {
+  composeApiOrigin,
+  composeApiTraceTarget,
+  composeApiUrl,
+  selectApiBase,
+} from './api-base.utils';
+
+const PROD_ORIGIN = 'https://last-loop-lepin.borso.fr';
+const PREVIEW_ORIGIN = 'https://last-loop-lepin-pr-7.preview.borso.fr';
+const PREVIEW_API = 'https://last-loop-lepin-pr-7-api.preview.borso.fr';
 
 // @FollowsBlueprint test-pure-unit
 describe('selectApiBase', () => {
@@ -41,5 +50,26 @@ describe('composeApiUrl', () => {
     expect(composeApiUrl('https://api-pr-7.borso.fr', '/api/health')).toBe(
       'https://api-pr-7.borso.fr/api/health',
     );
+  });
+});
+
+describe('composeApiTraceTarget', () => {
+  it('matches the API on the page origin when no API base is configured, and nothing else', () => {
+    const target = composeApiTraceTarget('', PROD_ORIGIN);
+
+    expect(target.test(`${PROD_ORIGIN}/api/editions?search=x`)).toBe(true);
+    expect(target.test(`${PROD_ORIGIN}/assets/index.js`)).toBe(false);
+    expect(target.test('https://last-loop-lepin.borso.fr.attacker.example/api/editions')).toBe(
+      false,
+    );
+    expect(target.test('https://last-loop-lepinXborso.fr/api/editions')).toBe(false);
+  });
+
+  it('matches the separate API host of a preview, and not the preview page origin', () => {
+    const target = composeApiTraceTarget(PREVIEW_API, PREVIEW_ORIGIN);
+
+    expect(target.test(`${PREVIEW_API}/api/editions`)).toBe(true);
+    expect(target.test(`${PREVIEW_ORIGIN}/api/editions`)).toBe(false);
+    expect(target.test('https://photos-cdn.borso.fr/api/x')).toBe(false);
   });
 });

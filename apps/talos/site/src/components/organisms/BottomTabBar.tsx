@@ -11,6 +11,7 @@ export interface BottomTab {
   readonly to: string;
   readonly labelKey: ParseKeys;
   readonly icon: IconName;
+  readonly aliases?: readonly string[];
 }
 
 export interface BottomTabBarProps {
@@ -38,7 +39,7 @@ export function BottomTabBar({
     >
       <ul className="m-0 p-1 list-none flex max-w-[480px] mx-auto rounded-full border border-on-shell/10 bg-shell/60 backdrop-blur-xl backdrop-saturate-150 shadow-[0_8px_24px_rgb(0_0_0/0.18),inset_0_1px_0_rgb(255_255_255/0.25)] pointer-events-auto">
         {tabs.map((tab) => {
-          const isActive = isNavigationDestinationActive(activePath, tab.to);
+          const isActive = isNavigationDestinationActive(activePath, tab.to, tab.aliases);
           const isBadgeShown = isBadgeShownOnTab(tab.to, badgeDestination, badgeCount);
           return (
             <li key={tab.to} className="flex-1">

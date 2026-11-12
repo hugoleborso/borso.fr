@@ -8,6 +8,7 @@ describe('selectSubjectReference', () => {
     expect(selectSubjectReference({ kind: 'focus' })).toBe('focus');
     expect(selectSubjectReference({ kind: 'scan' })).toBe('état: last_scan');
     expect(selectSubjectReference({ kind: 'relations' })).toBe('état: relations');
+    expect(selectSubjectReference({ kind: 'recurring' })).toBe('état: recurring');
     expect(selectSubjectReference({ kind: 'proposal', slug: '2026-10-04-atelier' })).toBe(
       'proposition: etat/propositions/2026-10-04-atelier',
     );

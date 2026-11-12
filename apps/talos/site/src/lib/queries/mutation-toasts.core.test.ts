@@ -3,6 +3,7 @@ import {
   selectDecisionToast,
   selectDraftReversal,
   selectDraftStatusToast,
+  selectLaunchFailureToast,
   selectPushTestToast,
   selectTodoReversal,
   selectTodoUpdateToast,
@@ -22,6 +23,22 @@ describe('selectDecisionToast', () => {
       tone: 'neutral',
       messageKey: 'toast.proposal-refused',
       values: { title: 'Réserver la salle' },
+    });
+  });
+});
+
+describe('selectLaunchFailureToast', () => {
+  it('points to Claude Code while the routine is not configured, which is no failure', () => {
+    expect(selectLaunchFailureToast({ status: 503 })).toEqual({
+      tone: 'info',
+      messageKey: 'toast.routine-unconfigured',
+    });
+  });
+
+  it('reports any other refusal as a launch that failed', () => {
+    expect(selectLaunchFailureToast({ status: 502 })).toEqual({
+      tone: 'danger',
+      messageKey: 'toast.routine-launch-failed',
     });
   });
 });

@@ -8,6 +8,7 @@ import { buildFocusRouter } from './focus/focus.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { isUnexpectedFailure, selectErrorResponse } from './helpers/errors/error-response.core';
 import { reportUnhandledError } from './helpers/observability/error-reporting.adapter';
+import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { buildHistoryRouter } from './history/history.controller';
 import { buildMessagesRouter } from './messages/messages.controller';
@@ -15,7 +16,9 @@ import { buildNotifyRouter } from './notify/notify.controller';
 import { buildPagesRouter } from './pages/pages.controller';
 import { buildProposalsRouter } from './proposals/proposals.controller';
 import { buildPushRouter } from './push/push.controller';
+import { buildRecurringTasksRouter } from './recurring-tasks/recurring-tasks.controller';
 import { buildRelationsRouter } from './relations/relations.controller';
+import { buildRoutineRouter } from './routine/routine.controller';
 import { buildSearchRouter } from './search/search.controller';
 import { buildTodayRouter } from './today/today.controller';
 import { buildTodosRouter } from './todos/todos.controller';
@@ -28,6 +31,7 @@ export interface CreateAppOptions {
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { sessionRouter, ceremonyRouter, passkeysRouter } = buildAuthRouter(options.auth);
   return new Hono()
+    .use('*', traceRequests)
     .use('*', recordWideEvents)
     .onError(async (failure, context) => {
       const answer = selectErrorResponse(failure);
@@ -46,12 +50,14 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/proposals', buildProposalsRouter())
     .route('/api/commitments', buildCommitmentsRouter())
     .route('/api/relations', buildRelationsRouter())
+    .route('/api/recurring-tasks', buildRecurringTasksRouter())
     .route('/api/drafts', buildDraftsRouter())
     .route('/api/history', buildHistoryRouter())
     .route('/api/graph', buildGraphRouter())
     .route('/api/pages', buildPagesRouter())
     .route('/api/search', buildSearchRouter())
     .route('/api/messages', buildMessagesRouter())
+    .route('/api/routine', buildRoutineRouter())
     .route('/api/push', buildPushRouter())
     .route('/api/notify', buildNotifyRouter())
     .route('/api/agent', buildAgentRouter());

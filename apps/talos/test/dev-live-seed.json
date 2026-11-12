@@ -1,0 +1,65 @@
+[
+  {
+    "op": "commitment.upsert",
+    "slug": "engagements/{{day+2}}-retour-acme",
+    "direction": "eux->moi",
+    "counterpart": "[[second-brain/personnes/alice-martin]]",
+    "action": "Renvoyer le devis signé",
+    "due": "{{day+2}}",
+    "status": "ouvert",
+    "attributes": {
+      "type": "engagement",
+      "sens": "eux->moi",
+      "qui": "[[second-brain/personnes/alice-martin]]",
+      "quoi": "Renvoyer le devis signé",
+      "echeance": "{{day+2}}",
+      "statut": "ouvert"
+    },
+    "body": "# Retour du devis signé par Acme\n"
+  },
+  {
+    "op": "proposal.upsert",
+    "slug": "etat/propositions/{{day+0}}-relance-acme",
+    "category": "action",
+    "status": "proposee",
+    "title": "Relancer Alice sur le devis",
+    "priority": "haute",
+    "createdOn": "{{day+0}}",
+    "expiresOn": "{{day+5}}",
+    "attributes": {
+      "type": "proposition",
+      "categorie": "action",
+      "statut": "proposee",
+      "titre": "Relancer Alice sur le devis",
+      "priorite": "haute",
+      "cree": "{{day+0}}",
+      "expire": "{{day+5}}"
+    },
+    "body": "## Pourquoi\nLe devis est parti sans réponse.\n\n## Ce que Talos propose\nEnvoyer une relance courte.\n\n## Décision\n"
+  },
+  {
+    "op": "proposal.upsert",
+    "slug": "etat/propositions/{{day+0}}-faits",
+    "category": "action",
+    "status": "proposee",
+    "title": "Faits relevés aujourd’hui",
+    "priority": "haute",
+    "createdOn": "{{day+0}}",
+    "expiresOn": "{{day+5}}",
+    "attributes": {
+      "type": "proposition",
+      "categorie": "action",
+      "statut": "proposee",
+      "titre": "Faits relevés aujourd’hui",
+      "priorite": "haute",
+      "cree": "{{day+0}}",
+      "expire": "{{day+5}}"
+    },
+    "body": "## Ce que Talos propose\n- Alice Martin préfère les réunions le matin.\n- Acme ferme ses bureaux en août.\n\n## Décision\n"
+  },
+  {
+    "op": "journal.write",
+    "slug": "journal/{{day+0}}",
+    "content": "# {{day+0}}\n\n## Brief envoyé\n\nJournée calme.\n\n## Scan de nuit\n\n2 sources lues.\n"
+  }
+]

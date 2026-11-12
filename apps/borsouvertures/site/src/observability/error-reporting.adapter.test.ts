@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { startErrorReporting } from './error-reporting.adapter';
 
-const sentry = vi.hoisted(() => ({ init: vi.fn() }));
+const browserTracing = vi.hoisted(() => ({ name: 'BrowserTracing' }));
+
+const sentry = vi.hoisted(() => ({
+  init: vi.fn(),
+  browserTracingIntegration: vi.fn(() => browserTracing),
+}));
 
 vi.mock('@sentry/react', () => sentry);
 
@@ -12,8 +17,8 @@ describe('startErrorReporting', () => {
     vi.clearAllMocks();
   });
 
-  it('reports errors tagged with the app, with personal data off and no tracing', () => {
-    startErrorReporting({ dsn: DSN, environment: 'prod' });
+  it('reports errors tagged with the app, traces every page load, with personal data off and no trace header sent', () => {
+    startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1 });
 
     expect(sentry.init).toHaveBeenCalledWith({
       dsn: DSN,
@@ -26,6 +31,9 @@ describe('startErrorReporting', () => {
         httpBodies: [],
         urlQueryParams: false,
       },
+      tracesSampleRate: 1,
+      tracePropagationTargets: [],
+      integrations: [browserTracing],
     });
   });
 });
