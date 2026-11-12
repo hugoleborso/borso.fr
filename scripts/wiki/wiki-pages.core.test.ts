@@ -59,8 +59,8 @@ describe('readTitle', () => {
 
 describe('rewriteTarget', () => {
   const pageNames = new Map([['docs/flows.md', 'flows']]);
-  const rewrite = (target: string, isImage = false, from = 'docs/architecture.md'): string =>
-    rewriteTarget(target, isImage, from, pageNames, SOURCE);
+  const rewrite = (target: string, from = 'docs/architecture.md'): string =>
+    rewriteTarget(target, from, pageNames, SOURCE);
 
   it('keeps a URL and an anchor', () => {
     expect(rewrite('https://example.com')).toBe('https://example.com');
@@ -83,7 +83,7 @@ describe('rewriteTarget', () => {
   });
 
   it('points an image at its raw file', () => {
-    expect(rewrite('shot.webm', true)).toBe(`${RAW}/docs/shot.webm`);
+    expect(rewrite('shot.webm')).toBe(`${RAW}/docs/shot.webm`);
     expect(rewrite('shot.PNG')).toBe(`${RAW}/docs/shot.PNG`);
   });
 
@@ -178,6 +178,7 @@ describe('renderFeatureIndex', () => {
     const documents = [
       { path: 'docs/features/pragma/x/kaizen.md', content: '# X friction' },
       { path: 'docs/features/pragma/x/spec/spec.md', content: '# X spec' },
+      { path: 'docs/features/pragma/y/kaizen.md', content: '# Y friction' },
       { path: 'docs/features/meta/lessons/kaizen.md', content: '# Lessons' },
       { path: 'docs/features/pragma/README.md', content: '# Not a feature' },
       { path: 'docs/flows.md', content: '# Flows' },
@@ -195,6 +196,7 @@ describe('renderFeatureIndex', () => {
         '## pragma',
         '',
         `- [x](${TREE}/docs/features/pragma/x): X spec`,
+        `- [y](${TREE}/docs/features/pragma/y): Y friction`,
         '',
       ].join('\n'),
     );
@@ -205,6 +207,7 @@ describe('buildWiki', () => {
   const documents = [
     { path: 'README.md', content: '# borso.fr\n[arch](docs/architecture.md)' },
     { path: 'docs/architecture.md', content: '# Architecture' },
+    { path: 'CLAUDE.md', content: '# Agents' },
     { path: 'docs/features/pragma/x/spec/spec.md', content: '# X spec' },
   ];
 
@@ -215,10 +218,27 @@ describe('buildWiki', () => {
     expect(byName.get('Knowledge')).toBe(
       '# Knowledge\n\nVendor surprises and reusable lessons. A hook prints the entry that applies.\n',
     );
-    expect(byName.get('_Sidebar')).toContain('- [Architecture](architecture)');
-    expect(byName.get('_Sidebar')).not.toContain('Deploy flows');
-    expect(byName.get('_Sidebar')).toContain('- [Root-cause analyses](Root-cause-analyses)');
-    expect(byName.get('_Sidebar')).toContain('- [Features](Features)');
+    expect(byName.get('_Sidebar')).toBe(
+      [
+        '**[Home](Home)**',
+        '',
+        '**Start here**',
+        '',
+        '- [Architecture](architecture)',
+        '- [Agent instructions](CLAUDE)',
+        '',
+        '**Browse**',
+        '',
+        '- [Apps](Apps)',
+        '- [Code standards](Standards)',
+        '- [Architecture decisions](Architecture-decisions)',
+        '- [Root-cause analyses](Root-cause-analyses)',
+        '- [Knowledge](Knowledge)',
+        '- [Quality](Quality)',
+        '- [Features](Features)',
+        '',
+      ].join('\n'),
+    );
     expect(byName.has('features-pragma-x-spec-spec')).toBe(false);
     expect(byName.get('Features')).toContain(`[x](${TREE}/docs/features/pragma/x): X spec`);
     expect(byName.get('_Footer')).toContain(

@@ -35,7 +35,7 @@ const FENCE = /^\s*(```|~~~)/;
 const INLINE_LINK = /(!?)\[([^\]]*)\]\(([^)\s]+)(\s+"[^"]*")?\)/g;
 const REFERENCE_DEFINITION = /^(\s*\[[^\]]+\]:\s*)(\S+)(.*)$/;
 const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
-const IMAGE_EXTENSION = /\.(png|jpe?g|gif|svg|webp)$/i;
+const RAW_EXTENSION = /\.(png|jpe?g|gif|svg|webp|webm|mp4)$/i;
 const TITLE_LINE = /^# .+$/m;
 const TITLE_MARKER_LENGTH = '# '.length;
 const FEATURES_DIRECTORY = 'docs/features/';
@@ -134,7 +134,6 @@ function resolveTarget(sourcePath: string, target: string): string | null {
 
 export function rewriteTarget(
   target: string,
-  isImage: boolean,
   sourcePath: string,
   pageNames: ReadonlyMap<string, string>,
   source: WikiSource,
@@ -147,7 +146,7 @@ export function rewriteTarget(
   if (resolved === null) return target;
   const pageName = pageNames.get(resolved);
   if (pageName !== undefined) return `${pageName}${anchor}`;
-  const kind = isImage || IMAGE_EXTENSION.test(resolved) ? 'raw' : 'blob';
+  const kind = RAW_EXTENSION.test(resolved) ? 'raw' : 'blob';
   return `https://github.com/${source.repository}/${kind}/${source.commit}/${resolved}${anchor}`;
 }
 
@@ -161,13 +160,13 @@ function rewriteLine(
     return line.replace(
       REFERENCE_DEFINITION,
       (_match: string, label: string, target: string, rest: string) =>
-        `${label}${rewriteTarget(target, false, sourcePath, pageNames, source)}${rest}`,
+        `${label}${rewriteTarget(target, sourcePath, pageNames, source)}${rest}`,
     );
   }
   return line.replaceAll(
     INLINE_LINK,
     (_match: string, bang: string, text: string, target: string, title: string | undefined) =>
-      `${bang}[${text}](${rewriteTarget(target, bang === '!', sourcePath, pageNames, source)}${title ?? ''})`,
+      `${bang}[${text}](${rewriteTarget(target, sourcePath, pageNames, source)}${title ?? ''})`,
   );
 }
 
@@ -205,7 +204,9 @@ export function mapPageNames(documents: readonly SourceDocument[]): ReadonlyMap<
 }
 
 function groupOf(path: string, directory: string): string {
-  return path.slice(directory.length).split('/').slice(0, -1).slice(0, 1).join('');
+  const rest = path.slice(directory.length);
+  const slash = rest.indexOf('/');
+  return slash === -1 ? '' : rest.slice(0, slash);
 }
 
 export function renderFeatureIndex(
