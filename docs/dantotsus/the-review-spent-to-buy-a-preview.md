@@ -84,8 +84,10 @@ The gate moves from the moment the pull request exists to the moment it can
 be merged. A draft opens without a report. The call that marks it ready meets
 the same check. A draft still deploys its preview: `preview.yml` and `ci.yml`
 hold no condition on `draft` (`grep -n draft .github/workflows/*.yml` prints
-nothing). GitHub refuses to merge a draft (its documented behaviour, not tried
-here, because trying it is a merge call).
+nothing). Measured on PR #310, the pull request of this entry, opened as a
+draft at 01:34 UTC: the five `deploy (<app>)` jobs of `preview` and the jobs of
+`ci` had started 15 seconds later. GitHub refuses to merge a draft (its
+documented behaviour, not tried here, because trying it is a merge call).
 
 ## Eradication
 
