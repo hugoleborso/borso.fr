@@ -5,9 +5,9 @@ detected-at: local
 severity: medium
 related-pr: '#298'
 fix-pr: none (the kaizen pull request for PRs #293 and #298 that adds this file)
-fix-commits: none (proposal under review)
-eradication-level: 5
-eradication-paths: []
+fix-commits: [self]
+eradication-level: 2
+eradication-paths: [.claude/hooks/pretool-api-change-needs-validation.sh, .claude/settings.json]
 time-to-detect: hours
 tags: [hooks, harness, validation, preview, gates]
 zone: .claude/hooks/pretool-api-change-needs-validation.sh
@@ -15,8 +15,6 @@ recurs: none (the first entry on the api-validation gate; the-validator-opened-a
 ---
 
 # The review spent to buy a preview
-
-Status: a proposal. The operator chooses the countermeasure, and no code has changed.
 
 ## User impact
 
@@ -82,29 +80,62 @@ on:
 
 ## Countermeasure
 
-Not chosen. The operator decides when an API change may reach a preview, so
-the options are side by side.
+The operator chose, on 2026-11-12, among three options:
 
 | Option | What a session does on work like PR #298 | What it costs |
 | --- | --- | --- |
-| Keep the gate where it is | It opens the pull request only with a report, so it reviews unfinished code or measures another way | A round is spent early again, or the preview stops being the instrument |
-| Ask for the report at the merge | It opens the pull request freely, measures, and runs the review once the work is done | API code reaches a preview before any review. A merge the operator makes in GitHub meets no hook |
-| Let through a pull request whose body says `Preview first: <reason>`, and ask for the report at the merge | The same as above, and the operator reads in the body that no review exists yet | The same, for the pull requests that say so, and two hooks to keep |
+| Keep the gate at the opening | It opens the pull request only with a report, so it reviews unfinished code or measures another way | A round is spent early again, or the preview stops being the instrument |
+| **Ask for the report at the merge (chosen)** | It opens the pull request freely, measures, and runs the review once the work is done | API code reaches a preview before any review. A merge the operator makes in GitHub meets no hook |
+| Let through a pull request whose body says `Preview first: <reason>`, and ask for the report at the merge | The same, and the operator reads in the body that no review exists yet | The same, for the pull requests that say so, and two hooks to keep |
 
 A first version of this entry let a draft pull request open without a report
-and asked for the report when it was marked ready. The operator refused it on
-2026-11-12: a draft is not to deploy its preview. Today it does. PR #310 was a
-draft for one minute, and its five `deploy (<app>)` jobs started 18 seconds
-after it opened (measured on its check runs). `preview.yml` holds no condition
-on `draft`.
+and asked for the report when it was marked ready. The operator refused it: a
+draft is not to deploy its preview. Today it does. PR #310 was a draft for one
+minute, and its five `deploy (<app>)` jobs started 18 seconds after it opened
+(measured on its check runs). `preview.yml` holds no condition on `draft`.
 
 ## Eradication
 
-**Type:** knowledge (level 5), until the operator chooses.
+**Type:** DevX check (level 2)
 
-**Reference:** none yet. The hook is as it was on `main`.
+**Reference:** the commit that adds the merge-time gate to this file's pull
+request, #310.
 
-**Proof it can fail:** none, since nothing was added.
+```diff
+-HEAD_BRANCH="$(jq -r '.tool_input.head // empty' <<<"$INPUT")"
+-if [[ -z "$HEAD_BRANCH" ]]; then
+-  ...
+-  grep -qE '...gh[[:space:]]+pr[[:space:]]+create\b' <<<"$COMMAND" || exit 0
++PULL_REQUEST="$(jq -r '.tool_input.pullNumber // empty' <<<"$INPUT")"
++if [[ -z "$PULL_REQUEST" ]]; then
++  ...
++  grep -qE '...gh[[:space:]]+pr[[:space:]]+merge\b' <<<"$COMMAND" || exit 0
+```
+
+`.claude/settings.json` registers the hook on `mcp__github__merge_pull_request`
+and no longer on `mcp__github__create_pull_request`. A review round can no
+longer be the price of a preview, because opening a pull request asks for
+none.
+
+**Proof it can fail:** on a scratch worktree holding one commit that changes
+`apps/pragma/api/src/main.ts` and no report, the hook was fed each call:
+
+| Call | Exit |
+| --- | --- |
+| `merge_pull_request` with a number GitHub does not know, so the checkout's HEAD is read | 2 |
+| `gh pr merge --squash` | 2 |
+| `create_pull_request` | 0 |
+| `gh pr create` | 0 |
+| a commit message that mentions `gh pr merge` | 0 |
+| `merge_pull_request` of #310, whose own head changes no API file | 0 |
+| `merge_pull_request`, after a report is committed | 0 |
+| `gh pr merge --squash`, after a report is committed | 0 |
+
+The sixth row shows the hook reads the pull request's head and not the
+checkout, which held the unreviewed API change at that moment. The refusal
+reads: "this pull request changes 1 file(s) under apps/*/api/ and its branch
+commits no technical-validation report. Run /technical-validation, commit its
+report under docs/features/<app>/<slug>/validation/, push, then merge."
 
 **Similar instances:** `.claude/settings.json` registers two other hooks on
 `mcp__github__create_pull_request`. `pretool-one-pull-request-per-session.sh`
