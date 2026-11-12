@@ -25,6 +25,7 @@ const sentry = vi.hoisted(() => ({
   updateSpanName: vi.fn(),
   getActiveSpan: vi.fn((): typeof requestSpan | undefined => requestSpan),
   setHttpStatus: vi.fn(),
+  postgresJsIntegration: vi.fn(() => ({ name: 'PostgresJs' })),
 }));
 
 vi.mock('@sentry/aws-serverless', () => sentry);
@@ -63,6 +64,8 @@ describe('startErrorReporting', () => {
         databaseQueryData: false,
         stackFrameVariables: false,
       },
+      enableRuntimeChannelInjection: false,
+      integrations: [{ name: 'PostgresJs' }],
     });
   });
 
