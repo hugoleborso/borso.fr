@@ -1,9 +1,6 @@
 const MESSAGE =
-  'No comment in this repository. A comment is a smell of badly written code: replace it with a ' +
-  'clearer name, failing that with better organisation — an extracted helper, a named constant, a ' +
-  'type, a test — and only as a last resort with a document under `docs/`. A comment recording how ' +
-  'the code changed over time belongs in `docs/dantotsus/` or `docs/knowledge/`, never beside the ' +
-  'line. See docs/standards/12-linting-and-gates.md.';
+  'No comment here. Say it with a name, a helper, a constant, a type or a test. ' +
+  'See docs/standards/00-principles.md.';
 
 const TAG_LINE_PATTERNS = [
   /^@Blueprint(Name|Usage|Description)?\s/,

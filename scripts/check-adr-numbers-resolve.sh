@@ -70,9 +70,9 @@ index_text="$(cat "$INDEX")"
 for record in docs/adr/[0-9]*.md; do
   [ -f "$record" ] || continue
   filename="${record##*/}"
-  if [[ "$index_text" != *"](./${filename})"* ]]; then
+  if [[ "$index_text" != *"| [${filename:0:15}](./${filename}) |"* ]]; then
     failed=1
-    echo "[check-adr-numbers-resolve] $record is in no row of the index" >&2
+    echo "[check-adr-numbers-resolve] $record is in no row of the index table, which is where its status is read" >&2
   fi
 done
 

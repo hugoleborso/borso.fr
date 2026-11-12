@@ -146,7 +146,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 
 ## Procedure
 
-1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first.
+1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first. The branch may move while you review. Keep reviewing the SHA you recorded, from `git show <sha>:<path>` or a `git archive` export for a test run, and say so in the preamble.
 2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding. When a merge of `main` sits above the base, the file list is the one the test bullet of category C gives.
 3. **Walk category A** — correctness vs spec. One row per Q.O.D. user-visible decision + one row per Files-to-change entry. Quote 2–4 lines of evidence per row.
 4. **Walk category B** — code cleanliness. Run lint, search for forbidden patterns, sample 3–5 representative names from the changed code, then read each changed source file in full against the standards checklist.
@@ -154,7 +154,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 6. **Walk category D** — test coverage of spec. Per use case, find a covering test. If none exists, the row is FAIL.
 7. **Walk category E** — scale. Every write path, every module-level state, every concurrent test, per the steps above.
 8. **Check every FAIL row for its failing case and its type.** Move any row that has no failing case to Notes as an open question.
-9. **Write the report.** Markdown at `report_path`, format below.
+9. **Write the report.** Markdown at `report_path`, format below. Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step before you return. The main session works beside you and commits what it finds at that path: on PR #298 a first version written early was committed with a placeholder cell.
 10. **Log your friction.** Anything that cost you time and is not a finding about the code — a gate that failed for an unrelated reason, a command that had to be run from a directory you had to discover, a convention two documents disagreed on — goes to the task's friction log, one line each, as you hit it:
 
    ```bash

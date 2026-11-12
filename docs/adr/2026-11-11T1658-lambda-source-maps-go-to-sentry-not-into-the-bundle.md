@@ -1,6 +1,6 @@
 # ADR-2026-11-11T1658: Lambda source maps go to Sentry, not into the bundle
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-11
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma-cold-start, cdk, observability

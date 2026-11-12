@@ -168,8 +168,7 @@ numbers rather than an impression:
 
 ```sh
 # how many of the last hundred commits it would run on
-git log --oneline -100 --name-only --pretty=format:%h -- '<its scope>' \
-  | grep -c '^[0-9a-f]\{7,\}$'
+git log --pretty=format:%h HEAD~100..HEAD -- '<its scope>' | grep -c .
 
 # how many commits ever touched what it guards
 git log --oneline -- '<the files it guards>' | wc -l

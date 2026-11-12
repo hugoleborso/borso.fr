@@ -77,7 +77,7 @@ decision.
 - [`knip-does-not-follow-a-stryker-vitest-config.md`](./knip-does-not-follow-a-stryker-vitest-config.md) — knip's Stryker plugin resolves package names and never follows `vitest.configFile`, so the config it points at reads as unreferenced.
 - [`stryker-imports-typescript-without-declaring-it.md`](./stryker-imports-typescript-without-declaring-it.md) — Stryker imports `typescript` without declaring it to rewrite a tsconfig; with TypeScript 7 that fails, so `stryker.shared.js` points `tsconfigFile` at a file that does not exist.
 - [`apigw-http-api-has-no-response-streaming.md`](./apigw-http-api-has-no-response-streaming.md) — an HTTP API buffers the whole response, so `streamifyResponse` does nothing behind `LambdaApi`; streaming needs a Function URL with `RESPONSE_STREAM`, which is an ADR.
-- [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
+- [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing. _2026-11-12_: the site host answers an API path 200 with the app (measured), and the entry now prints on a `curl` of that host.
 - [`cdk-route53-zone-token-pitfall.md`](./cdk-route53-zone-token-pitfall.md) — `ARecord(recordName: '<host>')` doubles the zone suffix when `zoneName` is a CFN token (resolves at deploy time, fails the literal-string suffix check). Trailing-dot the `recordName` to short-circuit.
 
 ### CDK / S3
@@ -179,6 +179,7 @@ decision.
 - [`eslint-rule-tester-needs-vitest-globals.md`](./eslint-rule-tester-needs-vitest-globals.md) — Vitest installs no test globals without `globals: true`, so a `RuleTester` suite registers zero cases and passes vacuously; plus why an `eslint-disable` valid case fails as an unused directive.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 - [`lambda-esm-native-modules.md`](./lambda-esm-native-modules.md) — ESM-bundled Lambdas crash at cold start on `__dirname is not defined`; the shared banner restores `require`, `__filename`, `__dirname`, and prefer pure-WASM (`hash-wasm`) over native modules (`argon2`, `bcrypt`).
+- [`measuring-a-lambda-cold-start-on-a-preview.md`](./measuring-a-lambda-cold-start-on-a-preview.md) — a cold start read from Lambda logs: init is bimodal across hosts (about 700 or 990 ms in one burst), a preview's log group dies with its stack, Hono logs a slow request in seconds, `sorted[n//2]` is not the median, and a preview runs no Sentry.
 ### Validation tooling
 
 - [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md) — stills have no speed in them, `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP instead.

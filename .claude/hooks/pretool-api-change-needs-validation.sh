@@ -44,6 +44,8 @@ grep -qE '^docs/features/[^/]+/[^/]+/validation/technical-validation-[^/]+\.md$'
 {
   echo "[api-validation] this branch changes $(wc -l <<<"$API_FILES" | tr -d ' ') file(s) under apps/*/api/ and commits no technical-validation report."
   echo "[api-validation] Run /technical-validation, commit its report under docs/features/<app>/<slug>/validation/, then open the pull request."
+  echo "[api-validation] Run it on finished work. A branch gets two rounds, and a round run on unfinished code to get past this gate is spent: PR #298 merged on a FAIL verdict that way."
+  echo "[api-validation] If the work needs its preview before it is finished, ask the operator."
   echo "[api-validation] First files: $(head -3 <<<"$API_FILES" | tr '\n' ' ')"
 } >&2
 "$(dirname "$0")/kaizen-refusal.sh" api-validation "opened a pull request changing an API without a technical-validation report"

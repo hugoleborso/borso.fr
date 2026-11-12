@@ -241,6 +241,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-local-storage',
+      icon: '💾',
+      name: 'localStorage',
+      technology: 'Browser storage API',
+      description:
+        'Holds which todo list the owner last chose, so the Todo tab opens on it again. Never holds an authorisation.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-vibration',
       icon: '📳',
       name: 'Vibration',
