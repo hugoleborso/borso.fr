@@ -30,11 +30,8 @@ Agent({
   subagent_type: "technical-validator",
   description: "Technical validation against spec + plan",
   prompt: <self-contained brief — see template.md>,
-  run_in_background: false,
 })
 ```
-
-`run_in_background: false` is required, and `pretool-validator-runs-in-the-foreground.sh` refuses the call without it. The review reads the branch at one commit, so nothing is committed until it hands back.
 
 ## When to invoke
 
@@ -64,7 +61,7 @@ Do **not** invoke when:
    `mkdir -p` the validation directory.
 6. **Pick the round.** Round 1 when no earlier `technical-validation-*.md` report of this branch sits in `validation_dir`; round 2 otherwise, with `previous_report` set to it. There is no round 3.
 7. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and `previous_report` on round 2. Round 1 reviews the whole branch; round 2 reviews only the commits after round 1's `Reviewed:` SHA, plus each round-1 blocking finding.
-8. **Read the report's verdict and its two finding lists**, not the tables. On **FAIL**, triage the blocking findings below; do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, carry the UNVERIFIABLE rows to the PR description per the disclosure rule.
+8. **Read the report's verdict and its two finding lists**, not the tables, once the agent has handed back. A file at `report_path` before that is a draft: on PR #298 one was committed with a placeholder cell. On **FAIL**, triage the blocking findings below; do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, carry the UNVERIFIABLE rows to the PR description per the disclosure rule.
 9. **Stage the report for commit.** It lives under `docs/features/<app>/<slug>/validation/` alongside any visual-validation report from the same feature.
 
 ## Findings and rounds
@@ -72,7 +69,7 @@ Do **not** invoke when:
 The implementer takes each finding, blocking or not, and does one of three things:
 
 - **fix** it;
-- **dismiss** it with a concrete reason, written in a commit message, where round 2 reads it (`B07 dismissed: the name is the one VOCABULARY.md uses`);
+- **dismiss** it with a concrete reason, written in a commit message, where round 2 reads it, because the pull request opens after validation (`B07 dismissed: the name is the one VOCABULARY.md uses`);
 - **ask the operator**, only when it is a product call.
 
 Be skeptical: a reviewer that read the diff cold is often wrong about intent. Non-blocking findings never start a round; list them in the pull request.

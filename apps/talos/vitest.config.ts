@@ -7,8 +7,6 @@ const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
-const CLOCK_AT_THE_PARIS_DAY_BOUNDARY = ['../../scripts/vitest-clock-at-the-paris-day-boundary.js'];
-
 const workspaceAliases = {
   '@site': fromHere('./site/src'),
   '@api': fromHere('./api/src'),
@@ -51,7 +49,6 @@ export default defineConfig({
             'site/src/**/*.test.{ts,tsx}',
           ],
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
-          setupFiles: CLOCK_AT_THE_PARIS_DAY_BOUNDARY,
           sequence: { groupOrder: 0 },
           testTimeout: 60_000,
         },
@@ -69,7 +66,6 @@ export default defineConfig({
             'api/src/**/*.schema.test.ts',
           ],
           globalSetup: ['./test/setup-postgres.ts'],
-          setupFiles: CLOCK_AT_THE_PARIS_DAY_BOUNDARY,
           pool: 'forks',
           maxWorkers: 1,
           fileParallelism: false,

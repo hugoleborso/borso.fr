@@ -89,15 +89,6 @@
         ]
       },
       {
-        "matcher": "Agent|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-validator-runs-in-the-foreground.sh"
-          }
-        ]
-      },
-      {
         "matcher": "Skill",
         "hooks": [
           {
@@ -122,16 +113,16 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-merge-strands-no-work.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-api-change-needs-validation.sh"
           }
         ]
       },
       {
         "matcher": "mcp__github__create_pull_request",
         "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-api-change-needs-validation.sh"
+          },
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-one-pull-request-per-session.sh"

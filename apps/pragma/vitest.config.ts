@@ -24,11 +24,8 @@ const ASSISTANT_TEST_FILES = [
   'api/src/**/*-tools.controller.test.ts',
 ];
 
-const CLOCK_AT_THE_PARIS_DAY_BOUNDARY = ['../../scripts/vitest-clock-at-the-paris-day-boundary.js'];
-
 const databaseSuite = {
   globalSetup: ['./test/setup-postgres.ts'],
-  setupFiles: CLOCK_AT_THE_PARIS_DAY_BOUNDARY,
   pool: 'forks' as const,
   maxWorkers: 1,
   fileParallelism: false,
@@ -91,7 +88,6 @@ export default defineConfig({
             'scripts/**/*.adapter.test.ts',
           ],
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
-          setupFiles: CLOCK_AT_THE_PARIS_DAY_BOUNDARY,
           sequence: { groupOrder: 0 },
           testTimeout: 60_000,
         },

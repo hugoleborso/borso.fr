@@ -6,8 +6,8 @@ severity: medium
 related-pr: '#298'
 fix-pr: none (the kaizen pull request for PRs #293 and #298 that adds this file)
 fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-validator-runs-in-the-foreground.sh, .claude/settings.json]
+eradication-level: 5
+eradication-paths: [.claude/agents/technical-validator.md, .claude/skills/technical-validation/SKILL.md]
 time-to-detect: minutes
 tags: [harness, hooks, validation, agents, process]
 zone: .claude/skills/technical-validation/SKILL.md
@@ -41,30 +41,23 @@ The record of PR #298's second review holds a draft. Read on `main`, under
         00:05 UTC.
       - The main session was free to read and commit during the review. It
         made four commits between 23:51 and 00:03 UTC.
-        - The validator ran in the background. The skill's dispatch did not
-          say otherwise, and the Agent tool's default is the background:
+        - The validator ran in the background, as the operator wants it to.
+        - The validator's procedure said where to write, and not when:
 
 ```
-Agent({
-  subagent_type: "technical-validator",
-  description: "Technical validation against spec + plan",
-  prompt: <self-contained brief — see template.md>,
-})
+9. **Write the report.** Markdown at `report_path`, format below.
 ```
 
 ## Root cause of occurrence
 
 *Thought the report file is the validator's answer, so it can be read as soon
-as it holds a verdict. Actually the answer is the handback, the file is a
-working copy until then, and a dispatched agent runs beside the main session
-unless the call says otherwise.*
+as it holds a verdict. Actually the answer is the handback, and the validator
+used the file as its working copy until then.*
 
 The Agent tool's description, as this session holds it: "Subagents run in the
-background by default; you'll be notified when one completes. Pass
-`run_in_background: false` only when your very next action depends on this
-agent's result and nothing else could usefully happen while it runs".
-A review is that case. Its round 2 reads "only the commits after round 1's
-`Reviewed:` SHA", so a commit made during round 2 is read by no round.
+background by default; you'll be notified when one completes." The handback is
+that notification. The skill's step 8 said "Read the report's verdict", with no
+word on when.
 
 ## Detection failure causes
 
@@ -72,7 +65,7 @@ A review is that case. Its round 2 reads "only the commits after round 1's
   the day it is committed. It cannot tell a draft from a verdict, so it locked
   the draft in.
 - **Review:** the validator saw the branch move and said so in its report. It
-  has no way to stop the main session.
+  cannot stop the main session, and should not.
 - **Earlier sweeps:** the branch moved under a review on PR #238 and PR #278.
   Both sweeps wrote `no-op`, because the commit was a `.gitignore` line or a
   document. On PR #278 an implementer's verdict was also committed holding
@@ -80,54 +73,40 @@ A review is that case. Its round 2 reads "only the commits after round 1's
 
 ## Countermeasure
 
-`/technical-validation` and `/visual-validation` dispatch their agent with
-`run_in_background: false`. The main session then waits for the handback. It
-cannot commit under the review, and the file it reads is the one returned.
+The validator drafts in its scratchpad and copies the report to `report_path`
+once, complete, as its last step. A file at that path is then always the
+report. The skill tells the main session to read it after the handback.
+
+A first version of this entry ran the validator in the foreground, with a hook
+that refused a background dispatch. The operator refused it on 2026-11-12: the
+main session must stay free while a review runs.
 
 ## Eradication
 
-**Type:** DevX check (level 2)
+**Type:** knowledge (level 5). Two instructions, each at the step where the
+mistake was made. No check can tell a draft from a report, and the stronger
+mechanism, a blocked main session, is refused.
 
-**Reference:** the commit that adds this file.
+**Reference:** the commit that adds this file's final text to pull request #310.
 
 ```diff
-+AGENT="$(jq -r '.tool_input.subagent_type // ""' <<<"$INPUT")"
-+case "$AGENT" in
-+  technical-validator | visual-validator) ;;
-+  *) exit 0 ;;
-+esac
-+
-+BACKGROUND="$(jq -r '.tool_input.run_in_background | if . == null then "unset" else tostring end' <<<"$INPUT")"
-+[[ "$BACKGROUND" == "false" ]] && exit 0
+-9. **Write the report.** Markdown at `report_path`, format below.
++9. **Write the report.** Markdown at `report_path`, format below. Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step before you return. [...]
 ```
 
-The hook is registered on the Agent tool in `.claude/settings.json`. The
-visual validator is included because it drives the dev server of the working
-tree, and on PR #107 the main session was asked to commit screenshots it was
-still writing.
+```diff
+-8. **Read the report's verdict and its two finding lists**, not the tables.
++8. **Read the report's verdict and its two finding lists**, not the tables, once the agent has handed back. A file at `report_path` before that is a draft [...]
+```
 
-**Proof it can fail:** the hook was fed each dispatch.
+The validator's first step also says what to do when the branch moves under
+it: keep reviewing the commit it recorded, from `git show` or a `git archive`
+export, which is what the validator of PR #298 worked out by itself.
 
-| `subagent_type` | `run_in_background` | Exit |
-| --- | --- | --- |
-| `technical-validator` | unset | 2 |
-| `technical-validator` | `true` | 2 |
-| `technical-validator` | `false` | 0 |
-| `visual-validator` | unset | 2 |
-| `visual-validator` | `false` | 0 |
-| `Explore` | unset | 0 |
-| none | unset | 0 |
+**Proof it can fail:** none. An instruction has no refusal to show.
 
-The refusal reads: "this dispatch runs the technical-validator in the
-background (run_in_background: unset). [...] Send the same call with
-run_in_background: false, and commit nothing until it hands back."
-
-The field names are the ones this session's Agent tool declares. The hook did
-not fire live here, because a session reads its hooks when it starts.
-
-**Similar instances:** `grep -rn "subagent_type" .claude/skills .claude/commands`
-finds the two validation skills and their two brief templates, all four
-changed here. `/feature-pipeline` spawns its validators from a workflow
-script with `agent(brief, { agentType: 'technical-validator' })`, which is not
-the Agent tool, so this hook does not see it. Whether the main session works
-beside a workflow was not tested.
+**Similar instances:** the branch also moved under a review on PR #238 and
+PR #278. On PR #107 the main session was asked to commit screenshots the
+visual validator was still writing. `visual-validator.md` is not changed: its
+evidence folder fills as it goes by design, and no draft of its report has
+been committed.

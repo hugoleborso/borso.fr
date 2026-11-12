@@ -29,7 +29,7 @@ You receive nothing else. No implementation summary. No "this should work becaus
 A branch gets two rounds at most.
 
 - **Round 1** reviews the whole diff `<base_ref>...HEAD` against the spec and the plan.
-- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. A round-1 finding, blocking or not, that a commit message after `<reviewed-sha>` dismisses gets a row too (`git log <reviewed-sha>..HEAD --format=%B`; a pull request may not exist yet, so its body is not where a dismissal is read): run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not. PR #247 dismissed B15 on the claim that a pure module cannot import the API client type, and one `grep` found a pure module that did. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read. When the fix commits also carry new scope, such as the same change rolled out to more apps as on PR #290, walk categories A and D for each file round 1 never read, as round 1 would, and say so in the preamble.
+- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, where `<reviewed-sha>` is the `Reviewed:` line of `previous_report`, and re-checks each blocking finding of that report: one row per finding, PASS when it is fixed, FAIL (blocking) when it is not. A round-1 finding, blocking or not, that a commit message after `<reviewed-sha>` dismisses gets a row too (`git log <reviewed-sha>..HEAD --format=%B`; the pull request opens after validation, so it holds none): run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not. PR #247 dismissed B15 on the claim that a pure module cannot import the API client type, and one `grep` found a pure module that did. Do not walk files the fix did not touch, and do not raise non-blocking findings on code round 1 already read. When the fix commits also carry new scope, such as the same change rolled out to more apps as on PR #290, walk categories A and D for each file round 1 never read, as round 1 would, and say so in the preamble.
 
 Before reading anything, record `git rev-parse HEAD`. It goes in the report as `Reviewed: <sha>`, and it is what the next round diffs from.
 
@@ -146,7 +146,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 
 ## Procedure
 
-1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first.
+1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first. The branch may move while you review. Keep reviewing the SHA you recorded, from `git show <sha>:<path>` or a `git archive` export for a test run, and say so in the preamble.
 2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding. When a merge of `main` sits above the base, the file list is the one the test bullet of category C gives.
 3. **Walk category A** — correctness vs spec. One row per Q.O.D. user-visible decision + one row per Files-to-change entry. Quote 2–4 lines of evidence per row.
 4. **Walk category B** — code cleanliness. Run lint, search for forbidden patterns, sample 3–5 representative names from the changed code, then read each changed source file in full against the standards checklist.
@@ -154,7 +154,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 6. **Walk category D** — test coverage of spec. Per use case, find a covering test. If none exists, the row is FAIL.
 7. **Walk category E** — scale. Every write path, every module-level state, every concurrent test, per the steps above.
 8. **Check every FAIL row for its failing case and its type.** Move any row that has no failing case to Notes as an open question.
-9. **Write the report.** Markdown at `report_path`, format below.
+9. **Write the report.** Markdown at `report_path`, format below. Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step before you return. The main session works beside you and commits what it finds at that path: on PR #298 a first version written early was committed with a placeholder cell.
 10. **Log your friction.** Anything that cost you time and is not a finding about the code — a gate that failed for an unrelated reason, a command that had to be run from a directory you had to discover, a convention two documents disagreed on — goes to the task's friction log, one line each, as you hit it:
 
    ```bash
