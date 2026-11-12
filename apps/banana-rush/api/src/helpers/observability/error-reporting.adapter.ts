@@ -5,6 +5,7 @@
 import type { ErrorReportingSettings } from '@domain/error-reporting.core';
 import * as Sentry from '@sentry/aws-serverless';
 import { isGameError } from '../errors/game-error.types';
+import { redactDatabaseSpan } from './database-span.core';
 
 const REQUEST_SPAN_OPERATION = 'http.server';
 
@@ -50,6 +51,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     dataCollection: PRIVATE_DATA_COLLECTION,
     enableRuntimeChannelInjection: false,
     integrations: [Sentry.postgresJsIntegration()],
+    beforeSendSpan: redactDatabaseSpan,
   });
 }
 

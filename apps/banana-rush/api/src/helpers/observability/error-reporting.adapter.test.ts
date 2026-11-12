@@ -8,6 +8,7 @@ import {
   startErrorReporting,
   traceIncomingRequest,
 } from './error-reporting.adapter';
+import { redactDatabaseSpan } from './database-span.core';
 
 const requestSpan = vi.hoisted(() => ({
   setAttribute: vi.fn(),
@@ -47,7 +48,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('traces under the release with every personal data category off and no trace header sent outward', () => {
+  it('traces under the release with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
     startErrorReporting({
       dsn: DSN,
       environment: 'preview',
@@ -73,6 +74,7 @@ describe('startErrorReporting', () => {
       },
       enableRuntimeChannelInjection: false,
       integrations: [{ name: 'PostgresJs' }],
+      beforeSendSpan: redactDatabaseSpan,
     });
   });
 
