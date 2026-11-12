@@ -4,6 +4,7 @@ import { testSeedRouter } from './__test/test-seed.controller';
 import { authRouter } from './auth/auth.controller';
 import { adminEditionRouter, editionRouter } from './edition/edition.controller';
 import { traceRequests } from './helpers/observability/request-tracing.middleware';
+import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { mediaRouter } from './media/media.controller';
 import { adminPunchRouter } from './punch/punch.controller';
@@ -20,6 +21,7 @@ function buildAppRouter() {
     .use('*', traceRequests)
     .use('*', recordWideEvents)
     .use('*', cors())
+    .onError(answerUnhandledError)
     .get('/api/health', (context) => context.json({ ok: true }))
     .route('/api/editions', editionRouter)
     .route('/api', runnerRouter)

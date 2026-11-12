@@ -128,11 +128,12 @@
         "src/internal/cf-host-routing-function.code.js",
         "src/internal/cf-static-site-index-rewrite.code.js",
         "src/internal/cf-api-viewer-address.code.js",
+        "src/internal/handler-bundler.mjs",
         "test/**/*.test.ts",
         "test/unit/fixtures/handler.ts",
+        "test/unit/fixtures/postgres-handler.ts",
         "vitest.mutation.config.ts"
-      ],
-      "ignoreDependencies": ["esbuild"]
+      ]
     },
     "infra/shared": {
       "entry": ["bin/shared.ts", "test/unit/**/*.test.ts"],

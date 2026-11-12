@@ -415,6 +415,12 @@ jobs:
           else
             note="Updated from <code>${HEAD_SHA::7}</code>"
           fi
+          # The comment is where a reader checks a preview, so it says when
+          # Sentry is off. See
+          # docs/dantotsus/the-preview-that-could-not-prove-tracing.md.
+          if [ -z "$VITE_SENTRY_DSN" ]; then
+            note="$note · Sentry off, so no error or trace from this preview reaches Sentry"
+          fi
           echo "note=$note · <a href=\"$RUN_URL\">build log</a>" >> "$GITHUB_OUTPUT"
       - uses: marocchino/sticky-pull-request-comment@v3
         with:

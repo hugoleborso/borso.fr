@@ -16,6 +16,7 @@ catalog:
   '@sentry/aws-serverless': '^11.6.0'
   '@sentry/cli': '^2.58.6'
   '@sentry/react': '^11.6.0'
+  '@sentry/server-utils': '^11.6.0'
   '@sentry/vite-plugin': '^5.4.1'
   '@simplewebauthn/browser': '13'
   '@simplewebauthn/server': '13'

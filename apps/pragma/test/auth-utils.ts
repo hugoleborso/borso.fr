@@ -108,8 +108,6 @@ export interface AuthenticatedApp {
   readonly memberId: string;
 }
 
-let credentialCounter = 0;
-
 const HMAC_KEY_BYTES = 32;
 const FIRST_SESSION_EPOCH = 1;
 
@@ -142,8 +140,7 @@ export async function buildAuthenticatedApp(firstName = 'Tester'): Promise<Authe
   const now = new Date();
   await ensureSharedPasswordConfigured(now);
   const memberId = await createMemberDirectly(app, firstName);
-  credentialCounter += 1;
-  const username = `${TEST_USERNAME}${String(credentialCounter)}`;
+  const username = `${TEST_USERNAME}-${memberId}`;
   await enrolMemberWithTestPassword(memberId, username, now);
   const session = await issueSessionForMember(memberId, now);
   if (session === null) throw new Error('issuing a session for the test member failed');
