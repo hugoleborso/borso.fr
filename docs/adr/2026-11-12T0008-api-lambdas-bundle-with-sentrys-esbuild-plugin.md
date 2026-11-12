@@ -1,6 +1,6 @@
 # ADR-2026-11-12T0008: API Lambdas bundle with Sentry's esbuild plugin
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-12
 - **Deciders:** Hugo Borsoni
 - **Tags:** lessons-from-pr-295, cdk, observability

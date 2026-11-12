@@ -8,6 +8,8 @@ triggers:
     - 'vnd\.sentry\.items\.span\.v2'
     - 'postgresJsIntegration'
     - 'Failed to register diagnostics-channel injection hooks'
+    - 'orchestrion:postgres'
+    - 'StreamedSpanJSON'
 ---
 
 # Sentry 11 tracing is not what Sentry 8 tracing was
@@ -75,3 +77,16 @@ removes both attributes and names the span after `db.operation.name`, such as
 
 Only prod has a DSN, so prod is the only place to check a change to this,
 with the same `span.op:db*` query after a deploy.
+
+## Two traps when proving or typing it
+
+- **A channel name in an app bundle proves nothing.** `postgresJsIntegration`
+  itself holds the `orchestrion:postgres:*` channel names it subscribes to, so
+  an app bundle that imports it contains them with or without the plugin
+  (measured by PR #302's implementer). Prove the rewrite on a bundle that
+  imports `postgres` and not Sentry, as
+  `infra/cdk/test/unit/fixtures/postgres-handler.ts` does.
+- **`StreamedSpanJSON` is not exported** from `@sentry/aws-serverless` 11.
+  Type a `beforeSendSpan` callback through the init options instead:
+  `Parameters<NonNullable<NonNullable<Parameters<typeof init>[0]>['beforeSendSpan']>>[0]`,
+  as each app's `database-span.core.ts` does.

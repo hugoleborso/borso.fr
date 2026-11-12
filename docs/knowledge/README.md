@@ -262,7 +262,7 @@ decision.
 - [`reading-another-sessions-transcript-with-list-events.md`](./reading-another-sessions-transcript-with-list-events.md) — `get_session` answers what a session cost in one call; `list_events` pages land inline and a hook-heavy session is thousands of them.
 - [`the-service-worker-grows-by-importscripts.md`](./the-service-worker-grows-by-importscripts.md) — Pragma's `sw.js` is at the line cap; split it with `importScripts` and register the file in the test harness.
 - [`sentry-search-tools-rewrite-the-query-before-sentry-sees-it.md`](./sentry-search-tools-rewrite-the-query-before-sentry-sees-it.md) — `search_issues` and `search_errors` run an agent over `query` first, which sometimes rewrites a bare tag value into a project filter and returns `400 Project(s) X do not exist`; quote every tag value, and read a 400 as a missing measurement, never a zero.
-- [`sentry-11-tracing-is-not-what-sentry-8-tracing-was.md`](./sentry-11-tracing-is-not-what-sentry-8-tracing-was.md) — Sentry 11 sends browser spans as span v2 envelope items, and a bundled Lambda sends database spans only with `postgresJsIntegration()` listed and Sentry's esbuild plugin in the bundle (measured).
+- [`sentry-11-tracing-is-not-what-sentry-8-tracing-was.md`](./sentry-11-tracing-is-not-what-sentry-8-tracing-was.md) — Sentry 11 sends browser spans as span v2 envelope items, and a bundled Lambda sends database spans only with `postgresJsIntegration()` listed and Sentry's esbuild plugin in the bundle (measured); a channel name in an app bundle proves no rewrite, and `StreamedSpanJSON` is typed through `init`'s options.
 
 ## Adding a new entry
 
