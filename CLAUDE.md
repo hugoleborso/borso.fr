@@ -66,10 +66,10 @@ They cover replies, documents, commits and PR bodies.
 - Write short declarative sentences, one thought each.
 - Use no long-dash character. Never join two halves of a sentence with a colon. A colon before a list is fine.
 - Terse is not an excuse to drop content. Details, tradeoffs, choices and open decisions stay.
-- Lead with impact. Say who the work is for and what changes for them, then what the next maintainer inherits.
+- Lead with impact. Say who the work is for and what changes for them, then what the next maintainer inherits. Name each change by what it does, never by a number or label from your own working list.
 - Every claim carries its evidence or its label in the same sentence, as measured, inferred or guess. Never hand the reader a check you could run.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
-- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation.
+- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push.
 - Do not narrate what is done. Report the result and what is left.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.
 
