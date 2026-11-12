@@ -76,6 +76,7 @@ describe('startErrorReporting', () => {
       maxBreadcrumbs: 0,
       tracesSampleRate: 1,
       tracePropagationTargets: [],
+      enableRuntimeChannelInjection: false,
       integrations: selectTracedIntegrations,
       beforeSend: withoutPrivateContent,
     });
@@ -89,11 +90,21 @@ describe('startErrorReporting', () => {
 });
 
 describe('selectTracedIntegrations', () => {
-  it('drops the database spans that would carry SQL text and records no outgoing fetch', () => {
+  it('installs no database integration over the SDK defaults, so no span carries SQL text', async () => {
+    const { getDefaultIntegrations } =
+      await vi.importActual<typeof import('@sentry/aws-serverless')>('@sentry/aws-serverless');
+
+    const names = selectTracedIntegrations(getDefaultIntegrations({})).map(
+      (integration) => integration.name,
+    );
+
+    expect(names).not.toContain('Postgres');
+    expect(names).not.toContain('PostgresJs');
+  });
+
+  it('replaces the default fetch integration with one that records no outgoing fetch', () => {
     const integrations = selectTracedIntegrations([
       { name: 'Http' },
-      { name: 'Postgres' },
-      { name: 'PostgresJs' },
       { name: 'NodeFetch' },
       { name: 'Aws' },
     ]);

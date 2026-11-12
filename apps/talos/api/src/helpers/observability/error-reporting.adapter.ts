@@ -15,11 +15,7 @@ const REQUEST_SPAN_OPERATION = 'http.server';
 
 const OUTGOING_TRACE_PROPAGATION_TARGETS: string[] = [];
 
-const UNTRACED_INTEGRATION_NAMES: ReadonlySet<string> = new Set([
-  'Postgres',
-  'PostgresJs',
-  'NodeFetch',
-]);
+const UNTRACED_INTEGRATION_NAMES: ReadonlySet<string> = new Set(['NodeFetch']);
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 
@@ -81,6 +77,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     maxBreadcrumbs: NO_BREADCRUMBS,
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
+    enableRuntimeChannelInjection: false,
     integrations: selectTracedIntegrations,
     beforeSend: withoutPrivateContent,
   });
