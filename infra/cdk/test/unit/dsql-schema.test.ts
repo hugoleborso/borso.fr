@@ -220,7 +220,7 @@ describe('DsqlSchema', () => {
       cluster,
     });
     const handler = new LambdaFunction(stack, 'Reader', {
-      runtime: Runtime.NODEJS_22_X,
+      runtime: Runtime.NODEJS_24_X,
       handler: 'index.handler',
       code: Code.fromInline('exports.handler = async () => {};'),
     });
@@ -334,7 +334,7 @@ function synthWithGrantedFunction(): { template: Template } {
     cluster,
   });
   const handler = new LambdaFunction(stack, 'Api', {
-    runtime: Runtime.NODEJS_22_X,
+    runtime: Runtime.NODEJS_24_X,
     handler: 'index.handler',
     code: Code.fromInline('export const handler = () => {};'),
   });

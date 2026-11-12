@@ -6,7 +6,7 @@ import { isObject, resourcesOfType, synthTemplate as synth } from './helpers/tem
 
 function makeLambda(stack: Stack, id: string): LambdaFunction {
   return new LambdaFunction(stack, id, {
-    runtime: Runtime.NODEJS_22_X,
+    runtime: Runtime.NODEJS_24_X,
     handler: 'index.handler',
     code: Code.fromInline('exports.handler = async () => ({ ok: true });'),
   });

@@ -75,7 +75,7 @@ describe('LambdaApi', () => {
     tpl.resourceCountIs('AWS::Lambda::Function', 1);
     tpl.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'test-app-prod-api',
-      Runtime: 'nodejs22.x',
+      Runtime: 'nodejs24.x',
       Handler: 'index.handler',
       Architectures: ['arm64'],
       ReservedConcurrentExecutions: 10,

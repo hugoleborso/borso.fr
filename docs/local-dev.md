@@ -4,7 +4,7 @@
 
 | Need | Why |
 | --- | --- |
-| Node 22 (`.nvmrc`) | Lambda runtime parity. |
+| Node 24 (`.nvmrc`) | Lambda runtime parity. |
 | pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work. |
 | `jq` | Required by the Claude Code hooks. Almost always already installed. |
 | Docker | Only needed if an app uses local Postgres (none do today). |

@@ -11,7 +11,7 @@ later commits).
 
 ## Setup
 
-Requires Node 22 and pnpm 10. With [corepack](https://nodejs.org/api/corepack.html)
+Requires Node 24 and pnpm 10. With [corepack](https://nodejs.org/api/corepack.html)
 enabled, the right pnpm version is picked up automatically from the
 `packageManager` field.
 

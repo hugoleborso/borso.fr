@@ -65,7 +65,7 @@ describe('WebSocketChannel (prod)', () => {
   it('gives the handler its own callback URL and the standard defaults', () => {
     tpl.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'test-app-prod-websocket',
-      Runtime: 'nodejs22.x',
+      Runtime: 'nodejs24.x',
       Architectures: ['arm64'],
       MemorySize: 512,
       Timeout: 10,

@@ -14,13 +14,13 @@ const BANNER =
   "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
 
 describe('buildHandlerBuildOptions', () => {
-  it('bundles one minified ESM file for Node 22 with its map, leaving the SDK the runtime provides', () => {
+  it('bundles one minified ESM file for Node 24 with its map, leaving the SDK the runtime provides', () => {
     expect(buildHandlerBuildOptions(REQUEST)).toEqual({
       entryPoints: ['/repo/apps/pragma/api/src/main.ts'],
       outfile: '/asset-output/index.mjs',
       bundle: true,
       platform: 'node',
-      target: 'node22',
+      target: 'node24',
       format: 'esm',
       minify: true,
       sourcemap: true,

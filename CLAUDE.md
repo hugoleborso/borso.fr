@@ -1,6 +1,6 @@
 # borso.fr monorepo
 
-One operator, many agents in parallel, each shipping one feature in its own sandbox without hand-holding. pnpm workspaces, Node 22, AWS eu-west-3 (ACM in us-east-1). `docs/` is the source of truth for how things work.
+One operator, many agents in parallel, each shipping one feature in its own sandbox without hand-holding. pnpm workspaces, Node 24, AWS eu-west-3 (ACM in us-east-1). `docs/` is the source of truth for how things work.
 
 ## Principles
 
