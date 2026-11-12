@@ -11,9 +11,6 @@ import { ActionSheet } from './ActionSheet';
 import { PROPOSALS_PATH } from './proposal-board.core';
 import { ToastViewport } from './ToastViewport';
 
-const COIN_FACE_SOURCE = '/icons/coin-face.webp';
-const LOGO_SIZE_PX = 28;
-
 const TABS: readonly BottomTab[] = [
   { to: '/', labelKey: 'nav.today', icon: 'today' },
   {
@@ -36,17 +33,6 @@ export function AppShell(): JSX.Element {
   return (
     <div className="min-h-dvh bg-bg text-ink pt-[env(safe-area-inset-top)]">
       {isOnline ? null : <OfflineBanner />}
-      <header className="flex items-center gap-2 max-w-[640px] mx-auto pt-3 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
-        <img
-          src={COIN_FACE_SOURCE}
-          alt=""
-          width={LOGO_SIZE_PX}
-          height={LOGO_SIZE_PX}
-          data-opening-dock=""
-          className="size-7"
-        />
-        <span className="font-display text-heading text-ink">{t('app.title')}</span>
-      </header>
       <main className="max-w-[640px] mx-auto px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]">
         <Suspense
           fallback={

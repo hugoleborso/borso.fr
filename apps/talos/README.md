@@ -8,9 +8,9 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 
 ## Icon and opening
 
-- The icon is a didrachm of Phaistos showing Talos winged. It shows on the home screen, in the browser tab and in the app header. The image files are in `site/public/icons/`.
+- The icon is a didrachm of Phaistos showing Talos winged. It shows on the home screen, in the browser tab and before the title of each tab screen. The image files are in `site/public/icons/`.
 - Credit: Didrachme de Phaistos, Cabinet des médailles (BnF), photo Jastrow (2006), Wikimedia Commons ([`File:Didrachm_Phaistos_obverse_CdM.jpg`](https://commons.wikimedia.org/wiki/File:Didrachm_Phaistos_obverse_CdM.jpg)). Commons lists the photo as public domain, so the credit is a courtesy rather than a licence condition.
-- On a cold start, once per browser session, a 4.2 second opening plays. The coin spins in, the app opens in a circle around it, and the coin lands on the header logo. A tap skips it. It is skipped under reduced motion, because `tokens.css` sets every animation to zero there. The code is `OpeningOverlay`, `SpinningCoin` and `lib/opening.*`.
+- On a cold start, once per browser session, a 4.2 second opening plays. The coin spins in, the app opens in a circle around it, and the coin lands in the page title. A tap skips it. It is skipped under reduced motion, because `tokens.css` sets every animation to zero there. The code is `OpeningOverlay`, `SpinningCoin` and `lib/opening.*`.
 
 ## Deliberate differences from the other apps
 

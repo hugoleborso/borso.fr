@@ -34,7 +34,7 @@ export function TodoBoard(): JSX.Element {
 
   return (
     <>
-      <PageTitle>{t('todo.title')}</PageTitle>
+      <PageTitle hasMark>{t('todo.title')}</PageTitle>
       <div className="flex flex-col gap-4 pb-16">
         <SegmentedFilter
           label={t('todo.list.label')}

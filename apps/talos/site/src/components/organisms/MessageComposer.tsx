@@ -74,7 +74,7 @@ export function MessageComposer(): JSX.Element {
 
   return (
     <>
-      <PageTitle>{t('message.title')}</PageTitle>
+      <PageTitle hasMark>{t('message.title')}</PageTitle>
       <div className="flex flex-col gap-3">
         <label htmlFor="message-text" className="sr-only">
           {t('message.label')}

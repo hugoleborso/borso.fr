@@ -26,7 +26,7 @@ export function BrainSearch(): JSX.Element {
 
   return (
     <>
-      <PageTitle>{t('brain.title')}</PageTitle>
+      <PageTitle hasMark>{t('brain.title')}</PageTitle>
       <div className="flex flex-col gap-4">
         <LatePages />
         <label className="relative block">

@@ -33,7 +33,7 @@ export function ProposalBoard(): JSX.Element {
 
   return (
     <>
-      <PageTitle subtitle={t('today.proposals.pending', { count: pending.length })}>
+      <PageTitle hasMark subtitle={t('today.proposals.pending', { count: pending.length })}>
         {t('proposals.title')}
       </PageTitle>
       {proposals.data === undefined ? (
