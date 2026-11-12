@@ -25,14 +25,14 @@ Writers of the 35 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 
 | # | When | Friction | Sources / evidence | Decision |
 | --- | --- | --- | --- | --- |
-| 01 | implementation | `tool-budget.test.ts` failed every night from 23:00 to 24:00 UTC. It saved a practice at an instant and looked it up by the UTC day of that instant, and the app resolves a day in Paris time | `[23:39] technical-validator`, `[23:52] main`; report 0005 C02; commit `7937a89`; in the tree since #206, 2026-10-29 | `dantotsu: a-test-that-failed-one-hour-a-night`, commit `f5552f1` |
+| 01 | implementation | `tool-budget.test.ts` failed every night from 23:00 to 24:00 UTC. It saved a practice at an instant and looked it up by the UTC day of that instant, and the app resolves a day in Paris time | `[23:39] technical-validator`, `[23:52] main`; report 0005 C02; commit `7937a89`; in the tree since #206, 2026-10-29 | `no-op:` fixed in #298 by commit `7937a89`, which saves the practice at noon UTC. No other test is built this way (table below). The code's own reading of the Paris day already has tests on both sides of the boundary: `paris-day.core.test.ts`, `paris-time.core.test.ts`, `session-tool.core.test.ts:161` and talos's `paris-clock.utils.test.ts` (read this sweep). This sweep built a test clock forced to 23:10 UTC, in commit `f5552f1`, and withdrew it in commit `54b943d`: the operator asked for tests that handle the time zone, not for a moved clock |
 | 02 | validation | CI's `pragma-assistants` job went red at 23:03 UTC on the commit that turned `fetch_types` off, so the clock and the change looked like one cause | report 0005 *Notes* | `merge into` 01 |
-| 03 | validation | "Are other tests built the same way?" had no answer | prompt candidate 1 | `merge into` 01, which runs every suite at several clock positions |
-| 04 | pr-description | `api-validation` refused to open #298, and a review round was run on a diff of two lines to get the preview | `[20:08] hook:api-validation`, `[23:27] main`; report 2009 | `dantotsu: the-review-spent-to-buy-a-preview`, commit `94695d1`. The hook asks for the report at the merge, the option the operator chose of three. A first eradication, in commit `feb9caa`, let a draft open without a report. The operator refused it, because a draft is not to deploy its preview, and commit `522fc33` took it out |
+| 03 | validation | "Are other tests built the same way?" had no answer | prompt candidate 1 | `merge into` 01, whose table answers it |
+| 04 | pr-description | `api-validation` refused to open #298, and a review round was run on a diff of two lines to get the preview | `[20:08] hook:api-validation`, `[23:27] main`; report 2009 | `fixed: 54b943d`. The gate stays at the opening, the operator's decision of 2026-11-12: a pull request opened early replays CI at every push. The refusal now says to run the review on finished work, and to ask the operator when the work needs its preview first. Two other eradications were built and withdrawn, a draft that opens without a report (`feb9caa`) and a gate at the merge (`94695d1`) |
 | 05 | validation | Round 1 read one lever of five while another sat in a stash, and graded four levers absent: 9 blocking findings | `[20:17] technical-validator`; report 2009 | `merge into` 04 |
 | 06 | validation | #298 merged on a FAIL verdict. Two blocking findings were fixed after round 2 with no round left to read the fixes | report 0005; #298 body; commit `8f70e7e` | `merge into` 04 |
 | 07 | implementation | Four commits on the branch existed only to measure on the preview and were then taken out: a connect probe and a run at 1024 MB | commits `4b8c285`, `3b7d6bc`, `d7a4d27`, `4104178` | `merge into` 04 |
-| 08 | validation | The round 2 report was read and committed from the working tree before the validator handed back, with `C02_CELL` in a cell | `[00:06] technical-validator`, `[00:08] main`; commits `8f70e7e`, `a62991f` | `dantotsu: the-report-committed-before-its-author-finished`, commit `feb9caa` |
+| 08 | validation | The round 2 report was read and committed from the working tree before the validator handed back, with `C02_CELL` in a cell | `[00:06] technical-validator`, `[00:08] main`; commits `8f70e7e`, `a62991f` | `dantotsu: the-report-committed-before-its-author-finished`, at level 5, commit `54b943d`. The validator drafts in its scratchpad and copies its report into place once. A hook that ran it in the foreground (`feb9caa`) was withdrawn: the operator wants the main session free while a review runs |
 | 09 | validation | The branch moved four commits under round 2, so the re-run the validator had queued for after midnight ran the test the main session had fixed | `[00:06] technical-validator`; report 0005 preamble | `merge into` 08 |
 | 10 | validation | Round 2 has two report files, and the append-only gate keeps the draft | `validation/technical-validation-2026-11-11-2330.md` | `merge into` 08. The cost row counts 2 rounds in three reports |
 | 11 | deploy | `merge-strands-no-work` refused the merge of #293 twice over a stash. Its one way out is a push to a `-wip` branch, which a session told to push to one branch read as forbidden. The stash went to a patch in the scratchpad | `[20:05]`, `[20:06] hook:merge-strands-no-work`, `[20:05] hook:no-discarding-reset`, `[20:06] main` | `fixed: e933719`. The message says the operator asks for that push, names the pull request's own branch first, and says a scratchpad patch is not a way out |
@@ -72,22 +72,24 @@ Writers of the 35 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 | 45 | post-merge | This sweep's clock run read the working tree while a gate was half edited, and reported one failure of its own making | this sweep's `KAIZEN.md` | `no-op:` the sweep's own doing, and the same run passed once the edit was whole |
 | 46 | post-merge | `no-broad-kill` refused a `pkill` this sweep made to stop its own background run | this sweep's `KAIZEN.md` | `no-op:` the hook held, and its message named `TaskStop` |
 | 47 | post-merge | `scripts/reports.sh` was red on `main`: talos's `todo-list-choice.adapter.ts`, from #292, names `browser-local-storage`, and talos's manifest did not declare it | `scripts/reports.sh all`, exit 1 | `fixed: 522fc33`, the manifest declares it and the report exits 0. The maps build on operator dispatch, so no gate saw it, as on #295 (its row 21) |
-| 48 | post-merge | This sweep built an eradication on a draft pull request deploying its preview, and opened #310 as a draft to prove it. The operator does not want a draft to deploy a preview | the operator, in this session | `merge into` 04. The sweep read `preview.yml` to learn what a draft does, and asked nobody what it should do |
+| 48 | post-merge | This sweep built four mechanisms the operator did not want | the operator, in this session; commits `feb9caa`, `94695d1`, `f5552f1` | `no-op:` the sweep's own doing, and all four are out. It built four eradications the operator refused: a draft pull request that opens without a report, a gate at the merge, a validator in the foreground and a forced test clock. Each was read from the code and proved, and none was put to the operator before it was built |
 
-Counts: 4 dantotsu, 1 knowledge, 6 fixed, 14 merged into another row or pull request, 23 no-op.
+Counts: 2 dantotsu, 1 knowledge, 7 fixed, 13 merged into another row or pull request, 25 no-op.
 
 ## What the clock runs measured
 
 Row 03 asked whether other tests are built like the one of row 01. Every
 suite of the nine workspaces was run with the process clock moved by a preload
 that shifts `Date`. No other test fails at any position that is not in the past.
+"The boundary clock" is the forced test clock of row 01, since withdrawn. It was
+in place on pragma and talos for the passes that name it.
 
 | Clock | Shifted by | Result |
 | --- | --- | --- |
 | The real clock, 00:22 to 00:36 UTC | nothing | 9 workspaces of 9 pass, bar one root test this sweep was editing |
 | 2026-11-12 23:31 UTC, a winter night | the preload | 9 of 9 pass, 10,664 tests |
 | 2026-07-15 22:31 UTC, a summer night | the preload, and the boundary clock on pragma and talos | pragma, last-loop-lepin, banana-rush, borso-fr and borsouvertures pass. talos fails 3 tests whose fixtures carry dates after July: a proposal that expires on 2 November is not expired yet. A clock moved back proves nothing, so the pass was stopped there |
-| Today, 23:10 UTC | the boundary clock alone | talos passes its 1,501 tests |
+| Today, 23:10 UTC | the boundary clock alone | talos passes its 1,501 tests, and the push gate ran pragma's and talos's suites green |
 | 2026-11-15 23:31 UTC, a Sunday night | the preload and the boundary clock | 9 of 9 pass |
 | 2026-12-31 23:31 UTC | the same | 9 of 9 pass |
 | 2027-03-28 00:31 UTC, the day the clocks change | the same | 9 of 9 pass |
