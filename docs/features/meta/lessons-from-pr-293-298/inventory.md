@@ -28,7 +28,7 @@ Writers of the 35 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 | 01 | implementation | `tool-budget.test.ts` failed every night from 23:00 to 24:00 UTC. It saved a practice at an instant and looked it up by the UTC day of that instant, and the app resolves a day in Paris time | `[23:39] technical-validator`, `[23:52] main`; report 0005 C02; commit `7937a89`; in the tree since #206, 2026-10-29 | `dantotsu: a-test-that-failed-one-hour-a-night`, commit `f5552f1` |
 | 02 | validation | CI's `pragma-assistants` job went red at 23:03 UTC on the commit that turned `fetch_types` off, so the clock and the change looked like one cause | report 0005 *Notes* | `merge into` 01 |
 | 03 | validation | "Are other tests built the same way?" had no answer | prompt candidate 1 | `merge into` 01, which runs every suite at several clock positions |
-| 04 | pr-description | `api-validation` refused to open #298, and a review round was run on a diff of two lines to get the preview | `[20:08] hook:api-validation`, `[23:27] main`; report 2009 | `dantotsu: the-review-spent-to-buy-a-preview`, as a proposal. Its first eradication let a draft open without a report, in commit `feb9caa`. The operator refused it, because a draft is not to deploy its preview, and commit `522fc33` took it out. The entry lists three options for the operator |
+| 04 | pr-description | `api-validation` refused to open #298, and a review round was run on a diff of two lines to get the preview | `[20:08] hook:api-validation`, `[23:27] main`; report 2009 | `dantotsu: the-review-spent-to-buy-a-preview`, commit `94695d1`. The hook asks for the report at the merge, the option the operator chose of three. A first eradication, in commit `feb9caa`, let a draft open without a report. The operator refused it, because a draft is not to deploy its preview, and commit `522fc33` took it out |
 | 05 | validation | Round 1 read one lever of five while another sat in a stash, and graded four levers absent: 9 blocking findings | `[20:17] technical-validator`; report 2009 | `merge into` 04 |
 | 06 | validation | #298 merged on a FAIL verdict. Two blocking findings were fixed after round 2 with no round left to read the fixes | report 0005; #298 body; commit `8f70e7e` | `merge into` 04 |
 | 07 | implementation | Four commits on the branch existed only to measure on the preview and were then taken out: a connect probe and a run at 1024 MB | commits `4b8c285`, `3b7d6bc`, `d7a4d27`, `4104178` | `merge into` 04 |
@@ -74,7 +74,7 @@ Writers of the 35 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 | 47 | post-merge | `scripts/reports.sh` was red on `main`: talos's `todo-list-choice.adapter.ts`, from #292, names `browser-local-storage`, and talos's manifest did not declare it | `scripts/reports.sh all`, exit 1 | `fixed: 522fc33`, the manifest declares it and the report exits 0. The maps build on operator dispatch, so no gate saw it, as on #295 (its row 21) |
 | 48 | post-merge | This sweep built an eradication on a draft pull request deploying its preview, and opened #310 as a draft to prove it. The operator does not want a draft to deploy a preview | the operator, in this session | `merge into` 04. The sweep read `preview.yml` to learn what a draft does, and asked nobody what it should do |
 
-Counts: 4 dantotsu, one of them a proposal, 1 knowledge, 6 fixed, 14 merged into another row or pull request, 23 no-op.
+Counts: 4 dantotsu, 1 knowledge, 6 fixed, 14 merged into another row or pull request, 23 no-op.
 
 ## What the clock runs measured
 
