@@ -33,6 +33,7 @@ export function TodayOverview(): JSX.Element {
   return (
     <>
       <PageTitle
+        hasMark
         trailing={
           <div className="flex items-center shrink-0">
             <Link

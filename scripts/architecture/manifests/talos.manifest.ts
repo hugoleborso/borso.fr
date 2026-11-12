@@ -251,6 +251,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-session-storage',
+      icon: '🗂️',
+      name: 'Session storage',
+      technology: 'window.sessionStorage',
+      description:
+        'Remembers that the opening animation already played in this browser session, so a reload goes straight to the app.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-vibration',
       icon: '📳',
       name: 'Vibration',
