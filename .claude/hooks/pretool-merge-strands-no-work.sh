@@ -9,9 +9,15 @@
 # after the merge, when saving it was no longer the session's to do.
 #
 # The hook refuses the merge while tracked changes or stash entries exist in
-# the checkout, and names the two ways out: push the work to a branch, or drop
-# it once the operator has said to. Untracked files are not counted: build
-# output and scratch files live there and are meant to go.
+# the checkout, and names the ways out: push the work to the pull request's
+# branch or to one of its own, or drop it once the operator has said to.
+# Untracked files are not counted: build output and scratch files live there
+# and are meant to go.
+#
+# A hosted session is told to push to one branch only. On PR #293 that made the
+# `-wip` push look forbidden, so the session moved its stash to a patch in the
+# scratchpad, which is the loss this hook exists to stop and which it cannot
+# see. The message now says the push is asked for.
 #
 # See docs/dantotsus/a-prototype-in-the-tree-the-merge-was-using.md.
 #
@@ -32,8 +38,11 @@ fi
 echo "[merge-strands-no-work] this container holds work no branch has, and it is reclaimed after the merge:" >&2
 [[ -n "$TRACKED" ]] && sed 's/^/[merge-strands-no-work]   changed: /' <<<"$TRACKED" >&2
 [[ -n "$STASHED" ]] && sed 's/^/[merge-strands-no-work]   stashed: /' <<<"$STASHED" >&2
-echo "[merge-strands-no-work] Push it first, for example:" >&2
+echo "[merge-strands-no-work] If it belongs to this pull request, commit it and push it to the pull request's branch." >&2
+echo "[merge-strands-no-work] If it is for later, push it to a branch of its own, for example:" >&2
 echo "[merge-strands-no-work]   git stash branch claude/<slug>-wip && git commit -am 'wip' && git push -u origin claude/<slug>-wip" >&2
-echo "[merge-strands-no-work] or drop it, with its own confirmation from the operator, then merge." >&2
+echo "[merge-strands-no-work] The operator asks for that push here, so a session told to push to one branch only makes it too." >&2
+echo "[merge-strands-no-work] A patch file in the scratchpad is not a way out: it is reclaimed with the container." >&2
+echo "[merge-strands-no-work] Or drop it, with its own confirmation from the operator, then merge." >&2
 "$(dirname "$0")/kaizen-refusal.sh" merge-strands-no-work "merged with uncommitted or stashed work in the container"
 exit 2

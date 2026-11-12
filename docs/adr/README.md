@@ -78,6 +78,7 @@ No:
 | [2026-09-16T1931](./2026-09-16T1931-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | accepted | 2026-09-16 |
 | [2026-08-26T1739](./2026-08-26T1739-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [2026-09-18T2339](./2026-09-18T2339-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [2026-09-19T2140](./2026-09-19T2140-api-gateway-websocket-pushes-banana-rush-round-state.md) | API Gateway WebSocket pushes Banana Rush round state | accepted | 2026-09-19 |
 | [2026-09-21T0819](./2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | accepted | 2026-09-21 |
 | [2026-10-05T1023](./2026-10-05T1023-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | superseded by [2026-11-05T0106](./2026-11-05T0106-the-harness-lives-in-claude-with-no-plugin.md) | 2026-10-05 |
 | [2026-10-06T2302](./2026-10-06T2302-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | accepted | 2026-10-06 |
@@ -112,6 +113,7 @@ No:
 | [2026-11-05T0445](./2026-11-05T0445-pragma-reads-leave-in-one-batch-per-tick.md) | pragma's reads go out as one batch per tick | accepted | 2026-11-05 |
 | [2026-11-11T1306](./2026-11-11T1306-talos-keeps-the-conversation-of-each-routine-run.md) | Talos keeps the conversation of each routine run in a table of its own database | accepted | 2026-11-11 |
 | [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
+| [2026-11-11T1658](./2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md) | Lambda source maps go to Sentry, not into the bundle | accepted | 2026-11-11 |
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | proposed | 2026-11-11 |
 
 ### Data layer
