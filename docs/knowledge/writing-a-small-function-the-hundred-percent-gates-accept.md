@@ -1,5 +1,5 @@
 ---
-summary: 'Shapes the 100% coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard no test reaches, a named no-op that is an equivalent mutant, a surviving conditional that signals a design problem.'
+summary: 'Shapes the 100% coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard no test reaches, a named no-op that is an equivalent mutant, a `flatMap` that returns `[]` before a filter, a surviving conditional that signals a design problem.'
 triggers:
   paths:
     - '**/*.core.ts'
@@ -62,6 +62,36 @@ Stryker mutates arrow bodies *to*, so it produces no mutant of its own:
 ```ts
 await dropEveryCache().catch(() => undefined);
 ```
+
+## A `flatMap` that returns `[]` before a filter is an equivalent mutant
+
+Stryker's array mutator replaces an empty array literal with
+`["Stryker was here"]` (read in
+`@stryker-mutator/instrumenter/dist/src/mutators/array-declaration-mutator.js`,
+version 9.6.1). A `flatMap` that rejects an item by returning `[]` therefore
+gets a mutant that lets a placeholder string through. When the next step
+filters on a property, the placeholder has none, the comparison is false, and
+the placeholder is dropped again. No test can tell the two versions apart.
+
+The fix agent of PR #300 logged this shape on talos's
+`computed-sections.core.ts`. The snippet is rebuilt from its log line and from
+the code that shipped, so it is inferred, not the committed text:
+
+```ts
+facts
+  .flatMap((fact) => (isIsoDay(fact.learnedOn) ? [fact] : []))
+  .filter((fact) => fact.learnedOn >= windowStart);
+```
+
+Reject with a type guard instead. A `filter` holds no array literal, so the
+mutant does not exist, and the guard narrows the type as the `flatMap` did:
+
+```ts
+facts.filter(isLearnedOnADay).filter((fact) => fact.learnedOn >= windowStart);
+```
+
+A `flatMap` whose result is joined or returned as is does not have the
+problem: the placeholder reaches the output and a test kills it.
 
 ## A surviving conditional mutant is usually a design signal
 

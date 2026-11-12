@@ -22,7 +22,9 @@
 #
 # Paths after the base keep only the changed files under them. Parallel agents
 # share one working tree, so an agent grading its own app mutated the others'
-# unfinished files too, on PR #290.
+# unfinished files too, on PR #290. A path may also be one file. A base below a
+# merge of main grades what the merge brought, and on PR #300 three validators
+# moved the base by hand to grade one feature.
 #
 # Usage: scripts/mutate-changed.sh <base-ref> [<path>...]
 
@@ -41,7 +43,7 @@ uncommitted=$(git status --porcelain=v1 --untracked-files=all | sed 's/^...//;s/
 changed=$(printf '%s\n%s\n' "$committed" "$uncommitted" | sed '/^$/d' | sort -u)
 if [ "$#" -gt 0 ]; then
   changed=$(for scope in "$@"; do
-    echo "$changed" | awk -v prefix="${scope%/}/" 'index($0, prefix) == 1'
+    echo "$changed" | awk -v scope="${scope%/}" '$0 == scope || index($0, scope "/") == 1'
   done | sort -u)
 fi
 failed=()

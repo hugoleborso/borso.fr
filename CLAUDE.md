@@ -69,7 +69,7 @@ They cover replies, documents, commits and PR bodies.
 - Lead with impact. Say who the work is for and what changes for them, then what the next maintainer inherits.
 - Every claim carries its evidence or its label in the same sentence, as measured, inferred or guess. Never hand the reader a check you could run.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
-- Ask one closed question at a time, with its options and your recommendation.
+- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation.
 - Do not narrate what is done. Report the result and what is left.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.
 

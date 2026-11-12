@@ -105,6 +105,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
   - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base> --reporter=verbose`, then `pnpm --filter <pkg> run test:e2e --changed <base>`. The `test:e2e` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
   - a front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base> --reporter=verbose`.
   - Pass `<base>` and `<reviewed-sha>` as `$(git rev-parse <ref>)`, the 40-character SHA. `vitest --changed 42012559`, an all-digit short SHA, found no test file and exited 0, where the full SHA ran the affected files (reproduced on talos, 2026-11-11). A run that names no test file is not a pass.
+  - When `git rev-list --merges <base>..HEAD` prints a commit, `main` was merged in above the base, and the diff, `--changed <base>` and `mutate-changed.sh <base>` all carry what the merge brought. Round 2 of PR #300 read 120 files against the feature's 28 (measured). Take the feature's files from `git log --first-parent --no-merges --name-only --format= <base>..HEAD | sort -u`, which leaves out a file only a conflict resolution touched. Keep the `--changed` runs, which run more tests than the feature needs and miss none. Give `mutate-changed.sh` each gated file of that list as a path after the base.
   - `--reporter=verbose` lists each test file run, so the report can name the feature's own files. The default reporter prints only totals.
 - Capture exit code + the last 30 lines on failure.
 - **Enumerate every `*.utils.ts` file in the touched workspaces.** Repo rule (CLAUDE.md "Clean code"): pure utilities ship at 100% coverage. For each `*.utils.ts`, confirm a sibling `*.utils.test.ts` exists and the runner picks it up. A `*.utils.ts` without its matching test file is **FAIL**. A workspace that touched any `*.utils.ts` but has no `test` script at all is **FAIL** — utilities are coverage-gated, so a missing runner is a missing gate.
@@ -146,7 +147,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 ## Procedure
 
 1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first.
-2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding.
+2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding. When a merge of `main` sits above the base, the file list is the one the test bullet of category C gives.
 3. **Walk category A** — correctness vs spec. One row per Q.O.D. user-visible decision + one row per Files-to-change entry. Quote 2–4 lines of evidence per row.
 4. **Walk category B** — code cleanliness. Run lint, search for forbidden patterns, sample 3–5 representative names from the changed code, then read each changed source file in full against the standards checklist.
 5. **Walk category C** — tests pass. Identify workspaces, run their test scripts, capture results.
