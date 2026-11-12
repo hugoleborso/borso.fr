@@ -11,14 +11,17 @@ onto `main` as
 
 Sources walked: `scripts/kaizen.sh sweep-input` on both merges (12 lines in
 `pragma/lambda-cold-start`, 21 in `pragma/cold-start-sweep`, the two archives
-the prompt named), the seven candidates the prompt carried, both bodies, the
-33 commits, the five validation reports, `findings.md`, the check runs of
-#298's last head (all green; the two red runs are read from report 0005), and
-the two open kaizen pull requests, #302 and #307. Neither pull request has a
-review thread, and their ten comments are the preview bot's.
+the prompt named) and on #308, which the same session merged while this sweep
+ran and which added 2 lines to the second archive. Also the seven candidates
+the prompt carried, both bodies, the 33 commits, the five validation reports,
+`findings.md`, the check runs of #298's last head (all green; the two red runs
+are read from report 0005), and the two kaizen pull requests that were open
+when the sweep started, #302 and #307. Both merged while it ran, and `main` is
+merged into this branch. Neither swept pull request has a review thread, and
+their ten comments are the preview bot's.
 
-Writers of the 33 lines: `main` 14, `technical-validator` 9, `pragma-latency`
-1, and nine hook refusals. Every subagent logged under its label.
+Writers of the 35 lines: `main` 14, `technical-validator` 9, `pragma-latency`
+1, and eleven hook refusals. Every subagent logged under its label.
 
 | # | When | Friction | Sources / evidence | Decision |
 | --- | --- | --- | --- | --- |
@@ -44,7 +47,7 @@ Writers of the 33 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 | 20 | conception | A Sentry `search_issues` query with a hyphenated tag value failed, and the skill's example was unquoted | `[12:42] main` | `no-op:` already eradicated by #288. `quality-dashboard/SKILL.md:37` quotes the value and `sentry-search-tools-rewrite-the-query-before-sentry-sees-it.md` prints on the error (read this sweep) |
 | 21 | pr-description | `api-validation` refused to open #293, so a spec was written after the code | `[17:42] hook:api-validation`; commit `4e1720b` | `no-op:` the hook held, and the review it forced found two blocking defects, both real (row 28) |
 | 22 | implementation | `borso(no-comments)` printed its 428-character explanation once per offending line, 23 times in one pre-commit run | `[17:45] main` | `fixed: e933719`. The message is 113 characters and names the standard that holds the rest |
-| 23 | validation | The validator could not check whether the preview job gets `SENTRY_ORG`, and #293's saving could not be measured on its preview | `[17:56] technical-validator`; report 1742 A12; commit `9f94413`; #293 body | `merge into` PR #302, whose `the-preview-that-could-not-prove-tracing` makes the preview comment say when Sentry is off. The operator row for a preview DSN is in `docs/operator-backlog.md` since #298 |
+| 23 | validation | The validator could not check whether the preview job gets `SENTRY_ORG`, and #293's saving could not be measured on its preview | `[17:56] technical-validator`; report 1742 A12; commit `9f94413`; #293 body | `merge into` PR #302, merged during this sweep, whose `the-preview-that-could-not-prove-tracing` makes the preview comment say when Sentry is off. The operator row for a preview DSN is in `docs/operator-backlog.md` since #298 |
 | 24 | validation | A repository-relative test path through `pnpm --filter` found no test file | `[18:18] technical-validator` | `no-op:` `run-repo-tools-from-the-directory-they-expect.md` prints on `No test files found` (read this sweep) |
 | 25 | validation | `gh pr view` and `gh pr list` answered 403 | `[18:18]`, `[23:39] technical-validator` | `no-op:` already eradicated by #304. `what-a-hosted-session-cannot-do-on-github.md` triggers on `gh pr (view\|checks\|status\|list)`, and both lines come from a branch based before it |
 | 26 | validation | `/usr/bin/time` is not installed | `[23:39] technical-validator` | `no-op:` one writer, and the shell's `time` keyword did the job on the second try. No instruction names the binary (`grep -rn /usr/bin/time docs/standards .claude scripts` prints nothing) |
@@ -53,17 +56,17 @@ Writers of the 33 lines: `main` 14, `technical-validator` 9, `pragma-latency`
 | 29 | implementation | #293's first commit had three defects a review found 24 minutes later: another app lost its source map, the map was deleted on a failed upload, and two tests ran `sentry-cli` for real | commit `8ad2f59` | `no-op:` found and fixed before the pull request opened, with a pure test on `buildHandlerBundling` |
 | 30 | implementation | After `main` was merged in, the handler test threw: its module mock replaced the adapter whole, and #290 had added an export | commit `191803c` | `no-op:` the test failed on the first run after the merge and was fixed in one commit. The mock now spreads the real module |
 | 31 | spec | #293's saving was inferred three times, 330, 310 then 270 ms, and measured at 369 ms | commits `cd4eb94`, `9f94413`, `6a8a9c8`; `findings.md` | `no-op:` each figure was labelled inferred, and production measured it |
-| 32 | pr-description | The pre-push hook refused the branch twice for conflicting with `main` | `[19:14]` twice, `hook:pre-push-conflict`; merge `c0edece`, conflict on `docs/adr/README.md` | `no-op:` the hook held, and #304 gave that file a union merge |
+| 32 | pr-description | The pre-push hook refused the branch four times for conflicting with `main` | `hook:pre-push-conflict`, `[19:14]` twice and `[00:08]`, `[00:09]`; merges `c0edece`, with its conflict on `docs/adr/README.md`, and `3b29b2d` | `no-op:` the hook held each time and `main` was merged in. #304 gave `docs/adr/README.md` a union merge |
 | 33 | deploy | `merge-on-moved-base` refused the merge of #293 | `[19:57] hook:merge-on-moved-base`; merge `0b8a18b` | `no-op:` the hook held, and `main` was merged in the same minute |
 | 34 | implementation | A commit staging only `pnpm-lock.yaml` was refused by the formatter step | `[20:21] main`; commit `e0fe9a3` | `no-op:` fixed in #298, and its validator measured the fix (report 0005 A12) |
 | 35 | validation | The command under *Earning the run* counts the last hundred commits that touch a scope. It printed 84 where 16 of the last hundred did | `[23:39] technical-validator`; report 0005 B18 | `fixed: e933719`. On `main` today the old command prints 84 and the new one 18 (measured) |
-| 36 | validation | Round 2 had to re-check five findings whose spec lines the fix commit had removed, and the procedure has no row for that | `[23:39] technical-validator`; report 0005 R05 to R09 | `merge into` PR #302. Its round 2 rule gives a dismissed finding a row and runs the check its reason claims, which is what this validator did unasked |
+| 36 | validation | Round 2 had to re-check five findings whose spec lines the fix commit had removed, and the procedure has no row for that | `[23:39] technical-validator`; report 0005 R05 to R09 | `merge into` PR #302, merged during this sweep. Its round 2 rule gives a dismissed finding a row and runs the check its reason claims, which is what this validator did unasked |
 | 37 | validation | Round 2's non-blocking findings: a 740 ms figure sourced from another preview, a lockfile key ending in `: {}` read as a second version, an unanswered *Earning the run* | report 0005 A04, A10, B18; commit `8f70e7e` | `no-op:` all three fixed before the merge, the second with a test |
 | 38 | validation | No test reached `createDsqlClient`, the client production runs | report 0005 D04; commit `8f70e7e` | `no-op:` fixed before the merge by `client.options.test.ts`. That no round read the fix is row 06 |
 | 39 | validation | Questions the validators asked that no commit answers: do the agent reader and the migration runner pay the array-type query, is `tslib` worth bundling once, is there a blueprint for a test of the database client | report 0005 *Notes* | `no-op:` the first is lead 6 of `findings.md`. The others are not measured as defects |
 | 40 | validation | Neither feature has a plan, so each report carries a `plan absent` row | reports 1742 to 0005 | `no-op:` the validator keeps that row on purpose for a short-form spec, as on #292 (its row 21) |
 | 41 | deploy | `pnpm dedupe` re-resolved every app, so the merge of #298 deployed all six | report 0005 *Notes*; #298 body | `no-op:` stated in the body the operator merged, with `app-tests` green for all six |
-| 42 | post-merge | Lever 1 can only be judged in production, and the session that shipped it was still measuring when this sweep ran | `get_session`: "prod redeployed 00:22 UTC; verifying new code" | `no-op:` by the spec's own *How it will be judged*. The figure belongs in `findings.md`, from that session |
+| 42 | post-merge | Lever 1 can only be judged in production, and the session that shipped it was still measuring when this sweep ran | `get_session`: "prod redeployed 00:22 UTC; verifying new code" | `no-op:` by the spec's own *How it will be judged*. #308 recorded it in `findings.md`: three real cold starts, each with about 290 ms less in the handler, and no line from Sentry's failed hook |
 | 43 | post-merge | The ADR #293 added was still `proposed`, and had no row in the index table to stamp. The gate passed it | `docs/adr/README.md`; this sweep's `KAIZEN.md` | `fixed: e933719`. Stamped, two missing rows added, and the gate asks for a table row. Its test refuses a record linked only from a topic list |
 | 44 | post-merge | The trigger gate refused a command trigger starting with a dash, and its message named jq's usage | this sweep's `KAIZEN.md` | `fixed: 4941fb1`, the gate ends jq's options before the patterns (measured with the pattern that failed) |
 | 45 | post-merge | This sweep's clock run read the working tree while a gate was half edited, and reported one failure of its own making | this sweep's `KAIZEN.md` | `no-op:` the sweep's own doing, and the same run passed once the edit was whole |

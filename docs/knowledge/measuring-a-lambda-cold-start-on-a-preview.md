@@ -33,6 +33,8 @@ Read its *Dead ends* before proposing a lever.
 
 **Init is bimodal.** In one burst on PR #298 the module loading took about
 700 ms on some containers and about 990 ms on others, same code, same memory.
+Production shows the same two modes: 1108, 1053, 771 and 801 ms on four cold
+starts provoked together (`findings.md`, *PR 298 in production*).
 A gain under 150 ms on the init cannot be read from one burst. The duration of
 the first request did not show two modes, so judge a lever there when it acts
 there. Judge a lever on module loading by a local import, repeated, or by
