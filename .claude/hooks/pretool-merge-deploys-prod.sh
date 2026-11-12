@@ -113,6 +113,30 @@ else
   SHARED="no — the committed borso-shared template is unchanged in this diff"
 fi
 
+# A merge waits for green. `main` has no branch rule, so GitHub merges a pull
+# request whose checks failed. The session of PR #316 first tried to merge
+# Dependabot's #311 with its `build` red, and only the moved-base refusal below
+# stopped it. The operator chose on 2026-11-12 that a red or unfinished check
+# refuses the merge. A skipped or neutral check counts as green. A head whose
+# checks cannot be read is let through, and the notice says so.
+CHECKS="unknown — the check runs of this head could not be read"
+if [[ "$PR" =~ ^[0-9]+$ ]] && [ -n "$COMPARED_HEAD" ] && command -v gh >/dev/null 2>&1; then
+  if CHECK_RUNS=$(cd "$REPO_ROOT" && gh api "repos/$OWNER/$REPO/commits/$COMPARED_HEAD/check-runs?per_page=100" \
+    --jq '.check_runs[] | "\(.name)\t\(.status)\t\(.conclusion // "")"' 2>/dev/null); then
+    NOT_GREEN=$(awk -F'\t' '$2 != "completed" || ($3 != "success" && $3 != "skipped" && $3 != "neutral") { print "    " $1 ": " ($2 == "completed" ? $3 : $2) }' <<<"$CHECK_RUNS")
+    if [ -n "$NOT_GREEN" ]; then
+      {
+        echo "[merge-on-red] refused: pull request $PR has checks that are not green on its head:"
+        printf '%s\n' "$NOT_GREEN"
+        echo "[merge-on-red] Fix a failure, or wait for the check_suite event of a running one, then merge."
+      } >&2
+      "$(dirname "$0")/kaizen-refusal.sh" merge-on-red "tried to merge a pull request whose checks were not green"
+      exit 2
+    fi
+    CHECKS="green"
+  fi
+fi
+
 # A pull_request run tests the branch merged with main as main was when the run
 # started. A pull request merged into main after that start lands beside this
 # one untested, and GitHub only says `mergeable_state: unknown` while it
@@ -171,6 +195,7 @@ automatically. The merge is the gate, and this call is the merge.
 
   Applications this merge deploys: $APPS
   shared-deploy dispatch owed:     $SHARED
+  Checks on the head:              $CHECKS
 
 Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the

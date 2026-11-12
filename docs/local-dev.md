@@ -7,7 +7,7 @@
 | Node 24 (`.nvmrc`) | Lambda runtime parity. |
 | pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work. |
 | `jq` | Required by the Claude Code hooks. Almost always already installed. |
-| Docker | Only needed if an app uses local Postgres (none do today). |
+| PostgreSQL 16 | `pnpm dev` and the e2e tests of a full-stack app start a private local Postgres through `scripts/local-postgres.sh`. |
 
 ## First clone
 
@@ -39,7 +39,7 @@ bash scripts/install-repo-deps.sh
 ```bash
 # repo-wide
 pnpm -r typecheck            # tsc --noEmit in every workspace
-pnpm exec biome lint         # lint everything (root rules apply globally)
+pnpm lint                    # oxlint with every rule, type-aware ones included
 pnpm exec knip               # dead-code detection
 pnpm -r test                 # run vitest in every workspace
 pnpm -r build                # build every workspace that has a build script

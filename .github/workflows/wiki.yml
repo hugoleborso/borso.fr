@@ -1,0 +1,80 @@
+# Publishes the repository's markdown to the GitHub wiki, so the architecture,
+# the decisions and the lessons read as a site with a sidebar instead of a
+# folder tree.
+#
+# The repository stays the source. `scripts/wiki/build-wiki.ts` turns the
+# tracked README, CLAUDE.md, `docs/` and each app's top-level markdown into
+# flat wiki pages, rewrites their links, and generates the indexes, the sidebar
+# and the footer. Feature folders are listed, not copied: each line of the
+# Features page opens the folder in the repository.
+#
+# Every run replaces every page, so an edit made in the wiki's web editor is
+# lost at the next merge. The footer of each page says so.
+#
+# This needs two repository settings the workflow cannot make (see
+# docs/operator-backlog.md): Settings → General → Features → Wikis on, and one
+# page saved by hand so the wiki's git repository exists. Until then the clone
+# step fails and nothing else breaks.
+
+name: wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'README.md'
+      - 'CLAUDE.md'
+      - 'docs/**'
+      - 'apps/*/*.md'
+      - 'scripts/wiki/**'
+      - '.github/workflows/wiki.yml'
+  workflow_dispatch: {}
+
+# Each run writes the whole wiki from one commit, so a newer push makes an
+# older run worthless.
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Clone the wiki
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" "$RUNNER_TEMP/wiki"
+
+      # Deleting first is what removes the page of a file deleted or renamed in
+      # the repository.
+      - name: Build the pages
+        run: |
+          find "$RUNNER_TEMP/wiki" -maxdepth 1 -name '*.md' -delete
+          pnpm exec tsx scripts/wiki/build-wiki.ts "$RUNNER_TEMP/wiki"
+
+      - name: Push the pages
+        working-directory: ${{ runner.temp }}/wiki
+        run: |
+          git add --all
+          if git diff --cached --quiet; then
+            echo "The wiki already matches ${GITHUB_SHA}."
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit --quiet -m "Publish ${GITHUB_SHA}"
+          git push

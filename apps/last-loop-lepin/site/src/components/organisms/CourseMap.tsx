@@ -16,10 +16,11 @@ interface CourseMapProps {
 
 const MIN_MAP_HEIGHT_PX = 320;
 const MAP_FOOTER_HEIGHT_PX = 40;
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const TILE_URL =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>';
-const TILE_SUBDOMAINS = 'abcd';
+  'Tiles &copy; <a href="https://www.esri.com">Esri</a> · &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const MAXIMUM_NATIVE_ZOOM = 16;
 const MAXIMUM_ZOOM = 20;
 const TRACK_COLOR = 'var(--color-accent)';
 const TRACK_WEIGHT = 4;
@@ -74,7 +75,7 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
       const latLngs: L.LatLngTuple[] = points.map((point) => [point.lat, point.lng]);
       const map = L.map(container, { attributionControl: true, zoomControl: true });
       L.tileLayer(TILE_URL, {
-        subdomains: TILE_SUBDOMAINS,
+        maxNativeZoom: MAXIMUM_NATIVE_ZOOM,
         maxZoom: MAXIMUM_ZOOM,
         attribution: TILE_ATTRIBUTION,
       }).addTo(map);
