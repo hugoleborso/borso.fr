@@ -28,7 +28,6 @@ const databaseSuite = {
   globalSetup: ['./test/setup-postgres.ts'],
   pool: 'forks' as const,
   maxWorkers: 1,
-  isolate: false,
   fileParallelism: false,
   testTimeout: 30_000,
   hookTimeout: 60_000,

@@ -6,11 +6,11 @@ severity: medium
 related-pr: '#295'
 fix-pr: none (the kaizen pull request of PR #295 lands it; its number is not known when this is written)
 fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.oxlintrc.json, apps/talos/vitest.config.ts]
+eradication-level: 1
+eradication-paths: [apps/pragma/vitest.config.ts, apps/last-loop-lepin/vitest.config.ts, apps/banana-rush/vitest.config.ts, apps/talos/vitest.config.ts]
 time-to-detect: minutes
 tags: [vitest, testing, gates, last-loop-lepin, talos]
-zone: apps/last-loop-lepin/api/src/helpers/observability/wide-event.middleware.test.ts
+zone: apps/last-loop-lepin/vitest.config.ts
 recurs: none (the-connection-parameter-no-mock-could-refuse is about what a mock cannot see, not about a mock that never applies)
 ---
 
@@ -38,55 +38,62 @@ that looked correct.
 
 ## Root cause of occurrence
 
-*Thought a `vi.mock` at the top of a file applies to that file, actually under
-`isolate: false` it applies only if no earlier file loaded the module.*
+*Thought back-e2e needs `isolate: false` to run its files one at a time on
+one Postgres, actually `maxWorkers: 1` and `fileParallelism: false` already
+do that, and `isolate: false` only made every file share one module cache.*
 
-`apps/last-loop-lepin/vitest.config.ts` gives back-e2e `pool: 'forks'`,
-`maxWorkers: 1`, `isolate: false`, as banana-rush, talos and pragma's database
-suites do. Nothing told the author the file would run in such a project.
+The vitest 4 migration (`f1c25506e`, 2026-08-09) spelled vitest 2's
+`singleFork` as "`maxWorkers: 1` plus `isolate: false`", and gave as the
+reason that "the back-e2e suites share one Postgres". Serial files answer
+that reason. The shared module cache was a side effect nobody chose, and it
+breaks a standard tool: a hoisted `vi.mock` cannot replace a module an
+earlier file already loaded.
 
 ## Detection failure causes
 
 - **Local:** the agent ran the file alone, where the mock applies.
-- **Lint:** no rule knew which test files run with a shared module cache.
+- **Lint:** nothing knew which test files share a module cache.
+- **The migration commit:** it named the reason for serial files and not for
+  the shared cache, so no one questioned the cache.
 
 ## Countermeasure
 
-PR #295 (`bece68f92`) injected the trace-id reader into the middleware, so
-the test passes a stub and mocks no module. This entry stops the next one.
+PR #295 (`bece68f92`) injected the trace-id reader, so its test mocks no
+module. The kaizen sweep then first added a lint rule refusing `vi.mock` in
+back-e2e files, with a list of exempt files written by hand. That list copied
+which files the vitest projects isolate; it drifted within the hour, when
+PR #298 added an isolated test that mocks modules. The operator rejected the
+approach: a list maintained by hand is not a fix, and refusing a standard
+vitest tool to protect a setting nobody chose is backwards.
 
 ## Eradication
 
-**Type:** DevX check (level 2). `eslint/no-restricted-properties` refuses
-`vi.mock` in every API test file that a back-e2e project runs. The core,
-utils, adapter and schema tests run in the isolated `core` project and are
-exempt by name, with pragma's `main.test.ts`, which pragma lists there.
-`vi.doMock` stays allowed: it follows `vi.resetModules()` and a dynamic
-import, which is the form that works in a shared cache
-(`apps/talos/api/src/helpers/secrets/parameter-store.client.test.ts`).
-
-The check found one more file with the same hazard,
-`apps/talos/api/src/main.export.test.ts`, which mocked the export adapter from
-back-e2e. It moves to talos's `core` project, as pragma's `main.test.ts` did.
+**Type:** structural impossibility (level 1). Every back-e2e project runs
+with vitest's default isolation, so each file gets its own module cache and
+a hoisted mock always applies. The lint rule and its list are deleted.
 
 ```diff
-+    {
-+      "files": ["apps/*/api/src/**/*.test.ts", "apps/*/test/**/*.test.ts"],
-+      "rules": {
-+        "eslint/no-restricted-properties": [
-+          "error",
-+          { "object": "vi", "property": "mock", "message": "This file runs in a back-e2e project with isolate: false, …" }
-+        ]
-+      }
-+    },
+           pool: 'forks',
+           maxWorkers: 1,
+-          isolate: false,
+           fileParallelism: false,
 ```
 
-**Proof it can fail:** the test file as it stood before `bece68f92`, linted with the rule:
+Cost, measured on 2026-11-12: last-loop-lepin's back-e2e went from 5.1 s to
+22.0 s and pragma's from 114 s to 173 s. Almost all of it is module import
+(last-loop-lepin 1.4 s to 14.2 s), the per-file cost of loading each API's
+dependency graph. Test time barely moved (2.8 s to 3.6 s).
 
-```
-apps/last-loop-lepin/api/src/helpers/observability/wide-event.middleware.test.ts:7:1: error eslint(no-restricted-properties): 'vi.mock' is restricted from being used
-```
+Isolation also surfaced a second hidden coupling. pragma's
+`test/auth-utils.ts` numbered test usernames with a module counter, unique
+only because every file shared it; isolated, two files both created
+`tester4` and the insert failed. The username now carries the member id.
 
-**Similar instances:** `grep -rl 'vi.mock(' apps/*/api` found 15 files. 13 are
-adapter tests and one is pragma's `main.test.ts`, all in an isolated project.
-The last is talos's `main.export.test.ts`, moved. `oxlint apps` exits 0 after the move.
+**Proof it can fail:** PR #295's original test, which hoisted
+`vi.mock('./error-reporting.adapter', …)`, run after `app.test.ts` in one
+back-e2e run: failed in round 1 with `isolate: false`
+(`expected { …(11) } to match object { trace.id }`), passes now (11 of 11).
+
+**Similar instances:** `grep -n "isolate" apps/*/vitest.config.ts` returns
+nothing; all four full-stack apps run isolated, and every back-e2e suite
+passes (last-loop-lepin 145, banana-rush 43, talos 167, pragma 467 tests).
