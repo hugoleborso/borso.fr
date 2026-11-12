@@ -7,8 +7,8 @@ cutting 500 ms from every cold start leaves 7.4% over, 700 ms leaves 4.6% and
 
 Two pull requests have worked on it. PR 293 took the source map out of the
 init. PR 298 took out Sentry's loader thread, the second copy of the AWS SDK
-core and postgres.js's array-type query. Everything below is either a
-measurement or a labelled guess.
+core and postgres.js's array-type query. Both are in production. Everything
+below is either a measurement or a labelled guess.
 
 Do not re-run the dead ends. Each is recorded with the numbers that killed it.
 
@@ -35,6 +35,54 @@ group went with its stack before the median could be recomputed.
 The init column is not a clean comparison. Module loading is bimodal across
 Lambda hosts, about 700 ms or about 990 ms in the same burst, which drowns a
 gain of a hundred milliseconds. The first-request column is clean.
+
+## PR 298 in production
+
+PR 298 reached production on 2026-11-12 at 00:22 UTC. Five cold starts were
+read on it that night, none of them slower than 1744 ms.
+
+One is a real one. An assistant connector that has been idle refreshes its
+token first, so its cold start lands on `POST /oauth/token`, the route that
+took 50 of the week's 226 cold starts:
+
+| `POST /oauth/token`, cold | the week before, median of 50 | after PR 298, 1 cold start |
+| --- | --- | --- |
+| init | 1255 ms | 773 ms |
+| handler | 853 ms | 564 ms |
+| after the handler | 199 ms | 200 ms |
+| total | 2386 ms | 1538 ms |
+
+The four others were provoked, by four parallel unauthenticated `GET /api/me`
+sent right after the deploy:
+
+| | the four, in order | median |
+| --- | --- | --- |
+| init | 1108, 1053, 771, 801 ms | 927 ms |
+| handler | 448, 413, 456, 419 ms | 434 ms |
+| after the handler | 188, 184, 174, 137 ms | 179 ms |
+| total | 1744, 1650, 1401, 1357 ms | 1525 ms |
+
+What they establish:
+
+- The new code is the one running. No cold start of the five logs
+  `Failed to register diagnostics-channel injection hooks`, which every cold
+  start logged before.
+- The init of the real one is 773 ms against 891 ms after PR 293, 118 ms less.
+  That is one cold start against six, so it agrees with the 110 ms inferred for
+  Sentry's thread without proving it.
+- The time after the handler did not move, as expected. Nothing touched it.
+- The init is bimodal in production too, about 790 ms or about 1080 ms in the
+  same burst.
+
+What they do not establish: the p95. Five cold starts are not a week, and four
+of them ran a lighter route than real traffic. The week's replay said 700 ms
+off every cold start leaves 4.6% of invocations over the ceiling. The real one
+lost 848 ms.
+
+To provoke a real cold start again: leave production idle, then make one
+assistant tool call. Its containers were all reclaimed within 12 idle minutes.
+Several tool calls in parallel do not help, because the connector sends them
+one after another and they all land on the one warm container.
 
 ## The shape of the problem
 
@@ -207,7 +255,9 @@ it runs without Sentry. The SDK's own Lambda extension answers the request
 before it sends, and has not been tried.
 
 **2. The second request of a container.** In production it has a p75 of
-515 ms, against about 130 ms from the fourth on. On the preview, the second
+515 ms, against about 130 ms from the fourth on. After PR 298, the first
+`POST /mcp` of a container that had only served one `GET /api/me` took 1245 ms
+in the handler, and the five calls after it 49 to 152 ms. On the preview, the second
 `GET /api/me` of two containers took 165 ms and 349 ms in the handler with no
 new connection, and one of them sent its statement twice, 142 ms apart. A
 retry by `retryingConflictAbortsOf` or a prepare round trip would both explain

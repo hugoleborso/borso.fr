@@ -36,3 +36,5 @@ Session: d4b94070-98b8-5170-ae92-3efe97db76a9
 - [2026-11-11 23:52] `main` a measurement script took the upper middle value as the median of an even count, so a production total was reported as 2229 ms where the median is 2105 ms
 - [2026-11-12 00:06] `technical-validator` the report file written before the handback was read and committed by the main session with a placeholder cell still in it, and HEAD moved four commits while the review ran, so the re-run queued for after midnight ran the already fixed test instead of the reviewed one
 - [2026-11-12 00:08] `main` the round 2 validation report was read and committed from the working tree before the validator handed back, so a draft with a placeholder cell landed in a commit
+- [2026-11-12 00:08] `hook:pre-push-conflict` pre-push refused a branch that conflicts with origin/main
+- [2026-11-12 00:09] `hook:pre-push-conflict` pre-push refused a branch that conflicts with origin/main
