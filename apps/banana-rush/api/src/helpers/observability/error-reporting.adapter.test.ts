@@ -73,6 +73,7 @@ describe('startErrorReporting', () => {
         stackFrameVariables: false,
       },
       enableRuntimeChannelInjection: false,
+      ignoreSpans: [{ op: 'middleware' }],
       integrations: [{ name: 'PostgresJs' }],
       beforeSendSpan: redactDatabaseSpan,
     });
