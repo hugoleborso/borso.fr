@@ -1,6 +1,6 @@
 ---
 name: after-task-kaizen
-description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-kaizen", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by the kaizen task the merged PR's session spawned, which starts this skill in a new conversation. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`. The follow-up PR is the dev's sole and last goal between the merged PR and starting any new work — give it your all.
+description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-kaizen", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by the kaizen task the merged PR's session spawned, which starts this skill in a new conversation. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`.
 ---
 
 # After-task kaizen sweep → `kaizen` PR
@@ -15,9 +15,7 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 > **Hard quality bar:** every Dantotsu in the output PR ships a
 > code-level eradication. No "captured as follow-up; not
-> implemented yet". No issue creation as a substitute. The PR is
-> the developer's sole and last goal between the merged work and
-> starting anything new — invest accordingly.
+> implemented yet". No issue creation as a substitute.
 
 ## When to invoke
 
@@ -322,6 +320,13 @@ For each surviving subject:
    proof lands in `KAIZEN.md` as friction. The repository keeps no standing canary, so this
    step is the only proof. Prefer removing a mechanism over adding a
    check, and never add a check that only guards the harness.
+   **A mechanism that changes how the operator works is his call.** That
+   is one that changes when he is asked for something, when CI or a
+   preview runs, or what a session waits for. Write its entry in
+   [`/dantotsu`](../dantotsu/SKILL.md)'s analysis mode, ask him one
+   closed question, and build only the option he picks. The sweep of
+   PR #310 built four such mechanisms unasked and removed all four once
+   he read them.
 
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
@@ -403,7 +408,8 @@ not its volume, is what keeps the system improving.
 
 - **No "captured as follow-up; not implemented yet"** in any
   Eradication section. Either implement it or pick a lower level
-  that you can implement now.
+  that you can implement now. An entry in analysis mode that waits
+  on the operator's closed question is not a follow-up.
 - **No issue creation as a substitute for a code commit.** Issues
   drift; the loop dies.
 - **Agent never opens PRs against repos outside `hugoleborso/*`.**
@@ -461,9 +467,8 @@ not its volume, is what keeps the system improving.
   archived log is what keeps the context, not your memory of the work.
   The skill exists because this debt always slips.
 - **"Knowledge is enough for this defect."**
-  → Almost always wrong. Re-read the root cause and push for the
-  highest level you can reach. Knowledge is the *floor*, not the
-  default. The exception runs the other way. A defect that costs no
-  one anything, such as a cosmetic commit header, is a no-op, not a
-  new gate. PR #228 added a workflow for one, and the operator
-  removed it.
+  → Check the rungs above it first. But a defect already fixed and
+  tested, or one that costs no one anything, is a no-op, not a new
+  gate. PR #228 added a workflow for a cosmetic commit header, and
+  PR #310 forced a test clock on a test #298 had already fixed. The
+  operator removed both.
