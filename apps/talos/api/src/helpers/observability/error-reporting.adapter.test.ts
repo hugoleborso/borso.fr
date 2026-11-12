@@ -77,6 +77,7 @@ describe('startErrorReporting', () => {
       tracesSampleRate: 1,
       tracePropagationTargets: [],
       enableRuntimeChannelInjection: false,
+      ignoreSpans: [{ op: 'middleware' }],
       integrations: selectTracedIntegrations,
       beforeSend: withoutPrivateContent,
     });
