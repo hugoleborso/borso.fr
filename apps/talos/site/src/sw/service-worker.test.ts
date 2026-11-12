@@ -8,8 +8,8 @@ import {
 } from './service-worker.test-utils';
 
 const ORIGIN = 'https://talos.borso.fr';
-const SHELL_CACHE = 'talos-v1-shell';
-const DATA_CACHE = 'talos-v1-data';
+const SHELL_CACHE = 'talos-v2-shell';
+const DATA_CACHE = 'talos-v2-data';
 
 function serveAlways(
   response: FakeResponse,
@@ -49,12 +49,12 @@ describe('sw.js, the worker that ships', () => {
     worker.caches.seed('talos-v0-shell', '/old', buildResponse('', 'text/plain'));
     worker.caches.seed(SHELL_CACHE, '/kept', buildResponse('', 'text/plain'));
     worker.caches.seed(DATA_CACHE, '/api/today', buildResponse('{}', 'application/json'));
-    worker.caches.seed('talos-v1-fonts', '/f.woff2', buildResponse('', 'font/woff2'));
+    worker.caches.seed('talos-v2-fonts', '/f.woff2', buildResponse('', 'font/woff2'));
     await worker.dispatch('activate', {});
     expect([...worker.caches.namedCaches.keys()]).toEqual([
       SHELL_CACHE,
       DATA_CACHE,
-      'talos-v1-fonts',
+      'talos-v2-fonts',
     ]);
   });
 
@@ -169,7 +169,7 @@ describe('sw.js, the worker that ships', () => {
     expect((await worker.respondTo({ url: fontUrl }))?.body).toBe('font');
     expect((await worker.respondTo({ url: fontUrl }))?.body).toBe('font');
     expect(fetchStub).toHaveBeenCalledOnce();
-    expect([...worker.caches.namedCaches.keys()]).toEqual(['talos-v1-fonts']);
+    expect([...worker.caches.namedCaches.keys()]).toEqual(['talos-v2-fonts']);
   });
 
   it('does not keep a font the network refused', async () => {

@@ -52,4 +52,3 @@ Only the sign-in screen. It carries a tondo, the round painted centre of a drink
 ## Not done yet
 
 - The knowledge graph keeps its force layout. Redrawing it as a transit diagram (edges at 0, 45 and 90 degrees, station shapes per page type) is part of the explored direction and was left out of the first change.
-- The app icons in `site/public/icons/` are still the bronze mark of the previous world.

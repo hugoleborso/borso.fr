@@ -13,6 +13,7 @@ const FONT_SIZE_TOKENS = [
   'caption',
   'mono',
   'mono-sm',
+  'engraved',
 ];
 
 const mergeClassNames = extendTailwindMerge({

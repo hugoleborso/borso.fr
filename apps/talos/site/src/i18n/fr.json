@@ -1,5 +1,6 @@
 {
   "app.title": "Talos",
+  "opening.word": "TALOS",
   "common.loading": "Chargement",
   "common.error": "Chargement impossible",
   "common.retry": "Réessayer",

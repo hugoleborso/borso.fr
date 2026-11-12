@@ -6,6 +6,12 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 - Deploys to prod only, never to a preview ([ADR-2026-10-06T2302](../../docs/adr/2026-10-06T2302-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.
 - Secrets are SSM SecureStrings under `/talos/`, created by hand: `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, and optionally `fire-url`, `fire-token`, `secret-phrase`.
 
+## Icon and opening
+
+- The icon is a didrachm of Phaistos showing Talos winged. It shows on the home screen, in the browser tab and in the app header. The image files are in `site/public/icons/`.
+- Credit: Didrachme de Phaistos, Cabinet des médailles (BnF), photo Jastrow (2006), Wikimedia Commons ([`File:Didrachm_Phaistos_obverse_CdM.jpg`](https://commons.wikimedia.org/wiki/File:Didrachm_Phaistos_obverse_CdM.jpg)). Commons lists the photo as public domain, so the credit is a courtesy rather than a licence condition.
+- On a cold start, once per browser session, a 4.2 second opening plays. The coin spins in, the app opens in a circle around it, and the coin lands on the header logo. A tap skips it. It is skipped under reduced motion, because `tokens.css` sets every animation to zero there. The code is `OpeningOverlay`, `SpinningCoin` and `lib/opening.*`.
+
 ## Deliberate differences from the other apps
 
 - **One language.** The interface is French only, from one catalogue `site/src/i18n/fr.json`, which types the keys (`react-i18next.d.ts`). There is no `en.json` and no parity test; the rest of [standard 09](../../docs/standards/09-i18n.md) applies.

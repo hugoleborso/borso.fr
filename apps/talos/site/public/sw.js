@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'talos-v1';
+const CACHE_VERSION = 'talos-v2';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const ENTRY_POINT_URL = '/index.html';

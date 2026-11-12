@@ -45,7 +45,7 @@ Talos is not a todo app. It is the face of an agent that works overnight: it wri
 ## Evidence on Hand
 
 - Fictional content examples in `CONTRAT.md` and `test/memory-seed.json`.
-- No logo beyond the current favicon in `site/public/icons/`.
+- The logo is a didrachm of Phaistos showing Talos (`site/public/icons/`, credited in `README.md`).
 
 ## Product Principles
 
