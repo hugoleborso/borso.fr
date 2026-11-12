@@ -117,6 +117,7 @@ No:
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | proposed | 2026-11-11 |
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | accepted | 2026-11-11 |
 | [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
+| [2026-11-12T1724](./2026-11-12T1724-api-lambdas-import-the-hono-adapter-from-hono-aws-lambda.md) | API Lambdas import the Hono adapter from `@hono/aws-lambda` | accepted | 2026-11-12 |
 
 ### Data layer
 
@@ -153,6 +154,7 @@ No:
 - 2026-10-27T1118. chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
 - 2026-11-01T1313. pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
 - 2026-11-05T0445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
+- 2026-11-12T1724. the API Lambdas import Hono's Lambda adapter from `@hono/aws-lambda`, hono's own split of the `hono/aws-lambda` subpath that hono 4.13.9 deprecated and hono 5 removes.
 
 ### CDK / infra
 

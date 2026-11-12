@@ -1,4 +1,4 @@
-import { handle, type LambdaContext, type LambdaEvent } from 'hono/aws-lambda';
+import { handle, type LambdaContext, type LambdaEvent } from '@hono/aws-lambda';
 import { createApp } from './app';
 import {
   isStreakReminderEvent,

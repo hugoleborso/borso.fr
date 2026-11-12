@@ -1,4 +1,4 @@
-import { handle } from 'hono/aws-lambda';
+import { handle } from '@hono/aws-lambda';
 import { createApp } from './app';
 import { startErrorReporting } from './helpers/observability/error-reporting.adapter';
 import { selectErrorReportingSettings } from './helpers/observability/error-reporting.core';

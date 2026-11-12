@@ -1,5 +1,5 @@
 import { selectErrorReportingSettings } from '@domain/error-reporting.core';
-import { handle } from 'hono/aws-lambda';
+import { handle } from '@hono/aws-lambda';
 import { createApp } from './app';
 import {
   reportHandlerFailures,

@@ -9,9 +9,9 @@ triggers:
 
 # Hono's Lambda adapter base64-encodes `text/calendar`
 
-`hono/aws-lambda` decides per response whether the body is binary, and binary
+`@hono/aws-lambda` (formerly `hono/aws-lambda`) decides per response whether the body is binary, and binary
 bodies go back to Lambda base64-encoded. Its default rule, in
-`dist/adapter/aws-lambda/handler.js` (hono 4.13.7), treats as text only:
+`dist/handler.js` (`@hono/aws-lambda` 1.0.1; `dist/adapter/aws-lambda/handler.js` in hono 4.13.7), treats as text only:
 
 ```js
 !/^text\/(?:plain|html|css|javascript|csv)|(?:\/|\+)(?:json|xml)\s*(?:;|$)/.test(contentType)

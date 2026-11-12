@@ -24,7 +24,7 @@ Gateway integration selects.
 
 This is what `LambdaApi` builds, so it is true of every API in this
 repository. `apps/*/api/src/main.ts` therefore uses Hono's ordinary APIGW v2
-handler (`handle` from `hono/aws-lambda`) rather than a streaming one.
+handler (`handle` from `@hono/aws-lambda`) rather than a streaming one.
 
 ## What to reach for instead
 
