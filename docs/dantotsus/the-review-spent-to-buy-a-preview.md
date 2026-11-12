@@ -5,9 +5,9 @@ detected-at: local
 severity: medium
 related-pr: '#298'
 fix-pr: none (the kaizen pull request for PRs #293 and #298 that adds this file)
-fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-api-change-needs-validation.sh, .claude/settings.json]
+fix-commits: none (proposal under review)
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [hooks, harness, validation, preview, gates]
 zone: .claude/hooks/pretool-api-change-needs-validation.sh
@@ -15,6 +15,8 @@ recurs: none (the first entry on the api-validation gate; the-validator-opened-a
 ---
 
 # The review spent to buy a preview
+
+Status: a proposal. The operator chooses the countermeasure, and no code has changed.
 
 ## User impact
 
@@ -80,53 +82,29 @@ on:
 
 ## Countermeasure
 
-The gate moves from the moment the pull request exists to the moment it can
-be merged. A draft opens without a report. The call that marks it ready meets
-the same check. A draft still deploys its preview: `preview.yml` and `ci.yml`
-hold no condition on `draft` (`grep -n draft .github/workflows/*.yml` prints
-nothing). Measured on PR #310, the pull request of this entry, opened as a
-draft at 01:34 UTC: the five `deploy (<app>)` jobs of `preview` and the jobs of
-`ci` had started 15 seconds later. GitHub refuses to merge a draft (its
-documented behaviour, not tried here, because trying it is a merge call).
+Not chosen. The operator decides when an API change may reach a preview, so
+the options are side by side.
+
+| Option | What a session does on work like PR #298 | What it costs |
+| --- | --- | --- |
+| Keep the gate where it is | It opens the pull request only with a report, so it reviews unfinished code or measures another way | A round is spent early again, or the preview stops being the instrument |
+| Ask for the report at the merge | It opens the pull request freely, measures, and runs the review once the work is done | API code reaches a preview before any review. A merge the operator makes in GitHub meets no hook |
+| Let through a pull request whose body says `Preview first: <reason>`, and ask for the report at the merge | The same as above, and the operator reads in the body that no review exists yet | The same, for the pull requests that say so, and two hooks to keep |
+
+A first version of this entry let a draft pull request open without a report
+and asked for the report when it was marked ready. The operator refused it on
+2026-11-12: a draft is not to deploy its preview. Today it does. PR #310 was a
+draft for one minute, and its five `deploy (<app>)` jobs started 18 seconds
+after it opened (measured on its check runs). `preview.yml` holds no condition
+on `draft`.
 
 ## Eradication
 
-**Type:** DevX check (level 2)
+**Type:** knowledge (level 5), until the operator chooses.
 
-**Reference:** the commit that adds this file.
+**Reference:** none yet. The hook is as it was on `main`.
 
-```diff
-+case "$TOOL" in
-+  mcp__github__create_pull_request)
-+    [[ "$DRAFT" == "true" ]] && exit 0
-+    ;;
-+  mcp__github__update_pull_request)
-+    [[ "$DRAFT" == "false" ]] || exit 0
-+    HEAD_BRANCH="$(head_of_pull_request "$(jq -r '.tool_input.pullNumber // empty' <<<"$INPUT")")"
-+    ;;
-```
-
-The refusal now names the way through: "If the work is not finished and its
-preview is what you need next, open the pull request as a draft".
-
-**Proof it can fail:** on a scratch worktree holding one commit that changes
-`apps/pragma/api/src/main.ts` and no report, the hook was fed each call:
-
-| Call | Exit |
-| --- | --- |
-| `create_pull_request`, no `draft` | 2 |
-| `create_pull_request`, `draft: true` | 0 |
-| `create_pull_request`, `draft: false` | 2 |
-| `update_pull_request`, body only | 0 |
-| `update_pull_request`, `draft: false` | 2 |
-| `update_pull_request`, `draft: true` | 0 |
-| `gh pr create` | 2 |
-| `gh pr create --draft` | 0 |
-| `gh pr ready 298` | 2 |
-| `gh pr ready 298 --undo` | 0 |
-| a commit message that mentions `gh pr ready` | 0 |
-| `create_pull_request`, no `draft`, after a report is committed | 0 |
-| `update_pull_request`, `draft: false`, after a report is committed | 0 |
+**Proof it can fail:** none, since nothing was added.
 
 **Similar instances:** `.claude/settings.json` registers two other hooks on
 `mcp__github__create_pull_request`. `pretool-one-pull-request-per-session.sh`

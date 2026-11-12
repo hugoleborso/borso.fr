@@ -137,15 +137,6 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-one-pull-request-per-session.sh"
           }
         ]
-      },
-      {
-        "matcher": "mcp__github__update_pull_request",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-api-change-needs-validation.sh"
-          }
-        ]
       }
     ],
     "PostToolUse": [
