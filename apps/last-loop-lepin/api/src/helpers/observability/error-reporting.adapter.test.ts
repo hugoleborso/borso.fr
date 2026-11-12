@@ -6,6 +6,7 @@ import {
   startErrorReporting,
   traceIncomingRequest,
 } from './error-reporting.adapter';
+import { redactDatabaseSpan } from './database-span.core';
 
 const requestSpan = vi.hoisted(() => ({
   setAttribute: vi.fn(),
@@ -45,7 +46,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).not.toHaveBeenCalled();
   });
 
-  it('starts the SDK tagged with the app in the shared project, with every personal data category off and no trace header sent outward', () => {
+  it('starts the SDK tagged with the app in the shared project, with every personal data category off, no trace header sent outward and no SQL on a database span', () => {
     startErrorReporting({ dsn: DSN, environment: 'prod', tracesSampleRate: 1, release: 'abc123' });
 
     expect(sentry.init).toHaveBeenCalledWith({
@@ -66,6 +67,7 @@ describe('startErrorReporting', () => {
       },
       enableRuntimeChannelInjection: false,
       integrations: [{ name: 'PostgresJs' }],
+      beforeSendSpan: redactDatabaseSpan,
     });
   });
 

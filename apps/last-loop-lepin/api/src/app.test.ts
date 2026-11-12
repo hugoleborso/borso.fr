@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/aws-serverless';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app';
 
@@ -97,5 +98,47 @@ describe('createApp — wide event', () => {
     expect(writtenEvents).toEqual([
       expect.objectContaining({ 'http.response.status_code': 500, outcome: 'failed' }),
     ]);
+  });
+});
+
+describe('createApp — unhandled error report', () => {
+  const reportedFailures: (string | undefined)[] = [];
+  const client = new Sentry.NodeClient({
+    dsn: 'https://public-key@example.invalid/1',
+    integrations: [],
+    stackParser: Sentry.defaultStackParser,
+    transport: (options) => Sentry.createTransport(options, () => Promise.resolve({})),
+    beforeSend: (event) => {
+      reportedFailures.push(event.exception?.values?.[0]?.value);
+      return null;
+    },
+  });
+
+  beforeAll(() => {
+    Sentry.setCurrentClient(client);
+    client.init();
+  });
+
+  afterAll(async () => {
+    Sentry.getCurrentScope().setClient(undefined);
+    await client.close();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('reports a route that throws past every middleware to Sentry once', async () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const app = createApp();
+    app.get('/api/always-fails', () => {
+      throw new Error('route failed');
+    });
+
+    const response = await app.request('/api/always-fails');
+    await Sentry.flush();
+
+    expect(response.status).toBe(500);
+    expect(reportedFailures).toStrictEqual(['route failed']);
   });
 });
