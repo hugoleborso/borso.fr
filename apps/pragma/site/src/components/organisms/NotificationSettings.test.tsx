@@ -39,6 +39,7 @@ const PREFERENCES = {
   preferences: [
     { category: 'takes', enabled: true },
     { category: 'take_comments', enabled: true },
+    { category: 'songs', enabled: true },
     { category: 'sessions', enabled: false },
     { category: 'setlists', enabled: true },
     { category: 'streak', enabled: true },

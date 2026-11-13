@@ -16,7 +16,7 @@ import { createCredentialForMember } from '../../api/src/auth/credentials.servic
 import { createSession, getSessions, patchSession } from '../../api/src/sessions/sessions.service';
 import { appendEntry } from '../../api/src/setlists/setlist-entry.service';
 import { createSetlist, getAllSetlists, getEntries } from '../../api/src/setlists/setlists.service';
-import { createSong, getSongs } from '../../api/src/songs/songs.service';
+import { getSongs, insertSongWithoutNotice } from '../../api/src/songs/songs.service';
 import { logStudy } from '../../api/src/studies/studies.service';
 import { createTake, createTakeComment } from '../../api/src/takes/takes.service';
 import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
@@ -507,7 +507,7 @@ async function main(): Promise<void> {
     );
 
   for (const song of EXTRA_SONGS) {
-    const created = await createSong({
+    const created = await insertSongWithoutNotice({
       title: song.title,
       artist: song.artist,
       status: song.status,

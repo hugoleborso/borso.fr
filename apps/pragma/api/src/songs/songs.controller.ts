@@ -45,7 +45,10 @@ export function buildSongsRouter() {
     })
     .post('/', zValidator('json', songCreateInputSchema), async (context) => {
       const input = context.req.valid('json');
-      const outcome = await createSong(input);
+      const outcome = await createSong(input, {
+        memberId: readMemberId(context),
+        now: new Date(),
+      });
       if (outcome.kind === 'deezer-track-taken') {
         return context.json(
           { error: outcome.kind, songId: outcome.holder.id, songTitle: outcome.holder.title },

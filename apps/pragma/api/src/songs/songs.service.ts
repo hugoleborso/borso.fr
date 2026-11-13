@@ -120,7 +120,7 @@ async function refuseTakenDeezerTrack(
   return { kind: 'deezer-track-taken', holder };
 }
 
-export async function createSong(
+export async function insertSongWithoutNotice(
   input: SongCreateInput,
   options: ResolveSpotifyOptions = {},
 ): Promise<SongCreateOutcome> {
@@ -130,6 +130,26 @@ export async function createSong(
   } catch (error) {
     return await refuseTakenDeezerTrack(error, values.deezerTrackId, null);
   }
+}
+
+// @FollowsBlueprint service-orchestration
+export async function createSong(
+  input: SongCreateInput,
+  actor: WriteActor,
+  options: ResolveSpotifyOptions = {},
+): Promise<SongCreateOutcome> {
+  const outcome = await insertSongWithoutNotice(input, options);
+  if (outcome.kind !== 'ok') return outcome;
+  await notifyBand(
+    {
+      kind: 'song-created',
+      actorMemberId: actor.memberId,
+      songId: outcome.song.id,
+      songTitle: outcome.song.title,
+    },
+    actor.now,
+  );
+  return outcome;
 }
 
 async function notifyIfLineupChanged(
@@ -252,7 +272,7 @@ export async function searchAudienceSongs(
 const SUGGESTED_SONG_STATUS = 'idea';
 
 async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOutcome> {
-  return await createSong({
+  return await insertSongWithoutNotice({
     title: track.title,
     artist: track.artist,
     status: SUGGESTED_SONG_STATUS,

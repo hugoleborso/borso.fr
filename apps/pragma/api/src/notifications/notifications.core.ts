@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const NOTIFICATION_CATEGORIES = [
   'takes',
   'take_comments',
+  'songs',
   'sessions',
   'setlists',
   'streak',
@@ -39,6 +40,12 @@ export interface TakeCommentCreatedEvent extends ActedEvent {
   readonly songTitle: string;
 }
 
+export interface SongCreatedEvent extends ActedEvent {
+  readonly kind: 'song-created';
+  readonly songId: string;
+  readonly songTitle: string;
+}
+
 export interface SessionWrittenEvent extends ActedEvent {
   readonly kind: 'session-created' | 'session-changed';
   readonly sessionId: string;
@@ -68,6 +75,7 @@ export interface TransitionChangedEvent extends ActedEvent {
 export type NotificationEvent =
   | TakeCreatedEvent
   | TakeCommentCreatedEvent
+  | SongCreatedEvent
   | SessionWrittenEvent
   | SetlistChangedEvent
   | SongLineupChangedEvent
@@ -158,6 +166,8 @@ export function selectCategory(event: NotificationEvent): NotificationCategory {
       return 'takes';
     case 'take-comment-created':
       return 'take_comments';
+    case 'song-created':
+      return 'songs';
     case 'session-created':
     case 'session-changed':
       return 'sessions';
@@ -206,6 +216,8 @@ export function buildGroupKey(event: NotificationEvent): string {
       return `take:${event.takeId}`;
     case 'take-comment-created':
       return `take-comment:${event.takeId}`;
+    case 'song-created':
+      return `song-created:${event.actorMemberId}`;
     case 'session-created':
     case 'session-changed':
       return `session:${event.sessionId}`;
@@ -233,6 +245,7 @@ export function buildNotificationUrl(event: NotificationEvent): string {
       return `/sessions/${event.sessionId}`;
     case 'setlist-changed':
       return `/setlists/${event.setlistId}`;
+    case 'song-created':
     case 'song-lineup-changed':
       return `/catalog/${event.songId}`;
     case 'transition-changed':
@@ -246,6 +259,7 @@ function selectSubjectParameters(event: NotificationEvent): MessageParameters {
   switch (event.kind) {
     case 'take-created':
     case 'take-comment-created':
+    case 'song-created':
     case 'song-lineup-changed':
       return { songTitle: event.songTitle };
     case 'session-created':

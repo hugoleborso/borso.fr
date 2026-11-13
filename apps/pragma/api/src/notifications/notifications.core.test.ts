@@ -31,6 +31,12 @@ const TAKE_CREATED: NotificationEvent = {
   songTitle: 'Seven Nation Army',
 };
 const TAKE_COMMENT_CREATED: NotificationEvent = { ...TAKE_CREATED, kind: 'take-comment-created' };
+const SONG_CREATED: NotificationEvent = {
+  kind: 'song-created',
+  actorMemberId: ACTOR,
+  songId: 'song-3',
+  songTitle: 'Rehab',
+};
 const SESSION_CREATED: NotificationEvent = {
   kind: 'session-created',
   actorMemberId: ACTOR,
@@ -131,6 +137,7 @@ describe('selectCategory', () => {
   it.each([
     [TAKE_CREATED, 'takes'],
     [TAKE_COMMENT_CREATED, 'take_comments'],
+    [SONG_CREATED, 'songs'],
     [SESSION_CREATED, 'sessions'],
     [SESSION_CHANGED, 'sessions'],
     [SETLIST_CHANGED, 'setlists'],
@@ -164,6 +171,7 @@ describe('buildCategoryToggles', () => {
     ).toEqual([
       { category: 'takes', enabled: true },
       { category: 'take_comments', enabled: true },
+      { category: 'songs', enabled: true },
       { category: 'sessions', enabled: false },
       { category: 'setlists', enabled: true },
       { category: 'streak', enabled: true },
@@ -171,6 +179,7 @@ describe('buildCategoryToggles', () => {
     expect(NOTIFICATION_CATEGORIES).toEqual([
       'takes',
       'take_comments',
+      'songs',
       'sessions',
       'setlists',
       'streak',
@@ -225,6 +234,7 @@ describe('buildGroupKey', () => {
   it.each([
     [TAKE_CREATED, 'take:take-1'],
     [TAKE_COMMENT_CREATED, 'take-comment:take-1'],
+    [SONG_CREATED, 'song-created:member-hugo'],
     [SESSION_CREATED, 'session:session-1'],
     [SESSION_CHANGED, 'session:session-1'],
     [SETLIST_CHANGED, 'setlist:setlist-1'],
@@ -256,6 +266,7 @@ describe('buildNotificationUrl', () => {
     [SESSION_CREATED, '/sessions/session-1'],
     [SESSION_CHANGED, '/sessions/session-1'],
     [SETLIST_CHANGED, '/setlists/setlist-1'],
+    [SONG_CREATED, '/catalog/song-3'],
     [SONG_LINEUP_CHANGED, '/catalog/song-2'],
     [TRANSITION_CHANGED, '/catalog/song-a'],
   ] as const)('opens %o at %s', (event, url) => {

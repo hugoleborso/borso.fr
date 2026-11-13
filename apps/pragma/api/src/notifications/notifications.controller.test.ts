@@ -21,6 +21,8 @@ import {
   subscribeDevice,
   turnCategory,
 } from '../../../test/push-utils';
+import { songCreateInputSchema } from '../songs/songs.schema';
+import { insertSongWithoutNotice } from '../songs/songs.service';
 import { buildTakeObjectKey } from '../takes/takes.core';
 import { takeTable } from '../takes/takes.schema';
 import { hasClaimedDispatch } from './notifications.repository';
@@ -79,11 +81,12 @@ async function postTake(member: AuthenticatedApp, songId: string): Promise<Respo
   });
 }
 
-async function createSong(member: AuthenticatedApp): Promise<string> {
-  return await createId(member, '/api/songs', 'song', {
-    title: 'Seven Nation Army',
-    status: 'idea',
-  });
+async function seedSong(): Promise<string> {
+  const outcome = await insertSongWithoutNotice(
+    songCreateInputSchema.parse({ title: 'Seven Nation Army', status: 'idea' }),
+  );
+  if (outcome.kind !== 'ok') throw new Error('the seeded song names a taken track');
+  return outcome.song.id;
 }
 
 async function buildBand(): Promise<Band> {
@@ -250,6 +253,7 @@ describe('notifications controller (back-e2e)', () => {
         preferences: [
           { category: 'takes', enabled: true },
           { category: 'take_comments', enabled: true },
+          { category: 'songs', enabled: true },
           { category: 'sessions', enabled: true },
           { category: 'setlists', enabled: true },
           { category: 'streak', enabled: true },
@@ -301,7 +305,7 @@ describe('notifications controller (back-e2e)', () => {
       const send = stubPushService();
       const { hugo, sam } = await buildBand();
       await turnCategory(sam, 'takes', false);
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
 
       expect((await postTake(hugo, songId)).status).toBe(201);
 
@@ -320,7 +324,7 @@ describe('notifications controller (back-e2e)', () => {
     it('sends nothing for a take the device sends a second time', async () => {
       const send = stubPushService();
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
       const id = randomUUID();
       const body = {
         id,
@@ -348,7 +352,7 @@ describe('notifications controller (back-e2e)', () => {
     it('sends one round for a take two tabs send at the same moment', async () => {
       const send = stubPushService();
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
       const id = randomUUID();
       const body = {
         id,
@@ -379,7 +383,7 @@ describe('notifications controller (back-e2e)', () => {
         async () => await Promise.reject(Object.assign(new Error('gone'), { statusCode: 410 })),
       );
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
 
       expect((await postTake(hugo, songId)).status).toBe(201);
 
@@ -393,7 +397,7 @@ describe('notifications controller (back-e2e)', () => {
           await Promise.reject(Object.assign(new Error('unavailable'), { statusCode: 503 })),
       );
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
 
       expect((await postTake(hugo, songId)).status).toBe(201);
 
@@ -410,7 +414,7 @@ describe('notifications controller (back-e2e)', () => {
     it('answers the write even when sending fails outright', async () => {
       const send = stubPushService();
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
       await testDatabase().execute(
         sql.raw('ALTER TABLE "notification_dispatch" RENAME TO "notification_dispatch_away"'),
       );
@@ -433,7 +437,7 @@ describe('notifications controller (back-e2e)', () => {
     it('answers the write once the deadline passes, even if a push service never answers', async () => {
       stubPushService(async () => await new Promise(() => undefined));
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
       const startedAt = Date.now();
 
       expect((await postTake(hugo, songId)).status).toBe(201);
@@ -447,7 +451,7 @@ describe('notifications controller (back-e2e)', () => {
     it('generates the stage key pair at the first send and signs every push with it', async () => {
       const send = stubPushService();
       const { hugo } = await buildBand();
-      const songId = await createSong(hugo);
+      const songId = await seedSong();
 
       expect((await postTake(hugo, songId)).status).toBe(201);
 

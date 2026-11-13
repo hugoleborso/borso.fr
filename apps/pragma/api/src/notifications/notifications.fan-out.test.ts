@@ -214,6 +214,29 @@ describe('the writes that notify the band (back-e2e)', () => {
     });
   });
 
+  it('a song added to the catalogue, grouped per member who adds', async () => {
+    const band = await prepareBand();
+    const songId = await createId(band.hugo, '/api/songs', 'song', {
+      title: 'Valerie',
+      status: 'idea',
+    });
+    expect(lastSentToLea(band)).toMatchObject({
+      messageKey: 'song-created',
+      parameters: { actorName: 'Hugo', songTitle: 'Valerie' },
+      url: `/catalog/${songId}`,
+      tag: `song-created:${band.hugo.memberId}`,
+    });
+
+    const before = sentCount(band);
+    await createId(band.hugo, '/api/songs', 'song', { title: 'Rehab', status: 'idea' });
+    expect(sentCount(band)).toBe(before);
+
+    startNextGroupWindow();
+    await turnCategory(band.lea, 'songs', false);
+    await createId(band.hugo, '/api/songs', 'song', { title: 'Back to Black', status: 'idea' });
+    expect(sentCount(band)).toBe(before);
+  });
+
   it('a song whose default lineup changed, and only then', async () => {
     const band = await prepareBand();
     const songId = await createSong(band, 'Valerie');
