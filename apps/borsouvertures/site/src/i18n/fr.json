@@ -135,6 +135,42 @@
       "message": "Le fichier des paquets n'a pas pu être chargé. Essayez de recharger la page."
     }
   },
+  "opponent": {
+    "title": "Jouer ce paquet contre Stockfish",
+    "start": "Commencer une partie",
+    "new-game": "Nouvelle partie",
+    "leave": "Quitter la partie",
+    "strength": {
+      "label": "Force de Stockfish",
+      "steps": {
+        "skill-0": "Le plus facile",
+        "skill-3": "Plus facile",
+        "skill-6": "Facile",
+        "elo-1320": "Classement 1320",
+        "elo-1500": "Classement 1500",
+        "elo-1700": "Classement 1700",
+        "elo-1900": "Classement 1900"
+      }
+    },
+    "source": {
+      "book": "L'adversaire suit le paquet",
+      "stockfish": "Le paquet est terminé, Stockfish joue"
+    },
+    "last-move": {
+      "book": "Le paquet a joué {{move}}",
+      "stockfish": "Stockfish a joué {{move}}"
+    },
+    "status": {
+      "reader-to-move": "À vous de jouer",
+      "book-moving": "Le paquet répond",
+      "stockfish-moving": "Stockfish réfléchit",
+      "reader-won": "Échec et mat. Vous avez gagné.",
+      "opponent-won": "Échec et mat. Vous avez perdu.",
+      "draw": "La partie est nulle.",
+      "stockfish-unavailable": "Stockfish n'a pas pu se charger, la partie s'arrête donc là où le paquet s'arrête. Sa première partie sur un appareil a besoin du réseau.",
+      "stockfish-illegal-move": "Stockfish a répondu un coup que l'échiquier refuse. La partie s'arrête ici."
+    }
+  },
   "explore": {
     "title": "Explorer",
     "description": "Apprenez et jouez dans tout le catalogue d'ouvertures. Rien de ce que vous faites ici ne crée de révision."

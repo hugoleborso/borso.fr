@@ -23,6 +23,7 @@ const VALID_STATE: PersistedState = {
   },
   treeVisualizationMode: 'buttons',
   newCardsPerDay: 10,
+  opponentStrength: 'skill-3',
 };
 
 const OTHER_VALID_STATE: PersistedState = {
@@ -35,6 +36,7 @@ const OTHER_VALID_STATE: PersistedState = {
   playScope: { openingIds: [], variationIds: [], lineIds: [] },
   treeVisualizationMode: null,
   newCardsPerDay: 0,
+  opponentStrength: 'elo-1900',
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -57,6 +59,22 @@ describe('parsePersistedState', () => {
   it('round-trips the other value of every enum field', () => {
     const raw = stringifyPersistedState(OTHER_VALID_STATE);
     expect(parsePersistedState(raw)).toEqual(OTHER_VALID_STATE);
+  });
+
+  it('gives a record stored before the opponent strength existed the 1320 step', () => {
+    const { opponentStrength: _opponentStrength, ...storedBefore } = VALID_STATE;
+    expect(parsePersistedState(JSON.stringify(storedBefore))).toEqual({
+      ...VALID_STATE,
+      opponentStrength: 'elo-1320',
+    });
+  });
+
+  it('rejects an opponent strength that is not a step', () => {
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, opponentStrength: 'elo-2000' };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+    expect(
+      parsePersistedState(JSON.stringify({ ...VALID_STATE, opponentStrength: null })),
+    ).toBeNull();
   });
 
   it('rejects an unknown mode value', () => {

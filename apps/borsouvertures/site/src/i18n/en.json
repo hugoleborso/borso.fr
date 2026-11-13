@@ -135,6 +135,42 @@
       "message": "The deck file failed to load. Try reloading the page."
     }
   },
+  "opponent": {
+    "title": "Play it against Stockfish",
+    "start": "Start a game",
+    "new-game": "New game",
+    "leave": "Leave the game",
+    "strength": {
+      "label": "Stockfish strength",
+      "steps": {
+        "skill-0": "Easiest",
+        "skill-3": "Easier",
+        "skill-6": "Easy",
+        "elo-1320": "1320 rating",
+        "elo-1500": "1500 rating",
+        "elo-1700": "1700 rating",
+        "elo-1900": "1900 rating"
+      }
+    },
+    "source": {
+      "book": "The opponent follows the deck",
+      "stockfish": "The deck has ended, Stockfish plays"
+    },
+    "last-move": {
+      "book": "The deck played {{move}}",
+      "stockfish": "Stockfish played {{move}}"
+    },
+    "status": {
+      "reader-to-move": "Your move",
+      "book-moving": "The deck is answering",
+      "stockfish-moving": "Stockfish is thinking",
+      "reader-won": "Checkmate. You won.",
+      "opponent-won": "Checkmate. You lost.",
+      "draw": "The game is a draw.",
+      "stockfish-unavailable": "Stockfish could not load, so the game ends where the deck ends. Its first game on a device needs the network.",
+      "stockfish-illegal-move": "Stockfish answered a move the board refuses. The game ends here."
+    }
+  },
   "explore": {
     "title": "Explore",
     "description": "Learn and play over the whole catalogue of openings. Nothing you do here creates a review."

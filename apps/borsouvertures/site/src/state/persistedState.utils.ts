@@ -1,4 +1,9 @@
 import type { Selection } from '@/openings/selectors.utils';
+import {
+  DEFAULT_OPPONENT_STRENGTH,
+  isOpponentStrengthId,
+  type OpponentStrengthId,
+} from '@/opponent/opponent-strength.core';
 import { type BoardThemeId, isBoardThemeId } from '@/theme/boardThemes.utils';
 
 export type Mode = 'learn' | 'play';
@@ -25,6 +30,7 @@ export interface PersistedState {
   playScope: PlayScope;
   treeVisualizationMode: TreeVisualizationMode;
   newCardsPerDay: number;
+  opponentStrength: OpponentStrengthId;
 }
 
 /**
@@ -52,6 +58,7 @@ export function parsePersistedState(raw: string): PersistedState | null {
   const playScope = parsePlayScope(record.playScope);
   const treeVisualizationMode = parseTreeVisualizationMode(record.treeVisualizationMode);
   const newCardsPerDay = parseNewCardsPerDay(record.newCardsPerDay);
+  const opponentStrength = parseOpponentStrength(record.opponentStrength);
 
   if (
     mode === null ||
@@ -62,7 +69,8 @@ export function parsePersistedState(raw: string): PersistedState | null {
     playAutoOpponent === null ||
     playScope === null ||
     treeVisualizationMode === undefined ||
-    newCardsPerDay === null
+    newCardsPerDay === null ||
+    opponentStrength === null
   ) {
     return null;
   }
@@ -76,7 +84,13 @@ export function parsePersistedState(raw: string): PersistedState | null {
     playScope,
     treeVisualizationMode,
     newCardsPerDay,
+    opponentStrength,
   };
+}
+
+function parseOpponentStrength(value: unknown): OpponentStrengthId | null {
+  if (value === undefined) return DEFAULT_OPPONENT_STRENGTH;
+  return isOpponentStrengthId(value) ? value : null;
 }
 
 function parseTreeVisualizationMode(value: unknown): TreeVisualizationMode | undefined {

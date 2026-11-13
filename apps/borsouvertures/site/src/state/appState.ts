@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from 'react';
 import { EMPTY_PLAY_SCOPE, FULL_SELECTION } from '@/openings/playScope.core';
 import type { Selection } from '@/openings/selectors.utils';
+import {
+  DEFAULT_OPPONENT_STRENGTH,
+  type OpponentStrengthId,
+} from '@/opponent/opponent-strength.core';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import {
   type Mode,
@@ -30,6 +34,7 @@ const INITIAL_STATE: AppState = {
   playScope: EMPTY_PLAY_SCOPE,
   treeVisualizationMode: null,
   newCardsPerDay: NEW_CARDS_PER_DAY_DEFAULT,
+  opponentStrength: DEFAULT_OPPONENT_STRENGTH,
 };
 
 function readInitialState(): AppState {
@@ -118,6 +123,14 @@ export function setTreeVisualizationMode(treeVisualizationMode: TreeVisualizatio
 
 export function setNewCardsPerDay(newCardsPerDay: number): void {
   update({ newCardsPerDay });
+}
+
+export function setOpponentStrength(opponentStrength: OpponentStrengthId): void {
+  update({ opponentStrength });
+}
+
+export function readOpponentStrength(): OpponentStrengthId {
+  return store.state.opponentStrength;
 }
 
 export function resetPlayScopeAndSelection(): void {

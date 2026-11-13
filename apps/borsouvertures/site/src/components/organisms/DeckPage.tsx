@@ -11,6 +11,7 @@ import { openScreen } from '@/navigation/navigation.store';
 import { findDeckProgress } from '@/review/daily-plan.core';
 import { useTrainerProgress } from '@/review/trainer-progress.hook';
 import type { Side } from '@/state/persistedState.utils';
+import { DeckGame } from './DeckGame';
 import type { AppScreenProps } from './screen.types';
 
 const SIDE_KEY_BY_SIDE = {
@@ -59,6 +60,7 @@ export function DeckPage({ decks, deckId }: AppScreenProps) {
         />
         <NothingToReview message={t('decks.nothing-to-review')} />
       </Panel>
+      <DeckGame deck={deck} />
       <Panel title={t('decks.lines')}>
         {deck.lines.map((line) => (
           <DeckLineDetails key={line.name} line={line} steps={listLineSteps(deck, line)} />

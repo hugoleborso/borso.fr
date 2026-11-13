@@ -1,0 +1,177 @@
+import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { IDBFactory } from 'fake-indexeddb';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import '@/i18n/i18n';
+import { buildExampleDocument } from '@/decks/deck.test-utils';
+import { deckGameMachine } from '@/opponent/deck-game-machine.setup';
+import { readReviewLog } from '@/review/review-log.store';
+import {
+  openApplication,
+  readCount,
+  stubBoardGeometry,
+  stubDecksFetch,
+} from '@/routes/trainer-page.test-utils';
+
+const sentry = vi.hoisted(() => ({
+  init: vi.fn(),
+  addBreadcrumb: vi.fn(),
+  captureException: vi.fn(),
+  browserTracingIntegration: vi.fn(),
+}));
+
+vi.mock('@sentry/react', () => sentry);
+
+type WorkerListener = (event: { data?: string; message?: string }) => void;
+
+const stockfishWorkers: FakeStockfishWorker[] = [];
+const stockfishScript = { canLoad: true, bestMove: 'a2a3' };
+
+// @FollowsBlueprint test-jsdom-gap-stub
+class FakeStockfishWorker {
+  readonly url: string;
+  readonly commands: string[] = [];
+  isTerminated = false;
+  private readonly listeners = new Map<string, WorkerListener>();
+
+  constructor(url: string) {
+    this.url = url;
+    stockfishWorkers.push(this);
+  }
+
+  addEventListener(type: string, listener: WorkerListener): void {
+    this.listeners.set(type, listener);
+  }
+
+  postMessage(command: string): void {
+    this.commands.push(command);
+    queueMicrotask(() => {
+      if (!stockfishScript.canLoad) this.listeners.get('error')?.({ message: 'offline' });
+      else if (command === 'uci') this.listeners.get('message')?.({ data: 'uciok' });
+      else if (command.startsWith('go ')) {
+        this.listeners.get('message')?.({ data: `bestmove ${stockfishScript.bestMove}` });
+      }
+    });
+  }
+
+  terminate(): void {
+    this.isTerminated = true;
+  }
+}
+
+function playReaderMove(uci: string): void {
+  act(() => {
+    deckGameMachine.playMove(uci);
+  });
+}
+
+async function playMainLineToItsEnd(): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
+  await screen.findByText('The deck played 1. d4');
+  playReaderMove('d7d5');
+  await screen.findByText('The deck played 2. c4');
+  playReaderMove('e7e5');
+  await screen.findByText('The deck played 3. dxe5');
+  playReaderMove('d5d4');
+  await screen.findByText('The deck played 4. Nf3');
+  playReaderMove('b8c6');
+}
+
+// @FollowsBlueprint test-component-render
+describe('a game against Stockfish on a deck page', () => {
+  beforeAll(() => {
+    window.localStorage.clear();
+    stubDecksFetch(buildExampleDocument());
+    vi.stubGlobal('indexedDB', new IDBFactory());
+    vi.stubGlobal('Worker', FakeStockfishWorker);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    stubBoardGeometry();
+  });
+
+  beforeEach(async () => {
+    act(() => {
+      deckGameMachine.leave();
+    });
+    stockfishWorkers.length = 0;
+    stockfishScript.canLoad = true;
+    sentry.captureException.mockClear();
+    await openApplication();
+    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Albin Countergambit/ }));
+  });
+
+  it('offers the game with the 1320 step selected, and starts no worker before a game', () => {
+    expect(screen.getByRole('heading', { name: 'Play it against Stockfish' })).toBeTruthy();
+    const strength = screen.getByRole('combobox', { name: 'Stockfish strength' });
+    expect(strength).toHaveProperty('value', 'elo-1320');
+    expect(Array.from(strength.querySelectorAll('option'), (option) => option.textContent)).toEqual(
+      ['Easiest', 'Easier', 'Easy', '1320 rating', '1500 rating', '1700 rating', '1900 rating'],
+    );
+    expect(stockfishWorkers).toEqual([]);
+  });
+
+  it('plays the deck moves, then a Stockfish move at the default strength once the line ends', async () => {
+    await playMainLineToItsEnd();
+    expect(await screen.findByText('Stockfish played 5. a3')).toBeTruthy();
+    expect(screen.getByText('The deck has ended, Stockfish plays')).toBeTruthy();
+    expect(screen.getByText('Your move')).toBeTruthy();
+    const [worker] = stockfishWorkers;
+    expect(worker?.url).toBe('/stockfish/stockfish-19-lite-single.js');
+    expect(worker?.commands).toEqual([
+      'uci',
+      'setoption name UCI_LimitStrength value true',
+      'setoption name UCI_Elo value 1320',
+      'position fen r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5N2/PP2PPPP/RNBQKB1R w KQkq - 2 5',
+      'go movetime 400',
+    ]);
+  });
+
+  it('stores no review, so the counts on Today stay as they were', async () => {
+    await playMainLineToItsEnd();
+    await screen.findByText('Stockfish played 5. a3');
+    await userEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(readCount('due')).toBe('0');
+    expect(readCount('new')).toBe('6');
+    expect(readReviewLog().events).toEqual([]);
+  });
+
+  it('plays an easier step with the skill level once the reader selects it', async () => {
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Stockfish strength' }),
+      'skill-3',
+    );
+    await playMainLineToItsEnd();
+    await screen.findByText('Stockfish played 5. a3');
+    expect(stockfishWorkers[0]?.commands.slice(1, 3)).toEqual([
+      'setoption name UCI_LimitStrength value false',
+      'setoption name Skill Level value 3',
+    ]);
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: 'Stockfish strength' }),
+      'elo-1320',
+    );
+  });
+
+  it('ends the game where the deck ends, with a message and a report, when the worker cannot load', async () => {
+    stockfishScript.canLoad = false;
+    await playMainLineToItsEnd();
+    expect(
+      await screen.findByText(
+        'Stockfish could not load, so the game ends where the deck ends. Its first game on a device needs the network.',
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText('The deck played 4. Nf3')).toBeTruthy();
+    expect(sentry.captureException).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'StockfishLoadFailedError' }),
+      { tags: { online: 'true' } },
+    );
+  });
+
+  it('stops the worker and offers a new game when the reader leaves', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
+    await screen.findByText('The deck played 1. d4');
+    await userEvent.click(screen.getByRole('button', { name: 'Leave the game' }));
+    expect(screen.getByRole('button', { name: 'Start a game' })).toBeTruthy();
+    expect(stockfishWorkers.map((worker) => worker.isTerminated)).toEqual([true]);
+  });
+});

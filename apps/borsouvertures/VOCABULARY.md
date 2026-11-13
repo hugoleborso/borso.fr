@@ -16,11 +16,13 @@ from the type, pure helper or machine named beside it.
 
 ## Auto opponent
 
-The automated reply that answers the reader's move with one of the available
-book moves, picked at random.
+The automated reply that answers the reader's move. In Explore it is one of the
+available book moves, picked at random. In a game on a deck page it has a move
+source, `book` then `stockfish`.
 
 Lives in: `site/src/openings/machineEffects.ts`, used by the two machines in
-`site/src/openings/`
+`site/src/openings/`, and `site/src/opponent/deck-game-machine.utils.ts` for a
+game on a deck page
 
 - `pickRandomCandidate` reads `Math.random` and `scheduleTimeoutCallback` reads
   `setTimeout`. Both are injected as options, so a test drives a machine with
@@ -31,6 +33,25 @@ Lives in: `site/src/openings/machineEffects.ts`, used by the two machines in
 - The play machine takes the reader's choice as `PlayMachineConfig.autoOpponent`,
   persisted as `playAutoOpponent`; `setAutoOpponent` changes it on the running
   game rather than restarting it. The learn machine answers every opponent ply.
+- In a game on a deck page the move source is `book` while the moves played are
+  the start of a deck line that still has a move, and the reply is one of those
+  moves after 450 ms. From the first position with no such move the source is
+  `stockfish`, for the rest of the game, and `opponent_left_deck` is recorded
+  once.
+- The `stockfish` source is the vendored worker, started by
+  `site/src/opponent/stockfish.adapter.ts` when a game starts and stopped when
+  it ends. It searches 400 ms a move. No answer to `uci` within 10 s raises
+  `StockfishLoadFailedError`, and the game then ends where the deck ends. A
+  move the board refuses raises `StockfishIllegalMoveError`.
+- The strength is one of seven steps in
+  `site/src/opponent/opponent-strength.core.ts`, persisted as
+  `opponentStrength`. Three easier steps set `Skill Level` 0, 3 and 6 and show
+  no rating. Four set `UCI_Elo` 1320, 1500, 1700 and 1900. The default is 1320.
+  A step sends one option family, never both.
+- A game on a deck page stores no review event.
+
+Held by: `site/src/opponent/deck-game-machine.utils.test.ts` › asks Stockfish for the move at the stored strength when the line ends
+Held by: `site/src/components/organisms/DeckGame.test.tsx` › stores no review, so the counts on Today stay as they were
 
 ## Board theme
 
