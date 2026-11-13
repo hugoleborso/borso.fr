@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import {
   buildEnvironmentAddress,
   type ClaudeCodeEnvironment,
@@ -8,6 +7,7 @@ import { detectClaudeCodeOpener } from './claude-code-opener.adapter';
 import { useClaudeCodeTarget } from './queries/messages.queries';
 
 const TALK_ENVIRONMENT: ClaudeCodeEnvironment = 'build';
+const NO_PROMPT = '';
 
 export interface TalkToTalosLink {
   readonly href: string | undefined;
@@ -17,11 +17,10 @@ export interface TalkToTalosLink {
 }
 
 export function useTalkToTalosLink(): TalkToTalosLink {
-  const { t } = useTranslation();
   const target = useClaudeCodeTarget();
   const opener = detectClaudeCodeOpener();
   return {
-    href: buildEnvironmentAddress(target.data, TALK_ENVIRONMENT, t('talk.prompt'), opener),
+    href: buildEnvironmentAddress(target.data, TALK_ENVIRONMENT, NO_PROMPT, opener),
     target: selectClaudeCodeLinkTarget(opener),
     isPending: target.isPending,
     retry: () => void target.refetch(),

@@ -94,8 +94,7 @@ const DAY_ROUTES_WITHOUT_TARGET: Record<string, unknown> = Object.fromEntries(
   Object.entries(DAY_ROUTES).filter(([path]) => path !== '/api/messages/claude-code'),
 );
 const TALK_ADDRESS =
-  'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_construction' +
-  '&q=Tu%20es%20Talos.%20Hugo%20veut%20te%20parler%20%3A';
+  'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_construction';
 
 function readTalkLink(container: HTMLElement): HTMLAnchorElement | null {
   return (
@@ -364,9 +363,7 @@ describe('the application shell', () => {
     const tree = mountWithClient(createIsolatedQueryClient(), <App />);
     await flushUntil(() => readTalkLink(tree.container)?.hasAttribute('href') === true);
     const link = readTalkLink(tree.container);
-    expect(link?.getAttribute('href')).toBe(
-      'claude://code/new?repo=proprietaire%2Fnotes&q=Tu%20es%20Talos.%20Hugo%20veut%20te%20parler%20%3A',
-    );
+    expect(link?.getAttribute('href')).toBe('claude://code/new?repo=proprietaire%2Fnotes');
     expect(link?.hasAttribute('target')).toBe(false);
     tree.unmount();
     Reflect.deleteProperty(navigator, 'standalone');
