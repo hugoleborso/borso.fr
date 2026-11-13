@@ -295,6 +295,7 @@ describe('buildNotificationPayload', () => {
 
   it.each([
     [TAKE_COMMENT_CREATED, { songTitle: 'Seven Nation Army' }],
+    [SONG_CREATED, { songTitle: 'Rehab' }],
     [SESSION_CREATED, { sessionDate: '2026-10-30T18:00:00.000Z' }],
     [SESSION_CHANGED, { sessionDate: '2026-10-30T18:00:00.000Z' }],
     [SONG_LINEUP_CHANGED, { songTitle: 'Valerie' }],
