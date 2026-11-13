@@ -11,6 +11,18 @@ const ICONS = {
   ),
   'chevron-right': <path d="M9 5l7 7-7 7" />,
   'chevron-left': <path d="M15 5l-7 7 7 7" />,
+  'chevrons-right': (
+    <>
+      <path d="M5 5l7 7-7 7" />
+      <path d="M12 5l7 7-7 7" />
+    </>
+  ),
+  'chevrons-left': (
+    <>
+      <path d="M19 5l-7 7 7 7" />
+      <path d="M12 5l-7 7 7 7" />
+    </>
+  ),
   close: (
     <>
       <path d="M6 6l12 12" />

@@ -71,7 +71,11 @@ game on a deck page
   the start of a deck line that still has a move, and the reply is one of those
   moves after 450 ms. From the first position with no such move the source is
   `stockfish`, for the rest of the game, and `opponent_left_deck` is recorded
-  once.
+  once. The pick is uniform among the distinct next moves, so a side line is as
+  likely as the main line at a branch.
+- When the reader's own move leaves the deck at a position where the deck has a
+  reader move, `missedBookMove` keeps that deck move's notation for the rest of
+  the game, and the status band names it in place of the move source.
 - The `stockfish` source is the vendored worker, started by
   `site/src/opponent/stockfish.adapter.ts` when a game starts and stopped when
   it ends. It searches 400 ms a move. No answer to `uci` within 10 s raises
@@ -87,6 +91,7 @@ game on a deck page
 
 Held by: `site/src/opponent/deck-game-machine.utils.test.ts` › asks Stockfish for the move at the stored strength when the line ends
 Held by: `site/src/components/organisms/DeckGame.test.tsx` › stores no review, so the counts on Today stay as they were
+Held by: `site/src/opponent/deck-game-machine.utils.test.ts` › names the deck move the reader missed, and keeps it for the rest of the game
 
 ## Board theme
 
@@ -220,8 +225,14 @@ read through `site/src/decks/deck.utils.ts`
 - The build writes every deck into `site/public/decks.json`, which the site
   fetches once per page load. A deck that fails to parse there raises
   `DeckContentInvalidError`.
+- The Lines tab of a deck page steps through one line on the board.
+  `listLineSteps` gives one step per ply, with the position after it, the
+  piece, its squares, the kind of move and, for a reader move only, its idea.
+  `moveLineStepPosition` keeps the position between 0, the starting position,
+  and the ply count.
 
 Held by: `scripts/decks/deck-build.core.test.ts` › rule 4 refuses two reader moves from one position
+Held by: `site/src/decks/line-stepper.utils.test.ts` › stays inside the line at both ends
 
 Not to be confused with: an opening, which is an entry of the Lichess book that
 Explore reads. A deck is content written for this application.

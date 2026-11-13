@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -63,8 +63,32 @@ describe('the opening trainer, one visit from the first load', () => {
     );
     expect(screen.getByRole('heading', { name: 'Albin Countergambit' })).toBeTruthy();
     expect(screen.getByText('You play Black')).toBeTruthy();
-    expect(screen.getByText('1. d4 d5 2. c4 e5 3. dxe5 d4 4. Nf3 Nc6')).toBeTruthy();
-    expect(screen.getAllByText('English idea 3.')).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Lines' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Main line' }));
+    expect(screen.queryByRole('heading', { name: 'Albin Countergambit' })).toBeNull();
+    const line = within(screen.getByRole('region', { name: 'Main line' }));
+    expect(line.getByText('Starting position')).toBeTruthy();
+    expect(line.getByText('0 of 8')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Previous move' })).toHaveProperty('disabled', true);
+    await userEvent.click(screen.getByRole('button', { name: 'Next move' }));
+    expect(line.getByText('1. d4')).toBeTruthy();
+    expect(line.getByText('white pawn on d2 goes to d4')).toBeTruthy();
+    expect(line.queryByRole('region', { name: 'Idea' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Next move' }));
+    expect(line.getByText('black pawn on d7 goes to d5')).toBeTruthy();
+    expect(line.getByText('English idea 1.')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'End of the line' }));
+    expect(line.getByText('4... Nc6')).toBeTruthy();
+    expect(line.getByText('8 of 8')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next move' })).toHaveProperty('disabled', true);
+    await userEvent.click(screen.getByRole('button', { name: 'Previous move' }));
+    expect(line.getByText('white knight on g1 goes to f3')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Start of the line' }));
+    expect(line.getByText('Starting position')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'All lines' }));
+    expect(screen.getByRole('button', { name: 'Lasker Trap' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('tab', { name: 'Review' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Review this deck' }));
     expect(await screen.findByRole('heading', { name: 'Albin Countergambit · 1/6' })).toBeTruthy();

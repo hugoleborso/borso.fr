@@ -1,4 +1,10 @@
+import { Chess } from 'chess.js';
 import { describe, expect, it, vi } from 'vitest';
+import { buildDecksDocument } from '../../../scripts/decks/deck-build.core';
+import {
+  DECK_CONTENT_ROOTS,
+  readDeckBuildInput,
+} from '../../../scripts/decks/deck-folders.adapter';
 import { buildExampleDeck } from '@/decks/deck.test-utils';
 import type { BuiltDeck } from '@/decks/deck.utils';
 import { buildDeckGameDriver } from './deck-game-machine.test-utils';
@@ -72,6 +78,7 @@ describe('the deck game machine before and at the start', () => {
       fen: STARTING_FEN,
       moveSource: 'book',
       lastOpponentMove: null,
+      missedBookMove: null,
       ending: null,
     });
     expect(machine.playMove('e2e4')).toBe('ignored');
@@ -92,6 +99,7 @@ describe('the deck game machine before and at the start', () => {
       fen: STARTING_FEN,
       moveSource: 'book',
       lastOpponentMove: null,
+      missedBookMove: null,
       ending: null,
     });
   });
@@ -175,6 +183,114 @@ describe('the deck game machine while the game is in the deck', () => {
   });
 });
 
+describe('the deck game machine when the reader leaves the deck', () => {
+  it('names the deck move the reader missed, and keeps it for the rest of the game', async () => {
+    const { driver, machine } = startGame(albinDeck);
+    driver.fireNextTimer();
+    machine.playMove('g8f6');
+    expect(machine.getSnapshot().missedBookMove).toBe('1... d5');
+    await driver.takeStockfishMove().answer('c2c4');
+    machine.playMove('e7e6');
+    await driver.takeStockfishMove().answer('b1c3');
+    expect(machine.getSnapshot()).toMatchObject({
+      moveSource: 'stockfish',
+      missedBookMove: '1... d5',
+    });
+    machine.start(albinDeck);
+    expect(machine.getSnapshot().missedBookMove).toBeNull();
+  });
+
+  it('names no missed move while the reader plays any of the deck moves', () => {
+    const twoReaderMoves: BuiltDeck = {
+      ...albinDeck,
+      lines: [
+        { name: 'With d5', movesSan: ['d4', 'd5'], movesUci: ['d2d4', 'd7d5'] },
+        { name: 'With Nf6', movesSan: ['d4', 'Nf6'], movesUci: ['d2d4', 'g8f6'] },
+      ],
+    };
+    const { driver, machine } = startGame(twoReaderMoves);
+    driver.fireNextTimer();
+    machine.playMove('g8f6');
+    expect(machine.getSnapshot()).toMatchObject({ moveSource: 'stockfish', missedBookMove: null });
+  });
+
+  it('names no missed move when the reader moves after the deck has ended', async () => {
+    const { driver, machine } = playMainLineToItsEnd();
+    await driver.takeStockfishMove().answer('a2a3');
+    machine.playMove('a7a6');
+    expect(machine.getSnapshot()).toMatchObject({ moveSource: 'stockfish', missedBookMove: null });
+  });
+
+  it('names the deck move in UCI when the board cannot play it', () => {
+    const unplayableReaderMove: BuiltDeck = {
+      ...albinDeck,
+      lines: [{ name: 'Broken', movesSan: ['d4', 'd4'], movesUci: ['d2d4', 'd7d4'] }],
+    };
+    const { driver, machine } = startGame(unplayableReaderMove);
+    driver.fireNextTimer();
+    machine.playMove('g8f6');
+    expect(machine.getSnapshot().missedBookMove).toBe('1... d7d4');
+  });
+});
+
+describe('the deck game machine over every line of the shipped decks', () => {
+  const shippedBuild = buildDecksDocument(readDeckBuildInput(DECK_CONTENT_ROOTS));
+  const shippedDecks = shippedBuild.ok ? shippedBuild.document.decks : [];
+  const lineCases = shippedDecks
+    .filter((deck) => deck.lines.length > 0)
+    .flatMap((deck) => deck.lines.map((line) => ({ deck, line })));
+
+  it('reads the five shipped decks with their lines', () => {
+    expect(new Set(lineCases.map(({ deck }) => deck.id))).toEqual(
+      new Set([
+        'albin-countergambit',
+        'scandinavian-qa5',
+        'caro-kann-two-knights',
+        'vienna-game',
+        'grand-prix-attack',
+      ]),
+    );
+  });
+
+  it.each(lineCases.map(({ deck, line }) => [deck.id, line.name, deck, line] as const))(
+    'plays every opponent move of %s, %s, from the deck, then Stockfish once the deck has none',
+    (_deckId, _lineName, deck, line) => {
+      const driver = buildDeckGameDriver();
+      let plyCount = 0;
+      const machine = createDeckGameMachine({
+        ...driver.options,
+        pickRandom: (candidates) => candidates.find((uci) => uci === line.movesUci[plyCount]),
+      });
+      const opponentSources: string[] = [];
+      const sourcesBeforeEachPly: string[] = [];
+      const readerResults: string[] = [];
+      machine.start(deck);
+      for (const uci of line.movesUci) {
+        const snapshot = machine.getSnapshot();
+        sourcesBeforeEachPly.push(snapshot.moveSource);
+        if (snapshot.phase === 'reader-to-move') {
+          readerResults.push(machine.playMove(uci));
+        } else {
+          driver.fireNextTimer();
+          opponentSources.push(machine.getSnapshot().lastOpponentMove?.source ?? 'none');
+        }
+        plyCount += 1;
+      }
+      expect(sourcesBeforeEachPly.every((source) => source === 'book')).toBe(true);
+      expect(readerResults.every((result) => result === 'accepted')).toBe(true);
+      const isDeckOver = listNextBookMoves(deck.lines, line.movesUci).length === 0;
+      const end = machine.getSnapshot();
+      const isMate = new Chess(end.fen).isCheckmate();
+      expect(end.missedBookMove).toBeNull();
+      expect(isMate ? end.ending : end.moveSource).toBe(
+        isMate ? 'reader-won' : isDeckOver ? 'stockfish' : 'book',
+      );
+      expect(opponentSources.every((source) => source === 'book')).toBe(true);
+      expect(opponentSources.length).toBeGreaterThan(0);
+    },
+  );
+});
+
 describe('the deck game machine once the deck ends', () => {
   it('asks Stockfish for the move at the stored strength when the line ends', () => {
     const { driver, machine } = playMainLineToItsEnd();
@@ -210,6 +326,7 @@ describe('the deck game machine once the deck ends', () => {
       fen: 'r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/P4N2/1P2PPPP/RNBQKB1R b KQkq - 0 5',
       moveSource: 'stockfish',
       lastOpponentMove: { notation: '5. a3', source: 'stockfish' },
+      missedBookMove: null,
       ending: null,
     });
     expect(driver.reportedErrors).toEqual([]);
@@ -424,6 +541,7 @@ describe('the deck game selectors', () => {
     fen: STARTING_FEN,
     moveSource: 'book',
     lastOpponentMove: null,
+    missedBookMove: null,
     ending: null,
   };
 

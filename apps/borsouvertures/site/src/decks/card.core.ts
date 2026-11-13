@@ -1,4 +1,4 @@
-import { Chess } from 'chess.js';
+import { Chess, type Color, type Move, type PieceSymbol } from 'chess.js';
 import { derivePositionKey } from '@domain/position-key.core';
 import type { CardId } from '@domain/review-event.core';
 import { uciFromSquare, uciPromotion, uciToSquare } from '@/openings/uciSquare.utils';
@@ -39,8 +39,30 @@ export interface ReviewCard {
   steps: ReviewStep[];
 }
 
+export type PieceCode =
+  | 'wP'
+  | 'wN'
+  | 'wB'
+  | 'wR'
+  | 'wQ'
+  | 'wK'
+  | 'bP'
+  | 'bN'
+  | 'bB'
+  | 'bR'
+  | 'bQ'
+  | 'bK';
+
+export type LineMoveKind = 'move' | 'capture' | 'castle-kingside' | 'castle-queenside';
+
 export interface LineStep {
+  fen: string;
   notation: string;
+  fromSquare: string;
+  toSquare: string;
+  piece: PieceCode;
+  kind: LineMoveKind;
+  mover: Side;
   idea: Idea | null;
 }
 
@@ -118,12 +140,16 @@ function listLineMoves(line: BuiltDeckLine): LineMove[] {
   }));
 }
 
-function applyUci(game: Chess, uci: string): string {
+function applyUciMove(game: Chess, uci: string): Move {
   return game.move({
     from: uciFromSquare(uci),
     to: uciToSquare(uci),
     promotion: uciPromotion(uci),
-  }).san;
+  });
+}
+
+function applyUci(game: Chess, uci: string): string {
+  return applyUciMove(game, uci).san;
 }
 
 function readFullMovePlyIndex(fen: string): number {
@@ -237,19 +263,32 @@ export function listReviewCards(
   return reviewCards;
 }
 
+const PIECE_CODE_BY_COLOR = {
+  w: { p: 'wP', n: 'wN', b: 'wB', r: 'wR', q: 'wQ', k: 'wK' },
+  b: { p: 'bP', n: 'bN', b: 'bB', r: 'bR', q: 'bQ', k: 'bK' },
+} as const satisfies Record<Color, Record<PieceSymbol, PieceCode>>;
+
+function selectLineMoveKind(move: Move): LineMoveKind {
+  if (move.isKingsideCastle()) return 'castle-kingside';
+  if (move.isQueensideCastle()) return 'castle-queenside';
+  return move.isCapture() ? 'capture' : 'move';
+}
+
 export function listLineSteps(deck: BuiltDeck, line: BuiltDeckLine): LineStep[] {
   const game = new Chess();
-  const steps: LineStep[] = [];
-  for (const move of listLineMoves(line)) {
-    applyUci(game, move.uci);
-    if (move.mover === deck.side) {
-      steps.push({
-        notation: move.notation,
-        idea: findIdea(deck, derivePositionKey(game.fen())),
-      });
-    }
-  }
-  return steps;
+  return listLineMoves(line).map((lineMove) => {
+    const move = applyUciMove(game, lineMove.uci);
+    return {
+      fen: move.after,
+      notation: lineMove.notation,
+      fromSquare: move.from,
+      toSquare: move.to,
+      piece: PIECE_CODE_BY_COLOR[move.color][move.piece],
+      kind: selectLineMoveKind(move),
+      mover: lineMove.mover,
+      idea: findIdea(deck, derivePositionKey(move.after)),
+    };
+  });
 }
 
 export function selectOpponentSide(readerSide: Side): Side {

@@ -73,12 +73,16 @@ function DeckGameStart({ deck }: DeckGameBodyProps) {
 
 function DeckGameControls({ deck, snapshot }: DeckGameBodyProps) {
   const { t } = useTranslation();
-  const { lastOpponentMove } = snapshot;
+  const { lastOpponentMove, missedBookMove } = snapshot;
   return (
     <div className="flex flex-col gap-3 w-full">
       <div role="status" aria-live="polite" className="flex flex-col gap-1">
         <StatusBand
-          label={t(SOURCE_KEY_BY_SOURCE[snapshot.moveSource])}
+          label={
+            missedBookMove === null
+              ? t(SOURCE_KEY_BY_SOURCE[snapshot.moveSource])
+              : t('opponent.source.left-deck', { move: missedBookMove })
+          }
           value={t(STATUS_KEY_BY_STATUS[selectDeckGameStatus(snapshot)])}
           tone="asking"
         />

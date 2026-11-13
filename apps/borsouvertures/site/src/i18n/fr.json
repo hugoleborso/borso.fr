@@ -188,7 +188,6 @@
     "nothing-to-review": "Aucune carte de ce paquet n'est à revoir, et les nouvelles cartes du jour sont épuisées.",
     "back": "Tous les paquets",
     "lines": "Lignes",
-    "line-moves": "Coups",
     "new-cards-per-day": {
       "label": "Nouvelles cartes par jour"
     },
@@ -201,6 +200,23 @@
       "review": "Réviser",
       "lines": "Lignes",
       "play": "Jouer"
+    },
+    "line-stepper": {
+      "back": "Toutes les lignes",
+      "start": "Position de départ",
+      "position": "{{position}} sur {{total}}",
+      "first": "Début de la ligne",
+      "previous": "Coup précédent",
+      "next": "Coup suivant",
+      "last": "Fin de la ligne",
+      "move": "{{piece}} va en {{square}}",
+      "capture": "{{piece}} prend en {{square}}",
+      "castle": {
+        "kingside-white": "Les Blancs roquent côté roi",
+        "kingside-black": "Les Noirs roquent côté roi",
+        "queenside-white": "Les Blancs roquent côté dame",
+        "queenside-black": "Les Noirs roquent côté dame"
+      }
     }
   },
   "opponent": {
@@ -225,7 +241,8 @@
     },
     "source": {
       "book": "L'adversaire suit le paquet",
-      "stockfish": "Le paquet est terminé, Stockfish joue"
+      "stockfish": "Le paquet est terminé, Stockfish joue",
+      "left-deck": "Vous avez quitté le paquet, qui joue {{move}}"
     },
     "last-move": {
       "book": "Le paquet a joué {{move}}",

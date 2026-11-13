@@ -193,6 +193,15 @@ describe('a game against Stockfish on a deck page', () => {
     );
   });
 
+  it('names the deck move the reader missed once his move leaves the deck', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
+    await screen.findByText('The deck played 1. d4');
+    playReaderMove('g8f6');
+    expect(await screen.findByText('Stockfish played 2. a3')).toBeTruthy();
+    expect(screen.getByText('You left the deck, which plays 1... d5')).toBeTruthy();
+    expect(screen.queryByText('The deck has ended, Stockfish plays')).toBeNull();
+  });
+
   it('stops the worker and offers a new game when the reader leaves', async () => {
     await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
     await screen.findByText('The deck played 1. d4');

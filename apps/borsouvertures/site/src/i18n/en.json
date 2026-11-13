@@ -188,7 +188,6 @@
     "nothing-to-review": "No card of this deck is due, and today's new cards are used up.",
     "back": "All decks",
     "lines": "Lines",
-    "line-moves": "Moves",
     "new-cards-per-day": {
       "label": "New cards per day"
     },
@@ -201,6 +200,23 @@
       "review": "Review",
       "lines": "Lines",
       "play": "Play"
+    },
+    "line-stepper": {
+      "back": "All lines",
+      "start": "Starting position",
+      "position": "{{position}} of {{total}}",
+      "first": "Start of the line",
+      "previous": "Previous move",
+      "next": "Next move",
+      "last": "End of the line",
+      "move": "{{piece}} goes to {{square}}",
+      "capture": "{{piece}} takes on {{square}}",
+      "castle": {
+        "kingside-white": "White castles kingside",
+        "kingside-black": "Black castles kingside",
+        "queenside-white": "White castles queenside",
+        "queenside-black": "Black castles queenside"
+      }
     }
   },
   "opponent": {
@@ -225,7 +241,8 @@
     },
     "source": {
       "book": "The opponent follows the deck",
-      "stockfish": "The deck has ended, Stockfish plays"
+      "stockfish": "The deck has ended, Stockfish plays",
+      "left-deck": "You left the deck, which plays {{move}}"
     },
     "last-move": {
       "book": "The deck played {{move}}",

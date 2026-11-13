@@ -311,33 +311,82 @@ describe('buildReviewCard and listReviewCards', () => {
 });
 
 describe('listLineSteps', () => {
-  it('gives one step per reader move of a line, with its idea', () => {
+  it('gives one step per ply, with the idea of each reader move only', () => {
     const [mainLine] = deck.lines;
     if (mainLine === undefined) throw new Error('the example has a main line');
     expect(
-      listLineSteps(deck, mainLine).map((step) => [step.notation, step.idea?.en ?? null]),
+      listLineSteps(deck, mainLine).map((step) => [
+        step.notation,
+        step.mover,
+        step.idea?.en ?? null,
+      ]),
     ).toEqual([
-      ['1... d5', 'English idea 1.'],
-      ['2... e5', 'English idea 2.'],
-      ['3... d4', 'English idea 3.'],
-      ['4... Nc6', 'English idea 4.'],
+      ['1. d4', 'white', null],
+      ['1... d5', 'black', 'English idea 1.'],
+      ['2. c4', 'white', null],
+      ['2... e5', 'black', 'English idea 2.'],
+      ['3. dxe5', 'white', null],
+      ['3... d4', 'black', 'English idea 3.'],
+      ['4. Nf3', 'white', null],
+      ['4... Nc6', 'black', 'English idea 4.'],
     ]);
+  });
+
+  it('names the piece, its squares, the kind of move and the position after it', () => {
+    const [mainLine] = deck.lines;
+    if (mainLine === undefined) throw new Error('the example has a main line');
+    const steps = listLineSteps(deck, mainLine);
+    const capture = steps[4];
+    const knightMove = steps[6];
+    expect(capture).toMatchObject({
+      fromSquare: 'd4',
+      toSquare: 'e5',
+      piece: 'wP',
+      kind: 'capture',
+      fen: 'rnbqkbnr/ppp2ppp/8/3pP3/2P5/8/PP2PPPP/RNBQKBNR b KQkq - 0 3',
+    });
+    expect(knightMove).toMatchObject({
+      fromSquare: 'g1',
+      toSquare: 'f3',
+      piece: 'wN',
+      kind: 'move',
+    });
+  });
+
+  it('tells castling on either wing apart from a king move', () => {
+    const castlingLine = {
+      name: 'Castling',
+      movesSan: ['e4', 'd5', 'Nf3', 'Qd6', 'Bc4', 'Bd7', 'O-O', 'Nc6', 'd3', 'O-O-O'],
+      movesUci: ['e2e4', 'd7d5', 'g1f3', 'd8d6', 'f1c4', 'c8d7', 'e1g1', 'b8c6', 'd2d3', 'e8c8'],
+    };
+    const steps = listLineSteps(WHITE_DECK, castlingLine);
+    expect(steps.map((step) => step.kind).slice(6)).toEqual([
+      'castle-kingside',
+      'move',
+      'move',
+      'castle-queenside',
+    ]);
+    expect(steps.map((step) => step.piece).slice(6)).toEqual(['wK', 'bN', 'wP', 'bK']);
+    expect(steps.map((step) => step.piece).slice(1, 6)).toEqual(['bP', 'wN', 'bQ', 'wB', 'bB']);
+    expect(steps.every((step) => step.idea === null || step.mover === 'white')).toBe(true);
   });
 
   it('falls back to the UCI move for a line that carries fewer SAN moves than UCI moves', () => {
     const shortOnSan = { name: 'Main line', movesSan: ['e4'], movesUci: ['e2e4', 'e7e5', 'b1c3'] };
     expect(listLineSteps(WHITE_DECK, shortOnSan).map((step) => step.notation)).toEqual([
       '1. e4',
+      '1... e7e5',
       '2. b1c3',
     ]);
   });
 
-  it('gives the white moves of a white deck, without an idea when none is written', () => {
+  it('gives no idea to a reader move whose idea is not written', () => {
     const [line] = WHITE_DECK.lines;
     if (line === undefined) throw new Error('the white deck has a line');
-    expect(listLineSteps(WHITE_DECK, line)).toEqual([
-      { notation: '1. e4', idea: null },
-      { notation: '2. Nc3', idea: null },
+    expect(listLineSteps(WHITE_DECK, line).map((step) => [step.mover, step.idea])).toEqual([
+      ['white', null],
+      ['black', null],
+      ['white', null],
     ]);
   });
 });

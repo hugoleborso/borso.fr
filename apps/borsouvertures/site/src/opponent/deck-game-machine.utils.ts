@@ -28,6 +28,7 @@ export interface DeckGameSnapshot {
   fen: string;
   moveSource: MoveSource;
   lastOpponentMove: OpponentMoveRecord | null;
+  missedBookMove: string | null;
   ending: DeckGameEnding | null;
 }
 
@@ -78,6 +79,7 @@ const INITIAL_SNAPSHOT: DeckGameSnapshot = {
   fen: STARTING_FEN,
   moveSource: 'book',
   lastOpponentMove: null,
+  missedBookMove: null,
   ending: null,
 };
 
@@ -232,12 +234,23 @@ export function createDeckGameMachine(options: DeckGameMachineOptions): DeckGame
     advance(nextRun);
   }
 
+  function findMissedBookMove(currentRun: DeckGameRun, move: Move): string | null {
+    const { chess, deck, playedMovesUci } = currentRun;
+    const bookMoves = listNextBookMoves(deck.lines, playedMovesUci);
+    const [bookMoveUci] = bookMoves;
+    if (bookMoveUci === undefined || bookMoves.includes(move.lan)) return null;
+    const bookMoveSan = findExactMove(chess, bookMoveUci)?.san ?? bookMoveUci;
+    return formatMoveNotation(playedMovesUci.length, bookMoveSan);
+  }
+
   function playMove(uci: string): DeckGameMoveResult {
     const currentRun = run;
     // Stryker disable next-line ConditionalExpression: equivalent mutant, the phase is reader-to-move only while a run is set, because leave clears both and start sets the run before any phase.
     if (currentRun === null || snapshot.phase !== 'reader-to-move') return 'ignored';
     const move = findReaderMove(currentRun.chess, uci);
     if (move === null) return 'rejected';
+    const missedBookMove = findMissedBookMove(currentRun, move);
+    if (missedBookMove !== null) snapshot = { ...snapshot, missedBookMove };
     currentRun.chess.move(move.san);
     currentRun.playedMovesUci.push(move.lan);
     advance(currentRun);
