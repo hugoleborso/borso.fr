@@ -22,7 +22,7 @@ The band wants to write its own songs and takes ideas from songs that work. Toda
 
 Two new screens.
 
-**Inspirations** (`/inspirations`, in the Band tab after compositions). This is the band's library of passages. Each card shows the title, the artist, `0:52 → 1:04`, the note, the author, and the number of sketches that use it. **New inspiration** is the one primary action. It opens a form with these fields:
+**Inspirations** (`/inspirations`, in the Band tab after compositions). This is the band's library of passages. Each card shows the title, the artist, `0:52 → 1:04`, the note, the author, and the number of sketches that use it. **New inspiration** is the one primary action. **Edit** on a card opens the same form, filled in. It opens a form with these fields:
 
 - the Deezer search already used to add a song (`GET /songs/search`, `AddSongForm`). Picking a hit fills the title, the artist and the Deezer album id, and the card shows `AlbumCover`. Typing the title and artist by hand stays possible when Deezer has no match.
 - a **Search on YouTube** button that opens `youtube.com/results?search_query=<artist> <title>` in a new tab
@@ -78,6 +78,7 @@ sequenceDiagram
 **Edge cases.**
 - Two members drop the same clip at the same moment. The last drop saved wins, and the other screen shows the clip jump to that position.
 - A dropped clip snaps to whole seconds and cannot go before 0:00.
+- Editing an inspiration's start or end changes the width of every clip already placed from it, in every sketch. Its offset does not move.
 - Clips may overlap, on the same lane or across lanes. The timeline is a sketch, so overlapping is allowed.
 - The timeline extends 30 seconds past the last clip's end, so there is always room to the right.
 - Deleting a lane removes its clips. The inspirations stay in the library.
@@ -90,6 +91,7 @@ sequenceDiagram
 - The end is not after the start, or the passage is longer than 10 minutes. The form refuses it, and the API refuses it again.
 - Deleting an inspiration that a sketch uses is refused with `inspiration-in-use`, naming those sketches.
 - A clip names an inspiration or lane that another member deleted meanwhile, or a clip that was removed meanwhile. The write is refused with `inspiration-not-found`, `lane-not-found` or `clip-not-found`, and the screen reloads the sketch.
+- An edit of an inspiration that another member deleted meanwhile is refused with `inspiration-not-found`.
 
 ## Questions, Options and Decisions
 
@@ -103,6 +105,7 @@ sequenceDiagram
 | Phone? | Full editing · read-only | **Full editing**, with a long press to drag (`@dnd-kit` is already installed) (2026-11-13). |
 | Two editors at once? | Last write wins · edit lock | **Last write wins**, one write per clip move, with live invalidation. The operator chose a lock first and dropped it on review (2026-11-13). |
 | Deleting a used inspiration? | Remove it everywhere · refuse | **Refuse** (2026-11-13). |
+| Can an inspiration be edited? | No edit · note only · every field | **Every field**, including the passage. Placed clips follow the new length (2026-11-13). |
 
 **Out of scope.**
 - Audio upload.
