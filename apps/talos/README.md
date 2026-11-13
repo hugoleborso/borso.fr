@@ -1,6 +1,6 @@
 # talos
 
-PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, a message screen that opens Claude Code on the web, and push notifications. Its content is the memory database (`memory_*` tables, [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md)); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
+PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, a « Parler à Talos » button on every screen that opens Claude Code, and push notifications. Its content is the memory database (`memory_*` tables, [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md)); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
 
 - Contract and file formats: [`CONTRAT.md`](./CONTRAT.md). Words to use in code: [`VOCABULARY.md`](./VOCABULARY.md).
 - Deploys to prod only, never to a preview ([ADR-2026-10-06T2302](../../docs/adr/2026-10-06T2302-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.
@@ -9,6 +9,7 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 ## Icon and opening
 
 - The icon is a didrachm of Phaistos showing Talos winged. It shows on the home screen, in the browser tab and before the title of each tab screen. The image files are in `site/public/icons/`.
+- The home-screen icons (`apple-touch-icon.png` 180 px, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`) are opaque full-colour PNGs: the coin on the vase black `#070605`, at 85 % of the side, 66 % for the maskable one so it stays inside the safe circle. They are drawn from a 360 px cut-out of the photo, so the 512 px sizes are upscaled. Changing an icon file means bumping `CACHE_VERSION` in `site/public/sw.js`, because the service worker serves `/icons/` from its cache first.
 - Credit: Didrachme de Phaistos, Cabinet des médailles (BnF), photo Jastrow (2006), Wikimedia Commons ([`File:Didrachm_Phaistos_obverse_CdM.jpg`](https://commons.wikimedia.org/wiki/File:Didrachm_Phaistos_obverse_CdM.jpg)). Commons lists the photo as public domain, so the credit is a courtesy rather than a licence condition.
 - On a cold start, once per browser session, a 4.2 second opening plays. The coin spins in, the app opens in a circle around it, and the coin lands in the page title. A tap skips it. It is skipped under reduced motion, because `tokens.css` sets every animation to zero there. The code is `OpeningOverlay`, `SpinningCoin` and `lib/opening.*`.
 
