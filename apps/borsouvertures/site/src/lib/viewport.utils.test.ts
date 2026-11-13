@@ -37,9 +37,13 @@ describe('selectBoardWidth', () => {
 });
 
 describe('selectNameCardBoardWidth', () => {
-  it('shrinks the board on a phone so the band and the four names fit above the action bar', () => {
-    expect(selectNameCardBoardWidth(375)).toBe(288);
-    expect(selectNameCardBoardWidth(600)).toBe(288);
+  it('shrinks the board on a phone so the prompt and the four names fit above the action bar', () => {
+    expect(selectNameCardBoardWidth(375)).toBe(336);
+    expect(selectNameCardBoardWidth(600)).toBe(336);
+  });
+
+  it('keeps the full width on a phone narrower than that board', () => {
+    expect(selectNameCardBoardWidth(320)).toBe(320);
   });
 
   it('keeps the full board from the roomy breakpoint upwards, where the action bar sits inline', () => {

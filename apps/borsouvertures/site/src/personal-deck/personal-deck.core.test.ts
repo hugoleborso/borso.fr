@@ -191,7 +191,9 @@ describe('buildPersonalDecks', () => {
       buildEvent(2, { movesUci: FRENCH, calendarDay: '2026-11-12' }),
     ]);
     const [white] = buildPersonalDecks(lines);
-    const firstMove = white?.cards.find((card) => card.positionKey === START_KEY);
+    const firstMove = white?.cards
+      .filter((card) => card.kind === 'move')
+      .find((card) => card.positionKey === START_KEY);
     expect(firstMove?.dueFromDay).toBe('2026-11-11');
   });
 

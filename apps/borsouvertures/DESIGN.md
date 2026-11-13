@@ -94,15 +94,17 @@ components:
     backgroundColor: "{colors.shell}"
     textColor: "{colors.on-shell}"
     height: "{spacing.tab-bar}"
-  status-band-asking:
+  status-band:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-  status-band-recalled:
+  board-mark-recalled:
     backgroundColor: "{colors.recalled}"
     textColor: "{colors.on-recalled}"
-  status-band-missed:
+    size: "28% of the board, centred"
+  board-mark-missed:
     backgroundColor: "{colors.missed}"
     textColor: "{colors.on-missed}"
+    size: "7.5% of the board, on a square's corner"
   mini-board:
     size: "56px"
 ---
@@ -113,7 +115,7 @@ components:
 
 The trainer is used on a phone, one-handed, in a few minutes on a metro ride. The world is the Swiss tournament poster of the 1960s chess olympiads: a white or black ground, one grotesk at two weights, thick black rules that open each section, and flat colour fields with no gradient, glass or shadow. The board is the poster's image. It spans the full width of a phone, edge to edge, and everything else sits below it within thumb reach.
 
-The signature move is the result field. Under the board, a flat band carries the prompt while the card asks. It turns green when the move was recalled and red when it was missed, with the answer set large inside it. The colour change is the feedback, and it reads at arm's length.
+The signature move is the board mark. Once a card is answered, a flat disc lands on the board itself: a white check in a green disc when the card was recalled, a white cross in a red disc when it was missed. The board is the poster's image, so the verdict sits in the image and reads at arm's length, and the space under the board goes to the move and its idea (operator, 2026-11-13, who found the recalled band took space for nothing).
 
 Light and dark follow the system setting. The four board themes (Lichess, Chess.com, Nord, Sand) are unchanged and live in the settings sheet with the language.
 
@@ -128,12 +130,12 @@ The strategy is restrained neutrals with colour that only carries meaning. Every
 
 ### Tertiary
 
-- **Recalled green** (`recalled`) and **missed red** (`missed`): the result field only, plus the sign-in error. In dark mode they turn bright and carry near-black text.
+- **Recalled green** (`recalled`) and **missed red** (`missed`): the board mark only, plus the sign-in error. In dark mode they turn bright and carry near-black text.
 - **Signal yellow** (`signal`): notices (an added or refused line in Explore) and text selection.
 
 ### Neutral
 
-- **Page**, **surface** (a second neutral layer for the asking band, hover and empty bars), **rule** (hairlines between rows), **shell** (the tab bar, inverted in light mode).
+- **Page**, **surface** (a second neutral layer for the deck game's status band, hover and empty bars), **rule** (hairlines between rows), **shell** (the tab bar, inverted in light mode).
 
 ### Named Rules
 
@@ -150,7 +152,7 @@ One system grotesk stack, Helvetica Neue first, so nothing is fetched and the pa
 ## Layout
 
 - **The fold rule (operator, 2026-11-13).** At 375 × 812, minus the tab bar and the safe area, a screen shows one section at a time when its sections would not all fit without scrolling. Split them with the `SectionTabs` segmented control inside the screen. One list that scrolls inside a tab is fine. Two different sections stacked past the fold are not. Applied today: Today (Session / Ahead when the plan is empty / Retention), a deck page (Review / Lines / Play), Stats (Retention / Accuracy, with the streak above), Credits (Lichess / Wikipedia / Stockfish). Explore needs no tabs: the opening name and the moves played sit above the board, the side toggle beside them, and the book moves below it in the one list that scrolls, its height set from the board width so the page never scrolls. Back, start over and *Add to my deck* sit in `ActionBar`, and the notice of an add sits at the top of the list.
-- **The review session fits one screen.** Top bar, progress row, board, result field, and the action bar must be visible together at 375 × 812, including a name card's four choices.
+- **The review session fits one screen.** Top bar, progress row, board, prompt line, the idea and the action bar must be visible together at 375 × 812, including a name card's four choices. The space the result band gave back goes to the idea, three lines on a phone instead of two, and to the name card's board, 336 px on a phone instead of 288 px.
 - **Thumb bar.** The screen's main actions (Start, Show the move and Next, Review this deck, New game and Leave the game, Explore's back, start over and *Add to my deck*) sit in `ActionBar`, fixed above the tab bar on a phone and inline from 601 px.
 - **Board width.** Full viewport width under 601 px, viewport minus 48 px up to 1023 px, half the viewport from 1024 px, capped at 560 px.
 - The shell is one column with a 16 px gutter, 24 px from 601 px, at most 1024 px wide. The four tabs are fixed at the bottom with the safe-area inset. From 1024 px the review session and the deck game put the board left and the card column right.
@@ -179,9 +181,20 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 - A deck row reads the deck's side and counts, then its retention over the last 30 days.
 - `MiniBoard` is a static 8 × 8 grid of squares and the bundled piece SVGs, 56 px on a phone and 64 px from 601 px, never a live chessboard. A deck shows its first line after six plies, a line shows its last position, both from the reader's side.
 
-### Result field
+### Board mark
 
-`StatusBand` with three tones (asking, recalled, missed). It bleeds to the screen edges on a phone.
+`BoardView` draws the mark over the board after the answer and keeps it until *Next*. It is an overlay, so the layout does not move. It scales in over 220 ms and appears without motion under `prefers-reduced-motion`. It carries the `img` role and is named *Recalled* or *Missed*.
+
+- **Recalled** puts a large check (28% of the board) in the centre, as the operator asked. Nothing under it is news, because the reader just played the move.
+- **Missed** puts a small cross (7.5% of the board) on the top right corner of the square the book move lands on, the way chess sites mark a move. Opening moves land on the centre squares, so a centred cross would cover the very move the reader has to learn. The cross also points at it. A name card draws no move, so its cross sits in the board's top right corner and leaves the position readable.
+
+### Prompt line
+
+`PromptLine`, one line under the board, no fill. While the card asks it reads the question in bold and what the opponent played beside it (*Your move · White played 1. d4*). Once answered it reads the book move in notation and in words, the way the line stepper does (*2... e5 · black pawn on e7 goes to e5*), a trap's whole solution, or a name card's moves and name. The live region around it also carries the outcome sentence for screen readers, visually hidden (*Missed. The book move is 2... e5.*).
+
+### Status band
+
+`StatusBand`, one neutral look, under the board of the deck game only. It names the move source and the game status. It stays a band because what it says is not on the board.
 
 ### Settings sheet
 

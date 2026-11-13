@@ -5,6 +5,7 @@ import { Chessboard, defaultArrowOptions } from 'react-chessboard';
 import type { Side } from '@/state/persistedState.utils';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
+import { type BoardMark, type BoardMarkTone, placeBoardMark } from './board-mark.utils';
 import {
   type BoardDropDecision,
   buildDroppedUci,
@@ -26,6 +27,27 @@ const DROP_OUTCOME_BY_DECISION: Record<
   played: (isMoveAccepted, uci) => isMoveAccepted(uci),
 };
 
+const MARK_CLASS =
+  'pointer-events-none absolute z-10 rounded-full outline-2 outline-page ' +
+  'motion-safe:animate-board-mark-in';
+
+// @FollowsBlueprint component-lookup-table
+const MARK_LOOK_BY_TONE = {
+  recalled: {
+    discClass: `${MARK_CLASS} bg-recalled text-on-recalled`,
+    glyphPath: 'M5.5 12.5l4.5 4.5 8.5-9.5',
+    labelKey: 'board.mark.recalled',
+  },
+  missed: {
+    discClass: `${MARK_CLASS} bg-missed text-on-missed`,
+    glyphPath: 'M7 7l10 10M17 7L7 17',
+    labelKey: 'board.mark.missed',
+  },
+} as const satisfies Record<
+  BoardMarkTone,
+  { discClass: string; glyphPath: string; labelKey: string }
+>;
+
 interface BoardViewProps {
   orientation: Side;
   fen: string;
@@ -34,6 +56,7 @@ interface BoardViewProps {
   highlightSquares: Record<string, CSSProperties>;
   boardStyleId: BoardThemeId;
   boardWidth: number;
+  mark: BoardMark | null;
 }
 
 // @FollowsBlueprint atom-plain
@@ -45,13 +68,15 @@ export function BoardView({
   highlightSquares,
   boardStyleId,
   boardWidth,
+  mark,
 }: BoardViewProps) {
   const { t } = useTranslation();
   const { theme } = getBoardAppearance(boardStyleId);
   const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
+  const markBox = placeBoardMark(mark?.square ?? null, orientation);
   return (
     <div
-      className="flex justify-center self-center shrink-0 -mx-4 roomy:mx-0"
+      className="relative flex justify-center self-center shrink-0 -mx-4 roomy:mx-0"
       style={{ width: `${boardWidth}px` }}
     >
       <Chessboard
@@ -78,6 +103,25 @@ export function BoardView({
             ),
         }}
       />
+      {mark === null ? null : (
+        <svg
+          role="img"
+          aria-label={t(MARK_LOOK_BY_TONE[mark.tone].labelKey)}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="square"
+          className={MARK_LOOK_BY_TONE[mark.tone].discClass}
+          style={{
+            left: `${markBox.leftPercent}%`,
+            top: `${markBox.topPercent}%`,
+            width: `${markBox.sizePercent}%`,
+          }}
+        >
+          <path d={MARK_LOOK_BY_TONE[mark.tone].glyphPath} />
+        </svg>
+      )}
     </div>
   );
 }

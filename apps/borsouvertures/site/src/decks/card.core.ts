@@ -55,14 +55,17 @@ export type PieceCode =
 
 export type LineMoveKind = 'move' | 'capture' | 'castle-kingside' | 'castle-queenside';
 
-export interface LineStep {
-  fen: string;
-  notation: string;
+export interface MoveFacts {
   fromSquare: string;
   toSquare: string;
   piece: PieceCode;
   kind: LineMoveKind;
   mover: Side;
+}
+
+export interface LineStep extends MoveFacts {
+  fen: string;
+  notation: string;
   idea: Idea | null;
 }
 
@@ -274,21 +277,33 @@ function selectLineMoveKind(move: Move): LineMoveKind {
   return move.isCapture() ? 'capture' : 'move';
 }
 
+function readMoveFacts(move: Move): MoveFacts {
+  return {
+    fromSquare: move.from,
+    toSquare: move.to,
+    piece: PIECE_CODE_BY_COLOR[move.color][move.piece],
+    kind: selectLineMoveKind(move),
+    mover: SIDE_BY_TURN[move.color],
+  };
+}
+
 export function listLineSteps(deck: BuiltDeck, line: BuiltDeckLine): LineStep[] {
   const game = new Chess();
   return listLineMoves(line).map((lineMove) => {
     const move = applyUciMove(game, lineMove.uci);
     return {
+      ...readMoveFacts(move),
       fen: move.after,
       notation: lineMove.notation,
-      fromSquare: move.from,
-      toSquare: move.to,
-      piece: PIECE_CODE_BY_COLOR[move.color][move.piece],
-      kind: selectLineMoveKind(move),
-      mover: lineMove.mover,
       idea: findIdea(deck, derivePositionKey(move.after)),
     };
   });
+}
+
+export function readAnswerMoveFacts(reviewCard: ReviewCard): MoveFacts | null {
+  const lastStep = reviewCard.steps.at(-1);
+  if (lastStep === undefined) return null;
+  return readMoveFacts(applyUciMove(new Chess(lastStep.fen), lastStep.moveUci));
 }
 
 export function selectOpponentSide(readerSide: Side): Side {

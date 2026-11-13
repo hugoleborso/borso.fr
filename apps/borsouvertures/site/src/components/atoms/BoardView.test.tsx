@@ -4,12 +4,13 @@ import { render, screen } from '@testing-library/react';
 import { defaultPieces } from 'react-chessboard';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { BoardView } from './BoardView';
+import type { BoardMark } from './board-mark.utils';
 import { buildNamedPieces } from './boardPieces';
 
 const STARTING_FEN = new Chess().fen();
 const BOARD_WIDTH_PX = 320;
 
-function renderStartingBoard() {
+function renderStartingBoard(mark: BoardMark | null = null) {
   return render(
     <BoardView
       orientation="white"
@@ -19,6 +20,7 @@ function renderStartingBoard() {
       highlightSquares={{}}
       boardStyleId="chesscom"
       boardWidth={BOARD_WIDTH_PX}
+      mark={mark}
     />,
   );
 }
@@ -45,5 +47,28 @@ describe('BoardView', () => {
   it('labels exactly the pieces the chessboard library ships', () => {
     const labelled = Object.keys(buildNamedPieces(i18next.t)).sort();
     expect(labelled).toEqual(Object.keys(defaultPieces).sort());
+  });
+
+  it('draws no mark until the card is answered', () => {
+    renderStartingBoard();
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
+  it('draws the mark over the board at the place it is given, named for the reader', () => {
+    renderStartingBoard({ tone: 'missed', square: 'd5' });
+    const mark = screen.getByRole('img', { name: 'Missed' });
+    expect([mark.style.left, mark.style.top, mark.style.width]).toEqual([
+      '46.25%',
+      '33.75%',
+      '7.5%',
+    ]);
+    expect(mark.getAttribute('class')).toContain('bg-missed');
+  });
+
+  it('centres the check on the board', () => {
+    renderStartingBoard({ tone: 'recalled', square: null });
+    const mark = screen.getByRole('img', { name: 'Recalled' });
+    expect([mark.style.left, mark.style.top, mark.style.width]).toEqual(['36%', '36%', '28%']);
+    expect(mark.getAttribute('class')).toContain('bg-recalled');
   });
 });

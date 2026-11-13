@@ -542,9 +542,6 @@ importers:
       chess.js:
         specifier: ^1.0.0
         version: 1.4.0
-      class-variance-authority:
-        specifier: 'catalog:'
-        version: 0.7.1
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.4(@opentelemetry/api@1.9.1)(gel@2.2.0)(postgres@3.4.9)

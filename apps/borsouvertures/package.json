@@ -41,7 +41,6 @@
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "chess.js": "^1.0.0",
-    "class-variance-authority": "catalog:",
     "drizzle-orm": "catalog:",
     "hash-wasm": "catalog:",
     "hono": "catalog:",

@@ -4,7 +4,7 @@ const HORIZONTAL_PADDING_PX = 48;
 const ROOMY_BREAKPOINT_PX = 601;
 const DESKTOP_BOARD_FRACTION = 0.5;
 const DESKTOP_BREAKPOINT_PX = 1024;
-const NAME_CARD_PHONE_BOARD_PX = 288;
+const NAME_CARD_PHONE_BOARD_PX = 336;
 
 // @FollowsBlueprint utils-pure-module
 export function selectBoardWidth(viewportWidth: number): number {

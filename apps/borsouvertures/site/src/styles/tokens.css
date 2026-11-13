@@ -35,6 +35,19 @@
   --spacing-action-bar: 4rem;
 
   --ease-out-quick: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-board-mark-in: board-mark-in 220ms var(--ease-out-quick) both;
+
+  @keyframes board-mark-in {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 @layer base {

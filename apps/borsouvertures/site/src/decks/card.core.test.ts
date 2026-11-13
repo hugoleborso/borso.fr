@@ -12,6 +12,7 @@ import {
   listDeckCards,
   listLineSteps,
   listReviewCards,
+  readAnswerMoveFacts,
   selectOpponentSide,
 } from './card.core';
 import {
@@ -388,5 +389,38 @@ describe('listLineSteps', () => {
       ['black', null],
       ['white', null],
     ]);
+  });
+});
+
+describe('readAnswerMoveFacts', () => {
+  it('reads the book move of a move card: its piece, squares, kind and mover', () => {
+    expect(readAnswerMoveFacts(buildReviewCard(deck, getCard('d5')))).toEqual({
+      fromSquare: 'd7',
+      toSquare: 'd5',
+      piece: 'bP',
+      kind: 'move',
+      mover: 'black',
+    });
+  });
+
+  it('reads the last reader move of a trap, the one the board draws', () => {
+    expect(readAnswerMoveFacts(buildReviewCard(deck, EXAMPLE_TRAP_CARD))).toEqual({
+      fromSquare: 'g4',
+      toSquare: 'd1',
+      piece: 'bB',
+      kind: 'capture',
+      mover: 'black',
+    });
+  });
+
+  it('reads a white move for a deck played as White', () => {
+    const [firstMove] = listMoveCards(WHITE_DECK.cards);
+    if (firstMove === undefined) throw new Error('the white deck holds one card');
+    expect(readAnswerMoveFacts(buildReviewCard(WHITE_DECK, firstMove))?.mover).toBe('white');
+  });
+
+  it('reads nothing for a name card, which plays no move', () => {
+    const nameDeck = buildNameDeck([EXAMPLE_NAME_CARD]);
+    expect(readAnswerMoveFacts(buildReviewCard(nameDeck, EXAMPLE_NAME_CARD))).toBeNull();
   });
 });

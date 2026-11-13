@@ -11,6 +11,7 @@ import { MoveCardBody } from '@/components/molecules/MoveCardBody';
 import { NameCardBody } from '@/components/molecules/NameCardBody';
 import { ProgressNotKeptBanner } from '@/components/molecules/ProgressNotKeptBanner';
 import { ReviewSummary } from '@/components/molecules/ReviewSummary';
+import { selectReviewMark } from '@/components/molecules/review-mark.core';
 import { TrapCardBody } from '@/components/molecules/TrapCardBody';
 import { type Card, listReviewCards, type ReviewCard } from '@/decks/card.core';
 import type { Idea } from '@/decks/deck.utils';
@@ -82,6 +83,8 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
   const isAnswered = snapshot.phase === 'answered';
   const CardBody = CARD_BODY_BY_KIND[reviewCard.card.kind];
   const IdeaSlot = IDEA_BY_SHOWN[`${isIdeaShown(snapshot)}`];
+  const status = selectReviewStatus(snapshot);
+  const answerMoves = listAnswerMoves(snapshot);
   const deckName = selectDeckName(
     i18n.getResource(i18n.language, 'translation', reviewCard.deckNameKey),
     reviewCard.deckNameKey,
@@ -102,17 +105,14 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
         orientation={reviewCard.readerSide}
         fen={snapshot.fen}
         onMove={(uci) => isMoveAccepted(reviewMachine.playMove(uci))}
-        arrows={listAnswerMoves(snapshot).map((uci) => uciToArrow(uci))}
+        arrows={answerMoves.map((uci) => uciToArrow(uci))}
         highlightSquares={NO_HIGHLIGHTS}
         boardStyleId={boardStyle}
         boardWidth={SELECT_BOARD_WIDTH_BY_KIND[reviewCard.card.kind](viewportWidth)}
+        mark={selectReviewMark(status, answerMoves, reviewCard.readerSide)}
       />
       <div className="flex flex-col gap-3 w-full">
-        <CardBody
-          reviewCard={reviewCard}
-          status={selectReviewStatus(snapshot)}
-          onChooseName={reviewMachine.chooseName}
-        />
+        <CardBody reviewCard={reviewCard} status={status} onChooseName={reviewMachine.chooseName} />
         <div className="empty:hidden lg:order-last">
           <IdeaSlot idea={reviewCard.idea} />
         </div>

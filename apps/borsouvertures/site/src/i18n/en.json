@@ -159,7 +159,7 @@
       "opponent-played": "Trap. {{side}} played {{move}}",
       "status": {
         "opponent-moving": "Watch the move",
-        "your-move": "Punish it. Play the whole solution.",
+        "your-move": "Punish it",
         "recalled": "Recalled. The solution is {{moves}}.",
         "missed": "Missed. The solution is {{moves}}."
       },
@@ -401,6 +401,10 @@
       "black-rook": "black rook on {{square}}",
       "black-queen": "black queen on {{square}}",
       "black-king": "black king on {{square}}"
+    },
+    "mark": {
+      "recalled": "Recalled",
+      "missed": "Missed"
     }
   },
   "learn": {

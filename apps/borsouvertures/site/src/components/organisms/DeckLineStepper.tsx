@@ -117,6 +117,7 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
         highlightSquares={buildLastMoveHighlights(step, theme.highlight)}
         boardStyleId={boardStyle}
         boardWidth={boardWidth}
+        mark={null}
       />
       <div className="flex flex-col gap-2 w-full">
         <LineStepCaption step={step} position={position} stepCount={steps.length} />

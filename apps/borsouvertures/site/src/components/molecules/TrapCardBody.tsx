@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { StatusBand } from '@/components/atoms/StatusBand';
+import { PromptLine } from '@/components/atoms/PromptLine';
+import { readAnswerMoveFacts } from '@/decks/card.core';
 import type { ReviewStatus } from '@/review/review-machine.utils';
 import type { Side } from '@/state/persistedState.utils';
 import type { CardBodyProps } from './card-body.types';
-import { TONE_BY_REVIEW_STATUS } from './review-tone.core';
+import { describeMoveInWords } from './move-words.utils';
+import { selectReviewPrompt } from './review-prompt.core';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'cards.trap.status.opponent-moving',
@@ -20,18 +22,23 @@ const SIDE_KEY_BY_SIDE = {
 // @FollowsBlueprint molecule-presentational
 export function TrapCardBody({ reviewCard, status }: CardBodyProps) {
   const { t } = useTranslation();
-  const { opponentMove } = reviewCard;
+  const { opponentMove, bookMoveNotation } = reviewCard;
   if (opponentMove === null) return null;
+  const statusText = t(STATUS_KEY_BY_STATUS[status], { moves: bookMoveNotation });
+  const prompt = selectReviewPrompt(status, {
+    question: statusText,
+    context: t('cards.trap.opponent-played', {
+      side: t(SIDE_KEY_BY_SIDE[opponentMove.side]),
+      move: opponentMove.notation,
+    }),
+    notation: bookMoveNotation,
+    words: describeMoveInWords(t, readAnswerMoveFacts(reviewCard)),
+    outcome: statusText,
+  });
   return (
     <div role="status" aria-live="polite">
-      <StatusBand
-        label={t('cards.trap.opponent-played', {
-          side: t(SIDE_KEY_BY_SIDE[opponentMove.side]),
-          move: opponentMove.notation,
-        })}
-        tone={TONE_BY_REVIEW_STATUS[status]}
-        value={t(STATUS_KEY_BY_STATUS[status], { moves: reviewCard.bookMoveNotation })}
-      />
+      <PromptLine lead={prompt.lead} detail={prompt.detail} leadFont={prompt.leadFont} />
+      <p className="sr-only">{prompt.spoken}</p>
     </div>
   );
 }

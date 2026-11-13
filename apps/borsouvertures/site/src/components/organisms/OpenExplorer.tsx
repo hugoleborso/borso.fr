@@ -137,6 +137,7 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
         highlightSquares={highlightSquares}
         boardStyleId={boardStyle}
         boardWidth={boardWidth}
+        mark={null}
       />
       <div className="flex flex-col gap-2 w-full min-w-0">
         <div className="flex flex-col gap-2 overflow-y-auto overscroll-contain" style={listStyle}>

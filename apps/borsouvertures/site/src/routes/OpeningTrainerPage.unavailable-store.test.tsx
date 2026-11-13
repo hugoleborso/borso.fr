@@ -34,6 +34,7 @@ describe('the opening trainer in a browser whose store cannot open', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Start' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Show the move' }));
+    expect(screen.getByRole('img', { name: 'Missed' })).toBeTruthy();
     expect(screen.getByText('Missed. The book move is 1... d5.')).toBeTruthy();
     expect(screen.getAllByRole('status')[0]?.textContent).toContain('cannot store your progress');
   });

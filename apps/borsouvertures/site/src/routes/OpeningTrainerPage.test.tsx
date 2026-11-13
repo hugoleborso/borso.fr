@@ -148,9 +148,14 @@ describe('the opening trainer, one visit from the first load', () => {
     expect(screen.queryByText('English idea 1.')).toBeNull();
     expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true);
     await screen.findByText('Your move');
+    expect(screen.queryByRole('img', { name: 'Recalled' })).toBeNull();
 
     playMove('d7d5');
-    expect(screen.getByText('Recalled. You played 1... d5.')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Recalled' })).toBeTruthy();
+    expect(screen.queryByText('Your move')).toBeNull();
+    expect(
+      screen.getByText('black pawn on d7 goes to d5').closest('[role="status"]')?.textContent,
+    ).toBe('1... d5black pawn on d7 goes to d5Recalled. You played 1... d5.');
     expect(screen.getByText('English idea 1.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Albin Countergambit · 1/3' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Show the move' })).toHaveProperty('disabled', true);
@@ -159,9 +164,13 @@ describe('the opening trainer, one visit from the first load', () => {
     expect(screen.getByRole('heading', { name: 'Albin Countergambit · 2/3' })).toBeTruthy();
     expect(screen.getByText('White played 2. c4')).toBeTruthy();
     expect(screen.queryByText('English idea 2.')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Recalled' })).toBeNull();
 
     await userEvent.click(screen.getByRole('button', { name: 'Show the move' }));
-    expect(screen.getByText('Missed. The book move is 2... e5.')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Missed' })).toBeTruthy();
+    expect(
+      screen.getByText('black pawn on e7 goes to e5').closest('[role="status"]')?.textContent,
+    ).toBe('2... e5black pawn on e7 goes to e5Missed. The book move is 2... e5.');
     expect(screen.getByText('English idea 2.')).toBeTruthy();
 
     await vi.waitFor(async () => {

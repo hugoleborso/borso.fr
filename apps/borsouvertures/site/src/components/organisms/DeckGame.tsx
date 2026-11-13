@@ -84,7 +84,6 @@ function DeckGameControls({ deck, snapshot }: DeckGameBodyProps) {
               : t('opponent.source.left-deck', { move: missedBookMove })
           }
           value={t(STATUS_KEY_BY_STATUS[selectDeckGameStatus(snapshot)])}
-          tone="asking"
         />
         {lastOpponentMove === null ? null : (
           <p className="text-sm text-ink-muted">
@@ -114,6 +113,7 @@ function DeckGameBoard({ snapshot }: DeckGameBodyProps) {
       highlightSquares={NO_HIGHLIGHTS}
       boardStyleId={boardStyle}
       boardWidth={boardWidth}
+      mark={null}
     />
   );
 }

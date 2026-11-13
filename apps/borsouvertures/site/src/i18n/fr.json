@@ -159,7 +159,7 @@
       "opponent-played": "Piège. Les {{side}} ont joué {{move}}",
       "status": {
         "opponent-moving": "Regardez le coup",
-        "your-move": "Punissez ce coup. Jouez toute la solution.",
+        "your-move": "Punissez-le",
         "recalled": "Retenu. La solution est {{moves}}.",
         "missed": "Manqué. La solution est {{moves}}."
       },
@@ -401,6 +401,10 @@
       "black-rook": "tour noire en {{square}}",
       "black-queen": "dame noire en {{square}}",
       "black-king": "roi noir en {{square}}"
+    },
+    "mark": {
+      "recalled": "Retenu",
+      "missed": "Manqué"
     }
   },
   "learn": {

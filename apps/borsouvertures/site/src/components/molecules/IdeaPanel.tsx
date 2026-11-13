@@ -19,7 +19,7 @@ const TITLE_KEY_BY_SOURCE = {
 const IDEA_TEXT_CLASS = 'max-w-[65ch] text-[1.0625rem] leading-relaxed whitespace-pre-line';
 
 const IDEA_PREVIEW_CLASS =
-  'max-w-[65ch] text-[1.0625rem] leading-relaxed whitespace-pre-line line-clamp-2 roomy:line-clamp-none';
+  'max-w-[65ch] text-[1.0625rem] leading-relaxed whitespace-pre-line line-clamp-3 roomy:line-clamp-none';
 
 type IdeaCreditLength = 'short' | 'full';
 

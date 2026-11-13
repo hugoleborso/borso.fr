@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button, type ButtonVariant } from '@/components/atoms/Button';
-import { StatusBand } from '@/components/atoms/StatusBand';
+import { PromptLine } from '@/components/atoms/PromptLine';
 import type { ValueByFlag } from '@/lib/componentTable.types';
 import {
   listNameChoices,
@@ -8,7 +8,7 @@ import {
   selectOpeningName,
 } from '@/review/review-machine.utils';
 import type { CardBodyProps } from './card-body.types';
-import { TONE_BY_REVIEW_STATUS } from './review-tone.core';
+import { selectReviewPrompt } from './review-prompt.core';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'cards.name.status.asking',
@@ -25,17 +25,22 @@ const VARIANT_BY_RIGHT_NAME: ValueByFlag<ButtonVariant> = {
 // @FollowsBlueprint molecule-presentational
 export function NameCardBody({ reviewCard, status, onChooseName }: CardBodyProps) {
   const { t } = useTranslation();
+  const openingName = selectOpeningName(reviewCard);
+  const prompt = selectReviewPrompt(status, {
+    question: t('cards.name.question'),
+    context: '',
+    notation: reviewCard.bookMoveNotation,
+    words: openingName,
+    outcome: t(STATUS_KEY_BY_STATUS[status], {
+      name: openingName,
+      moves: reviewCard.bookMoveNotation,
+    }),
+  });
   return (
     <div className="flex flex-col gap-3">
       <div role="status" aria-live="polite">
-        <StatusBand
-          label={t('cards.name.question')}
-          tone={TONE_BY_REVIEW_STATUS[status]}
-          value={t(STATUS_KEY_BY_STATUS[status], {
-            name: selectOpeningName(reviewCard),
-            moves: reviewCard.bookMoveNotation,
-          })}
-        />
+        <PromptLine lead={prompt.lead} detail={prompt.detail} leadFont={prompt.leadFont} />
+        <p className="sr-only">{prompt.spoken}</p>
       </div>
       <div role="group" aria-label={t('cards.name.choices')} className="grid grid-cols-2 gap-2">
         {listNameChoices(reviewCard, status).map((choice) => (

@@ -1,15 +1,12 @@
-import { type StatusBandTone, statusBandVariants } from './status-band.variants';
-
 interface StatusBandProps {
   label: string;
   value: string;
-  tone: StatusBandTone;
 }
 
-// @FollowsBlueprint atom-variant
-export function StatusBand({ label, value, tone }: StatusBandProps) {
+// @FollowsBlueprint atom-plain
+export function StatusBand({ label, value }: StatusBandProps) {
   return (
-    <div className={statusBandVariants({ tone })}>
+    <div className="flex flex-col gap-0.5 min-h-14 px-4 py-2 -mx-4 roomy:mx-0 roomy:rounded-md bg-surface text-ink">
       <div className="text-sm font-medium opacity-85">{label}</div>
       <div className="text-lg font-bold leading-snug text-balance">{value}</div>
     </div>
