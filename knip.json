@@ -56,7 +56,8 @@
     },
     "apps/borsouvertures": {
       "entry": [
-        "bin/app.ts",
+        "cdk/bin/cdk.ts",
+        "cdk/test/**/*.test.ts",
         "site/**/*.utils.test.ts",
         "scripts/build-decks.setup.ts",
         "scripts/check-decks.setup.ts",
@@ -69,7 +70,7 @@
         "vitest.mutation.config.ts"
       ],
       "project": [
-        "bin/**/*.ts",
+        "cdk/**/*.ts",
         "scripts/**/*.ts",
         "site/**/*.ts",
         "site/**/*.tsx",

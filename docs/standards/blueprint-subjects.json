@@ -496,7 +496,7 @@
   "apps/borso-fr/vitest.config.ts": {
     "defineConfig": "workspace-test-config"
   },
-  "apps/borsouvertures/bin/app.ts": {
+  "apps/borsouvertures/cdk/bin/cdk.ts": {
     "account": "cdk-app-entrypoint"
   },
   "apps/borsouvertures/site/src/components/atoms/BoardView.test.tsx": {

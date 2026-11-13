@@ -27,6 +27,7 @@
     "scripts/**/*.ts",
     "api/src/**/*.ts",
     "api/scripts/**/*.ts",
+    "cdk/test/**/*.ts",
     "test/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts",

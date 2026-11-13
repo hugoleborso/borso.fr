@@ -39,7 +39,7 @@ flowchart TB
   pr --> cluster
 ```
 
-A static app (`borso-fr`, `borsouvertures`) is one `<app>-prod` stack with its own bucket and distribution. A full-stack app adds a Lambda API and a schema in its own DSQL cluster, which a separate `<app>-cluster` stack owns so a preview never depends on the prod stack's lifecycle.
+A static app (`borso-fr`) is one `<app>-prod` stack with its own bucket and distribution. A full-stack app adds a Lambda API and a schema in its own DSQL cluster, which a separate `<app>-cluster` stack owns so a preview never depends on the prod stack's lifecycle.
 
 ## Constructs (`@borso/infra`)
 

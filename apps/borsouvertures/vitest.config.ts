@@ -51,11 +51,13 @@ export default defineConfig({
           environment: 'jsdom',
           globals: true,
           setupFiles: ['./site/src/test-setup.ts'],
+          globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
           include: [
             'site/src/**/*.test.ts',
             'site/src/**/*.test.tsx',
             'domain/**/*.test.ts',
             'scripts/**/*.test.ts',
+            'cdk/test/**/*.test.ts',
             ...BACK_END_TESTS_THAT_NEED_NO_DATABASE,
           ],
           sequence: { groupOrder: 0 },
