@@ -37,3 +37,41 @@ Session: 9499cdc7-5d1f-5719-8d50-a7d5c2d01baf
 - [2026-11-13 01:18] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-13 02:28] `implementation-02` convention-drift and check-pure-modules-have-callers read the git index, so an agent told not to stage cannot prove a rename against them without a scratch copy of the index.
 - [2026-11-13 02:28] `implementation-02` The suffixes .setup.ts, .store.ts and .adapter.ts count as layer markers in blueprint-utils but the suffix table in docs/standards/01-naming.md does not list or define them.
+- [2026-11-13 09:00] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 09:01] `mutation-fix-01` The mutation brief read the 4 in the timeout column of the Stryker table as survivors, which pointed the fix at review-event-store.adapter.ts instead of the real survivor in deck-folders.adapter.ts
+- [2026-11-13 09:01] `mutation-fix-01` The full borsouvertures coverage run fails on 30 s route-test timeouts at load average 15+ on 4 cores while parallel agents run, and passes file by file
+- [2026-11-13 09:02] `implementation-05b` Playing a deck line to its end in agent-browser needed a hand-written chess.js helper, because the page exposes only the last opponent move and no move list.
+- [2026-11-13 09:08] `implementation-03b` pnpm --filter <app> dev -- --port N is ignored because the dev script chains tsx and vite, so the server silently takes 5173 and can collide with a parallel agent.
+- [2026-11-13 09:08] `implementation-03b` A test fixture computed in a describe body runs before Stryker activates a mutant, so a mutant only that fixture covers survives although the assertions would kill it.
+- [2026-11-13 09:14] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 09:18] `implementation-06b` The Modal atom closes itself on mount under React StrictMode in dev, because the ref cleanup calls dialog.close() and the close event fires onClose, so a Modal opened from a click never shows in pnpm dev.
+- [2026-11-13 09:19] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 09:28] `implementation-04b` The plan said zlib.createZstdDecompress streams the Lichess puzzle dump, but Node 22 rejects its pzstd skippable frames (ZSTD_error_prefix_unknown), so each frame has to be cut out and decompressed by hand.
+- [2026-11-13 09:28] `implementation-04b` A previous agent stopped mid-slice left no record of which gates had run, so the resumed slice had to rerun build:traps and every test to know what held.
+- [2026-11-13 09:28] `implementation-04b` My agent-browser session came back on about:blank with a fresh profile mid-check, most likely because a parallel agent ran close --all.
+- [2026-11-13 09:37] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
+- [2026-11-13 09:52] `hook:no-discarding-reset` ran a git command that would discard uncommitted work
+- [2026-11-13 09:52] `implementation-07` blueprint-indexing.ts --accept rewrites about 1,400 unrelated lines of docs/standards/blueprint-subjects.json, so renaming one follower file means hand-editing the baseline key instead
+- [2026-11-13 10:12] `technical-validation-01` An uncommitted edit to infra/cdk/src/internal/cf-host-routing-function.code.js appeared in the shared working tree mid-review, so the mutation and test runs read a tree that was not the reviewed SHA.
+- [2026-11-13 10:12] `technical-validation-01` The spec routes every numbered step, edge case and error case to /visual-validation as one row each, which leaves category D of the technical validator with no row by the letter of the procedure, so the deterministic sub-claims had to be split out by judgement.
+- [2026-11-13 10:45] `fix-round-01` A test file that calls vi.resetModules and re-imports a gated module makes Stryker report that module's static mutants as survived, though the sibling tests kill them.
+- [2026-11-13 10:59] `redesign-01` The worktree isolation guard refuses agent-browser eval calls whose JavaScript contains a CSS attribute selector, so page checks need get html or a selector click instead.
+- [2026-11-13 10:59] `redesign-01` Modal closed itself in dev because StrictMode re-runs its ref callback and the queued close event from the first detach reached onClose after the dialog had reopened.
+- [2026-11-13 10:59] `redesign-01` scripts/phone.sh only taps, and the board takes moves by drag, so a touch board move cannot be proved with the repo's tooling.
+- [2026-11-13 11:19] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 11:22] `redesign-02` The ActionBar spacer reserved the full bar height on top of the shell's 1.5rem bottom slack, so every action-bar screen wasted 24 px and no gate measured fit at 375 x 812.
+- [2026-11-13 11:22] `redesign-02` The brief called the Play tab overflow a short scroll, but it measured 149 px, so the fix needed a layout move rather than a nudge.
+- [2026-11-13 11:29] `technical-validation-02` pnpm --filter @borso/shared matches no workspace (the package is @borso/shared-infra) and exits 0 with no test run, so a wrong filter name reads as a green run.
+- [2026-11-13 11:29] `technical-validation-02` CI's mutation job was still running at review time, so the brief's 'cite CI' for mutation could not be honoured and the row stays UNVERIFIABLE.
+- [2026-11-13 11:32] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
+- [2026-11-13 11:39] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
+- [2026-11-13 11:40] `visual-validation-01` agent-browser set offline and network route --abort do not reach requests a service worker makes, so an 'offline and not cached' row needs the service worker registration blocked by an init script to be reproduced
+- [2026-11-13 11:40] `visual-validation-01` scripts/phone.sh covers taps only, so moving a piece on the borsouvertures board by touch needed a hand-written CDP touch-drag script
+- [2026-11-13 11:40] `visual-validation-01` agent-browser click on a react-chessboard square does nothing and only drag moves a piece, which is not written in any knowledge entry
+- [2026-11-13 11:55] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 11:59] `fix-round-02` Standard 08 asks cva for more than two variants while the atom-lookup-variants blueprint sanctions a hand-built table, so the two canonical sources disagree.
+- [2026-11-13 11:59] `fix-round-02` convention-drift reads the git index, so a subagent that may not stage cannot run it after deleting a file without a private GIT_INDEX_FILE.
+- [2026-11-13 11:59] `fix-round-02` git rm stages the deletion, which a subagent forbidden to stage must undo with git reset.
+- [2026-11-13 12:18] `visual-validation-02` scripts/phone.sh touch takes only a CSS selector, and the borsouvertures action buttons carry no id, test id or aria-label distinct from their text, so a tap on Start or Next needed a data attribute injected by eval first
+- [2026-11-13 12:18] `visual-validation-02` Neither the visual-validator brief nor the CLI help says that 'agent-browser set offline' does not stop service-worker fetches, so an offline-worker row needs an init script that blocks navigator.serviceWorker.register, rediscovered each run
+- [2026-11-13 12:18] `visual-validation-02` The preview bundle carries no Sentry DSN, so the spec's 'Sentry receives it' clause can never be observed from a preview and goes UNVERIFIABLE every run
