@@ -6,8 +6,29 @@ import { composeClassName } from './class-name.utils';
 import { buildEnergyLevels, levelFromKey } from './energy-bar.utils';
 import { barHeightRatio, levelFromTravel } from './energy-meter.utils';
 
-const METER_HEIGHT_PX = 22;
-const BAR_WIDTH_CLASS = 'w-[3px]';
+export type EnergyMeterSize = 'compact' | 'wide';
+
+interface EnergyMeterLayout {
+  readonly heightPx: number;
+  readonly rootClassName: string;
+  readonly barsClassName: string;
+  readonly barClassName: string;
+}
+
+const LAYOUTS: Readonly<Record<EnergyMeterSize, EnergyMeterLayout>> = {
+  compact: {
+    heightPx: 22,
+    rootClassName: 'h-11 shrink-0 justify-center gap-1.5 px-1.5',
+    barsClassName: 'gap-[2px]',
+    barClassName: 'w-[3px]',
+  },
+  wide: {
+    heightPx: 40,
+    rootClassName: 'h-14 w-full min-w-0 gap-3',
+    barsClassName: 'min-w-0 flex-1 gap-1 sm:gap-1.5',
+    barClassName: 'flex-1',
+  },
+};
 
 export interface EnergyMeterProps {
   readonly value: number;
@@ -18,6 +39,7 @@ export interface EnergyMeterProps {
   readonly filledClassName: string;
   readonly emptyClassName: string;
   readonly className?: string;
+  readonly size?: EnergyMeterSize;
   readonly onChange: (level: number) => void;
 }
 
@@ -37,8 +59,10 @@ export function EnergyMeter({
   filledClassName,
   emptyClassName,
   className,
+  size = 'compact',
   onChange,
 }: EnergyMeterProps): JSX.Element {
+  const layout = LAYOUTS[size];
   const [isAdjusting, setIsAdjusting] = useState<boolean>(false);
   const gesture = useRef<Gesture | null>(null);
 
@@ -84,7 +108,8 @@ export function EnergyMeter({
       aria-valuetext={valueText}
       data-adjusting={isAdjusting}
       className={composeClassName(
-        'flex h-11 shrink-0 cursor-ew-resize touch-none select-none items-center justify-center gap-1.5 px-1.5',
+        'flex cursor-ew-resize touch-none select-none items-center',
+        layout.rootClassName,
         'outline-hidden focus-visible:outline-solid focus-visible:outline-3',
         'focus-visible:outline-offset-2 focus-visible:outline-focus',
         className,
@@ -95,16 +120,19 @@ export function EnergyMeter({
       onPointerCancel={closeGesture}
       onKeyDown={changeFromKey}
     >
-      <span className="flex items-end gap-[2px]" style={{ height: METER_HEIGHT_PX }}>
+      <span
+        className={composeClassName('flex items-end', layout.barsClassName)}
+        style={{ height: layout.heightPx }}
+      >
         {buildEnergyLevels(minimum, maximum).map((level) => (
           <span
             key={level}
             className={composeClassName(
-              BAR_WIDTH_CLASS,
+              layout.barClassName,
               'rounded-cover transition-colors',
               level <= value ? filledClassName : emptyClassName,
             )}
-            style={{ height: METER_HEIGHT_PX * barHeightRatio(level, minimum, maximum) }}
+            style={{ height: layout.heightPx * barHeightRatio(level, minimum, maximum) }}
           />
         ))}
       </span>
