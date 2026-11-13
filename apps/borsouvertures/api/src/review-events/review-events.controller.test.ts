@@ -89,6 +89,21 @@ describe('the review-events routes', () => {
     ]);
   });
 
+  it('stores a batch pushed twice at once from two sessions once, and answers both with the same receipts', async () => {
+    const [firstCookie, secondCookie] = [await signInForCookie(app), await signInForCookie(app)];
+    const [first, second] = await Promise.all([
+      push(firstCookie, buildEvents(1, 3)),
+      push(secondCookie, buildEvents(1, 3)),
+    ]);
+    expect(second).toEqual(first);
+    expect(first.map((receipt) => receipt.id)).toEqual([
+      buildEventId(1),
+      buildEventId(2),
+      buildEventId(3),
+    ]);
+    expect(await countReviewEvents()).toBe(3);
+  });
+
   it('answers an empty receipt list to an empty batch', async () => {
     const cookie = await signInForCookie(app);
     expect(await push(cookie, [])).toEqual([]);

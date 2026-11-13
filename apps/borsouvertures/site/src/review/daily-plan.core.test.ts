@@ -12,7 +12,7 @@ import {
   selectDeckSessionCardIds,
   selectSessionCardIds,
 } from './daily-plan.core';
-import { buildReviewEvent } from './review.test-utils';
+import { buildReviewEvent, LAPTOP } from './review.test-utils';
 import { type CardState, type Scheduler, SCHEDULER_CONFIGURATION } from './scheduler.core';
 
 const deck = buildExampleDeck();
@@ -131,10 +131,10 @@ describe('buildDailyPlan', () => {
 });
 
 describe('countCardsIntroducedOn', () => {
-  it('counts a card on the day of its first review only', () => {
+  it('counts a card on the day of its first review only, whichever device made it', () => {
     const events = [
       buildReviewEvent(1, first, '2026-01-10T08:00:00.000Z'),
-      buildReviewEvent(2, first, '2026-01-09T08:00:00.000Z'),
+      buildReviewEvent(2, first, '2026-01-09T08:00:00.000Z', 'recalled', { deviceId: LAPTOP }),
       buildReviewEvent(3, second, '2026-01-10T08:00:00.000Z'),
       buildReviewEvent(4, second, '2026-01-10T09:00:00.000Z'),
       buildReviewEvent(5, third, '2026-01-09T08:00:00.000Z'),

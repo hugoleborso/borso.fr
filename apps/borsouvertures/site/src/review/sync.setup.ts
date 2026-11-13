@@ -66,18 +66,18 @@ async function exchangeOneRound(): Promise<ExchangedRound | FailedRound> {
   const push = await pushUnlessEmpty(unpushed);
   if (push.outcome !== 'synced') return { failure: push };
   const stamped = applyPushReceipt(unpushed, push.receipts);
-  mergeIntoReviewLog(stamped);
+  await mergeIntoReviewLog(stamped);
   const storage = readCursorStorage();
   const cursor = readSyncCursor(storage);
   const pull = await pullReviewEvents(api, cursor);
   if (pull.outcome !== 'synced') return { failure: pull };
-  mergeIntoReviewLog(pull.events);
-  writeSyncCursor(storage, advanceCursor(cursor, pull.nextCursor));
+  const isPulledPageStored = (await mergeIntoReviewLog(pull.events)) === 'stored';
+  if (isPulledPageStored) writeSyncCursor(storage, advanceCursor(cursor, pull.nextCursor));
   return {
     failure: null,
     pushed: stamped.length,
     pulled: pull.events.length,
-    hasMore: pull.hasMore,
+    hasMore: isPulledPageStored && pull.hasMore,
   };
 }
 

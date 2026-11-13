@@ -185,7 +185,8 @@ CREATE INDEX ASYNC review_event_received ON review_event (received_at, id);
 CREATE TABLE operator_credential (id uuid PRIMARY KEY, password_hash text NOT NULL,
   session_epoch integer NOT NULL, created_at timestamptz NOT NULL);
 CREATE TABLE app_config (id text PRIMARY KEY, hmac_key text NOT NULL);
-CREATE TABLE sign_in_attempt (id uuid PRIMARY KEY, address_hash text NOT NULL, attempted_at timestamptz NOT NULL);
+CREATE TABLE sign_in_attempt (address_hash text PRIMARY KEY,  -- one atomic counter per address
+  attempt_count integer NOT NULL, window_started_at timestamptz NOT NULL);
 ```
 
 There is no account column, because there is one account. A preview clones nothing from prod, so it never carries the credential or the operator's events (ADR-2026-11-13T0002).

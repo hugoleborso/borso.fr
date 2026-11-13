@@ -1,12 +1,13 @@
 import { and, asc, eq, gt, inArray, or } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type ReviewEventRow, reviewEventTable } from './review-events.schema';
 
 // @FollowsBlueprint repository-idempotent-upsert
 export async function insertReviewEventsUnlessStored(
   rows: readonly ReviewEventRow[],
+  executor: DatabaseExecutor = getDatabase(),
 ): Promise<void> {
-  await getDatabase()
+  await executor
     .insert(reviewEventTable)
     .values([...rows])
     .onConflictDoNothing({ target: reviewEventTable.id });

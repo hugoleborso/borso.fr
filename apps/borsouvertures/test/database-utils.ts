@@ -27,3 +27,9 @@ export async function listReceivedInstants(): Promise<readonly string[]> {
     SELECT id, received_at FROM review_event ORDER BY received_at, id`;
   return rows.map((row) => `${row.id} ${row.received_at.toISOString()}`);
 }
+
+export async function listSignInAttemptCounts(): Promise<readonly number[]> {
+  const rows = await testSql()<{ attempt_count: number }[]>`
+    SELECT attempt_count FROM sign_in_attempt ORDER BY address_hash`;
+  return rows.map((row) => row.attempt_count);
+}

@@ -187,7 +187,8 @@ The cards a reader is asked today: the due cards, then the new cards.
 Lives in: `site/src/review/daily-plan.core.ts`
 
 - `buildDailyPlan` puts due cards first, by due instant then by id. New cards
-  follow in deck `order`, then line order, then ply order.
+  follow in the order `listDeckCards` gives: deck `order`, then line order, then
+  ply order, with one name card slipped in after every four deck cards.
 - New cards stop at `newCardsPerDay` minus the cards already introduced today.
   The setting is 10 by default, 0 to 30, and is kept on the device.
 - The plan is derived from the review log at each render and is never stored.
@@ -354,6 +355,8 @@ Lives in: `site/src/review/daily-plan.core.ts`
 
 - A card stops being new at its first review, on any device. The day of that
   first review is the day it counts against `newCardsPerDay`.
+
+Held by: `site/src/review/daily-plan.core.test.ts` › counts a card on the day of its first review only, whichever device made it
 
 ## Opening
 
@@ -544,6 +547,8 @@ Lives in: `site/src/review/`
   it, or its already seen cards ahead of their day when the plan holds none.
 - The session ends with the share recalled on the first try and tomorrow's due
   count.
+
+Held by: `site/src/routes/OpeningTrainerPage.test.tsx` › recalls a card and shows its idea, misses a card through Show the move, and ends with the recalled share
 
 ## Review event
 

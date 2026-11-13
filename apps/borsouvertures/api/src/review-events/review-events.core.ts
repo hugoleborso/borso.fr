@@ -1,4 +1,5 @@
 import type { ReviewEvent, ReviewOutcome } from '@domain/review-event.core';
+import type { ReviewEventRow } from './review-events.schema';
 
 const CURSOR_SEPARATOR = '~';
 const CURSOR_PART_COUNT = 3;
@@ -22,15 +23,7 @@ export interface PullFloor {
   readonly id: string;
 }
 
-export interface StoredReviewEvent {
-  readonly id: string;
-  readonly cardId: string;
-  readonly outcome: string;
-  readonly reviewedAt: Date;
-  readonly calendarDay: string;
-  readonly deviceId: string;
-  readonly receivedAt: Date;
-}
+export type StoredReviewEvent = Readonly<ReviewEventRow>;
 
 export interface PushReceipt {
   readonly id: string;

@@ -10,28 +10,47 @@ describe('fetchDecksDocument', () => {
   it('returns the body of a successful answer, bypassing the HTTP cache', async () => {
     const fetcher = vi.fn(() => Promise.resolve(Response.json({ version: 1, decks: [] })));
     vi.stubGlobal('fetch', fetcher);
-    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({ version: 1, decks: [] });
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({
+      status: 'arrived',
+      body: { version: 1, decks: [] },
+    });
     expect(fetcher).toHaveBeenCalledWith('/decks.json', { cache: 'no-cache' });
   });
 
-  it('returns null on a refusal', async () => {
+  it('answers unreachable on a refusal', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => Promise.resolve(Response.json({ version: 1 }, { status: 404 }))),
+      vi.fn(() => Promise.resolve(Response.json({ version: 1 }, { status: 503 }))),
     );
-    await expect(fetchDecksDocument('/decks.json')).resolves.toBeNull();
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({ status: 'unreachable' });
   });
 
-  it('returns null on a network failure and on a body that is no JSON', async () => {
+  it('answers unreachable on a network failure', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => Promise.reject(new TypeError('offline'))),
     );
-    await expect(fetchDecksDocument('/decks.json')).resolves.toBeNull();
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({ status: 'unreachable' });
+  });
+
+  it('answers unreachable when the connection drops while the body streams', async () => {
+    const response = new Response('{}');
+    vi.spyOn(response, 'json').mockRejectedValue(new TypeError('network error'));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(response)),
+    );
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({ status: 'unreachable' });
+  });
+
+  it('hands over an empty body when the answer arrived and is no JSON', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => Promise.resolve(new Response('<html>'))),
     );
-    await expect(fetchDecksDocument('/decks.json')).resolves.toBeNull();
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({
+      status: 'arrived',
+      body: null,
+    });
   });
 });

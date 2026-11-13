@@ -86,7 +86,7 @@ describe('TopBar', () => {
 
   it.each([
     [401, { error: 'invalid-credentials' }, 'Wrong password.'],
-    [429, { error: 'rate-limited' }, 'Too many attempts. Try again in 15 minutes.'],
+    [429, { error: 'rate-limited' }, 'Too many attempts. Try again later.'],
     [503, { error: 'auth-not-bootstrapped' }, 'Sign-in is not set up on this server yet.'],
     [500, { error: 'unexpected-failure' }, 'The server cannot be reached. Try again later.'],
   ])('keeps the form open and says why a %i sign-in failed', async (status, body, message) => {

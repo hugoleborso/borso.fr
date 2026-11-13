@@ -7,7 +7,7 @@ import { selectDecksLoad } from './decks-load.utils';
 describe('selectDecksLoad', () => {
   it('hands the decks over when the body parses', () => {
     const document = buildExampleDocument();
-    expect(selectDecksLoad(document)).toEqual({
+    expect(selectDecksLoad({ status: 'arrived', body: document })).toEqual({
       status: 'loaded',
       decks: document.decks,
       failure: null,
@@ -15,15 +15,26 @@ describe('selectDecksLoad', () => {
   });
 
   it('answers a failure that names the deck when the body does not parse', () => {
-    const load = selectDecksLoad({ version: 1, decks: [{ id: 'vienna-game' }] });
+    const load = selectDecksLoad({
+      status: 'arrived',
+      body: { version: 1, decks: [{ id: 'vienna-game' }] },
+    });
     expect(load.status).toBe('failed');
     expect(load.decks).toEqual([]);
     expect(load.failure).toBeInstanceOf(DeckContentInvalidError);
     expect(load.failure?.deckId).toBe('vienna-game');
   });
 
-  it('fails on a body the network did not deliver', () => {
-    expect(selectDecksLoad(null).failure?.deckId).toBe('unknown');
+  it('fails on a body that arrived and is no deck document, naming no deck', () => {
+    expect(selectDecksLoad({ status: 'arrived', body: null }).failure?.deckId).toBe('unknown');
+  });
+
+  it('answers unreachable with no failure to report when the file did not arrive', () => {
+    expect(selectDecksLoad({ status: 'unreachable' })).toEqual({
+      status: 'unreachable',
+      decks: [],
+      failure: null,
+    });
   });
 
   it('lets an error of another kind through', () => {
@@ -33,6 +44,6 @@ describe('selectDecksLoad', () => {
         throw new TypeError('hostile getter');
       },
     };
-    expect(() => selectDecksLoad(hostile)).toThrow(TypeError);
+    expect(() => selectDecksLoad({ status: 'arrived', body: hostile })).toThrow(TypeError);
   });
 });

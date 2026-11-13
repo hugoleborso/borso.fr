@@ -8,6 +8,8 @@ import {
   putStoredReviewEvents,
 } from './review-event-store.adapter';
 
+export type ReviewLogMerge = 'stored' | 'in-memory-only';
+
 export interface ReviewLog {
   events: readonly ReviewEvent[];
   isProgressKept: boolean;
@@ -63,21 +65,23 @@ export function appendReviewEvent(event: ReviewEvent): void {
   void persistReviewEvent(event);
 }
 
-async function persistReviewEvents(events: readonly ReviewEvent[]): Promise<void> {
+async function persistReviewEvents(events: readonly ReviewEvent[]): Promise<ReviewLogMerge> {
   try {
     await putStoredReviewEvents(readFactory(), events);
+    return 'stored';
   } catch (error) {
     keepProgressInMemoryOnly(error);
+    return 'in-memory-only';
   }
 }
 
-export function mergeIntoReviewLog(events: readonly ReviewEvent[]): void {
-  if (events.length === 0) return;
+export async function mergeIntoReviewLog(events: readonly ReviewEvent[]): Promise<ReviewLogMerge> {
+  if (events.length === 0) return 'stored';
   replaceLog({
     events: mergeReviewEvents(store.log.events, events),
     isProgressKept: store.log.isProgressKept,
   });
-  void persistReviewEvents(events);
+  return await persistReviewEvents(events);
 }
 
 export function subscribeToReviewLog(listener: () => void): () => void {

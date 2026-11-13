@@ -44,7 +44,7 @@
     "sync-paused": "Sync paused. Your reviews stay on this device and will be sent later.",
     "refusal": {
       "invalid-credentials": "Wrong password.",
-      "rate-limited": "Too many attempts. Try again in 15 minutes.",
+      "rate-limited": "Too many attempts. Try again later.",
       "auth-not-bootstrapped": "Sign-in is not set up on this server yet.",
       "unavailable": "The server cannot be reached. Try again later."
     }

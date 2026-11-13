@@ -44,7 +44,7 @@
     "sync-paused": "Synchronisation en pause. Vos révisions restent sur cet appareil et seront envoyées plus tard.",
     "refusal": {
       "invalid-credentials": "Mot de passe incorrect.",
-      "rate-limited": "Trop de tentatives. Réessayez dans 15 minutes.",
+      "rate-limited": "Trop de tentatives. Réessayez plus tard.",
       "auth-not-bootstrapped": "La connexion n'est pas encore configurée sur ce serveur.",
       "unavailable": "Le serveur est injoignable. Réessayez plus tard."
     }

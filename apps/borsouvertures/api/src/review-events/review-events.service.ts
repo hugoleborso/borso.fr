@@ -1,4 +1,5 @@
 import { REVIEW_EVENT_BATCH_LIMIT, type ReviewEvent } from '@domain/review-event.core';
+import type { DatabaseExecutor } from '../database/client';
 import {
   buildPulledPage,
   buildReviewEventRow,
@@ -28,6 +29,16 @@ export async function storeReviewEvents(params: StoreReviewEventsParams): Promis
     params.events.map((event) => buildReviewEventRow(event, params.now)),
   );
   return projectPushReceipts(await listReceivedAtByIds(params.events.map((event) => event.id)));
+}
+
+export async function storeReviewEventsWithin(
+  executor: DatabaseExecutor,
+  params: StoreReviewEventsParams,
+): Promise<void> {
+  await insertReviewEventsUnlessStored(
+    params.events.map((event) => buildReviewEventRow(event, params.now)),
+    executor,
+  );
 }
 
 // @FollowsBlueprint service-orchestration

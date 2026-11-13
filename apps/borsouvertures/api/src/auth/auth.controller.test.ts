@@ -8,7 +8,7 @@ import {
   signInForCookie,
   writeOperatorCredential,
 } from '../../../test/auth-utils';
-import { truncateAllTables } from '../../../test/database-utils';
+import { listSignInAttemptCounts, truncateAllTables } from '../../../test/database-utils';
 
 const refusalSchema = z.object({ error: z.string() });
 const sessionSchema = z.object({ signedIn: z.boolean() });
@@ -78,6 +78,20 @@ describe('the auth routes', () => {
     const sixth = await signIn(app);
     expect(sixth.status).toBe(429);
     expect(refusalSchema.parse(await sixth.json()).error).toBe('rate-limited');
+  });
+
+  it('counts every one of seven wrong passwords sent at once from one address, and refuses the two above the limit', async () => {
+    await writeOperatorCredential();
+    const settled = await Promise.allSettled(
+      Array.from({ length: 7 }, async () => (await signIn(app, 'wrong-password')).status),
+    );
+    const statuses = settled.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value] : [],
+    );
+    expect(statuses.toSorted((left, right) => left - right)).toEqual([
+      401, 401, 401, 401, 401, 429, 429,
+    ]);
+    expect(await listSignInAttemptCounts()).toEqual([7]);
   });
 
   it('clears the failed attempts after a sign-in that succeeds', async () => {

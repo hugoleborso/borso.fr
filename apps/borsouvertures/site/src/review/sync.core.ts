@@ -3,22 +3,21 @@ import {
   REVIEW_EVENT_BATCH_LIMIT,
   type ReviewEvent,
 } from '@domain/review-event.core';
+import type { InferResponseType } from 'hono/client';
 import { z } from 'zod';
+import type { ApiClient } from '@/lib/api.client';
 
 export type SyncOutcome = 'synced' | 'signed-out' | 'rejected' | 'offline';
 
 export type SyncStatus = 'idle' | 'synced' | 'paused';
 
-export interface PushReceipt {
-  readonly id: string;
-  readonly receivedAt: string;
-}
+export type PushReceipt = Readonly<
+  InferResponseType<ApiClient['api']['review-events']['$post'], 200>['accepted'][number]
+>;
 
-export interface PulledPage {
-  readonly events: readonly ReviewEvent[];
-  readonly nextCursor: string | null;
-  readonly hasMore: boolean;
-}
+export type PulledPage = Readonly<
+  InferResponseType<ApiClient['api']['review-events']['$get'], 200>
+>;
 
 export interface SyncRound {
   readonly roundsRun: number;
