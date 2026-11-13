@@ -47,6 +47,7 @@ Talos therefore writes `claude://code/new?repo=…&q=…` from the iOS home-scre
 Last verified: 2026-10-08 — read support.claude.com article 14898120 and the web quickstart's « Pre-fill sessions »; no phone was available to tap the link.
 
 - **Environment.** The app documents no `environment` parameter, so a session started from the app may run in the default environment. Check it in the composer before sending.
+- **A link without `q`.** Since 2026-11-13 « Parler à Talos » sends `claude://code/new?repo=…` with no prompt from the iOS home-screen app. The taps of 2026-10-24 all carried `q`, so whether the app opens a new session without one is unverified.
 - **Verification.** Nothing in a hosted session can tap a link on a phone. Unverified from here: whether the web serves `code/new` itself or redirects it to `code`. The support article only says that the link « opens in the browser ».
 
 ## See also

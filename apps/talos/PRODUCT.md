@@ -26,7 +26,7 @@ Talos is not a todo app. It is the face of an agent that works overnight: it wri
 ## Operating Context
 
 - The content lives in a private repository; every write is a commit with a French message. The app never stores content itself.
-- Screens: Today (date, brief, focus, counters, agenda, activity), Todo and Todo taff, Proposals, Commitments, Relations, Drafts, History, Second brain (search, pages, graph), Message (opens Claude Code), Settings, Login.
+- Screens: Today (date, brief, focus, counters, agenda, activity), Todo and Todo taff, Proposals, Commitments, Relations, Drafts, History, Second brain (search, pages, graph), Routine runs, Settings, Login, and a « Parler à Talos » button in the tab bar that opens Claude Code.
 - Interactions already in place: long press opens an action sheet, toasts with undo, offline banner, push notifications.
 
 ## Capabilities and Constraints

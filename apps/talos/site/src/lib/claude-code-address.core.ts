@@ -29,7 +29,7 @@ export function buildClaudeCodeAddress(launch: ClaudeCodeLaunch, opener: ClaudeC
   if (launch.environmentId !== null && opener === 'web') {
     parameters.push(['environment', launch.environmentId]);
   }
-  parameters.push(['q', launch.prompt]);
+  if (launch.prompt !== '') parameters.push(['q', launch.prompt]);
   const query = parameters.map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('&');
   return `${CLAUDE_CODE_ADDRESS[opener]}?${query}`;
 }

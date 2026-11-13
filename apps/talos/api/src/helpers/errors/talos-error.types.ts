@@ -38,7 +38,6 @@ export const TALOS_ERRORS = {
     message: 'Impossible de supprimer la dernière passkey : ajoutes-en une autre avant.',
   },
   'rate-limited': { status: 429, message: 'Trop de tentatives, réessaie plus tard.' },
-  'routine-fire-failed': { status: 502, message: "Talos n'a pas pu être lancé." },
   'not-configured': { status: 503, message: "Talos n'est pas encore configuré." },
 } as const satisfies Record<string, TalosErrorDefinition>;
 

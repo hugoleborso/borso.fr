@@ -9,7 +9,8 @@ export const loadCommitmentDetailPage = async () => await import('./routes/Commi
 export const loadBrainPage = async () => await import('./routes/BrainPage');
 export const loadBrainEntryPage = async () => await import('./routes/BrainEntryPage');
 export const loadGraphPage = async () => await import('./routes/GraphPage');
-export const loadMessagePage = async () => await import('./routes/MessagePage');
+export const loadRoutineRunsPage = async () => await import('./routes/RoutineRunsPage');
+export const loadTalkPage = async () => await import('./routes/TalkPage');
 export const loadSettingsPage = async () => await import('./routes/SettingsPage');
 export const loadRelationsPage = async () => await import('./routes/RelationsPage');
 export const loadRecurringTasksPage = async () => await import('./routes/RecurringTasksPage');
@@ -29,7 +30,7 @@ const SCREENS_KEPT_FOR_OFFLINE = [
   loadCommitmentDetailPage,
   loadBrainPage,
   loadBrainEntryPage,
-  loadMessagePage,
+  loadRoutineRunsPage,
   loadSettingsPage,
   loadRelationsPage,
   loadRecurringTasksPage,

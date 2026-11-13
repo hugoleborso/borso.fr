@@ -1,5 +1,5 @@
 import type { ParseKeys } from 'i18next';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { CountBadge } from '../atoms/CountBadge';
@@ -19,6 +19,7 @@ export interface BottomTabBarProps {
   readonly activePath: string;
   readonly badgeDestination: string;
   readonly badgeCount: number;
+  readonly trailing?: ReactNode;
 }
 
 const ACTIVE_STROKE = 2;
@@ -30,6 +31,7 @@ export function BottomTabBar({
   activePath,
   badgeDestination,
   badgeCount,
+  trailing,
 }: BottomTabBarProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -71,6 +73,7 @@ export function BottomTabBar({
             </li>
           );
         })}
+        {trailing === undefined ? null : <li className="shrink-0 ml-1">{trailing}</li>}
       </ul>
     </nav>
   );

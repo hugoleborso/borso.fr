@@ -4,7 +4,6 @@ import {
   READY_DRAFT_STATUS,
 } from '@domain/draft-status.core';
 import type { ProposalDecision } from '@domain/proposal.core';
-import { isRoutineConfigured } from '../routine-run.core';
 import type { TranslatableToast } from '../toast.core';
 import type { TodoPatch } from './cache-updates.core';
 
@@ -44,19 +43,6 @@ export const PUSH_DISABLED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.push-disabled',
 };
-export const ROUTINE_LAUNCHED_TOAST: TranslatableToast = {
-  tone: 'success',
-  messageKey: 'toast.routine-launched',
-};
-const ROUTINE_UNCONFIGURED_TOAST: TranslatableToast = {
-  tone: 'info',
-  messageKey: 'toast.routine-unconfigured',
-};
-const ROUTINE_LAUNCH_FAILED_TOAST: TranslatableToast = {
-  tone: 'danger',
-  messageKey: 'toast.routine-launch-failed',
-};
-
 export const COPIED_TOAST: TranslatableToast = { tone: 'neutral', messageKey: 'toast.copied' };
 export const PROMPT_COPIED_TOAST: TranslatableToast = {
   tone: 'neutral',
@@ -96,10 +82,6 @@ export function selectPushTestToast(delivered: number): TranslatableToast {
   return delivered > 0
     ? { tone: 'success', messageKey: 'toast.push-test-sent' }
     : { tone: 'info', messageKey: 'toast.push-test-none' };
-}
-
-export function selectLaunchFailureToast(failure: unknown): TranslatableToast {
-  return isRoutineConfigured(failure) ? ROUTINE_LAUNCH_FAILED_TOAST : ROUTINE_UNCONFIGURED_TOAST;
 }
 
 export function selectTodoReversal(
