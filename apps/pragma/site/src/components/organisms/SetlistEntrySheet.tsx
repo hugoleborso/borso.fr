@@ -17,6 +17,7 @@ import { useLatestTextSave } from '../molecules/latest-text-save.hook';
 import { selectTextSaveDisplay } from '../molecules/latest-text-save.utils';
 import {
   formValuesToLineup,
+  isLineupStaffed,
   selectLineupSaveTarget,
   toLineupPayload,
 } from '../molecules/lineup-editor.core';
@@ -85,6 +86,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
   const [hasTypedNote, setHasTypedNote] = useState(false);
   const [tab, setTab] = useState<SongViewTab>(props.focus);
   const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
+  const [isBuildingSongLineup] = useState(() => !isLineupStaffed(song.defaultLineup));
   const form = useSetlistEntryForm({
     keyOverride: entry.keyOverride ?? '',
     capo: entry.capo === null ? '' : String(entry.capo),
@@ -133,11 +135,14 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
   const toggleInstrument = (memberId: string, instrumentId: string): void => {
     const edited = formValuesToLineup(toggleTonightInstrument(lineupRows, memberId, instrumentId));
     const saveTo = {
-      'song-default': () => props.onSaveSongLineup(toLineupPayload(edited)),
+      'song-default': () => {
+        props.onSaveSongLineup(toLineupPayload(edited));
+        if (entry.lineupOverride !== null) props.onUpdate(entry.id, { lineupOverride: null });
+      },
       'entry-override': () => props.onUpdate(entry.id, { lineupOverride: toLineupPayload(edited) }),
       'entry-cleared': () => props.onUpdate(entry.id, { lineupOverride: null }),
     } as const;
-    saveTo[selectLineupSaveTarget(song.defaultLineup, edited, false)]();
+    saveTo[selectLineupSaveTarget(isBuildingSongLineup, edited)]();
   };
   const lengthLabel = song.durationSeconds === null ? null : formatDuration(song.durationSeconds);
 
