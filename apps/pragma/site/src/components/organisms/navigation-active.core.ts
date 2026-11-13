@@ -3,7 +3,7 @@
 import type { ParseKeys } from 'i18next';
 import type { IconName } from '../atoms/Icon';
 
-export type ShellTabId = 'home' | 'sessions' | 'songs' | 'band';
+export type ShellTabId = 'home' | 'sessions' | 'setlists' | 'songs' | 'band';
 
 export interface ShellTab {
   readonly id: ShellTabId;
@@ -15,6 +15,7 @@ export interface ShellTab {
 export const SHELL_TABS: readonly ShellTab[] = [
   { id: 'home', to: '/', labelKey: 'nav.home', icon: 'home' },
   { id: 'sessions', to: '/sessions', labelKey: 'nav.sessions', icon: 'sessions' },
+  { id: 'setlists', to: '/setlists', labelKey: 'nav.setlists', icon: 'setlist' },
   { id: 'songs', to: '/catalog', labelKey: 'nav.songs', icon: 'song' },
   { id: 'band', to: '/band', labelKey: 'nav.band', icon: 'members' },
 ];
@@ -23,7 +24,8 @@ const HOME_PATH = '/';
 const PATH_SEPARATOR = '/';
 
 const DESTINATIONS_BY_TAB: readonly (readonly [ShellTabId, readonly string[]])[] = [
-  ['sessions', ['/sessions', '/setlists']],
+  ['sessions', ['/sessions']],
+  ['setlists', ['/setlists']],
   ['songs', ['/catalog']],
   [
     'band',

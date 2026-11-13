@@ -106,9 +106,9 @@ describe('selectTakeFileMessage', () => {
   });
 
   it('names the limit for a file over it', () => {
-    expect(selectTakeFileMessage({ type: 'audio/mp4', size: 50 * 1024 * 1024 + 1 })).toEqual({
+    expect(selectTakeFileMessage({ type: 'audio/mp4', size: 200 * 1024 * 1024 + 1 })).toEqual({
       key: 'takes.fileErrors.tooLarge',
-      maxMebibytes: 50,
+      maxMebibytes: 200,
     });
   });
 

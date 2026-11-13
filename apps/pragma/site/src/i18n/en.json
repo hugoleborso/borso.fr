@@ -384,6 +384,7 @@
     "mastery": "Mastery",
     "members": "Members",
     "sessions": "Sessions",
+    "setlists": "Setlists",
     "tasks": "Tasks",
     "studies": "Studies",
     "home": "Home",
@@ -497,11 +498,6 @@
     },
     "preparedConcert": "Prepared concert",
     "saveConcertDetails": "Save",
-    "section": {
-      "label": "Sessions or setlists",
-      "sessions": "Sessions",
-      "setlists": "Setlists"
-    },
     "selectMember": "Member",
     "sessionNotFound": "This session is no longer in the schedule.",
     "setlist": "Setlist",

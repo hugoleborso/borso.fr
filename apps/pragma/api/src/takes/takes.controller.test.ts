@@ -27,7 +27,7 @@ const PRESIGNER_ENV = {
   UPLOADS_BUCKET: 'pragma-test-uploads',
 } as const;
 
-const FIFTY_MEBIBYTES = 52_428_800;
+const TWO_HUNDRED_MEBIBYTES = 209_715_200;
 const DURATION_SECONDS = 232;
 
 const takeSchema = z.object({
@@ -218,7 +218,7 @@ describe('takes controller (back-e2e)', () => {
       const takeId = randomUUID();
       const response = await jsonRequest(band.app, '/api/takes/sign', {
         method: 'POST',
-        body: { takeId, songId, contentType: 'audio/webm', contentLength: FIFTY_MEBIBYTES },
+        body: { takeId, songId, contentType: 'audio/webm', contentLength: TWO_HUNDRED_MEBIBYTES },
         cookieHeader: band.cookieHeader,
       });
       expect(response.status).toBe(200);
@@ -229,7 +229,7 @@ describe('takes controller (back-e2e)', () => {
       );
     });
 
-    it('refuses a take one byte over 50 MiB', async () => {
+    it('refuses a take one byte over 200 MiB', async () => {
       const band = await buildAuthenticatedApp();
       const songId = await createSong(band);
       const response = await jsonRequest(band.app, '/api/takes/sign', {
@@ -238,7 +238,7 @@ describe('takes controller (back-e2e)', () => {
           takeId: randomUUID(),
           songId,
           contentType: 'audio/webm',
-          contentLength: FIFTY_MEBIBYTES + 1,
+          contentLength: TWO_HUNDRED_MEBIBYTES + 1,
         },
         cookieHeader: band.cookieHeader,
       });

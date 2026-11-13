@@ -14,9 +14,9 @@ const ONE_MEBIBYTE = 1_048_576;
 
 // @FollowsBlueprint test-pure-unit
 describe('take upload limits', () => {
-  it('caps a take at 50 MiB, counted in bytes', () => {
-    expect(TAKE_MAX_MEBIBYTES).toBe(50);
-    expect(TAKE_MAX_BYTES).toBe(50 * ONE_MEBIBYTE);
+  it('caps a take at 200 MiB, counted in bytes', () => {
+    expect(TAKE_MAX_MEBIBYTES).toBe(200);
+    expect(TAKE_MAX_BYTES).toBe(200 * ONE_MEBIBYTE);
   });
 
   it('caps a take at four hours and a comment at 4 096 characters', () => {
@@ -83,17 +83,17 @@ describe('normalizeTakeContentType', () => {
 });
 
 describe('validateTakeFile', () => {
-  it('accepts an audio file up to exactly 50 MiB and answers its normalized type', () => {
+  it('accepts an audio file up to exactly 200 MiB and answers its normalized type', () => {
     expect(validateTakeFile({ type: 'audio/webm;codecs=opus', size: TAKE_MAX_BYTES })).toEqual({
       kind: 'ok',
       contentType: 'audio/webm',
     });
   });
 
-  it('refuses a file one byte over 50 MiB and names the limit', () => {
+  it('refuses a file one byte over 200 MiB and names the limit', () => {
     expect(validateTakeFile({ type: 'audio/mpeg', size: TAKE_MAX_BYTES + 1 })).toEqual({
       kind: 'too-large',
-      maxMebibytes: 50,
+      maxMebibytes: 200,
     });
   });
 
