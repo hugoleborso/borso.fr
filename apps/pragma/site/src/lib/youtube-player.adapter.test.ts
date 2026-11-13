@@ -236,6 +236,32 @@ describe('loadYoutubeNamespace', () => {
     await expect(pending).rejects.toThrow('the YouTube iframe API did not load');
   });
 
+  it('requests the API script again after a failed load', async () => {
+    const environment = buildEnvironment();
+    const first = loadYoutubeNamespace(environment);
+    document.head.querySelector('script')?.dispatchEvent(new Event('error'));
+    await expect(first).rejects.toThrow('the YouTube iframe API did not load');
+    expect(document.head.querySelectorAll('script')).toHaveLength(0);
+    const second = loadYoutubeNamespace(environment);
+    expect(second).not.toBe(first);
+    expect(document.head.querySelectorAll('script')).toHaveLength(1);
+    second.catch(() => undefined);
+  });
+
+  it('stays silent when a player detached before the API script failed', async () => {
+    const onBlocked = vi.fn();
+    const detach = attachPassagePlayer(
+      document.createElement('div'),
+      PASSAGE,
+      { onBlocked, onControl: vi.fn() },
+      buildEnvironment(),
+    );
+    detach?.();
+    document.head.querySelector('script')?.dispatchEvent(new Event('error'));
+    await flushPromises();
+    expect(onBlocked).not.toHaveBeenCalled();
+  });
+
   it('uses the API a page has already loaded', async () => {
     const { namespace } = buildNamespace(0);
     expect(await loadYoutubeNamespace(buildEnvironment({ YT: namespace }))).toBe(namespace);

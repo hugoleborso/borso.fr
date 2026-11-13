@@ -96,9 +96,11 @@ function requestNamespace(environment: YoutubeEnvironment): Promise<YoutubeNames
     });
     const script = environment.document.createElement('script');
     script.src = YOUTUBE_IFRAME_API_ADDRESS;
-    script.addEventListener('error', () =>
-      reject(new Error('the YouTube iframe API did not load')),
-    );
+    script.addEventListener('error', () => {
+      pendingNamespaces.delete(environment.window);
+      script.remove();
+      reject(new Error('the YouTube iframe API did not load'));
+    });
     environment.document.head.append(script);
   });
 }
@@ -146,21 +148,27 @@ export function attachPassagePlayer(
     readCurrentSecond: () =>
       Math.floor(lifecycle.player?.getCurrentTime() ?? playback.startSeconds),
   });
-  void loadYoutubeNamespace(environment).then((namespace) => {
-    if (lifecycle.isDetached === true) return;
-    lifecycle.player = new namespace.Player(host, {
-      videoId: playback.videoId,
-      width: PLAYER_FULL_SIZE,
-      height: PLAYER_FULL_SIZE,
-      playerVars: buildPlayerVariables(playback, environment.origin),
-      events: {
-        onError: (event) => {
-          const isBlockedEmbed = BLOCKED_EMBED_ERROR_CODES.has(event.data);
-          if (isBlockedEmbed) events.onBlocked();
+  void loadYoutubeNamespace(environment).then(
+    (namespace) => {
+      if (lifecycle.isDetached === true) return;
+      lifecycle.player = new namespace.Player(host, {
+        videoId: playback.videoId,
+        width: PLAYER_FULL_SIZE,
+        height: PLAYER_FULL_SIZE,
+        playerVars: buildPlayerVariables(playback, environment.origin),
+        events: {
+          onError: (event) => {
+            const isBlockedEmbed = BLOCKED_EMBED_ERROR_CODES.has(event.data);
+            if (isBlockedEmbed) events.onBlocked();
+          },
         },
-      },
-    });
-  }, events.onBlocked);
+      });
+    },
+    () => {
+      if (lifecycle.isDetached === true) return;
+      events.onBlocked();
+    },
+  );
   return () => {
     lifecycle.isDetached = true;
     lifecycle.player?.destroy();
