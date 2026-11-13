@@ -297,7 +297,7 @@ in `site/src/explorer/explorer.store.ts`
 - Nothing done in Explore stores a review event.
 
 Held by: `site/src/routes/OpeningTrainerPage.test.tsx` › leaves the due and new counts unchanged after time spent in Explore
-Held by: `site/src/routes/OpeningTrainerPage.explorer.test.tsx` › adds the line to My lines, stores the event, and refuses it a second time
+Held by: `site/src/routes/OpeningTrainerPage.explorer.test.tsx` › adds a line to My lines, refuses it a second time, shows it on Decks and removes it
 
 ## Idea
 
@@ -438,7 +438,7 @@ Lives in: `site/src/personal-deck/`
 - A reader removes a line from its step-through view on the deck page.
 
 Held by: `site/src/personal-deck/personal-deck.core.test.ts` › refuses a line where the reader has another move at a position of the deck
-Held by: `site/src/routes/OpeningTrainerPage.explorer.test.tsx` › shows My lines on Decks with its cards and the opening name in place of an idea
+Held by: `site/src/routes/OpeningTrainerPage.explorer.test.tsx` › adds a line to My lines, refuses it a second time, shows it on Decks and removes it
 
 Not to be confused with: a deck, which is a content file. The two build the same
 `BuiltDeck`.

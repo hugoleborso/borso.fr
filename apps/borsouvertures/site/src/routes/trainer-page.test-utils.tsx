@@ -60,6 +60,14 @@ export async function openApplication(): Promise<void> {
   await screen.findByRole('button', { name: /^(Start|Commencer|Reload|Recharger)$/ });
 }
 
+export async function selectTabAwaitingSuspense(name: string): Promise<void> {
+  const tab = screen.getByRole('button', { name });
+  await act(() => {
+    tab.click();
+    return Promise.resolve();
+  });
+}
+
 export function playMove(uci: string): void {
   act(() => {
     reviewMachine.playMove(uci);
