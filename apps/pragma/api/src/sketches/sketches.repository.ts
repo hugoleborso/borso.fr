@@ -125,8 +125,9 @@ export async function didDeleteLaneWithClips(songId: string, laneId: string): Pr
       .delete(sketchLaneTable)
       .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.songId, songId)))
       .returning({ id: sketchLaneTable.id });
+    if (deleted.length === 0) return false;
     await transaction.delete(sketchClipTable).where(eq(sketchClipTable.laneId, laneId));
-    return deleted.length > 0;
+    return true;
   });
 }
 
@@ -143,14 +144,16 @@ export async function hasInsertedClipWithin(
   return inserted.length > 0;
 }
 
-export async function findClipWithin(
+export async function findClipOfSongWithin(
   executor: DatabaseExecutor,
+  songId: string,
   clipId: string,
 ): Promise<SketchClipRow | null> {
   const [clip] = await executor
     .select(CLIP_PROJECTION)
     .from(sketchClipTable)
-    .where(eq(sketchClipTable.id, clipId))
+    .innerJoin(sketchLaneTable, eq(sketchLaneTable.id, sketchClipTable.laneId))
+    .where(and(eq(sketchClipTable.id, clipId), eq(sketchLaneTable.songId, songId)))
     .limit(1);
   return clip ?? null;
 }

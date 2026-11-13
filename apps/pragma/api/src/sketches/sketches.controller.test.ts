@@ -112,6 +112,30 @@ describe('sketches controller (back-e2e)', () => {
     expect((await readSketch(band, songId)).clips).toHaveLength(1);
   });
 
+  it('refuses a placement whose clip id is already a clip of another song, and leaves that clip', async () => {
+    const band = await buildAuthenticatedApp();
+    const songId = await createComposition(band, 'New 7');
+    const otherSongId = await createComposition(band, 'New 8');
+    const laneId = await createLane(band, songId);
+    const otherLaneId = await createLane(band, otherSongId);
+    const inspirationId = await createInspiration(band);
+    const otherClipId = await placeClip(band, {
+      songId: otherSongId,
+      laneId: otherLaneId,
+      inspirationId,
+      offsetSeconds: 6,
+    });
+
+    const reused = await postClip(band, { songId, laneId, inspirationId }, otherClipId);
+
+    expect(reused.status).toBe(404);
+    expect(await readJson(reused, errorEnvelope)).toEqual({ error: 'clip-not-found' });
+    expect((await readSketch(band, songId)).clips).toEqual([]);
+    expect((await readSketch(band, otherSongId)).clips).toEqual([
+      { id: otherClipId, laneId: otherLaneId, inspirationId, offsetSeconds: 6 },
+    ]);
+  });
+
   it('moves a clip in time and onto another lane, and refuses a negative or fractional offset', async () => {
     const band = await buildAuthenticatedApp();
     const songId = await createComposition(band);
@@ -264,6 +288,55 @@ describe('sketches controller (back-e2e)', () => {
     expect(sketch.lanes.map((lane) => lane.id)).toEqual([keptLaneId]);
     expect(sketch.clips).toEqual([expect.objectContaining({ laneId: keptLaneId })]);
     expect(await testDatabase().select().from(inspirationTable)).toHaveLength(1);
+  });
+
+  it('refuses to delete a lane of another song and leaves its clips', async () => {
+    const band = await buildAuthenticatedApp();
+    const songId = await createComposition(band, 'New 7');
+    const otherSongId = await createComposition(band, 'New 8');
+    await createLane(band, songId);
+    const otherLaneId = await createLane(band, otherSongId);
+    const inspirationId = await createInspiration(band);
+    const otherClipId = await placeClip(band, {
+      songId: otherSongId,
+      laneId: otherLaneId,
+      inspirationId,
+    });
+
+    const deletion = await sendJson(band, 'DELETE', `/api/sketches/${songId}/lanes/${otherLaneId}`);
+
+    expect(deletion.status).toBe(404);
+    expect(await readJson(deletion, errorEnvelope)).toEqual({ error: 'lane-not-found' });
+    const otherSketch = await readSketch(band, otherSongId);
+    expect(otherSketch.lanes.map((lane) => lane.id)).toEqual([otherLaneId]);
+    expect(otherSketch.clips.map((clip) => clip.id)).toEqual([otherClipId]);
+  });
+
+  it('leaves no orphan clip when it is moved off its lane while that lane is deleted', async () => {
+    const band = await buildAuthenticatedApp();
+    const songId = await createComposition(band);
+    const deletedLaneId = await createLane(band, songId, 'drums');
+    const keptLaneId = await createLane(band, songId, 'brass');
+    const inspirationId = await createInspiration(band);
+    const clipId = await placeClip(band, { songId, laneId: deletedLaneId, inspirationId });
+
+    const [move, deletion] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('sketch_clip'),
+      async () =>
+        await sendJson(band, 'PATCH', `/api/sketches/${songId}/clips/${clipId}`, {
+          laneId: keptLaneId,
+          offsetSeconds: 4,
+        }),
+      async () => await sendJson(band, 'DELETE', `/api/sketches/${songId}/lanes/${deletedLaneId}`),
+    );
+
+    expect([200, 404]).toContain(move.status);
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sketchLaneTable)).toEqual([
+      expect.objectContaining({ id: keptLaneId }),
+    ]);
+    const clips = await testDatabase().select().from(sketchClipTable);
+    expect(clips.filter((clip) => clip.laneId !== keptLaneId)).toEqual([]);
   });
 
   it('leaves no orphan clip when its inspiration is deleted while it is placed', async () => {

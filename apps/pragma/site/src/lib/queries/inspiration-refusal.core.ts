@@ -31,3 +31,7 @@ export function readInspirationRefusal(error: unknown): InspirationRefusal {
   }
   return { kind: 'inspiration-not-found' };
 }
+
+export function isInspirationDeletedMeanwhile(error: unknown): boolean {
+  return readInspirationRefusal(error).kind === 'inspiration-not-found';
+}

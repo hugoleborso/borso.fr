@@ -46,7 +46,7 @@ async function getWrittenInspirationViewWithin(
   return inspiration;
 }
 
-export async function getInspirationsNewestFirst(): Promise<InspirationView[]> {
+export async function listInspirationViewsNewestFirst(): Promise<InspirationView[]> {
   const [rows, usages] = await Promise.all([
     listInspirationsNewestFirst(),
     listInspirationUsages(),

@@ -45,6 +45,12 @@ describe('resolveEmbed — YouTube', () => {
     expect(embed.kind).toBe('oembed');
   });
 
+  it('embeds a YouTube Music song link', () => {
+    expect(resolveEmbed('https://music.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual(
+      expect.objectContaining({ iframeSrc: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }),
+    );
+  });
+
   it('embeds a shorts link', () => {
     expect(resolveEmbed('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toEqual(
       expect.objectContaining({ iframeSrc: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }),

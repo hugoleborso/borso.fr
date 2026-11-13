@@ -115,7 +115,7 @@ describe('useCreateInspiration', () => {
 });
 
 describe('useUpdateInspiration', () => {
-  it('shows the edited passage at once and puts the old one back when the server refuses', async () => {
+  it('shows the edited passage at once and puts the old one back when the server fails', async () => {
     const queryClient = createIsolatedQueryClient();
     queryClient.setQueryData(inspirationKeys.list(), { inspirations: [LISTED] });
     const pending = deferred<Response>();
@@ -131,9 +131,26 @@ describe('useUpdateInspiration', () => {
       expect.objectContaining({ title: 'Call Me Maybe', startSeconds: 40, sketchCount: 1 }),
     );
 
-    pending.resolve(jsonResponse({ error: 'inspiration-not-found' }, 404));
+    pending.resolve(jsonResponse({ error: 'boom' }, 500));
     await flushMicrotasks();
     expect(readList(queryClient)).toEqual([LISTED]);
+    tree.unmount();
+  });
+
+  it('reloads the list instead of putting the old passage back when another member deleted it', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(inspirationKeys.list(), { inspirations: [LISTED] });
+    stubTransport(() => Promise.resolve(jsonResponse({ error: 'inspiration-not-found' }, 404)));
+    const slot = createMutateSlot<UpdateInspiration>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+
+    await slot
+      .read()({ id: LISTED.id, changes: { ...FIELDS, startSeconds: 40 } })
+      .catch(() => undefined);
+    await flushMicrotasks();
+
+    expect(readList(queryClient)?.[0]).toEqual(expect.objectContaining({ startSeconds: 40 }));
+    expect(queryClient.getQueryState(inspirationKeys.list())?.isInvalidated).toBe(true);
     tree.unmount();
   });
 
@@ -177,6 +194,23 @@ describe('useDeleteInspiration', () => {
       body: { error: 'inspiration-in-use' },
     });
     expect(readList(queryClient)).toEqual([LISTED]);
+    tree.unmount();
+  });
+
+  it('reloads the list instead of putting the card back when another member deleted it', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(inspirationKeys.list(), { inspirations: [LISTED] });
+    stubTransport(() => Promise.resolve(jsonResponse({ error: 'inspiration-not-found' }, 404)));
+    const slot = createMutateSlot<DeleteInspiration>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+
+    await slot
+      .read()({ id: LISTED.id })
+      .catch(() => undefined);
+    await flushMicrotasks();
+
+    expect(readList(queryClient)).toEqual([]);
+    expect(queryClient.getQueryState(inspirationKeys.list())?.isInvalidated).toBe(true);
     tree.unmount();
   });
 });

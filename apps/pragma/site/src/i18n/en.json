@@ -707,7 +707,7 @@
     "title": "Sketch",
     "lanes": "Lanes",
     "timeline": "Timeline",
-    "empty": "No lane yet. Add one, then place passages from the library on it.",
+    "empty": "No lane yet.",
     "addLane": "Add a lane",
     "newLane": "New lane",
     "lane": "Lane",

@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import {
   type ClipPosition,
   isTapRightAfterDrag,
+  NEVER_DRAGGED_AT_MS,
   type SketchTimelineView,
   selectDroppedClip,
   type TimelineClip,
@@ -79,7 +80,7 @@ export function SketchTimeline({
   onAddClip,
 }: SketchTimelineProps): JSX.Element {
   const { t } = useTranslation();
-  const lastDragEndedAt = useRef<number | null>(null);
+  const lastDragEndedAt = useRef(NEVER_DRAGGED_AT_MS);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX } }),
     useSensor(TouchSensor, {

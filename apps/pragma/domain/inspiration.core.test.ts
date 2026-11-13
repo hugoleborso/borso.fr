@@ -18,6 +18,7 @@ describe('parseYoutubeVideoId', () => {
     expect(parseYoutubeVideoId(`https://youtube.com/watch?v=${VIDEO_ID}`)).toBe(VIDEO_ID);
     expect(parseYoutubeVideoId(`https://music.youtube.com/watch?v=${VIDEO_ID}`)).toBe(VIDEO_ID);
     expect(parseYoutubeVideoId(`  https://youtu.be/${VIDEO_ID}?si=share  `)).toBe(VIDEO_ID);
+    expect(parseYoutubeVideoId(`\u00a0https://youtu.be/${VIDEO_ID}\u00a0`)).toBe(VIDEO_ID);
     expect(parseYoutubeVideoId(`https://www.youtube.com/shorts/${VIDEO_ID}`)).toBe(VIDEO_ID);
     expect(parseYoutubeVideoId('https://www.youtube.com/playlist?list=PL123')).toBeNull();
     expect(parseYoutubeVideoId('https://www.youtube.com/@philcollins')).toBeNull();
@@ -40,6 +41,7 @@ describe('selectPassageRefusal', () => {
     expect(
       selectPassageRefusal({ startSeconds: 0, endSeconds: PASSAGE_LONGEST_SECONDS }),
     ).toBeNull();
+    expect(selectPassageRefusal({ startSeconds: 400, endSeconds: 700 })).toBeNull();
     expect(isPassageAccepted({ startSeconds: 52, endSeconds: 64 })).toBe(true);
   });
 
@@ -58,6 +60,12 @@ describe('the YouTube addresses', () => {
   it('searches YouTube for the artist then the title, skipping a blank part', () => {
     expect(buildYoutubeSearchUrl(' Carly Rae Jepsen ', 'Call Me Maybe')).toBe(
       'https://www.youtube.com/results?search_query=Carly+Rae+Jepsen+Call+Me+Maybe',
+    );
+    expect(buildYoutubeSearchUrl('Phil Collins', ' In the Air Tonight ')).toBe(
+      'https://www.youtube.com/results?search_query=Phil+Collins+In+the+Air+Tonight',
+    );
+    expect(buildYoutubeSearchUrl('Phil Collins', '  ')).toBe(
+      'https://www.youtube.com/results?search_query=Phil+Collins',
     );
     expect(buildYoutubeSearchUrl('', 'In the Air Tonight')).toBe(
       'https://www.youtube.com/results?search_query=In+the+Air+Tonight',

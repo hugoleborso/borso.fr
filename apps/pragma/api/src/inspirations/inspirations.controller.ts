@@ -8,7 +8,7 @@ import {
 } from './inspirations.schema';
 import {
   createInspiration,
-  getInspirationsNewestFirst,
+  listInspirationViewsNewestFirst,
   removeInspiration,
   updateInspiration,
 } from './inspirations.service';
@@ -25,7 +25,7 @@ export function buildInspirationsRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/', async (context) => {
-      const inspirations = await getInspirationsNewestFirst();
+      const inspirations = await listInspirationViewsNewestFirst();
       return context.json({ inspirations });
     })
     .post('/', zValidator('json', inspirationCreateSchema), async (context) => {

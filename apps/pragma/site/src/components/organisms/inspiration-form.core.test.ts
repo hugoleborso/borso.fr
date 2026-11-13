@@ -63,6 +63,7 @@ describe('the inspiration form', () => {
     expect(readWholeSeconds('64.8')).toBe(64);
     expect(readWholeSeconds('')).toBe(0);
     expect(readWholeSeconds('-3')).toBe(0);
+    expect(readWholeSeconds('-0')).toBe(0);
     expect(readWholeSeconds('abc')).toBe(0);
   });
 

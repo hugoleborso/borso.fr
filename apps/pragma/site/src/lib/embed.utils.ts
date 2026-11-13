@@ -10,7 +10,6 @@
 
 import { parseYoutubeVideoId } from '@domain/inspiration.core';
 
-const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
 const SPOTIFY_HOST = 'open.spotify.com';
 const DEEZER_HOST = 'deezer.com';
 const VIMEO_HOST = 'vimeo.com';
@@ -142,10 +141,8 @@ export function resolveEmbed(url: string): EmbedResult {
   const sourceUrl = tryParse(url);
   if (sourceUrl === null) return { kind: 'plain', href: url };
 
-  if (YOUTUBE_DOMAINS.has(sourceUrl.host)) {
-    const embed = youtubeEmbed(sourceUrl);
-    if (embed !== null) return embed;
-  }
+  const youtube = youtubeEmbed(sourceUrl);
+  if (youtube !== null) return youtube;
   if (sourceUrl.host === SPOTIFY_HOST) {
     const embed = spotifyEmbed(sourceUrl);
     if (embed !== null) return embed;

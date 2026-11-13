@@ -12,7 +12,7 @@ import {
 } from './sketches.schema';
 import {
   createLane,
-  getSketch,
+  readSketch,
   moveClip,
   placeClip,
   removeClip,
@@ -27,7 +27,7 @@ export function buildSketchesRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/:songId', zValidator('param', sketchPathSchema), async (context) => {
-      const outcome = await getSketch(context.req.valid('param').songId);
+      const outcome = await readSketch(context.req.valid('param').songId);
       if (outcome.kind === 'refused')
         return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
       return context.json({ sketch: outcome.sketch });

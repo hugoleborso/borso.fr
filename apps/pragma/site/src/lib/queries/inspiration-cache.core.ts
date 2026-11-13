@@ -1,23 +1,13 @@
 /** @Feature inspirations */
 
-export interface InspirationFieldsShape {
-  readonly youtubeVideoId: string;
-  readonly title: string;
-  readonly artist: string;
-  readonly deezerTrackId: string | null;
-  readonly deezerAlbumId: string | null;
-  readonly startSeconds: number;
-  readonly endSeconds: number;
-  readonly note: string;
-}
+import type { InferResponseType } from 'hono/client';
+import type { api } from '../api.client';
 
-export interface InspirationShape extends InspirationFieldsShape {
-  readonly id: string;
-  readonly authorMemberId: string | null;
-  readonly authorName: string | null;
-  readonly createdAt: string;
-  readonly sketchCount: number;
-}
+type InspirationsListResponse = InferResponseType<typeof api.api.inspirations.$get, 200>;
+export type InspirationShape = InspirationsListResponse['inspirations'][number];
+export type InspirationFieldsShape = Parameters<
+  (typeof api.api.inspirations)[':id']['$patch']
+>[0]['json'];
 
 export interface InspirationAuthor {
   readonly memberId: string;

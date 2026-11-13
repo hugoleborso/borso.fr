@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../api.client';
-import { readInspirationRefusal } from './inspiration-refusal.core';
+import { isInspirationDeletedMeanwhile, readInspirationRefusal } from './inspiration-refusal.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('readInspirationRefusal', () => {
@@ -25,5 +25,12 @@ describe('readInspirationRefusal', () => {
       kind: 'unknown',
     });
     expect(readInspirationRefusal(new Error('offline'))).toEqual({ kind: 'unknown' });
+  });
+
+  it('tells an inspiration another member deleted from any other refusal', () => {
+    const deleted = new ApiError(404, 'delete 404', { error: 'inspiration-not-found' });
+    const inUse = new ApiError(409, 'delete 409', { error: 'inspiration-in-use', sketches: [] });
+    expect(isInspirationDeletedMeanwhile(deleted)).toBe(true);
+    expect(isInspirationDeletedMeanwhile(inUse)).toBe(false);
   });
 });

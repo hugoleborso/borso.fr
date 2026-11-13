@@ -7,9 +7,9 @@ import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { HintText } from '../../components/atoms/HintText';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
-import { InspirationCard } from '../../components/molecules/InspirationCard';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { InspirationForm } from '../../components/organisms/InspirationForm';
+import { InspirationList } from '../../components/organisms/InspirationList';
 import {
   type InspirationFormValues,
   startInspirationForm,
@@ -27,7 +27,7 @@ import {
   useUpdateInspiration,
 } from '../../lib/queries/inspirations.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
-import { projectInspirationCard, selectDeletionRefusalMessage } from './inspirations-page.core';
+import { selectDeletionRefusalMessage } from './inspirations-page.core';
 
 interface EditedInspiration {
   readonly inspirationId: string | null;
@@ -93,17 +93,11 @@ export function InspirationsPage(): JSX.Element {
       {list.isLoading || inspirations.length > 0 ? null : (
         <HintText tone="muted">{t('inspirations.empty')}</HintText>
       )}
-      <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label={t('inspirations.title')}>
-        {inspirations.map((inspiration) => (
-          <li key={inspiration.id}>
-            <InspirationCard
-              card={projectInspirationCard(inspiration)}
-              onEdit={() => editInspiration(inspiration)}
-              onDelete={() => setPendingDeletionId(inspiration.id)}
-            />
-          </li>
-        ))}
-      </ul>
+      <InspirationList
+        inspirations={inspirations}
+        onEdit={editInspiration}
+        onDelete={setPendingDeletionId}
+      />
       {edited === null ? null : (
         <InspirationForm
           key={edited.inspirationId ?? 'new'}

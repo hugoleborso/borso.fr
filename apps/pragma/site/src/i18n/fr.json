@@ -707,7 +707,7 @@
     "title": "Esquisse",
     "lanes": "Pistes",
     "timeline": "Frise",
-    "empty": "Aucune piste pour l’instant. Ajoutes-en une, puis place dessus des passages de la bibliothèque.",
+    "empty": "Aucune piste pour l’instant.",
     "addLane": "Ajouter une piste",
     "newLane": "Nouvelle piste",
     "lane": "Piste",

@@ -43,16 +43,11 @@ function readCandidateVideoId(address: URL): string | null {
   return firstSegment === YOUTUBE_SHORTS_SEGMENT ? (secondSegment ?? null) : null;
 }
 
-export function isYoutubeVideoId(candidate: string): boolean {
-  return YOUTUBE_VIDEO_ID_PATTERN.test(candidate);
-}
-
 // @FollowsBlueprint core-decision
 export function parseYoutubeVideoId(link: string): string | null {
   const address = readAddress(link);
   if (address === null) return null;
-  const candidate = readCandidateVideoId(address);
-  return candidate !== null && isYoutubeVideoId(candidate) ? candidate : null;
+  return readCandidateVideoId(address)?.match(YOUTUBE_VIDEO_ID_PATTERN)?.[0] ?? null;
 }
 
 // @FollowsBlueprint core-decision-table-for-a-lifecycle

@@ -2,7 +2,10 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { InspirationCardView } from '../../routes/inspirations/inspirations-page.core';
+import {
+  DETAIL_SEPARATOR,
+  type InspirationCardView,
+} from '../../routes/inspirations/inspirations-page.core';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { IconButton } from '../atoms/IconButton';
 
@@ -28,7 +31,7 @@ export function InspirationCard({ card, onEdit, onDelete }: InspirationCardProps
         )}
         <p className={DETAIL_CLASS}>
           {card.authorName ?? t('inspirations.formerMember')}
-          {' · '}
+          {DETAIL_SEPARATOR}
           {t('inspirations.usedBy', { count: card.sketchCount })}
         </p>
       </div>

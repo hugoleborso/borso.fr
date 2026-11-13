@@ -9,6 +9,7 @@ import {
   type InspirationFieldsShape,
   mergeInspirationChanges,
 } from './inspiration-cache.core';
+import { isInspirationDeletedMeanwhile } from './inspiration-refusal.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 const INSPIRATIONS_WRITE_SCOPE = { id: 'inspirations-writes' } as const;
@@ -60,6 +61,19 @@ function settleList(
 function restoreList(queryClient: QueryClient, snapshot: ListSnapshot | undefined): void {
   if (snapshot?.previousList === undefined) return;
   queryClient.setQueryData(inspirationKeys.list(), snapshot.previousList);
+}
+
+function recoverListAfterRefusal(
+  queryClient: QueryClient,
+  snapshot: ListSnapshot | undefined,
+  error: unknown,
+): void {
+  const isDeletedMeanwhile = isInspirationDeletedMeanwhile(error);
+  if (!isDeletedMeanwhile) {
+    restoreList(queryClient, snapshot);
+    return;
+  }
+  void queryClient.invalidateQueries({ queryKey: inspirationKeys.list() });
 }
 
 // @FollowsBlueprint query-module
@@ -141,8 +155,8 @@ export function useUpdateInspiration() {
         replaceEntityById(inspirations, data.inspiration.id, () => data.inspiration),
       );
     },
-    onError: (_error, _variables, context) => {
-      restoreList(queryClient, context);
+    onError: (error, _variables, context) => {
+      recoverListAfterRefusal(queryClient, context, error);
     },
   });
 }
@@ -168,8 +182,8 @@ export function useDeleteInspiration() {
       await writeList(queryClient, (inspirations) =>
         inspirations.filter((inspiration) => inspiration.id !== id),
       ),
-    onError: (_error, _variables, context) => {
-      restoreList(queryClient, context);
+    onError: (error, _variables, context) => {
+      recoverListAfterRefusal(queryClient, context, error);
     },
   });
 }

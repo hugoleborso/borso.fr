@@ -19,6 +19,7 @@ const READY_CALLBACK_NAME = 'onYouTubeIframeAPIReady';
 const NAMESPACE_NAME = 'YT';
 const PLAYER_FULL_SIZE = '100%';
 const PLAYER_FLAG_ON = 1;
+const PLAYER_FLAG_OFF = 0;
 
 export interface PassagePlayback {
   readonly videoId: string;
@@ -77,9 +78,7 @@ function isReadyCallback(candidate: unknown): candidate is () => void {
   return typeof candidate === 'function';
 }
 
-function ignoreReady(): void {
-  return undefined;
-}
+const ignoreReady = (): undefined => undefined;
 
 function readPreviousReadyCallback(host: object): () => void {
   const candidate: unknown = Reflect.get(host, READY_CALLBACK_NAME);
@@ -88,7 +87,7 @@ function readPreviousReadyCallback(host: object): () => void {
 }
 
 function requestNamespace(environment: YoutubeEnvironment): Promise<YoutubeNamespace> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const previousCallback = readPreviousReadyCallback(environment.window);
     Reflect.set(environment.window, READY_CALLBACK_NAME, () => {
       previousCallback();
@@ -97,7 +96,9 @@ function requestNamespace(environment: YoutubeEnvironment): Promise<YoutubeNames
     });
     const script = environment.document.createElement('script');
     script.src = YOUTUBE_IFRAME_API_ADDRESS;
-    script.async = true;
+    script.addEventListener('error', () =>
+      reject(new Error('the YouTube iframe API did not load')),
+    );
     environment.document.head.append(script);
   });
 }
@@ -121,7 +122,7 @@ function buildPlayerVariables(
     ...endVariables,
     autoplay: Number(playback.isAutoplayed),
     playsinline: PLAYER_FLAG_ON,
-    rel: 0,
+    rel: PLAYER_FLAG_OFF,
     origin,
   };
 }
@@ -140,16 +141,13 @@ export function attachPassagePlayer(
   if (element === null) return undefined;
   const host = environment.document.createElement('div');
   element.append(host);
-  const lifecycle: { player: YoutubePlayerHandle | null; isDetached: boolean } = {
-    player: null,
-    isDetached: false,
-  };
+  const lifecycle: { player?: YoutubePlayerHandle; isDetached?: true } = {};
   events.onControl({
     readCurrentSecond: () =>
       Math.floor(lifecycle.player?.getCurrentTime() ?? playback.startSeconds),
   });
   void loadYoutubeNamespace(environment).then((namespace) => {
-    if (lifecycle.isDetached) return;
+    if (lifecycle.isDetached === true) return;
     lifecycle.player = new namespace.Player(host, {
       videoId: playback.videoId,
       width: PLAYER_FULL_SIZE,
@@ -162,7 +160,7 @@ export function attachPassagePlayer(
         },
       },
     });
-  });
+  }, events.onBlocked);
   return () => {
     lifecycle.isDetached = true;
     lifecycle.player?.destroy();

@@ -1,24 +1,12 @@
 /** @Feature sketches */
 
-export interface SketchLaneShape {
-  readonly id: string;
-  readonly songId: string;
-  readonly name: string;
-  readonly position: number;
-}
+import type { InferResponseType } from 'hono/client';
+import type { api } from '../api.client';
 
-export interface SketchClipShape {
-  readonly id: string;
-  readonly laneId: string;
-  readonly inspirationId: string;
-  readonly offsetSeconds: number;
-}
-
-export interface SketchShape {
-  readonly songId: string;
-  readonly lanes: readonly SketchLaneShape[];
-  readonly clips: readonly SketchClipShape[];
-}
+type SketchResponse = InferResponseType<(typeof api.api.sketches)[':songId']['$get'], 200>;
+export type SketchShape = SketchResponse['sketch'];
+export type SketchLaneShape = SketchShape['lanes'][number];
+export type SketchClipShape = SketchShape['clips'][number];
 
 export interface ClipMove {
   readonly clipId: string;

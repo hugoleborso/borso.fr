@@ -26,7 +26,7 @@ export interface DeletionRefusalMessage {
 }
 
 const RANGE_ARROW = ' → ';
-const DETAIL_SEPARATOR = ' · ';
+export const DETAIL_SEPARATOR = ' · ';
 const SKETCH_TITLE_SEPARATOR = ', ';
 
 const DELETION_REFUSAL_KEY = {

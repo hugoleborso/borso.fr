@@ -13,5 +13,6 @@ describe('readSketchRefusal', () => {
   it('reads no refusal from another failure or from an error the API did not answer', () => {
     expect(readSketchRefusal(new ApiError(500, 'clip 500', { error: 'boom' }))).toBeNull();
     expect(readSketchRefusal(new Error('offline'))).toBeNull();
+    expect(readSketchRefusal({ body: { error: 'clip-not-found' } })).toBeNull();
   });
 });

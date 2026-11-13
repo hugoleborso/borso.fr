@@ -3,7 +3,7 @@
 import { selectTimelineLengthSeconds, snapOffsetSeconds } from '@domain/sketch.core';
 import { formatDuration } from '../../components/molecules/song-duration.utils';
 import type { SketchClipShape, SketchShape } from '../../lib/queries/sketch-cache.core';
-import { formatPassageRange } from '../inspirations/inspirations-page.core';
+import { DETAIL_SEPARATOR, formatPassageRange } from '../inspirations/inspirations-page.core';
 
 export const PIXELS_PER_SECOND = 8;
 export const RULER_TICK_SECONDS = 10;
@@ -122,8 +122,10 @@ export function isTapKey(key: string): boolean {
   return key === TAP_KEY;
 }
 
-export function isTapRightAfterDrag(lastDragEndedAtMs: number | null, nowMs: number): boolean {
-  return lastDragEndedAtMs !== null && nowMs - lastDragEndedAtMs < TAP_AFTER_DRAG_MILLISECONDS;
+export const NEVER_DRAGGED_AT_MS = Number.NEGATIVE_INFINITY;
+
+export function isTapRightAfterDrag(lastDragEndedAtMs: number, nowMs: number): boolean {
+  return nowMs - lastDragEndedAtMs < TAP_AFTER_DRAG_MILLISECONDS;
 }
 
 export interface PlayableInspiration extends PassageSource {
@@ -140,8 +142,6 @@ export interface PlayedPassage {
   readonly startSeconds: number;
   readonly endSeconds: number;
 }
-
-const DETAIL_SEPARATOR = ' · ';
 
 export function selectPlayedPassage(
   sketch: SketchShape,

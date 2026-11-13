@@ -100,7 +100,7 @@ export function shouldSearchDeezerFor(
 
 export function readWholeSeconds(typed: string): number {
   const seconds = Math.floor(Number(typed));
-  return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+  return Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
 }
 
 export function selectInspirationFormRefusal(

@@ -13,7 +13,7 @@ import {
   didClaimSketchSongWithin,
   didDeleteClip,
   didDeleteLaneWithClips,
-  findClipWithin,
+  findClipOfSongWithin,
   findLaneOfSongWithin,
   findMovedClipWithin,
   findRenamedLane,
@@ -38,7 +38,7 @@ function refuse(reason: SketchRefusal): SketchRefused {
   return { kind: 'refused', reason };
 }
 
-export async function getSketch(songId: string): Promise<SketchReadOutcome> {
+export async function readSketch(songId: string): Promise<SketchReadOutcome> {
   if (!(await hasSong(songId))) return refuse('song-not-found');
   const [lanes, clips] = await Promise.all([listLanesOfSong(songId), listClipsOfSong(songId)]);
   return { kind: 'ok', sketch: { songId, lanes, clips } };
@@ -72,15 +72,6 @@ export async function removeLane(songId: string, laneId: string): Promise<Sketch
   return { kind: 'ok' };
 }
 
-async function getWrittenClipWithin(
-  executor: DatabaseExecutor,
-  clipId: string,
-): Promise<SketchClipRow> {
-  const clip = await findClipWithin(executor, clipId);
-  if (clip === null) throw new Error('the written clip is not visible to its own transaction');
-  return clip;
-}
-
 type ClipPlacement =
   | { readonly kind: 'placed'; readonly clip: SketchClipRow; readonly isNewClip: boolean }
   | SketchRefused;
@@ -98,7 +89,9 @@ export async function placeClip(
       return refuse('inspiration-not-found');
     }
     const isNewClip = await hasInsertedClipWithin(executor, input);
-    return { kind: 'placed', clip: await getWrittenClipWithin(executor, input.id), isNewClip };
+    const clip = await findClipOfSongWithin(executor, songId, input.id);
+    if (clip === null) return refuse('clip-not-found');
+    return { kind: 'placed', clip, isNewClip };
   });
   if (placement.kind === 'refused') return placement;
   if (placement.isNewClip) recordProductEvent({ event: 'sketch_clip_placed', song_id: songId });

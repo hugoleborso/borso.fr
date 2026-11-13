@@ -6,6 +6,7 @@ import {
   isTapRightAfterDrag,
   PIXELS_PER_SECOND,
   projectSketchTimeline,
+  NEVER_DRAGGED_AT_MS,
   selectDroppedClip,
   selectNewClipOffsetSeconds,
   selectNextLanePosition,
@@ -85,6 +86,10 @@ describe('selectDroppedClip', () => {
     });
   });
 
+  it('moves a clip onto the lane under it at the same second', () => {
+    expect(selectDroppedClip(clip, 2, 'lane-b')).toEqual({ laneId: 'lane-b', offsetSeconds: 10 });
+  });
+
   it('writes nothing when the clip lands where it was', () => {
     expect(selectDroppedClip(clip, 2, 'lane-a')).toBeNull();
   });
@@ -111,7 +116,7 @@ describe('isTapKey', () => {
 
 describe('isTapRightAfterDrag', () => {
   it('ignores the tap a drag ends on, and no other', () => {
-    expect(isTapRightAfterDrag(null, 1_000)).toBe(false);
+    expect(isTapRightAfterDrag(NEVER_DRAGGED_AT_MS, 0)).toBe(false);
     expect(isTapRightAfterDrag(1_000, 1_100)).toBe(true);
     expect(isTapRightAfterDrag(1_000, 1_400)).toBe(false);
   });
