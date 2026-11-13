@@ -24,8 +24,8 @@ const VIENNA = 'vienna-game';
 const deck = buildExampleDeck();
 const [firstCard, secondCard] = deck.cards;
 
-if (firstCard === undefined || secondCard === undefined) {
-  throw new Error('the example deck holds six cards');
+if (firstCard?.kind !== 'move' || secondCard === undefined) {
+  throw new Error('the example deck opens on two move cards');
 }
 
 const first = firstCard.cardId;

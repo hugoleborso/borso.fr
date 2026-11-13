@@ -1,11 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
-import { listReviewCards, type ReviewCard } from '@/decks/card.core';
-import { buildExampleDeck } from '@/decks/deck.test-utils';
+import { buildReviewCard, listReviewCards, type ReviewCard } from '@/decks/card.core';
+import {
+  buildExampleDeck,
+  buildNameDeck,
+  EXAMPLE_NAME_CARD,
+  EXAMPLE_TRAP_CARD,
+} from '@/decks/deck.test-utils';
+import type { MoveCard } from '@/decks/deck.utils';
 import { buildReviewDriver } from './review-machine.test-utils';
 import {
   createReviewMachine,
+  isIdeaShown,
   isMoveAccepted,
   listAnswerMoves,
+  listNameChoices,
+  selectOpeningName,
   type ReviewSnapshot,
   selectRecalledPercent,
   selectReviewStatus,
@@ -21,11 +30,24 @@ const reviewCards = listReviewCards(
 const [firstCard, secondCard] = reviewCards;
 if (firstCard === undefined || secondCard === undefined) throw new Error('the example has cards');
 
+function readMoveCard(reviewCard: ReviewCard): MoveCard {
+  if (reviewCard.card.kind !== 'move') throw new Error('the example holds move cards');
+  return reviewCard.card;
+}
+
 const WHITE_FIRST_MOVE: ReviewCard = {
   ...firstCard,
   opponentMove: null,
-  card: { ...firstCard.card, cardId: 'move:vienna-game:start', opponentMoveUci: null },
+  card: { ...readMoveCard(firstCard), cardId: 'move:vienna-game:start', opponentMoveUci: null },
 };
+
+const NAME_CARD = buildReviewCard(buildNameDeck([EXAMPLE_NAME_CARD]), EXAMPLE_NAME_CARD);
+const TRAP_CARD = buildReviewCard(deck, EXAMPLE_TRAP_CARD);
+const SECOND_TRAP_CARD = buildReviewCard(deck, { ...EXAMPLE_TRAP_CARD, cardId: 'trap:other' });
+const [TRAP_FIRST_STEP, TRAP_LAST_STEP] = TRAP_CARD.steps;
+if (TRAP_FIRST_STEP === undefined || TRAP_LAST_STEP === undefined) {
+  throw new Error('the example trap asks two reader moves');
+}
 
 function startSession(cards: readonly ReviewCard[], newCardCount = 0) {
   const driver = buildReviewDriver();
@@ -387,7 +409,199 @@ describe('what the screen reads off a snapshot', () => {
 
   it('lets the board keep a recalled move and take back any other', () => {
     expect(isMoveAccepted('recalled')).toBe(true);
+    expect(isMoveAccepted('continued')).toBe(true);
     expect(isMoveAccepted('missed')).toBe(false);
     expect(isMoveAccepted('ignored')).toBe(false);
+  });
+});
+
+describe('a trap card', () => {
+  it('replays the opponent move, then answers each right reader move with the next reply', () => {
+    const { driver, machine } = startSession([TRAP_CARD]);
+    expect(machine.getSnapshot().fen).toBe(EXAMPLE_TRAP_CARD.fen);
+    driver.fireNextTimer();
+    expect(machine.getSnapshot()).toMatchObject({
+      fen: TRAP_FIRST_STEP.fen,
+      isOpponentMovePending: false,
+    });
+    expect(machine.playMove('e5d3')).toBe('continued');
+    expect(machine.getSnapshot()).toMatchObject({
+      phase: 'asking',
+      fen: TRAP_FIRST_STEP.answerFen,
+      isOpponentMovePending: true,
+    });
+    expect(machine.playMove('g4d1')).toBe('ignored');
+    expect(driver.pendingTimers.map((timer) => timer.delayMilliseconds)).toEqual([450]);
+    driver.fireNextTimer();
+    expect(machine.getSnapshot()).toMatchObject({
+      fen: TRAP_LAST_STEP.fen,
+      isOpponentMovePending: false,
+    });
+    expect(driver.storedEvents).toEqual([]);
+    expect(machine.playMove('g4d1')).toBe('recalled');
+    expect(machine.getSnapshot()).toMatchObject({
+      phase: 'answered',
+      outcome: 'recalled',
+      fen: TRAP_CARD.answerFen,
+      recalledCount: 1,
+    });
+    expect(driver.productEvents.at(-1)).toEqual({
+      name: 'card_reviewed',
+      cardKind: 'trap',
+      outcome: 'recalled',
+    });
+  });
+
+  it('misses a trap card on its second move, and asks it again from its start', () => {
+    const { driver, machine } = startSession([TRAP_CARD]);
+    driver.fireNextTimer();
+    machine.playMove('e5d3');
+    driver.fireNextTimer();
+    expect(machine.playMove('g4e2')).toBe('missed');
+    expect(machine.getSnapshot()).toMatchObject({ outcome: 'missed', fen: TRAP_CARD.answerFen });
+    machine.advance();
+    driver.fireNextTimer();
+    expect(machine.getSnapshot().fen).toBe(TRAP_FIRST_STEP.fen);
+    expect(machine.playMove('g4d1')).toBe('missed');
+  });
+
+  it('drops a reply that lands after the trap card was answered', () => {
+    const { driver, machine } = startSession([TRAP_CARD]);
+    driver.fireNextTimer();
+    machine.playMove('e5d3');
+    machine.showMove();
+    driver.fireNextTimer();
+    expect(machine.getSnapshot().fen).toBe(TRAP_CARD.answerFen);
+  });
+
+  it('drops a reply that lands after the trap card was asked again', () => {
+    const { driver, machine } = startSession([TRAP_CARD]);
+    driver.fireNextTimer();
+    machine.playMove('e5d3');
+    machine.showMove();
+    machine.advance();
+    driver.fireNextTimer();
+    expect(machine.getSnapshot()).toMatchObject({
+      fen: EXAMPLE_TRAP_CARD.fen,
+      isOpponentMovePending: true,
+    });
+  });
+
+  it('drops a reply of a trap card that lands on the next trap card', () => {
+    const { driver, machine } = startSession([TRAP_CARD, SECOND_TRAP_CARD]);
+    driver.fireNextTimer();
+    machine.playMove('e5d3');
+    machine.showMove();
+    machine.advance();
+    const [staleReply, opponentMove] = driver.pendingTimers.splice(0);
+    opponentMove?.callback();
+    machine.playMove('e5d3');
+    staleReply?.callback();
+    expect(machine.getSnapshot()).toMatchObject({
+      current: SECOND_TRAP_CARD,
+      fen: TRAP_FIRST_STEP.answerFen,
+      isOpponentMovePending: true,
+    });
+  });
+
+  it('drops a reply of a session that was replaced', () => {
+    const { driver, machine } = startSession([TRAP_CARD]);
+    driver.fireNextTimer();
+    machine.playMove('e5d3');
+    machine.start({ cards: [TRAP_CARD], newCardCount: 0 });
+    const [staleReply, opponentMove] = driver.pendingTimers.splice(0);
+    opponentMove?.callback();
+    machine.playMove('e5d3');
+    staleReply?.callback();
+    expect(machine.getSnapshot()).toMatchObject({
+      fen: TRAP_FIRST_STEP.answerFen,
+      isOpponentMovePending: true,
+    });
+  });
+
+  it('shows the position of a card that has an opponent move and no step', () => {
+    const { driver, machine } = startSession([{ ...TRAP_CARD, steps: [] }]);
+    driver.fireNextTimer();
+    expect(machine.getSnapshot().fen).toBe(EXAMPLE_TRAP_CARD.fen);
+    expect(machine.playMove('e5d3')).toBe('ignored');
+  });
+});
+
+describe('a name card', () => {
+  it('asks at once, ignores a board move, and recalls the right name', () => {
+    const { driver, machine } = startSession([NAME_CARD]);
+    expect(machine.getSnapshot()).toMatchObject({
+      fen: EXAMPLE_NAME_CARD.fen,
+      isOpponentMovePending: false,
+    });
+    expect(driver.pendingTimers).toEqual([]);
+    expect(machine.playMove('g8f6')).toBe('ignored');
+    expect(machine.chooseName('Vienna Game')).toBe('recalled');
+    expect(machine.getSnapshot()).toMatchObject({ outcome: 'recalled', recalledCount: 1 });
+    expect(driver.productEvents.at(-1)).toEqual({
+      name: 'card_reviewed',
+      cardKind: 'name',
+      outcome: 'recalled',
+    });
+    expect(machine.chooseName('Vienna Game')).toBe('ignored');
+  });
+
+  it('misses another name, and ignores a name for a card of another kind', () => {
+    const { driver, machine } = startSession([NAME_CARD, firstCard]);
+    expect(machine.chooseName('Ruy Lopez')).toBe('missed');
+    expect(driver.storedEvents.map((event) => event.outcome)).toEqual(['missed']);
+    machine.advance();
+    expect(machine.chooseName('Vienna Game')).toBe('ignored');
+    expect(machine.getSnapshot().phase).toBe('asking');
+  });
+});
+
+describe('what the screen reads off a trap card or a name card', () => {
+  const answered: ReviewSnapshot = {
+    phase: 'answered',
+    current: TRAP_CARD,
+    fen: TRAP_CARD.answerFen,
+    isOpponentMovePending: false,
+    outcome: 'missed',
+    cardCount: 1,
+    answeredCount: 1,
+    recalledCount: 0,
+  };
+
+  it('shows the last reader move of a trap, and no move for a name card', () => {
+    expect(listAnswerMoves(answered)).toEqual(['g4d1']);
+    expect(listAnswerMoves({ ...answered, current: NAME_CARD })).toEqual([]);
+  });
+
+  it('shows the idea of a move card once answered, and never on another kind', () => {
+    expect(isIdeaShown({ ...answered, current: firstCard })).toBe(true);
+    expect(isIdeaShown({ ...answered, current: firstCard, phase: 'asking' })).toBe(false);
+    expect(isIdeaShown(answered)).toBe(false);
+    expect(isIdeaShown({ ...answered, current: null })).toBe(false);
+  });
+
+  it('names the opening of a name card, and nothing for another kind', () => {
+    expect(selectOpeningName(NAME_CARD)).toBe('Vienna Game');
+    expect(selectOpeningName(TRAP_CARD)).toBe('');
+  });
+
+  it('offers the four names, and marks the right one once the card is answered', () => {
+    expect(listNameChoices(NAME_CARD, 'your-move')).toEqual(
+      EXAMPLE_NAME_CARD.choices.map((openingName) => ({
+        openingName,
+        isRightName: false,
+        isLocked: false,
+      })),
+    );
+    for (const status of ['recalled', 'missed'] as const) {
+      expect(listNameChoices(NAME_CARD, status)).toEqual(
+        EXAMPLE_NAME_CARD.choices.map((openingName) => ({
+          openingName,
+          isRightName: openingName === 'Vienna Game',
+          isLocked: true,
+        })),
+      );
+    }
+    expect(listNameChoices(TRAP_CARD, 'missed')).toEqual([]);
   });
 });

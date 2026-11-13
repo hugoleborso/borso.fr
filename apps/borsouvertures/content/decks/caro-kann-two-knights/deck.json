@@ -3,6 +3,7 @@
   "order": 3,
   "nameKey": "decks.names.caro-kann-two-knights",
   "side": "white",
+  "trapFilter": { "openingTags": ["Caro-Kann_Defense_Two_Knights_Attack"] },
   "pliesPerLine": {
     "minimum": 11,
     "maximum": 20

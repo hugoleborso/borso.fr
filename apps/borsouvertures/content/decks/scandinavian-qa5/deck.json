@@ -3,6 +3,9 @@
   "order": 2,
   "nameKey": "decks.names.scandinavian-qa5",
   "side": "black",
+  "trapFilter": {
+    "openingTags": ["Scandinavian_Defense_Main_Line", "Zukertort_Opening_Tennison_Gambit"]
+  },
   "lines": [
     {
       "name": "Main Line: 8. Nd5",

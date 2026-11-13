@@ -6,7 +6,11 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DECK_CONTENT_ROOTS, readDeckBuildInput } from './deck-folders.adapter';
+import {
+  DECK_CONTENT_ROOTS,
+  type DeckContentRoots,
+  readDeckBuildInput,
+} from './deck-folders.adapter';
 
 function writeDeckFolder(decksRoot: string, folderName: string): void {
   mkdirSync(path.join(decksRoot, folderName), { recursive: true });
@@ -15,10 +19,7 @@ function writeDeckFolder(decksRoot: string, folderName: string): void {
   writeFileSync(path.join(decksRoot, folderName, 'ideas.fr.md'), `French ${folderName}`);
 }
 
-function writeContent(folderNames: readonly string[]): {
-  decksRoot: string;
-  catalogueRoot: string;
-} {
+function writeContent(folderNames: readonly string[]): DeckContentRoots {
   const root = mkdtempSync(path.join(tmpdir(), 'borsouvertures-deck-folders-'));
   const decksRoot = path.join(root, 'decks');
   const catalogueRoot = path.join(root, 'i18n');
@@ -27,7 +28,13 @@ function writeContent(folderNames: readonly string[]): {
   for (const folderName of folderNames) writeDeckFolder(decksRoot, folderName);
   writeFileSync(path.join(catalogueRoot, 'en.json'), '{"deck":"Deck"}');
   writeFileSync(path.join(catalogueRoot, 'fr.json'), '{"deck":"Paquet"}');
-  return { decksRoot, catalogueRoot };
+  const nameCardsPath = path.join(root, 'name-cards.json');
+  const openingsPath = path.join(root, 'openings.json');
+  const trapsPath = path.join(root, 'traps.json');
+  writeFileSync(nameCardsPath, '{"names":["Vienna Game"]}');
+  writeFileSync(openingsPath, '[]');
+  writeFileSync(trapsPath, '{"traps":[]}');
+  return { decksRoot, catalogueRoot, nameCardsPath, openingsPath, trapsPath };
 }
 
 describe('readDeckBuildInput', () => {
@@ -74,10 +81,19 @@ describe('readDeckBuildInput', () => {
     });
   });
 
+  it('reads the name list, the openings dataset and the traps', () => {
+    const input = readDeckBuildInput(writeContent([]));
+    expect(input.nameCards).toEqual({ nameList: { names: ['Vienna Game'] }, openings: [] });
+    expect(input.traps).toEqual({ traps: [] });
+  });
+
   it('points at the content and the catalogues of this application', () => {
     expect(DECK_CONTENT_ROOTS).toEqual({
       decksRoot: path.resolve('content/decks'),
       catalogueRoot: path.resolve('site/src/i18n'),
+      nameCardsPath: path.resolve('content/name-cards.json'),
+      openingsPath: path.resolve('site/src/openings/openings.json'),
+      trapsPath: path.resolve('content/traps.json'),
     });
   });
 });

@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { StatusItem } from '@/components/atoms/StatusItem';
-import type { ReviewCard } from '@/decks/card.core';
 import type { ReviewStatus } from '@/review/review-machine.utils';
 import type { Side } from '@/state/persistedState.utils';
+import type { CardBodyProps } from './card-body.types';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'review.status.opponent-moving',
@@ -15,11 +15,6 @@ const SIDE_KEY_BY_SIDE = {
   white: 'review.side.white',
   black: 'review.side.black',
 } as const satisfies Record<Side, string>;
-
-export interface CardBodyProps {
-  reviewCard: ReviewCard;
-  status: ReviewStatus;
-}
 
 // @FollowsBlueprint molecule-presentational
 export function MoveCardBody({ reviewCard, status }: CardBodyProps) {

@@ -125,6 +125,29 @@
     },
     "progress-not-kept": "Ce navigateur ne peut pas enregistrer votre progression. Les révisions de cette visite seront perdues à la fermeture de la page."
   },
+  "cards": {
+    "name-deck": "Noms d'ouvertures",
+    "name": {
+      "question": "Quelle est cette ouverture ?",
+      "choices": "Noms d'ouvertures proposés",
+      "status": {
+        "asking": "Choisissez l'un des quatre noms",
+        "recalled": "Retenu. C'est {{name}}, atteint par {{moves}}.",
+        "missed": "Manqué. C'est {{name}}, atteint par {{moves}}."
+      },
+      "show-answer": "Montrer le nom"
+    },
+    "trap": {
+      "opponent-played": "Piège. Les {{side}} ont joué {{move}}",
+      "status": {
+        "opponent-moving": "Regardez le coup",
+        "your-move": "Punissez ce coup. Jouez toute la solution.",
+        "recalled": "Retenu. La solution est {{moves}}.",
+        "missed": "Manqué. La solution est {{moves}}."
+      },
+      "show-answer": "Montrer la solution"
+    }
+  },
   "decks": {
     "title": "Paquets",
     "names": {

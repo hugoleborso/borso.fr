@@ -1,5 +1,5 @@
 import { isPositionKey, type PositionKey } from '@domain/position-key.core';
-import { type CardId, parseCardId } from '@domain/review-event.core';
+import { type CardId, type CardKind, parseCardId } from '@domain/review-event.core';
 import type { Side } from '@/state/persistedState.utils';
 
 export interface BuiltDeckLine {
@@ -18,6 +18,44 @@ export interface MoveCard {
   bookMoveUci: string;
   bookMoveSan: string;
   ideaPositionKey: PositionKey;
+}
+
+export const NAME_DECK_ID = 'opening-names';
+export const NAME_CARD_CHOICE_COUNT = 4;
+
+export type NameCardChoices = [string, string, string, string];
+
+export interface NameCard {
+  kind: 'name';
+  cardId: CardId;
+  deckId: string;
+  positionKey: PositionKey;
+  fen: string;
+  openingName: string;
+  movesSan: string[];
+  choices: NameCardChoices;
+}
+
+export interface TrapCard {
+  kind: 'trap';
+  cardId: CardId;
+  deckId: string;
+  fen: string;
+  opponentMoveUci: string;
+  solutionUci: string[];
+}
+
+export type Card = MoveCard | NameCard | TrapCard;
+
+const NAME_CARD_ID_PREFIX = 'name:';
+const TRAP_CARD_ID_PREFIX = 'trap:';
+
+export function buildNameCardId(positionKey: PositionKey): CardId {
+  return `${NAME_CARD_ID_PREFIX}${positionKey}`;
+}
+
+export function buildTrapCardId(puzzleId: string): CardId {
+  return `${TRAP_CARD_ID_PREFIX}${puzzleId}`;
 }
 
 export type IdeaSource = 'wikipedia';
@@ -39,7 +77,7 @@ export interface BuiltDeck {
   nameKey: string;
   side: Side;
   lines: BuiltDeckLine[];
-  cards: MoveCard[];
+  cards: Card[];
   ideas: Idea[];
   trapFilter?: TrapFilter;
 }
@@ -120,14 +158,14 @@ function parseOpponentMove(value: unknown): string | null | undefined {
   return parseText(value) ?? undefined;
 }
 
-function parseMoveCardId(value: unknown): CardId | null {
+function parseKindCardId(value: unknown, kind: CardKind): CardId | null {
   const text = String(value);
-  return text === value && parseCardId(text)?.kind === 'move' ? text : null;
+  return text === value && parseCardId(text)?.kind === kind ? text : null;
 }
 
 function parseMoveCard(value: unknown): MoveCard | null {
   if (!isPlainRecord(value) || value.kind !== 'move') return null;
-  const cardId = parseMoveCardId(value.cardId);
+  const cardId = parseKindCardId(value.cardId, 'move');
   const deckId = parseText(value.deckId);
   const positionKey = parsePositionKey(value.positionKey);
   const fen = parseText(value.fen);
@@ -158,6 +196,73 @@ function parseMoveCard(value: unknown): MoveCard | null {
     bookMoveSan,
     ideaPositionKey,
   };
+}
+
+export function isNameCardChoices(names: readonly string[]): names is NameCardChoices {
+  return names.length === NAME_CARD_CHOICE_COUNT;
+}
+
+function parseChoices(value: unknown, openingName: string | null): NameCardChoices | null {
+  const choices = parseTextList(value);
+  if (choices === null || !isNameCardChoices(choices)) return null;
+  const isRightNameOffered = choices.some((choice) => choice === openingName);
+  const isEveryChoiceDistinct = new Set(choices).size === NAME_CARD_CHOICE_COUNT;
+  return isRightNameOffered && isEveryChoiceDistinct ? choices : null;
+}
+
+function parseNameCard(value: unknown): NameCard | null {
+  if (!isPlainRecord(value) || value.kind !== 'name' || value.deckId !== NAME_DECK_ID) return null;
+  const cardId = parseKindCardId(value.cardId, 'name');
+  const positionKey = parsePositionKey(value.positionKey);
+  const fen = parseText(value.fen);
+  const openingName = parseText(value.openingName);
+  const movesSan = parseTextList(value.movesSan);
+  const choices = parseChoices(value.choices, openingName);
+  if (
+    cardId === null ||
+    positionKey === null ||
+    fen === null ||
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, a missing name is never among the parsed choices, so parseChoices already answers null.
+    openingName === null ||
+    movesSan === null ||
+    choices === null
+  ) {
+    return null;
+  }
+  return {
+    kind: 'name',
+    cardId,
+    deckId: NAME_DECK_ID,
+    positionKey,
+    fen,
+    openingName,
+    movesSan,
+    choices,
+  };
+}
+
+function parseTrapCard(value: unknown): TrapCard | null {
+  if (!isPlainRecord(value) || value.kind !== 'trap') return null;
+  const cardId = parseKindCardId(value.cardId, 'trap');
+  const deckId = parseText(value.deckId);
+  const fen = parseText(value.fen);
+  const opponentMoveUci = parseText(value.opponentMoveUci);
+  const solutionUci = parseTextList(value.solutionUci);
+  if (
+    cardId === null ||
+    deckId === null ||
+    fen === null ||
+    opponentMoveUci === null ||
+    solutionUci === null ||
+    solutionUci.length === 0
+  ) {
+    return null;
+  }
+  return { kind: 'trap', cardId, deckId, fen, opponentMoveUci, solutionUci };
+}
+
+function parseCard(value: unknown): Card | null {
+  return parseMoveCard(value) ?? parseNameCard(value) ?? parseTrapCard(value);
 }
 
 function parseIdeaCredit(
@@ -193,7 +298,7 @@ function parseBuiltDeck(value: Record<string, unknown>): BuiltDeck | null {
   const nameKey = parseText(value.nameKey);
   const side = parseSide(value.side);
   const lines = parseList(value.lines, parseLine);
-  const cards = parseList(value.cards, parseMoveCard);
+  const cards = parseList(value.cards, parseCard);
   const ideas = parseList(value.ideas, parseIdea);
   const trapFilter = parseTrapFilter(value.trapFilter);
   if (

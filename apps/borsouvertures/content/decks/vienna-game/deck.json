@@ -3,6 +3,7 @@
   "order": 4,
   "nameKey": "decks.names.vienna-game",
   "side": "white",
+  "trapFilter": { "openingTags": ["Vienna_Game"] },
   "lines": [
     {
       "name": "Vienna Gambit Main Line",

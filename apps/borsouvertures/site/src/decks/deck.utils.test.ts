@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildExampleDeck, buildExampleDocument } from './deck.test-utils';
-import { DeckContentInvalidError, parseDecksDocument } from './deck.utils';
+import {
+  buildExampleDeck,
+  buildExampleDocument,
+  buildNameDeck,
+  EXAMPLE_NAME_CARD,
+  EXAMPLE_TRAP_CARD,
+} from './deck.test-utils';
+import {
+  buildNameCardId,
+  buildTrapCardId,
+  DeckContentInvalidError,
+  parseDecksDocument,
+} from './deck.utils';
 
 function readFailedDeckId(value: unknown): string {
   try {
@@ -18,6 +29,14 @@ function withDeckChange(change: Record<string, unknown>): unknown {
 function withCardChange(change: Record<string, unknown>): unknown {
   const deck = buildExampleDeck();
   return withDeckChange({ cards: [{ ...deck.cards[0], ...change }] });
+}
+
+function withNameCardChange(change: Record<string, unknown>): unknown {
+  return { version: 1, decks: [buildNameDeck([{ ...EXAMPLE_NAME_CARD, ...change }])] };
+}
+
+function withTrapCardChange(change: Record<string, unknown>): unknown {
+  return withDeckChange({ cards: [{ ...EXAMPLE_TRAP_CARD, ...change }] });
 }
 
 function withIdeaChange(change: Record<string, unknown>): unknown {
@@ -50,6 +69,22 @@ describe('parseDecksDocument', () => {
       ],
     };
     expect(parseDecksDocument(document)).toEqual(document);
+  });
+
+  it('reads a name deck and a trap card back unchanged', () => {
+    const document = {
+      version: 1,
+      decks: [
+        { ...buildExampleDeck(), cards: [EXAMPLE_TRAP_CARD] },
+        buildNameDeck([EXAMPLE_NAME_CARD]),
+      ],
+    };
+    expect(parseDecksDocument(JSON.parse(JSON.stringify(document)))).toEqual(document);
+  });
+
+  it('builds the ids of a name card and a trap card', () => {
+    expect(buildNameCardId(EXAMPLE_NAME_CARD.positionKey)).toBe(EXAMPLE_NAME_CARD.cardId);
+    expect(buildTrapCardId('FUczt')).toBe('trap:FUczt');
   });
 
   it('drops a field the type does not name', () => {
@@ -141,7 +176,50 @@ describe('parseDecksDocument', () => {
     ['an idea with a link and no source', withIdeaChange({ sourceUrl: 'https://x' })],
     ['a trap filter that is no record', withDeckChange({ trapFilter: 'Albin' })],
     ['a trap filter with no tags', withDeckChange({ trapFilter: { openingTags: 'Albin' } })],
+    ['a trap card with a name card id', withTrapCardChange({ cardId: EXAMPLE_NAME_CARD.cardId })],
+    ['a trap card with no deck', withTrapCardChange({ deckId: '' })],
+    ['a trap card with no FEN', withTrapCardChange({ fen: 3 })],
+    ['a trap card with no opponent move', withTrapCardChange({ opponentMoveUci: null })],
+    ['a trap card whose solution is no list', withTrapCardChange({ solutionUci: 'e5d3' })],
+    ['a trap card with an empty solution', withTrapCardChange({ solutionUci: [] })],
+    ['a card of an unknown kind', withTrapCardChange({ kind: 'line' })],
+    ['a card that is null', withDeckChange({ cards: [null] })],
   ])('refuses %s and names the deck', (_label, value) => {
     expect(readFailedDeckId(value)).toBe('DeckContentInvalidError albin-countergambit');
+  });
+
+  it.each([
+    ['a name card outside the name deck', withNameCardChange({ deckId: 'albin-countergambit' })],
+    ['a name card with a trap card id', withNameCardChange({ cardId: 'trap:FUczt' })],
+    ['a name card whose kind says trap', withNameCardChange({ kind: 'trap' })],
+    ['a name card whose position is no key', withNameCardChange({ positionKey: 'x' })],
+    ['a name card with no FEN', withNameCardChange({ fen: '' })],
+    ['a name card with no opening name', withNameCardChange({ openingName: null })],
+    ['a name card whose moves are no list', withNameCardChange({ movesSan: 'e4' })],
+    ['a name card whose choices are no list', withNameCardChange({ choices: 'Vienna Game' })],
+    [
+      'a name card with three choices',
+      withNameCardChange({ choices: ['Vienna Game', 'Ruy Lopez', 'Scotch Game'] }),
+    ],
+    ['a name card with two choices', withNameCardChange({ choices: ['Vienna Game', 'Ruy Lopez'] })],
+    ['a name card with one choice', withNameCardChange({ choices: ['Vienna Game'] })],
+    [
+      'a name card with five choices',
+      withNameCardChange({ choices: [...EXAMPLE_NAME_CARD.choices, 'Italian Game'] }),
+    ],
+    [
+      'a name card whose choices leave out the right name',
+      withNameCardChange({
+        choices: ['Sicilian Defense', 'Italian Game', 'Scotch Game', 'Ruy Lopez'],
+      }),
+    ],
+    [
+      'a name card that offers one name twice',
+      withNameCardChange({
+        choices: ['Vienna Game', 'Vienna Game', 'Scotch Game', 'Ruy Lopez'],
+      }),
+    ],
+  ])('refuses %s and names the name deck', (_label, value) => {
+    expect(readFailedDeckId(value)).toBe('DeckContentInvalidError opening-names');
   });
 });

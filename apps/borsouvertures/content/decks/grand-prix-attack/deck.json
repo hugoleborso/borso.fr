@@ -3,6 +3,7 @@
   "order": 5,
   "nameKey": "decks.names.grand-prix-attack",
   "side": "white",
+  "trapFilter": { "openingTags": ["Sicilian_Defense_Grand_Prix_Attack"] },
   "lines": [
     {
       "name": "Main line with f5 and Qh4",

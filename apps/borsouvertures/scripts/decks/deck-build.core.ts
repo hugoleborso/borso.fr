@@ -4,11 +4,16 @@ import { buildMoveCardId } from '../../domain/review-event.core';
 import {
   type BuiltDeck,
   type BuiltDeckLine,
+  type Card,
   DECKS_DOCUMENT_VERSION,
   type DecksDocument,
   type Idea,
   type MoveCard,
+  NAME_DECK_ID,
+  type NameCard,
+  type TrapCard,
 } from '../../site/src/decks/deck.utils';
+import { buildTrapCards } from '../traps/trap-cards.core';
 import { type DeckSource, type EngineException, parseDeckSource } from './deck-source.core';
 import {
   describeIdeasProblem,
@@ -16,6 +21,7 @@ import {
   type IdeasFile,
   parseIdeasMarkdown,
 } from './ideas-markdown.core';
+import { buildNameCards, type NameCardsInput } from './name-cards.core';
 
 export interface DeckFolder {
   folderName: string;
@@ -27,6 +33,8 @@ export interface DeckFolder {
 export interface DeckBuildInput {
   folders: readonly DeckFolder[];
   catalogues: { en: unknown; fr: unknown };
+  nameCards?: NameCardsInput;
+  traps?: unknown;
 }
 
 export interface ReaderMove {
@@ -66,6 +74,9 @@ interface ReplayedPath {
 const PLIES_PER_FULL_MOVE = 2;
 const PATH_SEPARATOR = ' ';
 const CATALOGUE_KEY_SEPARATOR = '.';
+export const NAME_DECK_NAME_KEY = 'cards.name-deck';
+const NAME_DECK_SIDE = 'white';
+const NO_TRAPS = { traps: [] };
 const LANGUAGE_NAMES: Record<IdeaLanguage, string> = { en: 'English', fr: 'French' };
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -390,7 +401,7 @@ function buildCards(
   return { cards: [...cards.values()], problems };
 }
 
-function buildDeck(deck: ReplayedDeck, cards: MoveCard[]): BuiltDeck {
+function buildDeck(deck: ReplayedDeck, cards: Card[]): BuiltDeck {
   const trapFilter = deck.source.trapFilter;
   return {
     id: deck.source.id,
@@ -400,6 +411,34 @@ function buildDeck(deck: ReplayedDeck, cards: MoveCard[]): BuiltDeck {
     cards,
     ideas: deck.ideas,
     ...(trapFilter === undefined ? {} : { trapFilter }),
+  };
+}
+
+function listNameKeyProblems(catalogues: DeckBuildInput['catalogues']): string[] {
+  const languages: IdeaLanguage[] = ['en', 'fr'];
+  return languages
+    .filter((language) => !hasCatalogueKey(catalogues[language], NAME_DECK_NAME_KEY))
+    .map(
+      (language) => `the name deck's key ${NAME_DECK_NAME_KEY} is missing from ${language}.json`,
+    );
+}
+
+function buildNameDecks(input: DeckBuildInput): { decks: BuiltDeck[]; problems: string[] } {
+  if (input.nameCards === undefined) return { decks: [], problems: [] };
+  const built = buildNameCards(input.nameCards);
+  const cards: NameCard[] = built.cards;
+  return {
+    decks: [
+      {
+        id: NAME_DECK_ID,
+        nameKey: NAME_DECK_NAME_KEY,
+        side: NAME_DECK_SIDE,
+        lines: [],
+        cards,
+        ideas: [],
+      },
+    ],
+    problems: [...built.problems, ...listNameKeyProblems(input.catalogues)],
   };
 }
 
@@ -419,16 +458,24 @@ export function buildDecksDocument(input: DeckBuildInput): DeckBuild {
   }
   const ordered = replayed.toSorted((left, right) => left.source.order - right.source.order);
   problems.push(...listOrderProblems(ordered));
+  const traps = buildTrapCards(
+    input.traps ?? NO_TRAPS,
+    ordered.map((deck) => deck.source),
+  );
+  problems.push(...traps.problems);
   const decks: BuiltDeck[] = [];
   for (const [index, deck] of ordered.entries()) {
     const built = buildCards(deck, ordered.slice(0, index));
+    const trapCards: TrapCard[] = traps.cardsByDeckId.get(deck.source.id) ?? [];
     problems.push(...built.problems);
-    decks.push(buildDeck(deck, built.cards));
+    decks.push(buildDeck(deck, [...built.cards, ...trapCards]));
   }
+  const nameDecks = buildNameDecks(input);
+  problems.push(...nameDecks.problems);
   if (problems.length > 0) return { ok: false, problems };
   return {
     ok: true,
-    document: { version: DECKS_DOCUMENT_VERSION, decks },
+    document: { version: DECKS_DOCUMENT_VERSION, decks: [...decks, ...nameDecks.decks] },
     readerMoves: ordered.flatMap((deck) => deck.readerMoves),
   };
 }

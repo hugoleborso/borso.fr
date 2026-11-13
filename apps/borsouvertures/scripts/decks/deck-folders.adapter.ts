@@ -5,11 +5,17 @@ import type { DeckBuildInput, DeckFolder } from './deck-build.core';
 export interface DeckContentRoots {
   decksRoot: string;
   catalogueRoot: string;
+  nameCardsPath: string;
+  openingsPath: string;
+  trapsPath: string;
 }
 
 export const DECK_CONTENT_ROOTS: DeckContentRoots = {
   decksRoot: path.resolve('content/decks'),
   catalogueRoot: path.resolve('site/src/i18n'),
+  nameCardsPath: path.resolve('content/name-cards.json'),
+  openingsPath: path.resolve('site/src/openings/openings.json'),
+  trapsPath: path.resolve('content/traps.json'),
 };
 
 function readText(...segments: string[]): string {
@@ -40,5 +46,10 @@ export function readDeckBuildInput(roots: DeckContentRoots): DeckBuildInput {
       en: readJson(roots.catalogueRoot, 'en.json'),
       fr: readJson(roots.catalogueRoot, 'fr.json'),
     },
+    nameCards: {
+      nameList: readJson(roots.nameCardsPath),
+      openings: readJson(roots.openingsPath),
+    },
+    traps: readJson(roots.trapsPath),
   };
 }

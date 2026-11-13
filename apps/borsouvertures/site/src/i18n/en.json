@@ -125,6 +125,29 @@
     },
     "progress-not-kept": "This browser cannot store your progress. Reviews from this visit will be lost when you close the page."
   },
+  "cards": {
+    "name-deck": "Opening names",
+    "name": {
+      "question": "Which opening is this?",
+      "choices": "Opening names to choose from",
+      "status": {
+        "asking": "Pick one of the four names",
+        "recalled": "Recalled. This is the {{name}}, reached by {{moves}}.",
+        "missed": "Missed. This is the {{name}}, reached by {{moves}}."
+      },
+      "show-answer": "Show the name"
+    },
+    "trap": {
+      "opponent-played": "Trap. {{side}} played {{move}}",
+      "status": {
+        "opponent-moving": "Watch the move",
+        "your-move": "Punish it. Play the whole solution.",
+        "recalled": "Recalled. The solution is {{moves}}.",
+        "missed": "Missed. The solution is {{moves}}."
+      },
+      "show-answer": "Show the solution"
+    }
+  },
   "decks": {
     "title": "Decks",
     "names": {

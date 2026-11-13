@@ -1,11 +1,12 @@
 import { deriveCalendarDay } from '@domain/calendar-day.core';
 import type { ReviewEvent, ReviewOutcome } from '@domain/review-event.core';
-import { isBookMove, type ReviewCard } from '@/decks/card.core';
+import { isExpectedMove, type ReviewCard, type ReviewStep } from '@/decks/card.core';
 import type { ProductEvent } from '@/observability/error-reporting.core';
 
 export type ReviewPhase = 'idle' | 'asking' | 'answered' | 'completed';
 export type ReviewStatus = 'opponent-moving' | 'your-move' | 'recalled' | 'missed';
-export type PlayMoveResult = 'recalled' | 'missed' | 'ignored';
+export type PlayMoveResult = 'recalled' | 'continued' | 'missed' | 'ignored';
+export type ChooseNameResult = 'recalled' | 'missed' | 'ignored';
 
 export interface ReviewSnapshot {
   phase: ReviewPhase;
@@ -39,6 +40,7 @@ export interface ReviewMachine {
   getSnapshot: () => ReviewSnapshot;
   start: (session: ReviewSessionStart) => void;
   playMove: (uci: string) => PlayMoveResult;
+  chooseName: (openingName: string) => ChooseNameResult;
   showMove: () => void;
   advance: () => void;
 }
@@ -73,6 +75,7 @@ export function createReviewMachine(options: ReviewMachineOptions): ReviewMachin
   const opponentMoveDelay =
     options.opponentMoveDelayMilliseconds ?? DEFAULT_OPPONENT_MOVE_DELAY_MILLISECONDS;
   let run: ReviewRun = NO_RUN;
+  let stepIndex = 0;
   let snapshot: ReviewSnapshot = INITIAL_SNAPSHOT;
   const listeners = new Set<() => void>();
 
@@ -93,6 +96,7 @@ export function createReviewMachine(options: ReviewMachineOptions): ReviewMachin
       return;
     }
     const { opponentMove } = next;
+    stepIndex = 0;
     publish({
       phase: 'asking',
       current: next,
@@ -105,7 +109,7 @@ export function createReviewMachine(options: ReviewMachineOptions): ReviewMachin
       const isStillWaiting =
         currentRun === run && snapshot.current === next && snapshot.isOpponentMovePending;
       if (!isStillWaiting) return;
-      publish({ fen: next.card.fen, isOpponentMovePending: false });
+      publish({ fen: next.steps[0]?.fen ?? next.card.fen, isOpponentMovePending: false });
     }, opponentMoveDelay);
   }
 
@@ -161,10 +165,43 @@ export function createReviewMachine(options: ReviewMachineOptions): ReviewMachin
     askNextCard(nextRun);
   }
 
+  function playOpponentReply(asked: ReviewCard, step: ReviewStep, nextStep: ReviewStep): void {
+    const currentRun = run;
+    stepIndex += 1;
+    const replyStepIndex = stepIndex;
+    publish({ fen: step.answerFen, isOpponentMovePending: true });
+    options.scheduleTimeout(() => {
+      const isStillWaiting =
+        currentRun === run &&
+        stepIndex === replyStepIndex &&
+        snapshot.current === asked &&
+        snapshot.isOpponentMovePending;
+      if (!isStillWaiting) return;
+      publish({ fen: nextStep.fen, isOpponentMovePending: false });
+    }, opponentMoveDelay);
+  }
+
   function playMove(uci: string): PlayMoveResult {
     const asked = readAskedCard(snapshot);
-    if (asked === null || snapshot.isOpponentMovePending) return 'ignored';
-    const outcome: ReviewOutcome = isBookMove(asked.card, uci) ? 'recalled' : 'missed';
+    const step = asked?.steps[stepIndex];
+    if (asked === null || step === undefined || snapshot.isOpponentMovePending) return 'ignored';
+    if (!isExpectedMove(step.moveUci, uci)) {
+      answer('missed');
+      return 'missed';
+    }
+    const nextStep = asked.steps[stepIndex + 1];
+    if (nextStep === undefined) {
+      answer('recalled');
+      return 'recalled';
+    }
+    playOpponentReply(asked, step, nextStep);
+    return 'continued';
+  }
+
+  function chooseName(openingName: string): ChooseNameResult {
+    const asked = readAskedCard(snapshot);
+    if (asked?.card.kind !== 'name') return 'ignored';
+    const outcome: ReviewOutcome = openingName === asked.card.openingName ? 'recalled' : 'missed';
     answer(outcome);
     return outcome;
   }
@@ -188,6 +225,7 @@ export function createReviewMachine(options: ReviewMachineOptions): ReviewMachin
     getSnapshot: () => snapshot,
     start,
     playMove,
+    chooseName,
     showMove,
     advance,
   };
@@ -206,7 +244,7 @@ export function selectRecalledPercent(snapshot: ReviewSnapshot): number {
 }
 
 export function isMoveAccepted(result: PlayMoveResult): boolean {
-  return result === 'recalled';
+  return result === 'recalled' || result === 'continued';
 }
 
 export function selectReviewStatus(snapshot: ReviewSnapshot): ReviewStatus {
@@ -216,5 +254,30 @@ export function selectReviewStatus(snapshot: ReviewSnapshot): ReviewStatus {
 
 export function listAnswerMoves(snapshot: ReviewSnapshot): string[] {
   if (snapshot.phase !== 'answered' || snapshot.current === null) return [];
-  return [snapshot.current.card.bookMoveUci];
+  return snapshot.current.steps.slice(-1).map((step) => step.moveUci);
+}
+
+export function isIdeaShown(snapshot: ReviewSnapshot): boolean {
+  return snapshot.phase === 'answered' && snapshot.current?.card.kind === 'move';
+}
+
+export interface NameChoice {
+  openingName: string;
+  isRightName: boolean;
+  isLocked: boolean;
+}
+
+export function listNameChoices(reviewCard: ReviewCard, status: ReviewStatus): NameChoice[] {
+  const { card } = reviewCard;
+  if (card.kind !== 'name') return [];
+  const isLocked = status === 'recalled' || status === 'missed';
+  return card.choices.map((openingName) => ({
+    openingName,
+    isRightName: isLocked && openingName === card.openingName,
+    isLocked,
+  }));
+}
+
+export function selectOpeningName(reviewCard: ReviewCard): string {
+  return reviewCard.card.kind === 'name' ? reviewCard.card.openingName : '';
 }

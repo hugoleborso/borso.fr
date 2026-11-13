@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseDecksDocument } from '../../site/src/decks/deck.utils';
-import { buildDecksDocument, type DeckFolder, hasCatalogueKey } from './deck-build.core';
+import { type Card, type MoveCard, parseDecksDocument } from '../../site/src/decks/deck.utils';
+import { EXAMPLE_TRAP_CARD } from '../../site/src/decks/deck.test-utils';
+import {
+  buildDecksDocument,
+  type DeckBuildInput,
+  type DeckFolder,
+  hasCatalogueKey,
+} from './deck-build.core';
 import {
   buildExampleFolder,
   buildExampleInput,
@@ -8,11 +14,21 @@ import {
   EXAMPLE_CATALOGUE,
   EXAMPLE_DECK,
   EXAMPLE_PATHS,
+  NAME_CARD_OPENINGS,
 } from './deck-build.test-utils';
+import { buildNameCards } from './name-cards.core';
 
 const MAIN_LINE = ['d4', 'd5', 'c4', 'e5', 'dxe5', 'd4', 'Nf3', 'Nc6'];
 const FIRST_KEY = 'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq -';
 const FIRST_IDEA_KEY = 'rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq -';
+
+function listMoveCards(cards: readonly Card[] = []): MoveCard[] {
+  return cards.filter((card) => card.kind === 'move');
+}
+
+function listBookMoves(cards: readonly Card[] = []): string[] {
+  return listMoveCards(cards).map((card) => card.bookMoveSan);
+}
 
 function listProblems(folders: readonly DeckFolder[]): string[] {
   const build = buildDecksDocument(buildExampleInput(folders));
@@ -54,14 +70,7 @@ describe('buildDecksDocument, the worked example', () => {
     const [deck] = build.document.decks;
     expect(build.document.version).toBe(1);
     expect(build.document.decks).toHaveLength(1);
-    expect(deck?.cards.map((card) => card.bookMoveSan)).toEqual([
-      'd5',
-      'e5',
-      'd4',
-      'Nc6',
-      'Bb4+',
-      'dxe3',
-    ]);
+    expect(listBookMoves(deck?.cards)).toEqual(['d5', 'e5', 'd4', 'Nc6', 'Bb4+', 'dxe3']);
     expect(deck?.cards[0]).toEqual({
       kind: 'move',
       cardId: `move:albin-countergambit:${FIRST_KEY}`,
@@ -218,7 +227,7 @@ describe('buildDecksDocument, what a deck may add', () => {
       ]),
     );
     if (!build.ok) throw new Error(build.problems.join('\n'));
-    expect(build.document.decks[0]?.cards.map((card) => card.bookMoveSan)).toEqual([
+    expect(listBookMoves(build.document.decks[0]?.cards)).toEqual([
       'd5',
       'Nf6',
       'c5',
@@ -233,10 +242,9 @@ describe('buildDecksDocument, what a deck may add', () => {
       buildExampleInput([buildWhiteFolder('vienna-game', 4, ['e4', 'e5', 'Nc3'])]),
     );
     if (!build.ok) throw new Error(build.problems.join('\n'));
-    expect(build.document.decks[0]?.cards.map((card) => card.opponentMoveUci)).toEqual([
-      null,
-      'e7e5',
-    ]);
+    expect(
+      listMoveCards(build.document.decks[0]?.cards).map((card) => card.opponentMoveUci),
+    ).toEqual([null, 'e7e5']);
     expect(build.readerMoves.map((move) => move.ply)).toEqual([1, 3]);
   });
 });
@@ -312,7 +320,7 @@ describe('buildDecksDocument, the rules', () => {
     );
     if (!build.ok) throw new Error(build.problems.join('\n'));
     expect(build.document.decks.map((deck) => deck.id)).toEqual(['caro-kann', 'vienna-game']);
-    expect(build.document.decks.map((deck) => deck.cards.map((card) => card.bookMoveSan))).toEqual([
+    expect(build.document.decks.map((deck) => listBookMoves(deck.cards))).toEqual([
       ['e4', 'Nc3'],
       ['Nc3'],
     ]);
@@ -454,6 +462,82 @@ describe('buildDecksDocument, rule 8 on ideas', () => {
     expect(listProblems([withDeck({ lines, pliesPerLine: { minimum: 1, maximum: 20 } })])).toEqual([
       'deck "albin-countergambit": line "Main line", ply 4: "e9" is not a legal move',
     ]);
+  });
+});
+
+describe('buildDecksDocument, name cards and trap cards', () => {
+  const NAMES = ['Vienna Game', 'Italian Game', 'Ruy Lopez', 'Scotch Game', 'Sicilian Defense'];
+  const CATALOGUE = { ...EXAMPLE_CATALOGUE, cards: { 'name-deck': 'Opening names' } };
+  const TRAP = {
+    puzzleId: 'FUczt',
+    deckId: 'albin-countergambit',
+    fen: EXAMPLE_TRAP_CARD.fen,
+    movesUci: ['f3d4', 'e5d3', 'e2d3', 'g4d1'],
+    rating: 1237,
+  };
+
+  function buildWith(change: Partial<DeckBuildInput>) {
+    return buildDecksDocument({
+      ...buildExampleInput([buildExampleFolder()]),
+      catalogues: { en: CATALOGUE, fr: CATALOGUE },
+      ...change,
+    });
+  }
+
+  it('adds the name deck after every deck, and the site reads it back', () => {
+    const nameCards = { nameList: { names: NAMES }, openings: NAME_CARD_OPENINGS };
+    const build = buildWith({ nameCards });
+    if (!build.ok) throw new Error(build.problems.join('\n'));
+    expect(build.document.decks.map((deck) => deck.id)).toEqual([
+      'albin-countergambit',
+      'opening-names',
+    ]);
+    expect(build.document.decks[1]).toEqual({
+      id: 'opening-names',
+      nameKey: 'cards.name-deck',
+      side: 'white',
+      lines: [],
+      cards: buildNameCards(nameCards).cards,
+      ideas: [],
+    });
+    expect(build.readerMoves).toHaveLength(9);
+    expect(parseDecksDocument(JSON.parse(JSON.stringify(build.document)))).toEqual(build.document);
+  });
+
+  it('puts the trap cards of a deck after its move cards', () => {
+    const build = buildWith({ traps: { traps: [TRAP] } });
+    if (!build.ok) throw new Error(build.problems.join('\n'));
+    expect(build.document.decks[0]?.cards.map((card) => card.kind)).toEqual([
+      ...Array.from({ length: 6 }, () => 'move'),
+      'trap',
+    ]);
+    expect(build.document.decks[0]?.cards.at(-1)).toEqual(EXAMPLE_TRAP_CARD);
+  });
+
+  it('refuses a name the openings do not carry, and a name deck key either catalogue lacks', () => {
+    const nameCards = { nameList: { names: [...NAMES, 'Nowhere'] }, openings: NAME_CARD_OPENINGS };
+    expect(buildWith({ nameCards, catalogues: { en: CATALOGUE, fr: EXAMPLE_CATALOGUE } })).toEqual({
+      ok: false,
+      problems: [
+        'name-cards.json: "Nowhere" is the name of no line of openings.json',
+        "the name deck's key cards.name-deck is missing from fr.json",
+      ],
+    });
+    const neither = buildWith({
+      nameCards: { nameList: { names: NAMES }, openings: NAME_CARD_OPENINGS },
+      catalogues: { en: EXAMPLE_CATALOGUE, fr: EXAMPLE_CATALOGUE },
+    });
+    expect(neither.ok ? [] : neither.problems).toEqual([
+      "the name deck's key cards.name-deck is missing from en.json",
+      "the name deck's key cards.name-deck is missing from fr.json",
+    ]);
+  });
+
+  it('refuses a traps file of another shape', () => {
+    expect(buildWith({ traps: { traps: 'none' } })).toEqual({
+      ok: false,
+      problems: ['traps.json must hold { "traps": [...] }'],
+    });
   });
 });
 

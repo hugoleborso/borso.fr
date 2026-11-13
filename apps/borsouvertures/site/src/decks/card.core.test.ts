@@ -8,18 +8,28 @@ import {
   formatMoveNotation,
   formatNumberedLine,
   isBookMove,
+  isExpectedMove,
   listDeckCards,
   listLineSteps,
   listReviewCards,
   selectOpponentSide,
 } from './card.core';
-import { buildExampleDeck } from './deck.test-utils';
-import type { BuiltDeck, MoveCard } from './deck.utils';
+import {
+  buildExampleDeck,
+  buildNameDeck,
+  EXAMPLE_NAME_CARD,
+  EXAMPLE_TRAP_CARD,
+} from './deck.test-utils';
+import type { BuiltDeck, Card, MoveCard } from './deck.utils';
 
 const deck = buildExampleDeck();
 
+function listMoveCards(cards: readonly Card[]): MoveCard[] {
+  return cards.filter((card) => card.kind === 'move');
+}
+
 function getCard(bookMoveSan: string): MoveCard {
-  const card = deck.cards.find((candidate) => candidate.bookMoveSan === bookMoveSan);
+  const card = listMoveCards(deck.cards).find((candidate) => candidate.bookMoveSan === bookMoveSan);
   if (card === undefined) throw new Error(`no card plays ${bookMoveSan}`);
   return card;
 }
@@ -48,16 +58,39 @@ const WHITE_DECK: BuiltDeck = {
 // @FollowsBlueprint test-pure-unit
 describe('finding cards, decks and ideas', () => {
   it('lists the cards of every deck in deck order', () => {
-    expect(listDeckCards([deck, WHITE_DECK]).map((card) => card.bookMoveSan)).toEqual([
-      'd5',
-      'e5',
-      'd4',
-      'Nc6',
-      'Bb4+',
-      'dxe3',
-      'e4',
-    ]);
+    expect(
+      listMoveCards(listDeckCards([deck, WHITE_DECK])).map((card) => card.bookMoveSan),
+    ).toEqual(['d5', 'e5', 'd4', 'Nc6', 'Bb4+', 'dxe3', 'e4']);
     expect(listDeckCards([])).toEqual([]);
+  });
+
+  it('slips one name card in after every four deck cards, and the rest at the end', () => {
+    const names = ['Ruy Lopez', 'Scotch Game', 'Italian Game'].map((openingName) => ({
+      ...EXAMPLE_NAME_CARD,
+      cardId: `name:${openingName}`,
+      openingName,
+    }));
+    const order = listDeckCards([buildNameDeck(names), deck]).map((card) =>
+      card.kind === 'name' ? card.openingName : card.cardId,
+    );
+    const moveIds = deck.cards.map((card) => card.cardId);
+    expect(order).toEqual([
+      ...moveIds.slice(0, 4),
+      'Ruy Lopez',
+      ...moveIds.slice(4),
+      'Scotch Game',
+      'Italian Game',
+    ]);
+  });
+
+  it('slips in no name card where the name deck has run out', () => {
+    const twoDecks = [deck, { ...deck, id: 'second' }, buildNameDeck([EXAMPLE_NAME_CARD])];
+    const kinds = listDeckCards(twoDecks).map((card) => card.kind);
+    expect(kinds).toEqual([
+      ...Array.from({ length: 4 }, () => 'move'),
+      'name',
+      ...Array.from({ length: 8 }, () => 'move'),
+    ]);
   });
 
   it('finds a card and a deck by id, or nothing', () => {
@@ -89,6 +122,15 @@ describe('isBookMove', () => {
     expect(isBookMove(promotion, 'f2g1n')).toBe(true);
     expect(isBookMove(promotion, 'f2g1q')).toBe(false);
     expect(isBookMove(promotion, 'f2f1')).toBe(false);
+  });
+});
+
+describe('isExpectedMove', () => {
+  it('accepts the expected move, its two squares, and nothing else', () => {
+    expect(isExpectedMove('e5d3', 'e5d3')).toBe(true);
+    expect(isExpectedMove('e7e8q', 'e7e8')).toBe(true);
+    expect(isExpectedMove('e5d3', 'e5c4')).toBe(false);
+    expect(isExpectedMove('e5d3', 'e5d3q')).toBe(false);
   });
 });
 
@@ -131,7 +173,6 @@ describe('findOpponentMove', () => {
 
   it('names Black as the opponent of a white deck', () => {
     const afterBlackReply: MoveCard = {
-      ...WHITE_DECK.cards[0],
       kind: 'move',
       cardId: 'x',
       deckId: 'vienna-game',
@@ -150,7 +191,7 @@ describe('findOpponentMove', () => {
   });
 
   it('answers nothing for the first move of a white deck and for a card no line reaches', () => {
-    const [firstMove] = WHITE_DECK.cards;
+    const [firstMove] = listMoveCards(WHITE_DECK.cards);
     if (firstMove === undefined) throw new Error('the white deck holds one card');
     expect(findOpponentMove(WHITE_DECK, firstMove)).toBeNull();
     expect(findOpponentMove(WHITE_DECK, getCard('e5'))).toBeNull();
@@ -169,11 +210,18 @@ describe('buildReviewCard and listReviewCards', () => {
       opponentMove: findOpponentMove(deck, card),
       answerFen: 'rnbqkbnr/ppp2ppp/8/4P3/2Pp4/8/PP2PPPP/RNBQKBNR w KQkq - 0 4',
       bookMoveNotation: '3... d4',
+      steps: [
+        {
+          fen: card.fen,
+          moveUci: 'd5d4',
+          answerFen: 'rnbqkbnr/ppp2ppp/8/4P3/2Pp4/8/PP2PPPP/RNBQKBNR w KQkq - 0 4',
+        },
+      ],
     });
   });
 
   it('numbers a white book move and applies a promotion to the answer position', () => {
-    const [firstMove] = WHITE_DECK.cards;
+    const [firstMove] = listMoveCards(WHITE_DECK.cards);
     if (firstMove === undefined) throw new Error('the white deck holds one card');
     const whiteCard = buildReviewCard(WHITE_DECK, firstMove);
     expect(whiteCard.bookMoveNotation).toBe('1. e4');
@@ -190,10 +238,69 @@ describe('buildReviewCard and listReviewCards', () => {
     expect(promoted.bookMoveNotation).toBe('7... fxg1=N+');
   });
 
+  it('gathers a name card: its position, the moves to show and no step on the board', () => {
+    const nameDeck = buildNameDeck([EXAMPLE_NAME_CARD]);
+    expect(buildReviewCard(nameDeck, EXAMPLE_NAME_CARD)).toEqual({
+      card: EXAMPLE_NAME_CARD,
+      deckId: 'opening-names',
+      deckNameKey: 'cards.name-deck',
+      readerSide: 'white',
+      idea: null,
+      opponentMove: null,
+      answerFen: EXAMPLE_NAME_CARD.fen,
+      bookMoveNotation: '1. e4 e5 2. Nc3',
+      steps: [],
+    });
+  });
+
+  it('gathers a trap card: the opponent move, one step per reader move and the whole solution', () => {
+    expect(buildReviewCard(deck, EXAMPLE_TRAP_CARD)).toEqual({
+      card: EXAMPLE_TRAP_CARD,
+      deckId: 'albin-countergambit',
+      deckNameKey: 'decks.names.albin-countergambit',
+      readerSide: 'black',
+      idea: null,
+      opponentMove: {
+        fenBefore: EXAMPLE_TRAP_CARD.fen,
+        notation: '9. Nxd4',
+        side: 'white',
+      },
+      answerFen: 'r2qk1nr/ppp2pbp/6p1/8/1PPN4/P2P4/1B1N1PPP/R2bKB1R w KQkq - 0 11',
+      bookMoveNotation: '9... Nd3+ 10. exd3 Bxd1',
+      steps: [
+        {
+          fen: 'r2qk1nr/ppp2pbp/6p1/4n3/1PPN2b1/P7/1B1NPPPP/R2QKB1R b KQkq - 0 9',
+          moveUci: 'e5d3',
+          answerFen: 'r2qk1nr/ppp2pbp/6p1/8/1PPN2b1/P2n4/1B1NPPPP/R2QKB1R w KQkq - 1 10',
+        },
+        {
+          fen: 'r2qk1nr/ppp2pbp/6p1/8/1PPN2b1/P2P4/1B1N1PPP/R2QKB1R b KQkq - 0 10',
+          moveUci: 'g4d1',
+          answerFen: 'r2qk1nr/ppp2pbp/6p1/8/1PPN4/P2P4/1B1N1PPP/R2bKB1R w KQkq - 0 11',
+        },
+      ],
+    });
+  });
+
+  it('names Black as the opponent of a trap for White', () => {
+    const whiteTrap = {
+      ...EXAMPLE_TRAP_CARD,
+      fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1',
+      opponentMoveUci: 'e7e5',
+      solutionUci: ['g1f3', 'b8c6', 'f1c4'],
+    };
+    const reviewCard = buildReviewCard(WHITE_DECK, whiteTrap);
+    expect(reviewCard.opponentMove?.notation).toBe('1... e5');
+    expect(reviewCard.opponentMove?.side).toBe('black');
+    expect(reviewCard.bookMoveNotation).toBe('2. Nf3 Nc6 3. Bc4');
+  });
+
   it('keeps the order asked and skips an id no deck holds', () => {
     const cardIds = [getCard('Nc6').cardId, 'move:gone:nowhere', getCard('d5').cardId];
     expect(
-      listReviewCards([deck], cardIds).map((reviewCard) => reviewCard.card.bookMoveSan),
+      listMoveCards(listReviewCards([deck], cardIds).map((reviewCard) => reviewCard.card)).map(
+        (card) => card.bookMoveSan,
+      ),
     ).toEqual(['Nc6', 'd5']);
   });
 

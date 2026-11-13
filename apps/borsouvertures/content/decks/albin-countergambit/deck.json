@@ -3,6 +3,7 @@
   "order": 1,
   "nameKey": "decks.names.albin-countergambit",
   "side": "black",
+  "trapFilter": { "openingTags": ["Queens_Gambit_Declined_Albin_Countergambit"] },
   "lines": [
     {
       "name": "Main line with 5. g3",

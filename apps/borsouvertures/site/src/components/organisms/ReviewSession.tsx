@@ -4,10 +4,13 @@ import { BoardView } from '@/components/atoms/BoardView';
 import { Button } from '@/components/atoms/Button';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import { IdeaPanel } from '@/components/molecules/IdeaPanel';
-import { type CardBodyProps, MoveCardBody } from '@/components/molecules/MoveCardBody';
+import type { CardBodyProps } from '@/components/molecules/card-body.types';
+import { MoveCardBody } from '@/components/molecules/MoveCardBody';
+import { NameCardBody } from '@/components/molecules/NameCardBody';
 import { ProgressNotKeptBanner } from '@/components/molecules/ProgressNotKeptBanner';
 import { ReviewSummary } from '@/components/molecules/ReviewSummary';
-import { listReviewCards, type ReviewCard } from '@/decks/card.core';
+import { TrapCardBody } from '@/components/molecules/TrapCardBody';
+import { type Card, listReviewCards, type ReviewCard } from '@/decks/card.core';
 import type { Idea } from '@/decks/deck.utils';
 import { selectDeckName } from '@/decks/idea.utils';
 import type { ComponentByFlag, ComponentByKind } from '@/lib/componentTable.types';
@@ -20,6 +23,7 @@ import { countNewCards, selectSessionCardIds } from '@/review/daily-plan.core';
 import { reviewMachine } from '@/review/review-machine.setup';
 import { useReviewLog } from '@/review/review-log.store';
 import {
+  isIdeaShown,
   isMoveAccepted,
   listAnswerMoves,
   type ReviewSnapshot,
@@ -34,11 +38,19 @@ import type { AppScreenProps } from './screen.types';
 const NO_HIGHLIGHTS: Record<string, CSSProperties> = {};
 
 // @FollowsBlueprint component-lookup-table
-const CARD_BODY_BY_KIND: ComponentByKind<ReviewCard['card']['kind'], CardBodyProps> = {
+const CARD_BODY_BY_KIND: ComponentByKind<Card['kind'], CardBodyProps> = {
   move: MoveCardBody,
+  name: NameCardBody,
+  trap: TrapCardBody,
 };
 
-const IDEA_BY_ANSWERED: ComponentByFlag<{ idea: Idea | null }> = {
+const SHOW_ANSWER_KEY_BY_KIND = {
+  move: 'review.show-move',
+  name: 'cards.name.show-answer',
+  trap: 'cards.trap.show-answer',
+} as const satisfies Record<Card['kind'], string>;
+
+const IDEA_BY_SHOWN: ComponentByFlag<{ idea: Idea | null }> = {
   true: IdeaPanel,
   false: EmptySlot,
 };
@@ -60,7 +72,7 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
   const boardWidth = useBoardWidth();
   const isAnswered = snapshot.phase === 'answered';
   const CardBody = CARD_BODY_BY_KIND[reviewCard.card.kind];
-  const IdeaSlot = IDEA_BY_ANSWERED[`${isAnswered}`];
+  const IdeaSlot = IDEA_BY_SHOWN[`${isIdeaShown(snapshot)}`];
   const deckName = selectDeckName(
     i18n.getResource(i18n.language, 'translation', reviewCard.deckNameKey),
     reviewCard.deckNameKey,
@@ -84,10 +96,14 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
         boardWidth={boardWidth}
       />
       <div className="flex flex-col gap-3 w-full">
-        <CardBody reviewCard={reviewCard} status={selectReviewStatus(snapshot)} />
+        <CardBody
+          reviewCard={reviewCard}
+          status={selectReviewStatus(snapshot)}
+          onChooseName={reviewMachine.chooseName}
+        />
         <div className="flex flex-wrap gap-3">
           <Button
-            label={t('review.show-move')}
+            label={t(SHOW_ANSWER_KEY_BY_KIND[reviewCard.card.kind])}
             isDisabled={isAnswered}
             onActivate={reviewMachine.showMove}
           />

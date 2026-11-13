@@ -153,17 +153,26 @@ has exactly one move to play.
 Lives in: `site/src/decks/card.core.ts`, with the stored shape in
 `site/src/decks/deck.utils.ts`
 
-- `Card` is a union discriminated by `kind`. It has one member today, the
-  `move` card. The kinds `name` and `trap` exist in `CardKind` and in the card
-  id grammar, and no card of those kinds is built yet.
+- `Card` is a union discriminated by `kind`: `move`, `name` and `trap`. Every
+  member carries a `cardId` and a `deckId`, and all three are scheduled alike.
+- A name card shows the position at the end of the shortest line of
+  `openings.json` with one name of `content/name-cards.json`, and offers four
+  names, the right one once. Its id is `name:<positionKey>`, and every name card
+  sits in the deck `opening-names`. Picking the right name recalls it.
+- A trap card plays the opponent's move, then asks the reader for every reader
+  move of the solution. Its id is `trap:<puzzleId>`, and it sits in the deck
+  whose `trapFilter` matched. Any move off the solution misses it.
+- "Puzzle" names only the Lichess source row (`PuzzleRow`, `puzzleId`), which
+  `build:traps` filters into `content/traps.json`. In the app the unit is a trap
+  card.
 - A move card's id is `move:<deckId>:<positionKey>`, built by `buildMoveCardId`.
   The id is the position and not the line, so editing the later moves of a line
   keeps the earlier ids and their history.
 - A position two decks of one side share is one card, owned by the deck with
   the lower `order`.
-- `isBookMove` accepts the card's `bookMoveUci`. A board drop names no
-  promotion piece, so a move of four characters matches a promotion on its two
-  squares.
+- `isExpectedMove` accepts the move a card or a trap step expects. A board
+  drop names no promotion piece, so a move of four characters matches a
+  promotion on its two squares.
 
 Held by: `site/src/decks/card.core.test.ts` › accepts a board drop on the two squares of a promotion, and only the book piece when one is named
 
