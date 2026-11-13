@@ -5,6 +5,7 @@ import { APP_TABS, type AppTab } from '@/navigation/app-screen.core';
 const LABEL_KEY_BY_TAB = {
   today: 'tab-bar.today',
   decks: 'tab-bar.decks',
+  stats: 'stats.tab',
   explore: 'tab-bar.explore',
 } as const satisfies Record<AppTab, string>;
 

@@ -1,22 +1,24 @@
-export type AppTab = 'today' | 'decks' | 'explore';
+export type AppTab = 'today' | 'decks' | 'stats' | 'explore';
 
 export type AppScreen =
   | { kind: 'today' }
   | { kind: 'review-session'; deckId: string | null }
   | { kind: 'decks' }
   | { kind: 'deck'; deckId: string }
+  | { kind: 'stats' }
   | { kind: 'explore' }
   | { kind: 'credits' };
 
 export type AppScreenKind = AppScreen['kind'];
 
-export const APP_TABS: readonly AppTab[] = ['today', 'decks', 'explore'];
+export const APP_TABS: readonly AppTab[] = ['today', 'decks', 'stats', 'explore'];
 export const INITIAL_SCREEN: AppScreen = { kind: 'today' };
 
 const TAB_BY_SCREEN_KIND: Record<Exclude<AppScreenKind, 'review-session'>, AppTab | null> = {
   today: 'today',
   decks: 'decks',
   deck: 'decks',
+  stats: 'stats',
   explore: 'explore',
   credits: null,
 };
@@ -24,6 +26,7 @@ const TAB_BY_SCREEN_KIND: Record<Exclude<AppScreenKind, 'review-session'>, AppTa
 const SCREEN_BY_TAB: Record<AppTab, AppScreen> = {
   today: { kind: 'today' },
   decks: { kind: 'decks' },
+  stats: { kind: 'stats' },
   explore: { kind: 'explore' },
 };
 
@@ -52,6 +55,7 @@ const KINDS_THAT_READ_DECKS: ReadonlySet<AppScreenKind> = new Set([
   'review-session',
   'decks',
   'deck',
+  'stats',
 ]);
 
 export function selectAppScreenView(

@@ -14,6 +14,7 @@ import { DecksScreen } from './DecksScreen';
 import { ExploreScreen } from './ExploreScreen';
 import { ReviewSession } from './ReviewSession';
 import type { AppScreenProps } from './screen.types';
+import { StatsScreen } from './StatsScreen';
 import { TodayScreen } from './TodayScreen';
 
 const SCREEN_BY_VIEW: ComponentByKind<AppScreenView, AppScreenProps> = {
@@ -21,6 +22,7 @@ const SCREEN_BY_VIEW: ComponentByKind<AppScreenView, AppScreenProps> = {
   'review-session': ReviewSession,
   decks: DecksScreen,
   deck: DeckPage,
+  stats: StatsScreen,
   explore: ExploreScreen,
   credits: CreditsScreen,
   'decks-load-failure': DecksLoadFailurePanel,

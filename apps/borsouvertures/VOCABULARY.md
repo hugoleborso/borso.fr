@@ -451,6 +451,29 @@ Lives in: `site/src/openings/previews.utils.ts`
   `main`, and the first line of its first variation otherwise. A variation
   previews its first line, and a line previews itself.
 
+## Retention
+
+The share of due cards recalled on the first try, per deck and per week.
+
+Lives in: `site/src/review/retention.core.ts`
+
+- A review counts only when the card had been seen before and was due. The
+  first review of a new card and a review made ahead of its day count for
+  nothing.
+- A card was due when the stamped days between its previous review and this one
+  cover the interval the scheduler gave. Each review keeps the calendar day of
+  the device that made it.
+- `projectDeckRetention` groups the due reviews by deck and by week. A week
+  starts on the Monday of the review's calendar day.
+- Today shows the last 30 days per deck, and Stats the last 12 weeks. A week
+  with no due review is drawn as empty, never as 0%.
+- It is derived from the review log at each render and is never stored.
+
+Held by: `site/src/review/retention.core.test.ts` › leaves retention unchanged for a review of a card that is not due
+
+Not to be confused with: accuracy, which is the share recalled over every
+stored review of a deck, due or not.
+
 ## Review
 
 One answer a reader gives to one card.
@@ -537,6 +560,21 @@ Lives in: `site/src/state/persistedState.utils.ts`
 - Two values, `white` and `black`. It feeds `isOpponentToMove`, so changing it
   changes which plies the auto opponent answers.
 - It is part of the session key, so changing it restarts the session.
+
+## Streak
+
+The run of consecutive calendar days holding at least one review, ending today
+or yesterday.
+
+Lives in: `site/src/review/streak.core.ts`
+
+- `countStreakDays` reads the calendar day stamped on each review event and
+  nothing else, so the streak is the same on every device holding the same
+  events.
+- A streak whose last review was yesterday still stands, because today is not
+  over. One whose last review was two days ago is 0.
+
+Held by: `site/src/review/streak.core.test.ts` › reads the stamped day across a time-zone change, not the instant
 
 ## Variation
 

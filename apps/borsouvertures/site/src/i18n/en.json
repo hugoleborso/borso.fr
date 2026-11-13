@@ -46,6 +46,37 @@
     "nothing-left": "Nothing is due and no new card is left today. Open a deck to review it ahead.",
     "review-ahead": "Review a deck ahead"
   },
+  "stats": {
+    "tab": "Stats",
+    "title": "Stats",
+    "streak": {
+      "label": "Streak",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "recent-retention": {
+      "title": "Retention, last 30 days",
+      "measured": "{{percent}}% · due reviews recalled: {{recalled}}/{{reviews}}",
+      "empty": "No due review yet"
+    },
+    "retention": {
+      "title": "Retention by week",
+      "caption": "The share of due cards recalled on the first try, over the last 12 weeks.",
+      "oldest-week_one": "{{count}} week ago",
+      "oldest-week_other": "{{count}} weeks ago",
+      "latest-week": "This week",
+      "week": {
+        "measured": "Week of {{weekStart}}: {{percent}}%, due reviews recalled: {{recalled}}/{{reviews}}",
+        "empty": "Week of {{weekStart}}: no due review"
+      }
+    },
+    "accuracy": {
+      "title": "Accuracy per deck",
+      "caption": "The share of all reviews recalled, due or not.",
+      "measured": "{{percent}}% · reviews recalled: {{recalled}}/{{reviews}}",
+      "empty": "No review yet"
+    }
+  },
   "review": {
     "progress": "{{deck}} · {{position}}/{{total}}",
     "opponent-played": "{{side}} played {{move}}",

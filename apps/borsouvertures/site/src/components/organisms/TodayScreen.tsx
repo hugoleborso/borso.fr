@@ -3,14 +3,17 @@ import { Button } from '@/components/atoms/Button';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import { Panel } from '@/components/atoms/Panel';
 import { DailyCounts } from '@/components/molecules/DailyCounts';
+import { DeckAccuracyRow } from '@/components/molecules/DeckAccuracyRow';
 import { DeckRow } from '@/components/molecules/DeckRow';
 import { ProgressNotKeptBanner } from '@/components/molecules/ProgressNotKeptBanner';
+import { StreakBadge } from '@/components/molecules/StreakBadge';
 import type { BuiltDeck } from '@/decks/deck.utils';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
 import { openScreen } from '@/navigation/navigation.store';
 import type { TrainerProgress } from '@/review/daily-plan.core';
 import { useReviewLog } from '@/review/review-log.store';
 import { useTrainerProgress } from '@/review/trainer-progress.hook';
+import { useTrainerStatistics } from '@/review/trainer-statistics.hook';
 import type { AppScreenProps } from './screen.types';
 
 interface ReviewAheadProps {
@@ -51,6 +54,7 @@ const BANNER_BY_PROGRESS_KEPT: ComponentByFlag<Record<string, never>> = {
 export function TodayScreen({ decks }: AppScreenProps) {
   const { t } = useTranslation();
   const progress = useTrainerProgress(decks);
+  const statistics = useTrainerStatistics(decks);
   const { isProgressKept } = useReviewLog();
   const isPlanEmpty = progress.sessionCardIds.length === 0;
   const ReviewAhead = REVIEW_AHEAD_BY_EMPTY_PLAN[`${isPlanEmpty}`];
@@ -63,6 +67,7 @@ export function TodayScreen({ decks }: AppScreenProps) {
           dueCount={progress.plan.dueCardIds.length}
           newCount={progress.plan.newCardIds.length}
         />
+        <StreakBadge streakDays={statistics.streakDays} />
         <Button
           label={t('today.start')}
           variant="primary"
@@ -71,6 +76,13 @@ export function TodayScreen({ decks }: AppScreenProps) {
         />
       </Panel>
       <ReviewAhead decks={decks} progress={progress} />
+      <Panel title={t('stats.recent-retention.title')}>
+        {decks.map((deck, index) => {
+          const share = statistics.recentRetention[index];
+          if (share === undefined) return null;
+          return <DeckAccuracyRow key={deck.id} deck={deck} share={share} measure="retention" />;
+        })}
+      </Panel>
     </div>
   );
 }

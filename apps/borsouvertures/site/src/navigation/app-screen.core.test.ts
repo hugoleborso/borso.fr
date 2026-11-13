@@ -11,8 +11,8 @@ import {
 
 // @FollowsBlueprint test-pure-unit
 describe('the tabs', () => {
-  it('are Today, Decks and Explore, and Today is the screen after every load', () => {
-    expect(APP_TABS).toEqual(['today', 'decks', 'explore']);
+  it('are Today, Decks, Stats and Explore, and Today is the screen after every load', () => {
+    expect(APP_TABS).toEqual(['today', 'decks', 'stats', 'explore']);
     expect(INITIAL_SCREEN).toEqual({ kind: 'today' });
   });
 
@@ -20,6 +20,7 @@ describe('the tabs', () => {
     expect(selectActiveTab({ kind: 'today' })).toBe('today');
     expect(selectActiveTab({ kind: 'decks' })).toBe('decks');
     expect(selectActiveTab({ kind: 'deck', deckId: 'albin-countergambit' })).toBe('decks');
+    expect(selectActiveTab({ kind: 'stats' })).toBe('stats');
     expect(selectActiveTab({ kind: 'explore' })).toBe('explore');
     expect(selectActiveTab({ kind: 'credits' })).toBeNull();
   });
@@ -34,6 +35,7 @@ describe('the tabs', () => {
   it('opens the screen of a tab', () => {
     expect(selectTabScreen('today')).toEqual({ kind: 'today' });
     expect(selectTabScreen('decks')).toEqual({ kind: 'decks' });
+    expect(selectTabScreen('stats')).toEqual({ kind: 'stats' });
     expect(selectTabScreen('explore')).toEqual({ kind: 'explore' });
   });
 });
@@ -63,6 +65,7 @@ describe('selectAppScreenView', () => {
     expect(selectAppScreenView({ kind: 'review-session', deckId: null }, true, deckIds)).toBe(
       'review-session',
     );
+    expect(selectAppScreenView({ kind: 'stats' }, true, deckIds)).toBe('stats');
     expect(selectAppScreenView({ kind: 'explore' }, true, deckIds)).toBe('explore');
     expect(selectAppScreenView({ kind: 'credits' }, true, deckIds)).toBe('credits');
   });
@@ -71,7 +74,7 @@ describe('selectAppScreenView', () => {
     expect(selectAppScreenView({ kind: 'deck', deckId: 'gone' }, true, deckIds)).toBe('decks');
   });
 
-  it('shows the failure on the four screens that read decks, and nowhere else', () => {
+  it('shows the failure on the five screens that read decks, and nowhere else', () => {
     expect(selectAppScreenView({ kind: 'today' }, false, [])).toBe('decks-load-failure');
     expect(selectAppScreenView({ kind: 'decks' }, false, [])).toBe('decks-load-failure');
     expect(selectAppScreenView({ kind: 'deck', deckId: 'gone' }, false, [])).toBe(
@@ -80,6 +83,7 @@ describe('selectAppScreenView', () => {
     expect(selectAppScreenView({ kind: 'review-session', deckId: null }, false, [])).toBe(
       'decks-load-failure',
     );
+    expect(selectAppScreenView({ kind: 'stats' }, false, [])).toBe('decks-load-failure');
     expect(selectAppScreenView({ kind: 'explore' }, false, [])).toBe('explore');
     expect(selectAppScreenView({ kind: 'credits' }, false, [])).toBe('credits');
   });

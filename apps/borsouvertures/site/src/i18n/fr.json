@@ -46,6 +46,37 @@
     "nothing-left": "Rien à revoir et plus de nouvelle carte aujourd'hui. Ouvrez un paquet pour le revoir en avance.",
     "review-ahead": "Revoir un paquet en avance"
   },
+  "stats": {
+    "tab": "Bilan",
+    "title": "Bilan",
+    "streak": {
+      "label": "Série",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours"
+    },
+    "recent-retention": {
+      "title": "Rétention, 30 derniers jours",
+      "measured": "{{percent}} % · révisions dues retenues : {{recalled}}/{{reviews}}",
+      "empty": "Aucune révision due pour l'instant"
+    },
+    "retention": {
+      "title": "Rétention par semaine",
+      "caption": "La part des cartes à revoir retenues du premier coup, sur les 12 dernières semaines.",
+      "oldest-week_one": "Il y a {{count}} semaine",
+      "oldest-week_other": "Il y a {{count}} semaines",
+      "latest-week": "Cette semaine",
+      "week": {
+        "measured": "Semaine du {{weekStart}} : {{percent}} %, révisions dues retenues : {{recalled}}/{{reviews}}",
+        "empty": "Semaine du {{weekStart}} : aucune révision due"
+      }
+    },
+    "accuracy": {
+      "title": "Précision par paquet",
+      "caption": "La part de toutes les révisions retenues, dues ou non.",
+      "measured": "{{percent}} % · révisions retenues : {{recalled}}/{{reviews}}",
+      "empty": "Aucune révision pour l'instant"
+    }
+  },
   "review": {
     "progress": "{{deck}} · {{position}}/{{total}}",
     "opponent-played": "Les {{side}} ont joué {{move}}",
