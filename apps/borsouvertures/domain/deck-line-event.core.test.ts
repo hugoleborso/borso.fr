@@ -63,6 +63,7 @@ describe('parseDeckLineEvent', () => {
     ['no move', buildEvent({ movesUci: [] })],
     ['moves that are not a list', { ...buildEvent(), movesUci: 'e2e4' }],
     ['a move in SAN', buildEvent({ movesUci: ['e4'] })],
+    ['a valid move followed by a move in SAN', buildEvent({ movesUci: ['e2e4', 'e5'] })],
     ['a move with a trailing square', buildEvent({ movesUci: ['e2e4e5'] })],
     ['a move with a leading letter', buildEvent({ movesUci: ['xe2e4'] })],
     [
@@ -81,6 +82,10 @@ describe('parseDeckLineEvent', () => {
     ['an opening name that is not a string', { ...buildEvent(), openingName: 3 }],
     ['an instant that is not a date', buildEvent({ occurredAt: 'today' })],
     ['a calendar day that is not a day', buildEvent({ calendarDay: '2026-02-30' })],
+    [
+      'a calendar day that is not a string',
+      { ...buildEvent(), calendarDay: { toString: (): string => '2026-11-13' } },
+    ],
     ['a device that is not a UUID', buildEvent({ deviceId: 'phone' })],
     ['a received instant that is not a date', buildEvent({ receivedAt: 'later' })],
   ])('refuses %s', (_reason, value) => {

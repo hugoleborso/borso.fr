@@ -185,6 +185,16 @@ describe('buildPersonalDecks', () => {
     ]);
   });
 
+  it('makes a shared move due from the day the first line holding it was added', () => {
+    const lines = linesOf([
+      buildEvent(1, { calendarDay: '2026-11-10' }),
+      buildEvent(2, { movesUci: FRENCH, calendarDay: '2026-11-12' }),
+    ]);
+    const [white] = buildPersonalDecks(lines);
+    const firstMove = white?.cards.find((card) => card.positionKey === START_KEY);
+    expect(firstMove?.dueFromDay).toBe('2026-11-11');
+  });
+
   it('shows the opening name in place of an idea, the first line naming a shared move', () => {
     const lines = linesOf([buildEvent(1), buildEvent(2, { movesUci: FRENCH, openingName: null })]);
     const [white] = buildPersonalDecks(lines);

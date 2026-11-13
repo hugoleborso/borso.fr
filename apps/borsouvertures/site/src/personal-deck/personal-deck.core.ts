@@ -90,7 +90,7 @@ function replayLine(side: Side, movesUci: readonly string[]): ReplayedLine | nul
 }
 
 function isPrefixOf(shorter: readonly string[], longer: readonly string[]): boolean {
-  return shorter.length <= longer.length && shorter.every((move, index) => longer[index] === move);
+  return shorter.every((move, index) => longer[index] === move);
 }
 
 function findConflictingMove(
