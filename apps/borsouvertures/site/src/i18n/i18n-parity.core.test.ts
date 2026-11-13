@@ -21,6 +21,8 @@ const IDENTICAL_VALUE_REASON_BY_KEY: Readonly<Record<string, string>> = {
   'learn.lines-visited.value': '"{{visited}} / {{total}}" — two numbers and a slash',
   'review.progress': 'a deck name, a middle dot and two numbers, with no word of its own',
   'selection.lines.eco': 'ECO is the Encyclopaedia of Chess Openings code, untranslated',
+  'tab-bar.decks':
+    'the short tab label; French players say "deck" too, and the screen title carries the full French name',
   'top-bar.board-style.theme.chesscom': 'the Chess.com brand, a proper noun',
   'top-bar.board-style.theme.lichess': 'the Lichess brand, a proper noun',
   'top-bar.brand': 'the Borsouvertures brand',

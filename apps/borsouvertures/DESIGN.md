@@ -100,6 +100,7 @@ components:
     backgroundColor: "{colors.page}"
     textColor: "{colors.ink-muted}"
     height: "{spacing.tab-bar}"
+    icon: "24px glyph above a one-line label"
   status-band:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -161,7 +162,7 @@ One system grotesk stack, Helvetica Neue first, so nothing is fetched and the pa
 - **The review session fits one screen.** Top bar, progress row, board, prompt line, the idea and the action bar must be visible together at 375 × 812, including a name card's four choices. The space the result band gave back goes to the idea, three lines on a phone instead of two. Every card kind uses the same board width, so the board never changes size from one card to the next; a name card's four choices still fit, each choice at least 60 px tall so a two-line name does not resize its row (measured 13 px of room at 375 × 812).
 - **Thumb bar.** The screen's main actions (Start, Show the move and Next, Review this deck, New game and Leave the game, Explore's back, start over and *Add to my deck*) sit in `ActionBar`, fixed above the tab bar on a phone and inline from 601 px. On a phone it has no rule and no fill of its own: it sits on the page colour, so the bottom reads as one light band of buttons over one hairline over the tabs.
 - **Board width.** Full viewport width under 601 px, viewport minus 48 px up to 1023 px, half the viewport from 1024 px, capped at 560 px.
-- The shell is one column with a 16 px gutter, 24 px from 601 px, at most 1024 px wide. The four tabs are fixed at the bottom with the safe-area inset, on the page colour with one hairline above them. A tab label is 13 px semibold in muted ink and may wrap to two lines (*Opening decks*, *Decks d'ouvertures*). The current tab turns to ink and carries a 2 px poster-red bar on the hairline. Both states keep the same weight, so a label never changes width when it becomes current. From 1024 px the review session and the deck game put the board left and the card column right.
+- The shell is one column with a 16 px gutter, 24 px from 601 px, at most 1024 px wide. The four tabs are fixed at the bottom with the safe-area inset, on the page colour with one hairline above them. Each tab is a 24 px `Icon` glyph over a 13 px semibold label on one line, in muted ink: a calendar with a square dot (Today), a stack of cards (Decks), three bars on a baseline (Stats), a compass (Explore). The glyphs share the app's 2.25 px square-cap stroke. The Decks tab says *Decks* in both languages and its accessible name is the screen title (*Opening decks*, *Decks d'ouvertures*), so a label never wraps; every tab's accessible name is its screen title. The current tab turns icon and label to ink and carries a 40 px poster-red bar centred on the hairline above its icon. Both states keep the same weight, so nothing moves when a tab becomes current (measured: identical boxes across all four tabs at 375 and 1280 px, English and French). From 1024 px the review session and the deck game put the board left and the card column right.
 
 ### Touch and stability (operator, 2026-11-13)
 
@@ -224,4 +225,5 @@ Wherever an excerpt of a Wikipedia-based idea shows, its credit shows beside it:
 - Do show a mini board beside every opening name, except where it gives the answer away.
 - Don't add a gradient, glass, a glow or a coloured card.
 - Don't load a font or an asset from a CDN; the trainer is used offline.
-- Don't add an emoji or a Unicode glyph as an icon; draw it in `Icon`.
+- Don't add an emoji or a Unicode glyph as an icon; draw it in `Icon` with the shared stroke.
+- Don't let a tab label wrap; give the tab a short label and keep the full name as its accessible name.

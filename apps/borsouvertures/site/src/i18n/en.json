@@ -55,7 +55,7 @@
   "tab-bar": {
     "aria-label": "Main sections",
     "today": "Today",
-    "decks": "Opening decks",
+    "decks": "Decks",
     "explore": "Explore"
   },
   "today": {
