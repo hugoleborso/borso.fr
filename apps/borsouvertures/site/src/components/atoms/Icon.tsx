@@ -23,6 +23,24 @@ const ICONS = {
       <path d="M12 5l-7 7 7 7" />
     </>
   ),
+  undo: (
+    <>
+      <path d="M9 14l-5-5 5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-3" />
+    </>
+  ),
+  restart: (
+    <>
+      <path d="M4 4v6h6" />
+      <path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10" />
+    </>
+  ),
+  plus: (
+    <>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </>
+  ),
   close: (
     <>
       <path d="M6 6l12 12" />

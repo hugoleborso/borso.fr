@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { buildApiClient } from '@/lib/api.client';
-import { pullReviewEvents, pushReviewEvents, SyncRejectedError } from './sync.adapter';
+import type { DeckLineEvent } from '@domain/deck-line-event.core';
+import {
+  pullDeckLineEvents,
+  pullReviewEvents,
+  pushDeckLineEvents,
+  pushReviewEvents,
+  SyncRejectedError,
+} from './sync.adapter';
 import { buildEventId, buildReviewEvent } from './review.test-utils';
 
 const CARD = 'move:albin-countergambit:rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq -';
@@ -72,7 +79,7 @@ describe('pushReviewEvents', () => {
     expect(error).toBeInstanceOf(SyncRejectedError);
     expect(error).toMatchObject({
       name: 'SyncRejectedError',
-      message: 'The API refused the review events with 400 on POST /api/review-events.',
+      message: 'The API refused the synced events with 400 on POST /api/review-events.',
       tags: { status: '400', route: 'POST /api/review-events' },
     });
   });
@@ -140,6 +147,74 @@ describe('pullReviewEvents', () => {
     ).resolves.toEqual({ outcome: 'signed-out' });
     await expect(pullReviewEvents(buildOfflineApi(), null)).resolves.toEqual({
       outcome: 'offline',
+    });
+  });
+});
+
+describe('the deck line events', () => {
+  const LINE: DeckLineEvent = {
+    id: buildEventId(3),
+    kind: 'line-added',
+    side: 'white',
+    movesUci: ['e2e4', 'c7c5', 'b1c3'],
+    openingName: 'Sicilian Defense: Closed',
+    occurredAt: '2026-01-10T08:00:00.000Z',
+    calendarDay: '2026-11-13',
+    deviceId: EVENT.deviceId,
+    receivedAt: null,
+  };
+
+  it('posts a batch to its own route and answers the receipts', async () => {
+    const api = buildFakeApi(() =>
+      buildJsonResponse(200, { accepted: [{ id: LINE.id, receivedAt: RECEIVED_AT }] }),
+    );
+    await expect(pushDeckLineEvents(api.client, [LINE])).resolves.toEqual({
+      outcome: 'synced',
+      receipts: [{ id: LINE.id, receivedAt: RECEIVED_AT }],
+    });
+    expect(api.sent[0]?.url).toMatch(/\/api\/deck-line-events$/);
+    expect(api.sent[0]?.body).toEqual({ events: [LINE] });
+  });
+
+  it('names its route when the push is refused', async () => {
+    const refused = await pushDeckLineEvents(
+      buildFakeApi(() => buildJsonResponse(400, {})).client,
+      [LINE],
+    );
+    expect(refused).toMatchObject({
+      outcome: 'rejected',
+      error: { tags: { status: '400', route: 'POST /api/deck-line-events' } },
+    });
+  });
+
+  it('pulls after the cursor it holds, keeps the stamped events and drops the others', async () => {
+    const stamped = { ...LINE, receivedAt: RECEIVED_AT };
+    const api = buildFakeApi(() =>
+      buildJsonResponse(200, {
+        events: [stamped, LINE, EVENT],
+        nextCursor: 'resume~a~b',
+        hasMore: true,
+      }),
+    );
+    await expect(pullDeckLineEvents(api.client, 'page~x~y')).resolves.toEqual({
+      outcome: 'synced',
+      events: [stamped],
+      nextCursor: 'resume~a~b',
+      hasMore: true,
+    });
+    expect(api.sent[0]?.url).toMatch(/\/api\/deck-line-events\?after=/);
+    await pullDeckLineEvents(api.client, null);
+    expect(api.sent[1]?.url).toMatch(/\/api\/deck-line-events$/);
+  });
+
+  it('names its route when the pull is refused', async () => {
+    const refused = await pullDeckLineEvents(
+      buildFakeApi(() => buildJsonResponse(403, {})).client,
+      null,
+    );
+    expect(refused).toMatchObject({
+      outcome: 'rejected',
+      error: { tags: { status: '403', route: 'GET /api/deck-line-events' } },
     });
   });
 });

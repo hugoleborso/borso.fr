@@ -43,23 +43,43 @@ export interface TrainerProgressInput {
   newCardsPerDay: number;
 }
 
+const START_OF_DAY = 'T00:00:00.000Z';
+
+function readScheduledDay(card: Card): CalendarDay | null {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, only a move card ever carries dueFromDay, so reading it on a name or trap card also answers null.
+  return card.kind === 'move' ? (card.dueFromDay ?? null) : null;
+}
+
+function readFirstDueInstant(card: Card, day: CalendarDay): string | null {
+  const scheduledDay = readScheduledDay(card);
+  if (scheduledDay === null || scheduledDay > day) return null;
+  return `${scheduledDay}${START_OF_DAY}`;
+}
+
 function readDueInstant(
+  card: Card,
   state: CardState | undefined,
   day: CalendarDay,
   utcOffsetMinutes: number,
 ): string | null {
-  const dueAt = state?.dueAt;
+  if (state === undefined) return readFirstDueInstant(card, day);
+  const dueAt = state.dueAt;
   const isDue =
     typeof dueAt === 'string' && deriveCalendarDay(new Date(dueAt), utcOffsetMinutes) <= day;
   return isDue ? dueAt : null;
 }
 
 function isDueOn(
+  card: Card,
   state: CardState | undefined,
   day: CalendarDay,
   utcOffsetMinutes: number,
 ): boolean {
-  return readDueInstant(state, day, utcOffsetMinutes) !== null;
+  return readDueInstant(card, state, day, utcOffsetMinutes) !== null;
+}
+
+function isNewInTheDailyLimit(card: Card, states: ReadonlyMap<CardId, CardState>): boolean {
+  return !states.has(card.cardId) && readScheduledDay(card) === null;
 }
 
 export function countCardsIntroducedOn(events: readonly ReviewEvent[], day: CalendarDay): number {
@@ -77,7 +97,8 @@ export function countCardsDueOn(
   day: CalendarDay,
   utcOffsetMinutes: number,
 ): number {
-  return cards.filter((card) => isDueOn(states.get(card.cardId), day, utcOffsetMinutes)).length;
+  return cards.filter((card) => isDueOn(card, states.get(card.cardId), day, utcOffsetMinutes))
+    .length;
 }
 
 // @FollowsBlueprint core-view-projection
@@ -86,7 +107,7 @@ export function buildDailyPlan(input: DailyPlanInput): DailyPlan {
   const dueCardIds = cards
     .map((card) => ({
       cardId: card.cardId,
-      dueAt: readDueInstant(states.get(card.cardId), today, utcOffsetMinutes),
+      dueAt: readDueInstant(card, states.get(card.cardId), today, utcOffsetMinutes),
     }))
     .filter((due): due is { cardId: CardId; dueAt: string } => due.dueAt !== null)
     .toSorted(
@@ -100,7 +121,7 @@ export function buildDailyPlan(input: DailyPlanInput): DailyPlan {
     input.newCardsPerDay - countCardsIntroducedOn(input.events, today),
   );
   const newCardIds = cards
-    .filter((card) => !states.has(card.cardId))
+    .filter((card) => isNewInTheDailyLimit(card, states))
     .slice(0, remainingNewCards)
     .map((card) => card.cardId);
   return { day: today, dueCardIds, newCardIds };
@@ -116,7 +137,9 @@ export function selectDeckSessionCardIds(
     deckCardIds.has(cardId),
   );
   if (planned.length > 0) return planned;
-  return deck.cards.filter((card) => states.has(card.cardId)).map((card) => card.cardId);
+  return deck.cards
+    .filter((card) => states.has(card.cardId) || readScheduledDay(card) !== null)
+    .map((card) => card.cardId);
 }
 
 function projectDeckProgress(

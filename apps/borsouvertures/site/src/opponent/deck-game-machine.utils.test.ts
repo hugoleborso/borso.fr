@@ -240,6 +240,27 @@ describe('the deck game machine over every line of the shipped decks', () => {
     .filter((deck) => deck.lines.length > 0)
     .flatMap((deck) => deck.lines.map((line) => ({ deck, line })));
 
+  it('weighs the book pick by the lines through each move: 2. c4 in 7 of the 13 Albin lines', () => {
+    const albin = shippedDecks.find((deck) => deck.id === 'albin-countergambit');
+    const bookMoves = listNextBookMoves(albin?.lines ?? [], ['d2d4', 'd7d5']);
+    expect(bookMoves).toHaveLength(13);
+    expect(bookMoves.filter((uci) => uci === 'c2c4')).toHaveLength(7);
+    const driver = buildDeckGameDriver();
+    const picks: string[] = [];
+    const machine = createDeckGameMachine({
+      ...driver.options,
+      pickRandom: (candidates) => {
+        picks.push(...candidates);
+        return candidates[0];
+      },
+    });
+    machine.start(albin ?? albinDeck);
+    driver.fireNextTimer();
+    machine.playMove('d7d5');
+    driver.fireNextTimer();
+    expect(picks.slice(13).filter((uci) => uci === 'c2c4')).toHaveLength(7);
+  });
+
   it('reads the five shipped decks with their lines', () => {
     expect(new Set(lineCases.map(({ deck }) => deck.id))).toEqual(
       new Set([
@@ -545,8 +566,8 @@ describe('the deck game selectors', () => {
     ending: null,
   };
 
-  it('lists the distinct next moves of the lines the played moves open', () => {
-    expect(listNextBookMoves(albinDeck.lines, [])).toEqual(['d2d4']);
+  it('lists the next move of each line the played moves open, once per line', () => {
+    expect(listNextBookMoves(albinDeck.lines, [])).toEqual(albinDeck.lines.map(() => 'd2d4'));
     expect(
       listNextBookMoves(albinDeck.lines, ['d2d4', 'd7d5', 'c2c4', 'e7e5', 'd4e5', 'd5d4']),
     ).toEqual(['g1f3', 'e2e3']);

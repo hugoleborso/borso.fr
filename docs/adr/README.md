@@ -125,6 +125,7 @@ No:
 | [2026-11-13T0002](./2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md) | The operator's credential is written by a script, and no route enrols anyone | proposed | 2026-11-13 |
 | [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | proposed | 2026-11-13 |
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | proposed | 2026-11-13 |
+| [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | proposed | 2026-11-13 |
 
 ### Data layer
 
@@ -140,6 +141,7 @@ No:
 - 2026-10-29T1115. pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
 - 2026-11-13T0000. borsouvertures keeps progress as immutable review events, written first to IndexedDB and merged by the union of their ids; card state, plan, streak and retention are replayed and stored nowhere, so no review is lost when two offline devices meet, and the log only grows.
 - 2026-11-13T0004. borsouvertures decks and ideas are content files found by a glob, with ideas outside the i18n catalogues; Lichess-derived files are committed snapshots that name their pin, and `LICHESS_TOKEN` is read by one script, never by CI or the deployed app.
+- 2026-11-13T1619. borsouvertures "My lines" is replayed from immutable `line-added` and `line-removed` events, stored in IndexedDB and synced through `deck_line_event` with the cursor and merge of review events.
 
 ### App architecture
 

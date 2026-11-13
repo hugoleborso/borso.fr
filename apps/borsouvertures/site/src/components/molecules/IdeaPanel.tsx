@@ -3,12 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/atoms/Button';
 import { ExternalLink } from '@/components/atoms/ExternalLink';
 import { Modal } from '@/components/atoms/Modal';
-import type { Idea } from '@/decks/deck.utils';
+import type { Idea, IdeaSource } from '@/decks/deck.utils';
 import { selectIdeaText } from '@/decks/idea.utils';
 
 interface IdeaPanelProps {
   idea: Idea | null;
 }
+
+const TITLE_KEY_BY_SOURCE = {
+  wikipedia: 'review.idea.title',
+  'opening-name': 'review.idea.opening-title',
+  written: 'review.idea.title',
+} as const satisfies Record<IdeaSource | 'written', string>;
 
 const IDEA_TEXT_CLASS = 'max-w-[65ch] text-[1.0625rem] leading-relaxed whitespace-pre-line';
 
@@ -39,12 +45,11 @@ export function IdeaPanel({ idea }: IdeaPanelProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const text = idea === null ? t('review.idea.missing') : selectIdeaText(idea, i18n.language);
   const sourceUrl = idea?.sourceUrl;
+  const title = t(TITLE_KEY_BY_SOURCE[idea?.source ?? 'written']);
   return (
-    <section className="flex flex-col gap-1.5" aria-label={t('review.idea.title')}>
+    <section className="flex flex-col gap-1.5" aria-label={title}>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-bold uppercase tracking-[0.06em] text-ink-muted">
-          {t('review.idea.title')}
-        </h3>
+        <h3 className="text-sm font-bold uppercase tracking-[0.06em] text-ink-muted">{title}</h3>
         <div className="flex items-center gap-2 -my-3.5 roomy:hidden">
           <IdeaCredit sourceUrl={sourceUrl} length="short" />
           <Button
@@ -60,7 +65,7 @@ export function IdeaPanel({ idea }: IdeaPanelProps) {
       </div>
       {isSheetOpen ? (
         <Modal
-          title={t('review.idea.title')}
+          title={title}
           closeLabel={t('review.idea.close')}
           onClose={() => setIsSheetOpen(false)}
         >

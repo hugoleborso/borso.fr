@@ -10,31 +10,15 @@ import {
 } from './persistedState.utils';
 
 const VALID_STATE: PersistedState = {
-  mode: 'play',
   side: 'black',
   boardStyle: 'nord',
-  selection: { openingId: 'italian-game', variationId: 'main', lineId: null },
-  view: 'session',
-  playAutoOpponent: false,
-  playScope: {
-    openingIds: ['italian-game'],
-    variationIds: ['main'],
-    lineIds: ['classical'],
-  },
-  treeVisualizationMode: 'buttons',
   newCardsPerDay: 10,
   opponentStrength: 'skill-3',
 };
 
 const OTHER_VALID_STATE: PersistedState = {
-  mode: 'learn',
   side: 'white',
   boardStyle: 'lichess',
-  selection: { openingId: null, variationId: null, lineId: null },
-  view: 'select',
-  playAutoOpponent: true,
-  playScope: { openingIds: [], variationIds: [], lineIds: [] },
-  treeVisualizationMode: null,
   newCardsPerDay: 0,
   opponentStrength: 'elo-1900',
 };
@@ -77,9 +61,17 @@ describe('parsePersistedState', () => {
     ).toBeNull();
   });
 
-  it('rejects an unknown mode value', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, mode: 'bogus' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
+  it('keeps the side, the board and the settings of a record that still holds the old Explore fields', () => {
+    const storedBefore = {
+      ...VALID_STATE,
+      mode: 'play',
+      view: 'session',
+      selection: { openingId: 'italian-game', variationId: 'main', lineId: null },
+      playScope: { openingIds: [], variationIds: [], lineIds: [] },
+      playAutoOpponent: false,
+      treeVisualizationMode: 'buttons',
+    };
+    expect(parsePersistedState(JSON.stringify(storedBefore))).toEqual(VALID_STATE);
   });
 
   it('rejects an unknown side value', () => {
@@ -94,104 +86,6 @@ describe('parsePersistedState', () => {
 
   it('rejects a string boardStyle that is not a known theme id', () => {
     const corrupted: Record<string, unknown> = { ...VALID_STATE, boardStyle: 'classique' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects an unknown view value', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, view: 'splash' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a non-boolean playAutoOpponent', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, playAutoOpponent: 'yes' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a non-object selection', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, selection: 'all' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a null selection', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, selection: null };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a selection with a numeric id field', () => {
-    const corrupted: Record<string, unknown> = {
-      ...VALID_STATE,
-      selection: { openingId: 1, variationId: null, lineId: null },
-    };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('accepts a selection with null id fields', () => {
-    const state: PersistedState = {
-      ...VALID_STATE,
-      selection: { openingId: null, variationId: null, lineId: null },
-    };
-    expect(parsePersistedState(stringifyPersistedState(state))).toEqual(state);
-  });
-
-  it('rejects a non-object playScope', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, playScope: 'all' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a null playScope', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, playScope: null };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a playScope whose variationIds alone is not an array', () => {
-    const corrupted: Record<string, unknown> = {
-      ...VALID_STATE,
-      playScope: { openingIds: [], variationIds: 'main', lineIds: [] },
-    };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a playScope with a non-array openingIds', () => {
-    const corrupted: Record<string, unknown> = {
-      ...VALID_STATE,
-      playScope: { openingIds: 'italian-game', variationIds: [], lineIds: [] },
-    };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a playScope array containing non-string entries', () => {
-    const corrupted: Record<string, unknown> = {
-      ...VALID_STATE,
-      playScope: { openingIds: [42], variationIds: [], lineIds: [] },
-    };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a playScope missing one of the array fields', () => {
-    const corrupted: Record<string, unknown> = {
-      ...VALID_STATE,
-      playScope: { openingIds: ['italian-game'], variationIds: ['main'] },
-    };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('accepts a null treeVisualizationMode (auto by viewport)', () => {
-    const state: PersistedState = { ...VALID_STATE, treeVisualizationMode: null };
-    expect(parsePersistedState(stringifyPersistedState(state))).toEqual(state);
-  });
-
-  it('accepts the explicit arrows value for treeVisualizationMode', () => {
-    const state: PersistedState = { ...VALID_STATE, treeVisualizationMode: 'arrows' };
-    expect(parsePersistedState(stringifyPersistedState(state))).toEqual(state);
-  });
-
-  it('rejects an unknown treeVisualizationMode string', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, treeVisualizationMode: 'pies' };
-    expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
-  });
-
-  it('rejects a non-string-non-null treeVisualizationMode', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, treeVisualizationMode: 42 };
     expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
   });
 });

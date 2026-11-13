@@ -10,6 +10,7 @@ import {
   hasUnpushedEvents,
   isSessionEnded,
   MAX_ROUNDS_PER_SYNC,
+  readPulledDeckLinePage,
   readPulledPage,
   readPushReceipts,
   selectSyncStatus,
@@ -259,5 +260,28 @@ describe('readPulledPage', () => {
     ['a list', []],
   ])('answers null for a body with %s', (_reason, body) => {
     expect(readPulledPage(body)).toBeNull();
+  });
+});
+
+describe('readPulledDeckLinePage', () => {
+  it('reads the stamped deck line events and drops review events', () => {
+    const line = {
+      id: buildEventId(3),
+      kind: 'line-removed',
+      side: 'black',
+      movesUci: ['e2e4'],
+      openingName: null,
+      occurredAt: '2026-01-10T08:00:00.000Z',
+      calendarDay: '2026-11-13',
+      deviceId: '11111111-1111-4111-8111-111111111111',
+      receivedAt: RECEIVED_AT,
+    };
+    const review = buildReviewEvent(1, CARD, '2026-01-10T08:00:00.000Z', 'recalled', {
+      receivedAt: RECEIVED_AT,
+    });
+    expect(
+      readPulledDeckLinePage({ events: [line, review], nextCursor: null, hasMore: false }),
+    ).toEqual({ events: [line], nextCursor: null, hasMore: false });
+    expect(readPulledDeckLinePage([])).toBeNull();
   });
 });

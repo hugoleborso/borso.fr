@@ -93,13 +93,11 @@ export function listNextBookMoves(
   lines: readonly BuiltDeckLine[],
   playedMovesUci: readonly string[],
 ): string[] {
-  const nextMoves = new Set<string>();
-  for (const line of lines) {
+  return lines.flatMap((line) => {
     const isPrefix = playedMovesUci.every((uci, plyIndex) => line.movesUci[plyIndex] === uci);
     const nextMove = line.movesUci[playedMovesUci.length];
-    if (isPrefix && nextMove !== undefined) nextMoves.add(nextMove);
-  }
-  return [...nextMoves];
+    return isPrefix && nextMove !== undefined ? [nextMove] : [];
+  });
 }
 
 function findExactMove(chess: Chess, uci: string): Move | null {

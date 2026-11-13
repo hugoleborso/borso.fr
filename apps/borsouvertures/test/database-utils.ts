@@ -1,6 +1,12 @@
 import postgres from 'postgres';
 
-const TRUNCATED_TABLES = ['review_event', 'sign_in_attempt', 'operator_credential', 'app_config'];
+const TRUNCATED_TABLES = [
+  'review_event',
+  'deck_line_event',
+  'sign_in_attempt',
+  'operator_credential',
+  'app_config',
+];
 
 let cachedSql: ReturnType<typeof postgres> | null = null;
 
@@ -19,6 +25,12 @@ export async function truncateAllTables(): Promise<void> {
 export async function countReviewEvents(): Promise<number> {
   const rows = await testSql()<{ total: number }[]>`
     SELECT count(*)::int AS total FROM review_event`;
+  return rows[0]?.total ?? 0;
+}
+
+export async function countDeckLineEvents(): Promise<number> {
+  const rows = await testSql()<{ total: number }[]>`
+    SELECT count(*)::int AS total FROM deck_line_event`;
   return rows[0]?.total ?? 0;
 }
 

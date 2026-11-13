@@ -26,7 +26,7 @@ The decks are the operator's own repertoire with one written idea per move, not 
 - A review session asks one card at a time on the board: play the move, or show it, then Next. Feedback says recalled or missed, then the idea behind the move.
 - Decks list the repertoire; a deck page reviews that deck, lists its lines and plays a game from it against Stockfish.
 - Stats show the streak, retention by week and accuracy per deck.
-- Explore drills or plays the whole Lichess catalogue.
+- Explore opens the Lichess catalogue as a board: each book move names the openings, variations or lines it leads to, and *Add to my deck* puts the line in "My lines", reviewed from the next day.
 - Works offline as an installed PWA; one account syncs devices.
 
 ## Capabilities and Constraints

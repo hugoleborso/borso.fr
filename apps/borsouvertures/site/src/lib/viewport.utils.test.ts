@@ -1,21 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isCompactViewport, selectBoardWidth, selectNameCardBoardWidth } from './viewport.utils';
+import { selectBoardWidth, selectNameCardBoardWidth } from './viewport.utils';
 
-describe('isCompactViewport', () => {
-  it('treats a phone width as compact', () => {
-    expect(isCompactViewport(375)).toBe(true);
-  });
-
-  it('treats the breakpoint itself as compact', () => {
-    expect(isCompactViewport(900)).toBe(true);
-  });
-
-  it('treats a desktop width as not compact', () => {
-    expect(isCompactViewport(901)).toBe(false);
-  });
-});
-
-// @FollowsBlueprint test-pure-unit
 describe('selectBoardWidth', () => {
   it('gives a desktop viewport half its width, beside the card column', () => {
     expect(selectBoardWidth(1100)).toBe(550);

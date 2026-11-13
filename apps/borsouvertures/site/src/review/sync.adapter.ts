@@ -1,23 +1,31 @@
+import type { DeckLineEvent } from '@domain/deck-line-event.core';
 import type { ReviewEvent } from '@domain/review-event.core';
 import type { ApiClient } from '@/lib/api.client';
 import {
   decideSyncOutcome,
   type PushReceipt,
+  readPulledDeckLinePage,
   readPulledPage,
   readPushReceipts,
   type SyncOutcome,
 } from './sync.core';
 
-export type SyncRoute = 'POST /api/review-events' | 'GET /api/review-events';
+export type SyncRoute =
+  | 'POST /api/review-events'
+  | 'GET /api/review-events'
+  | 'POST /api/deck-line-events'
+  | 'GET /api/deck-line-events';
 
 const PUSH_ROUTE: SyncRoute = 'POST /api/review-events';
 const PULL_ROUTE: SyncRoute = 'GET /api/review-events';
+const DECK_LINE_PUSH_ROUTE: SyncRoute = 'POST /api/deck-line-events';
+const DECK_LINE_PULL_ROUTE: SyncRoute = 'GET /api/deck-line-events';
 
 export class SyncRejectedError extends Error {
   readonly tags: { status: string; route: SyncRoute };
 
   constructor(status: number, route: SyncRoute) {
-    super(`The API refused the review events with ${String(status)} on ${route}.`);
+    super(`The API refused the synced events with ${String(status)} on ${route}.`);
     this.name = 'SyncRejectedError';
     this.tags = { status: String(status), route };
   }
@@ -31,10 +39,10 @@ export type PushResult =
   | { readonly outcome: 'synced'; readonly receipts: readonly PushReceipt[] }
   | SyncFailure;
 
-export type PullResult =
+export type PullResult<Event = ReviewEvent> =
   | {
       readonly outcome: 'synced';
-      readonly events: readonly ReviewEvent[];
+      readonly events: readonly Event[];
       readonly nextCursor: string | null;
       readonly hasMore: boolean;
     }
@@ -96,6 +104,32 @@ export async function pullReviewEvents(
     () => client.api['review-events'].$get({ query: cursor === null ? {} : { after: cursor } }),
     PULL_ROUTE,
     readPulledPage,
+  );
+  if (answer.outcome !== 'synced') return answer;
+  return { outcome: 'synced', ...answer.body };
+}
+
+export async function pushDeckLineEvents(
+  client: ApiClient,
+  events: readonly DeckLineEvent[],
+): Promise<PushResult> {
+  const answer = await readAnswer(
+    () => client.api['deck-line-events'].$post({ json: { events: [...events] } }),
+    DECK_LINE_PUSH_ROUTE,
+    readPushReceipts,
+  );
+  if (answer.outcome !== 'synced') return answer;
+  return { outcome: 'synced', receipts: answer.body };
+}
+
+export async function pullDeckLineEvents(
+  client: ApiClient,
+  cursor: string | null,
+): Promise<PullResult<DeckLineEvent>> {
+  const answer = await readAnswer(
+    () => client.api['deck-line-events'].$get({ query: cursor === null ? {} : { after: cursor } }),
+    DECK_LINE_PULL_ROUTE,
+    readPulledDeckLinePage,
   );
   if (answer.outcome !== 'synced') return answer;
   return { outcome: 'synced', ...answer.body };

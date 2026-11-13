@@ -1,7 +1,7 @@
 import { DefaultScheduler } from 'ts-fsrs';
 import { describe, expect, it } from 'vitest';
 import { buildExampleDeck } from '@/decks/deck.test-utils';
-import type { BuiltDeck } from '@/decks/deck.utils';
+import type { BuiltDeck, Card } from '@/decks/deck.utils';
 import {
   buildDailyPlan,
   countCardsDueOn,
@@ -127,6 +127,59 @@ describe('buildDailyPlan', () => {
     expect(buildDailyPlan({ ...input, newCardsPerDay: 3 }).newCardIds).toEqual([fourth]);
     expect(buildDailyPlan({ ...input, newCardsPerDay: 2 }).newCardIds).toEqual([]);
     expect(buildDailyPlan({ ...input, newCardsPerDay: 1 }).newCardIds).toEqual([]);
+  });
+});
+
+describe('the cards of a line he added to My lines', () => {
+  const [firstCard, secondCard, thirdCard] = deck.cards;
+  if (firstCard?.kind !== 'move' || secondCard?.kind !== 'move' || thirdCard === undefined) {
+    throw new Error('the example deck starts with two move cards');
+  }
+  const addedYesterday = { ...firstCard, dueFromDay: '2026-01-10' };
+  const addedToday = { ...secondCard, dueFromDay: '2026-01-11' };
+  const trapCard: Card = {
+    kind: 'trap',
+    cardId: 'trap:abc12',
+    deckId: deck.id,
+    fen: thirdCard.fen,
+    opponentMoveUci: 'e2e4',
+    solutionUci: ['e7e5'],
+  };
+  const cards = [addedYesterday, addedToday, trapCard];
+
+  it('come up from the day after the line was added, outside the new card limit', () => {
+    const input = {
+      cards,
+      states: new Map(),
+      events: [],
+      utcOffsetMinutes: 0,
+      newCardsPerDay: 0,
+    };
+    expect(buildDailyPlan({ ...input, today: '2026-01-10' })).toEqual({
+      day: '2026-01-10',
+      dueCardIds: [addedYesterday.cardId],
+      newCardIds: [],
+    });
+    expect(buildDailyPlan({ ...input, today: '2026-01-09' }).dueCardIds).toEqual([]);
+    expect(buildDailyPlan({ ...input, today: '2026-01-11', newCardsPerDay: 5 })).toEqual({
+      day: '2026-01-11',
+      dueCardIds: [addedYesterday.cardId, addedToday.cardId],
+      newCardIds: [trapCard.cardId],
+    });
+  });
+
+  it('follow the schedule once reviewed, like any card', () => {
+    const states = new Map([buildState(addedYesterday.cardId, '2026-01-20T08:00:00.000Z')]);
+    expect(countCardsDueOn(cards, states, '2026-01-12', 0)).toBe(1);
+    expect(countCardsDueOn(cards, states, '2026-01-20', 0)).toBe(2);
+  });
+
+  it('can be reviewed ahead from the deck page on the day they were added', () => {
+    const personalDeck = { ...deck, cards: [addedToday] };
+    const emptyPlan = { day: '2026-01-10', dueCardIds: [], newCardIds: [] };
+    expect(selectDeckSessionCardIds(personalDeck, emptyPlan, new Map())).toEqual([
+      addedToday.cardId,
+    ]);
   });
 });
 

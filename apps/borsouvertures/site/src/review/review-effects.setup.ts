@@ -11,8 +11,12 @@ function readDeviceStorage(): DeviceIdentityStorage | undefined {
   }
 }
 
-function buildUuid(): string {
+export function buildUuid(): string {
   return crypto.randomUUID();
+}
+
+export function readThisDeviceId(): string {
+  return readDeviceId(readDeviceStorage(), buildUuid);
 }
 
 export function readNow(): Date {
@@ -27,7 +31,7 @@ export function readUtcOffsetMinutes(): number {
 export const reviewEffects: ReviewMachineOptions = {
   readNow,
   readUtcOffsetMinutes,
-  readDeviceId: () => readDeviceId(readDeviceStorage(), buildUuid),
+  readDeviceId: readThisDeviceId,
   buildEventId: buildUuid,
   storeReviewEvent: appendReviewEvent,
   recordProductEvent,

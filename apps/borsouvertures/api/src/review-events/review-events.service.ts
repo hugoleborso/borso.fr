@@ -2,13 +2,13 @@ import { REVIEW_EVENT_BATCH_LIMIT, type ReviewEvent } from '@domain/review-event
 import type { DatabaseExecutor } from '../database/client';
 import {
   buildPulledPage,
-  buildReviewEventRow,
   parsePullCursor,
   projectPushReceipts,
   type PulledPage,
   type PushReceipt,
   selectPullFloor,
-} from './review-events.core';
+} from '../helpers/pull-cursor/pull-cursor.core';
+import { buildReviewEventRow, projectReviewEvent } from './review-events.core';
 import {
   insertReviewEventsUnlessStored,
   listReceivedAtByIds,
@@ -42,11 +42,13 @@ export async function storeReviewEventsWithin(
 }
 
 // @FollowsBlueprint service-orchestration
-export async function readReviewEventsPage(after: string | undefined): Promise<PulledPage> {
+export async function readReviewEventsPage(
+  after: string | undefined,
+): Promise<PulledPage<ReviewEvent>> {
   const cursor = parsePullCursor(after);
   const rows = await listReviewEventsAfter(
     selectPullFloor(cursor),
     REVIEW_EVENT_BATCH_LIMIT + ONE_ROW_BEYOND_THE_PAGE,
   );
-  return buildPulledPage(rows, REVIEW_EVENT_BATCH_LIMIT, cursor);
+  return buildPulledPage(rows, REVIEW_EVENT_BATCH_LIMIT, cursor, projectReviewEvent);
 }

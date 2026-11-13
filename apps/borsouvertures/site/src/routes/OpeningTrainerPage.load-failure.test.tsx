@@ -32,6 +32,6 @@ describe('the opening trainer when the deck file does not parse', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
     expect(screen.getByRole('alert').textContent).toContain("Couldn't load the decks");
     await userEvent.click(screen.getByRole('button', { name: 'Explore' }));
-    expect(await screen.findByRole('heading', { name: 'Explore' })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: 'Explore' })).toBeTruthy();
   });
 });

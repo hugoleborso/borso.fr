@@ -1,4 +1,4 @@
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import { DecksLoadFailurePanel } from '@/components/molecules/DecksLoadFailurePanel';
 import { readDecksRequest } from '@/decks/decks-resource.setup';
 import type { ComponentByKind } from '@/lib/componentTable.types';
@@ -8,6 +8,7 @@ import {
   selectAppScreenView,
 } from '@/navigation/app-screen.core';
 import { useAppScreen } from '@/navigation/navigation.store';
+import { usePersonalDecks } from '@/personal-deck/personal-decks.hook';
 import { CreditsScreen } from './CreditsScreen';
 import { DeckPage } from './DeckPage';
 import { DecksScreen } from './DecksScreen';
@@ -31,12 +32,14 @@ const SCREEN_BY_VIEW: ComponentByKind<AppScreenView, AppScreenProps> = {
 // @FollowsBlueprint component-lookup-table
 export function AppScreens() {
   const load = use(readDecksRequest());
+  const personalDecks = usePersonalDecks();
+  const decks = useMemo(() => [...load.decks, ...personalDecks], [load.decks, personalDecks]);
   const screen = useAppScreen();
   const view = selectAppScreenView(
     screen,
     load.status === 'loaded',
-    load.decks.map((deck) => deck.id),
+    decks.map((deck) => deck.id),
   );
   const Screen = SCREEN_BY_VIEW[view];
-  return <Screen decks={load.decks} deckId={readScreenDeckId(screen)} />;
+  return <Screen decks={decks} deckId={readScreenDeckId(screen)} />;
 }

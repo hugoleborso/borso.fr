@@ -1,3 +1,4 @@
+import type { CalendarDay } from '@domain/calendar-day.core';
 import { isPositionKey, type PositionKey } from '@domain/position-key.core';
 import { type CardId, type CardKind, parseCardId } from '@domain/review-event.core';
 import type { Side } from '@/state/persistedState.utils';
@@ -18,6 +19,7 @@ export interface MoveCard {
   bookMoveUci: string;
   bookMoveSan: string;
   ideaPositionKey: PositionKey;
+  dueFromDay?: CalendarDay;
 }
 
 export const NAME_DECK_ID = 'opening-names';
@@ -58,7 +60,7 @@ export function buildTrapCardId(puzzleId: string): CardId {
   return `${TRAP_CARD_ID_PREFIX}${puzzleId}`;
 }
 
-export type IdeaSource = 'wikipedia';
+export type IdeaSource = 'wikipedia' | 'opening-name';
 
 export interface Idea {
   positionKey: PositionKey;
@@ -118,17 +120,6 @@ function parsePositionKey(value: unknown): PositionKey | null {
   return text === value && isPositionKey(text) ? text : null;
 }
 
-function parseTextList(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  const texts: string[] = [];
-  for (const entry of value) {
-    const text = parseText(entry);
-    if (text === null) return null;
-    texts.push(text);
-  }
-  return texts;
-}
-
 function parseList<Parsed>(
   value: unknown,
   parseEntry: (entry: unknown) => Parsed | null,
@@ -141,6 +132,10 @@ function parseList<Parsed>(
     list.push(parsedEntry);
   }
   return list;
+}
+
+function parseTextList(value: unknown): string[] | null {
+  return parseList(value, parseText);
 }
 
 function parseLine(value: unknown): BuiltDeckLine | null {

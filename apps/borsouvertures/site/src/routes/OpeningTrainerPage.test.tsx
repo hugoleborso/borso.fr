@@ -111,14 +111,12 @@ describe('the opening trainer, one visit from the first load', () => {
 
   it('leaves the due and new counts unchanged after time spent in Explore', async () => {
     await userEvent.click(screen.getByRole('button', { name: 'Explore' }));
-    expect(await screen.findByRole('heading', { name: 'Explore' })).toBeTruthy();
+    expect(await screen.findByRole('region', { name: 'Explore' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Explore' }).getAttribute('aria-current')).toBe(
       'page',
     );
-    await userEvent.click(await screen.findByRole('button', { name: 'Toggle mode' }));
-    await userEvent.click(await screen.findByRole('tab', { name: 'Setup' }));
-    expect(screen.getByRole('button', { name: 'Choose side' })).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'Openings' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /^1\. e4/ }));
+    expect(screen.getByText('1. e4')).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: 'Today' }));
     expect(readCount('due')).toBe('0');
     expect(readCount('new')).toBe('3');

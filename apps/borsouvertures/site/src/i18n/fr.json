@@ -128,7 +128,8 @@
       "wikipedia-credit": "D'après Wikipédia, CC BY-SA 4.0",
       "wikipedia-credit-short": "Wikipédia, CC BY-SA",
       "read-all": "Tout lire",
-      "close": "Fermer l'idée"
+      "close": "Fermer l'idée",
+      "opening-title": "Ouverture"
     },
     "show-move": "Montrer le coup",
     "next": "Suivant",
@@ -216,8 +217,10 @@
         "kingside-black": "Les Noirs roquent côté roi",
         "queenside-white": "Les Blancs roquent côté dame",
         "queenside-black": "Les Noirs roquent côté dame"
-      }
-    }
+      },
+      "remove": "Retirer"
+    },
+    "my-lines": "Mes lignes"
   },
   "opponent": {
     "title": "Jouer ce paquet contre Stockfish",
@@ -261,10 +264,32 @@
   },
   "explore": {
     "title": "Explorer",
-    "sections": {
-      "aria-label": "Sections d'Explorer",
-      "pick": "Choisir",
-      "setup": "Réglages"
+    "unnamed": "Aucune ouverture nommée",
+    "start": "Position de départ",
+    "out-of-book": "Hors des ouvertures connues",
+    "more_one": "+{{count}} autre",
+    "more_other": "+{{count}} autres",
+    "line-count_one": "{{count}} ligne",
+    "line-count_other": "{{count}} lignes",
+    "groups": {
+      "opening": "Ouvertures",
+      "variation": "Variantes",
+      "line": "Lignes"
+    },
+    "side": {
+      "aria-label": "Camp joué",
+      "white": "Blancs",
+      "black": "Noirs"
+    },
+    "back": "Reprendre le dernier coup",
+    "reset": "Revenir à la position de départ",
+    "add": {
+      "action": "Ajouter à mon paquet",
+      "added": "Ajoutée à Mes lignes, {{side}}",
+      "already-in-deck": "Mes lignes contiennent déjà cette ligne",
+      "conflicts": "Mes lignes jouent déjà {{move}} dans une position de cette ligne",
+      "no-reader-move": "Cette ligne ne contient aucun de vos coups",
+      "illegal": "L'échiquier refuse cette ligne"
     }
   },
   "credits": {

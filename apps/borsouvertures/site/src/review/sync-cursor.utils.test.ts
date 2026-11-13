@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { readSyncCursor, SYNC_CURSOR_STORAGE_KEY, writeSyncCursor } from './sync-cursor.utils';
+import {
+  DECK_LINE_SYNC_CURSOR_STORAGE_KEY,
+  readSyncCursor,
+  SYNC_CURSOR_STORAGE_KEY,
+  writeSyncCursor,
+} from './sync-cursor.utils';
 
 function buildStorage(initial: Record<string, string> = {}) {
   const values = new Map(Object.entries(initial));
@@ -38,5 +43,13 @@ describe('the sync cursor', () => {
     expect(() => {
       writeSyncCursor(undefined, 'resume~a~b');
     }).not.toThrow();
+  });
+
+  it('keeps the deck line cursor under its own key, apart from the review cursor', () => {
+    const storage = buildStorage({ 'borsouvertures.sync-cursor': 'resume~review~b' });
+    writeSyncCursor(storage, 'resume~line~b', DECK_LINE_SYNC_CURSOR_STORAGE_KEY);
+    expect(storage.values.get('borsouvertures.deck-line-sync-cursor')).toBe('resume~line~b');
+    expect(readSyncCursor(storage, DECK_LINE_SYNC_CURSOR_STORAGE_KEY)).toBe('resume~line~b');
+    expect(readSyncCursor(storage)).toBe('resume~review~b');
   });
 });

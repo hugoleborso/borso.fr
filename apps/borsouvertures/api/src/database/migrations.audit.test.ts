@@ -36,12 +36,18 @@ describe('migration SQL audit', () => {
     expect(migrations.filter((migration) => pattern.test(migration.sql))).toEqual([]);
   });
 
-  it('creates the four tables of the spec and no card state', () => {
+  it('creates the five tables of the specs and no card state', () => {
     const tables = migrations.flatMap((migration) =>
       [...migration.sql.matchAll(/CREATE TABLE "(\w+)"/g)].map((match) => match[1]),
     );
     expect(
       tables.toSorted((left, right) => String(left).localeCompare(String(right), 'en')),
-    ).toEqual(['app_config', 'operator_credential', 'review_event', 'sign_in_attempt']);
+    ).toEqual([
+      'app_config',
+      'deck_line_event',
+      'operator_credential',
+      'review_event',
+      'sign_in_attempt',
+    ]);
   });
 });

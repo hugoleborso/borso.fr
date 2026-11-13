@@ -6,7 +6,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/i18n/i18n';
 import { buildExampleDeck, buildExampleDocument } from '@/decks/deck.test-utils';
-import { appendStoredReviewEvent } from '@/review/review-event-store.adapter';
+import { putStoredReviewEvents } from '@/review/review-event-store.adapter';
 import { buildReviewEvent } from '@/review/review.test-utils';
 import { openApplication, readCount, stubDecksFetch } from './trainer-page.test-utils';
 
@@ -31,9 +31,9 @@ describe('the opening trainer, loaded over a card recalled when it came due', ()
     const [firstCard, secondCard] = buildExampleDeck().cards;
     if (firstCard === undefined || secondCard === undefined) throw new Error('two cards');
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, buildReviewDaysAgo(1, firstCard.cardId, 4, 'recalled'));
-    await appendStoredReviewEvent(factory, buildReviewDaysAgo(2, firstCard.cardId, 1, 'recalled'));
-    await appendStoredReviewEvent(factory, buildReviewDaysAgo(3, secondCard.cardId, 1, 'missed'));
+    await putStoredReviewEvents(factory, [buildReviewDaysAgo(1, firstCard.cardId, 4, 'recalled')]);
+    await putStoredReviewEvents(factory, [buildReviewDaysAgo(2, firstCard.cardId, 1, 'recalled')]);
+    await putStoredReviewEvents(factory, [buildReviewDaysAgo(3, secondCard.cardId, 1, 'missed')]);
     window.localStorage.clear();
     stubDecksFetch(buildExampleDocument());
     vi.stubGlobal('indexedDB', factory);

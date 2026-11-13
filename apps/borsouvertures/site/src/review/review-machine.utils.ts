@@ -70,7 +70,12 @@ function readAskedCard(snapshot: ReviewSnapshot): ReviewCard | null {
   return snapshot.phase === 'asking' ? snapshot.current : null;
 }
 
-// @FollowsBlueprint state-machine-module
+/**
+ * @Blueprint state-machine-module
+ * @BlueprintName Hand Written State Machine Module
+ * @BlueprintUsage Use for session state that outlives a render, has timers of its own, and would otherwise be a tangle of `useState` and effects.
+ * @BlueprintDescription Returns a closure holding the current run, the last snapshot and a listener set, and exposes `subscribe` and `getSnapshot` so a component can read it with `useSyncExternalStore`. Every command mutates the run then calls `notify`, which recomputes the snapshot once and replaces it, so subscribers compare by identity. Each `start` builds a fresh run object and that object's identity is the run's identity, so a timer scheduled for an earlier run compares `activeRun !== scheduledRun` and returns: a stale reply cannot land on the board after a reset. The impure edges arrive as options with production defaults, which is what makes the whole module drivable from a test with no clock.
+ */
 export function createReviewMachine(options: ReviewMachineOptions): ReviewMachine {
   const opponentMoveDelay =
     options.opponentMoveDelayMilliseconds ?? DEFAULT_OPPONENT_MOVE_DELAY_MILLISECONDS;

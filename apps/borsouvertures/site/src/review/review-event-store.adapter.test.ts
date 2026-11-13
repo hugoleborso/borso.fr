@@ -1,7 +1,6 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
 import {
-  appendStoredReviewEvent,
   listStoredReviewEvents,
   putStoredReviewEvents,
   ReviewEventStoreUnavailableError,
@@ -49,15 +48,15 @@ describe('the review event store', () => {
 
   it('appends events and lists them back after a reopen', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, SECOND);
-    await appendStoredReviewEvent(factory, FIRST);
+    await putStoredReviewEvents(factory, [SECOND]);
+    await putStoredReviewEvents(factory, [FIRST]);
     await expect(listStoredReviewEvents(factory)).resolves.toEqual([FIRST, SECOND]);
   });
 
   it('keeps one copy of an event appended twice', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, FIRST);
-    await appendStoredReviewEvent(factory, { ...FIRST, receivedAt: '2026-01-10T08:00:09.000Z' });
+    await putStoredReviewEvents(factory, [FIRST]);
+    await putStoredReviewEvents(factory, [{ ...FIRST, receivedAt: '2026-01-10T08:00:09.000Z' }]);
     await expect(listStoredReviewEvents(factory)).resolves.toEqual([
       { ...FIRST, receivedAt: '2026-01-10T08:00:09.000Z' },
     ]);
@@ -65,7 +64,7 @@ describe('the review event store', () => {
 
   it('uses one object store named review-event keyed by id', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, FIRST);
+    await putStoredReviewEvents(factory, [FIRST]);
     await prepareDatabase(factory, 1, () => {
       throw new Error('the adapter already created version 1');
     });
@@ -82,7 +81,7 @@ describe('the review event store', () => {
 
   it('closes its connection, so the database can be upgraded afterwards', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, FIRST);
+    await putStoredReviewEvents(factory, [FIRST]);
     await listStoredReviewEvents(factory);
     await expect(
       prepareDatabase(factory, 2, (database) => {
@@ -93,8 +92,8 @@ describe('the review event store', () => {
 
   it('drops a stored value that is no review event', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, FIRST);
-    await appendStoredReviewEvent(factory, { ...SECOND, cardId: 'nowhere' });
+    await putStoredReviewEvents(factory, [FIRST]);
+    await putStoredReviewEvents(factory, [{ ...SECOND, cardId: 'nowhere' }]);
     await expect(listStoredReviewEvents(factory)).resolves.toEqual([FIRST]);
   });
 
@@ -114,7 +113,7 @@ describe('the review event store', () => {
     await prepareDatabase(factory, 2, (database) => {
       database.createObjectStore('review-event', { keyPath: 'id' });
     });
-    const failure = await readFailure(appendStoredReviewEvent(factory, FIRST));
+    const failure = await readFailure(putStoredReviewEvents(factory, [FIRST]));
     expect(failure).toMatchObject({ tags: { operation: 'open' } });
     expect(failure).toHaveProperty('cause.message', 'IndexedDB refused to open the database');
     expect(failure).toHaveProperty('cause.cause.name', 'VersionError');
@@ -141,9 +140,9 @@ describe('the review event store', () => {
         .createObjectStore('review-event', { keyPath: 'id' })
         .createIndex('one-event-per-card', 'cardId', { unique: true });
     });
-    await appendStoredReviewEvent(factory, FIRST);
+    await putStoredReviewEvents(factory, [FIRST]);
     const failure = await readFailure(
-      appendStoredReviewEvent(factory, { ...SECOND, cardId: FIRST.cardId }),
+      putStoredReviewEvents(factory, [{ ...SECOND, cardId: FIRST.cardId }]),
     );
     expect(failure).toMatchObject({
       message: 'The browser store of review events failed to write.',
@@ -155,7 +154,7 @@ describe('the review event store', () => {
   });
   it('puts pulled events and push receipts in one write, replacing the copy kept by id', async () => {
     const factory = new IDBFactory();
-    await appendStoredReviewEvent(factory, FIRST);
+    await putStoredReviewEvents(factory, [FIRST]);
     const received = { ...FIRST, receivedAt: '2026-01-10T08:00:09.000Z' };
     const third = buildReviewEvent(3, CARD, '2026-01-10T08:02:00.000Z');
     await putStoredReviewEvents(factory, [received, SECOND, third]);

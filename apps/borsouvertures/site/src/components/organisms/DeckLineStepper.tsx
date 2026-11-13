@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Arrow } from 'react-chessboard';
 import { ActionBar } from '@/components/atoms/ActionBar';
 import { BoardView } from '@/components/atoms/BoardView';
+import { Button } from '@/components/atoms/Button';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import type { IconName } from '@/components/atoms/Icon';
 import { IconButton, type IconButtonVariant } from '@/components/molecules/IconButton';
@@ -22,6 +23,8 @@ import {
 } from '@/decks/line-stepper.utils';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
 import { useBoardWidth } from '@/lib/viewport.hook';
+import { isPersonalDeck } from '@/personal-deck/personal-deck.core';
+import { recordDeckLineChange } from '@/personal-deck/personal-deck-effects.setup';
 import { useAppState } from '@/state/appState';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 
@@ -50,6 +53,20 @@ const IDEA_BY_READER_STEP: ComponentByFlag<{ idea: Idea | null }> = {
   false: EmptySlot,
 };
 
+interface RemoveLineProps {
+  label: string;
+  onRemove: () => void;
+}
+
+function RemoveLineButton({ label, onRemove }: RemoveLineProps) {
+  return <Button label={label} variant="quiet" onActivate={onRemove} />;
+}
+
+const REMOVE_BY_PERSONAL_DECK: ComponentByFlag<RemoveLineProps> = {
+  true: RemoveLineButton,
+  false: EmptySlot,
+};
+
 function isBoardMoveAccepted(): boolean {
   return false;
 }
@@ -70,6 +87,16 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
   const step = selectLineStep(steps, position);
   const { theme } = getBoardAppearance(boardStyle);
   const IdeaSlot = IDEA_BY_READER_STEP[`${isReaderStep(step, deck.side)}`];
+  const RemoveLine = REMOVE_BY_PERSONAL_DECK[`${isPersonalDeck(deck.id)}`];
+  function removeLine(): void {
+    recordDeckLineChange({
+      kind: 'line-removed',
+      side: deck.side,
+      movesUci: line.movesUci,
+      openingName: null,
+    });
+    onClose();
+  }
   return (
     <section
       aria-label={line.name}
@@ -77,7 +104,10 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
     >
       <div className="flex items-center gap-2 -my-1.5 lg:col-span-2 lg:my-0">
         <IconButton label={t('decks.line-stepper.back')} icon="chevron-left" onActivate={onClose} />
-        <h3 className="min-w-0 text-base font-bold leading-tight line-clamp-2">{line.name}</h3>
+        <h3 className="flex-auto min-w-0 text-base font-bold leading-tight line-clamp-2">
+          {line.name}
+        </h3>
+        <RemoveLine label={t('decks.line-stepper.remove')} onRemove={removeLine} />
       </div>
       <BoardView
         orientation={deck.side}

@@ -134,7 +134,12 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
   );
 }
 
-// @FollowsBlueprint organism-machine-bound
+/**
+ * @Blueprint organism-machine-bound
+ * @BlueprintName Organism Bound To A State Machine
+ * @BlueprintUsage Use for a screen region whose state lives in a hand written machine outside React.
+ * @BlueprintDescription Starts the machine once from `useSessionStart`, then reads it through `useSyncExternalStore` with the machine's own `subscribe` and `getSnapshot` passed as stable references rather than inline closures. Everything the markup needs is derived from that snapshot during render through pure selectors, and the two modal flags are read as lookup keys, so the component holds no `useState` mirroring the machine and no effect keeping the two in step.
+ */
 export function ReviewSession({ decks, deckId }: AppScreenProps) {
   const progress = useTrainerProgress(decks);
   const { isProgressKept } = useReviewLog();

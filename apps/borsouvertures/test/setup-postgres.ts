@@ -12,6 +12,7 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 
 export const TRACKED_TABLES = [
   'review_event',
+  'deck_line_event',
   'sign_in_attempt',
   'operator_credential',
   'app_config',

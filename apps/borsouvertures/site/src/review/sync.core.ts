@@ -1,8 +1,10 @@
+import { type DeckLineEvent, listValidDeckLineEvents } from '@domain/deck-line-event.core';
 import {
   listValidReviewEvents,
   REVIEW_EVENT_BATCH_LIMIT,
   type ReviewEvent,
 } from '@domain/review-event.core';
+import type { SyncedEvent } from '@domain/synced-event.core';
 import type { InferResponseType } from 'hono/client';
 import { z } from 'zod';
 import type { ApiClient } from '@/lib/api.client';
@@ -15,9 +17,11 @@ export type PushReceipt = Readonly<
   InferResponseType<ApiClient['api']['review-events']['$post'], 200>['accepted'][number]
 >;
 
-export type PulledPage = Readonly<
-  InferResponseType<ApiClient['api']['review-events']['$get'], 200>
->;
+export interface PulledEventsPage<Event> {
+  readonly events: readonly Event[];
+  readonly nextCursor: string | null;
+  readonly hasMore: boolean;
+}
 
 export interface SyncRound {
   readonly roundsRun: number;
@@ -52,17 +56,17 @@ export function decideSyncOutcome(status: number): SyncOutcome {
   return 'offline';
 }
 
-export function selectUnpushedEvents(
-  events: readonly ReviewEvent[],
+export function selectUnpushedEvents<Event extends SyncedEvent>(
+  events: readonly Event[],
   limit: number = REVIEW_EVENT_BATCH_LIMIT,
-): ReviewEvent[] {
+): Event[] {
   return events.filter((event) => event.receivedAt === null).slice(0, limit);
 }
 
-export function applyPushReceipt(
-  pushed: readonly ReviewEvent[],
+export function applyPushReceipt<Event extends SyncedEvent>(
+  pushed: readonly Event[],
   receipts: readonly PushReceipt[],
-): ReviewEvent[] {
+): Event[] {
   const receivedAtById = new Map(receipts.map((receipt) => [receipt.id, receipt.receivedAt]));
   return pushed.flatMap((event) => {
     const receivedAt = receivedAtById.get(event.id);
@@ -86,7 +90,7 @@ export function isAnotherRoundNeeded(round: SyncRound): boolean {
   return isWorkLeft && round.roundsRun < MAX_ROUNDS_PER_SYNC;
 }
 
-export function hasUnpushedEvents(events: readonly ReviewEvent[]): boolean {
+export function hasUnpushedEvents(events: readonly SyncedEvent[]): boolean {
   return events.some((event) => event.receivedAt === null);
 }
 
@@ -128,11 +132,20 @@ export function readPushReceipts(body: unknown): PushReceipt[] | null {
   return answer.data.accepted.flatMap((value) => readPushReceipt(value));
 }
 
-export function readPulledPage(body: unknown): PulledPage | null {
+function readPulledEventsPage<Event extends SyncedEvent>(
+  body: unknown,
+  listValid: (values: readonly unknown[]) => Event[],
+): PulledEventsPage<Event> | null {
   const page = pulledPageSchema.safeParse(body);
   if (!page.success) return null;
-  const events = listValidReviewEvents(page.data.events).filter(
-    (event) => event.receivedAt !== null,
-  );
+  const events = listValid(page.data.events).filter((event) => event.receivedAt !== null);
   return { events, nextCursor: page.data.nextCursor, hasMore: page.data.hasMore };
+}
+
+export function readPulledPage(body: unknown): PulledEventsPage<ReviewEvent> | null {
+  return readPulledEventsPage(body, listValidReviewEvents);
+}
+
+export function readPulledDeckLinePage(body: unknown): PulledEventsPage<DeckLineEvent> | null {
+  return readPulledEventsPage(body, listValidDeckLineEvents);
 }

@@ -128,7 +128,8 @@
       "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0",
       "wikipedia-credit-short": "Wikipedia, CC BY-SA",
       "read-all": "Read all",
-      "close": "Close the idea"
+      "close": "Close the idea",
+      "opening-title": "Opening"
     },
     "show-move": "Show the move",
     "next": "Next",
@@ -216,8 +217,10 @@
         "kingside-black": "Black castles kingside",
         "queenside-white": "White castles queenside",
         "queenside-black": "Black castles queenside"
-      }
-    }
+      },
+      "remove": "Remove"
+    },
+    "my-lines": "My lines"
   },
   "opponent": {
     "title": "Play it against Stockfish",
@@ -261,10 +264,32 @@
   },
   "explore": {
     "title": "Explore",
-    "sections": {
-      "aria-label": "Explore sections",
-      "pick": "Pick",
-      "setup": "Setup"
+    "unnamed": "No named opening yet",
+    "start": "Starting position",
+    "out-of-book": "Outside the known openings",
+    "more_one": "+{{count}} more",
+    "more_other": "+{{count}} more",
+    "line-count_one": "{{count}} line",
+    "line-count_other": "{{count}} lines",
+    "groups": {
+      "opening": "Openings",
+      "variation": "Variations",
+      "line": "Lines"
+    },
+    "side": {
+      "aria-label": "Side you play",
+      "white": "White",
+      "black": "Black"
+    },
+    "back": "Take back the last move",
+    "reset": "Back to the starting position",
+    "add": {
+      "action": "Add to my deck",
+      "added": "Added to My lines, {{side}}",
+      "already-in-deck": "My lines already hold this line",
+      "conflicts": "My lines already play {{move}} in a position of this line",
+      "no-reader-move": "This line holds no move of yours",
+      "illegal": "The board refuses this line"
     }
   },
   "credits": {

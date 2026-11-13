@@ -1,9 +1,10 @@
 # `apps/borsouvertures`
 
 Chess-openings PWA at `https://borsouvertures.borso.fr`. React + TypeScript + Vite. A daily
-trainer over hand-written decks (Today, Decks), the earlier Learn and Play modes over the whole
-Lichess catalogue (Explore), four board themes, and an offline-capable service worker. Progress
-is a log of review events kept in the browser's IndexedDB. There is no server yet.
+trainer over hand-written decks (Today, Decks), an open explorer over the shipped Lichess
+openings (Explore) that adds lines to a personal deck, four board themes, and an offline-capable
+service worker. Progress and the personal deck are logs of events kept in the browser's
+IndexedDB, synced for one account through the API.
 
 ## Layout
 
