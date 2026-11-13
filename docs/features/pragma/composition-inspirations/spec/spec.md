@@ -161,13 +161,13 @@ api/src/inspirations/*.{controller,service,repository,schema}.ts   NEW  CRUD, re
 api/src/sketches/*.{controller,service,repository,schema}.ts       NEW  read sketch, lane and clip writes
 api/src/songs/songs.repository.ts                UPDATE  song delete cascades lanes and clips
 api/src/members/members.repository.ts            UPDATE  member delete clears inspiration author
-api/src/realtime/stale-scope.core.ts             UPDATE  new scopes: inspirations, sketch:<songId>
+domain/stale-scope.core.ts                       UPDATE  new written roots: inspirations, sketches
 api/src/database/migrations/0026_…sql            NEW
 site/src/routes/inspirations/                    NEW  library page, form reusing the Deezer search, YouTube search link, embedded player
 site/src/routes/compos/sketch/                   NEW  timeline, lanes, draggable clips, clip player
 site/src/routes/band/band-destinations.core.ts   UPDATE  add Inspirations after compositions
 site/src/lib/embed.utils.ts                      UPDATE  accept shorts/ and start/end
-site/src/locales/{en,fr}.json                    UPDATE
+site/src/i18n/{en,fr}.json                    UPDATE
 apps/pragma/VOCABULARY.md                        UPDATE
 ```
 
@@ -199,5 +199,5 @@ One query to watch is inspirations per week by distinct author. Another is sketc
 ### Zero-defect strategy
 
 - `inspiration-in-use`, `inspiration-not-found`, `lane-not-found` and `clip-not-found` are expected 409 and 404 answers. They are logged with their code and are not sent to Sentry.
-- Any 5xx on `/api/inspirations` or `/api/sketches` goes to Sentry, tagged `feature:composition-inspirations`, through the existing shared alert.
+- Any 5xx on `/api/inspirations` or `/api/sketches` goes to Sentry, under a transaction named after the route (for example `POST /api/sketches/:songId/clips`), through the existing shared alert.
 - If members report moves that undo each other, that is the signal to revisit the lock decision.
