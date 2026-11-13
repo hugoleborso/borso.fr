@@ -66,3 +66,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | #310 | meta | `session_01K69KnDzbVY3yxgGHEWuPgJ` | $38.18 at worker epoch 1, archived | 618,766 | $4.44 (555,604 tokens) | none | lessons from PR #310 |
 | #314 | feature | `session_01K69KnCkGVwNDQy7uL7VPYi` | $21.31 at worker epoch 6, idle after the merge; whether it counts earlier epochs is unknown | 424,851 | $7.76 (969,738 tokens) | 2, both ending FAIL; the round 2 finding was fixed before the merge with no third round | lessons from PR #314 |
 | #316 | chore | `session_01K69KnBCpMuBJtxtgUa3FSc` | $5.50 at worker epoch 2, idle after the merge; whether it counts earlier epochs is unknown | 197,540 | $1.62 (202,444 tokens) | 1 | lessons from PR #316 |
+| #324 | feature | `session_01K69KnC9wWRNqYiLkucEvNx` | $18.28 at worker epoch 7, archived; whether it counts earlier epochs is unknown | 404,152 | $6.06 (756,973 tokens) | 1 | lessons from PR #324 |
