@@ -83,6 +83,27 @@ const DAY_ROUTES: Record<string, unknown> = {
   '/api/recurring-tasks': { generatedAt: '2026-10-08T05:00:00Z', tasks: RECURRING_TASKS },
 };
 
+const TALK_ROUTES: Record<string, unknown> = {
+  ...DAY_ROUTES,
+  '/api/messages/claude-code': {
+    repository: 'proprietaire/notes',
+    environments: { talos: 'env_lecture', build: 'env_construction' },
+  },
+};
+const DAY_ROUTES_WITHOUT_TARGET: Record<string, unknown> = Object.fromEntries(
+  Object.entries(DAY_ROUTES).filter(([path]) => path !== '/api/messages/claude-code'),
+);
+const TALK_ADDRESS =
+  'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_construction';
+
+function readTalkLink(container: HTMLElement): HTMLAnchorElement | null {
+  return (
+    [...container.querySelectorAll<HTMLAnchorElement>('nav a')].find(
+      (link) => link.textContent === 'Parler à Talos',
+    ) ?? null
+  );
+}
+
 const RECURRING_TASKS_PATH = '/api/recurring-tasks';
 const DAY_CONTENT_IN_ORDER = [
   'Récurrentes',
@@ -309,6 +330,92 @@ describe('the application shell', () => {
     expect(tree.container.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe(
       'Récurrentes · 2',
     );
+    tree.unmount();
+  });
+
+  it('puts « Parler à Talos » in the tab bar of every screen, opening Claude Code on the build environment', async () => {
+    window.history.replaceState(null, '', '/recurring');
+    restoreFetch = stubFetch(answerFrom(TALK_ROUTES)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => readTalkLink(tree.container)?.hasAttribute('href') === true);
+    const link = readTalkLink(tree.container);
+    expect(link?.getAttribute('href')).toBe(TALK_ADDRESS);
+    expect(link?.getAttribute('target')).toBe('_blank');
+    expect(link?.getAttribute('rel')).toBe('noopener');
+    tree.unmount();
+  });
+
+  it('answers /talk, the address of the home-screen shortcut, with the link to talk to Talos', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    window.history.replaceState(null, '', '/talk');
+    restoreFetch = stubFetch(answerFrom(TALK_ROUTES)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.querySelector(`main a[href="${TALK_ADDRESS}"]`) !== null);
+    expect(tree.container.querySelector('h1')?.textContent).toBe('Parler à Talos');
+    tree.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it('writes the link for the Claude app, without the environment it would refuse, from the iOS home screen', async () => {
+    stubStandaloneDisplay();
+    Object.defineProperty(navigator, 'standalone', { value: true, configurable: true });
+    restoreFetch = stubFetch(answerFrom(TALK_ROUTES)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => readTalkLink(tree.container)?.hasAttribute('href') === true);
+    const link = readTalkLink(tree.container);
+    expect(link?.getAttribute('href')).toBe('claude://code/new?repo=proprietaire%2Fnotes');
+    expect(link?.hasAttribute('target')).toBe(false);
+    tree.unmount();
+    Reflect.deleteProperty(navigator, 'standalone');
+  });
+
+  it('offers a retry on /talk when the Claude Code target cannot be read', async () => {
+    window.history.replaceState(null, '', '/talk');
+    restoreFetch = stubFetch(answerFrom(DAY_ROUTES_WITHOUT_TARGET)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.textContent.includes('Réessayer'));
+    expect(tree.container.textContent).toContain('Chargement impossible');
+    expect(readTalkLink(tree.container)?.getAttribute('aria-disabled')).toBe('true');
+    tree.unmount();
+  });
+
+  it('says so when no routine run was ever fired', async () => {
+    window.history.replaceState(null, '', '/runs');
+    restoreFetch = stubFetch(
+      answerFrom({ ...DAY_ROUTES, '/api/routine/runs': { items: [] } }),
+    ).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.textContent.includes('Aucun lancement pour l’instant'));
+    expect(tree.container.querySelector('h1')?.textContent).toBe('Lancements');
+    expect(tree.container.querySelectorAll('main li')).toHaveLength(0);
+    tree.unmount();
+  });
+
+  it('lists the routine runs on a screen of their own', async () => {
+    window.history.replaceState(null, '', '/runs');
+    restoreFetch = stubFetch(
+      answerFrom({
+        ...DAY_ROUTES,
+        '/api/routine/runs': {
+          items: [
+            {
+              id: '00000000-0000-4000-8000-000000000001',
+              firedAt: '2026-10-08T05:00:00Z',
+              trigger: 'proposition',
+              subject: 'etat/propositions/2026-10-08-devis',
+              sessionUrl: 'https://claude.ai/code/session_01Exemple',
+            },
+          ],
+        },
+      }),
+    ).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.textContent.includes('2026-10-08-devis'));
+    expect(tree.container.querySelector('h1')?.textContent).toBe('Lancements');
+    expect(
+      tree.container.querySelector('main a[href="https://claude.ai/code/session_01Exemple"]')
+        ?.textContent,
+    ).toBe('Ouvrir');
     tree.unmount();
   });
 

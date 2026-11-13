@@ -65,7 +65,7 @@ const ICONS = {
   todo: ListTodo,
   proposals: Lightbulb,
   brain: Waypoints,
-  message: MessageSquareText,
+  talk: MessageSquareText,
   send: Send,
   check: Check,
   plus: Plus,

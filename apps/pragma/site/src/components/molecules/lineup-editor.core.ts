@@ -52,16 +52,15 @@ export function toLineupPayload(lineup: LineupRecord | null): Record<string, str
 
 export type LineupSaveTarget = 'song-default' | 'entry-override' | 'entry-cleared';
 
-function isStaffed(lineup: LineupRecord): boolean {
+export function isLineupStaffed(lineup: LineupRecord): boolean {
   return Object.values(lineup).some((instrumentIds) => instrumentIds.length > 0);
 }
 
 export function selectLineupSaveTarget(
-  songDefaultLineup: LineupRecord,
+  isBuildingSongLineup: boolean,
   editedLineup: LineupRecord | null,
-  wasReset: boolean,
 ): LineupSaveTarget {
-  if (wasReset || editedLineup === null) return 'entry-cleared';
-  if (!isStaffed(songDefaultLineup)) return 'song-default';
+  if (isBuildingSongLineup) return 'song-default';
+  if (editedLineup === null) return 'entry-cleared';
   return 'entry-override';
 }

@@ -53,7 +53,7 @@ describe('the index of the day', () => {
       ['5Brouillons', '/drafts'],
       ['6Relations', '/relations'],
       ['7Récurrentes', '/recurring'],
-      ['Lancements', '/message#runs'],
+      ['Lancements', '/runs'],
       ['Historique', '/history'],
       ['67Mémoire', '/brain'],
     ]);

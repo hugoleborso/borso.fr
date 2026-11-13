@@ -8,6 +8,7 @@ import { useToday } from '../../lib/queries/today.queries';
 import { TODO_LIST_ROUTES } from '../../lib/wikilinks.core';
 import { type BottomTab, BottomTabBar } from './BottomTabBar';
 import { ActionSheet } from './ActionSheet';
+import { TalkToTalosLink } from './TalkToTalosLink';
 import { PROPOSALS_PATH } from './proposal-board.core';
 import { ToastViewport } from './ToastViewport';
 
@@ -21,7 +22,6 @@ const TABS: readonly BottomTab[] = [
   },
   { to: PROPOSALS_PATH, labelKey: 'nav.proposals', icon: 'proposals' },
   { to: '/brain', labelKey: 'nav.brain', icon: 'brain' },
-  { to: '/message', labelKey: 'nav.message', icon: 'message' },
 ];
 
 // @FollowsBlueprint organism-shell
@@ -51,6 +51,7 @@ export function AppShell(): JSX.Element {
         activePath={location.pathname}
         badgeDestination={PROPOSALS_PATH}
         badgeCount={today.data?.pendingProposalCount ?? 0}
+        trailing={<TalkToTalosLink />}
       />
     </div>
   );

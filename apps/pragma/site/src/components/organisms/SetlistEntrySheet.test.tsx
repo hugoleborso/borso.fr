@@ -210,6 +210,55 @@ describe('the entry sheet', () => {
     expect(onSaveSongLineup).toHaveBeenCalledWith({ tom: ['bass'], lea: [] });
   });
 
+  it('keeps building the song’s lineup on every tap once its first instrument is saved', () => {
+    const onSaveSongLineup = vi.fn();
+    const onUpdate = vi.fn();
+    const props = buildProps({
+      focus: 'lineup',
+      onSaveSongLineup,
+      onUpdate,
+      song: { ...buildProps().song, defaultLineup: {} },
+    });
+    const view = render(
+      <MemoryRouter>
+        <SetlistEntrySheet {...props} />
+      </MemoryRouter>,
+    );
+    view.rerender(
+      <MemoryRouter>
+        <SetlistEntrySheet
+          {...props}
+          song={{ ...props.song, defaultLineup: { tom: ['bass'], lea: [] } }}
+        />
+      </MemoryRouter>,
+    );
+    const leaChips = screen.getByRole('group', { name: 'Léa — Instruments' });
+    fireEvent.click(Array.from(leaChips.querySelectorAll('button'))[1] ?? leaChips);
+    expect(onSaveSongLineup).toHaveBeenCalledWith({ tom: ['bass'], lea: ['guitar'] });
+    const tomChips = screen.getByRole('group', { name: 'Tom — Instruments' });
+    fireEvent.click(Array.from(tomChips.querySelectorAll('button'))[0] ?? tomChips);
+    expect(onSaveSongLineup).toHaveBeenLastCalledWith({});
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('moves a leftover entry lineup into the song’s lineup when the song has none', () => {
+    const onSaveSongLineup = vi.fn();
+    const onUpdate = vi.fn();
+    renderSheet(
+      buildProps({
+        focus: 'lineup',
+        onSaveSongLineup,
+        onUpdate,
+        song: { ...buildProps().song, defaultLineup: {} },
+        entry: { ...buildProps().entry, lineupOverride: { tom: ['guitar'] } },
+      }),
+    );
+    const leaChips = screen.getByRole('group', { name: 'Léa — Instruments' });
+    fireEvent.click(Array.from(leaChips.querySelectorAll('button'))[0] ?? leaChips);
+    expect(onSaveSongLineup).toHaveBeenCalledWith({ tom: ['guitar'], lea: ['bass'] });
+    expect(onUpdate).toHaveBeenCalledWith('entry-1', { lineupOverride: null });
+  });
+
   it('clears the override when the last instrument is taken off', () => {
     const onUpdate = vi.fn();
     renderSheet(

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import catalogue from '../i18n/fr.json';
 import {
   buildClaudeCodeAddress,
   buildEnvironmentAddress,
@@ -8,30 +9,36 @@ import {
 
 describe('composeTalosPrompt', () => {
   it('puts the message after the preamble, trimmed', () => {
-    expect(composeTalosPrompt('Tu es Talos.', '  Rappelle-moi Julie \n')).toBe(
-      'Tu es Talos.\n\nRappelle-moi Julie',
+    expect(composeTalosPrompt('Lis la note.', '  Rappelle-moi Julie \n')).toBe(
+      'Lis la note.\n\nRappelle-moi Julie',
     );
   });
 
   it('answers the preamble alone for a blank message', () => {
-    expect(composeTalosPrompt('Tu es Talos.', ' \n ')).toBe('Tu es Talos.');
+    expect(composeTalosPrompt('Lis la note.', ' \n ')).toBe('Lis la note.');
   });
 });
 
 describe('buildClaudeCodeAddress', () => {
+  it('leaves the prompt out when there is none, so the session opens on an empty composer', () => {
+    expect(
+      buildClaudeCodeAddress({ repository: 'a/b', environmentId: 'env_01abc', prompt: '' }, 'web'),
+    ).toBe('https://claude.ai/code/new?repo=a%2Fb&environment=env_01abc');
+  });
+
   it('opens Claude Code on the repository and the environment, with the prompt encoded', () => {
     expect(
       buildClaudeCodeAddress(
         {
           repository: 'proprietaire/notes',
           environmentId: 'env_01abc',
-          prompt: 'Tu es Talos :\n\nÉcris & envoie 50 % ?',
+          prompt: 'Lis ceci :\n\nÉcris & envoie 50 % ?',
         },
         'web',
       ),
     ).toBe(
       'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_01abc' +
-        '&q=Tu%20es%20Talos%20%3A%0A%0A%C3%89cris%20%26%20envoie%2050%20%25%20%3F',
+        '&q=Lis%20ceci%20%3A%0A%0A%C3%89cris%20%26%20envoie%2050%20%25%20%3F',
     );
   });
 
@@ -69,5 +76,11 @@ describe('buildEnvironmentAddress', () => {
 
   it('has no address while the settings are still loading', () => {
     expect(buildEnvironmentAddress(undefined, 'talos', 'p', 'web')).toBeUndefined();
+  });
+});
+
+describe('the prompts of the catalogue', () => {
+  it('never tell Claude it is Talos, which the agent repository already says', () => {
+    expect(Object.values(catalogue).filter((text) => /tu es talos/i.test(text))).toEqual([]);
   });
 });

@@ -384,6 +384,7 @@
     "mastery": "Maîtrise",
     "members": "Membres",
     "sessions": "Sessions",
+    "setlists": "Setlists",
     "tasks": "Tâches",
     "studies": "Révisions",
     "home": "Accueil",
@@ -497,11 +498,6 @@
     },
     "preparedConcert": "Concert préparé",
     "saveConcertDetails": "Enregistrer",
-    "section": {
-      "label": "Sessions ou setlists",
-      "sessions": "Sessions",
-      "setlists": "Setlists"
-    },
     "selectMember": "Membre",
     "sessionNotFound": "Cette session n'est plus au planning.",
     "setlist": "Setlist",

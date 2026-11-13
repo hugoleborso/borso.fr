@@ -4,6 +4,8 @@ import { AppShell } from './components/organisms/AppShell';
 import { PROPOSALS_PATH } from './components/organisms/proposal-board.core';
 import { RequireSession } from './components/organisms/RequireSession';
 import { TracedRoutes } from './observability/error-reporting.adapter';
+import { ROUTINE_RUN_LIST_PATH } from './lib/routine-run.core';
+import { TALK_PATH } from './lib/talk-to-talos.core';
 import { buildTodoListHref, TODO_LIST_ROUTES } from './lib/wikilinks.core';
 import {
   loadBrainEntryPage,
@@ -15,13 +17,14 @@ import {
   loadGraphPage,
   loadHistoryPage,
   loadLoginPage,
-  loadMessagePage,
   loadPastBriefPage,
   loadProposalPage,
   loadProposalsPage,
   loadRecurringTasksPage,
   loadRelationsPage,
+  loadRoutineRunsPage,
   loadSettingsPage,
+  loadTalkPage,
   loadTodayPage,
   loadTodoDetailPage,
   loadTodosPage,
@@ -47,7 +50,10 @@ const BrainEntryPage = lazy(async () => ({
   default: (await loadBrainEntryPage()).BrainEntryPage,
 }));
 const GraphPage = lazy(async () => ({ default: (await loadGraphPage()).GraphPage }));
-const MessagePage = lazy(async () => ({ default: (await loadMessagePage()).MessagePage }));
+const RoutineRunsPage = lazy(async () => ({
+  default: (await loadRoutineRunsPage()).RoutineRunsPage,
+}));
+const TalkPage = lazy(async () => ({ default: (await loadTalkPage()).TalkPage }));
 const SettingsPage = lazy(async () => ({ default: (await loadSettingsPage()).SettingsPage }));
 const RelationsPage = lazy(async () => ({ default: (await loadRelationsPage()).RelationsPage }));
 const RecurringTasksPage = lazy(async () => ({
@@ -97,7 +103,8 @@ export function App(): JSX.Element {
               <Route path="/brain" element={<BrainPage />} />
               <Route path="/brain/graph" element={<GraphPage />} />
               <Route path="/brain/page/*" element={<BrainEntryPage />} />
-              <Route path="/message" element={<MessagePage />} />
+              <Route path={ROUTINE_RUN_LIST_PATH} element={<RoutineRunsPage />} />
+              <Route path={TALK_PATH} element={<TalkPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

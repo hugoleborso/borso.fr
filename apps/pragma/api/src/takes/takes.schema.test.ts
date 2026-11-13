@@ -15,7 +15,7 @@ import {
 const SONG_ID = '11111111-1111-4111-8111-111111111111';
 const TAKE_ID = '22222222-2222-4222-8222-222222222222';
 const SESSION_ID = '33333333-3333-4333-8333-333333333333';
-const FIFTY_MEBIBYTES = 52_428_800;
+const TWO_HUNDRED_MEBIBYTES = 209_715_200;
 
 const VALID_CREATE = {
   id: TAKE_ID,
@@ -43,15 +43,15 @@ describe('take tables', () => {
 describe('takeSignSchema', () => {
   const validSign = { takeId: TAKE_ID, songId: SONG_ID, contentType: 'audio/mp4' } as const;
 
-  it('accepts a take of exactly 50 MiB', () => {
-    expect(takeSignSchema.safeParse({ ...validSign, contentLength: FIFTY_MEBIBYTES }).success).toBe(
-      true,
-    );
+  it('accepts a take of exactly 200 MiB', () => {
+    expect(
+      takeSignSchema.safeParse({ ...validSign, contentLength: TWO_HUNDRED_MEBIBYTES }).success,
+    ).toBe(true);
   });
 
-  it('refuses a take one byte over 50 MiB, an empty one, and a type that is not audio', () => {
+  it('refuses a take one byte over 200 MiB, an empty one, and a type that is not audio', () => {
     expect(
-      takeSignSchema.safeParse({ ...validSign, contentLength: FIFTY_MEBIBYTES + 1 }).success,
+      takeSignSchema.safeParse({ ...validSign, contentLength: TWO_HUNDRED_MEBIBYTES + 1 }).success,
     ).toBe(false);
     expect(takeSignSchema.safeParse({ ...validSign, contentLength: 0 }).success).toBe(false);
     expect(

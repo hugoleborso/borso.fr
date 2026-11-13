@@ -92,14 +92,14 @@ describe('the one todo tab', () => {
     window.history.replaceState(null, '', '/');
   });
 
-  it('keeps five tabs, and opens the todo screen on the personal list with a three-way switch', async () => {
+  it('keeps four tabs and the link to talk to Talos, and opens the todo screen on the personal list with a three-way switch', async () => {
     stub = serveBothLists();
     tree = await openApp('/todos', PERSONAL_TODO.text);
     expect(
       [...tree.container.querySelectorAll('nav[aria-label="Navigation principale"] a')].map(
         (tab) => tab.textContent,
       ),
-    ).toStrictEqual(['Jour', 'Todo', 'Décider', 'Mémoire', 'Message']);
+    ).toStrictEqual(['Jour', 'Todo', 'Décider', 'Mémoire', 'Parler à Talos']);
     expect(listSwitch(tree).map((button) => button.textContent)).toStrictEqual([
       'Perso',
       'Taff',

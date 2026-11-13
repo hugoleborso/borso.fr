@@ -16,7 +16,6 @@ import { CreateSessionDialog } from '../../components/organisms/CreateSessionDia
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SegmentedChoice } from '../../components/molecules/SegmentedChoice';
-import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDateTime } from '../../lib/formatters.utils';
@@ -103,7 +102,6 @@ export function SessionsPage(): JSX.Element {
           </ButtonLink>
         }
       >
-        <SessionsSectionTabs value="sessions" />
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <SegmentedChoice
             legend={t('sessions.when.label')}
