@@ -36,10 +36,10 @@ export function PlayStatusPanel({
   const { t } = useTranslation();
   const noValue = t('common.value.none');
   return (
-    <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+    <div className="pt-3 border-t-[3px] border-ink">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="inline-block px-[0.55rem] py-1 rounded-full bg-white/10 text-[0.85rem]">
+          <span className="inline-block px-[0.55rem] py-1 rounded-full bg-surface text-sm font-bold">
             {t(BOOK_STATUS_KEY_BY_IN_BOOK[`${isInBook}`])}
           </span>
         </div>

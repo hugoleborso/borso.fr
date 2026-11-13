@@ -13,6 +13,8 @@ const IDENTICAL_VALUE_REASON_BY_KEY: Readonly<Record<string, string>> = {
   'common.value.none': 'an em dash, not a word',
   'credits.lichess.licence': 'CC0 1.0, the name of a licence',
   'credits.lichess.name': 'the name of the Lichess dataset, a proper noun',
+  'credits.sections.lichess': 'the Lichess brand, a proper noun, naming its credits tab',
+  'credits.sections.stockfish': 'the Stockfish engine, a proper noun, naming its credits tab',
   'credits.stockfish.licence': 'GPL-3.0, the name of a licence',
   'credits.stockfish.name': 'the Stockfish name and its version number',
   'credits.wikipedia.licence': 'CC BY-SA 4.0, the name of a licence',

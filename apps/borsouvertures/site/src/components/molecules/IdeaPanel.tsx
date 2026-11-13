@@ -13,12 +13,11 @@ export function IdeaPanel({ idea }: IdeaPanelProps) {
   const text = idea === null ? t('review.idea.missing') : selectIdeaText(idea, i18n.language);
   const sourceUrl = idea?.sourceUrl;
   return (
-    <section
-      className="flex flex-col gap-1 p-3 rounded-lg border border-card-line bg-sunken"
-      aria-label={t('review.idea.title')}
-    >
-      <h3 className="text-sm font-bold opacity-80">{t('review.idea.title')}</h3>
-      <p className="whitespace-pre-line">{text}</p>
+    <section className="flex flex-col gap-1.5" aria-label={t('review.idea.title')}>
+      <h3 className="text-sm font-bold uppercase tracking-[0.06em] text-ink-muted">
+        {t('review.idea.title')}
+      </h3>
+      <p className="max-w-[65ch] text-[1.0625rem] leading-relaxed whitespace-pre-line">{text}</p>
       {sourceUrl === undefined ? null : (
         <ExternalLink href={sourceUrl} label={t('review.idea.wikipedia-credit')} />
       )}

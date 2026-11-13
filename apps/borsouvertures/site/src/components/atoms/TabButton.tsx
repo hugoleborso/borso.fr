@@ -6,12 +6,14 @@ interface TabButtonProps {
   onActivate: () => void;
 }
 
-const TAB_BASE = 'flex-1 min-h-14 px-2 py-2 text-sm font-semibold border-t-2';
+const TAB_BASE =
+  'flex-1 min-h-14 px-1 pt-1 text-[0.9375rem] font-bold border-t-4 ' +
+  'transition-[border-color,color] duration-150 ease-out-quick';
 
 // @FollowsBlueprint component-lookup-table
 const TAB_CLASS_BY_CURRENT: ValueByFlag<string> = {
-  true: TAB_BASE + ' border-accent text-accent',
-  false: TAB_BASE + ' border-transparent text-ink opacity-80 hover:opacity-100',
+  true: TAB_BASE + ' border-accent text-on-shell',
+  false: TAB_BASE + ' border-transparent text-on-shell-muted hover:text-on-shell',
 };
 
 // @FollowsBlueprint atom-plain

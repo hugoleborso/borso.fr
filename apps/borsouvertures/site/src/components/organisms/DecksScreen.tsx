@@ -17,15 +17,25 @@ function openDeck(deckId: string): void {
 export function DecksScreen({ decks }: AppScreenProps) {
   const { t } = useTranslation();
   const progress = useTrainerProgress(decks);
-  const { newCardsPerDay } = useAppState();
+  const { newCardsPerDay, boardStyle } = useAppState();
   return (
     <div className="flex flex-col gap-4 w-full max-w-xl mx-auto">
       <Panel title={t('decks.title')}>
-        {decks.map((deck, index) => {
-          const deckProgress = progress.deckProgress[index];
-          if (deckProgress === undefined) return null;
-          return <DeckRow key={deck.id} deck={deck} progress={deckProgress} onOpen={openDeck} />;
-        })}
+        <div className="flex flex-col">
+          {decks.map((deck, index) => {
+            const deckProgress = progress.deckProgress[index];
+            if (deckProgress === undefined) return null;
+            return (
+              <DeckRow
+                key={deck.id}
+                deck={deck}
+                progress={deckProgress}
+                boardStyle={boardStyle}
+                onOpen={openDeck}
+              />
+            );
+          })}
+        </div>
         <NewCardsPerDaySelect newCardsPerDay={newCardsPerDay} />
       </Panel>
     </div>

@@ -1,11 +1,12 @@
 import { type CSSProperties, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Arrow } from 'react-chessboard';
+import { ActionBar } from '@/components/atoms/ActionBar';
 import { BoardView } from '@/components/atoms/BoardView';
 import { Button } from '@/components/atoms/Button';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import { Panel } from '@/components/atoms/Panel';
-import { StatusItem } from '@/components/atoms/StatusItem';
+import { StatusBand } from '@/components/atoms/StatusBand';
 import { OpponentStrengthSelect } from '@/components/molecules/OpponentStrengthSelect';
 import type { BuiltDeck } from '@/decks/deck.utils';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
@@ -56,8 +57,10 @@ function isReaderMoveAccepted(uci: string): boolean {
 
 function DeckGameStart({ deck }: DeckGameBodyProps) {
   const { t } = useTranslation();
+  const { opponentStrength } = useAppState();
   return (
-    <div>
+    <div className="flex flex-col gap-4">
+      <OpponentStrengthSelect strength={opponentStrength} />
       <Button
         label={t('opponent.start')}
         variant="primary"
@@ -69,26 +72,29 @@ function DeckGameStart({ deck }: DeckGameBodyProps) {
 
 function DeckGameControls({ deck, snapshot }: DeckGameBodyProps) {
   const { t } = useTranslation();
+  const { opponentStrength } = useAppState();
   const { lastOpponentMove } = snapshot;
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <div role="status" aria-live="polite" className="flex flex-col gap-3">
-        <StatusItem
+    <div className="flex flex-col gap-4 w-full">
+      <div role="status" aria-live="polite" className="flex flex-col gap-1">
+        <StatusBand
           label={t(SOURCE_KEY_BY_SOURCE[snapshot.moveSource])}
           value={t(STATUS_KEY_BY_STATUS[selectDeckGameStatus(snapshot)])}
+          tone="asking"
         />
         {lastOpponentMove === null ? null : (
-          <p>
+          <p className="text-sm text-ink-muted">
             {t(LAST_MOVE_KEY_BY_SOURCE[lastOpponentMove.source], {
               move: lastOpponentMove.notation,
             })}
           </p>
         )}
       </div>
-      <div className="flex flex-wrap gap-3">
+      <ActionBar>
         <Button label={t('opponent.new-game')} onActivate={() => deckGameMachine.start(deck)} />
         <Button label={t('opponent.leave')} onActivate={deckGameMachine.leave} />
-      </div>
+      </ActionBar>
+      <OpponentStrengthSelect strength={opponentStrength} />
     </div>
   );
 }
@@ -127,18 +133,16 @@ interface DeckGameProps {
 // @FollowsBlueprint organism-machine-bound
 export function DeckGame({ deck }: DeckGameProps) {
   const { t } = useTranslation();
-  const { opponentStrength } = useAppState();
   const snapshot = useSyncExternalStore(deckGameMachine.subscribe, deckGameMachine.getSnapshot);
   const isGameOn = isDeckGameOn(snapshot, deck.id);
   const Controls = CONTROLS_BY_GAME_ON[`${isGameOn}`];
   const Board = BOARD_BY_GAME_ON[`${isGameOn}`];
   return (
-    <>
-      <Panel title={t('opponent.title')}>
-        <OpponentStrengthSelect strength={opponentStrength} />
+    <Panel title={t('opponent.title')}>
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-8 lg:items-start">
+        <Board deck={deck} snapshot={snapshot} />
         <Controls deck={deck} snapshot={snapshot} />
-      </Panel>
-      <Board deck={deck} snapshot={snapshot} />
-    </>
+      </div>
+    </Panel>
   );
 }

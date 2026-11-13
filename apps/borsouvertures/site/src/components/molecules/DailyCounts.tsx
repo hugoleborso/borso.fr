@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { StatusItem } from '@/components/atoms/StatusItem';
+import { CountFigure } from '@/components/atoms/CountFigure';
 
 interface DailyCountsProps {
   dueCount: number;
@@ -10,9 +10,9 @@ interface DailyCountsProps {
 export function DailyCounts({ dueCount, newCount }: DailyCountsProps) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <StatusItem label={t('today.due')} value={String(dueCount)} />
-      <StatusItem label={t('today.new')} value={String(newCount)} />
+    <div className="grid grid-cols-2 gap-4">
+      <CountFigure label={t('today.due')} value={String(dueCount)} />
+      <CountFigure label={t('today.new')} value={String(newCount)} />
     </div>
   );
 }

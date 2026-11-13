@@ -30,7 +30,9 @@
       "aria-label": "Langue de l'interface",
       "english": "EN",
       "french": "FR"
-    }
+    },
+    "settings": "Réglages",
+    "close-settings": "Fermer les réglages"
   },
   "account": {
     "sign-in": "Se connecter",
@@ -61,7 +63,13 @@
     "new": "nouvelles",
     "start": "Commencer",
     "nothing-left": "Rien à revoir et plus de nouvelle carte aujourd'hui. Ouvrez un paquet pour le revoir en avance.",
-    "review-ahead": "Revoir un paquet en avance"
+    "review-ahead": "Revoir un paquet en avance",
+    "sections": {
+      "aria-label": "Sections du jour",
+      "session": "Séance",
+      "ahead": "En avance",
+      "retention": "Rétention"
+    }
   },
   "stats": {
     "tab": "Bilan",
@@ -92,6 +100,11 @@
       "caption": "La part de toutes les révisions retenues, dues ou non.",
       "measured": "{{percent}} % · révisions retenues : {{recalled}}/{{reviews}}",
       "empty": "Aucune révision pour l'instant"
+    },
+    "sections": {
+      "aria-label": "Sections du bilan",
+      "retention": "Rétention",
+      "accuracy": "Précision"
     }
   },
   "review": {
@@ -173,6 +186,12 @@
     "load-failure": {
       "title": "Impossible de charger les paquets",
       "message": "Le fichier des paquets n'a pas pu être chargé. Essayez de recharger la page."
+    },
+    "sections": {
+      "aria-label": "Sections du paquet",
+      "review": "Réviser",
+      "lines": "Lignes",
+      "play": "Jouer"
     }
   },
   "opponent": {
@@ -240,6 +259,12 @@
       "source-link": "Code source à l'étiquette {{tag}}",
       "licence-link": "Texte de la licence",
       "digests": "SHA-256 des fichiers distribués"
+    },
+    "sections": {
+      "aria-label": "Sections des crédits",
+      "lichess": "Lichess",
+      "wikipedia": "Wikipédia",
+      "stockfish": "Stockfish"
     }
   },
   "loading": {

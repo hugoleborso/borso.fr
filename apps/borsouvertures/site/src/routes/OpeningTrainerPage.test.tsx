@@ -16,6 +16,16 @@ import {
 
 // @FollowsBlueprint test-component-render
 describe('the opening trainer, one visit from the first load', () => {
+  // @FollowsBlueprint test-jsdom-gap-stub
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+      this.open = false;
+    };
+  });
+
   beforeAll(async () => {
     window.localStorage.clear();
     stubDecksFetch(buildExampleDocument());
@@ -87,11 +97,13 @@ describe('the opening trainer, one visit from the first load', () => {
   });
 
   it('names its three sources on Credits', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(screen.getByRole('button', { name: 'Credits' }));
     expect(screen.getByRole('heading', { name: 'Credits' })).toBeTruthy();
     expect(screen.getByText('CC0 1.0')).toBeTruthy();
     expect(screen.getByText('CC BY-SA 4.0')).toBeTruthy();
     expect(screen.getByText('GPL-3.0')).toBeTruthy();
+    await userEvent.click(screen.getByRole('tab', { name: 'Stockfish' }));
     expect(
       screen.getByRole('link', { name: 'Source code at tag v19.0.1' }).getAttribute('href'),
     ).toBe('https://github.com/nmrugg/stockfish.js/tree/v19.0.1');
@@ -142,8 +154,9 @@ describe('the opening trainer, one visit from the first load', () => {
     expect(screen.getByText('2 of 3 recalled on the first try (67%)')).toBeTruthy();
     expect(screen.getByText('1 card due tomorrow')).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: 'Done' }));
-    expect(screen.getByRole('heading', { name: 'Review a deck ahead' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Start' })).toHaveProperty('disabled', true);
+    await userEvent.click(screen.getByRole('tab', { name: 'Ahead' }));
+    expect(screen.getByRole('heading', { name: 'Review a deck ahead' })).toBeTruthy();
     expect(readCount('new')).toBe('0');
   });
 });

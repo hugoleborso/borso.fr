@@ -98,6 +98,7 @@ describe('a game against Stockfish on a deck page', () => {
     await openApplication();
     await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
     await userEvent.click(await screen.findByRole('button', { name: /Albin Countergambit/ }));
+    await userEvent.click(screen.getByRole('tab', { name: 'Play' }));
   });
 
   it('offers the game with the 2000 step selected, and starts no worker before a game', () => {

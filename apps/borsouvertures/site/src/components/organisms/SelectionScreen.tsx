@@ -41,12 +41,12 @@ export function SelectionScreen({ openings }: SelectionScreenProps) {
 
   return (
     <>
-      <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+      <div className="pt-3 border-t-[3px] border-ink">
         <SideSelector side={side} />
         <AutoOpponentRow isAutoOpponentEnabled={playAutoOpponent} />
       </div>
       <OpeningFlowSelector openings={openings} />
-      <div className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+      <div className="pt-3 border-t-[3px] border-ink">
         <Button
           label={t(START_LABEL_KEY_BY_MODE[mode])}
           variant="primary"

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { BUTTON_CLASS } from './buttonStyles';
 
 interface ModalProps {
   title: string;
@@ -9,7 +8,16 @@ interface ModalProps {
 }
 
 const DIALOG_CLASS =
-  'm-auto p-0 max-w-none max-h-none bg-transparent text-inherit backdrop:bg-black/65';
+  'mt-auto mb-0 mx-0 p-0 w-full max-w-none max-h-[88dvh] bg-transparent text-ink ' +
+  'backdrop:bg-scrim roomy:m-auto roomy:w-[min(440px,90vw)]';
+
+const SHEET_CLASS =
+  'flex flex-col gap-4 max-h-[88dvh] overflow-y-auto px-4 pt-2 ' +
+  'pb-[max(1.25rem,env(safe-area-inset-bottom))] rounded-t-xl bg-page ' +
+  'roomy:p-5 roomy:rounded-xl';
+
+const CLOSE_CLASS =
+  'inline-flex items-center justify-center size-12 -mr-2 rounded-md text-ink hover:bg-surface';
 
 // @FollowsBlueprint ref-callback-browser-api
 function openAsModalDialog(dialog: HTMLDialogElement | null): () => void {
@@ -20,12 +28,36 @@ function openAsModalDialog(dialog: HTMLDialogElement | null): () => void {
 // @FollowsBlueprint atom-plain
 export function Modal({ title, closeLabel, children, onClose }: ModalProps) {
   return (
-    <dialog ref={openAsModalDialog} className={DIALOG_CLASS} aria-label={title} onClose={onClose}>
-      <div className="w-[min(420px,90vw)] p-5 rounded-[14px] border border-white/10 bg-modal shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="my-[1.17rem] text-[1.17rem] font-bold">{title}</h2>
-          <button type="button" className={BUTTON_CLASS} aria-label={closeLabel} onClick={onClose}>
-            ×
+    <dialog
+      ref={openAsModalDialog}
+      className={DIALOG_CLASS}
+      aria-label={title}
+      onClose={(event) => {
+        if (!event.currentTarget.open) onClose();
+      }}
+    >
+      <div className={SHEET_CLASS}>
+        <div className="flex items-center justify-between gap-3 pt-2 border-b-[3px] border-ink">
+          <h2 className="text-xl font-bold leading-tight">{title}</h2>
+          <button
+            type="button"
+            className={CLOSE_CLASS}
+            aria-label={closeLabel}
+            title={closeLabel}
+            onClick={onClose}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              strokeLinecap="square"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
           </button>
         </div>
         {children}

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button, type ButtonVariant } from '@/components/atoms/Button';
-import { StatusItem } from '@/components/atoms/StatusItem';
+import { StatusBand } from '@/components/atoms/StatusBand';
 import type { ValueByFlag } from '@/lib/componentTable.types';
 import {
   listNameChoices,
@@ -8,6 +8,7 @@ import {
   selectOpeningName,
 } from '@/review/review-machine.utils';
 import type { CardBodyProps } from './card-body.types';
+import { TONE_BY_REVIEW_STATUS } from './review-tone.core';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'cards.name.status.asking',
@@ -27,19 +28,16 @@ export function NameCardBody({ reviewCard, status, onChooseName }: CardBodyProps
   return (
     <div className="flex flex-col gap-3">
       <div role="status" aria-live="polite">
-        <StatusItem
+        <StatusBand
           label={t('cards.name.question')}
+          tone={TONE_BY_REVIEW_STATUS[status]}
           value={t(STATUS_KEY_BY_STATUS[status], {
             name: selectOpeningName(reviewCard),
             moves: reviewCard.bookMoveNotation,
           })}
         />
       </div>
-      <div
-        role="group"
-        aria-label={t('cards.name.choices')}
-        className="grid grid-cols-1 gap-2 roomy:grid-cols-2"
-      >
+      <div role="group" aria-label={t('cards.name.choices')} className="grid grid-cols-2 gap-2">
         {listNameChoices(reviewCard, status).map((choice) => (
           <Button
             key={choice.openingName}

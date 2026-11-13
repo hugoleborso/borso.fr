@@ -8,9 +8,9 @@ interface SelectorPanelProps {
 // @FollowsBlueprint atom-plain
 export function SelectorPanel({ title, children }: SelectorPanelProps) {
   return (
-    <div className="min-h-60 p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
+    <div className="min-h-60 pt-3 border-t-[3px] border-ink">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[1.17rem] font-bold">{title}</h2>
+        <h2 className="text-xl font-bold">{title}</h2>
       </div>
       <div className="grid [grid-auto-rows:1fr] gap-[0.6rem] max-h-90 overflow-y-auto pr-1">
         {children}

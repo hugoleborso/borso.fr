@@ -20,16 +20,18 @@ export function TabBar({ activeTab, onSelect }: TabBarProps) {
   return (
     <nav
       aria-label={t('tab-bar.aria-label')}
-      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-panel-line bg-modal"
+      className="fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] bg-shell"
     >
-      {APP_TABS.map((tab) => (
-        <TabButton
-          key={tab}
-          label={t(LABEL_KEY_BY_TAB[tab])}
-          isCurrent={tab === activeTab}
-          onActivate={() => onSelect(tab)}
-        />
-      ))}
+      <div className="flex w-full max-w-3xl h-tab-bar mx-auto">
+        {APP_TABS.map((tab) => (
+          <TabButton
+            key={tab}
+            label={t(LABEL_KEY_BY_TAB[tab])}
+            isCurrent={tab === activeTab}
+            onActivate={() => onSelect(tab)}
+          />
+        ))}
+      </div>
     </nav>
   );
 }

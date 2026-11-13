@@ -11,9 +11,9 @@ export function ExploreScreen() {
   const { t } = useTranslation();
   const { mode } = useAppState();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5 w-full">
       <Panel title={t('explore.title')}>
-        <p>{t('explore.description')}</p>
+        <p className="max-w-[65ch] text-sm text-ink-muted">{t('explore.description')}</p>
         <div>
           <ModeToggle mode={mode} />
         </div>

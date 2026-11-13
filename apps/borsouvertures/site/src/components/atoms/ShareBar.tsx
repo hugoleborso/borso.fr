@@ -6,16 +6,16 @@ interface ShareBarProps {
   isMeasured: boolean;
 }
 
-const FRAME_BASE = 'flex items-end h-12 rounded-sm border';
+const FRAME_BASE = 'flex items-end h-10';
 
 // @FollowsBlueprint component-lookup-table
 const FRAME_CLASS_BY_MEASURED: ValueByFlag<string> = {
-  true: FRAME_BASE + ' border-transparent bg-raised',
-  false: FRAME_BASE + ' border-dashed border-edge',
+  true: FRAME_BASE + ' bg-surface',
+  false: FRAME_BASE + ' border-b-2 border-rule',
 };
 
 const FILL_CLASS_BY_MEASURED: ValueByFlag<string> = {
-  true: 'w-full min-h-0.5 rounded-sm bg-accent',
+  true: 'w-full min-h-0.5 bg-ink',
   false: 'hidden',
 };
 

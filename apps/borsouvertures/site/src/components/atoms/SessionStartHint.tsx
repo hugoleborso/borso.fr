@@ -14,5 +14,5 @@ interface SessionStartHintProps {
 // @FollowsBlueprint atom-plain
 export function SessionStartHint({ mode }: SessionStartHintProps) {
   const { t } = useTranslation();
-  return <p className="mt-2 mb-4 opacity-80">{t(HINT_KEY_BY_MODE[mode])}</p>;
+  return <p className="mt-2 mb-4 text-ink-muted">{t(HINT_KEY_BY_MODE[mode])}</p>;
 }

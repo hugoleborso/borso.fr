@@ -43,8 +43,9 @@ describe('the opening trainer, loaded over a card recalled when it came due', ()
     await openApplication();
   });
 
-  it('shows the streak and the retention of the last 30 days on Today', () => {
+  it('shows the streak and the retention of the last 30 days on Today', async () => {
     expect(readCount('Streak')).toBe('1 day');
+    await userEvent.click(screen.getByRole('tab', { name: 'Retention' }));
     expect(screen.getByRole('heading', { name: 'Retention, last 30 days' })).toBeTruthy();
     expect(readCount('Albin Countergambit')).toBe('100% · due reviews recalled: 1/1');
   });
@@ -68,6 +69,7 @@ describe('the opening trainer, loaded over a card recalled when it came due', ()
     expect(screen.getByText('11 weeks ago')).toBeTruthy();
     expect(screen.getByText('This week')).toBeTruthy();
 
+    await userEvent.click(screen.getByRole('tab', { name: 'Accuracy' }));
     expect(screen.getByRole('heading', { name: 'Accuracy per deck' })).toBeTruthy();
     expect(screen.getAllByText('Albin Countergambit')).toHaveLength(2);
     expect(screen.getByText('67% · reviews recalled: 2/3')).toBeTruthy();

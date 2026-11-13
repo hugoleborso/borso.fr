@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/atoms/Button';
+import { Modal } from '@/components/atoms/Modal';
 import { AccountLink } from '@/components/molecules/AccountLink';
 import { BoardStyleSelect } from '@/components/molecules/BoardStyleSelect';
+import { IconButton } from '@/components/molecules/IconButton';
 import { LanguageSwitcher } from '@/components/molecules/LanguageSwitcher';
 import { SignInScreen } from '@/components/organisms/SignInScreen';
 import { selectAccountLinkView } from '@/lib/account-session.core';
@@ -16,34 +18,59 @@ export function TopBar() {
   const { boardStyle } = useAppState();
   const session = useAccountSession();
   const signOut = useSignOut();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
+
+  function closeSettings(): void {
+    setIsSettingsOpen(false);
+    setIsSignInOpen(false);
+  }
+
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]">
-      <div className="flex flex-wrap items-center gap-3 min-w-0">
-        <h1 className="text-[1rem] font-bold roomy:text-[1.2rem]">{t('top-bar.brand')}</h1>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <BoardStyleSelect boardStyle={boardStyle} />
-        <LanguageSwitcher />
-        <Button label={t('credits.link')} onActivate={() => openScreen({ kind: 'credits' })} />
-        <AccountLink
-          view={selectAccountLinkView(session.data)}
-          onSignIn={() => {
-            setIsSignInOpen(true);
-          }}
-          onSignOut={() => {
-            signOut.mutate();
-          }}
-        />
-      </div>
-      {isSignInOpen ? (
-        <div className="basis-full">
-          <SignInScreen
-            onClose={() => {
-              setIsSignInOpen(false);
-            }}
-          />
-        </div>
+    <header className="flex items-center justify-between gap-3 h-12">
+      <h1 className="flex items-center gap-2 text-lg font-bold tracking-[-0.02em]">
+        <span aria-hidden="true" className="size-3 bg-accent" />
+        {t('top-bar.brand')}
+      </h1>
+      <IconButton
+        label={t('top-bar.settings')}
+        icon="settings"
+        onActivate={() => setIsSettingsOpen(true)}
+      />
+      {isSettingsOpen ? (
+        <Modal
+          title={t('top-bar.settings')}
+          closeLabel={t('top-bar.close-settings')}
+          onClose={closeSettings}
+        >
+          <BoardStyleSelect boardStyle={boardStyle} />
+          <LanguageSwitcher />
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-rule">
+            <Button
+              label={t('credits.link')}
+              onActivate={() => {
+                closeSettings();
+                openScreen({ kind: 'credits' });
+              }}
+            />
+            <AccountLink
+              view={selectAccountLinkView(session.data)}
+              onSignIn={() => {
+                setIsSignInOpen(true);
+              }}
+              onSignOut={() => {
+                signOut.mutate();
+              }}
+            />
+          </div>
+          {isSignInOpen ? (
+            <SignInScreen
+              onClose={() => {
+                setIsSignInOpen(false);
+              }}
+            />
+          ) : null}
+        </Modal>
       ) : null}
     </header>
   );

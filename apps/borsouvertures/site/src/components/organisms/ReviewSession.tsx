@@ -1,8 +1,10 @@
 import { type CSSProperties, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ActionBar } from '@/components/atoms/ActionBar';
 import { BoardView } from '@/components/atoms/BoardView';
 import { Button } from '@/components/atoms/Button';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
+import { IconButton } from '@/components/molecules/IconButton';
 import { IdeaPanel } from '@/components/molecules/IdeaPanel';
 import type { CardBodyProps } from '@/components/molecules/card-body.types';
 import { MoveCardBody } from '@/components/molecules/MoveCardBody';
@@ -78,14 +80,17 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
     reviewCard.deckNameKey,
   );
   return (
-    <div className="flex flex-col items-center gap-3 w-full max-w-xl mx-auto">
-      <h2 className="self-start text-base font-bold">
-        {t('review.progress', {
-          deck: deckName,
-          position: selectSessionPosition(snapshot),
-          total: snapshot.cardCount,
-        })}
-      </h2>
+    <div className="flex flex-col gap-3 w-full max-w-xl mx-auto lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:max-w-none lg:gap-x-8 lg:items-start">
+      <div className="flex items-center justify-between gap-3 lg:col-span-2">
+        <h2 className="min-w-0 text-base font-bold leading-tight tabular-nums">
+          {t('review.progress', {
+            deck: deckName,
+            position: selectSessionPosition(snapshot),
+            total: snapshot.cardCount,
+          })}
+        </h2>
+        <IconButton label={t('review.leave')} icon="close" onActivate={onLeave} />
+      </div>
       <BoardView
         orientation={reviewCard.readerSide}
         fen={snapshot.fen}
@@ -101,7 +106,10 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
           status={selectReviewStatus(snapshot)}
           onChooseName={reviewMachine.chooseName}
         />
-        <div className="flex flex-wrap gap-3">
+        <div className="lg:order-last">
+          <IdeaSlot idea={reviewCard.idea} />
+        </div>
+        <ActionBar>
           <Button
             label={t(SHOW_ANSWER_KEY_BY_KIND[reviewCard.card.kind])}
             isDisabled={isAnswered}
@@ -113,9 +121,7 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
             isDisabled={!isAnswered}
             onActivate={reviewMachine.advance}
           />
-          <Button label={t('review.leave')} onActivate={onLeave} />
-        </div>
-        <IdeaSlot idea={reviewCard.idea} />
+        </ActionBar>
       </div>
     </div>
   );
@@ -141,7 +147,7 @@ export function ReviewSession({ decks, deckId }: AppScreenProps) {
 
   const asked = snapshot.current;
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 w-full">
       <Banner />
       {asked === null ? (
         <div className="w-full max-w-xl mx-auto">

@@ -1,6 +1,12 @@
 import { Chess } from 'chess.js';
 import { describe, expect, it } from 'vitest';
-import { buildLinePreview, buildOpeningPreview, buildVariationPreview } from './previews.utils';
+import {
+  buildDeckPreviewFen,
+  buildLineEndFen,
+  buildLinePreview,
+  buildOpeningPreview,
+  buildVariationPreview,
+} from './previews.utils';
 import type { Line, Opening, Variation } from './types';
 
 const e4Line: Line = {
@@ -118,5 +124,25 @@ describe('buildLinePreview', () => {
       movesUci: ['e2e4', 'zzzz', 'e7e5'],
     };
     expect(buildLinePreview(opening, mainVariation, broken).fen).toBe(fenAfter(['e4']));
+  });
+});
+
+describe('buildDeckPreviewFen', () => {
+  it("shows the deck's first line at the configured ply depth", () => {
+    expect(buildDeckPreviewFen([e4Line, sideLine])).toBe(fenAfter(e4Line.movesSan.slice(0, 6)));
+  });
+
+  it('shows the starting position for a deck with no lines', () => {
+    expect(buildDeckPreviewFen([])).toBe(new Chess().fen());
+  });
+});
+
+describe('buildLineEndFen', () => {
+  it('plays every move of the line, past the preview depth', () => {
+    expect(buildLineEndFen(e4Line.movesSan)).toBe(fenAfter(e4Line.movesSan));
+  });
+
+  it('shows the starting position for a line with no moves', () => {
+    expect(buildLineEndFen([])).toBe(new Chess().fen());
   });
 });

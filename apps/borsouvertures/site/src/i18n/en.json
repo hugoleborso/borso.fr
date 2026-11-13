@@ -30,7 +30,9 @@
       "aria-label": "Interface language",
       "english": "EN",
       "french": "FR"
-    }
+    },
+    "settings": "Settings",
+    "close-settings": "Close settings"
   },
   "account": {
     "sign-in": "Sign in",
@@ -61,7 +63,13 @@
     "new": "new",
     "start": "Start",
     "nothing-left": "Nothing is due and no new card is left today. Open a deck to review it ahead.",
-    "review-ahead": "Review a deck ahead"
+    "review-ahead": "Review a deck ahead",
+    "sections": {
+      "aria-label": "Today sections",
+      "session": "Session",
+      "ahead": "Ahead",
+      "retention": "Retention"
+    }
   },
   "stats": {
     "tab": "Stats",
@@ -92,6 +100,11 @@
       "caption": "The share of all reviews recalled, due or not.",
       "measured": "{{percent}}% · reviews recalled: {{recalled}}/{{reviews}}",
       "empty": "No review yet"
+    },
+    "sections": {
+      "aria-label": "Stats sections",
+      "retention": "Retention",
+      "accuracy": "Accuracy"
     }
   },
   "review": {
@@ -173,6 +186,12 @@
     "load-failure": {
       "title": "Couldn't load the decks",
       "message": "The deck file failed to load. Try reloading the page."
+    },
+    "sections": {
+      "aria-label": "Deck sections",
+      "review": "Review",
+      "lines": "Lines",
+      "play": "Play"
     }
   },
   "opponent": {
@@ -240,6 +259,12 @@
       "source-link": "Source code at tag {{tag}}",
       "licence-link": "Licence text",
       "digests": "SHA-256 of the distributed files"
+    },
+    "sections": {
+      "aria-label": "Credit sections",
+      "lichess": "Lichess",
+      "wikipedia": "Wikipedia",
+      "stockfish": "Stockfish"
     }
   },
   "loading": {

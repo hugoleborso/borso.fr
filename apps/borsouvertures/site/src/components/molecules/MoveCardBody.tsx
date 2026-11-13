@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { StatusItem } from '@/components/atoms/StatusItem';
+import { StatusBand } from '@/components/atoms/StatusBand';
 import type { ReviewStatus } from '@/review/review-machine.utils';
 import type { Side } from '@/state/persistedState.utils';
 import type { CardBodyProps } from './card-body.types';
+import { TONE_BY_REVIEW_STATUS } from './review-tone.core';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'review.status.opponent-moving',
@@ -29,8 +30,9 @@ export function MoveCardBody({ reviewCard, status }: CardBodyProps) {
         });
   return (
     <div role="status" aria-live="polite">
-      <StatusItem
+      <StatusBand
         label={context}
+        tone={TONE_BY_REVIEW_STATUS[status]}
         value={t(STATUS_KEY_BY_STATUS[status], { move: reviewCard.bookMoveNotation })}
       />
     </div>

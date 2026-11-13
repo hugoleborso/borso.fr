@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { StatusItem } from '@/components/atoms/StatusItem';
+import { StatusBand } from '@/components/atoms/StatusBand';
 import type { ReviewStatus } from '@/review/review-machine.utils';
 import type { Side } from '@/state/persistedState.utils';
 import type { CardBodyProps } from './card-body.types';
+import { TONE_BY_REVIEW_STATUS } from './review-tone.core';
 
 const STATUS_KEY_BY_STATUS = {
   'opponent-moving': 'cards.trap.status.opponent-moving',
@@ -23,11 +24,12 @@ export function TrapCardBody({ reviewCard, status }: CardBodyProps) {
   if (opponentMove === null) return null;
   return (
     <div role="status" aria-live="polite">
-      <StatusItem
+      <StatusBand
         label={t('cards.trap.opponent-played', {
           side: t(SIDE_KEY_BY_SIDE[opponentMove.side]),
           move: opponentMove.notation,
         })}
+        tone={TONE_BY_REVIEW_STATUS[status]}
         value={t(STATUS_KEY_BY_STATUS[status], { moves: reviewCard.bookMoveNotation })}
       />
     </div>

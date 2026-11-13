@@ -12,8 +12,7 @@ import {
 } from './boardDrop.utils';
 import { buildNamedPieces } from './boardPieces';
 
-const BOARD_BORDER_RADIUS = '12px';
-const BOARD_SHADOW = '0 10px 30px rgba(0,0,0,0.4)';
+const BOARD_BORDER_RADIUS = '0';
 const MOVE_ANIMATION_MS = 200;
 
 type IsMoveAccepted = (uci: string) => boolean;
@@ -52,7 +51,7 @@ export function BoardView({
   const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
   return (
     <div
-      className="flex justify-center self-start p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]"
+      className="flex justify-center self-center shrink-0 -mx-4 roomy:mx-0"
       style={{ width: `${boardWidth}px` }}
     >
       <Chessboard
@@ -63,7 +62,7 @@ export function BoardView({
           boardOrientation: orientation,
           darkSquareStyle: { backgroundColor: theme.dark },
           lightSquareStyle: { backgroundColor: theme.light },
-          boardStyle: { borderRadius: BOARD_BORDER_RADIUS, boxShadow: BOARD_SHADOW },
+          boardStyle: { borderRadius: BOARD_BORDER_RADIUS },
           arrowOptions: {
             ...defaultArrowOptions,
             colors: { ...defaultArrowOptions.colors, default: theme.arrow },

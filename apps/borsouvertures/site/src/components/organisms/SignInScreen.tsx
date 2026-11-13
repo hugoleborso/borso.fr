@@ -55,12 +55,12 @@ export function SignInScreen({ onClose }: SignInScreenProps) {
           void form.handleSubmit();
         }}
       >
-        <p className="text-sm text-ink opacity-80">{t('account.dialog-hint')}</p>
+        <p className="max-w-[65ch] text-sm text-ink-muted">{t('account.dialog-hint')}</p>
         <label className="flex flex-col gap-1 font-semibold" htmlFor={PASSWORD_FIELD_ID}>
           {t('account.password')}
           <input
             id={PASSWORD_FIELD_ID}
-            className="min-h-11 w-full px-[0.6rem] py-[0.4rem] rounded-lg border border-edge bg-field text-ink font-normal"
+            className="min-h-12 w-full px-3 py-2 rounded-md border-2 border-ink bg-field text-base text-ink font-normal"
             type="password"
             autoComplete="current-password"
             value={password}
@@ -70,7 +70,10 @@ export function SignInScreen({ onClose }: SignInScreenProps) {
           />
         </label>
         {failure === null ? null : (
-          <p className="text-sm font-semibold" role="alert">
+          <p
+            className="px-3 py-2 rounded-md bg-missed text-on-missed text-sm font-bold"
+            role="alert"
+          >
             {t(FAILURE_KEY_BY_FAILURE[failure])}
           </p>
         )}

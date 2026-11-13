@@ -9,33 +9,16 @@ interface ToggleSliderProps {
 }
 
 const SLIDER_CLASS =
-  'inline-flex items-center gap-2 min-h-11 p-[0.2rem] rounded-full ' +
-  'transition-transform duration-120 ease-[ease] hover:-translate-y-px';
+  'inline-flex self-start items-stretch min-h-12 p-1 rounded-md border-2 border-ink';
 
-const TRACK_BASE =
-  'relative w-[68px] h-[30px] rounded-full border border-white/[0.18] ' +
-  'shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] transition-[background] duration-150 ease-[ease]';
-
-const THUMB_BASE =
-  'absolute top-[3px] left-[3px] size-6 rounded-full shadow-[0_6px_14px_rgba(0,0,0,0.4)] ' +
-  'transition-[transform,background] duration-180 ease-[ease]';
-
-const LABEL_BASE = 'text-[0.95rem] transition-[opacity,color] duration-150 ease-[ease]';
+const SIDE_BASE =
+  'inline-flex items-center justify-center min-w-12 px-3 rounded-[4px] text-base font-bold ' +
+  'transition-[background-color,color] duration-150 ease-out-quick';
 
 // @FollowsBlueprint component-lookup-table
-const TRACK_CLASS_BY_STATE: ValueByFlag<string> = {
-  true: TRACK_BASE + ' bg-[image:var(--gradient-accent)]',
-  false: TRACK_BASE + ' bg-[image:var(--gradient-track)]',
-};
-
-const THUMB_CLASS_BY_STATE: ValueByFlag<string> = {
-  true: THUMB_BASE + ' translate-x-[38px] bg-white',
-  false: THUMB_BASE + ' bg-ink',
-};
-
-const LABEL_CLASS_BY_ACTIVE: ValueByFlag<string> = {
-  true: LABEL_BASE + ' font-semibold text-accent opacity-100',
-  false: LABEL_BASE + ' opacity-70',
+const SIDE_CLASS_BY_ACTIVE: ValueByFlag<string> = {
+  true: SIDE_BASE + ' bg-primary text-on-primary',
+  false: SIDE_BASE + ' text-ink-muted',
 };
 
 // @FollowsBlueprint atom-plain
@@ -54,11 +37,8 @@ export function ToggleSlider({
       aria-pressed={isOn}
       aria-label={ariaLabel}
     >
-      <span className={LABEL_CLASS_BY_ACTIVE[`${!isOn}`]}>{leftLabel}</span>
-      <span className={TRACK_CLASS_BY_STATE[`${isOn}`]}>
-        <span className={THUMB_CLASS_BY_STATE[`${isOn}`]} />
-      </span>
-      <span className={LABEL_CLASS_BY_ACTIVE[`${isOn}`]}>{rightLabel}</span>
+      <span className={SIDE_CLASS_BY_ACTIVE[`${!isOn}`]}>{leftLabel}</span>
+      <span className={SIDE_CLASS_BY_ACTIVE[`${isOn}`]}>{rightLabel}</span>
     </button>
   );
 }
