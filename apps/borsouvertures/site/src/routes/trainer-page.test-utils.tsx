@@ -6,14 +6,42 @@ import { OpeningTrainerPage } from './OpeningTrainerPage';
 
 const BOARD_SQUARE_PX = 40;
 
+const SMALL_OPENINGS_DOCUMENT = [
+  {
+    id: 'italian',
+    name: 'Italian Game',
+    ecoCodes: ['C50'],
+    variations: [
+      {
+        id: 'main',
+        name: 'Main',
+        lines: [
+          {
+            id: 'classical',
+            name: 'Classical',
+            eco: 'C50',
+            movesSan: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'],
+            movesUci: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4'],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const STUBBED_DOCUMENTS: Readonly<Record<string, unknown>> = {
+  '/openings.json': SMALL_OPENINGS_DOCUMENT,
+};
+
 export function stubDecksFetch(body: unknown): void {
   vi.stubGlobal(
     'fetch',
-    vi.fn((url: string) =>
-      Promise.resolve(
-        url === '/decks.json' ? Response.json(body) : new Response('', { status: 404 }),
-      ),
-    ),
+    vi.fn((url: string) => {
+      const document = url === '/decks.json' ? body : STUBBED_DOCUMENTS[url];
+      return Promise.resolve(
+        document === undefined ? new Response('', { status: 404 }) : Response.json(document),
+      );
+    }),
   );
 }
 
