@@ -407,10 +407,10 @@ Where it runs.
 | `scripts/check-no-null-bytes.sh` | Add `*.wasm` to the skipped extensions. The gate refuses the engine's `.wasm` today (measured, exit 1). |
 | `.oxlintrc.json` | Add `apps/borsouvertures/site/public/stockfish/**` to `ignorePatterns`. |
 | `.oxfmtrc.json` | Add `apps/borsouvertures/site/public/stockfish` and `apps/borsouvertures/site/public/decks.json` to `ignorePatterns`. The engine files must stay byte-identical. |
-| `knip.json` | For `apps/borsouvertures`, add `scripts/build-decks.ts`, `scripts/check-decks.ts`, `domain/**/*.core.test.ts` and `scripts/**/*.test.ts` to `entry`, and `domain/**/*.ts` to `project`. |
+| `knip.json` | For `apps/borsouvertures`, add `scripts/build-decks.setup.ts`, `scripts/check-decks.setup.ts`, `domain/**/*.core.test.ts` and `scripts/**/*.test.ts` to `entry`, and `domain/**/*.ts` to `project`. |
 | `.github/workflows/ci.yml` | Add the `deck-content` job described above. |
 | `apps/borsouvertures/.gitignore` | Add `site/public/decks.json`. |
-| `package.json` | Add `ts-fsrs` at exactly `6.0.0` (dependency) and `fake-indexeddb` at exactly `6.2.8` (dev dependency). Add `"build:decks": "tsx scripts/build-decks.ts"` and `"check:decks": "tsx scripts/check-decks.ts"`. Change `dev` to `tsx scripts/build-decks.ts && vite` and `build` to `tsx scripts/build-decks.ts && vite build`. |
+| `package.json` | Add `ts-fsrs` at exactly `6.0.0` (dependency) and `fake-indexeddb` at exactly `6.2.8` (dev dependency). Add `"build:decks": "tsx scripts/build-decks.setup.ts"` and `"check:decks": "tsx scripts/check-decks.setup.ts"`. Change `dev` to `tsx scripts/build-decks.setup.ts && vite` and `build` to `tsx scripts/build-decks.setup.ts && vite build`. |
 | `vite.config.ts` | Add the `@domain` alias. Add `decks.json` to `includeAssets`. Add `workbox.globIgnores: ['**/stockfish/**']`. Add a `CacheFirst` runtime rule for paths under `/stockfish/`, cache name `stockfish-19.0.1`. |
 | `vitest.config.ts` | Add `@domain`. Include `domain/**/*.test.ts` and `scripts/**/*.test.ts`. Add `domain/**/*.core.ts`, `scripts/**/*.core.ts` and `scripts/**/*.adapter.ts` to the coverage list. |
 | `tsconfig.json` | Add `"@domain/*": ["./domain/*"]`, add `node` to `types`, include `domain/**/*.ts` and `scripts/**/*.ts`. |
@@ -427,20 +427,20 @@ Where it runs.
 | `scripts/decks/deck-build.core.ts` | `core-projection` | Replays lines with `chess.js`, applies rules 1 to 8, derives cards and ideas, returns a `DecksDocument` or a list of problems. |
 | `scripts/decks/engine-gate.core.ts` | `core-decision` | The loss, the margin, the ceiling, the stale exception, the stub text. |
 | `scripts/decks/stockfish-process.adapter.ts` | `adapter-external-service`, test `test-node-adapter` | Spawns the engine. `spawn` is an option, so the test feeds lines from a fake process. |
-| `scripts/build-decks.ts`, `scripts/check-decks.ts` | none, thin shells like `scripts/build-openings.ts` | Read the folders by a glob over `content/decks/*/deck.json`, call the cores, write or print. No branch of their own. |
+| `scripts/build-decks.setup.ts`, `scripts/check-decks.setup.ts` | none, thin shells like `scripts/build-openings.ts` | Read the folders by a glob over `content/decks/*/deck.json`, call the cores, write or print. No branch of their own. |
 | `scripts/build-openings.ts` (update) | | `LICHESS_COMMIT = '3ba6b20d31b2e6125cb0e6a2e792f400717d9d39'`. Do not rerun it in this slice. A rerun changes `openings.json`, and the vocabulary counts with it. |
 | `content/decks/albin-countergambit/` | `data-module` | The Albin deck, per "Deck content format". |
 | `site/public/stockfish/stockfish-19-lite-single.js`, `.wasm`, `Copying.txt` | `vendored-third-party` | Copied unmodified from `stockfish@19.0.1`. A copy is in this session at `<scratchpad>/adr-opening-trainer/stockfish/x/package/`. Otherwise `npm pack stockfish@19.0.1` in a scratch folder (161 MB). |
 | `site/src/opponent/stockfish-distribution.core.ts` | `core-lookup-table` | Version, file names, byte sizes, the three SHA-256 values of ADR-2026-11-13T0003, the upstream tag `v19.0.1`, and `listTamperedFiles(actualDigests)`. Its test hashes the three committed files. Callers are `check-decks.ts` and the Credits screen. |
 | `site/src/opponent/uci.utils.ts` | `utils-pure-module` | `parseUciScore(line)`, `parseBestMove(line)`, `isEngineReady(line)`. Caller in this slice is the process adapter. Slice 5 reuses it. |
 | `site/src/decks/deck.utils.ts` | `unknown-payload-parser` | The `DecksDocument` types, `parseDecksDocument(value: unknown)`, `DeckContentInvalidError`. A test parses the output of `deck-build.core` after a JSON round trip, so the build and the loader cannot drift. |
-| `site/src/decks/decks-source.adapter.ts`, `site/src/decks/decksResource.ts` | `adapter-external-service`, `route-suspense-resource` | Fetch `/decks.json` once per page load. A parse failure reports `DeckContentInvalidError` with the tag `deckId`. |
+| `site/src/decks/decks-source.adapter.ts`, `site/src/decks/decks-resource.setup.ts` | `adapter-external-service`, `route-suspense-resource` | Fetch `/decks.json` once per page load. A parse failure reports `DeckContentInvalidError` with the tag `deckId`. |
 | `site/src/decks/card.core.ts`, `site/src/decks/idea.utils.ts` | `core-projection`, `utils-pure-module` | `listDeckCards`, `findCard`, `isBookMove`, `selectIdeaText(idea, language)`. The card type is a union discriminated by `kind`, with one member today. |
 | `site/src/review/scheduler.core.ts` | `core-projection` | `SCHEDULER_CONFIGURATION`, `replayCardStates`. Recalled maps to `Rating.Good`, missed to `Rating.Again`. The library's own `cardId` is never read. |
-| `site/src/review/scheduler-resource.ts` | `route-suspense-resource` | Builds the scheduler once. `DefaultScheduler()` returns a promise (ADR-2026-11-13T0001). |
+| `site/src/review/scheduler-resource.setup.ts` | `route-suspense-resource` | Builds the scheduler once. `DefaultScheduler()` returns a promise (ADR-2026-11-13T0001). |
 | `site/src/review/daily-plan.core.ts` | `core-view-projection` | `buildDailyPlan`. Due first by `dueAt` then id, then new cards up to `newCardsPerDay` minus those introduced today. |
 | `site/src/review/review-machine.utils.ts`, `review-machine.test-utils.ts` | `state-machine-module`, tests `test-machine-transition` and `test-machine-driver` | The session in review mode. `start(plan)`, `playMove(uci)`, `showMove()`, `advance()`. A move outside the deck or `showMove` gives `missed` and requeues the card. The clock and the UUID are injected. |
-| `site/src/review/review-effects.ts`, `site/src/review/machineInstances.ts` | `machine-impure-edge`, `machine-singleton` | `Date`, `crypto.randomUUID`, `getTimezoneOffset`. The one machine instance. |
+| `site/src/review/review-effects.setup.ts`, `site/src/review/review-machine.setup.ts` | `machine-impure-edge`, `machine-singleton` | `Date`, `crypto.randomUUID`, `getTimezoneOffset`. The one machine instance. |
 | `site/src/review/review-event-store.adapter.ts` | `adapter-storage-keyed-by-record` | IndexedDB, database `borsouvertures-review`, one object store `review-event` keyed by `id`. The `IDBFactory` is an option. Tests pass `fake-indexeddb`'s factory. A failure to open or write throws `ReviewEventStoreUnavailableError` with the tag `operation`. |
 | `site/src/review/review-log.store.ts` | `external-store-module` | The events in memory, loaded from the adapter at start. `appendReviewEvent`, `useReviewLog`, `subscribeToReviewLog`, `isProgressKept`. When the store is unavailable the log stays in memory. |
 | `site/src/review/device-identity.utils.ts` | `injected-storage-slice` | The device UUID under the localStorage key `borsouvertures.device-id`. |
@@ -532,7 +532,7 @@ interface TrapCard { kind: 'trap'; cardId: CardId; deckId: string; fen: string; 
 
 A puzzle fits a deck when one of its `OpeningTags` is in the deck's `trapFilter.openingTags`, the side to move after the first move is the deck's side, its rating is 1000 to 1700, its popularity is at least 80, and the full-move number of its FEN is at most 15. The 10 most played puzzles are kept per deck. All five numbers are guesses. A deck with no `trapFilter` or no match ships no trap card (spec, edge cases).
 
-**Updated files.** `scripts/decks/deck-build.core.ts`, `scripts/build-decks.ts`, `site/src/decks/deck.utils.ts`, `card.core.ts`, `review-machine.utils.ts` (a name card is recalled by the right choice, a trap card by the whole solution, any other move is missed), `ReviewSession.tsx` (two entries in the card body table), `package.json` (one line, `"build:traps": "tsx scripts/build-traps.ts"`), `en.json` and `fr.json` (namespace `cards`, inserted after `review`, with the name deck's key), `VOCABULARY.md` (Card kinds, and "puzzle" names only the Lichess row). Each launch `deck.json` may gain `trapFilter`. That is the one edit this slice makes in a deck folder, and it comes after slice 2 is merged.
+**Updated files.** `scripts/decks/deck-build.core.ts`, `scripts/build-decks.setup.ts`, `site/src/decks/deck.utils.ts`, `card.core.ts`, `review-machine.utils.ts` (a name card is recalled by the right choice, a trap card by the whole solution, any other move is missed), `ReviewSession.tsx` (two entries in the card body table), `package.json` (one line, `"build:traps": "tsx scripts/build-traps.ts"`), `en.json` and `fr.json` (namespace `cards`, inserted after `review`, with the name deck's key), `VOCABULARY.md` (Card kinds, and "puzzle" names only the Lichess row). Each launch `deck.json` may gain `trapFilter`. That is the one edit this slice makes in a deck folder, and it comes after slice 2 is merged.
 
 **Tests.** A name with no row fails the build. The four choices hold the right name once. A puzzle row for the wrong side is refused. A trap card missed on its second move. The round-trip test of `deck.utils` with the two new kinds.
 
@@ -708,7 +708,7 @@ Slice 6b adds these to `docs/operator-backlog.md`. The first three are the spec'
 | Spec ref | Decision | Where it lands | Self-check |
 |---|---|---|---|
 | Q.O.D. hand-curated lines | Decks are content files with one reader move per position | `content/decks/*/deck.json`, `scripts/decks/deck-build.core.ts` rules 1 to 5 | `build:decks` exits 0, and the rule tests |
-| Q.O.D. what groups lines | A glob over `content/decks/*/deck.json` | `scripts/build-decks.ts` | Deleting a deck folder and rebuilding changes no other file |
+| Q.O.D. what groups lines | A glob over `content/decks/*/deck.json` | `scripts/build-decks.setup.ts` | Deleting a deck folder and rebuilding changes no other file |
 | Q.O.D. three card kinds | Move and trap cards in their deck, name cards in `opening-names` | `site/src/decks/card.core.ts`, slice 4 | Retention per deck in `retention.core.test.ts` ignores name cards |
 | Q.O.D. sign-in precedent | pragma's slice, one credential, no enrolment | `api/src/auth/`, `scripts/seed-operator-credential.sh` | Back e2e, enrol answers 404 |
 | Q.O.D. analytics | Counts come from `review_event` | `api/src/review-events/`, `recordProductEvent` | `APP=borsouvertures scripts/db-read.sh` once the reader is granted |

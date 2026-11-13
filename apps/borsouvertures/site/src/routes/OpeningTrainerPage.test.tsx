@@ -1,0 +1,149 @@
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { IDBFactory } from 'fake-indexeddb';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import '@/i18n/i18n';
+import { buildExampleDocument } from '@/decks/deck.test-utils';
+import { listStoredReviewEvents } from '@/review/review-event-store.adapter';
+import { readReviewLog } from '@/review/review-log.store';
+import {
+  openApplication,
+  playMove,
+  readCount,
+  stubBoardGeometry,
+  stubDecksFetch,
+} from './trainer-page.test-utils';
+
+// @FollowsBlueprint test-component-render
+describe('the opening trainer, one visit from the first load', () => {
+  beforeAll(async () => {
+    window.localStorage.clear();
+    stubDecksFetch(buildExampleDocument());
+    vi.stubGlobal('indexedDB', new IDBFactory());
+    stubBoardGeometry();
+  });
+
+  beforeEach(async () => {
+    await openApplication();
+  });
+
+  it('opens on Today with the due count, the new count and Start', () => {
+    expect(screen.getByRole('heading', { name: 'Today' })).toBeTruthy();
+    expect(readCount('due')).toBe('0');
+    expect(readCount('new')).toBe('6');
+    expect(screen.getByRole('button', { name: 'Start' })).toHaveProperty('disabled', false);
+    expect(screen.getByRole('button', { name: 'Today' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('switches screens from the tab bar and opens a deck page', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    expect(await screen.findByRole('heading', { name: 'Decks' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Decks' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('button', { name: 'Today' }).getAttribute('aria-current')).toBeNull();
+    expect(screen.getByRole('combobox', { name: 'New cards per day' })).toHaveProperty(
+      'value',
+      '10',
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Albin Countergambit.*6 cards · 0 due · 6 new/ }),
+    );
+    expect(screen.getByRole('heading', { name: 'Albin Countergambit' })).toBeTruthy();
+    expect(screen.getByText('You play Black')).toBeTruthy();
+    expect(screen.getByText('1. d4 d5 2. c4 e5 3. dxe5 d4 4. Nf3 Nc6')).toBeTruthy();
+    expect(screen.getAllByText('English idea 3.')).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Review this deck' }));
+    expect(await screen.findByRole('heading', { name: 'Albin Countergambit · 1/6' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Leave the session' }));
+    expect(screen.getByRole('heading', { name: 'Albin Countergambit' })).toBeTruthy();
+
+    await userEvent.click(screen.getByRole('button', { name: 'All decks' }));
+    expect(screen.getByRole('heading', { name: 'Decks' })).toBeTruthy();
+  });
+
+  it('applies the new cards per day the reader picks', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.selectOptions(
+      await screen.findByRole('combobox', { name: 'New cards per day' }),
+      '3',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(readCount('new')).toBe('3');
+  });
+
+  it('leaves the due and new counts unchanged after time spent in Explore', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Explore' }));
+    expect(await screen.findByRole('heading', { name: 'Explore' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Explore' }).getAttribute('aria-current')).toBe(
+      'page',
+    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Toggle mode' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(readCount('due')).toBe('0');
+    expect(readCount('new')).toBe('3');
+    expect(readReviewLog().events).toEqual([]);
+  });
+
+  it('names its three sources on Credits', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Credits' }));
+    expect(screen.getByRole('heading', { name: 'Credits' })).toBeTruthy();
+    expect(screen.getByText('CC0 1.0')).toBeTruthy();
+    expect(screen.getByText('CC BY-SA 4.0')).toBeTruthy();
+    expect(screen.getByText('GPL-3.0')).toBeTruthy();
+    expect(
+      screen.getByRole('link', { name: 'Source code at tag v19.0.1' }).getAttribute('href'),
+    ).toBe('https://github.com/nmrugg/stockfish.js/tree/v19.0.1');
+    expect(
+      screen.getByText('ee4f115bdb2d32cadf96cada104a05b5ec257d7ad6f57582190b49bc71f096de'),
+    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Today' }).getAttribute('aria-current')).toBeNull();
+  });
+
+  it('recalls a card and shows its idea, misses a card through Show the move, and ends with the recalled share', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(await screen.findByRole('heading', { name: 'Albin Countergambit · 1/3' })).toBeTruthy();
+    expect(screen.getByText('White played 1. d4')).toBeTruthy();
+    expect(screen.queryByText('English idea 1.')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Next' })).toHaveProperty('disabled', true);
+    await screen.findByText('Your move');
+
+    playMove('d7d5');
+    expect(screen.getByText('Recalled. You played 1... d5.')).toBeTruthy();
+    expect(screen.getByText('English idea 1.')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Albin Countergambit · 1/3' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Show the move' })).toHaveProperty('disabled', true);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('heading', { name: 'Albin Countergambit · 2/3' })).toBeTruthy();
+    expect(screen.getByText('White played 2. c4')).toBeTruthy();
+    expect(screen.queryByText('English idea 2.')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show the move' }));
+    expect(screen.getByText('Missed. The book move is 2... e5.')).toBeTruthy();
+    expect(screen.getByText('English idea 2.')).toBeTruthy();
+
+    await vi.waitFor(async () => {
+      const stored = await listStoredReviewEvents(globalThis.indexedDB);
+      expect(stored.map((event) => event.outcome).toSorted()).toEqual(['missed', 'recalled']);
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByText('Your move');
+    playMove('d5d4');
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('heading', { name: 'Albin Countergambit · 3/3' })).toBeTruthy();
+    await screen.findByText('Your move');
+    playMove('e7e5');
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByRole('heading', { name: 'Session complete' })).toBeTruthy();
+    expect(screen.getByText('2 of 3 recalled on the first try (67%)')).toBeTruthy();
+    expect(screen.getByText('1 card due tomorrow')).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByRole('heading', { name: 'Review a deck ahead' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Start' })).toHaveProperty('disabled', true);
+    expect(readCount('new')).toBe('0');
+  });
+});

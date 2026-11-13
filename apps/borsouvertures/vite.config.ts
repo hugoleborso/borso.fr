@@ -4,10 +4,12 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { OPENINGS_CACHE_VERSION } from './site/src/config/openingsCacheVersion';
+import { STOCKFISH_DISTRIBUTION } from './site/src/opponent/stockfish-distribution.core';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 const openingsCacheName = `openings-cache-${OPENINGS_CACHE_VERSION}`;
+const stockfishCacheName = `stockfish-${STOCKFISH_DISTRIBUTION.version}`;
 
 export default defineConfig({
   root: fromHere('./site'),
@@ -15,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fromHere('./site/src'),
+      '@domain': fromHere('./domain'),
     },
   },
   build: {
@@ -26,7 +29,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'decks.json'],
       manifest: {
         name: 'Borsouvertures',
         short_name: 'Borsouvertures',
@@ -46,7 +49,16 @@ export default defineConfig({
         ],
       },
       workbox: {
+        globIgnores: ['**/stockfish/**'],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/stockfish/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: stockfishCacheName,
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.endsWith('/openings.json'),
             handler: 'CacheFirst',

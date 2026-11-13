@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isNewCardsPerDay,
+  listNewCardsPerDayChoices,
+  NEW_CARDS_PER_DAY_DEFAULT,
   type PersistedState,
   parsePersistedState,
   stringifyPersistedState,
+  toNewCardsPerDay,
 } from './persistedState.utils';
 
 const VALID_STATE: PersistedState = {
@@ -18,6 +22,7 @@ const VALID_STATE: PersistedState = {
     lineIds: ['classical'],
   },
   treeVisualizationMode: 'buttons',
+  newCardsPerDay: 10,
 };
 
 const OTHER_VALID_STATE: PersistedState = {
@@ -29,6 +34,7 @@ const OTHER_VALID_STATE: PersistedState = {
   playAutoOpponent: true,
   playScope: { openingIds: [], variationIds: [], lineIds: [] },
   treeVisualizationMode: null,
+  newCardsPerDay: 0,
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -175,5 +181,44 @@ describe('parsePersistedState', () => {
 describe('stringifyPersistedState', () => {
   it('produces JSON that parses back to the same value', () => {
     expect(JSON.parse(stringifyPersistedState(VALID_STATE))).toEqual(VALID_STATE);
+  });
+});
+
+describe('the new cards per day setting', () => {
+  it('defaults to 10 and allows 0 to 30 whole cards', () => {
+    expect(NEW_CARDS_PER_DAY_DEFAULT).toBe(10);
+    expect(isNewCardsPerDay(0)).toBe(true);
+    expect(isNewCardsPerDay(30)).toBe(true);
+    expect(isNewCardsPerDay(31)).toBe(false);
+    expect(isNewCardsPerDay(-1)).toBe(false);
+    expect(isNewCardsPerDay(2.5)).toBe(false);
+    expect(isNewCardsPerDay('10')).toBe(false);
+  });
+
+  it('offers every count from 0 to 30', () => {
+    const choices = listNewCardsPerDayChoices();
+    expect(choices).toHaveLength(31);
+    expect(choices[0]).toBe(0);
+    expect(choices[10]).toBe(10);
+    expect(choices.at(-1)).toBe(30);
+  });
+
+  it('reads the count a select hands back, and keeps the current one on anything else', () => {
+    expect(toNewCardsPerDay('0', 10)).toBe(0);
+    expect(toNewCardsPerDay('30', 10)).toBe(30);
+    expect(toNewCardsPerDay('31', 10)).toBe(10);
+    expect(toNewCardsPerDay('', 10)).toBe(10);
+    expect(toNewCardsPerDay('  ', 10)).toBe(10);
+    expect(toNewCardsPerDay('many', 7)).toBe(7);
+  });
+
+  it('discards a stored record that lacks the field or holds a count out of range', () => {
+    const { newCardsPerDay: _newCardsPerDay, ...withoutField } = VALID_STATE;
+    expect(parsePersistedState(JSON.stringify(withoutField))).toBeNull();
+    expect(parsePersistedState(JSON.stringify({ ...VALID_STATE, newCardsPerDay: 31 }))).toBeNull();
+    expect(parsePersistedState(JSON.stringify({ ...VALID_STATE, newCardsPerDay: 30 }))).toEqual({
+      ...VALID_STATE,
+      newCardsPerDay: 30,
+    });
   });
 });

@@ -32,6 +32,106 @@
       "french": "FR"
     }
   },
+  "tab-bar": {
+    "aria-label": "Sections principales",
+    "today": "Aujourd'hui",
+    "decks": "Paquets",
+    "explore": "Explorer"
+  },
+  "today": {
+    "title": "Aujourd'hui",
+    "due": "à revoir",
+    "new": "nouvelles",
+    "start": "Commencer",
+    "nothing-left": "Rien à revoir et plus de nouvelle carte aujourd'hui. Ouvrez un paquet pour le revoir en avance.",
+    "review-ahead": "Revoir un paquet en avance"
+  },
+  "review": {
+    "progress": "{{deck}} · {{position}}/{{total}}",
+    "opponent-played": "Les {{side}} ont joué {{move}}",
+    "first-move": "Vous jouez le premier coup",
+    "side": {
+      "white": "Blancs",
+      "black": "Noirs"
+    },
+    "status": {
+      "opponent-moving": "Regardez le coup",
+      "your-move": "À vous de jouer",
+      "recalled": "Retenu. Vous avez joué {{move}}.",
+      "missed": "Manqué. Le coup du livre est {{move}}."
+    },
+    "idea": {
+      "title": "Idée",
+      "missing": "Ce coup n'a pas encore d'idée.",
+      "wikipedia-credit": "D'après Wikipédia, CC BY-SA 4.0"
+    },
+    "show-move": "Montrer le coup",
+    "next": "Suivant",
+    "leave": "Quitter la session",
+    "completed": {
+      "title": "Session terminée",
+      "recalled-share": "{{recalled}} sur {{total}} retenues du premier coup ({{percent}} %)",
+      "due-tomorrow_one": "{{count}} carte à revoir demain",
+      "due-tomorrow_other": "{{count}} cartes à revoir demain",
+      "back": "Terminer"
+    },
+    "progress-not-kept": "Ce navigateur ne peut pas enregistrer votre progression. Les révisions de cette visite seront perdues à la fermeture de la page."
+  },
+  "decks": {
+    "title": "Paquets",
+    "names": {
+      "albin-countergambit": "Contre-gambit Albin",
+      "scandinavian-qa5": "Scandinave avec 3...Qa5",
+      "caro-kann-two-knights": "Caro-Kann, attaque des deux cavaliers",
+      "vienna-game": "Partie viennoise",
+      "grand-prix-attack": "Attaque Grand Prix"
+    },
+    "side": {
+      "white": "Vous jouez les Blancs",
+      "black": "Vous jouez les Noirs"
+    },
+    "counts": "{{cards}} cartes · {{due}} à revoir · {{new}} nouvelles",
+    "review": "Revoir ce paquet",
+    "nothing-to-review": "Aucune carte de ce paquet n'est à revoir, et les nouvelles cartes du jour sont épuisées.",
+    "back": "Tous les paquets",
+    "lines": "Lignes",
+    "line-moves": "Coups",
+    "new-cards-per-day": {
+      "label": "Nouvelles cartes par jour"
+    },
+    "load-failure": {
+      "title": "Impossible de charger les paquets",
+      "message": "Le fichier des paquets n'a pas pu être chargé. Essayez de recharger la page."
+    }
+  },
+  "explore": {
+    "title": "Explorer",
+    "description": "Apprenez et jouez dans tout le catalogue d'ouvertures. Rien de ce que vous faites ici ne crée de révision."
+  },
+  "credits": {
+    "title": "Crédits",
+    "link": "Crédits",
+    "lichess": {
+      "name": "Lichess chess-openings",
+      "licence": "CC0 1.0",
+      "description": "Les noms et les coups des ouvertures de l'onglet Explorer viennent du jeu de données chess-openings de Lichess.",
+      "link": "lichess-org/chess-openings sur GitHub"
+    },
+    "wikipedia": {
+      "name": "Wikipédia",
+      "licence": "CC BY-SA 4.0",
+      "description": "Certaines idées affichées avec les cartes s'appuient sur des articles de Wikipédia. Chacune porte un lien vers son article.",
+      "link": "Albin Countergambit sur Wikipédia"
+    },
+    "stockfish": {
+      "name": "Stockfish {{version}}",
+      "licence": "GPL-3.0",
+      "description": "Le moteur d'échecs Stockfish vérifie chaque coup des paquets. Ses fichiers sont distribués avec cette application sans modification, comme un programme séparé.",
+      "source-link": "Code source à l'étiquette {{tag}}",
+      "licence-link": "Texte de la licence",
+      "digests": "SHA-256 des fichiers distribués"
+    }
+  },
   "loading": {
     "openings": "Chargement des ouvertures…"
   },

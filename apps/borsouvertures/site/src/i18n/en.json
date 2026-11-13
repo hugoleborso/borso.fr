@@ -32,6 +32,106 @@
       "french": "FR"
     }
   },
+  "tab-bar": {
+    "aria-label": "Main sections",
+    "today": "Today",
+    "decks": "Decks",
+    "explore": "Explore"
+  },
+  "today": {
+    "title": "Today",
+    "due": "due",
+    "new": "new",
+    "start": "Start",
+    "nothing-left": "Nothing is due and no new card is left today. Open a deck to review it ahead.",
+    "review-ahead": "Review a deck ahead"
+  },
+  "review": {
+    "progress": "{{deck}} · {{position}}/{{total}}",
+    "opponent-played": "{{side}} played {{move}}",
+    "first-move": "You make the first move",
+    "side": {
+      "white": "White",
+      "black": "Black"
+    },
+    "status": {
+      "opponent-moving": "Watch the move",
+      "your-move": "Your move",
+      "recalled": "Recalled. You played {{move}}.",
+      "missed": "Missed. The book move is {{move}}."
+    },
+    "idea": {
+      "title": "Idea",
+      "missing": "This move has no idea yet.",
+      "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0"
+    },
+    "show-move": "Show the move",
+    "next": "Next",
+    "leave": "Leave the session",
+    "completed": {
+      "title": "Session complete",
+      "recalled-share": "{{recalled}} of {{total}} recalled on the first try ({{percent}}%)",
+      "due-tomorrow_one": "{{count}} card due tomorrow",
+      "due-tomorrow_other": "{{count}} cards due tomorrow",
+      "back": "Done"
+    },
+    "progress-not-kept": "This browser cannot store your progress. Reviews from this visit will be lost when you close the page."
+  },
+  "decks": {
+    "title": "Decks",
+    "names": {
+      "albin-countergambit": "Albin Countergambit",
+      "scandinavian-qa5": "Scandinavian with 3...Qa5",
+      "caro-kann-two-knights": "Caro-Kann, Two Knights Attack",
+      "vienna-game": "Vienna Game",
+      "grand-prix-attack": "Grand Prix Attack"
+    },
+    "side": {
+      "white": "You play White",
+      "black": "You play Black"
+    },
+    "counts": "{{cards}} cards · {{due}} due · {{new}} new",
+    "review": "Review this deck",
+    "nothing-to-review": "No card of this deck is due, and today's new cards are used up.",
+    "back": "All decks",
+    "lines": "Lines",
+    "line-moves": "Moves",
+    "new-cards-per-day": {
+      "label": "New cards per day"
+    },
+    "load-failure": {
+      "title": "Couldn't load the decks",
+      "message": "The deck file failed to load. Try reloading the page."
+    }
+  },
+  "explore": {
+    "title": "Explore",
+    "description": "Learn and play over the whole catalogue of openings. Nothing you do here creates a review."
+  },
+  "credits": {
+    "title": "Credits",
+    "link": "Credits",
+    "lichess": {
+      "name": "Lichess chess-openings",
+      "licence": "CC0 1.0",
+      "description": "The names and moves of the openings in Explore come from the Lichess chess-openings dataset.",
+      "link": "lichess-org/chess-openings on GitHub"
+    },
+    "wikipedia": {
+      "name": "Wikipedia",
+      "licence": "CC BY-SA 4.0",
+      "description": "Some ideas shown with the cards are based on Wikipedia articles. Each one carries a link to its article.",
+      "link": "Albin Countergambit on Wikipedia"
+    },
+    "stockfish": {
+      "name": "Stockfish {{version}}",
+      "licence": "GPL-3.0",
+      "description": "The Stockfish chess engine checks every move of the decks. Its files are distributed with this application unmodified, as a separate program.",
+      "source-link": "Source code at tag {{tag}}",
+      "licence-link": "Licence text",
+      "digests": "SHA-256 of the distributed files"
+    }
+  },
   "loading": {
     "openings": "Loading openings…"
   },

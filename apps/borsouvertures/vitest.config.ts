@@ -12,6 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fromHere('./site/src'),
+      '@domain': fromHere('./domain'),
     },
   },
   test: {
@@ -20,11 +21,21 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./site/src/test-setup.ts'],
     testTimeout: 30_000,
-    include: ['site/src/**/*.test.ts', 'site/src/**/*.test.tsx'],
+    include: [
+      'site/src/**/*.test.ts',
+      'site/src/**/*.test.tsx',
+      'domain/**/*.test.ts',
+      'scripts/**/*.test.ts',
+    ],
     coverage: {
       provider: 'v8',
       reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
-      include: ['site/**/*.{core,utils,adapter,schema}.ts'],
+      include: [
+        'site/**/*.{core,utils,adapter,schema}.ts',
+        'domain/**/*.core.ts',
+        'scripts/**/*.core.ts',
+        'scripts/**/*.adapter.ts',
+      ],
       thresholds: {
         perFile: true,
         statements: 100,

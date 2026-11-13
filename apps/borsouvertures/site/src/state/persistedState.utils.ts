@@ -6,6 +6,9 @@ export type Side = 'white' | 'black';
 export type View = 'select' | 'session';
 export type TreeVisualizationMode = 'arrows' | 'buttons' | null;
 
+export const NEW_CARDS_PER_DAY_DEFAULT = 10;
+export const NEW_CARDS_PER_DAY_MAXIMUM = 30;
+
 export interface PlayScope {
   openingIds: string[];
   variationIds: string[];
@@ -21,6 +24,7 @@ export interface PersistedState {
   playAutoOpponent: boolean;
   playScope: PlayScope;
   treeVisualizationMode: TreeVisualizationMode;
+  newCardsPerDay: number;
 }
 
 /**
@@ -47,6 +51,7 @@ export function parsePersistedState(raw: string): PersistedState | null {
   const playAutoOpponent = parseBoolean(record.playAutoOpponent);
   const playScope = parsePlayScope(record.playScope);
   const treeVisualizationMode = parseTreeVisualizationMode(record.treeVisualizationMode);
+  const newCardsPerDay = parseNewCardsPerDay(record.newCardsPerDay);
 
   if (
     mode === null ||
@@ -56,7 +61,8 @@ export function parsePersistedState(raw: string): PersistedState | null {
     view === null ||
     playAutoOpponent === null ||
     playScope === null ||
-    treeVisualizationMode === undefined
+    treeVisualizationMode === undefined ||
+    newCardsPerDay === null
   ) {
     return null;
   }
@@ -69,6 +75,7 @@ export function parsePersistedState(raw: string): PersistedState | null {
     playAutoOpponent,
     playScope,
     treeVisualizationMode,
+    newCardsPerDay,
   };
 }
 
@@ -76,6 +83,25 @@ function parseTreeVisualizationMode(value: unknown): TreeVisualizationMode | und
   if (value === null) return null;
   if (value === 'arrows' || value === 'buttons') return value;
   return undefined;
+}
+
+export function isNewCardsPerDay(value: unknown): value is number {
+  return (
+    Number.isInteger(value) && Number(value) >= 0 && Number(value) <= NEW_CARDS_PER_DAY_MAXIMUM
+  );
+}
+
+function parseNewCardsPerDay(value: unknown): number | null {
+  return isNewCardsPerDay(value) ? value : null;
+}
+
+export function listNewCardsPerDayChoices(): number[] {
+  return Array.from({ length: NEW_CARDS_PER_DAY_MAXIMUM + 1 }, (_unused, count) => count);
+}
+
+export function toNewCardsPerDay(value: string, current: number): number {
+  const count = value.trim() === '' ? Number.NaN : Number(value);
+  return isNewCardsPerDay(count) ? count : current;
 }
 
 export function stringifyPersistedState(state: PersistedState): string {

@@ -1,11 +1,14 @@
 # Vocabulary — borsouvertures
 
 `borsouvertures` is a front-end-only progressive web app for learning chess
-openings. It ships a book built from the Lichess `chess-openings` tables and
-drives it two ways: a learner drills one variation until every line in it has
-been seen, or a player keeps a game inside a chosen part of the book for as
-long as they can. There is no server and no account, and everything a reader
-picks lives in one localStorage record.
+openings. It ships hand-written decks that a reader reviews a few cards a day,
+on a schedule that asks each card again when it is about to be forgotten. It
+also ships a book built from the Lichess `chess-openings` tables, which the
+Explore tab drives two ways: a learner drills one variation until every line in
+it has been seen, or a player keeps a game inside a chosen part of the book for
+as long as they can. There is no server and no account. What a reader picks
+lives in one localStorage record, and what a reader has reviewed lives in a log
+of review events in the browser's IndexedDB.
 
 This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is taken
@@ -93,6 +96,70 @@ Not to be confused with: the `candidates` parameter of `pickRandom` and of
 `MoveButtonList`, which is a list of UCI book moves. The word carries two
 meanings in this codebase.
 
+## Card
+
+One question the scheduler asks again: a position of a deck where the reader
+has exactly one move to play.
+
+Lives in: `site/src/decks/card.core.ts`, with the stored shape in
+`site/src/decks/deck.utils.ts`
+
+- `Card` is a union discriminated by `kind`. It has one member today, the
+  `move` card. The kinds `name` and `trap` exist in `CardKind` and in the card
+  id grammar, and no card of those kinds is built yet.
+- A move card's id is `move:<deckId>:<positionKey>`, built by `buildMoveCardId`.
+  The id is the position and not the line, so editing the later moves of a line
+  keeps the earlier ids and their history.
+- A position two decks of one side share is one card, owned by the deck with
+  the lower `order`.
+- `isBookMove` accepts the card's `bookMoveUci`. A board drop names no
+  promotion piece, so a move of four characters matches a promotion on its two
+  squares.
+
+Held by: `site/src/decks/card.core.test.ts` › accepts a board drop on the two squares of a promotion, and only the book piece when one is named
+
+Not to be confused with: a line, which is a whole move sequence. A line of 18
+plies holds nine reader moves, so up to nine cards.
+
+## Daily plan
+
+The cards a reader is asked today: the due cards, then the new cards.
+
+Lives in: `site/src/review/daily-plan.core.ts`
+
+- `buildDailyPlan` puts due cards first, by due instant then by id. New cards
+  follow in deck `order`, then line order, then ply order.
+- New cards stop at `newCardsPerDay` minus the cards already introduced today.
+  The setting is 10 by default, 0 to 30, and is kept on the device.
+- The plan is derived from the review log at each render and is never stored.
+
+Held by: `site/src/review/daily-plan.core.test.ts` › takes the cards introduced today off the limit
+
+## Deck
+
+A hand-written set of lines for one side, with one idea per reader move, that a
+reader reviews card by card.
+
+Lives in: `content/decks/`, built by `scripts/decks/deck-build.core.ts` and
+read through `site/src/decks/deck.utils.ts`
+
+- A deck is one folder: `deck.json`, `ideas.en.md` and `ideas.fr.md`. The build
+  finds decks by listing the folders, so adding or removing one needs no code
+  change.
+- A position where the reader moves has exactly one reader move across the
+  whole deck. The opponent may have several moves from one position, and that
+  is what makes lines.
+- `order` decides which deck owns a position two decks share, and the order new
+  cards are introduced in.
+- The build writes every deck into `site/public/decks.json`, which the site
+  fetches once per page load. A deck that fails to parse there raises
+  `DeckContentInvalidError`.
+
+Held by: `scripts/decks/deck-build.core.test.ts` › rule 4 refuses two reader moves from one position
+
+Not to be confused with: an opening, which is an entry of the Lichess book that
+Explore reads. A deck is content written for this application.
+
 ## Drill
 
 One run of learn mode against one variation.
@@ -110,6 +177,21 @@ resolved in `site/src/openings/learnSession.core.ts`
   variation id, when the selection names no opening or no variation.
   `isLearnDrillReady` is the test the screen branches on.
 
+## Due
+
+The state of a card whose scheduled day has come.
+
+Lives in: `site/src/review/daily-plan.core.ts`, with the schedule in
+`site/src/review/scheduler.core.ts`
+
+- A card is due on a calendar day and not at an instant. Its `dueAt` is turned
+  into the device's calendar day and compared with today.
+- `dueAt` comes from replaying the card's review events through `ts-fsrs` with
+  the pinned `SCHEDULER_CONFIGURATION`, fuzz off, so two devices holding the
+  same events agree.
+
+Held by: `site/src/review/daily-plan.core.test.ts` › counts a card as due on the calendar day of the device, not at the instant
+
 ## ECO code
 
 The Encyclopaedia of Chess Openings classification the source row carried.
@@ -120,6 +202,33 @@ Lives in: `site/src/openings/types.ts`
   distinct codes of every row folded into it, in first-seen order.
 - Both are plain strings to the parser, which checks the type and nothing about
   the format.
+
+## Explore
+
+The tab that holds learn mode and play mode over the whole openings dataset.
+
+Lives in: `site/src/components/organisms/ExploreScreen.tsx`
+
+- Nothing done in Explore stores a review event, so a drill or a game there
+  leaves the due count and the new count unchanged.
+
+Held by: `site/src/routes/OpeningTrainerPage.test.tsx` › leaves the due and new counts unchanged after time spent in Explore
+
+## Idea
+
+The short text that explains one reader move: which piece goes where, and why.
+
+Lives in: `site/src/decks/idea.utils.ts`, parsed by
+`scripts/decks/ideas-markdown.core.ts`
+
+- An idea is keyed by the position key after the reader's move, so two paths
+  that transpose share one text.
+- Every reader move of every line has an idea in English and in French, of 280
+  characters at most. The build fails otherwise.
+- Ideas are content and stay out of the i18n catalogues. `selectIdeaText` picks
+  the French text for a French interface and the English text for any other.
+- A file based on Wikipedia carries its source, and the session shows the
+  credit under each of its ideas.
 
 ## Learn mode
 
@@ -160,7 +269,7 @@ Lives in: `site/src/openings/types.ts`, built by `scripts/build-openings.ts`
 - `shortLineName` trims the opening's name and colon, then the variation's name
   and comma, off the front of the line's name, and answers `null` when nothing
   distinctive is left.
-- The shipped dataset holds 1837 lines.
+- The shipped dataset holds 2313 lines.
 
 Not to be confused with: a variation, which is the group a line belongs to. A
 line is always a leaf; a variation never is.
@@ -177,6 +286,15 @@ Lives in: `site/src/openings/uciSquare.utils.ts`, with the conversion in
   `b`, `n`. `toSquare` throws on anything else.
 - SAN is for reading. `describeMoveInStandardNotation` replays the UCI move from
   a FEN to get it, and answers the raw UCI when the move is illegal there.
+
+## New
+
+The state of a card that has no review event yet.
+
+Lives in: `site/src/review/daily-plan.core.ts`
+
+- A card stops being new at its first review, on any device. The day of that
+  first review is the day it counts against `newCardsPerDay`.
 
 ## Opening
 
@@ -231,6 +349,25 @@ Lives in: `site/src/openings/learnTreeMachine.utils.ts` and
 - A drill also answers `'rejected-no-variation'` before it has been started and
   `'rejected-opponents-turn'` on the opponent's ply.
 
+## Outcome
+
+What one review of a card ended in: `recalled` or `missed`.
+
+Lives in: `domain/review-event.core.ts`, decided in
+`site/src/review/review-machine.utils.ts`
+
+- A card is recalled when the reader plays its book move. A move outside the
+  deck, or a tap on *Show the move*, misses it.
+- Recalled maps to the scheduler's Good and missed to Again. No other grade is
+  used.
+- A missed card comes back later in the same session, and that second answer
+  stores no review event.
+
+Held by: `site/src/review/review-machine.utils.test.ts` › brings a missed card back at the end, and its second answer stores no event
+
+Not to be confused with: out of book, which is the state of a drill or a game
+in Explore. A review has an outcome, a drill does not.
+
 ## Play mode
 
 The mode where the reader plays a whole game and tries to stay inside a chosen
@@ -284,6 +421,24 @@ Lives in: `site/src/openings/learnTreeMachine.utils.ts` and
 - `PLIES_PER_FULL_MOVE` is 2 in both machines, and `MOVES_PER_FULL_TURN` is the
   same 2 in `playSession.core.ts`.
 
+## Position key
+
+The stored name of a position: the first four fields of its FEN, joined by one
+space.
+
+Lives in: `domain/position-key.core.ts`
+
+- The four fields are the board, the side to move, the castling rights and the
+  en passant square. The two move counters are dropped, so two move orders that
+  reach one position share a key.
+- `chess.js` writes the en passant square only when a capture is possible, so
+  the key changes only when the position really does.
+
+Held by: `domain/position-key.core.test.ts` › carries an en passant square that changes a position key
+
+Not to be confused with: a FEN, which is the full six-field string a board is
+drawn from.
+
 ## Preview
 
 The small static board shown on a card in the opening picker.
@@ -295,6 +450,40 @@ Lives in: `site/src/openings/previews.utils.ts`
 - An opening previews the first line of the first variation whose name contains
   `main`, and the first line of its first variation otherwise. A variation
   previews its first line, and a line previews itself.
+
+## Review
+
+One answer a reader gives to one card.
+
+Lives in: `site/src/review/`
+
+- A review is the event, a session in review mode is the run of them. Today's
+  session asks the daily plan, and a deck's session asks that deck's share of
+  it, or its already seen cards ahead of their day when the plan holds none.
+- The session ends with the share recalled on the first try and tomorrow's due
+  count.
+
+## Review event
+
+The immutable record of one review, and the only thing progress is made of.
+
+Lives in: `domain/review-event.core.ts`, stored by
+`site/src/review/review-event-store.adapter.ts`
+
+- It holds an `id` made on the device, the `cardId`, the `outcome`, the device
+  instant `reviewedAt`, the device's `calendarDay` at that instant, the
+  `deviceId`, and `receivedAt`, which is `null` until a server stamps it.
+- Card state, the daily plan and every count are replayed from the events and
+  never stored. `listReviewEventsInReplayOrder` orders them by replay instant,
+  then by id.
+- `selectReplayInstant` is the earliest of `reviewedAt`, `receivedAt` and now,
+  so an event from a clock running ahead is clamped.
+- Events live in the IndexedDB database `borsouvertures-review`, in the object
+  store `review-event`, keyed by `id`. When the store cannot open or write, the
+  log stays in memory and a banner says progress will not be kept.
+
+Held by: `domain/review-event.core.test.ts` › clamps a reviewedAt in the future to now
+Held by: `site/src/routes/OpeningTrainerPage.reload.test.tsx` › finds the same progress after a reload
 
 ## Selection
 
@@ -318,14 +507,19 @@ one id per level, and is what play mode reads.
 ## Session
 
 One mounted board playing one mode, from the moment its machine starts until
-the component unmounts.
+the component unmounts. The modes are `learn`, `play` and `review`.
 
-Lives in: `site/src/components/organisms/SessionScreen.tsx`, with the mount hook
-in `site/src/lib/useSessionStart.ts`
+Lives in: `site/src/components/organisms/SessionScreen.tsx` for learn and play,
+`site/src/components/organisms/ReviewSession.tsx` for review, with the mount
+hook in `site/src/lib/session-start.hook.ts`
+
+- A session in review mode asks a list of cards fixed at its start. It is not a
+  stored `Mode`: the stored field keeps the two Explore modes, and the review
+  session is the screen `review-session`.
 
 - `useSessionStart` runs the machine's `start` inside `useState`'s lazy
   initialiser, which React calls once per mount and before the first paint.
-- The two machines are module-level singletons, so a control outside the board
+- The machines are module-level singletons, so a control outside the board
   drives the same object the board reads.
 - Restarting is a remount: the session body carries `buildSessionKey(...)` as
   its `key`, a string joining the mode, the side, the three selection ids and
@@ -356,7 +550,7 @@ Lives in: `site/src/openings/types.ts`, built by `scripts/build-openings.ts`
   that name.
 - It is the unit a drill runs against, and the unit whose lines a cleared drill
   has covered.
-- The shipped dataset holds 477 variations.
+- The shipped dataset holds 587 variations.
 
 Not to be confused with: a line, which is one move sequence inside a variation.
 A picker column shows variations; the column beside it shows the lines of one.
@@ -401,7 +595,8 @@ where the tree shape matters, which is inside the drill helpers.
 - **node**, **branch**, **tree** as domain nouns. The tree is a shape the drill
   helpers reason about; the things themselves are **lines** and **leaves**.
 - **engine**, **bot**, **AI**. The reply is the **auto opponent**, and it is a
-  uniform random pick among the book moves.
+  uniform random pick among the book moves. The program that checks the decks
+  is named by its own name, **Stockfish**, and identifiers say `stockfish`.
 - **quiz**, **exercise**, **test**. One run of learn mode is a **drill**, and a
   drill is **cleared**.
 - **game** as a stored entity. A game is one **session** in play mode, and it
@@ -413,6 +608,11 @@ where the tree shape matters, which is inside the drill helpers.
 - **algebraic notation** unqualified. Say **SAN** for the readable form and
   **UCI** for the four-character form the machines speak; those are the two
   field suffixes, `movesSan` and `movesUci`.
-- **position** for a stored value. A position on the board is a **FEN** string.
+- **position** for a stored value. A position on the board is a **FEN** string,
+  and the stored name of one is a **position key**.
+- **wrong**, **correct**, **score**, **grade** for a review. A review has an
+  **outcome**, `recalled` or `missed`.
+- **repertoire** for a set of lines. The set is a **deck**.
+- **flashcard**, **puzzle**. The unit is a **card**.
 - **French** in identifiers. The application's name is French and the interface
   ships `fr.json`; the code is English.

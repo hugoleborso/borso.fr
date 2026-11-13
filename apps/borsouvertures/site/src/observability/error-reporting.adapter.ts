@@ -3,7 +3,7 @@
  */
 
 import * as Sentry from '@sentry/react';
-import type { ErrorReportingSettings } from './error-reporting.core';
+import type { ErrorReportingSettings, ProductEvent } from './error-reporting.core';
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 
@@ -30,4 +30,20 @@ export function startErrorReporting(settings: ErrorReportingSettings): void {
     tracePropagationTargets: NO_OWN_API_TO_PROPAGATE_TRACES_TO,
     integrations: [Sentry.browserTracingIntegration()],
   });
+}
+
+// @FollowsBlueprint observability-adapter
+export function recordProductEvent(event: ProductEvent): void {
+  const { name, ...details } = event;
+  Sentry.addBreadcrumb({
+    category: 'product',
+    type: 'info',
+    level: 'info',
+    message: name,
+    data: details,
+  });
+}
+
+export function reportTaggedError(error: unknown, tags: Record<string, string>): void {
+  Sentry.captureException(error, { tags });
 }

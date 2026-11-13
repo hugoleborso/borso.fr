@@ -14,5 +14,5 @@
     "lib": ["ES2023"],
     "types": ["node"]
   },
-  "include": ["bin", "scripts"]
+  "include": ["bin"]
 }

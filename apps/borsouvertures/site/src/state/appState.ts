@@ -4,6 +4,7 @@ import type { Selection } from '@/openings/selectors.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import {
   type Mode,
+  NEW_CARDS_PER_DAY_DEFAULT,
   parsePersistedState,
   type PersistedState,
   type PlayScope,
@@ -28,6 +29,7 @@ const INITIAL_STATE: AppState = {
   playAutoOpponent: true,
   playScope: EMPTY_PLAY_SCOPE,
   treeVisualizationMode: null,
+  newCardsPerDay: NEW_CARDS_PER_DAY_DEFAULT,
 };
 
 function readInitialState(): AppState {
@@ -112,6 +114,10 @@ export function setPlayScope(playScope: PlayScope): void {
 
 export function setTreeVisualizationMode(treeVisualizationMode: TreeVisualizationMode): void {
   update({ treeVisualizationMode });
+}
+
+export function setNewCardsPerDay(newCardsPerDay: number): void {
+  update({ newCardsPerDay });
 }
 
 export function resetPlayScopeAndSelection(): void {
