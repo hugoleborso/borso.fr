@@ -2268,30 +2268,12 @@
   "apps/pragma/api/src/songs/spotify.core.ts": {
     "readSpotifyToken": "core-parse-untrusted"
   },
-  "apps/pragma/api/src/studies/band-streaks.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/studies/band-streaks.core.ts": {
-    "buildMemberStreaks": "core-projection"
-  },
   "apps/pragma/api/src/studies/concert-readiness.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/studies/concert-readiness.core.ts": {
     "groupLineupsBySong": "core-projection",
     "isSongReady": "core-decision"
-  },
-  "apps/pragma/api/src/studies/paris-day.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/studies/paris-day.core.ts": {
-    "parisCalendarDay": "core-projection"
-  },
-  "apps/pragma/api/src/studies/streak.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/studies/streak.core.ts": {
-    "computeStreak": "core-decision"
   },
   "apps/pragma/api/src/studies/studies.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -2789,9 +2771,6 @@
   "apps/pragma/site/src/components/molecules/SessionViewTabs.tsx": {
     "SessionViewTabs": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/SessionsSectionTabs.tsx": {
-    "SessionsSectionTabs": "molecule-presentational"
-  },
   "apps/pragma/site/src/components/molecules/SetlistEntryEnergyField.test.tsx": {
     "describe": "test-pure-unit"
   },
@@ -2833,9 +2812,6 @@
   },
   "apps/pragma/site/src/components/molecules/StandingSongRow.tsx": {
     "StandingSongRow": "molecule-presentational"
-  },
-  "apps/pragma/site/src/components/molecules/StreakBadge.tsx": {
-    "StreakBadge": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/TargetSongCountField.tsx": {
     "TargetSongCountField": "molecule-field"
@@ -4836,9 +4812,6 @@
   "apps/talos/site/src/components/molecules/CommitmentRow.tsx": {
     "CommitmentRow": "molecule-presentational"
   },
-  "apps/talos/site/src/components/molecules/CounterPill.tsx": {
-    "CounterPill": "molecule-presentational"
-  },
   "apps/talos/site/src/components/molecules/DateSlider.tsx": {
     "DateSlider": "molecule-presentational"
   },
@@ -4969,12 +4942,6 @@
     "KnowledgeGraph": "organism-imperative-bridge",
     "useEffect": "lint-exception"
   },
-  "apps/talos/site/src/components/organisms/MessageComposer.test.tsx": {
-    "describe": "test-component-render"
-  },
-  "apps/talos/site/src/components/organisms/MessageComposer.tsx": {
-    "MessageComposer": "organism-form"
-  },
   "apps/talos/site/src/components/organisms/NotificationSettings.tsx": {
     "NotificationSettings": "organism-query-owning"
   },
@@ -5029,17 +4996,11 @@
   "apps/talos/site/src/components/organisms/TodayBrief.tsx": {
     "TodayBrief": "organism-presentational"
   },
-  "apps/talos/site/src/components/organisms/TodayCounters.tsx": {
-    "TodayCounters": "organism-presentational"
-  },
   "apps/talos/site/src/components/organisms/TodayFocus.tsx": {
     "TodayFocus": "organism-mutation-panel"
   },
   "apps/talos/site/src/components/organisms/TodayOverview.tsx": {
     "TodayOverview": "organism-query-owning"
-  },
-  "apps/talos/site/src/components/organisms/TodayProposal.tsx": {
-    "TodayProposal": "organism-mutation-panel"
   },
   "apps/talos/site/src/components/organisms/TodoBoard.tsx": {
     "TodoBoard": "organism-presentational"
@@ -5089,9 +5050,6 @@
   "apps/talos/site/src/components/organisms/knowledge-graph.core.ts": {
     "selectNodeColorToken": "core-view-projection"
   },
-  "apps/talos/site/src/components/organisms/message-composer.core.ts": {
-    "isMessageTooLong": "core-view-intent"
-  },
   "apps/talos/site/src/components/organisms/navigation-active.core.ts": {
     "isNavigationDestinationActive": "core-view-intent"
   },
@@ -5121,9 +5079,6 @@
   },
   "apps/talos/site/src/components/organisms/today-brief.core.ts": {
     "selectBriefPreview": "core-view-projection"
-  },
-  "apps/talos/site/src/components/organisms/today-counters.core.ts": {
-    "keepNonZeroCounters": "core-view-projection"
   },
   "apps/talos/site/src/components/organisms/todo-form.core.ts": {
     "canCreateTodo": "core-form-schema"
@@ -5286,9 +5241,6 @@
   },
   "apps/talos/site/src/routes/LoginPage.tsx": {
     "LoginPage": "route-detail-page"
-  },
-  "apps/talos/site/src/routes/MessagePage.tsx": {
-    "MessagePage": "route-list-page"
   },
   "apps/talos/site/src/routes/PastBriefPage.tsx": {
     "PastBriefPage": "route-detail-page"

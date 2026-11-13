@@ -3,7 +3,9 @@ import {
   acceptSubjects,
   buildSubjectBaseline,
   describeDetachedClaim,
+  describeVanishedFile,
   listDetachedClaims,
+  listVanishedFiles,
   parseSubjectBaseline,
   type MarkerClaim,
 } from './subjects.core';
@@ -160,6 +162,28 @@ describe('listDetachedClaims', () => {
       },
     );
     expect(asked).toStrictEqual([`${RUNNER_REPOSITORY}:listRunnersForEdition`]);
+  });
+});
+
+describe('listVanishedFiles', () => {
+  it('reports a recorded file that carries no marker any more', () => {
+    const recorded = buildSubjectBaseline([claim(), claim({ filePath: EDITION_REPOSITORY })]);
+    expect(listVanishedFiles(recorded, [claim()])).toStrictEqual([EDITION_REPOSITORY]);
+  });
+
+  it('reports nothing while every recorded file still carries a marker', () => {
+    const recorded = buildSubjectBaseline([claim()]);
+    expect(listVanishedFiles(recorded, [claim({ subject: 'other' })])).toStrictEqual([]);
+  });
+});
+
+describe('describeVanishedFile', () => {
+  it('names the file and the command that drops its entry', () => {
+    expect(describeVanishedFile(RUNNER_REPOSITORY)).toBe(
+      `${RUNNER_REPOSITORY}: docs/standards/blueprint-subjects.json still records markers for this ` +
+        'file, which no longer carries any, or no longer exists. Drop the entry in the same commit: ' +
+        `\`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept ${RUNNER_REPOSITORY}\`.`,
+    );
   });
 });
 

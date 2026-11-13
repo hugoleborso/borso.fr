@@ -18,7 +18,9 @@ import {
 import {
   acceptSubjects,
   describeDetachedClaim,
+  describeVanishedFile,
   listDetachedClaims,
+  listVanishedFiles,
   parseSubjectBaseline,
   type MarkerClaim,
 } from '../../../scripts/blueprints/subjects.core.js';
@@ -324,9 +326,13 @@ function listSubjectDrift(followers: readonly FollowerReference[]): string[] {
       'docs/standards/blueprint-subjects.json does not read as a mapping of file to subject. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
     ];
   }
-  return listDetachedClaims(recorded, toMarkerClaims(followers), (filePath, subject) =>
-    hasDeclarationOf(fs.readFileSync(path.join(REPOSITORY_ROOT, filePath), 'utf8'), subject),
-  ).map(describeDetachedClaim);
+  const claims = toMarkerClaims(followers);
+  return [
+    ...listVanishedFiles(recorded, claims).map(describeVanishedFile),
+    ...listDetachedClaims(recorded, claims, (filePath, subject) =>
+      hasDeclarationOf(fs.readFileSync(path.join(REPOSITORY_ROOT, filePath), 'utf8'), subject),
+    ).map(describeDetachedClaim),
+  ];
 }
 
 function main(): void {

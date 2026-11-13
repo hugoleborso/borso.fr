@@ -85,6 +85,22 @@ export function describeDetachedClaim(claim: DetachedClaim): string {
   );
 }
 
+export function listVanishedFiles(
+  recorded: SubjectBaseline,
+  current: readonly MarkerClaim[],
+): string[] {
+  const claimedNow = new Set(current.map((claim) => claim.filePath));
+  return Object.keys(recorded).filter((filePath) => !claimedNow.has(filePath));
+}
+
+export function describeVanishedFile(filePath: string): string {
+  return (
+    `${filePath}: docs/standards/blueprint-subjects.json still records markers for this file, ` +
+    'which no longer carries any, or no longer exists. Drop the entry in the same commit: ' +
+    `\`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept ${filePath}\`.`
+  );
+}
+
 export function acceptSubjects(
   recorded: SubjectBaseline,
   current: readonly MarkerClaim[],
