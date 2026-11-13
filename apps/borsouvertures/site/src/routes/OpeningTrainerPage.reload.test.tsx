@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import '@/i18n/i18n';
 import { buildExampleDeck, buildExampleDocument } from '@/decks/deck.test-utils';
 import { appendStoredReviewEvent } from '@/review/review-event-store.adapter';
@@ -24,6 +24,15 @@ describe('the opening trainer, loaded over reviews made on an earlier visit', ()
     stubDecksFetch(buildExampleDocument());
     vi.stubGlobal('indexedDB', factory);
     await openApplication();
+  });
+
+  afterAll(async () => {
+    await act(async () => {
+      cleanup();
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+    });
   });
 
   it('finds the same progress after a reload', () => {
