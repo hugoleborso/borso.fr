@@ -189,7 +189,10 @@
         "elo-1320": "Classement 1320",
         "elo-1500": "Classement 1500",
         "elo-1700": "Classement 1700",
-        "elo-1900": "Classement 1900"
+        "elo-1900": "Classement 1900",
+        "elo-2000": "Classement 2000",
+        "elo-2200": "Classement 2200",
+        "elo-2500": "Classement 2500"
       }
     },
     "source": {

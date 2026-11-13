@@ -15,6 +15,9 @@ const STEP_KEY_BY_STRENGTH = {
   'elo-1500': 'opponent.strength.steps.elo-1500',
   'elo-1700': 'opponent.strength.steps.elo-1700',
   'elo-1900': 'opponent.strength.steps.elo-1900',
+  'elo-2000': 'opponent.strength.steps.elo-2000',
+  'elo-2200': 'opponent.strength.steps.elo-2200',
+  'elo-2500': 'opponent.strength.steps.elo-2500',
 } as const satisfies Record<OpponentStrengthId, string>;
 
 interface OpponentStrengthSelectProps {

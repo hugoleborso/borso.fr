@@ -7,7 +7,10 @@ export type OpponentStrengthId =
   | 'elo-1320'
   | 'elo-1500'
   | 'elo-1700'
-  | 'elo-1900';
+  | 'elo-1900'
+  | 'elo-2000'
+  | 'elo-2200'
+  | 'elo-2500';
 
 export interface OpponentStrengthStep {
   id: OpponentStrengthId;
@@ -24,6 +27,9 @@ const OPPONENT_STRENGTH_STEPS = {
   'elo-1500': { id: 'elo-1500', family: 'rating', level: 1500 },
   'elo-1700': { id: 'elo-1700', family: 'rating', level: 1700 },
   'elo-1900': { id: 'elo-1900', family: 'rating', level: 1900 },
+  'elo-2000': { id: 'elo-2000', family: 'rating', level: 2000 },
+  'elo-2200': { id: 'elo-2200', family: 'rating', level: 2200 },
+  'elo-2500': { id: 'elo-2500', family: 'rating', level: 2500 },
 } as const satisfies Record<OpponentStrengthId, OpponentStrengthStep>;
 
 const OPPONENT_STRENGTH_ORDER: readonly OpponentStrengthId[] = [
@@ -34,9 +40,12 @@ const OPPONENT_STRENGTH_ORDER: readonly OpponentStrengthId[] = [
   'elo-1500',
   'elo-1700',
   'elo-1900',
+  'elo-2000',
+  'elo-2200',
+  'elo-2500',
 ];
 
-export const DEFAULT_OPPONENT_STRENGTH: OpponentStrengthId = 'elo-1320';
+export const DEFAULT_OPPONENT_STRENGTH: OpponentStrengthId = 'elo-2000';
 
 const LIMIT_STRENGTH_BY_FAMILY = {
   'skill-level': 'false',

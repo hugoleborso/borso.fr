@@ -100,12 +100,23 @@ describe('a game against Stockfish on a deck page', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Albin Countergambit/ }));
   });
 
-  it('offers the game with the 1320 step selected, and starts no worker before a game', () => {
+  it('offers the game with the 2000 step selected, and starts no worker before a game', () => {
     expect(screen.getByRole('heading', { name: 'Play it against Stockfish' })).toBeTruthy();
     const strength = screen.getByRole('combobox', { name: 'Stockfish strength' });
-    expect(strength).toHaveProperty('value', 'elo-1320');
+    expect(strength).toHaveProperty('value', 'elo-2000');
     expect(Array.from(strength.querySelectorAll('option'), (option) => option.textContent)).toEqual(
-      ['Easiest', 'Easier', 'Easy', '1320 rating', '1500 rating', '1700 rating', '1900 rating'],
+      [
+        'Easiest',
+        'Easier',
+        'Easy',
+        '1320 rating',
+        '1500 rating',
+        '1700 rating',
+        '1900 rating',
+        '2000 rating',
+        '2200 rating',
+        '2500 rating',
+      ],
     );
     expect(stockfishWorkers).toEqual([]);
   });
@@ -120,7 +131,7 @@ describe('a game against Stockfish on a deck page', () => {
     expect(worker?.commands).toEqual([
       'uci',
       'setoption name UCI_LimitStrength value true',
-      'setoption name UCI_Elo value 1320',
+      'setoption name UCI_Elo value 2000',
       'position fen r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5N2/PP2PPPP/RNBQKB1R w KQkq - 2 5',
       'go movetime 400',
     ]);
@@ -148,7 +159,7 @@ describe('a game against Stockfish on a deck page', () => {
     ]);
     await userEvent.selectOptions(
       screen.getByRole('combobox', { name: 'Stockfish strength' }),
-      'elo-1320',
+      'elo-2000',
     );
   });
 

@@ -189,7 +189,10 @@
         "elo-1320": "1320 rating",
         "elo-1500": "1500 rating",
         "elo-1700": "1700 rating",
-        "elo-1900": "1900 rating"
+        "elo-1900": "1900 rating",
+        "elo-2000": "2000 rating",
+        "elo-2200": "2200 rating",
+        "elo-2500": "2500 rating"
       }
     },
     "source": {

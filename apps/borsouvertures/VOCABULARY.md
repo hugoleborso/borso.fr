@@ -74,7 +74,8 @@ game on a deck page
 - The strength is one of seven steps in
   `site/src/opponent/opponent-strength.core.ts`, persisted as
   `opponentStrength`. Three easier steps set `Skill Level` 0, 3 and 6 and show
-  no rating. Four set `UCI_Elo` 1320, 1500, 1700 and 1900. The default is 1320.
+  no rating. Seven set `UCI_Elo` 1320, 1500, 1700, 1900, 2000, 2200 and 2500.
+  The default is 2000.
   A step sends one option family, never both.
 - A game on a deck page stores no review event.
 

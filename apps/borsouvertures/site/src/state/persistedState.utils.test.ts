@@ -61,16 +61,16 @@ describe('parsePersistedState', () => {
     expect(parsePersistedState(raw)).toEqual(OTHER_VALID_STATE);
   });
 
-  it('gives a record stored before the opponent strength existed the 1320 step', () => {
+  it('gives a record stored before the opponent strength existed the 2000 step', () => {
     const { opponentStrength: _opponentStrength, ...storedBefore } = VALID_STATE;
     expect(parsePersistedState(JSON.stringify(storedBefore))).toEqual({
       ...VALID_STATE,
-      opponentStrength: 'elo-1320',
+      opponentStrength: 'elo-2000',
     });
   });
 
   it('rejects an opponent strength that is not a step', () => {
-    const corrupted: Record<string, unknown> = { ...VALID_STATE, opponentStrength: 'elo-2000' };
+    const corrupted: Record<string, unknown> = { ...VALID_STATE, opponentStrength: 'elo-2100' };
     expect(parsePersistedState(JSON.stringify(corrupted))).toBeNull();
     expect(
       parsePersistedState(JSON.stringify({ ...VALID_STATE, opponentStrength: null })),
