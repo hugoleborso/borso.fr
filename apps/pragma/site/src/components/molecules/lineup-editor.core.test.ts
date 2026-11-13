@@ -3,6 +3,7 @@ import {
   formValuesToLineup,
   type LineupEditorMember,
   lineupToFormValues,
+  isLineupStaffed,
   selectLineupSaveTarget,
   toggleInstrumentHeld,
   toLineupPayload,
@@ -69,23 +70,27 @@ describe('toLineupPayload', () => {
   });
 });
 
+describe('isLineupStaffed', () => {
+  it('answers whether anyone holds an instrument', () => {
+    expect(isLineupStaffed({})).toBe(false);
+    expect(isLineupStaffed({ ada: [], bob: [] })).toBe(false);
+    expect(isLineupStaffed({ ada: ['guitar'], bob: [] })).toBe(true);
+  });
+});
+
 describe('selectLineupSaveTarget', () => {
-  const STAFFED_DEFAULT = { ada: ['guitar'], bob: [] };
   const EDITED = { ada: ['bass'], bob: [] };
 
-  it('writes a lineup into the song default when the song has none yet', () => {
-    expect(selectLineupSaveTarget({}, EDITED, false)).toBe('song-default');
-    expect(selectLineupSaveTarget({ ada: [], bob: [] }, EDITED, false)).toBe('song-default');
+  it('writes every edit into the song default while the song lineup is being built', () => {
+    expect(selectLineupSaveTarget(true, EDITED)).toBe('song-default');
+    expect(selectLineupSaveTarget(true, null)).toBe('song-default');
   });
 
-  it('keeps an edit on the entry when the song already has a default', () => {
-    expect(selectLineupSaveTarget(STAFFED_DEFAULT, EDITED, false)).toBe('entry-override');
+  it('keeps an edit on the entry when the song already had a lineup', () => {
+    expect(selectLineupSaveTarget(false, EDITED)).toBe('entry-override');
   });
 
-  it('clears the entry override on a reset or when nobody plays', () => {
-    expect(selectLineupSaveTarget(STAFFED_DEFAULT, EDITED, true)).toBe('entry-cleared');
-    expect(selectLineupSaveTarget({}, EDITED, true)).toBe('entry-cleared');
-    expect(selectLineupSaveTarget(STAFFED_DEFAULT, null, false)).toBe('entry-cleared');
-    expect(selectLineupSaveTarget({}, null, false)).toBe('entry-cleared');
+  it('clears the entry override when nobody plays', () => {
+    expect(selectLineupSaveTarget(false, null)).toBe('entry-cleared');
   });
 });
