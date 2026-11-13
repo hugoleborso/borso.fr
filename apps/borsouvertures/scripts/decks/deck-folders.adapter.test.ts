@@ -50,6 +50,16 @@ describe('readDeckBuildInput', () => {
     ]);
   });
 
+  it('sorts the folder names in English order, not in the byte order Node lists them in', () => {
+    const roots = writeContent(['slav', 'écossaise', 'albin']);
+
+    expect(readDeckBuildInput(roots).folders.map((folder) => folder.folderName)).toEqual([
+      'albin',
+      'écossaise',
+      'slav',
+    ]);
+  });
+
   it('skips a file that sits beside the deck folders', () => {
     const roots = writeContent(['albin']);
     writeFileSync(path.join(roots.decksRoot, 'README.md'), 'not a deck');
