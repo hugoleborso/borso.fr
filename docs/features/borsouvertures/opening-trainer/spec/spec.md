@@ -96,7 +96,7 @@ Error cases:
 | Can the dataset's lines, pruned by popularity, be the deck? | (a) Yes. (b) Hand-curated lines in content files. | **(b), agent, reversible.** The dataset lines are too short (measured above). A deck also needs exactly one reader move per FEN, and the dataset offers three bishop moves in the Albin Fianchetto Variation (measured). Popularity can only prune the opponent's moves. |
 | What groups lines into a deck? | (a) Name prefix, as today. (b) One deck per `Family: Variation` name, 587 decks (measured). (c) A deck file that names a side and its lines from move 1. | **(c), agent.** A gambit becomes a deck because a file says so. Decks are found by a glob over `content/decks/*/deck.json`, so adding or removing a deck needs no code change (operator requirement). |
 | Do three card kinds share one scheduler and one retention figure? | (a) All kinds inside each deck. (b) Move and trap cards in their deck, name cards in a deck of their own. | **(b), agent, reversible.** Naming an opening is another skill, and mixing it would blur per-deck retention. |
-| Is pragma's shared-password ADR the sign-in precedent? | (a) Shared password, ADR-2026-05-19T1955. (b) pragma's current per-credential slice. (c) Passkey only. | **(b) without passkeys, agent.** The shared-password ADR is superseded by [ADR-2026-09-14T1903](../../../../adr/2026-09-14T1903-per-member-credentials-replace-the-shared-password.md) (read). The slice is copied, because apps do not import each other. One `operator_credential` row, an argon2id hash, a signed `HttpOnly` cookie and a rate limit. `POST /api/auth/enrol` closes itself once a row exists. The first caller owns the account, so the operator enrols on the day of the merge. |
+| Is pragma's shared-password ADR the sign-in precedent? | (a) Shared password, ADR-2026-05-19T1955. (b) pragma's current per-credential slice. (c) Passkey only. | **(b) without passkeys, agent.** The shared-password ADR is superseded by [ADR-2026-09-14T1903](../../../../adr/2026-09-14T1903-per-member-credentials-replace-the-shared-password.md) (read). The slice is copied, because apps do not import each other. One `operator_credential` row, an argon2id hash, a signed `HttpOnly` cookie and a rate limit. No route enrols anyone, because on a public site a first-caller rule lets a stranger take the account. A script the operator runs writes the row on prod, and the fixture seed writes it on a preview ([ADR-2026-11-13T0002](../../../../adr/2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md)). |
 | Can analytics events measure the objective? | (a) Sentry breadcrumbs. (b) The `review_event` table. | **(b), agent.** A breadcrumb leaves the browser only with an error (inferred from the `observability-adapter` blueprint). Retention is read from the table for the operator and is unknown for readers without an account. |
 | What are the launch decks? | Operator decision 5, revised 2026-11-12. | **Decided, five decks, settled by his game statistics.** (1) Black, the Albin Countergambit with answers to 2. Nf3, the London and 2. e3. (2) Black, the Scandinavian with 3...Qa5. Its main line is short and the weight is on the side lines, the Tennison Gambit first, then 2. d4, 2. d3, 2. Nc3 and 2. e5. (3) White, the Caro-Kann Two Knights Attack. (4) White, the Vienna Game and Vienna Gambit. (5) White, the Grand Prix Attack with 2. Nc3. Each has hand-written ideas. |
 | How long is a deck line? | (a) 8 to 12 moves, the first decision 6. (b) 6 to 10 moves. | **(b), revised 2026-11-12** to match a 1300 player. It is a default in the deck build, and a deck file may exceed it. |
@@ -111,8 +111,8 @@ Error cases:
 | Where do move statistics come from? | (a) The Lichess explorer API with a personal token at build time. (b) The CC0 game dumps, size unknown. (c) None. | **(a) as an optional slice, agent.** The API answered 401 without a token (measured by the research agent). The script reads `LICHESS_TOKEN`, writes only the FENs of the decks to a committed `move-statistics.json`, and records the fetch date and filters in it. Without the token the slice is skipped and nothing else depends on it. The file's size is unknown until it is built. |
 | How are ideas keyed and written? | (a) JSON keyed by FEN. (b) One Markdown file per deck and language, each heading a SAN path. (c) i18n catalogues. | **(b), agent.** The build turns each path into a position key, the first four FEN fields, so transpositions share an idea. It fails when English and French differ in keys, and when two paths reach one key with different text. Ideas are content, so they stay out of `en.json` (a stated divergence from the i18n rule). A file based on Wikipedia carries its source and is CC BY-SA 4.0. |
 | How is hand-written chess checked? | (a) Legality only. (b) Legality, plus a Stockfish check that no reader move loses more than a set margin against the best move. | **(b), agent.** An agent writes the lines, so a gate has to read them. The margin is set in the plan. |
-| What are the engine's obligations? | (a) Stockfish as an unmodified, separate worker file. (b) Bundled into the app. (c) No engine. | **(a), agent.** `stockfish` is GPL-3.0 (measured on npm, version 19.0.1). The licence text, the notice and a link to the exact upstream source ship in `THIRD_PARTY_NOTICES.md` and on Credits. The app talks to it by UCI messages only, so it is treated as a separate program (inferred, not legal advice). The repository has no licence file (measured). The lite build's 1.85 MB and its lack of header needs come from the brief and are not re-measured. |
-| How strong is the opponent? | `UCI_Elo` floors at 1320 (from the brief). | **Default 1320, agent, reversible.** It is the floor and it sits beside his rapid 1304 and blitz 1322. Selectable up to 1900, and three easier steps through `Skill Level`, shown without a rating. |
+| What are the engine's obligations? | (a) Stockfish as an unmodified, separate worker file. (b) Bundled into the app. (c) No engine. | **(a), agent.** `stockfish` is GPL-3.0 (measured on npm, version 19.0.1). The licence text, the notice and a link to the exact upstream source ship in `THIRD_PARTY_NOTICES.md` and on Credits. The app talks to it by UCI messages only, so it is treated as a separate program (inferred, not legal advice). The repository has no licence file (measured). The lite single-threaded build is two files, 28,230 and 1,845,971 bytes, and needs no cross-origin isolation header (measured in the npm tarball and read in its README on 2026-11-12). They are committed, not installed, because the package tarball is 161 MB (measured). |
+| How strong is the opponent? | `UCI_Elo` floors at 1320 (measured, the engine prints min 1320 and max 3190, and `Skill Level` 0 to 20). | **Default 1320, agent, reversible.** It is the floor and it sits beside his rapid 1304 and blitz 1322. Selectable up to 1900, and three easier steps through `Skill Level`, shown without a rating. |
 | Is the Lichess data pinned? | (a) `refs/heads/master`, as today (measured in `build-openings.ts`). (b) A commit SHA. | **(b).** The puzzle import records the dump's date the same way. |
 | Are Lichess studies a source? | The earlier spec planned an importer and called them CC BY-SA. | **No.** Studies carry no reuse licence (measured by the research agent). That importer was never built (measured, no such file). |
 
@@ -120,16 +120,16 @@ Error cases:
 
 ## Architectural choices
 
-No ADR is written yet. Each row is a candidate to ratify before code.
+Six ADRs are written, one per row. The agent decided them on 2026-11-12, delegated by the operator, and they are ratified at pull-request review.
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| to write | borsouvertures gains `api/`, `cdk/`, `domain/` and a DSQL schema for one account | `StaticSite` becomes `PreviewableApp`. Previews get a schema. It reverses "no DSQL, no auth" in the earlier spec. |
-| to write | Operator sign-in copies pragma's credential and cookie slice, with a self-closing enrolment | New secret material (an HMAC key and a hash, in the database). No passkey, no recovery but a row delete. |
-| to write | Progress is a log of immutable review events, local first, merged by id | No stored card state anywhere. IndexedDB adapter. `fake-indexeddb` dev dependency. |
-| to write | `ts-fsrs` schedules the cards | MIT, 6.0.0, Node 24 or later (measured on npm). Fuzz off. |
-| to write | Stockfish runs as a separate GPL-3.0 worker file | Notices and source link. Loaded on demand, cached by the service worker after first use. |
-| to write | Decks, ideas and Lichess-derived files are content, built and pinned | A new build secret, `LICHESS_TOKEN`. Attribution duties. Ideas outside the i18n catalogues. |
+| [ADR-2026-11-12T2359](../../../../adr/2026-11-12T2359-borsouvertures-becomes-a-full-stack-app-for-one-account.md) | borsouvertures gains `api/`, `cdk/`, `domain/` and a DSQL schema for one account | `StaticSite` becomes `PreviewableApp`. Previews get a schema. It reverses "no DSQL, no auth" in the earlier spec. |
+| [ADR-2026-11-13T0002](../../../../adr/2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md) | Operator sign-in copies pragma's credential and cookie slice, with no enrolment route. A script writes the one row on prod and the fixture seed writes it on a preview | New secret material (an HMAC key and a hash, in the database). No passkey. Recovery is a rerun of the script. A preview clones nothing from prod. |
+| [ADR-2026-11-13T0000](../../../../adr/2026-11-13T0000-progress-is-a-log-of-immutable-review-events-merged-by-id.md) | Progress is a log of immutable review events, local first, merged by id | No stored card state anywhere. IndexedDB adapter. `fake-indexeddb` dev dependency. |
+| [ADR-2026-11-13T0001](../../../../adr/2026-11-13T0001-ts-fsrs-schedules-the-cards-with-fuzz-off.md) | `ts-fsrs` schedules the cards | MIT, 6.0.0, Node 24 or later, with one dependency, `@open-spaced-repetition/srs-kit` 1.0.0, BSD-3-Clause (measured on npm). Fuzz off, every option pinned. |
+| [ADR-2026-11-13T0003](../../../../adr/2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as a separate GPL-3.0 worker, two committed and unmodified files | Notices and source link. Loaded on demand, cached by the service worker after first use. 1,874,201 bytes in git (measured). |
+| [ADR-2026-11-13T0004](../../../../adr/2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks, ideas and Lichess-derived files are content, built and pinned | `LICHESS_TOKEN` is read by one script, never by CI or the deployed app. Attribution duties. Ideas outside the i18n catalogues. |
 
 ## Changes
 
@@ -188,7 +188,7 @@ CREATE TABLE app_config (id text PRIMARY KEY, hmac_key text NOT NULL);
 CREATE TABLE sign_in_attempt (id uuid PRIMARY KEY, address_hash text NOT NULL, attempted_at timestamptz NOT NULL);
 ```
 
-There is no account column, because there is one account. Whether a preview's clone carries the credential is not decided here. The plan reads `docs/knowledge/dsql-clone-from-prod.md` first.
+There is no account column, because there is one account. A preview clones nothing from prod, so it never carries the credential or the operator's events (ADR-2026-11-13T0002).
 
 ### Files to change
 
@@ -201,13 +201,15 @@ apps/borsouvertures/
   site/src/decks/      deck.utils, card.core, idea.utils, pawn-structure.core        // NEW
   site/src/review/     scheduler.core, daily-plan.core, streak.core, retention.core,
                        review-machine.utils, review-event-store.adapter, sync.core, sync.adapter   // NEW
-  site/src/opponent/   stockfish.adapter, opponent-strength.core, stockfish.worker   // NEW
+  site/src/opponent/   stockfish.adapter, opponent-strength.core                     // NEW
+  site/public/stockfish/   the two engine files and Copying.txt, unmodified          // NEW
   site/src/components/ Today, Decks, Stats, Credits, SignIn, TabBar                  // NEW
   site/src/state/persistedState.utils.ts, i18n/en.json, fr.json, vite.config.ts      // UPDATE
   api/src/auth/*, api/src/review-events/* (controller, service, repository, schema), database/   // NEW
   cdk/lib/stack.ts, bin/app.ts, drizzle.config.ts, vitest.config.ts (core, back-e2e, site)      // NEW or UPDATE
   VOCABULARY.md, README.md, THIRD_PARTY_NOTICES.md                                   // UPDATE or NEW
 docs/operator-backlog.md, scripts/database/read-target.utils.ts, .github/path-filters.yml   // UPDATE
+scripts/seed-operator-credential.sh                                                         // NEW
 ```
 
 ### Slices, in commit order
@@ -228,7 +230,7 @@ Every check is automated. No manual check exists.
 
 - **Unit, 100% coverage.** Every `*.core.ts`, `*.utils.ts`, `*.adapter.ts` and `*.schema.ts` above. The scheduler replay takes `now` as an argument. Named cases: two devices replayed in either arrival order give the same state, a future `reviewedAt` is clamped, a not-due review leaves retention unchanged, the streak across a time-zone change, an en passant square that changes a position key.
 - **Content gates.** `build-decks` fails on an illegal move, two reader moves for one FEN, a missing translation, or an idea whose path is in no deck. `check-decks` runs Stockfish over every reader move.
-- **Back e2e, real Postgres.** A pushed batch is idempotent. A pull returns only events after the cursor. A second enrolment answers `enrolment-closed`. An unsigned request gets 401. The sixth failed sign-in is rate limited.
+- **Back e2e, real Postgres.** A pushed batch is idempotent. A pull returns only events after the cursor. `POST /api/auth/enrol` answers 404, and a sign-in before the credential exists answers `auth-not-bootstrapped`. An unsigned request gets 401. The sixth failed sign-in is rate limited.
 - **Site.** Component tests by role for Today, a review session and the tab bar.
 - **Visual validation, at 375 px and at desktop width, input metrics only.** Each numbered step, edge case and error case above is one row. Further rows: every tab fits 375 px with no horizontal scroll, the interface and the ideas switch between English and French, Credits names three sources, an Explore drill leaves the due count unchanged, a review made in one browser profile shows in a second after sign-in. The output metric is not asserted.
 - **Technical validation.** Lint, typecheck, build, the suites above and one pass per decision row.
@@ -255,6 +257,6 @@ Every check is automated. No manual check exists.
 | Task | Right it needs | How to check it is done |
 | --- | --- | --- |
 | Create a Lichess personal API token and store it as `LICHESS_TOKEN` where a session can read it | The operator's Lichess account, a secret | `pnpm --filter @borso-app/borsouvertures run build:move-statistics` writes a file with at least one FEN |
-| Enrol the operator account on prod on the day of the merge | The operator's own device | `APP=borsouvertures scripts/db-read.sh "SELECT count(*) FROM operator_credential"` returns 1 |
+| Run `scripts/seed-operator-credential.sh` once after the merge that ships sync, and again to change the password | The `borso-admin` AWS profile, with `psql` and `node` | A sign-in with a wrong password on `borsouvertures.borso.fr` answers 401 and no longer `auth-not-bootstrapped` |
 | Grant `AI-Dev-ReadOnly` invoke on the borsouvertures agent-reader Lambda | IAM | `APP=borsouvertures scripts/db-read.sh "SELECT 1 AS ok"` returns `{"ok":1}` |
 | Give the borsouvertures API Lambda its Sentry DSN in the `prod` environment (inferred from rows #235 and #263) | GitHub environment variables | A cold start of `borsouvertures-prod-api` reports a span to Sentry |

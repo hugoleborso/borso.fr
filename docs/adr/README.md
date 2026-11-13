@@ -119,6 +119,12 @@ No:
 | [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
 | [2026-11-12T1724](./2026-11-12T1724-api-lambdas-import-the-hono-adapter-from-hono-aws-lambda.md) | API Lambdas import the Hono adapter from `@hono/aws-lambda` | accepted | 2026-11-12 |
 | [2026-11-12T1838](./2026-11-12T1838-the-monorepo-runs-on-node-24.md) | The monorepo runs on Node 24 locally, in CI and in every Lambda | proposed | 2026-11-12 |
+| [2026-11-12T2359](./2026-11-12T2359-borsouvertures-becomes-a-full-stack-app-for-one-account.md) | borsouvertures becomes a full-stack app that serves one account | proposed | 2026-11-12 |
+| [2026-11-13T0000](./2026-11-13T0000-progress-is-a-log-of-immutable-review-events-merged-by-id.md) | Progress is a log of immutable review events, local first, merged by id | proposed | 2026-11-13 |
+| [2026-11-13T0001](./2026-11-13T0001-ts-fsrs-schedules-the-cards-with-fuzz-off.md) | `ts-fsrs` schedules the cards, with fuzz off and a pinned configuration | proposed | 2026-11-13 |
+| [2026-11-13T0002](./2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md) | The operator's credential is written by a script, and no route enrols anyone | proposed | 2026-11-13 |
+| [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | proposed | 2026-11-13 |
+| [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | proposed | 2026-11-13 |
 
 ### Data layer
 
@@ -132,6 +138,8 @@ No:
 - 2026-10-28T2126. the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 2026-10-25T0054.
 - 2026-10-27T1117. a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
 - 2026-10-29T1115. pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
+- 2026-11-13T0000. borsouvertures keeps progress as immutable review events, written first to IndexedDB and merged by the union of their ids; card state, plan, streak and retention are replayed and stored nowhere, so no review is lost when two offline devices meet, and the log only grows.
+- 2026-11-13T0004. borsouvertures decks and ideas are content files found by a glob, with ideas outside the i18n catalogues; Lichess-derived files are committed snapshots that name their pin, and `LICHESS_TOKEN` is read by one script, never by CI or the deployed app.
 
 ### App architecture
 
@@ -156,6 +164,10 @@ No:
 - 2026-11-01T1313. pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
 - 2026-11-05T0445. pragma's Hono client folds every read issued in one tick into one `POST /api/read-batch` that one Lambda answers with per-read status, at most 10 reads per batch and 2 in flight per tab, writes never batched and `/api/offline-manifest` deleted, because it holds every route under the reserved concurrency of 10 with no endpoint per screen; grouped reads lose their path in the API Gateway log.
 - 2026-11-12T1724. the API Lambdas import Hono's Lambda adapter from `@hono/aws-lambda`, hono's own split of the `hono/aws-lambda` subpath that hono 4.13.9 deprecated and hono 5 removes.
+- 2026-11-12T2359. borsouvertures gains `api/`, `cdk/`, `domain/` and one DSQL schema for one account on the existing shared constructs, reversing the "No DSQL, no auth" line of its learn-by-tree spec; no screen depends on the API.
+- 2026-11-13T0001. `ts-fsrs` 6.0.0 schedules the borsouvertures cards with fuzz off and every option pinned, about 17 kB gzipped with its one dependency; a golden replay test holds its output across upgrades.
+- 2026-11-13T0002. the borsouvertures operator signs in with pragma's credential and cookie slice, copied; no route enrols anyone, a script the operator runs writes the one row on prod, and the fixture seed writes it on a preview, which clones nothing from prod, so a stranger cannot take the account and an agent signs in with no secret.
+- 2026-11-13T0003. the lite single-threaded Stockfish 19.0.1 is committed as two unmodified GPL-3.0 files, 1,874,201 bytes, and started as a Web Worker on demand; it needs no cross-origin isolation, and vendoring avoids a 161 MB npm tarball on every install.
 
 ### CDK / infra
 
