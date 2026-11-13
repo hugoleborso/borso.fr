@@ -90,3 +90,14 @@ export async function appendStoredReviewEvent(
 ): Promise<void> {
   await runStoreOperation(factory, 'write', 'readwrite', (store) => store.put(event));
 }
+
+export async function putStoredReviewEvents(
+  factory: IDBFactory | undefined,
+  events: readonly ReviewEvent[],
+): Promise<void> {
+  const [firstEvent, ...laterEvents] = events;
+  if (firstEvent === undefined) return;
+  await runStoreOperation(factory, 'write', 'readwrite', (store) =>
+    laterEvents.reduce((_previousRequest, event) => store.put(event), store.put(firstEvent)),
+  );
+}

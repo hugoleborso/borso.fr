@@ -1,18 +1,46 @@
 # Vocabulary — borsouvertures
 
-`borsouvertures` is a front-end-only progressive web app for learning chess
-openings. It ships hand-written decks that a reader reviews a few cards a day,
+`borsouvertures` is a progressive web app for learning chess openings, with a
+small API that syncs one account. It ships hand-written decks that a reader reviews a few cards a day,
 on a schedule that asks each card again when it is about to be forgotten. It
 also ships a book built from the Lichess `chess-openings` tables, which the
 Explore tab drives two ways: a learner drills one variation until every line in
 it has been seen, or a player keeps a game inside a chosen part of the book for
-as long as they can. There is no server and no account. What a reader picks
-lives in one localStorage record, and what a reader has reviewed lives in a log
-of review events in the browser's IndexedDB.
+as long as they can. What a reader picks lives in one localStorage record, and
+what a reader has reviewed lives in a log of review events in the browser's
+IndexedDB. Every screen works without the API. The one account, the owner's,
+also pushes its events to the API and pulls the events of its other devices.
 
 This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is taken
 from the type, pure helper or machine named beside it.
+
+## Account
+
+The one synced identity, the owner's. There is no sign-up and no route that
+creates it.
+
+Lives in: `api/src/auth/`, `site/src/lib/queries/account.queries.ts`,
+`site/src/review/`
+
+- The account is one `operator_credential` row, an argon2id hash and a
+  `session_epoch`, plus the HMAC signing key in `app_config`. A script writes
+  them on prod and the fixture seed writes them on a preview and in local dev.
+- Signing in sets a signed `HttpOnly` cookie that lasts 30 days. A new epoch
+  ends every session issued before it.
+- The sixth failed sign-in from one address within 15 minutes answers
+  `rate-limited`. A sign-in before the credential exists answers
+  `auth-not-bootstrapped`.
+- A signed-in device pushes the review events whose `receivedAt` is `null`,
+  then pulls the account's events after its sync cursor, and merges both into
+  its log by id. A refused push keeps the batch queued and shows "sync paused".
+  A 401 shows the sign-in link again. Offline is not an error.
+- The account link shows only when the session route answers, so with no API
+  the app shows no dead link.
+
+Held by: `api/src/auth/auth.controller.test.ts` › has no enrolment route
+Held by: `api/src/auth/auth.controller.test.ts` › rate limits the sixth failed sign-in, even with the right password
+Held by: `api/src/review-events/review-events.controller.test.ts` › stores a batch pushed twice once, and answers the stored receivedAt both times
 
 ## Auto opponent
 

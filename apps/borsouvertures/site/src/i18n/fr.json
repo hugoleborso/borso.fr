@@ -32,6 +32,23 @@
       "french": "FR"
     }
   },
+  "account": {
+    "sign-in": "Se connecter",
+    "sign-out": "Se déconnecter",
+    "dialog-title": "Se connecter pour synchroniser",
+    "dialog-hint": "Seul le compte du propriétaire se synchronise. Les autres gardent leur progression dans ce navigateur.",
+    "close": "Fermer",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "submitting": "Connexion…",
+    "sync-paused": "Synchronisation en pause. Vos révisions restent sur cet appareil et seront envoyées plus tard.",
+    "refusal": {
+      "invalid-credentials": "Mot de passe incorrect.",
+      "rate-limited": "Trop de tentatives. Réessayez dans 15 minutes.",
+      "auth-not-bootstrapped": "La connexion n'est pas encore configurée sur ce serveur.",
+      "unavailable": "Le serveur est injoignable. Réessayez plus tard."
+    }
+  },
   "tab-bar": {
     "aria-label": "Sections principales",
     "today": "Aujourd'hui",

@@ -16,6 +16,7 @@
     "types": ["vite/client", "vite-plugin-pwa/client", "node"],
     "paths": {
       "@/*": ["./site/src/*"],
+      "@api/*": ["./api/src/*"],
       "@domain/*": ["./domain/*"]
     }
   },
@@ -24,7 +25,12 @@
     "site/src/**/*.tsx",
     "domain/**/*.ts",
     "scripts/**/*.ts",
+    "api/src/**/*.ts",
+    "api/scripts/**/*.ts",
+    "test/**/*.ts",
     "vite.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "vitest.mutation.config.ts",
+    "drizzle.config.ts"
   ]
 }

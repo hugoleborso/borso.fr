@@ -32,6 +32,23 @@
       "french": "FR"
     }
   },
+  "account": {
+    "sign-in": "Sign in",
+    "sign-out": "Sign out",
+    "dialog-title": "Sign in to sync",
+    "dialog-hint": "Only the owner's account syncs. Everyone else keeps their progress in this browser.",
+    "close": "Close",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "sync-paused": "Sync paused. Your reviews stay on this device and will be sent later.",
+    "refusal": {
+      "invalid-credentials": "Wrong password.",
+      "rate-limited": "Too many attempts. Try again in 15 minutes.",
+      "auth-not-bootstrapped": "Sign-in is not set up on this server yet.",
+      "unavailable": "The server cannot be reached. Try again later."
+    }
+  },
   "tab-bar": {
     "aria-label": "Main sections",
     "today": "Today",

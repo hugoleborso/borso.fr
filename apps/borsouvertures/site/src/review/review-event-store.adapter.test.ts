@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendStoredReviewEvent,
   listStoredReviewEvents,
+  putStoredReviewEvents,
   ReviewEventStoreUnavailableError,
 } from './review-event-store.adapter';
 import { buildReviewEvent } from './review.test-utils';
@@ -151,5 +152,31 @@ describe('the review event store', () => {
     expect(failure).toHaveProperty('cause.message', 'The IndexedDB transaction was aborted');
     expect(failure).toHaveProperty('cause.cause.name', 'ConstraintError');
     await expect(listStoredReviewEvents(factory)).resolves.toEqual([FIRST]);
+  });
+  it('puts pulled events and push receipts in one write, replacing the copy kept by id', async () => {
+    const factory = new IDBFactory();
+    await appendStoredReviewEvent(factory, FIRST);
+    const received = { ...FIRST, receivedAt: '2026-01-10T08:00:09.000Z' };
+    const third = buildReviewEvent(3, CARD, '2026-01-10T08:02:00.000Z');
+    await putStoredReviewEvents(factory, [received, SECOND, third]);
+    await expect(listStoredReviewEvents(factory)).resolves.toEqual([received, SECOND, third]);
+  });
+
+  it('opens nothing to put an empty batch', async () => {
+    await expect(putStoredReviewEvents(undefined, [])).resolves.toBeUndefined();
+  });
+
+  it('reports write when a batch put aborts, and keeps none of the batch', async () => {
+    const factory = new IDBFactory();
+    await prepareDatabase(factory, 1, (database) => {
+      database
+        .createObjectStore('review-event', { keyPath: 'id' })
+        .createIndex('one-event-per-card', 'cardId', { unique: true });
+    });
+    const failure = await readFailure(
+      putStoredReviewEvents(factory, [FIRST, { ...SECOND, cardId: FIRST.cardId }]),
+    );
+    expect(failure).toMatchObject({ tags: { operation: 'write' } });
+    await expect(listStoredReviewEvents(factory)).resolves.toEqual([]);
   });
 });

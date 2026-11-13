@@ -58,7 +58,7 @@
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "drizzle-orm": "catalog:",
-    "hash-wasm": "^4.11.0",
+    "hash-wasm": "catalog:",
     "hono": "catalog:",
     "i18next": "catalog:",
     "ical.js": "2.2.1",

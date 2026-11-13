@@ -61,14 +61,21 @@
         "scripts/build-decks.setup.ts",
         "scripts/check-decks.setup.ts",
         "domain/**/*.core.test.ts",
-        "scripts/**/*.test.ts"
+        "scripts/**/*.test.ts",
+        "api/src/main.ts",
+        "api/scripts/*.ts",
+        "api/src/**/*.test.ts",
+        "test/**/*.ts",
+        "vitest.mutation.config.ts"
       ],
       "project": [
         "bin/**/*.ts",
         "scripts/**/*.ts",
         "site/**/*.ts",
         "site/**/*.tsx",
-        "domain/**/*.ts"
+        "domain/**/*.ts",
+        "api/**/*.ts",
+        "test/**/*.ts"
       ],
       "ignoreDependencies": ["tailwindcss"]
     },

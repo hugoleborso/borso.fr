@@ -2,7 +2,11 @@ import { useSyncExternalStore } from 'react';
 import { mergeReviewEvents, type ReviewEvent } from '@domain/review-event.core';
 import { reportTaggedError } from '@/observability/error-reporting.adapter';
 import { readErrorTags } from '@/observability/error-reporting.core';
-import { appendStoredReviewEvent, listStoredReviewEvents } from './review-event-store.adapter';
+import {
+  appendStoredReviewEvent,
+  listStoredReviewEvents,
+  putStoredReviewEvents,
+} from './review-event-store.adapter';
 
 export interface ReviewLog {
   events: readonly ReviewEvent[];
@@ -57,6 +61,23 @@ export function readReviewLogRequest(): Promise<void> {
 export function appendReviewEvent(event: ReviewEvent): void {
   replaceLog({ events: [...store.log.events, event], isProgressKept: store.log.isProgressKept });
   void persistReviewEvent(event);
+}
+
+async function persistReviewEvents(events: readonly ReviewEvent[]): Promise<void> {
+  try {
+    await putStoredReviewEvents(readFactory(), events);
+  } catch (error) {
+    keepProgressInMemoryOnly(error);
+  }
+}
+
+export function mergeIntoReviewLog(events: readonly ReviewEvent[]): void {
+  if (events.length === 0) return;
+  replaceLog({
+    events: mergeReviewEvents(store.log.events, events),
+    isProgressKept: store.log.isProgressKept,
+  });
+  void persistReviewEvents(events);
 }
 
 export function subscribeToReviewLog(listener: () => void): () => void {

@@ -11,12 +11,15 @@ const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url))
 const openingsCacheName = `openings-cache-${OPENINGS_CACHE_VERSION}`;
 const stockfishCacheName = `stockfish-${STOCKFISH_DISTRIBUTION.version}`;
 
+const LOCAL_API_PORT = 3005;
+
 export default defineConfig({
   root: fromHere('./site'),
   publicDir: fromHere('./site/public'),
   resolve: {
     alias: {
       '@': fromHere('./site/src'),
+      '@api': fromHere('./api/src'),
       '@domain': fromHere('./domain'),
     },
   },
@@ -81,5 +84,8 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    proxy: {
+      '/api': `http://localhost:${LOCAL_API_PORT}`,
+    },
   },
 });
