@@ -25,6 +25,11 @@
   "shortcuts": [
     { "name": "Todo", "url": "/todos" },
     { "name": "Propositions", "url": "/proposals" },
-    { "name": "Message", "url": "/message" }
+    {
+      "name": "Parler à Talos",
+      "short_name": "Parler",
+      "url": "/talk",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

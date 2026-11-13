@@ -40,7 +40,7 @@ Lives in: `api/src/proposals/`
 - A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`), kept as a routine run.
 - A cancellation (`cancelProposalDecision`) takes back an `acceptee` or `refusee` decision before Talos acts on it: the status returns to `proposee`, a `décision annulée` line is appended, and no run fires. It is not a third decision, which is why it is not in `PROPOSAL_DECISIONS`.
 
-Not to be confused with: a message, which the owner writes and Talos reads.
+Not to be confused with: a draft, which Talos prepares for the owner to send.
 
 ## Brief
 
@@ -175,28 +175,28 @@ Lives in: `api/src/pages/`
 - Code: `Page` (`path`, `title`, `type`, `frontMatter`, `markdown`, `outgoingLinks`, `incomingLinks`, `summarizedOn` for the summary day of an entity, null otherwise).
 - A page's title is its first `# ` heading (`domain/markdown-page.core.ts`).
 
-## Message
+## Talk to Talos
 
-A note from the owner to Talos. Its text is not stored whole: the Message screen fires the routine with it, and only the routine run it started is kept. While the routine is not configured, and for « Construire », the screen opens a Claude Code session on the web with the message as its prompt.
+The « Parler à Talos » link at the end of the tab bar, on every screen. It opens a new Claude Code session on the agent repository, in the build environment, with a short prompt prefilled. `/talk` redirects to the same link, for the home-screen shortcut.
 
-Lives in: `api/src/routine/`, `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`
+Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`, `site/src/lib/talk-to-talos.*`
 
-- Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
+- Code: `ClaudeCodeTarget` (`repository`, `environments`), what `GET /api/messages/claude-code` answers so the site can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link; `useTalkToTalosLink` gives it to the tab bar and to `/talk`.
 - The repository Claude Code opens is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
 
-Not to be confused with: a routine run, which a message or a proposal decision starts and which is what the API keeps; nor a run report, which says when a scheduled scan last went through.
+Not to be confused with: « Discuter », which opens the same kind of link from the action sheet, about one item, on the reading environment.
 
 ## Routine run
 
-One successful fire of the Claude Code routine, started by a message or by a decision on a proposal, one row of `routine_run`.
+One successful fire of the Claude Code routine, started by a decision on a proposal, one row of `routine_run`. Runs started by the former Message screen stay listed with the trigger `message`.
 
 Lives in: `api/src/routine/`, `site/src/lib/routine-run.core.ts`
 
 - Code: `routineRunTable` and its row `RoutineRunRow` (`firedAt`, `trigger`, `subject`, `sessionUrl`), answered by the API as `RoutineRun`; `RoutineTrigger` (`proposition` or `message`, the word that starts the fired line, so it stays in French for a decision).
-- `subject` is the proposal's memory slug, or the message cut to 200 characters (`cutMessageSubject`).
+- `subject` is the proposal's memory slug, or for an older `message` run the message cut to 200 characters.
 - `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it is `https://claude.ai/code/` followed by a plain path (`readSessionUrl`), `null` otherwise.
 - A fire that fails, or that is skipped because no `fire-url` is set, leaves no run.
-Held by: `api/src/routine/routine.controller.test.ts` › answers 503 and stores nothing while no fire url is configured
+Held by: `api/src/proposals/proposals.controller.test.ts` › commits the decision even when no routine is configured
 
 Not to be confused with: a run report, which says when a scheduled scan last went through; a routine run is started by the owner and has a conversation to open.
 
