@@ -21,17 +21,17 @@ The operator opens the app, drills a variation and forgets it, because nothing a
 
 ## Result
 
-Four tabs in a bottom bar, each at least 44 px high. **Today** is the home screen.
+Four tabs in a bottom bar, each at least 44 px high. **Today** is the home screen. Its retention list sits in its own section tab, by the fold rule in `apps/borsouvertures/DESIGN.md`.
 
 ```
 ┌────────── 375 px ──────────┐   ┌────────────────────────────┐
-│ Today                      │   │ Albin Countergambit · 3/14 │
-│  12 due   5 new   🔥 6 days│   │      [ board, Black ]      │
-│  ┌──────────────────────┐  │   │ White played 3. dxe5       │
-│  │        Start         │  │   │ Your move                  │
-│  └──────────────────────┘  │   │ ── after the answer ───────│
-│  Retention, last 30 days   │   │ Idea: the d4 pawn cramps   │
-│  Albin 84%  Scandinavian … │   │ White's queenside …        │
+│ Borsouvertures          ⚙  │   │ Albin Countergambit · 3/14 │
+│ [ Session ][ Retention ]   │   │      [ board, Black ]      │
+│  12 due   5 new   🔥 6 days│   │ White played 3. dxe5       │
+│  ┌──────────────────────┐  │   │ Your move                  │
+│  │        Start         │  │   │ ── after the answer ───────│
+│  └──────────────────────┘  │   │ Idea: the d4 pawn cramps   │
+│                            │   │ White's queenside …        │
 ├────────────────────────────┤   │ [ Show the move ] [ Next ] │
 │ Today  Decks  Stats  Explore│  └────────────────────────────┘
 └────────────────────────────┘
@@ -39,8 +39,8 @@ Four tabs in a bottom bar, each at least 44 px high. **Today** is the home scree
 
 - **Decks.** One row per deck with its side, card counts and retention. A deck page shows its lines, its ideas, *Review this deck*, and *Play it against Stockfish*.
 - **Stats.** Retention per deck by week over 12 weeks, the streak, and accuracy per opening. Counters appear here when move statistics exist.
-- **Explore.** The existing learn and play screens over the whole catalogue, unchanged. Nothing done there creates a review.
-- **Account.** A sign-in link in the top bar. There is no sign-up. A reader without an account sees every screen.
+- **Explore.** The existing learn and play screens over the whole catalogue, split into section tabs by the fold rule so each state fits one phone screen. Nothing done there creates a review.
+- **Account.** A sign-in link in the settings sheet, which the gear in the top bar opens (operator delegation, 2026-11-13: the phone-first redesign keeps the top bar at 48 px). There is no sign-up. A reader without an account sees every screen.
 - **Credits.** A screen naming Lichess (CC0), Wikipedia (CC BY-SA 4.0) and Stockfish (GPL-3.0, with its source link). The app ships no attribution today (measured, no match in `site/src`).
 - **Audience.** Public at `borsouvertures.borso.fr`. The API serves one account.
 
@@ -83,9 +83,9 @@ Edge cases:
 
 Error cases:
 
-- The browser store cannot open (private mode, quota). The session runs in memory and a banner says progress will not be kept.
+- The browser store cannot open (private mode, quota). The session runs in memory and a banner says progress will not be kept. Sync still pulls every page into the open tab, and its cursor stays in memory, because the events it covers are not stored.
 - A push is refused with a 4xx. The batch stays queued, the banner shows "sync paused", and Sentry receives it.
-- The session cookie expired. The API answers 401, the app shows the sign-in link, and reviews continue locally.
+- The session cookie expired. The API answers 401, a band under the top bar says the session expired, its *Sign in* button opens the settings sheet on the sign-in form, and reviews continue locally.
 - A device clock runs ahead. The server keeps its own `receivedAt` and the replay uses the earlier of the two.
 
 ## Questions, Options and Decisions

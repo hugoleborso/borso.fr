@@ -149,7 +149,7 @@ One system grotesk stack, Helvetica Neue first, so nothing is fetched and the pa
 
 ## Layout
 
-- **The fold rule (operator, 2026-11-13).** At 375 × 812, minus the tab bar and the safe area, a screen shows one section at a time when its sections would not all fit without scrolling. Split them with the `SectionTabs` segmented control inside the screen. One list that scrolls inside a tab is fine. Two different sections stacked past the fold are not. Applied today: Today (Session / Ahead when the plan is empty / Retention), a deck page (Review / Lines / Play), Stats (Retention / Accuracy, with the streak above), Credits (Lichess / Wikipedia / Stockfish).
+- **The fold rule (operator, 2026-11-13).** At 375 × 812, minus the tab bar and the safe area, a screen shows one section at a time when its sections would not all fit without scrolling. Split them with the `SectionTabs` segmented control inside the screen. One list that scrolls inside a tab is fine. Two different sections stacked past the fold are not. Applied today: Today (Session / Ahead when the plan is empty / Retention), a deck page (Review / Lines / Play), Stats (Retention / Accuracy, with the streak above), Credits (Lichess / Wikipedia / Stockfish), Explore's picker (Pick / Setup, with the mode toggle beside the title and the start action in `ActionBar`) and Explore's drill and game (Board / Status / Options, with Change selection as a back button beside the tabs and the drill's actions in `ActionBar`).
 - **The review session fits one screen.** Top bar, progress row, board, result field, and the action bar must be visible together at 375 × 812, including a name card's four choices.
 - **Thumb bar.** The screen's main actions (Start, Show the move and Next, Review this deck, New game and Leave the game) sit in `ActionBar`, fixed above the tab bar on a phone and inline from 601 px.
 - **Board width.** Full viewport width under 601 px, viewport minus 48 px up to 1023 px, half the viewport from 1024 px, capped at 560 px.
@@ -176,6 +176,7 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 ### Mini boards
 
 - **The preview rule (operator, 2026-11-13).** Wherever an opening, deck, line or variation is named, a small board shows its position beside the name: deck rows, the deck page header, each line, Today's retention and ahead lists, Stats rows and every Explore list. A name card's choices show none, because the preview would give the answer away.
+- A deck row reads the deck's side and counts, then its retention over the last 30 days.
 - `MiniBoard` is a static 8 × 8 grid of squares and the bundled piece SVGs, 56 px on a phone and 64 px from 601 px, never a live chessboard. A deck shows its first line after six plies, a line shows its last position, both from the reader's side.
 
 ### Result field
@@ -184,7 +185,11 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 
 ### Settings sheet
 
-The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, Credits and the account. The top bar is 48 px and holds only the name and that button.
+The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, the Stockfish strength, Credits and the account. The top bar is 48 px and holds only the name and that button. The sign-in link stays in the sheet (operator delegation, 2026-11-13). When the API answers 401, a signal band under the top bar says the session expired, and its *Sign in* button opens the sheet on the sign-in form. This band and the sync-paused band show only on the screens that draw no board (Today, Decks, Stats, Credits), so a board screen keeps its fit at 375 × 812.
+
+### Source credits
+
+Wherever an excerpt of a Wikipedia-based idea shows, its credit shows beside it: a short *Wikipedia, CC BY-SA* link in the idea header on a phone, the full credit under the text from 601 px and in the *Read all* sheet, and one full credit per source under a deck line's ideas.
 
 ## Do's and Don'ts
 

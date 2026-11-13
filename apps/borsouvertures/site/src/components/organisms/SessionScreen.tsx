@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/atoms/Button';
+import { SectionTabs } from '@/components/atoms/SectionTabs';
+import { TabPanel } from '@/components/atoms/TabPanel';
+import { IconButton } from '@/components/molecules/IconButton';
 import { ShowMovesToggle } from '@/components/molecules/ShowMovesToggle';
 import type { ComponentByKind } from '@/lib/componentTable.types';
 import { useIsCompactViewport } from '@/lib/viewport.hook';
@@ -12,7 +14,7 @@ import { LearnSessionControl } from './LearnSessionControl';
 import { LearnTreeSession } from './LearnTreeSession';
 import { PlaySession } from './PlaySession';
 import { PlaySessionControl } from './PlaySessionControl';
-import type { SessionBodyProps, SessionModeControlProps } from './session.types';
+import type { SessionBodyProps, SessionModeControlProps, SessionSection } from './session.types';
 
 // @FollowsBlueprint component-lookup-table
 const SESSION_BODY_BY_MODE: ComponentByKind<Mode, SessionBodyProps> = {
@@ -24,6 +26,20 @@ const SESSION_CONTROL_BY_MODE: ComponentByKind<Mode, SessionModeControlProps> = 
   learn: LearnSessionControl,
   play: PlaySessionControl,
 };
+
+const SESSION_TABS_ID = 'explore-session';
+
+const SESSION_SECTIONS = [
+  'board',
+  'status',
+  'options',
+] as const satisfies readonly SessionSection[];
+
+const SECTION_LABEL_KEY_BY_SECTION = {
+  board: 'session.sections.board',
+  status: 'session.sections.status',
+  options: 'session.sections.options',
+} as const satisfies Record<SessionSection, string>;
 
 interface SessionScreenProps {
   openings: Opening[];
@@ -40,6 +56,7 @@ export function SessionScreen({ openings }: SessionScreenProps) {
   const { mode, side, boardStyle, selection, playScope, playAutoOpponent, treeVisualizationMode } =
     useAppState();
   const [areMovesShown, setAreMovesShown] = useState(false);
+  const [shownSection, setShownSection] = useState<SessionSection>('board');
   const isCompactViewport = useIsCompactViewport();
   const visualization = selectTreeVisualization(treeVisualizationMode, isCompactViewport);
 
@@ -48,11 +65,23 @@ export function SessionScreen({ openings }: SessionScreenProps) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <Button label={t('session.change-selection')} onActivate={() => setView('select')} />
-          <ShowMovesToggle areMovesShown={areMovesShown} onToggle={setAreMovesShown} />
-          <SessionControl visualization={visualization} isAutoOpponentEnabled={playAutoOpponent} />
+      <div className="flex items-center gap-2">
+        <IconButton
+          label={t('session.change-selection')}
+          icon="chevron-left"
+          onActivate={() => setView('select')}
+        />
+        <div className="flex-auto min-w-0">
+          <SectionTabs
+            tabs={SESSION_SECTIONS.map((section) => ({
+              id: section,
+              label: t(SECTION_LABEL_KEY_BY_SECTION[section]),
+            }))}
+            selectedId={shownSection}
+            ariaLabel={t('session.sections.aria-label')}
+            idPrefix={SESSION_TABS_ID}
+            onSelect={setShownSection}
+          />
         </div>
       </div>
       <SessionBody
@@ -65,7 +94,13 @@ export function SessionScreen({ openings }: SessionScreenProps) {
         isAutoOpponentEnabled={playAutoOpponent}
         areMovesShown={areMovesShown}
         visualization={visualization}
+        shownSection={shownSection}
+        tabsId={SESSION_TABS_ID}
       />
+      <TabPanel idPrefix={SESSION_TABS_ID} tabId="options" isSelected={shownSection === 'options'}>
+        <ShowMovesToggle areMovesShown={areMovesShown} onToggle={setAreMovesShown} />
+        <SessionControl visualization={visualization} isAutoOpponentEnabled={playAutoOpponent} />
+      </TabPanel>
     </>
   );
 }

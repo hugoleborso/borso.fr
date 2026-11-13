@@ -9,7 +9,7 @@ import type { ApiClient } from '@/lib/api.client';
 
 export type SyncOutcome = 'synced' | 'signed-out' | 'rejected' | 'offline';
 
-export type SyncStatus = 'idle' | 'synced' | 'paused';
+export type SyncStatus = 'idle' | 'synced' | 'paused' | 'expired';
 
 export type PushReceipt = Readonly<
   InferResponseType<ApiClient['api']['review-events']['$post'], 200>['accepted'][number]
@@ -36,7 +36,7 @@ const LOWEST_SERVER_ERROR_STATUS = 500;
 
 const STATUS_BY_OUTCOME: Readonly<Record<Exclude<SyncOutcome, 'offline'>, SyncStatus>> = {
   synced: 'synced',
-  'signed-out': 'idle',
+  'signed-out': 'expired',
   rejected: 'paused',
 };
 
@@ -74,6 +74,13 @@ export function advanceCursor(current: string | null, next: string | null): stri
   return next ?? current;
 }
 
+export function isPulledPageDurable(
+  merge: 'stored' | 'in-memory-only',
+  isProgressKept: boolean,
+): boolean {
+  return merge === 'stored' && isProgressKept;
+}
+
 export function isAnotherRoundNeeded(round: SyncRound): boolean {
   const isWorkLeft = round.unpushedLeft > 0 || round.hasMore || round.isRerunRequested;
   return isWorkLeft && round.roundsRun < MAX_ROUNDS_PER_SYNC;
@@ -85,6 +92,13 @@ export function hasUnpushedEvents(events: readonly ReviewEvent[]): boolean {
 
 export function isSessionEnded(outcome: SyncOutcome): boolean {
   return outcome === 'signed-out';
+}
+
+export function isSessionExpiryShown(
+  status: SyncStatus,
+  session: { readonly signedIn: boolean } | undefined,
+): boolean {
+  return status === 'expired' && session?.signedIn === false;
 }
 
 export function selectSyncStatus(outcome: SyncOutcome, previous: SyncStatus): SyncStatus {

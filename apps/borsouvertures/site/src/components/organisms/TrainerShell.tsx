@@ -2,7 +2,12 @@ import { Suspense } from 'react';
 import { OpeningsLoadingPanel } from '@/components/molecules/OpeningsLoadingPanel';
 import { SyncPausedBanner } from '@/components/molecules/SyncPausedBanner';
 import { TabBar } from '@/components/molecules/TabBar';
-import { type AppTab, selectActiveTab, selectTabScreen } from '@/navigation/app-screen.core';
+import {
+  type AppTab,
+  hasRoomForABand,
+  selectActiveTab,
+  selectTabScreen,
+} from '@/navigation/app-screen.core';
 import { openScreen, useAppScreen } from '@/navigation/navigation.store';
 import { useSyncStatus } from '@/review/sync.store';
 import { AppScreens } from './AppScreens';
@@ -15,7 +20,7 @@ function openTab(tab: AppTab): void {
 // @FollowsBlueprint organism-shell
 export function TrainerShell() {
   const screen = useAppScreen();
-  const isSyncPaused = useSyncStatus() === 'paused';
+  const isSyncPaused = useSyncStatus() === 'paused' && hasRoomForABand(screen);
   return (
     <div className="flex flex-col w-full max-w-5xl min-h-dvh mx-auto px-4 pt-[env(safe-area-inset-top)] pb-[calc(var(--spacing-tab-bar)+env(safe-area-inset-bottom)+1.5rem)] roomy:px-6">
       <TopBar />

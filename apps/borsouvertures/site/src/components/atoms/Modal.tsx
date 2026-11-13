@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon } from '@/components/atoms/Icon';
 
 interface ModalProps {
   title: string;
@@ -46,18 +47,7 @@ export function Modal({ title, closeLabel, children, onClose }: ModalProps) {
             title={closeLabel}
             onClick={onClose}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.25"
-              strokeLinecap="square"
-              aria-hidden="true"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
+            <Icon name="close" />
           </button>
         </div>
         {children}

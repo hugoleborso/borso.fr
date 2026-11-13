@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Disclosure } from '@/components/atoms/Disclosure';
+import { ExternalLink } from '@/components/atoms/ExternalLink';
 import { MiniBoard } from '@/components/atoms/MiniBoard';
 import { formatNumberedLine, type LineStep } from '@/decks/card.core';
 import type { BuiltDeckLine } from '@/decks/deck.utils';
-import { selectIdeaText } from '@/decks/idea.utils';
+import { listIdeaSourceUrls, selectIdeaText } from '@/decks/idea.utils';
 import { buildLineEndFen } from '@/openings/previews.utils';
 import type { Side } from '@/state/persistedState.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
@@ -44,6 +45,9 @@ export function DeckLineDetails({ line, steps, side, boardStyle }: DeckLineDetai
           </div>
         ))}
       </dl>
+      {listIdeaSourceUrls(steps.map((step) => step.idea)).map((sourceUrl) => (
+        <ExternalLink key={sourceUrl} href={sourceUrl} label={t('review.idea.wikipedia-credit')} />
+      ))}
     </Disclosure>
   );
 }

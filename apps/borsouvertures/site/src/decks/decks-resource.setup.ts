@@ -8,7 +8,7 @@ const decksRequest: { pending: Promise<DecksLoad> | undefined } = { pending: und
 
 async function loadDecks(): Promise<DecksLoad> {
   const load = selectDecksLoad(await fetchDecksDocument(DECKS_URL));
-  if (load.failure !== null) reportTaggedError(load.failure, { deckId: load.failure.deckId });
+  if (load.failure !== null) reportTaggedError(load.failure, load.tags);
   return load;
 }
 

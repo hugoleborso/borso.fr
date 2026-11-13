@@ -4,8 +4,12 @@ import type { Opening } from '@/openings/types';
 import type { PlayScope, Side } from '@/state/persistedState.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 
+export type SessionSection = 'board' | 'status' | 'options';
+
 // @FollowsBlueprint shared-props-shape
 export interface SessionBodyProps {
+  shownSection: SessionSection;
+  tabsId: string;
   openings: Opening[];
   selection: Selection;
   playScope: PlayScope;

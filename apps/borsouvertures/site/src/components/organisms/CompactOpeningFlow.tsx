@@ -31,6 +31,7 @@ const PREVIOUS_STEP_BY_STEP: Record<SelectorStep, SelectorStep> = {
 
 interface BackButtonProps {
   label: string;
+  variant: 'quiet';
   onActivate: () => void;
 }
 
@@ -48,10 +49,11 @@ export function CompactOpeningFlow(props: OpeningPanelProps) {
   const BackButton = BACK_BUTTON_BY_STEP[step];
 
   return (
-    <div className="grid grid-cols-1 gap-3 triple:grid-cols-3">
-      <div className="mb-2">
+    <div className="relative grid grid-cols-1 gap-3 triple:grid-cols-3">
+      <div className="absolute top-1.5 right-0">
         <BackButton
           label={t('common.action.back')}
+          variant="quiet"
           onActivate={() => setStep(PREVIOUS_STEP_BY_STEP[step])}
         />
       </div>

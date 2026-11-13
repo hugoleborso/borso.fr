@@ -9,13 +9,15 @@ import type { TreeVisualization } from '@/openings/sessionStart.core';
 import type { Side } from '@/state/persistedState.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import { LearnDrill } from './LearnDrill';
-import type { SessionBodyProps } from './session.types';
+import type { SessionBodyProps, SessionSection } from './session.types';
 
 interface DrillProps {
   target: LearnDrillTarget;
   side: Side;
   boardStyle: BoardThemeId;
   visualization: TreeVisualization;
+  shownSection: SessionSection;
+  tabsId: string;
 }
 
 // @FollowsBlueprint component-lookup-table
@@ -31,6 +33,8 @@ export function LearnTreeSession({
   side,
   boardStyle,
   visualization,
+  shownSection,
+  tabsId,
 }: SessionBodyProps) {
   const target = findLearnDrillTarget(openings, selection);
   const Drill = DRILL_BY_READINESS[`${isLearnDrillReady(target)}`];
@@ -41,6 +45,8 @@ export function LearnTreeSession({
       side={side}
       boardStyle={boardStyle}
       visualization={visualization}
+      shownSection={shownSection}
+      tabsId={tabsId}
     />
   );
 }

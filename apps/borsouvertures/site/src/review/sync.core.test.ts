@@ -2,6 +2,8 @@ import { mergeReviewEvents, selectReplayInstant } from '@domain/review-event.cor
 import { describe, expect, it } from 'vitest';
 import {
   advanceCursor,
+  isPulledPageDurable,
+  isSessionExpiryShown,
   applyPushReceipt,
   decideSyncOutcome,
   isAnotherRoundNeeded,
@@ -108,6 +110,20 @@ describe('advanceCursor', () => {
   });
 });
 
+describe('isPulledPageDurable', () => {
+  it('keeps the cursor on disk once the page is stored and the store still writes', () => {
+    expect(isPulledPageDurable('stored', true)).toBe(true);
+  });
+
+  it('keeps the cursor for the open tab only when the page stayed in memory', () => {
+    expect(isPulledPageDurable('in-memory-only', true)).toBe(false);
+  });
+
+  it('keeps the cursor for the open tab only once the store has stopped writing, even for an empty page', () => {
+    expect(isPulledPageDurable('stored', false)).toBe(false);
+  });
+});
+
 describe('isAnotherRoundNeeded', () => {
   const settled = { roundsRun: 1, unpushedLeft: 0, hasMore: false, isRerunRequested: false };
 
@@ -128,14 +144,33 @@ describe('isAnotherRoundNeeded', () => {
   });
 });
 
+describe('isSessionExpiryShown', () => {
+  it('shows the expiry once a 401 signed the device out', () => {
+    expect(isSessionExpiryShown('expired', { signedIn: false })).toBe(true);
+  });
+
+  it('hides it once the operator signed in again, even before a sync completes', () => {
+    expect(isSessionExpiryShown('expired', { signedIn: true })).toBe(false);
+  });
+
+  it('hides it when the API has not answered the session yet', () => {
+    expect(isSessionExpiryShown('expired', undefined)).toBe(false);
+  });
+
+  it('hides it for a device that was never signed in or signed out by hand', () => {
+    expect(isSessionExpiryShown('idle', { signedIn: false })).toBe(false);
+    expect(isSessionExpiryShown('synced', { signedIn: false })).toBe(false);
+  });
+});
+
 describe('selectSyncStatus', () => {
   it('shows synced after a full exchange and sync paused after a refusal', () => {
     expect(selectSyncStatus('synced', 'paused')).toBe('synced');
     expect(selectSyncStatus('rejected', 'synced')).toBe('paused');
   });
 
-  it('goes back to idle when the session ended', () => {
-    expect(selectSyncStatus('signed-out', 'paused')).toBe('idle');
+  it('marks the session expired when the API answered 401', () => {
+    expect(selectSyncStatus('signed-out', 'paused')).toBe('expired');
   });
 
   it('keeps the status it had when offline, since offline is not an error', () => {

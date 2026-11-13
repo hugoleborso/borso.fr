@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasRoomForABand,
   APP_TABS,
   INITIAL_SCREEN,
   readScreenDeckId,
@@ -86,5 +87,20 @@ describe('selectAppScreenView', () => {
     expect(selectAppScreenView({ kind: 'stats' }, false, [])).toBe('decks-load-failure');
     expect(selectAppScreenView({ kind: 'explore' }, false, [])).toBe('explore');
     expect(selectAppScreenView({ kind: 'credits' }, false, [])).toBe('credits');
+  });
+});
+
+describe('hasRoomForABand', () => {
+  it('leaves room for a band on the screens that draw no board', () => {
+    expect(hasRoomForABand({ kind: 'today' })).toBe(true);
+    expect(hasRoomForABand({ kind: 'decks' })).toBe(true);
+    expect(hasRoomForABand({ kind: 'stats' })).toBe(true);
+    expect(hasRoomForABand({ kind: 'credits' })).toBe(true);
+  });
+
+  it('keeps a band off the screens whose board fills the phone', () => {
+    expect(hasRoomForABand({ kind: 'review-session', deckId: null })).toBe(false);
+    expect(hasRoomForABand({ kind: 'deck', deckId: 'albin-countergambit' })).toBe(false);
+    expect(hasRoomForABand({ kind: 'explore' })).toBe(false);
   });
 });

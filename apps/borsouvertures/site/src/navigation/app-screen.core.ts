@@ -67,3 +67,14 @@ export function selectAppScreenView(
   if (screen.kind === 'deck' && !deckIds.includes(screen.deckId)) return 'decks';
   return screen.kind;
 }
+
+const KINDS_WITH_ROOM_FOR_A_BAND: ReadonlySet<AppScreenKind> = new Set([
+  'today',
+  'decks',
+  'stats',
+  'credits',
+]);
+
+export function hasRoomForABand(screen: AppScreen): boolean {
+  return KINDS_WITH_ROOM_FOR_A_BAND.has(screen.kind);
+}

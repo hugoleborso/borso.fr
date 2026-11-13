@@ -1,8 +1,14 @@
 import { type CSSProperties, useSyncExternalStore } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ActionBar } from '@/components/atoms/ActionBar';
 import { BoardView } from '@/components/atoms/BoardView';
 import { EmptySlot } from '@/components/atoms/EmptySlot';
 import { MoveButtonList } from '@/components/atoms/MoveButtonList';
-import { LearnClearedBanner } from '@/components/molecules/LearnClearedBanner';
+import { TabPanel } from '@/components/atoms/TabPanel';
+import { Notice } from '@/components/atoms/Notice';
+import { LearnClearedActions } from '@/components/molecules/LearnClearedActions';
+import { LearnDrillActions } from '@/components/molecules/LearnDrillActions';
+import type { LearnDrillActionsProps } from '@/components/molecules/drill-actions.types';
 import { LearnDrillPanel } from '@/components/molecules/LearnDrillPanel';
 import { LearnDrillProgress } from '@/components/molecules/LearnDrillProgress';
 import { LearnOutOfBookModal } from '@/components/molecules/LearnOutOfBookModal';
@@ -16,19 +22,20 @@ import type { TreeVisualization } from '@/openings/sessionStart.core';
 import { uciToArrow } from '@/openings/uciSquare.utils';
 import type { Side } from '@/state/persistedState.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
+import type { SessionSection } from './session.types';
 
 const NO_HIGHLIGHTS: Record<string, CSSProperties> = {};
 const ACCEPTED = 'accepted';
 
-interface ClearedBannerProps {
-  openingId: string;
-  variationId: string;
-}
-
 // @FollowsBlueprint component-lookup-table
-const CLEARED_BANNER_BY_STATE: ComponentByFlag<ClearedBannerProps> = {
-  true: LearnClearedBanner,
+const CLEARED_NOTICE_BY_STATE: ComponentByFlag<{ message: string }> = {
+  true: Notice,
   false: EmptySlot,
+};
+
+const ACTIONS_BY_CLEARED: ComponentByFlag<LearnDrillActionsProps> = {
+  true: LearnClearedActions,
+  false: LearnDrillActions,
 };
 
 interface MoveListProps {
@@ -52,10 +59,20 @@ interface LearnDrillProps {
   side: Side;
   boardStyle: BoardThemeId;
   visualization: TreeVisualization;
+  shownSection: SessionSection;
+  tabsId: string;
 }
 
 // @FollowsBlueprint organism-machine-bound
-export function LearnDrill({ target, side, boardStyle, visualization }: LearnDrillProps) {
+export function LearnDrill({
+  target,
+  side,
+  boardStyle,
+  visualization,
+  shownSection,
+  tabsId,
+}: LearnDrillProps) {
+  const { t } = useTranslation();
   const { opening, variation } = target;
   useSessionStart(() => learnTreeMachine.start(variation, side));
   const snapshot = useSyncExternalStore(learnTreeMachine.subscribe, learnTreeMachine.getSnapshot);
@@ -66,40 +83,49 @@ export function LearnDrill({ target, side, boardStyle, visualization }: LearnDri
     uciToArrow(uci),
   );
 
-  const ClearedBanner = CLEARED_BANNER_BY_STATE[`${snapshot.variationCleared}`];
+  const ClearedNotice = CLEARED_NOTICE_BY_STATE[`${snapshot.variationCleared}`];
+  const Actions = ACTIONS_BY_CLEARED[`${snapshot.variationCleared}`];
   const MoveList = MOVE_LIST_BY_VISUALIZATION[visualization];
   const OutOfBookModal = OUT_OF_BOOK_MODAL_BY_STATE[`${snapshot.outOfBookOpen}`];
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-      <div className="flex flex-col items-center justify-center lg:block lg:row-span-2 lg:justify-self-start">
-        <ClearedBanner openingId={opening.id} variationId={variation.id} />
-        <BoardView
-          orientation={side}
-          fen={snapshot.fen}
-          onMove={(uci) => learnTreeMachine.playMove(uci) === ACCEPTED}
-          arrows={arrows}
-          highlightSquares={NO_HIGHLIGHTS}
-          boardStyleId={boardStyle}
-          boardWidth={boardWidth}
-        />
-      </div>
-      <div className="flex flex-col gap-4">
-        <LearnDrillPanel
-          variationName={variation.name}
-          areArrowsRevealed={snapshot.showRevealedArrows}
-        />
-        <MoveList
-          candidates={snapshot.nextBookMovesUci}
-          fen={snapshot.fen}
-          onPick={(uci) => learnTreeMachine.playMove(uci)}
-        />
+    <>
+      <TabPanel idPrefix={tabsId} tabId="board" isSelected={shownSection === 'board'}>
+        <div className="flex flex-col items-center gap-4 lg:items-start">
+          <BoardView
+            orientation={side}
+            fen={snapshot.fen}
+            onMove={(uci) => learnTreeMachine.playMove(uci) === ACCEPTED}
+            arrows={arrows}
+            highlightSquares={NO_HIGHLIGHTS}
+            boardStyleId={boardStyle}
+            boardWidth={boardWidth}
+          />
+          <div className="flex flex-col gap-3 self-stretch">
+            <ClearedNotice message={t('learn.cleared.message')} />
+            <MoveList
+              candidates={snapshot.nextBookMovesUci}
+              fen={snapshot.fen}
+              onPick={(uci) => learnTreeMachine.playMove(uci)}
+            />
+          </div>
+        </div>
+      </TabPanel>
+      <TabPanel idPrefix={tabsId} tabId="status" isSelected={shownSection === 'status'}>
+        <LearnDrillPanel variationName={variation.name} />
         <LearnDrillProgress
           visitedCount={snapshot.visitedLeafIds.size}
           totalCount={variation.lines.length}
         />
-      </div>
+      </TabPanel>
+      <ActionBar>
+        <Actions
+          openingId={opening.id}
+          variationId={variation.id}
+          areArrowsRevealed={snapshot.showRevealedArrows}
+        />
+      </ActionBar>
       <OutOfBookModal />
-    </div>
+    </>
   );
 }

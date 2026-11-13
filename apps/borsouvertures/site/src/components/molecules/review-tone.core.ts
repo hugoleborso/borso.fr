@@ -1,4 +1,4 @@
-import type { StatusBandTone } from '@/components/atoms/StatusBand';
+import type { StatusBandTone } from '@/components/atoms/status-band.variants';
 import type { ReviewStatus } from '@/review/review-machine.utils';
 
 // @FollowsBlueprint component-lookup-table

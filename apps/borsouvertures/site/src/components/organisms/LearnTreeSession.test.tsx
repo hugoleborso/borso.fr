@@ -17,6 +17,8 @@ describe('LearnTreeSession', () => {
         isAutoOpponentEnabled
         areMovesShown={false}
         visualization="arrows"
+        shownSection="board"
+        tabsId="explore-session"
       />,
     );
     expect(screen.getByRole('status').textContent).toBe(

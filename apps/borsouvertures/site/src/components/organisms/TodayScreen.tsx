@@ -17,11 +17,12 @@ import { openScreen } from '@/navigation/navigation.store';
 import type { TrainerProgress } from '@/review/daily-plan.core';
 import { useReviewLog } from '@/review/review-log.store';
 import { useTrainerProgress } from '@/review/trainer-progress.hook';
+import type { DeckShare } from '@/review/retention.core';
 import { useTrainerStatistics } from '@/review/trainer-statistics.hook';
 import { useAppState } from '@/state/appState';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import type { AppScreenProps } from './screen.types';
-import { selectShownSection } from './section-tabs.core';
+import { selectShownSection } from '@/components/atoms/section-tabs.utils';
 
 type TodaySection = 'session' | 'ahead' | 'retention';
 
@@ -60,11 +61,18 @@ function openDeck(deckId: string): void {
 interface AheadPanelProps {
   decks: BuiltDeck[];
   progress: TrainerProgress;
+  recentRetention: readonly DeckShare[];
   boardStyle: BoardThemeId;
   isSelected: boolean;
 }
 
-function ReviewAheadPanel({ decks, progress, boardStyle, isSelected }: AheadPanelProps) {
+function ReviewAheadPanel({
+  decks,
+  progress,
+  recentRetention,
+  boardStyle,
+  isSelected,
+}: AheadPanelProps) {
   const { t } = useTranslation();
   return (
     <TabPanel idPrefix={TODAY_TABS_ID} tabId="ahead" isSelected={isSelected}>
@@ -72,12 +80,14 @@ function ReviewAheadPanel({ decks, progress, boardStyle, isSelected }: AheadPane
         <div className="flex flex-col">
           {decks.map((deck, index) => {
             const deckProgress = progress.deckProgress[index];
-            if (deckProgress === undefined) return null;
+            const retention = recentRetention[index];
+            if (deckProgress === undefined || retention === undefined) return null;
             return (
               <DeckRow
                 key={deck.id}
                 deck={deck}
                 progress={deckProgress}
+                retention={retention}
                 boardStyle={boardStyle}
                 onOpen={openDeck}
               />
@@ -143,6 +153,7 @@ export function TodayScreen({ decks }: AppScreenProps) {
       <AheadPanel
         decks={decks}
         progress={progress}
+        recentRetention={statistics.recentRetention}
         boardStyle={boardStyle}
         isSelected={shownSection === 'ahead'}
       />

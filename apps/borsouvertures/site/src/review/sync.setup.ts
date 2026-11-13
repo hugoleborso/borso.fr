@@ -21,6 +21,7 @@ import {
   applyPushReceipt,
   hasUnpushedEvents,
   isAnotherRoundNeeded,
+  isPulledPageDurable,
   isSessionEnded,
   selectSyncStatus,
   selectUnpushedEvents,
@@ -43,6 +44,8 @@ const NOTHING_TO_PUSH: PushResult = { outcome: 'synced', receipts: [] };
 const SIGNED_OUT = { signedIn: false };
 
 const run = { isRunning: false, isRerunRequested: false };
+
+const sessionPull: { cursor: string | null } = { cursor: null };
 
 function readCursorStorage(): SyncCursorStorage | undefined {
   try {
@@ -68,16 +71,18 @@ async function exchangeOneRound(): Promise<ExchangedRound | FailedRound> {
   const stamped = applyPushReceipt(unpushed, push.receipts);
   await mergeIntoReviewLog(stamped);
   const storage = readCursorStorage();
-  const cursor = readSyncCursor(storage);
+  const cursor = sessionPull.cursor ?? readSyncCursor(storage);
   const pull = await pullReviewEvents(api, cursor);
   if (pull.outcome !== 'synced') return { failure: pull };
-  const isPulledPageStored = (await mergeIntoReviewLog(pull.events)) === 'stored';
-  if (isPulledPageStored) writeSyncCursor(storage, advanceCursor(cursor, pull.nextCursor));
+  const merge = await mergeIntoReviewLog(pull.events);
+  sessionPull.cursor = advanceCursor(cursor, pull.nextCursor);
+  const isDurable = isPulledPageDurable(merge, readReviewLog().isProgressKept);
+  if (isDurable) writeSyncCursor(storage, sessionPull.cursor);
   return {
     failure: null,
     pushed: stamped.length,
     pulled: pull.events.length,
-    hasMore: isPulledPageStored && pull.hasMore,
+    hasMore: pull.hasMore,
   };
 }
 

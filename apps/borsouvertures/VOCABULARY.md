@@ -34,13 +34,19 @@ Lives in: `api/src/auth/`, `site/src/lib/queries/account.queries.ts`,
 - A signed-in device pushes the review events whose `receivedAt` is `null`,
   then pulls the account's events after its sync cursor, and merges both into
   its log by id. A refused push keeps the batch queued and shows "sync paused".
-  A 401 shows the sign-in link again. Offline is not an error.
+  A 401 marks the sync `expired`, and a band under the top bar says the session
+  expired, with a button that opens the sign-in form in the settings sheet. The
+  band shows on the screens that draw no board.
+  Offline is not an error. A browser whose store cannot write still pulls every
+  page into the open tab, and keeps that cursor in memory only.
 - The account link shows only when the session route answers, so with no API
   the app shows no dead link.
 
 Held by: `api/src/auth/auth.controller.test.ts` › has no enrolment route
 Held by: `api/src/auth/auth.controller.test.ts` › rate limits the sixth failed sign-in, even with the right password
 Held by: `api/src/review-events/review-events.controller.test.ts` › stores a batch pushed twice once, and answers the stored receivedAt both times
+Held by: `site/src/review/sync.setup.unavailable-store.test.ts` › pulls every page once into the open tab and keeps the cursor off the disk
+Held by: `site/src/components/organisms/TopBar.test.tsx` › says the session expired after a 401 and opens the sign-in form in the settings sheet
 
 ## Auto opponent
 
@@ -71,7 +77,7 @@ game on a deck page
   it ends. It searches 400 ms a move. No answer to `uci` within 10 s raises
   `StockfishLoadFailedError`, and the game then ends where the deck ends. A
   move the board refuses raises `StockfishIllegalMoveError`.
-- The strength is one of seven steps in
+- The strength is one of ten steps in
   `site/src/opponent/opponent-strength.core.ts`, persisted as
   `opponentStrength`. Three easier steps set `Skill Level` 0, 3 and 6 and show
   no rating. Seven set `UCI_Elo` 1320, 1500, 1700, 1900, 2000, 2200 and 2500.

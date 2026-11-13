@@ -17,12 +17,15 @@ describe('fetchDecksDocument', () => {
     expect(fetcher).toHaveBeenCalledWith('/decks.json', { cache: 'no-cache' });
   });
 
-  it('answers unreachable on a refusal', async () => {
+  it('answers a refusal with its status when our own origin answers an error', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(() => Promise.resolve(Response.json({ version: 1 }, { status: 503 }))),
+      vi.fn(() => Promise.resolve(Response.json({ version: 1 }, { status: 404 }))),
     );
-    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({ status: 'unreachable' });
+    await expect(fetchDecksDocument('/decks.json')).resolves.toEqual({
+      status: 'refused',
+      httpStatus: 404,
+    });
   });
 
   it('answers unreachable on a network failure', async () => {

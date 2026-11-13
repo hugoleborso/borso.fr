@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildExampleDocument } from './deck.test-utils';
 import { DeckContentInvalidError } from './deck.utils';
-import { selectDecksLoad } from './decks-load.utils';
+import { DecksDocumentRefusedError, selectDecksLoad } from './decks-load.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('selectDecksLoad', () => {
@@ -22,11 +22,16 @@ describe('selectDecksLoad', () => {
     expect(load.status).toBe('failed');
     expect(load.decks).toEqual([]);
     expect(load.failure).toBeInstanceOf(DeckContentInvalidError);
-    expect(load.failure?.deckId).toBe('vienna-game');
+    expect(load).toMatchObject({
+      failure: { deckId: 'vienna-game' },
+      tags: { deckId: 'vienna-game' },
+    });
   });
 
   it('fails on a body that arrived and is no deck document, naming no deck', () => {
-    expect(selectDecksLoad({ status: 'arrived', body: null }).failure?.deckId).toBe('unknown');
+    expect(selectDecksLoad({ status: 'arrived', body: null }).failure).toMatchObject({
+      deckId: 'unknown',
+    });
   });
 
   it('answers unreachable with no failure to report when the file did not arrive', () => {
@@ -35,6 +40,16 @@ describe('selectDecksLoad', () => {
       decks: [],
       failure: null,
     });
+  });
+
+  it('fails with the status when our own origin refuses the file, so a deploy defect is reported', () => {
+    const load = selectDecksLoad({ status: 'refused', httpStatus: 404 });
+    expect(load.status).toBe('failed');
+    expect(load.decks).toEqual([]);
+    expect(load.failure).toBeInstanceOf(DecksDocumentRefusedError);
+    expect(load.failure?.name).toBe('DecksDocumentRefusedError');
+    expect(load.failure?.message).toBe('The site answered 404 for the built decks.');
+    expect(load).toMatchObject({ tags: { status: '404', route: 'GET /decks.json' } });
   });
 
   it('lets an error of another kind through', () => {

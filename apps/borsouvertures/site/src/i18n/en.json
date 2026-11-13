@@ -44,6 +44,7 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "sync-paused": "Sync paused. Your reviews stay on this device and will be sent later.",
+    "session-expired": "Session expired. Sign in to keep syncing.",
     "refusal": {
       "invalid-credentials": "Wrong password.",
       "rate-limited": "Too many attempts. Try again later.",
@@ -125,6 +126,7 @@
       "title": "Idea",
       "missing": "This move has no idea yet.",
       "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0",
+      "wikipedia-credit-short": "Wikipedia, CC BY-SA",
       "read-all": "Read all",
       "close": "Close the idea"
     },
@@ -177,6 +179,11 @@
       "black": "You play Black"
     },
     "counts": "{{cards}} cards · {{due}} due · {{new}} new",
+    "row-counts": "{{side}} · {{cards}} cards · {{due}} due · {{new}} new",
+    "retention": {
+      "measured": "Retention {{percent}}%",
+      "empty": "No retention yet"
+    },
     "review": "Review this deck",
     "nothing-to-review": "No card of this deck is due, and today's new cards are used up.",
     "back": "All decks",
@@ -237,7 +244,11 @@
   },
   "explore": {
     "title": "Explore",
-    "description": "Learn and play over the whole catalogue of openings. Nothing you do here creates a review."
+    "sections": {
+      "aria-label": "Explore sections",
+      "pick": "Pick",
+      "setup": "Setup"
+    }
   },
   "credits": {
     "title": "Credits",
@@ -292,10 +303,6 @@
       "learn": "Drill this variation",
       "play": "Play within this scope"
     },
-    "hint": {
-      "learn": "Pick an opening + variation to drill its tree.",
-      "play": "Pick at least one opening, variation, or line to play."
-    },
     "openings": {
       "title": "Openings",
       "all": "All openings",
@@ -330,6 +337,12 @@
       "aria-label": "Tree visualization mode",
       "arrows": "Arrows",
       "buttons": "Buttons"
+    },
+    "sections": {
+      "aria-label": "Session sections",
+      "board": "Board",
+      "status": "Status",
+      "options": "Options"
     }
   },
   "board": {

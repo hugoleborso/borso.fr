@@ -12,7 +12,7 @@ export function SelectorPanel({ title, children }: SelectorPanelProps) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl font-bold">{title}</h2>
       </div>
-      <div className="grid [grid-auto-rows:1fr] gap-[0.6rem] max-h-90 overflow-y-auto pr-1">
+      <div className="grid content-start gap-[0.6rem] max-h-90 overflow-y-auto pr-1">
         {children}
       </div>
     </div>

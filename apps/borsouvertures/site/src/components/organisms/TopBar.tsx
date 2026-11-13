@@ -7,10 +7,14 @@ import { BoardStyleSelect } from '@/components/molecules/BoardStyleSelect';
 import { IconButton } from '@/components/molecules/IconButton';
 import { LanguageSwitcher } from '@/components/molecules/LanguageSwitcher';
 import { OpponentStrengthSelect } from '@/components/molecules/OpponentStrengthSelect';
+import { SessionExpiredBanner } from '@/components/molecules/SessionExpiredBanner';
 import { SignInScreen } from '@/components/organisms/SignInScreen';
 import { selectAccountLinkView } from '@/lib/account-session.core';
 import { useAccountSession, useSignOut } from '@/lib/queries/account.queries';
-import { openScreen } from '@/navigation/navigation.store';
+import { hasRoomForABand } from '@/navigation/app-screen.core';
+import { openScreen, useAppScreen } from '@/navigation/navigation.store';
+import { isSessionExpiryShown } from '@/review/sync.core';
+import { useSyncStatus } from '@/review/sync.store';
 import { useAppState } from '@/state/appState';
 
 // @FollowsBlueprint organism-presentational
@@ -21,23 +25,35 @@ export function TopBar() {
   const signOut = useSignOut();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const syncStatus = useSyncStatus();
+  const screen = useAppScreen();
+  const isSessionExpired =
+    isSessionExpiryShown(syncStatus, session.data) && hasRoomForABand(screen);
 
   function closeSettings(): void {
     setIsSettingsOpen(false);
     setIsSignInOpen(false);
   }
 
+  function openSignIn(): void {
+    setIsSettingsOpen(true);
+    setIsSignInOpen(true);
+  }
+
   return (
-    <header className="flex items-center justify-between gap-3 h-12">
-      <h1 className="flex items-center gap-2 text-lg font-bold tracking-[-0.02em]">
-        <span aria-hidden="true" className="size-3 bg-accent" />
-        {t('top-bar.brand')}
-      </h1>
-      <IconButton
-        label={t('top-bar.settings')}
-        icon="settings"
-        onActivate={() => setIsSettingsOpen(true)}
-      />
+    <>
+      <header className="flex items-center justify-between gap-3 h-12">
+        <h1 className="flex items-center gap-2 text-lg font-bold tracking-[-0.02em]">
+          <span aria-hidden="true" className="size-3 bg-accent" />
+          {t('top-bar.brand')}
+        </h1>
+        <IconButton
+          label={t('top-bar.settings')}
+          icon="settings"
+          onActivate={() => setIsSettingsOpen(true)}
+        />
+      </header>
+      {isSessionExpired ? <SessionExpiredBanner onSignIn={openSignIn} /> : null}
       {isSettingsOpen ? (
         <Modal
           title={t('top-bar.settings')}
@@ -74,6 +90,6 @@ export function TopBar() {
           ) : null}
         </Modal>
       ) : null}
-    </header>
+    </>
   );
 }

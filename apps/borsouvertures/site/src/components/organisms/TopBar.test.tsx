@@ -6,6 +6,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import '@/i18n/i18n';
 import { accountKeys } from '@/lib/queries/account.queries';
 import { openScreen, useAppScreen } from '@/navigation/navigation.store';
+import { replaceSyncStatus } from '@/review/sync.store';
 import { TopBar } from './TopBar';
 
 // @FollowsBlueprint test-hook-probe
@@ -42,6 +43,7 @@ beforeAll(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  replaceSyncStatus('idle');
 });
 
 async function openSettings(): Promise<void> {
@@ -151,5 +153,22 @@ describe('TopBar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
     expect(queryClient.getQueryData(accountKeys.session())).toEqual({ signedIn: true });
+  });
+
+  it('says the session expired after a 401 and opens the sign-in form in the settings sheet', async () => {
+    replaceSyncStatus('expired');
+    openScreen({ kind: 'today' });
+    renderWithSession(<TopBar />, false);
+    expect(screen.getByRole('status').textContent).toBe(
+      'Session expired. Sign in to keep syncing.Sign in',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Sign in to sync' })).toBeTruthy();
+  });
+
+  it('says nothing about an expired session to a device that never signed in', () => {
+    renderWithSession(<TopBar />, false);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

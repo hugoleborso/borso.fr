@@ -57,7 +57,9 @@ describe('the opening trainer, one visit from the first load', () => {
     );
 
     await userEvent.click(
-      screen.getByRole('button', { name: /Albin Countergambit.*6 cards · 0 due · 6 new/ }),
+      screen.getByRole('button', {
+        name: /Albin Countergambit.*Black · 6 cards · 0 due · 6 new.*No retention yet/,
+      }),
     );
     expect(screen.getByRole('heading', { name: 'Albin Countergambit' })).toBeTruthy();
     expect(screen.getByText('You play Black')).toBeTruthy();
@@ -90,6 +92,9 @@ describe('the opening trainer, one visit from the first load', () => {
       'page',
     );
     await userEvent.click(await screen.findByRole('button', { name: 'Toggle mode' }));
+    await userEvent.click(await screen.findByRole('tab', { name: 'Setup' }));
+    expect(screen.getByRole('button', { name: 'Choose side' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Openings' })).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Today' }));
     expect(readCount('due')).toBe('0');
     expect(readCount('new')).toBe('3');

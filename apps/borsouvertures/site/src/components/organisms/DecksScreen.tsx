@@ -5,6 +5,7 @@ import { NewCardsPerDaySelect } from '@/components/molecules/NewCardsPerDaySelec
 import { openScreen } from '@/navigation/navigation.store';
 import { recordProductEvent } from '@/observability/error-reporting.adapter';
 import { useTrainerProgress } from '@/review/trainer-progress.hook';
+import { useTrainerStatistics } from '@/review/trainer-statistics.hook';
 import { useAppState } from '@/state/appState';
 import type { AppScreenProps } from './screen.types';
 
@@ -17,6 +18,7 @@ function openDeck(deckId: string): void {
 export function DecksScreen({ decks }: AppScreenProps) {
   const { t } = useTranslation();
   const progress = useTrainerProgress(decks);
+  const statistics = useTrainerStatistics(decks);
   const { newCardsPerDay, boardStyle } = useAppState();
   return (
     <div className="flex flex-col gap-4 w-full max-w-xl mx-auto">
@@ -24,12 +26,14 @@ export function DecksScreen({ decks }: AppScreenProps) {
         <div className="flex flex-col">
           {decks.map((deck, index) => {
             const deckProgress = progress.deckProgress[index];
-            if (deckProgress === undefined) return null;
+            const retention = statistics.recentRetention[index];
+            if (deckProgress === undefined || retention === undefined) return null;
             return (
               <DeckRow
                 key={deck.id}
                 deck={deck}
                 progress={deckProgress}
+                retention={retention}
                 boardStyle={boardStyle}
                 onOpen={openDeck}
               />

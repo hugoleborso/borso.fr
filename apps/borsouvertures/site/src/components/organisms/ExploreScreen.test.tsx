@@ -38,15 +38,6 @@ beforeEach(() => {
 
 // @FollowsBlueprint test-component-render
 describe('ExploreScreen', () => {
-  it('says that nothing done here creates a review', async () => {
-    await renderExplore();
-    expect(
-      screen.getByText(
-        'Learn and play over the whole catalogue of openings. Nothing you do here creates a review.',
-      ),
-    ).toBeTruthy();
-  });
-
   it('drops the drilled selection and the scope when the user switches to play', async () => {
     await renderExplore();
     await userEvent.click(screen.getByRole('button', { name: 'Toggle mode' }));

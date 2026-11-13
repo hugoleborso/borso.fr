@@ -44,6 +44,7 @@
     "submit": "Se connecter",
     "submitting": "Connexion…",
     "sync-paused": "Synchronisation en pause. Vos révisions restent sur cet appareil et seront envoyées plus tard.",
+    "session-expired": "Session expirée. Reconnectez-vous pour synchroniser.",
     "refusal": {
       "invalid-credentials": "Mot de passe incorrect.",
       "rate-limited": "Trop de tentatives. Réessayez plus tard.",
@@ -125,6 +126,7 @@
       "title": "Idée",
       "missing": "Ce coup n'a pas encore d'idée.",
       "wikipedia-credit": "D'après Wikipédia, CC BY-SA 4.0",
+      "wikipedia-credit-short": "Wikipédia, CC BY-SA",
       "read-all": "Tout lire",
       "close": "Fermer l'idée"
     },
@@ -177,6 +179,11 @@
       "black": "Vous jouez les Noirs"
     },
     "counts": "{{cards}} cartes · {{due}} à revoir · {{new}} nouvelles",
+    "row-counts": "{{side}} · {{cards}} cartes · {{due}} à revoir · {{new}} nouvelles",
+    "retention": {
+      "measured": "Rétention {{percent}} %",
+      "empty": "Pas encore de rétention"
+    },
     "review": "Revoir ce paquet",
     "nothing-to-review": "Aucune carte de ce paquet n'est à revoir, et les nouvelles cartes du jour sont épuisées.",
     "back": "Tous les paquets",
@@ -237,7 +244,11 @@
   },
   "explore": {
     "title": "Explorer",
-    "description": "Apprenez et jouez dans tout le catalogue d'ouvertures. Rien de ce que vous faites ici ne crée de révision."
+    "sections": {
+      "aria-label": "Sections d'Explorer",
+      "pick": "Choisir",
+      "setup": "Réglages"
+    }
   },
   "credits": {
     "title": "Crédits",
@@ -292,10 +303,6 @@
       "learn": "Travailler cette variante",
       "play": "Jouer dans ce périmètre"
     },
-    "hint": {
-      "learn": "Choisissez une ouverture et une variante pour travailler son arbre.",
-      "play": "Choisissez au moins une ouverture, une variante ou une ligne pour jouer."
-    },
     "openings": {
       "title": "Ouvertures",
       "all": "Toutes les ouvertures",
@@ -330,6 +337,12 @@
       "aria-label": "Mode de visualisation de l'arbre",
       "arrows": "Flèches",
       "buttons": "Boutons"
+    },
+    "sections": {
+      "aria-label": "Sections de la séance",
+      "board": "Échiquier",
+      "status": "État",
+      "options": "Affichage"
     }
   },
   "board": {

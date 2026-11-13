@@ -16,6 +16,16 @@ export const LAPTOP_REVIEW = buildReviewEvent(1, CARD, '2026-01-10T08:00:00.000Z
 
 export const PHONE_REVIEW = buildReviewEvent(2, CARD, '2026-01-11T08:00:00.000Z');
 
+export const LAST_CURSOR = 'page~2026-01-12T08:05:00.000Z~bbbbbbbb-bbbb-4bbb-8bbb-000000000003';
+
+export const LATER_LAPTOP_REVIEW = buildReviewEvent(
+  3,
+  CARD,
+  '2026-01-12T08:00:00.000Z',
+  'recalled',
+  { deviceId: LAPTOP, receivedAt: '2026-01-12T08:05:00.000Z' },
+);
+
 export interface StubbedApi {
   readonly pushStatus: number;
   readonly pulled: readonly ReviewEvent[];
@@ -33,6 +43,34 @@ export function stubApi(stubbed: StubbedApi): void {
       );
     }),
   );
+}
+
+export interface PulledPageAnswer {
+  readonly events: readonly ReviewEvent[];
+  readonly nextCursor: string;
+  readonly hasMore: boolean;
+}
+
+function readRequestUrl(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
+}
+
+export function stubPagedPull(pageByCursor: ReadonlyMap<string | null, PulledPageAnswer>): {
+  readonly cursorsAsked: (string | null)[];
+} {
+  const cursorsAsked: (string | null)[] = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL) => {
+      const cursor = new URL(readRequestUrl(input), 'http://localhost').searchParams.get('after');
+      cursorsAsked.push(cursor);
+      const page = pageByCursor.get(cursor);
+      if (page === undefined) return Promise.resolve(Response.json({}, { status: 404 }));
+      return Promise.resolve(Response.json(page));
+    }),
+  );
+  return { cursorsAsked };
 }
 
 export async function signInAndSync(): Promise<void> {
