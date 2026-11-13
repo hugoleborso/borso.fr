@@ -261,6 +261,7 @@
     "noTasks": "Nothing to do on this composition.",
     "notes": "Notes and comments",
     "openInCatalog": "Open in the catalog",
+    "openSketch": "Open the sketch",
     "tasks": "Tasks",
     "title": "Compositions"
   },
@@ -296,6 +297,45 @@
     "title": "Improvements",
     "titleField": "Title",
     "voteFor": "Vote for {{title}}"
+  },
+  "inspirations": {
+    "title": "Inspirations",
+    "empty": "No inspiration yet.",
+    "new": "New inspiration",
+    "edit": "Edit the inspiration",
+    "editFor": "Edit {{title}}",
+    "deleteFor": "Delete {{title}}",
+    "deleteConfirm": "Delete this inspiration from the library?",
+    "formerMember": "former member",
+    "usedBy_one": "in {{count}} sketch",
+    "usedBy_other": "in {{count}} sketches",
+    "searchResults": "On Deezer",
+    "searchOnYoutube": "Search on YouTube",
+    "setStartHere": "Set start here",
+    "setEndHere": "Set end here",
+    "fields": {
+      "title": "Title",
+      "artist": "Artist",
+      "youtubeLink": "YouTube link",
+      "start": "Start (seconds)",
+      "end": "End (seconds)",
+      "note": "Note"
+    },
+    "form": {
+      "titleMissing": "Give the song a title.",
+      "notAYoutubeLink": "Paste the link of one YouTube video.",
+      "endNotAfterStart": "The end has to come after the start.",
+      "passageTooLong": "A passage lasts 10 minutes at most."
+    },
+    "refusal": {
+      "inUse": "Used by {{sketches}}. Remove its clips there first.",
+      "notFound": "Another member deleted this inspiration.",
+      "unknown": "The change was not saved. Try again."
+    },
+    "player": {
+      "title": "YouTube player: {{title}}",
+      "openOnYoutube": "Open on YouTube"
+    }
   },
   "instruments": {
     "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
@@ -376,6 +416,7 @@
     "bottomBar": "Main sections",
     "compos": "Compositions",
     "improvements": "Improvements",
+    "inspirations": "Inspirations",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",
@@ -661,6 +702,27 @@
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
+  },
+  "sketch": {
+    "title": "Sketch",
+    "lanes": "Lanes",
+    "timeline": "Timeline",
+    "empty": "No lane yet. Add one, then place passages from the library on it.",
+    "addLane": "Add a lane",
+    "newLane": "New lane",
+    "lane": "Lane",
+    "laneName": "Lane name",
+    "renameLane": "Rename {{name}}",
+    "deleteLane": "Delete the lane",
+    "deleteLaneConfirm": "Delete this lane and its clips? The inspirations stay in the library.",
+    "addClip": "Add a clip to {{name}}",
+    "addClipTitle": "Add from the library",
+    "emptyLibrary": "The library is empty.",
+    "openLibrary": "Open the library",
+    "removeClip": "Remove the clip",
+    "clipLabel": "{{title}} at {{start}}",
+    "reloaded": "Another member changed this sketch. It was reloaded.",
+    "notFound": "This composition no longer exists."
   },
   "songDefaults": {
     "open": "Song defaults",

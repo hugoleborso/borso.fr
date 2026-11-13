@@ -8,6 +8,7 @@ import { deleteScoreHistoryOfDeletedSong } from '../mastery/mastery.service';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
 import { deleteStudiesOfDeletedSong } from '../studies/studies.service';
+import { deleteSketchOfDeletedSong } from '../sketches/sketches.service';
 import { deleteTakesOfDeletedSong } from '../takes/takes.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
@@ -260,6 +261,7 @@ export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);
+    await deleteSketchOfDeletedSong(transaction, id);
     const takeObjectKeys = await deleteTakesOfDeletedSong(transaction, id);
     return { outcome: selectDeletionOutcome(deleted.length), takeObjectKeys };
   });

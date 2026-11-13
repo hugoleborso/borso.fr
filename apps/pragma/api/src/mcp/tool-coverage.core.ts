@@ -14,6 +14,8 @@ const MIDDLEWARE_METHOD = 'ALL';
 const SUBTREE_SUFFIX = '/*';
 const ROUTE_SEPARATOR = ' ';
 const NOT_FOR_ASSISTANTS = 'operator 2026-10-29: not for assistants';
+const INSPIRATIONS_HAVE_NO_TOOL_YET =
+  'Inspirations and sketches have no assistant tool yet; a later feature can add them.';
 
 export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'GET /api/health': 'A liveness probe for the platform; it carries no band data.',
@@ -52,6 +54,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'POST /api/takes/:id/comments': NOT_FOR_ASSISTANTS,
   '* /api/takes/:id/comments/:commentId': NOT_FOR_ASSISTANTS,
   '* /api/transition-comments/*': NOT_FOR_ASSISTANTS,
+  '* /api/inspirations/*': INSPIRATIONS_HAVE_NO_TOOL_YET,
+  '* /api/sketches/*': INSPIRATIONS_HAVE_NO_TOOL_YET,
   'POST /api/instruments': NOT_FOR_ASSISTANTS,
   'PUT /api/instruments/order': NOT_FOR_ASSISTANTS,
   'PUT /api/instruments/:id': NOT_FOR_ASSISTANTS,

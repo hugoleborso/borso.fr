@@ -51,7 +51,13 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
           <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
         ) : null}
         <StatusChip status={composition.status} />
-        <Link to={`/catalog/${composition.id}`} className={composeClassName('ml-auto', LINK_CLASS)}>
+        <Link
+          to={`/compos/${composition.id}/sketch`}
+          className={composeClassName('ml-auto', LINK_CLASS)}
+        >
+          {t('compos.openSketch')}
+        </Link>
+        <Link to={`/catalog/${composition.id}`} className={LINK_CLASS}>
           {t('compos.openInCatalog')}
         </Link>
       </div>

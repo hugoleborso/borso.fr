@@ -13,6 +13,7 @@ export {
 export { barTable } from '../bars/bars.schema';
 export { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 export { improvementTable, improvementVoteTable } from '../improvements/improvements.schema';
+export { inspirationTable } from '../inspirations/inspirations.schema';
 export { instrumentTable } from '../instruments/instruments.schema';
 export {
   masteryDefaultTable,
@@ -41,6 +42,7 @@ export {
   setlistTable,
   setlistVoteTable,
 } from '../setlists/setlists.schema';
+export { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 export { songTable } from '../songs/songs.schema';
 export { studyTable } from '../studies/studies.schema';
 export { takeCommentTable, takeTable } from '../takes/takes.schema';

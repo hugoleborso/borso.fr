@@ -115,4 +115,11 @@ describe('the compositions page', () => {
     expect(header?.classList.contains('sticky')).toBe(true);
     expect(header?.querySelector('a')?.getAttribute('href')).toBe('/band');
   });
+
+  it('links each composition to its sketch', async () => {
+    stubViewport(false);
+    renderComposPage();
+    const sketchLink = await screen.findByRole('link', { name: 'Open the sketch' });
+    expect(sketchLink.getAttribute('href')).toBe('/compos/song-1/sketch');
+  });
 });

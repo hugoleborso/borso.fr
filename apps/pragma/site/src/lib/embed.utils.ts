@@ -8,6 +8,8 @@
  * @Feature songs
  */
 
+import { parseYoutubeVideoId } from '@domain/inspiration.core';
+
 const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
 const SPOTIFY_HOST = 'open.spotify.com';
 const DEEZER_HOST = 'deezer.com';
@@ -49,29 +51,15 @@ function pathSegments(sourceUrl: URL): readonly string[] {
 }
 
 function youtubeEmbed(sourceUrl: URL): EmbedResult | null {
-  if (sourceUrl.host === 'youtu.be') {
-    const [videoId] = sourceUrl.pathname.slice(1).split('/');
-    if (videoId === '') return null;
-    return {
-      kind: 'oembed',
-      provider: 'youtube',
-      iframeSrc: `https://www.youtube.com/embed/${videoId}`,
-      width: YOUTUBE_IFRAME_WIDTH,
-      height: YOUTUBE_IFRAME_HEIGHT,
-    };
-  }
-  if (sourceUrl.pathname === '/watch') {
-    const videoId = sourceUrl.searchParams.get('v') ?? '';
-    if (videoId === '') return null;
-    return {
-      kind: 'oembed',
-      provider: 'youtube',
-      iframeSrc: `https://www.youtube.com/embed/${videoId}`,
-      width: YOUTUBE_IFRAME_WIDTH,
-      height: YOUTUBE_IFRAME_HEIGHT,
-    };
-  }
-  return null;
+  const videoId = parseYoutubeVideoId(sourceUrl.toString());
+  if (videoId === null) return null;
+  return {
+    kind: 'oembed',
+    provider: 'youtube',
+    iframeSrc: `https://www.youtube.com/embed/${videoId}`,
+    width: YOUTUBE_IFRAME_WIDTH,
+    height: YOUTUBE_IFRAME_HEIGHT,
+  };
 }
 
 function spotifyEmbed(sourceUrl: URL): EmbedResult | null {

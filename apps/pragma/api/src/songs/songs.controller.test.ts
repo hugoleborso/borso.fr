@@ -6,6 +6,15 @@ import {
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
+import {
+  createComposition,
+  createInspiration,
+  createLane,
+  listInspirations,
+  placeClip,
+  sendJson,
+} from '../../../test/sketch-utils';
+import { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
 
 const songSchema = z.object({
@@ -412,5 +421,29 @@ describe('songs controller (back-e2e)', () => {
     expect(
       (await jsonRequest(app, `/api/songs/${missing}`, { method: 'DELETE', cookieHeader })).status,
     ).toBe(404);
+  });
+
+  it('deletes the lanes and clips of a deleted composition and keeps its inspirations', async () => {
+    const band = await buildAuthenticatedApp();
+    const songId = await createComposition(band);
+    const keptSongId = await createComposition(band, 'New 8');
+    const laneId = await createLane(band, songId);
+    const keptLaneId = await createLane(band, keptSongId);
+    const inspirationId = await createInspiration(band);
+    await placeClip(band, { songId, laneId, inspirationId });
+    await placeClip(band, { songId: keptSongId, laneId: keptLaneId, inspirationId });
+
+    const deletion = await sendJson(band, 'DELETE', `/api/songs/${songId}`);
+
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sketchLaneTable)).toEqual([
+      expect.objectContaining({ id: keptLaneId }),
+    ]);
+    expect(await testDatabase().select().from(sketchClipTable)).toEqual([
+      expect.objectContaining({ laneId: keptLaneId }),
+    ]);
+    expect(await listInspirations(band)).toEqual([
+      expect.objectContaining({ id: inspirationId, sketchCount: 1 }),
+    ]);
   });
 });

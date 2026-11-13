@@ -261,6 +261,7 @@
     "noTasks": "Rien à faire sur cette compo.",
     "notes": "Notes et commentaires",
     "openInCatalog": "Ouvrir dans le catalogue",
+    "openSketch": "Ouvrir l’esquisse",
     "tasks": "Tâches",
     "title": "Compos"
   },
@@ -296,6 +297,45 @@
     "title": "Améliorations",
     "titleField": "Titre",
     "voteFor": "Voter pour {{title}}"
+  },
+  "inspirations": {
+    "title": "Inspirations",
+    "empty": "Aucune inspiration pour l’instant.",
+    "new": "Nouvelle inspiration",
+    "edit": "Modifier l’inspiration",
+    "editFor": "Modifier {{title}}",
+    "deleteFor": "Supprimer {{title}}",
+    "deleteConfirm": "Supprimer cette inspiration de la bibliothèque ?",
+    "formerMember": "ancien membre",
+    "usedBy_one": "dans {{count}} esquisse",
+    "usedBy_other": "dans {{count}} esquisses",
+    "searchResults": "Sur Deezer",
+    "searchOnYoutube": "Chercher sur YouTube",
+    "setStartHere": "Début ici",
+    "setEndHere": "Fin ici",
+    "fields": {
+      "title": "Titre",
+      "artist": "Artiste",
+      "youtubeLink": "Lien YouTube",
+      "start": "Début (secondes)",
+      "end": "Fin (secondes)",
+      "note": "Note"
+    },
+    "form": {
+      "titleMissing": "Donne un titre au morceau.",
+      "notAYoutubeLink": "Colle le lien d’une vidéo YouTube.",
+      "endNotAfterStart": "La fin doit venir après le début.",
+      "passageTooLong": "Un passage dure 10 minutes au plus."
+    },
+    "refusal": {
+      "inUse": "Utilisée dans {{sketches}}. Retire d’abord ses extraits.",
+      "notFound": "Un autre membre a supprimé cette inspiration.",
+      "unknown": "La modification n’a pas été enregistrée. Réessaie."
+    },
+    "player": {
+      "title": "Lecteur YouTube : {{title}}",
+      "openOnYoutube": "Ouvrir sur YouTube"
+    }
   },
   "instruments": {
     "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
@@ -376,6 +416,7 @@
     "bottomBar": "Sections principales",
     "compos": "Compos",
     "improvements": "Améliorations",
+    "inspirations": "Inspirations",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",
@@ -661,6 +702,27 @@
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
+  },
+  "sketch": {
+    "title": "Esquisse",
+    "lanes": "Pistes",
+    "timeline": "Frise",
+    "empty": "Aucune piste pour l’instant. Ajoutes-en une, puis place dessus des passages de la bibliothèque.",
+    "addLane": "Ajouter une piste",
+    "newLane": "Nouvelle piste",
+    "lane": "Piste",
+    "laneName": "Nom de la piste",
+    "renameLane": "Renommer {{name}}",
+    "deleteLane": "Supprimer la piste",
+    "deleteLaneConfirm": "Supprimer cette piste et ses extraits ? Les inspirations restent dans la bibliothèque.",
+    "addClip": "Ajouter un extrait sur {{name}}",
+    "addClipTitle": "Ajouter depuis la bibliothèque",
+    "emptyLibrary": "La bibliothèque est vide.",
+    "openLibrary": "Ouvrir la bibliothèque",
+    "removeClip": "Retirer l’extrait",
+    "clipLabel": "{{title}} à {{start}}",
+    "reloaded": "Un autre membre a modifié cette esquisse. Elle a été rechargée.",
+    "notFound": "Cette composition n’existe plus."
   },
   "songDefaults": {
     "open": "Défauts du morceau",
