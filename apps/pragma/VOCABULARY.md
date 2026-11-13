@@ -1486,7 +1486,7 @@ Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
   claims both rows in the same retried transaction as the insert, and is
   refused with `song-not-found` or `session-not-found` when a claim finds
   no row.
-- The audio is one of the types in `TAKE_CONTENT_TYPES`, at most 50 MiB,
+- The audio is one of the types in `TAKE_CONTENT_TYPES`, at most 200 MiB,
   and S3 enforces that length because the signed upload carries it. The
   object key is `take/<songId>/<takeId>.<extension>` (`buildTakeObjectKey`),
   and a create naming any other key is refused.
@@ -1502,7 +1502,7 @@ Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 Held by: `api/src/takes/takes.controller.test.ts` › answers the same take when a create is retried with the same id
 Held by: `api/src/takes/takes.controller.test.ts` › keeps one take when two tabs send the same create at the same moment
 Held by: `api/src/takes/takes.controller.test.ts` › refuses an object key other than the one the take was signed for
-Held by: `api/src/takes/takes.controller.test.ts` › refuses a take one byte over 50 MiB
+Held by: `api/src/takes/takes.controller.test.ts` › refuses a take one byte over 200 MiB
 Held by: `api/src/takes/takes.controller.test.ts` › lists takes by recording time, newest first, whatever order they were uploaded in
 Held by: `api/src/takes/takes.controller.test.ts` › lets any member delete another member’s take, its comments and its audio
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio

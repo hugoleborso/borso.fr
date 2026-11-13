@@ -11,8 +11,8 @@ describe('selectActiveTab', () => {
   it.each([
     ['/sessions', 'sessions'],
     ['/sessions/7', 'sessions'],
-    ['/setlists', 'sessions'],
-    ['/setlists/3/vote', 'sessions'],
+    ['/setlists', 'setlists'],
+    ['/setlists/3/vote', 'setlists'],
     ['/catalog', 'songs'],
     ['/catalog/3/edit', 'songs'],
     ['/band', 'band'],
@@ -35,7 +35,13 @@ describe('selectActiveTab', () => {
     expect(selectActiveTab('/vote')).toBeNull();
   });
 
-  it('declares the four tabs in order', () => {
-    expect(SHELL_TABS.map((tab) => tab.to)).toEqual(['/', '/sessions', '/catalog', '/band']);
+  it('declares the five tabs in order', () => {
+    expect(SHELL_TABS.map((tab) => tab.to)).toEqual([
+      '/',
+      '/sessions',
+      '/setlists',
+      '/catalog',
+      '/band',
+    ]);
   });
 });

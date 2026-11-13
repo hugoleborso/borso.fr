@@ -64,6 +64,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'nav.language.en', readsTheSameBecause: 'the EN language tag' },
   { key: 'nav.language.fr', readsTheSameBecause: 'the FR language tag' },
   { key: 'nav.sessions', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'nav.setlists',
+    readsTheSameBecause: 'same word, and French pluralises it the same way',
+  },
   { key: 'practice.note', readsTheSameBecause: 'same word, same spelling' },
   { key: 'practice.noteTitle', readsTheSameBecause: 'same word, then the song title' },
   { key: 'scene.autoScrollStop', readsTheSameBecause: '"Stop" is the word on French pedals too' },
@@ -74,11 +78,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'sessions.practiceSongs.concerts', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'sessions.practiceSongs.setlists',
-    readsTheSameBecause: 'same word, and French pluralises it the same way',
-  },
-  { key: 'sessions.section.sessions', readsTheSameBecause: 'same word, same spelling' },
-  {
-    key: 'sessions.section.setlists',
     readsTheSameBecause: 'same word, and French pluralises it the same way',
   },
   { key: 'sessions.setlist', readsTheSameBecause: '"setlist" is the word French musicians use' },
