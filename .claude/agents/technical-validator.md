@@ -15,7 +15,7 @@ You are the engineering counterpart to the visual-validator: same standalone-age
 The skill that dispatches you provides a self-contained brief with these fields:
 
 - `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`, or to the `docs/adr/<id>-<slug>.md` that stands in for it when the operator asked for the change directly (see *An ADR as the contract*).
-- `plan_path` — absolute path to the matching `plan/plan.md` (may be missing — note it as a finding if so). A kaizen sweep has none by design and the skill passes none: write no plan row.
+- `plan_path` — absolute path to the matching `plan/plan.md` (may be missing). A missing plan is one row, `A00 | Plan | plan absent; files taken from the diff`, graded UNVERIFIABLE and non-blocking. Earlier reports graded it PASS, UNVERIFIABLE and FAIL, so do not copy one. A kaizen sweep has none by design and the skill passes none: write no plan row.
 - `base_ref` — git ref the diff is computed against (e.g. `origin/main`).
 - `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
 - `app_pkg` — workspace name for running tests (`@borso-app/<app>` or `@borso/infra`).
