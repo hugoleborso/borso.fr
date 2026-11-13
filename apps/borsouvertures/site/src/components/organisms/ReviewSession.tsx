@@ -17,7 +17,8 @@ import type { Idea } from '@/decks/deck.utils';
 import { selectDeckName } from '@/decks/idea.utils';
 import type { ComponentByFlag, ComponentByKind } from '@/lib/componentTable.types';
 import { useSessionStart } from '@/lib/session-start.hook';
-import { useBoardWidth } from '@/lib/viewport.hook';
+import { useViewportWidth } from '@/lib/viewport.hook';
+import { selectBoardWidth, selectNameCardBoardWidth } from '@/lib/viewport.utils';
 import { selectSessionExitScreen } from '@/navigation/app-screen.core';
 import { openScreen } from '@/navigation/navigation.store';
 import { uciToArrow } from '@/openings/uciSquare.utils';
@@ -52,6 +53,12 @@ const SHOW_ANSWER_KEY_BY_KIND = {
   trap: 'cards.trap.show-answer',
 } as const satisfies Record<Card['kind'], string>;
 
+const SELECT_BOARD_WIDTH_BY_KIND = {
+  move: selectBoardWidth,
+  name: selectNameCardBoardWidth,
+  trap: selectBoardWidth,
+} as const satisfies Record<Card['kind'], (viewportWidth: number) => number>;
+
 const IDEA_BY_SHOWN: ComponentByFlag<{ idea: Idea | null }> = {
   true: IdeaPanel,
   false: EmptySlot,
@@ -71,7 +78,7 @@ interface AskedCardProps {
 function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
   const { t, i18n } = useTranslation();
   const { boardStyle } = useAppState();
-  const boardWidth = useBoardWidth();
+  const viewportWidth = useViewportWidth();
   const isAnswered = snapshot.phase === 'answered';
   const CardBody = CARD_BODY_BY_KIND[reviewCard.card.kind];
   const IdeaSlot = IDEA_BY_SHOWN[`${isIdeaShown(snapshot)}`];
@@ -98,7 +105,7 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
         arrows={listAnswerMoves(snapshot).map((uci) => uciToArrow(uci))}
         highlightSquares={NO_HIGHLIGHTS}
         boardStyleId={boardStyle}
-        boardWidth={boardWidth}
+        boardWidth={SELECT_BOARD_WIDTH_BY_KIND[reviewCard.card.kind](viewportWidth)}
       />
       <div className="flex flex-col gap-3 w-full">
         <CardBody
@@ -106,7 +113,7 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
           status={selectReviewStatus(snapshot)}
           onChooseName={reviewMachine.chooseName}
         />
-        <div className="lg:order-last">
+        <div className="empty:hidden lg:order-last">
           <IdeaSlot idea={reviewCard.idea} />
         </div>
         <ActionBar>

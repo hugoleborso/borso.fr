@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -80,6 +80,12 @@ async function playMainLineToItsEnd(): Promise<void> {
 // @FollowsBlueprint test-component-render
 describe('a game against Stockfish on a deck page', () => {
   beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+      this.open = false;
+    };
     window.localStorage.clear();
     stubDecksFetch(buildExampleDocument());
     vi.stubGlobal('indexedDB', new IDBFactory());
@@ -147,7 +153,7 @@ describe('a game against Stockfish on a deck page', () => {
     expect(readReviewLog().events).toEqual([]);
   });
 
-  it('plays an easier step with the skill level once the reader selects it', async () => {
+  it('plays an easier step once the reader selects it, and offers the strength in settings mid-game', async () => {
     await userEvent.selectOptions(
       screen.getByRole('combobox', { name: 'Stockfish strength' }),
       'skill-3',
@@ -158,10 +164,18 @@ describe('a game against Stockfish on a deck page', () => {
       'setoption name UCI_LimitStrength value false',
       'setoption name Skill Level value 3',
     ]);
+    expect(screen.queryByRole('combobox', { name: 'Stockfish strength' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    const settings = within(screen.getByRole('dialog', { name: 'Settings' }));
     await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: 'Stockfish strength' }),
+      settings.getByRole('combobox', { name: 'Stockfish strength' }),
       'elo-2000',
     );
+    expect(settings.getByRole('combobox', { name: 'Stockfish strength' })).toHaveProperty(
+      'value',
+      'elo-2000',
+    );
+    await userEvent.click(settings.getByRole('button', { name: 'Close settings' }));
   });
 
   it('ends the game where the deck ends, with a message and a report, when the worker cannot load', async () => {

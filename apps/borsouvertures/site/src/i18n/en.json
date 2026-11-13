@@ -124,7 +124,9 @@
     "idea": {
       "title": "Idea",
       "missing": "This move has no idea yet.",
-      "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0"
+      "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0",
+      "read-all": "Read all",
+      "close": "Close the idea"
     },
     "show-move": "Show the move",
     "next": "Next",

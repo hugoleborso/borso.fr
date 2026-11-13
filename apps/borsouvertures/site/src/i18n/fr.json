@@ -124,7 +124,9 @@
     "idea": {
       "title": "Idée",
       "missing": "Ce coup n'a pas encore d'idée.",
-      "wikipedia-credit": "D'après Wikipédia, CC BY-SA 4.0"
+      "wikipedia-credit": "D'après Wikipédia, CC BY-SA 4.0",
+      "read-all": "Tout lire",
+      "close": "Fermer l'idée"
     },
     "show-move": "Montrer le coup",
     "next": "Suivant",

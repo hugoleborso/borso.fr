@@ -6,6 +6,7 @@ import { AccountLink } from '@/components/molecules/AccountLink';
 import { BoardStyleSelect } from '@/components/molecules/BoardStyleSelect';
 import { IconButton } from '@/components/molecules/IconButton';
 import { LanguageSwitcher } from '@/components/molecules/LanguageSwitcher';
+import { OpponentStrengthSelect } from '@/components/molecules/OpponentStrengthSelect';
 import { SignInScreen } from '@/components/organisms/SignInScreen';
 import { selectAccountLinkView } from '@/lib/account-session.core';
 import { useAccountSession, useSignOut } from '@/lib/queries/account.queries';
@@ -15,7 +16,7 @@ import { useAppState } from '@/state/appState';
 // @FollowsBlueprint organism-presentational
 export function TopBar() {
   const { t } = useTranslation();
-  const { boardStyle } = useAppState();
+  const { boardStyle, opponentStrength } = useAppState();
   const session = useAccountSession();
   const signOut = useSignOut();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -45,6 +46,7 @@ export function TopBar() {
         >
           <BoardStyleSelect boardStyle={boardStyle} />
           <LanguageSwitcher />
+          <OpponentStrengthSelect strength={opponentStrength} />
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-rule">
             <Button
               label={t('credits.link')}
