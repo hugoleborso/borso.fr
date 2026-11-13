@@ -29,8 +29,8 @@ describe('the inspiration cards', () => {
       title: 'Call Me Maybe',
       artist: 'Carly Rae Jepsen',
       deezerAlbumId: '5678',
-      rangeLabel: '0:52 → 1:04',
-      detailLabel: 'Carly Rae Jepsen · 0:52 → 1:04',
+      rangeLabel: '0:52\u00A0→\u00A01:04',
+      detailLabel: 'Carly Rae Jepsen · 0:52\u00A0→\u00A01:04',
       note: 'the trumpet',
       authorName: null,
       sketchCount: 2,
@@ -38,11 +38,15 @@ describe('the inspiration cards', () => {
   });
 
   it('shows the range alone when the artist is not known', () => {
-    expect(projectInspirationCard({ ...INSPIRATION, artist: '' }).detailLabel).toBe('0:52 → 1:04');
+    expect(projectInspirationCard({ ...INSPIRATION, artist: '' }).detailLabel).toBe(
+      '0:52\u00A0→\u00A01:04',
+    );
   });
 
   it('writes a passage past a minute in minutes and seconds', () => {
-    expect(formatPassageRange({ startSeconds: 220, endSeconds: 232 })).toBe('3:40 → 3:52');
+    expect(formatPassageRange({ startSeconds: 220, endSeconds: 232 })).toBe(
+      '3:40\u00A0→\u00A03:52',
+    );
   });
 });
 

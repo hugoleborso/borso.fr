@@ -78,7 +78,7 @@ describe('the inspirations page', () => {
     const card = (await screen.findByRole('heading', { name: 'Call Me Maybe' })).closest('article');
     expect(card).not.toBeNull();
     const text = card?.textContent ?? '';
-    expect(text).toContain('Carly Rae Jepsen · 0:52 → 1:04');
+    expect(text).toContain('Carly Rae Jepsen · 0:52\u00A0→\u00A01:04');
     expect(text).toContain('the trumpet');
     expect(text).toContain('former member · in 1 sketch');
   });

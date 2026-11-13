@@ -141,14 +141,14 @@ describe('the clip a tap plays', () => {
   it('plays the passage of the tapped clip from its start to its end', () => {
     expect(selectPlayedPassage(sketch, [inspiration], 'clip-1')).toEqual({
       title: 'Call Me Maybe',
-      detail: 'Carly Rae Jepsen · 0:52 → 1:04',
+      detail: 'Carly Rae Jepsen · 0:52\u00A0→\u00A01:04',
       note: 'the trumpet',
       youtubeVideoId: 'dQw4w9WgXcQ',
       startSeconds: 52,
       endSeconds: 64,
     });
     expect(selectPlayedPassage(sketch, [{ ...inspiration, artist: '' }], 'clip-1')?.detail).toBe(
-      '0:52 → 1:04',
+      '0:52\u00A0→\u00A01:04',
     );
   });
 

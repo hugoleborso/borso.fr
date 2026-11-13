@@ -25,7 +25,7 @@ export interface DeletionRefusalMessage {
   readonly sketchTitles: string;
 }
 
-const RANGE_ARROW = ' → ';
+const RANGE_ARROW = '\u00A0→\u00A0';
 export const DETAIL_SEPARATOR = ' · ';
 const SKETCH_TITLE_SEPARATOR = ', ';
 
