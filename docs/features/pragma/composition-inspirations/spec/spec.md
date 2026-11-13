@@ -3,7 +3,7 @@
 ## Perspectives confronted
 
 - [x] **Client / business** — The operator picked "more compositions per quarter" as the one objective, on 2026-11-13.
-- [x] **Product** — The operator picked a timestamped YouTube link as the only source. No audio is stored, and the title and artist are typed by hand (2026-11-13).
+- [x] **Product** — The operator picked a timestamped YouTube link as the only playback source, with no audio stored. On review, the operator asked for the Deezer search to find the song, then a prefilled YouTube search link to find the video (2026-11-13).
 - [x] **Tech-lead** — The operator first picked an edit lock, then dropped it on review for last-write-wins with live invalidation. Clips are played one at a time, never layered (2026-11-13).
 - [x] **Developer** — The operator picked refusing to delete an inspiration that a sketch still uses (2026-11-13).
 - [x] **Designer** — The operator picked a GarageBand-like timeline with free lanes, measured in seconds and fully editable at 375 px (2026-11-13).
@@ -24,9 +24,9 @@ Two new screens.
 
 **Inspirations** (`/inspirations`, in the Band tab after compositions). This is the band's library of passages. Each card shows the title, the artist, `0:52 → 1:04`, the note, the author, and the number of sketches that use it. **New inspiration** is the one primary action. It opens a form with these fields:
 
-- a YouTube link
-- a title
-- an artist
+- the Deezer search already used to add a song (`GET /songs/search`, `AddSongForm`). Picking a hit fills the title, the artist and the Deezer album id, and the card shows `AlbumCover`. Typing the title and artist by hand stays possible when Deezer has no match.
+- a **Search on YouTube** button that opens `youtube.com/results?search_query=<artist> <title>` in a new tab
+- a YouTube link, pasted back from that tab
 - a start and an end, set while the embedded video plays, with "set start here" and "set end here" buttons
 - a note
 
@@ -67,7 +67,7 @@ sequenceDiagram
 ```
 
 **Happy path.**
-1. A member adds an inspiration from a YouTube link, with a start, an end, a title, an artist and a note.
+1. A member searches Deezer for the song and picks it, opens the prefilled YouTube search, then pastes the video link. They set a start and an end, and add a note.
 2. The inspiration appears in the library for every member, newest first.
 3. A member opens a composition's sketch.
 4. They add a lane, then add a clip from the library. The clip lands on that lane at the timeline's current scroll position.
@@ -96,7 +96,7 @@ sequenceDiagram
 | Question | Options | Decision (date) |
 | --- | --- | --- |
 | Where does the sound come from? | Timestamped link · uploaded extract · both | **Timestamped YouTube link.** No copyrighted audio is stored on S3, and the feature works on a phone at once (2026-11-13). |
-| Deezer to fill the title? | Deezer search plus a YouTube link · YouTube only | **YouTube only, with the title typed by hand.** A Deezer track only offers a fixed 30-second preview, so it cannot target a passage (2026-11-13). |
+| How does a member find the song and its video? | YouTube only · Deezer search plus a pasted YouTube link · Deezer search plus an automatic YouTube match | **Deezer search, then a prefilled YouTube search link.** Deezer finds the song and fills the title, artist and cover. It only offers a fixed 30-second preview, so YouTube plays the passage. An automatic match would need a YouTube Data API key, which is a secret with a daily quota, so the operator declined it (2026-11-13, revised the same day). |
 | How are clips arranged? | Facet columns · infinite canvas · ordered list · free-lane timeline | **Free-lane timeline**, as the operator asked (2026-11-13). |
 | What does play do? | Sketch, one clip at a time · chained playhead · layered | **Sketch.** Separate YouTube players cannot be layered in sync. This is inferred and was not prototyped. Layering would require uploads (2026-11-13). |
 | Timeline unit? | Seconds · bars with a tempo | **Seconds.** It needs no tempo field. Bar numbers go in the note (2026-11-13). |
@@ -109,7 +109,8 @@ sequenceDiagram
 - Layered or chained playback.
 - Tempo and bars.
 - Links drawn between clips.
-- Spotify, Deezer or SoundCloud as a source.
+- Spotify, Deezer or SoundCloud as a playback source.
+- An automatic YouTube match, which would need a YouTube Data API key.
 - A sketch on a cover.
 - Inspirations from the MCP server. A later feature can add them.
 - An edit lock or presence ("Thomas is here").
@@ -125,7 +126,7 @@ None. `@dnd-kit` and the YouTube embed are already used. The YouTube IFrame Play
 ```ts
 // Inspiration: a passage of a published song a member wants the band to steal from.
 type Inspiration = {
-  id: string; youtubeVideoId: string; title: string; artist: string;
+  id: string; youtubeVideoId: string; title: string; artist: string; deezerTrackId: string | null; deezerAlbumId: string | null;
   startSeconds: number; endSeconds: number; // whole seconds, 0 <= start < end, end - start <= 600
   note: string; authorMemberId: string | null; createdAt: string; sketchCount: number;
 };
@@ -142,7 +143,7 @@ type Sketch = { songId: string; lanes: SketchLane[]; clips: SketchClip[] };
 ```sql
 -- 0026_inspirations_and_sketches.sql (DSQL: no foreign keys; cascades run in the repository, in one transaction)
 CREATE TABLE inspiration (id uuid PRIMARY KEY, youtube_video_id text NOT NULL, title text NOT NULL,
-  artist text NOT NULL DEFAULT '', start_seconds integer NOT NULL, end_seconds integer NOT NULL,
+  artist text NOT NULL DEFAULT '', deezer_track_id text, deezer_album_id text, start_seconds integer NOT NULL, end_seconds integer NOT NULL,
   note text NOT NULL DEFAULT '', author_member_id uuid, created_at timestamptz NOT NULL);
 CREATE TABLE sketch_lane (id uuid PRIMARY KEY, song_id uuid NOT NULL, name text NOT NULL, position integer NOT NULL);
 CREATE TABLE sketch_clip (id uuid PRIMARY KEY, lane_id uuid NOT NULL, inspiration_id uuid NOT NULL, offset_seconds integer NOT NULL);
@@ -154,7 +155,7 @@ CREATE INDEX ASYNC sketch_clip_inspiration ON sketch_clip (inspiration_id);
 ### Files to change
 
 ```
-domain/inspiration.core.ts                       NEW  parse YouTube id, validate a passage, format m:ss
+domain/inspiration.core.ts                       NEW  parse YouTube id, validate a passage, format m:ss, build the YouTube search URL
 domain/sketch.core.ts                            NEW  snap/clamp an offset, timeline length
 api/src/inspirations/*.{controller,service,repository,schema}.ts   NEW  CRUD, refuse delete in use
 api/src/sketches/*.{controller,service,repository,schema}.ts       NEW  read sketch, lane and clip writes
@@ -162,7 +163,7 @@ api/src/songs/songs.repository.ts                UPDATE  song delete cascades la
 api/src/members/members.repository.ts            UPDATE  member delete clears inspiration author
 api/src/realtime/stale-scope.core.ts             UPDATE  new scopes: inspirations, sketch:<songId>
 api/src/database/migrations/0026_…sql            NEW
-site/src/routes/inspirations/                    NEW  library page, form with embedded player
+site/src/routes/inspirations/                    NEW  library page, form reusing the Deezer search, YouTube search link, embedded player
 site/src/routes/compos/sketch/                   NEW  timeline, lanes, draggable clips, clip player
 site/src/routes/band/band-destinations.core.ts   UPDATE  add Inspirations after compositions
 site/src/lib/embed.utils.ts                      UPDATE  accept shorts/ and start/end
@@ -179,7 +180,7 @@ apps/pragma/VOCABULARY.md                        UPDATE
   - placing a clip while its inspiration or lane is deleted, leaving no orphan clip
   - a clip naming a deleted lane or inspiration
   - the song and member delete cascades
-- **Visual validation** at 375 px and at 1280 px. It drives happy path steps 1 to 7, a second member's screen updating after a move, and the error messages in the form. It drives input metrics only. A green run does not show that more compositions get written.
+- **Visual validation** at 375 px and at 1280 px. It drives happy path steps 1 to 7, including the Deezer search (the plan names how the dev server answers it), a second member's screen updating after a move, and the error messages in the form. It drives input metrics only. A green run does not show that more compositions get written.
 - **Not automatable.** Whether a real video starts at the right second in the YouTube player. The validator asserts the `start` and `end` the player is given.
 
 ## Production strategy
