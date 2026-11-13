@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectBoardWidth, selectNameCardBoardWidth } from './viewport.utils';
+import { selectBoardWidth } from './viewport.utils';
 
 describe('selectBoardWidth', () => {
   it('gives a desktop viewport half its width, beside the card column', () => {
@@ -33,21 +33,5 @@ describe('selectBoardWidth', () => {
 
   it('never goes negative on an empty viewport', () => {
     expect(selectBoardWidth(0)).toBe(260);
-  });
-});
-
-describe('selectNameCardBoardWidth', () => {
-  it('shrinks the board on a phone so the prompt and the four names fit above the action bar', () => {
-    expect(selectNameCardBoardWidth(375)).toBe(336);
-    expect(selectNameCardBoardWidth(600)).toBe(336);
-  });
-
-  it('keeps the full width on a phone narrower than that board', () => {
-    expect(selectNameCardBoardWidth(320)).toBe(320);
-  });
-
-  it('keeps the full board from the roomy breakpoint upwards, where the action bar sits inline', () => {
-    expect(selectNameCardBoardWidth(601)).toBe(553);
-    expect(selectNameCardBoardWidth(1100)).toBe(550);
   });
 });

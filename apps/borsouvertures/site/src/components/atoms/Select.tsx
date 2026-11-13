@@ -1,5 +1,5 @@
 const SELECT_CLASS_NAME =
-  'min-h-12 min-w-0 max-w-full px-3 py-2 rounded-md border-2 border-ink bg-field text-base font-bold text-ink';
+  'min-h-12 min-w-0 max-w-full px-3 py-2 rounded-md border-[1.5px] border-ink bg-field text-base font-bold text-ink';
 
 export interface SelectOption {
   value: string;

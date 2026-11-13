@@ -7,9 +7,6 @@ colors:
   ink-muted: "#595959"
   surface: "#f1f1ee"
   rule: "#d6d6d1"
-  shell: "#111111"
-  on-shell: "#ffffff"
-  on-shell-muted: "#b8b8b8"
   primary: "#111111"
   on-primary: "#ffffff"
   accent: "#d52b1e"
@@ -24,7 +21,6 @@ colors:
   dark-ink-muted: "#a6a6a6"
   dark-surface: "#1e1e1e"
   dark-rule: "#343434"
-  dark-shell: "#1e1e1e"
   dark-primary: "#f4f4f2"
   dark-on-primary: "#111111"
   dark-accent: "#ff5a45"
@@ -68,6 +64,16 @@ typography:
   notation:
     fontFamily: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
     fontSize: "0.875rem"
+  segment:
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 700
+    lineHeight: 1.25
+  tab-label:
+    fontFamily: "'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 600
+    lineHeight: 1.25
 rounded:
   control: "6px"
   sheet: "12px"
@@ -91,8 +97,8 @@ components:
     textColor: "{colors.on-primary}"
     height: "44px"
   tab-bar:
-    backgroundColor: "{colors.shell}"
-    textColor: "{colors.on-shell}"
+    backgroundColor: "{colors.page}"
+    textColor: "{colors.ink-muted}"
     height: "{spacing.tab-bar}"
   status-band:
     backgroundColor: "{colors.surface}"
@@ -113,7 +119,7 @@ components:
 
 ## Overview
 
-The trainer is used on a phone, one-handed, in a few minutes on a metro ride. The world is the Swiss tournament poster of the 1960s chess olympiads: a white or black ground, one grotesk at two weights, thick black rules that open each section, and flat colour fields with no gradient, glass or shadow. The board is the poster's image. It spans the full width of a phone, edge to edge, and everything else sits below it within thumb reach.
+The trainer is used on a phone, one-handed, in a few minutes on a metro ride. The world is the Swiss tournament poster of the 1960s chess olympiads: a white or black ground, one grotesk at two weights, a 2 px ink rule that opens each section, and flat colour fields with no gradient, glass or shadow. The board is the poster's image. It spans the full width of a phone, edge to edge, and everything else sits below it within thumb reach.
 
 The signature move is the board mark. Once a card is answered, a flat disc lands on the board itself: a white check in a green disc when the card was recalled, a white cross in a red disc when it was missed. The board is the poster's image, so the verdict sits in the image and reads at arm's length, and the space under the board goes to the move and its idea (operator, 2026-11-13, who found the recalled band took space for nothing).
 
@@ -135,7 +141,7 @@ The strategy is restrained neutrals with colour that only carries meaning. Every
 
 ### Neutral
 
-- **Page**, **surface** (a second neutral layer for the deck game's status band, hover and empty bars), **rule** (hairlines between rows), **shell** (the tab bar, inverted in light mode).
+- **Page**, **surface** (a second neutral layer for the deck game's status band, hover and empty bars), **rule** (hairlines between rows) and under the tab bar. The tab bar sits on the page colour, not on an inverted shell (operator, 2026-11-13, who found the black bar heavy).
 
 ### Named Rules
 
@@ -151,19 +157,26 @@ One system grotesk stack, Helvetica Neue first, so nothing is fetched and the pa
 
 ## Layout
 
-- **The fold rule (operator, 2026-11-13).** At 375 × 812, minus the tab bar and the safe area, a screen shows one section at a time when its sections would not all fit without scrolling. Split them with the `SectionTabs` segmented control inside the screen. One list that scrolls inside a tab is fine. Two different sections stacked past the fold are not. Applied today: Today (Session / Ahead when the plan is empty / Retention), a deck page (Review / Lines / Play), Stats (Retention / Accuracy, with the streak above), Credits (Lichess / Wikipedia / Stockfish). Explore needs no tabs: the opening name and the moves played sit above the board, the side toggle beside them, and the book moves below it in the one list that scrolls, its height set from the board width so the page never scrolls. Back, start over and *Add to my deck* sit in `ActionBar`, and the notice of an add sits at the top of the list.
-- **The review session fits one screen.** Top bar, progress row, board, prompt line, the idea and the action bar must be visible together at 375 × 812, including a name card's four choices. The space the result band gave back goes to the idea, three lines on a phone instead of two, and to the name card's board, 336 px on a phone instead of 288 px.
-- **Thumb bar.** The screen's main actions (Start, Show the move and Next, Review this deck, New game and Leave the game, Explore's back, start over and *Add to my deck*) sit in `ActionBar`, fixed above the tab bar on a phone and inline from 601 px.
+- **The fold rule (operator, 2026-11-13).** At 375 × 812, minus the tab bar and the safe area, a screen shows one section at a time when its sections would not all fit without scrolling. Split them with the `SectionTabs` segmented control inside the screen. One list that scrolls inside a tab is fine. Two different sections stacked past the fold are not. Applied today: Today (Session / Ahead when the plan is empty / Retention), a deck page (Review / Lines / Play, and an opened line replaces the deck header and its tabs, as a drill-down with its own back button), Stats (Retention / Accuracy, with the streak above), Credits (Lichess / Wikipedia / Stockfish). Explore needs no tabs: the opening name and the moves played sit above the board, the side toggle beside them, and the book moves below it in the one list that scrolls, its height set from the board width so the page never scrolls. Back, start over and *Add to my deck* sit in `ActionBar`, and the notice of an add sits at the top of the list.
+- **The review session fits one screen.** Top bar, progress row, board, prompt line, the idea and the action bar must be visible together at 375 × 812, including a name card's four choices. The space the result band gave back goes to the idea, three lines on a phone instead of two. Every card kind uses the same board width, so the board never changes size from one card to the next; a name card's four choices still fit, each choice at least 60 px tall so a two-line name does not resize its row (measured 13 px of room at 375 × 812).
+- **Thumb bar.** The screen's main actions (Start, Show the move and Next, Review this deck, New game and Leave the game, Explore's back, start over and *Add to my deck*) sit in `ActionBar`, fixed above the tab bar on a phone and inline from 601 px. On a phone it has no rule and no fill of its own: it sits on the page colour, so the bottom reads as one light band of buttons over one hairline over the tabs.
 - **Board width.** Full viewport width under 601 px, viewport minus 48 px up to 1023 px, half the viewport from 1024 px, capped at 560 px.
-- The shell is one column with a 16 px gutter, 24 px from 601 px, at most 1024 px wide. The four tabs are fixed at the bottom with the safe-area inset. From 1024 px the review session and the deck game put the board left and the card column right.
+- The shell is one column with a 16 px gutter, 24 px from 601 px, at most 1024 px wide. The four tabs are fixed at the bottom with the safe-area inset, on the page colour with one hairline above them. A tab label is 13 px semibold in muted ink and may wrap to two lines (*Opening decks*, *Decks d'ouvertures*). The current tab turns to ink and carries a 2 px poster-red bar on the hairline. Both states keep the same weight, so a label never changes width when it becomes current. From 1024 px the review session and the deck game put the board left and the card column right.
+
+### Touch and stability (operator, 2026-11-13)
+
+- **A swipe never grabs the wrong piece.** `BoardView` takes a `mover` (`white`, `black`, `both` or `none`) and lets only the pieces of the side to move drag, when that side may move: the reader's side in a review and in the deck game, both sides in Explore, nobody in the line stepper. The chessboard library puts `touch-action: none` on every piece, so the other pieces get `touch-action: manipulation` back and a swipe that starts on them is the browser's.
+- **The shell never rubber-bands.** `overscroll-behavior: none` on the root and the body. Inner lists keep `overscroll-behavior: contain`.
+- **No long-press selection on the board.** The board turns off text selection and the iOS callout.
+- **Nothing resizes with its content in place.** Counts use tabular figures (the body sets `proportional-nums`, which a `tabular-nums` class overrides; the former `font-feature-settings: 'tnum' 0` beat every `tabular-nums` class). Explore's opening name holds two lines whether it needs one or two, a book move row holds two lines of names, the deck game keeps the line of the last reply even before the first one, and the book move list is rebuilt for each position instead of reusing rows across positions.
 
 ## Elevation & Depth
 
-Flat. No shadow, no blur, no gradient. Depth comes from the 3 px ink rule that opens a section, 1 px hairlines between rows, and the scrim behind the settings sheet.
+Flat. No shadow, no blur, no gradient. Depth comes from the 2 px ink rule that opens a section, 1 px hairlines between rows, and the scrim behind the settings sheet.
 
 ## Shapes
 
-Squares. The board has square corners. Controls have a 6 px radius, the settings sheet 12 px at its top corners. Secondary buttons and the segmented control carry a 2 px ink border.
+Squares. The board has square corners. Controls have a 6 px radius, the settings sheet 12 px at its top corners. Secondary buttons, the select and the sign-in field carry a 1.5 px ink border. The segmented control and the side toggle have no border: they sit on a surface track, and the selected segment is an ink fill.
 
 ## Components
 
@@ -173,7 +186,7 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 
 ### Section tabs
 
-`SectionTabs` and `TabPanel` atoms: a bordered segmented control with `role="tablist"`. Hidden panels keep their state and stay in the DOM with `hidden`.
+`SectionTabs` and `TabPanel` atoms: a segmented control on a surface track with `role="tablist"`. Hidden panels keep their state and stay in the DOM with `hidden`.
 
 ### Mini boards
 
@@ -190,7 +203,7 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 
 ### Prompt line
 
-`PromptLine`, one line under the board, no fill. While the card asks it reads the question in bold and what the opponent played beside it (*Your move · White played 1. d4*). Once answered it reads the book move in notation and in words, the way the line stepper does (*2... e5 · black pawn on e7 goes to e5*), a trap's whole solution, or a name card's moves and name. The live region around it also carries the outcome sentence for screen readers, visually hidden (*Missed. The book move is 2... e5.*).
+`PromptLine`, two fixed lines under the board, no fill: the lead in bold on a 24 px line, the detail in muted ink on a 20 px line under it, each cut with an ellipsis. Neither line ever wraps or moves sideways, so a new card or an answer replaces the text without moving anything (measured CLS 0). While the card asks it reads the question and what the opponent played (*Your move*, then *White played 1. d4*). Once answered it reads the book move in notation and in words, the way the line stepper does (*2... e5 · black pawn on e7 goes to e5*), a trap's whole solution, or a name card's moves and name. The live region around it also carries the outcome sentence for screen readers, visually hidden (*Missed. The book move is 2... e5.*).
 
 ### Status band
 
@@ -198,7 +211,7 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 
 ### Settings sheet
 
-The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, the Stockfish strength, Credits and the account. The top bar is 48 px and holds only the name and that button. The sign-in link stays in the sheet (operator delegation, 2026-11-13). When the API answers 401, a signal band under the top bar says the session expired, and its *Sign in* button opens the sheet on the sign-in form. This band and the sync-paused band show only on the screens that draw no board (Today, Decks, Stats, Credits), so a board screen keeps its fit at 375 × 812.
+The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, the Stockfish strength, Credits and the account. The top bar is 48 px and holds only the name and that button. The sign-in link stays in the sheet (operator delegation, 2026-11-13). When the API answers 401, a signal band under the top bar says the session expired, and its *Sign in* button opens the sheet on the sign-in form. This band and the sync-paused band show only on the screens that draw no board (Today, Opening decks, Stats, Credits), so a board screen keeps its fit at 375 × 812.
 
 ### Source credits
 

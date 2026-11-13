@@ -29,7 +29,7 @@ describe('the opening trainer when the deck file does not parse', () => {
       expect.objectContaining({ name: 'DeckContentInvalidError' }),
       { tags: { deckId: 'vienna-game' } },
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
     expect(screen.getByRole('alert').textContent).toContain("Couldn't load the decks");
     await userEvent.click(screen.getByRole('button', { name: 'Explore' }));
     expect(await screen.findByRole('region', { name: 'Explore' })).toBeTruthy();

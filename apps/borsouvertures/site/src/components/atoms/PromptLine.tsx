@@ -7,16 +7,16 @@ interface PromptLineProps {
 }
 
 const LEAD_CLASS_BY_FONT = {
-  text: 'font-bold',
-  notation: 'font-mono font-bold',
+  text: 'h-6 text-base leading-6 font-bold truncate',
+  notation: 'h-6 text-base leading-6 font-mono font-bold truncate',
 } as const satisfies Record<PromptLeadFont, string>;
 
 // @FollowsBlueprint atom-plain
 export function PromptLine({ lead, detail, leadFont }: PromptLineProps) {
   return (
-    <p className="flex flex-wrap items-baseline gap-x-2 min-h-6 text-base leading-snug">
+    <p className="flex flex-col">
       <span className={LEAD_CLASS_BY_FONT[leadFont]}>{lead}</span>
-      <span className="min-w-0 max-w-full truncate text-sm text-ink-muted first-letter:uppercase">
+      <span className="h-5 text-sm leading-5 text-ink-muted truncate first-letter:uppercase">
         {detail}
       </span>
     </p>

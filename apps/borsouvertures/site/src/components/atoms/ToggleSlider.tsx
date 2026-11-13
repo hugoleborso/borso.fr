@@ -8,8 +8,7 @@ interface ToggleSliderProps {
   ariaLabel: string;
 }
 
-const SLIDER_CLASS =
-  'inline-flex self-start items-stretch min-h-12 p-1 rounded-md border-2 border-ink';
+const SLIDER_CLASS = 'inline-flex self-start items-stretch min-h-12 p-1 rounded-md bg-surface';
 
 const SIDE_BASE =
   'inline-flex items-center justify-center min-w-12 px-3 rounded-[4px] text-base font-bold ' +

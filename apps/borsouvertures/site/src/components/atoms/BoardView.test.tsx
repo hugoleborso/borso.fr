@@ -16,6 +16,7 @@ function renderStartingBoard(mark: BoardMark | null = null) {
       orientation="white"
       fen={STARTING_FEN}
       onMove={() => false}
+      mover="both"
       arrows={[]}
       highlightSquares={{}}
       boardStyleId="chesscom"

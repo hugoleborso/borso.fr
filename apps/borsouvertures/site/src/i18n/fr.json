@@ -55,7 +55,7 @@
   "tab-bar": {
     "aria-label": "Sections principales",
     "today": "Aujourd'hui",
-    "decks": "Paquets",
+    "decks": "Decks d'ouvertures",
     "explore": "Explorer"
   },
   "today": {
@@ -63,8 +63,8 @@
     "due": "à revoir",
     "new": "nouvelles",
     "start": "Commencer",
-    "nothing-left": "Rien à revoir et plus de nouvelle carte aujourd'hui. Ouvrez un paquet pour le revoir en avance.",
-    "review-ahead": "Revoir un paquet en avance",
+    "nothing-left": "Rien à revoir et plus de nouvelle carte aujourd'hui. Ouvrez un deck pour le revoir en avance.",
+    "review-ahead": "Revoir un deck en avance",
     "sections": {
       "aria-label": "Sections du jour",
       "session": "Séance",
@@ -97,7 +97,7 @@
       }
     },
     "accuracy": {
-      "title": "Précision par paquet",
+      "title": "Précision par deck",
       "caption": "La part de toutes les révisions retenues, dues ou non.",
       "measured": "{{percent}} % · révisions retenues : {{recalled}}/{{reviews}}",
       "empty": "Aucune révision pour l'instant"
@@ -167,7 +167,7 @@
     }
   },
   "decks": {
-    "title": "Paquets",
+    "title": "Decks d'ouvertures",
     "names": {
       "albin-countergambit": "Contre-gambit Albin",
       "scandinavian-qa5": "Scandinave avec 3...Qa5",
@@ -185,19 +185,19 @@
       "measured": "Rétention {{percent}} %",
       "empty": "Pas encore de rétention"
     },
-    "review": "Revoir ce paquet",
-    "nothing-to-review": "Aucune carte de ce paquet n'est à revoir, et les nouvelles cartes du jour sont épuisées.",
-    "back": "Tous les paquets",
+    "review": "Revoir ce deck",
+    "nothing-to-review": "Aucune carte de ce deck n'est à revoir, et les nouvelles cartes du jour sont épuisées.",
+    "back": "Tous les decks d'ouvertures",
     "lines": "Lignes",
     "new-cards-per-day": {
       "label": "Nouvelles cartes par jour"
     },
     "load-failure": {
-      "title": "Impossible de charger les paquets",
-      "message": "Le fichier des paquets n'a pas pu être chargé. Essayez de recharger la page."
+      "title": "Impossible de charger les decks",
+      "message": "Le fichier des decks n'a pas pu être chargé. Essayez de recharger la page."
     },
     "sections": {
-      "aria-label": "Sections du paquet",
+      "aria-label": "Sections du deck",
       "review": "Réviser",
       "lines": "Lignes",
       "play": "Jouer"
@@ -223,7 +223,7 @@
     "my-lines": "Mes lignes"
   },
   "opponent": {
-    "title": "Jouer ce paquet contre Stockfish",
+    "title": "Jouer ce deck contre Stockfish",
     "start": "Commencer une partie",
     "new-game": "Nouvelle partie",
     "leave": "Quitter la partie",
@@ -243,22 +243,22 @@
       }
     },
     "source": {
-      "book": "L'adversaire suit le paquet",
-      "stockfish": "Le paquet est terminé, Stockfish joue",
-      "left-deck": "Vous avez quitté le paquet, qui joue {{move}}"
+      "book": "L'adversaire suit le deck",
+      "stockfish": "Le deck est terminé, Stockfish joue",
+      "left-deck": "Vous avez quitté le deck, qui joue {{move}}"
     },
     "last-move": {
-      "book": "Le paquet a joué {{move}}",
+      "book": "Le deck a joué {{move}}",
       "stockfish": "Stockfish a joué {{move}}"
     },
     "status": {
       "reader-to-move": "À vous de jouer",
-      "book-moving": "Le paquet répond",
+      "book-moving": "Le deck répond",
       "stockfish-moving": "Stockfish réfléchit",
       "reader-won": "Échec et mat. Vous avez gagné.",
       "opponent-won": "Échec et mat. Vous avez perdu.",
       "draw": "La partie est nulle.",
-      "stockfish-unavailable": "Stockfish n'a pas pu se charger, la partie s'arrête donc là où le paquet s'arrête. Sa première partie sur un appareil a besoin du réseau.",
+      "stockfish-unavailable": "Stockfish n'a pas pu se charger, la partie s'arrête donc là où le deck s'arrête. Sa première partie sur un appareil a besoin du réseau.",
       "stockfish-illegal-move": "Stockfish a répondu un coup que l'échiquier refuse. La partie s'arrête ici."
     }
   },
@@ -284,7 +284,7 @@
     "back": "Reprendre le dernier coup",
     "reset": "Revenir à la position de départ",
     "add": {
-      "action": "Ajouter à mon paquet",
+      "action": "Ajouter à mon deck",
       "added": "Ajoutée à Mes lignes, {{side}}",
       "already-in-deck": "Mes lignes contiennent déjà cette ligne",
       "conflicts": "Mes lignes jouent déjà {{move}} dans une position de cette ligne",
@@ -310,7 +310,7 @@
     "stockfish": {
       "name": "Stockfish {{version}}",
       "licence": "GPL-3.0",
-      "description": "Le moteur d'échecs Stockfish vérifie chaque coup des paquets. Ses fichiers sont distribués avec cette application sans modification, comme un programme séparé.",
+      "description": "Le moteur d'échecs Stockfish vérifie chaque coup des decks. Ses fichiers sont distribués avec cette application sans modification, comme un programme séparé.",
       "source-link": "Code source à l'étiquette {{tag}}",
       "licence-link": "Texte de la licence",
       "digests": "SHA-256 des fichiers distribués"

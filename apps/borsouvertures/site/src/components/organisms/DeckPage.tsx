@@ -57,7 +57,7 @@ function DeckHeader({ deck, name }: DeckHeaderProps) {
   const { t } = useTranslation();
   const { boardStyle } = useAppState();
   return (
-    <div className="flex items-center gap-3 pt-3 border-t-[3px] border-ink">
+    <div className="flex items-center gap-3 pt-3 border-t-2 border-ink">
       <IconButton
         label={t('decks.back')}
         icon="chevron-left"
@@ -76,11 +76,6 @@ function DeckHeader({ deck, name }: DeckHeaderProps) {
   );
 }
 
-const HEADER_BY_LINE_CLOSED: ComponentByFlag<DeckHeaderProps> = {
-  true: DeckHeader,
-  false: EmptySlot,
-};
-
 // @FollowsBlueprint organism-table-dispatch
 export function DeckPage({ decks, deckId }: AppScreenProps) {
   const { t, i18n } = useTranslation();
@@ -94,15 +89,25 @@ export function DeckPage({ decks, deckId }: AppScreenProps) {
   const isSessionEmpty = deckProgress.sessionCardIds.length === 0;
   const NothingToReview = NOTHING_TO_REVIEW_BY_EMPTY_SESSION[`${isSessionEmpty}`];
   const openedLine = findDeckLine(deck.lines, openedLineName);
-  const isLineShown = shownSection === 'lines' && openedLine !== null;
-  const Header = HEADER_BY_LINE_CLOSED[`${!isLineShown}`];
   const name = selectDeckName(
     i18n.getResource(i18n.language, 'translation', deck.nameKey),
     deck.nameKey,
   );
+  if (shownSection === 'lines' && openedLine !== null) {
+    return (
+      <div className="flex flex-col w-full max-w-xl mx-auto lg:max-w-none">
+        <DeckLineStepper
+          key={openedLine.name}
+          deck={deck}
+          line={openedLine}
+          onClose={() => setOpenedLineName(null)}
+        />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4 w-full max-w-xl mx-auto lg:max-w-none">
-      <Header deck={deck} name={name} />
+      <DeckHeader deck={deck} name={name} />
       <SectionTabs
         tabs={DECK_SECTIONS.map((section) => ({
           id: section,
@@ -132,28 +137,19 @@ export function DeckPage({ decks, deckId }: AppScreenProps) {
         </ActionBar>
       </TabPanel>
       <TabPanel idPrefix={DECK_TABS_ID} tabId="lines" isSelected={shownSection === 'lines'}>
-        {openedLine === null ? (
-          <Panel title={t('decks.lines')}>
-            <div className="flex flex-col">
-              {deck.lines.map((line) => (
-                <DeckLineRow
-                  key={line.name}
-                  line={line}
-                  side={deck.side}
-                  boardStyle={boardStyle}
-                  onOpen={setOpenedLineName}
-                />
-              ))}
-            </div>
-          </Panel>
-        ) : (
-          <DeckLineStepper
-            key={openedLine.name}
-            deck={deck}
-            line={openedLine}
-            onClose={() => setOpenedLineName(null)}
-          />
-        )}
+        <Panel title={t('decks.lines')}>
+          <div className="flex flex-col">
+            {deck.lines.map((line) => (
+              <DeckLineRow
+                key={line.name}
+                line={line}
+                side={deck.side}
+                boardStyle={boardStyle}
+                onOpen={setOpenedLineName}
+              />
+            ))}
+          </div>
+        </Panel>
       </TabPanel>
       <TabPanel idPrefix={DECK_TABS_ID} tabId="play" isSelected={shownSection === 'play'}>
         <DeckGame deck={deck} />

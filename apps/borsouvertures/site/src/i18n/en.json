@@ -55,7 +55,7 @@
   "tab-bar": {
     "aria-label": "Main sections",
     "today": "Today",
-    "decks": "Decks",
+    "decks": "Opening decks",
     "explore": "Explore"
   },
   "today": {
@@ -167,7 +167,7 @@
     }
   },
   "decks": {
-    "title": "Decks",
+    "title": "Opening decks",
     "names": {
       "albin-countergambit": "Albin Countergambit",
       "scandinavian-qa5": "Scandinavian with 3...Qa5",
@@ -187,7 +187,7 @@
     },
     "review": "Review this deck",
     "nothing-to-review": "No card of this deck is due, and today's new cards are used up.",
-    "back": "All decks",
+    "back": "All opening decks",
     "lines": "Lines",
     "new-cards-per-day": {
       "label": "New cards per day"

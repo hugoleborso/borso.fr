@@ -113,6 +113,7 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
         orientation={deck.side}
         fen={selectLineStepFen(steps, position)}
         onMove={isBoardMoveAccepted}
+        mover="none"
         arrows={NO_ARROWS}
         highlightSquares={buildLastMoveHighlights(step, theme.highlight)}
         boardStyleId={boardStyle}

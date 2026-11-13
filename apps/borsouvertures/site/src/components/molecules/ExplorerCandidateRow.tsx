@@ -35,7 +35,7 @@ export function ExplorerCandidateRow({
         <span className="font-mono font-bold">
           {formatMoveNotation(plyIndex, candidate.moveSan)}
         </span>
-        <span className="text-sm leading-snug line-clamp-2">
+        <span className="h-10 text-sm leading-5 line-clamp-2">
           {names.shown.join(' · ')}
           <span className="text-ink-muted">{more}</span>
         </span>

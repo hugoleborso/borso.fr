@@ -60,7 +60,7 @@ export function SignInScreen({ onClose }: SignInScreenProps) {
           {t('account.password')}
           <input
             id={PASSWORD_FIELD_ID}
-            className="min-h-12 w-full px-3 py-2 rounded-md border-2 border-ink bg-field text-base text-ink font-normal"
+            className="min-h-12 w-full px-3 py-2 rounded-md border-[1.5px] border-ink bg-field text-base text-ink font-normal"
             type="password"
             autoComplete="current-password"
             value={password}

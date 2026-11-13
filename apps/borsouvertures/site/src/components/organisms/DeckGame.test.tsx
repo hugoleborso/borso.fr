@@ -102,7 +102,7 @@ describe('a game against Stockfish on a deck page', () => {
     stockfishScript.canLoad = true;
     sentry.captureException.mockClear();
     await openApplication();
-    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
     await userEvent.click(await screen.findByRole('button', { name: /Albin Countergambit/ }));
     await userEvent.click(screen.getByRole('tab', { name: 'Play' }));
   });

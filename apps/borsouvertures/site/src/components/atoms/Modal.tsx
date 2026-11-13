@@ -38,7 +38,7 @@ export function Modal({ title, closeLabel, children, onClose }: ModalProps) {
       }}
     >
       <div className={SHEET_CLASS}>
-        <div className="flex items-center justify-between gap-3 pt-2 border-b-[3px] border-ink">
+        <div className="flex items-center justify-between gap-3 pt-2 border-b-2 border-ink">
           <h2 className="text-xl font-bold leading-tight">{title}</h2>
           <button
             type="button"

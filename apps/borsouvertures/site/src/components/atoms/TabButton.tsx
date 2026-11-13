@@ -7,13 +7,14 @@ interface TabButtonProps {
 }
 
 const TAB_BASE =
-  'flex-1 min-h-14 px-1 pt-1 text-[0.9375rem] font-bold border-t-4 ' +
-  'transition-[border-color,color] duration-150 ease-out-quick';
+  'relative flex-1 min-w-0 min-h-14 px-1 text-[0.8125rem] font-semibold leading-tight ' +
+  'text-balance before:absolute before:inset-x-3 before:-top-px before:h-0.5 ' +
+  'transition-[color] duration-150 ease-out-quick';
 
 // @FollowsBlueprint component-lookup-table
 const TAB_CLASS_BY_CURRENT: ValueByFlag<string> = {
-  true: TAB_BASE + ' border-accent text-on-shell',
-  false: TAB_BASE + ' border-transparent text-on-shell-muted hover:text-on-shell',
+  true: TAB_BASE + ' text-ink before:bg-accent',
+  false: TAB_BASE + ' text-ink-muted hover:text-ink',
 };
 
 // @FollowsBlueprint atom-plain

@@ -21,7 +21,7 @@ const TAB_BASE =
 // @FollowsBlueprint component-lookup-table
 const TAB_CLASS_BY_SELECTED: ValueByFlag<string> = {
   true: TAB_BASE + ' bg-primary text-on-primary',
-  false: TAB_BASE + ' text-ink hover:bg-surface',
+  false: TAB_BASE + ' text-ink hover:bg-page',
 };
 
 // @FollowsBlueprint atom-plain
@@ -33,11 +33,7 @@ export function SectionTabs<TabId extends string>({
   onSelect,
 }: SectionTabsProps<TabId>) {
   return (
-    <div
-      role="tablist"
-      aria-label={ariaLabel}
-      className="flex gap-1 p-1 rounded-md border-2 border-ink"
-    >
+    <div role="tablist" aria-label={ariaLabel} className="flex gap-1 p-1 rounded-md bg-surface">
       {tabs.map((tab) => {
         const isSelected = tab.id === selectedId;
         return (

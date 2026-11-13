@@ -5,12 +5,12 @@ const BUTTON_BASE =
   'disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100';
 
 export const BUTTON_CLASS =
-  BUTTON_BASE + ' border-2 border-ink bg-transparent text-ink hover:bg-surface';
+  BUTTON_BASE + ' border-[1.5px] border-ink bg-transparent text-ink hover:bg-surface';
 
 export const ACTIVE_BUTTON_CLASS =
-  BUTTON_BASE + ' border-2 border-primary bg-primary text-on-primary hover:opacity-90';
+  BUTTON_BASE + ' border-[1.5px] border-primary bg-primary text-on-primary hover:opacity-90';
 
 export const QUIET_BUTTON_CLASS =
   BUTTON_BASE +
-  ' px-2 border-2 border-transparent bg-transparent text-ink whitespace-nowrap ' +
+  ' px-2 border-[1.5px] border-transparent bg-transparent text-ink whitespace-nowrap ' +
   'underline underline-offset-4 decoration-2 hover:decoration-accent';

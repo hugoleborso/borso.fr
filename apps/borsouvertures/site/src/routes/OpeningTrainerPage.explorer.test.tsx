@@ -93,7 +93,7 @@ describe('the open explorer and the personal deck', () => {
       ]);
     });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
     const myLines = screen.getByRole('button', { name: /^My lines/ });
     expect(myLines.textContent).toContain('3 cards');
     await userEvent.click(myLines);
@@ -106,7 +106,7 @@ describe('the open explorer and the personal deck', () => {
     expect(readReviewLog().events).toEqual([]);
 
     await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
-    expect(screen.getByRole('heading', { name: 'Decks' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Opening decks' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^My lines/ })).toBeNull();
     await vi.waitFor(async () => {
       const storedKinds = (await listStoredDeckLineEvents(factory)).map((event) => event.kind);

@@ -5,6 +5,12 @@ import { Chessboard, defaultArrowOptions } from 'react-chessboard';
 import type { Side } from '@/state/persistedState.utils';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
+import {
+  type BoardMover,
+  isPieceMovable,
+  type MovableSide,
+  selectMovableSide,
+} from './board-gesture.utils';
 import { type BoardMark, type BoardMarkTone, placeBoardMark } from './board-mark.utils';
 import {
   type BoardDropDecision,
@@ -26,6 +32,17 @@ const DROP_OUTCOME_BY_DECISION: Record<
   ignored: () => false,
   played: (isMoveAccepted, uci) => isMoveAccepted(uci),
 };
+
+const BOARD_CLASS =
+  'relative flex justify-center self-center shrink-0 -mx-4 select-none ' +
+  '[-webkit-touch-callout:none] roomy:mx-0';
+
+// @FollowsBlueprint component-lookup-table
+const STILL_PIECES_CLASS_BY_MOVABLE_SIDE = {
+  white: `${BOARD_CLASS} [&_[data-piece^=b]]:touch-manipulation!`,
+  black: `${BOARD_CLASS} [&_[data-piece^=w]]:touch-manipulation!`,
+  none: `${BOARD_CLASS} [&_[data-piece]]:touch-manipulation!`,
+} as const satisfies Record<MovableSide, string>;
 
 const MARK_CLASS =
   'pointer-events-none absolute z-10 rounded-full outline-2 outline-page ' +
@@ -52,6 +69,7 @@ interface BoardViewProps {
   orientation: Side;
   fen: string;
   onMove: IsMoveAccepted;
+  mover: BoardMover;
   arrows: Arrow[];
   highlightSquares: Record<string, CSSProperties>;
   boardStyleId: BoardThemeId;
@@ -64,6 +82,7 @@ export function BoardView({
   orientation,
   fen,
   onMove,
+  mover,
   arrows,
   highlightSquares,
   boardStyleId,
@@ -74,9 +93,10 @@ export function BoardView({
   const { theme } = getBoardAppearance(boardStyleId);
   const namedPieces = useMemo(() => buildNamedPieces(t), [t]);
   const markBox = placeBoardMark(mark?.square ?? null, orientation);
+  const movableSide = selectMovableSide(fen, mover);
   return (
     <div
-      className="relative flex justify-center self-center shrink-0 -mx-4 roomy:mx-0"
+      className={STILL_PIECES_CLASS_BY_MOVABLE_SIDE[movableSide]}
       style={{ width: `${boardWidth}px` }}
     >
       <Chessboard
@@ -95,7 +115,8 @@ export function BoardView({
           arrows,
           squareStyles: highlightSquares,
           animationDurationInMs: MOVE_ANIMATION_MS,
-          allowDragging: true,
+          allowDragging: movableSide !== 'none',
+          canDragPiece: ({ piece }) => isPieceMovable(piece.pieceType, movableSide),
           onPieceDrop: ({ sourceSquare, targetSquare }) =>
             DROP_OUTCOME_BY_DECISION[selectBoardDropDecision(targetSquare)](
               onMove,

@@ -85,13 +85,13 @@ function DeckGameControls({ deck, snapshot }: DeckGameBodyProps) {
           }
           value={t(STATUS_KEY_BY_STATUS[selectDeckGameStatus(snapshot)])}
         />
-        {lastOpponentMove === null ? null : (
-          <p className="text-sm text-ink-muted">
-            {t(LAST_MOVE_KEY_BY_SOURCE[lastOpponentMove.source], {
-              move: lastOpponentMove.notation,
-            })}
-          </p>
-        )}
+        <p className="min-h-5 text-sm text-ink-muted truncate">
+          {lastOpponentMove === null
+            ? null
+            : t(LAST_MOVE_KEY_BY_SOURCE[lastOpponentMove.source], {
+                move: lastOpponentMove.notation,
+              })}
+        </p>
       </div>
       <ActionBar>
         <Button label={t('opponent.new-game')} onActivate={() => deckGameMachine.start(deck)} />
@@ -109,6 +109,7 @@ function DeckGameBoard({ snapshot }: DeckGameBodyProps) {
       orientation={snapshot.readerSide}
       fen={snapshot.fen}
       onMove={isReaderMoveAccepted}
+      mover={snapshot.readerSide}
       arrows={NO_ARROWS}
       highlightSquares={NO_HIGHLIGHTS}
       boardStyleId={boardStyle}

@@ -15,10 +15,6 @@
   --color-field: #ffffff;
   --color-scrim: rgba(17, 17, 17, 0.55);
 
-  --color-shell: #111111;
-  --color-on-shell: #ffffff;
-  --color-on-shell-muted: #b8b8b8;
-
   --color-primary: #111111;
   --color-on-primary: #ffffff;
   --color-accent: #d52b1e;
@@ -54,6 +50,7 @@
   :root {
     color-scheme: light dark;
     background-color: var(--color-page);
+    overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -66,10 +63,6 @@
       --color-rule: #343434;
       --color-field: #1a1a1a;
       --color-scrim: rgba(0, 0, 0, 0.7);
-
-      --color-shell: #1e1e1e;
-      --color-on-shell: #f4f4f2;
-      --color-on-shell-muted: #a6a6a6;
 
       --color-primary: #f4f4f2;
       --color-on-primary: #111111;
@@ -88,7 +81,8 @@
     background-color: var(--color-page);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    font-feature-settings: 'tnum' 0;
+    font-variant-numeric: proportional-nums;
+    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }

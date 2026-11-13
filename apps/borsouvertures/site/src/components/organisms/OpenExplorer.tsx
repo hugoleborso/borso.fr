@@ -116,9 +116,11 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
       aria-label={t('explore.title')}
       className="flex flex-col gap-2 w-full lg:grid lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-x-8 lg:items-start"
     >
-      <div className="flex items-center justify-between gap-3 pt-2 border-t-[3px] border-ink lg:col-span-2">
+      <div className="flex items-center justify-between gap-3 pt-2 border-t-2 border-ink lg:col-span-2">
         <div className="flex flex-col min-w-0" aria-live="polite">
-          <h2 className="text-lg font-bold leading-tight line-clamp-2">{openingName}</h2>
+          <h2 className="h-[2.8125rem] text-lg font-bold leading-tight line-clamp-2">
+            {openingName}
+          </h2>
           <p className="font-mono text-sm text-ink-muted truncate">{movePath}</p>
         </div>
         <ToggleSlider
@@ -133,6 +135,7 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
         orientation={side}
         fen={position.fen}
         onMove={didPlayMove}
+        mover="both"
         arrows={listCandidateMoves(position).map((uci) => uciToArrow(uci))}
         highlightSquares={highlightSquares}
         boardStyleId={boardStyle}
@@ -148,7 +151,10 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
             </p>
           )}
           {position.groups.map((group) => (
-            <section key={group.level} aria-label={t(GROUP_TITLE_KEY_BY_LEVEL[group.level])}>
+            <section
+              key={`${position.fen}:${group.level}`}
+              aria-label={t(GROUP_TITLE_KEY_BY_LEVEL[group.level])}
+            >
               <h3 className="sticky top-0 z-[1] py-1 bg-page text-sm font-bold uppercase tracking-[0.06em] text-ink-muted">
                 {t(GROUP_TITLE_KEY_BY_LEVEL[group.level])}
               </h3>

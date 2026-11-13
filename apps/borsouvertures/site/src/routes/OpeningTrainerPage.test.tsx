@@ -48,9 +48,11 @@ describe('the opening trainer, one visit from the first load', () => {
   });
 
   it('switches screens from the tab bar and opens a deck page', async () => {
-    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
-    expect(await screen.findByRole('heading', { name: 'Decks' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Decks' }).getAttribute('aria-current')).toBe('page');
+    await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
+    expect(await screen.findByRole('heading', { name: 'Opening decks' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Opening decks' }).getAttribute('aria-current')).toBe(
+      'page',
+    );
     expect(screen.getByRole('button', { name: 'Today' }).getAttribute('aria-current')).toBeNull();
     expect(screen.getByRole('combobox', { name: 'New cards per day' })).toHaveProperty(
       'value',
@@ -96,12 +98,12 @@ describe('the opening trainer, one visit from the first load', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Leave the session' }));
     expect(screen.getByRole('heading', { name: 'Albin Countergambit' })).toBeTruthy();
 
-    await userEvent.click(screen.getByRole('button', { name: 'All decks' }));
-    expect(screen.getByRole('heading', { name: 'Decks' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'All opening decks' }));
+    expect(screen.getByRole('heading', { name: 'Opening decks' })).toBeTruthy();
   });
 
   it('applies the new cards per day the reader picks', async () => {
-    await userEvent.click(screen.getByRole('button', { name: 'Decks' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
     await userEvent.selectOptions(
       await screen.findByRole('combobox', { name: 'New cards per day' }),
       '3',

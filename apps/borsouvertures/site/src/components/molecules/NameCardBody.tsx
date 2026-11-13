@@ -42,7 +42,11 @@ export function NameCardBody({ reviewCard, status, onChooseName }: CardBodyProps
         <PromptLine lead={prompt.lead} detail={prompt.detail} leadFont={prompt.leadFont} />
         <p className="sr-only">{prompt.spoken}</p>
       </div>
-      <div role="group" aria-label={t('cards.name.choices')} className="grid grid-cols-2 gap-2">
+      <div
+        role="group"
+        aria-label={t('cards.name.choices')}
+        className="grid grid-cols-2 auto-rows-[minmax(3.75rem,auto)] gap-2"
+      >
         {listNameChoices(reviewCard, status).map((choice) => (
           <Button
             key={choice.openingName}

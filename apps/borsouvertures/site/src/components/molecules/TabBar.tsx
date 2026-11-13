@@ -20,7 +20,7 @@ export function TabBar({ activeTab, onSelect }: TabBarProps) {
   return (
     <nav
       aria-label={t('tab-bar.aria-label')}
-      className="fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] bg-shell"
+      className="fixed inset-x-0 bottom-0 z-20 pb-[env(safe-area-inset-bottom)] bg-page border-t border-rule"
     >
       <div className="flex w-full max-w-3xl h-tab-bar mx-auto">
         {APP_TABS.map((tab) => (

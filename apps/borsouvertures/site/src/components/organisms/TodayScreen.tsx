@@ -126,7 +126,7 @@ export function TodayScreen({ decks }: AppScreenProps) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-xl mx-auto">
       <Banner />
-      <h2 className="pt-3 border-t-[3px] border-ink text-2xl font-bold tracking-[-0.02em]">
+      <h2 className="pt-3 border-t-2 border-ink text-2xl font-bold tracking-[-0.02em]">
         {t('today.title')}
       </h2>
       <SectionTabs
