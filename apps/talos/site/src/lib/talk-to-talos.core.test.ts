@@ -6,7 +6,9 @@ import { z } from 'zod';
 import { TALK_PATH } from './talk-to-talos.core';
 
 const manifestSchema = z.object({
-  shortcuts: z.array(z.object({ name: z.string(), url: z.string() })),
+  shortcuts: z.array(
+    z.object({ name: z.string(), short_name: z.string().optional(), url: z.string() }),
+  ),
 });
 
 function readManifestShortcuts() {
@@ -21,7 +23,11 @@ function readManifestShortcuts() {
 describe('the address of « Parler à Talos »', () => {
   it('is the path the home-screen shortcut opens', () => {
     expect(TALK_PATH).toBe('/talk');
-    expect(readManifestShortcuts()).toContainEqual({ name: 'Parler à Talos', url: TALK_PATH });
+    expect(readManifestShortcuts()).toContainEqual({
+      name: 'Parler à Talos',
+      short_name: 'Parler',
+      url: TALK_PATH,
+    });
   });
 
   it('leaves no shortcut to the removed Message screen', () => {

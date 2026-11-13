@@ -177,7 +177,7 @@ Lives in: `api/src/pages/`
 
 ## Talk to Talos
 
-The « Parler à Talos » link at the end of the tab bar, on every screen. It opens a new Claude Code session on the agent repository, in the build environment, with a short prompt prefilled. `/talk` redirects to the same link, for the home-screen shortcut.
+The « Parler à Talos » link at the end of the tab bar, on every screen. It opens a new Claude Code session on the agent repository, with a short prompt prefilled, in the build environment on the web; from the iOS home-screen app the Claude app drops `environment`, so the session starts in the app's default environment. `/talk` redirects to the same link, for the home-screen shortcut.
 
 Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`, `site/src/lib/talk-to-talos.*`
 

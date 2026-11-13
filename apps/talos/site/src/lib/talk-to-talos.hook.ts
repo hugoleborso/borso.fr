@@ -12,6 +12,8 @@ const TALK_ENVIRONMENT: ClaudeCodeEnvironment = 'build';
 export interface TalkToTalosLink {
   readonly href: string | undefined;
   readonly target: string | undefined;
+  readonly isPending: boolean;
+  readonly retry: () => void;
 }
 
 export function useTalkToTalosLink(): TalkToTalosLink {
@@ -21,5 +23,7 @@ export function useTalkToTalosLink(): TalkToTalosLink {
   return {
     href: buildEnvironmentAddress(target.data, TALK_ENVIRONMENT, t('talk.prompt'), opener),
     target: selectClaudeCodeLinkTarget(opener),
+    isPending: target.isPending,
+    retry: () => void target.refetch(),
   };
 }

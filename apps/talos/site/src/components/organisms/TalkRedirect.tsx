@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { buttonVariants } from '../atoms/button.variants';
 import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
-import { Spinner } from '../atoms/Spinner';
+import { QueryState } from '../molecules/QueryState';
 import { followLinkOnAttach } from '../../lib/departure.adapter';
 import { useTalkToTalosLink } from '../../lib/talk-to-talos.hook';
 
@@ -15,9 +15,7 @@ export function TalkRedirect(): JSX.Element {
     <>
       <PageTitle hasMark>{t('talk.title')}</PageTitle>
       {link.href === undefined ? (
-        <div className="py-6 flex justify-center">
-          <Spinner label={t('common.loading')} />
-        </div>
+        <QueryState isPending={link.isPending} onRetry={link.retry} />
       ) : (
         <a
           ref={followLinkOnAttach}

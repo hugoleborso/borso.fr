@@ -90,6 +90,9 @@ const TALK_ROUTES: Record<string, unknown> = {
     environments: { talos: 'env_lecture', build: 'env_construction' },
   },
 };
+const DAY_ROUTES_WITHOUT_TARGET: Record<string, unknown> = Object.fromEntries(
+  Object.entries(DAY_ROUTES).filter(([path]) => path !== '/api/messages/claude-code'),
+);
 const TALK_ADDRESS =
   'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_construction' +
   '&q=Tu%20es%20Talos.%20Hugo%20veut%20te%20parler%20%3A';
@@ -352,6 +355,43 @@ describe('the application shell', () => {
     expect(tree.container.querySelector('h1')?.textContent).toBe('Parler à Talos');
     tree.unmount();
     vi.restoreAllMocks();
+  });
+
+  it('writes the link for the Claude app, without the environment it would refuse, from the iOS home screen', async () => {
+    stubStandaloneDisplay();
+    Object.defineProperty(navigator, 'standalone', { value: true, configurable: true });
+    restoreFetch = stubFetch(answerFrom(TALK_ROUTES)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => readTalkLink(tree.container)?.hasAttribute('href') === true);
+    const link = readTalkLink(tree.container);
+    expect(link?.getAttribute('href')).toBe(
+      'claude://code/new?repo=proprietaire%2Fnotes&q=Tu%20es%20Talos.%20Hugo%20veut%20te%20parler%20%3A',
+    );
+    expect(link?.hasAttribute('target')).toBe(false);
+    tree.unmount();
+    Reflect.deleteProperty(navigator, 'standalone');
+  });
+
+  it('offers a retry on /talk when the Claude Code target cannot be read', async () => {
+    window.history.replaceState(null, '', '/talk');
+    restoreFetch = stubFetch(answerFrom(DAY_ROUTES_WITHOUT_TARGET)).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.textContent.includes('Réessayer'));
+    expect(tree.container.textContent).toContain('Chargement impossible');
+    expect(readTalkLink(tree.container)?.getAttribute('aria-disabled')).toBe('true');
+    tree.unmount();
+  });
+
+  it('says so when no routine run was ever fired', async () => {
+    window.history.replaceState(null, '', '/runs');
+    restoreFetch = stubFetch(
+      answerFrom({ ...DAY_ROUTES, '/api/routine/runs': { items: [] } }),
+    ).restore;
+    const tree = mountWithClient(createIsolatedQueryClient(), <App />);
+    await flushUntil(() => tree.container.textContent.includes('Aucun lancement pour l’instant'));
+    expect(tree.container.querySelector('h1')?.textContent).toBe('Lancements');
+    expect(tree.container.querySelectorAll('main li')).toHaveLength(0);
+    tree.unmount();
   });
 
   it('lists the routine runs on a screen of their own', async () => {
