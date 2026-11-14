@@ -1,9 +1,14 @@
 import {
-  type CdpReply,
-  findPageTarget,
+  createSender,
+  emulatePhone,
+  openSession,
+  pause,
+  PROBE_SIGNAL,
+  READ_PAGE_SCRIPT,
+  RESET_PROBE_SCRIPT,
+} from './cdp-session';
+import {
   judgeTouchTap,
-  type PageTarget,
-  parseCdpReply,
   parseTapPoint,
   parseTouchTapArguments,
   readReportedEvent,
@@ -27,53 +32,6 @@ const PAGE_LEFT = 'the tap navigated away before the page could be read';
 const TOUCH_HOLD_MILLISECONDS = 60;
 const SETTLE_MILLISECONDS = 300;
 const TOUCH_RADIUS = 12;
-const PHONE_SCALE_FACTOR = 3;
-const PHONE_TOUCH_POINTS = 5;
-
-function pause(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-async function getPage(options: TouchTapOptions): Promise<PageTarget> {
-  const response = await fetch(`http://127.0.0.1:${String(options.port)}/json/list`);
-  const listing: unknown = await response.json();
-  const page = findPageTarget(listing, options.pageUrlPart);
-  if (page === null) {
-    throw new Error(`no page on CDP ${String(options.port)} matches "${options.pageUrlPart}"`);
-  }
-  return page;
-}
-
-function openSession(page: PageTarget): Promise<WebSocket> {
-  const socket = new WebSocket(page.webSocketDebuggerUrl);
-  return new Promise((resolve, reject) => {
-    socket.addEventListener('open', () => {
-      resolve(socket);
-    });
-    socket.addEventListener('error', () => {
-      reject(new Error(`could not open ${page.webSocketDebuggerUrl}`));
-    });
-  });
-}
-
-function createSender(socket: WebSocket) {
-  let nextId = 0;
-  const waiting = new Map<number, (reply: CdpReply) => void>();
-  socket.addEventListener('message', (message) => {
-    const reply = parseCdpReply(String(message.data));
-    if (reply.id !== undefined) waiting.get(reply.id)?.(reply);
-  });
-  return async function send(method: string, params: object = {}): Promise<unknown> {
-    nextId += 1;
-    const id = nextId;
-    const reply = await new Promise<CdpReply>((resolve) => {
-      waiting.set(id, resolve);
-      socket.send(JSON.stringify({ id, method, params }));
-    });
-    if (reply.error !== undefined) throw new Error(`${method}: ${reply.error.message}`);
-    return reply.result?.result?.value;
-  };
-}
 
 function buildPreparationScript(selector: string): string {
   return `(() => {
@@ -82,6 +40,7 @@ function buildPreparationScript(selector: string): string {
     );
     if (target === undefined) return null;
     target.scrollIntoView({ block: 'center' });
+    ${RESET_PROBE_SCRIPT}
     for (const type of ['pointerdown', 'touchstart', 'touchend', 'click']) {
       document.addEventListener(type, (event) => {
         window.${TOUCH_TAP_BINDING}(JSON.stringify({
@@ -89,21 +48,15 @@ function buildPreparationScript(selector: string): string {
           pointerType: event.pointerType ?? '',
           isOnTarget: event.target instanceof Node && target.contains(event.target),
         }));
-      }, { capture: true });
+      }, { capture: true, signal: ${PROBE_SIGNAL} });
     }
     const box = target.getBoundingClientRect();
     return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
   })()`;
 }
 
-const READ_PAGE_SCRIPT = `({
-  innerWidth: window.innerWidth,
-  maxTouchPoints: navigator.maxTouchPoints,
-  isCoarsePointer: matchMedia('(pointer: coarse)').matches,
-})`;
-
 async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
-  const socket = await openSession(await getPage(options));
+  const socket = await openSession(options);
   const send = createSender(socket);
   const reported: RecordedInputEvent[] = [];
   socket.addEventListener('message', (message) => {
@@ -113,16 +66,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
   try {
     await send('Runtime.enable');
     await send('Runtime.addBinding', { name: TOUCH_TAP_BINDING });
-    await send('Emulation.setDeviceMetricsOverride', {
-      width: options.width,
-      height: options.height,
-      deviceScaleFactor: PHONE_SCALE_FACTOR,
-      mobile: true,
-    });
-    await send('Emulation.setTouchEmulationEnabled', {
-      enabled: true,
-      maxTouchPoints: PHONE_TOUCH_POINTS,
-    });
+    await emulatePhone(send, options);
     const point = parseTapPoint(
       await send('Runtime.evaluate', {
         expression: buildPreparationScript(options.selector),
