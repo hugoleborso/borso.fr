@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCategoryToggles,
-  buildGroupKey,
   buildNotificationPayload,
+  buildNotificationTag,
   buildNotificationUrl,
   classifyPushFailure,
   countDelivered,
   isCategoryEnabled,
-  isGroupDue,
   NOTIFICATION_CATEGORIES,
-  NOTIFICATION_GROUP_WINDOW_MINUTES,
   type NotificationEvent,
   type PushDeliveryOutcome,
   readPushFailureStatus,
@@ -31,6 +29,12 @@ const TAKE_CREATED: NotificationEvent = {
   songTitle: 'Seven Nation Army',
 };
 const TAKE_COMMENT_CREATED: NotificationEvent = { ...TAKE_CREATED, kind: 'take-comment-created' };
+const SONG_CREATED: NotificationEvent = {
+  kind: 'song-created',
+  actorMemberId: ACTOR,
+  songId: 'song-3',
+  songTitle: 'Rehab',
+};
 const SESSION_CREATED: NotificationEvent = {
   kind: 'session-created',
   actorMemberId: ACTOR,
@@ -131,6 +135,7 @@ describe('selectCategory', () => {
   it.each([
     [TAKE_CREATED, 'takes'],
     [TAKE_COMMENT_CREATED, 'take_comments'],
+    [SONG_CREATED, 'songs'],
     [SESSION_CREATED, 'sessions'],
     [SESSION_CHANGED, 'sessions'],
     [SETLIST_CHANGED, 'setlists'],
@@ -164,6 +169,7 @@ describe('buildCategoryToggles', () => {
     ).toEqual([
       { category: 'takes', enabled: true },
       { category: 'take_comments', enabled: true },
+      { category: 'songs', enabled: true },
       { category: 'sessions', enabled: false },
       { category: 'setlists', enabled: true },
       { category: 'streak', enabled: true },
@@ -171,6 +177,7 @@ describe('buildCategoryToggles', () => {
     expect(NOTIFICATION_CATEGORIES).toEqual([
       'takes',
       'take_comments',
+      'songs',
       'sessions',
       'setlists',
       'streak',
@@ -221,31 +228,18 @@ describe('selectRecipients', () => {
   });
 });
 
-describe('buildGroupKey', () => {
+describe('buildNotificationTag', () => {
   it.each([
     [TAKE_CREATED, 'take:take-1'],
     [TAKE_COMMENT_CREATED, 'take-comment:take-1'],
+    [SONG_CREATED, 'song:song-3'],
     [SESSION_CREATED, 'session:session-1'],
     [SESSION_CHANGED, 'session:session-1'],
     [SETLIST_CHANGED, 'setlist:setlist-1'],
     [SONG_LINEUP_CHANGED, 'song-lineup:song-2'],
     [TRANSITION_CHANGED, 'transition:song-a:song-b'],
-  ] as const)('groups %o under %s', (event, groupKey) => {
-    expect(buildGroupKey(event)).toBe(groupKey);
-  });
-});
-
-describe('isGroupDue', () => {
-  const lastSentAt = new Date('2026-10-23T20:00:00.000Z');
-
-  it('sends a group that never sent', () => {
-    expect(isGroupDue(null, lastSentAt)).toBe(true);
-  });
-
-  it('holds a group inside its window and sends it once the window has passed', () => {
-    expect(NOTIFICATION_GROUP_WINDOW_MINUTES).toBe(10);
-    expect(isGroupDue(lastSentAt, new Date('2026-10-23T20:09:59.999Z'))).toBe(false);
-    expect(isGroupDue(lastSentAt, new Date('2026-10-23T20:10:00.000Z'))).toBe(true);
+  ] as const)('tags %o as %s', (event, tag) => {
+    expect(buildNotificationTag(event)).toBe(tag);
   });
 });
 
@@ -256,6 +250,7 @@ describe('buildNotificationUrl', () => {
     [SESSION_CREATED, '/sessions/session-1'],
     [SESSION_CHANGED, '/sessions/session-1'],
     [SETLIST_CHANGED, '/setlists/setlist-1'],
+    [SONG_CREATED, '/catalog/song-3'],
     [SONG_LINEUP_CHANGED, '/catalog/song-2'],
     [TRANSITION_CHANGED, '/catalog/song-a'],
   ] as const)('opens %o at %s', (event, url) => {
@@ -284,6 +279,7 @@ describe('buildNotificationPayload', () => {
 
   it.each([
     [TAKE_COMMENT_CREATED, { songTitle: 'Seven Nation Army' }],
+    [SONG_CREATED, { songTitle: 'Rehab' }],
     [SESSION_CREATED, { sessionDate: '2026-10-30T18:00:00.000Z' }],
     [SESSION_CHANGED, { sessionDate: '2026-10-30T18:00:00.000Z' }],
     [SONG_LINEUP_CHANGED, { songTitle: 'Valerie' }],

@@ -38,8 +38,8 @@ function refuseTakenDeezerTrack(holder: { id: string; title: string }): ToolAnsw
   };
 }
 
-async function runSongCreate(input: SongCreate): Promise<ToolAnswer> {
-  const outcome = await createSong(input);
+async function runSongCreate(input: SongCreate, actor: ToolActor): Promise<ToolAnswer> {
+  const outcome = await createSong(input, actor);
   if (outcome.kind === 'deezer-track-taken') return refuseTakenDeezerTrack(outcome.holder);
   return { kind: 'answered', body: { id: outcome.song.id, title: outcome.song.title } };
 }
@@ -104,13 +104,13 @@ export const SONG_TOOLS = [
   defineTool({
     name: 'save_song',
     description:
-      'Add a song (`title` and `status` required), or, with `song` (title or id), change only the fields given. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out.',
+      'Add a song (`title` and `status` required; the band is notified), or, with `song` (title or id), change only the fields given. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out.',
     routes: ['POST /api/songs', 'PUT /api/songs/:id'],
     inputSchema: songSaveToolInputSchema,
     run: async ({ song, defaultLineup, ...fields }, actor) => {
       if (song === undefined) {
         const input = parseToolFields(songCreateFieldsSchema, fields);
-        return await runSongCreate(await buildSongCreate(input, defaultLineup));
+        return await runSongCreate(await buildSongCreate(input, defaultLineup), actor);
       }
       const id = await resolveSongId(song);
       return await runSongUpdate(id, await buildSongUpdate(fields, defaultLineup), actor);

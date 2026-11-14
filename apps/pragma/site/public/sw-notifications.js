@@ -21,6 +21,7 @@ const NOTIFICATION_TEXT = {
       fallback: 'Band update',
       'take-created': 'New take',
       'take-comment-created': 'New comment',
+      'song-created': 'New song',
       'session-created': 'New session',
       'session-changed': 'Session changed',
       'setlist-changed': 'Setlist changed',
@@ -33,6 +34,7 @@ const NOTIFICATION_TEXT = {
     templates: {
       'take-created': '{actorName} posted a take of {songTitle}',
       'take-comment-created': '{actorName} commented on a take of {songTitle}',
+      'song-created': '{actorName} added {songTitle} to the catalogue',
       'session-created': '{actorName} planned a session on {sessionDate}',
       'session-changed': '{actorName} changed the session on {sessionDate}',
       'setlist-changed': '{actorName} changed the setlist {setlistName}',
@@ -50,6 +52,7 @@ const NOTIFICATION_TEXT = {
       fallback: 'Nouvelles du groupe',
       'take-created': 'Nouvelle prise',
       'take-comment-created': 'Nouveau commentaire',
+      'song-created': 'Nouveau morceau',
       'session-created': 'Nouvelle session',
       'session-changed': 'Session modifiée',
       'setlist-changed': 'Setlist modifiée',
@@ -62,6 +65,7 @@ const NOTIFICATION_TEXT = {
     templates: {
       'take-created': '{actorName} a publié une prise de {songTitle}',
       'take-comment-created': '{actorName} a commenté une prise de {songTitle}',
+      'song-created': '{actorName} a ajouté {songTitle} au catalogue',
       'session-created': '{actorName} a prévu une session le {sessionDate}',
       'session-changed': '{actorName} a modifié la session du {sessionDate}',
       'setlist-changed': '{actorName} a modifié la setlist {setlistName}',

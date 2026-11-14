@@ -216,12 +216,11 @@ export async function readEntryTitlesInOrder(setlistId: string): Promise<string[
 
 export type AppendSongsOutcome = { kind: 'ok'; entryIds: string[] } | { kind: 'not-found' };
 
-export async function appendSongs(
+export async function appendSongsWithoutNotice(
   setlistId: string,
   songIds: readonly string[],
-  actor: WriteActor,
-): Promise<AppendSongsOutcome> {
-  const entryIds = await runInOneSetlistTransaction(async (executor) => {
+): Promise<string[] | null> {
+  return await runInOneSetlistTransaction(async (executor) => {
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return null;
     const firstPosition = await nextItemPositionWithin(executor, setlistId);
@@ -241,6 +240,14 @@ export async function appendSongs(
     }
     return written;
   });
+}
+
+export async function appendSongs(
+  setlistId: string,
+  songIds: readonly string[],
+  actor: WriteActor,
+): Promise<AppendSongsOutcome> {
+  const entryIds = await appendSongsWithoutNotice(setlistId, songIds);
   if (entryIds === null) return { kind: 'not-found' };
   await notifySetlistChangedById(setlistId, actor);
   return { kind: 'ok', entryIds };

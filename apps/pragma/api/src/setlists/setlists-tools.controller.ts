@@ -21,6 +21,7 @@ import {
 import { patchEntry } from './setlist-entry.service';
 import {
   appendSongs,
+  appendSongsWithoutNotice,
   defineDeletion,
   buildEntryUpdate,
   getSetlistsForTool,
@@ -56,7 +57,7 @@ async function runSetlistCreate(creation: SetlistCreation, actor: ToolActor): Pr
   if (outcome.kind === 'session-not-found') {
     return { kind: 'refused', body: { error: 'session-not-found' } };
   }
-  await appendSongs(outcome.setlist.id, songIds, actor);
+  await appendSongsWithoutNotice(outcome.setlist.id, songIds);
   return { kind: 'answered', body: { id: outcome.setlist.id, songs: songIds.length } };
 }
 

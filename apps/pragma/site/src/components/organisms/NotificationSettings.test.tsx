@@ -39,6 +39,7 @@ const PREFERENCES = {
   preferences: [
     { category: 'takes', enabled: true },
     { category: 'take_comments', enabled: true },
+    { category: 'songs', enabled: true },
     { category: 'sessions', enabled: false },
     { category: 'setlists', enabled: true },
     { category: 'streak', enabled: true },
@@ -114,11 +115,14 @@ describe('NotificationSettings', () => {
     device.readInstallContext.mockReturnValue({ isIos: false, isStandalone: false });
   });
 
-  it('lists the five categories with the state the member saved', async () => {
+  it('lists the six categories with the state the member saved', async () => {
     api = answerApi();
     renderSettings();
     expect(isChecked(await screen.findByRole('checkbox', { name: 'New takes' }))).toBe(true);
     expect(isChecked(screen.getByRole('checkbox', { name: 'Comments on takes' }))).toBe(true);
+    expect(isChecked(screen.getByRole('checkbox', { name: 'New songs in the catalogue' }))).toBe(
+      true,
+    );
     expect(isChecked(screen.getByRole('checkbox', { name: 'Sessions' }))).toBe(false);
     expect(
       isChecked(screen.getByRole('checkbox', { name: 'Setlists, lineups and transitions' })),
