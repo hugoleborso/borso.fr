@@ -99,6 +99,9 @@ exit=0  agent=a1 cwd=/home/user/borso.fr  :: git commit-tree HEAD^{tree}
 Live, the hook refused this sweep's own subagent on `git mv -h` minutes after
 it was registered, which shows Claude Code sets `agent_id` in a real subagent
 call. `-h` stages nothing, and the refusal costs one retry, so it stays.
+_2026-11-14_: no longer. The container has no man pages, so `-h` is the only
+git manual a subagent has, and the hook now lets `-h` and `--help` through. See
+[`the-rule-against-staging-met-the-tools-that-assumed-it`](./the-rule-against-staging-met-the-tools-that-assumed-it.md).
 
 The first draft matched the verb with `\b`, which refused `git commit-tree`.
 The verb now ends at whitespace or the end of the line.
