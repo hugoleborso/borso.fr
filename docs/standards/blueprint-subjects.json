@@ -512,12 +512,6 @@
   "apps/borsouvertures/site/src/components/atoms/ErrorPanel.tsx": {
     "ErrorPanel": "atom-plain"
   },
-  "apps/borsouvertures/site/src/components/atoms/InlineBanner.tsx": {
-    "InlineBanner": "atom-plain"
-  },
-  "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx": {
-    "LoadMoreRow": "atom-plain"
-  },
   "apps/borsouvertures/site/src/components/atoms/LoadingPanel.tsx": {
     "LoadingPanel": "atom-plain"
   },
@@ -534,22 +528,12 @@
     "Modal": "atom-plain",
     "openAsModalDialog": "ref-callback-browser-api"
   },
-  "apps/borsouvertures/site/src/components/atoms/MoveButtonList.tsx": {
-    "MoveButtonList": "atom-plain"
-  },
   "apps/borsouvertures/site/src/components/atoms/Select.tsx": {
     "Select": "atom-plain"
   },
   "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx": {
     "CARD_CLASS_BY_ACTIVE": "component-lookup-table",
     "SelectorCard": "atom-plain"
-  },
-  "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx": {
-    "SelectorPanel": "atom-plain"
-  },
-  "apps/borsouvertures/site/src/components/atoms/SessionStartHint.tsx": {
-    "HINT_KEY_BY_MODE": "core-label-key",
-    "SessionStartHint": "atom-plain"
   },
   "apps/borsouvertures/site/src/components/atoms/StatusItem.tsx": {
     "StatusItem": "atom-plain"
@@ -558,27 +542,9 @@
     "TRACK_CLASS_BY_STATE": "component-lookup-table",
     "ToggleSlider": "atom-plain"
   },
-  "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.ts": {
-    "selectBoardDropDecision": "core-view-intent"
-  },
   "apps/borsouvertures/site/src/components/atoms/boardPieces.tsx": {
     "PIECE_LABEL_KEY_BY_TYPE": "core-label-key",
     "buildNamedPieces": "component-lookup-table"
-  },
-  "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts": {
-    "LoadMoreRowProps": "shared-props-shape"
-  },
-  "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.ts": {
-    "describeMoveInStandardNotation": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/components/molecules/AutoOpponentToggle.tsx": {
-    "AutoOpponentToggle": "molecule-presentational"
   },
   "apps/borsouvertures/site/src/components/molecules/BoardStyleSelect.tsx": {
     "BoardStyleSelect": "molecule-presentational"
@@ -590,105 +556,11 @@
     "LANGUAGE_BY_IS_FRENCH": "component-lookup-table",
     "LanguageSwitcher": "molecule-presentational"
   },
-  "apps/borsouvertures/site/src/components/molecules/LearnClearedBanner.tsx": {
-    "LearnClearedBanner": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/LearnDrillPanel.tsx": {
-    "ARROW_LABEL_KEY_BY_VISIBILITY": "component-lookup-table",
-    "LearnDrillPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/LearnDrillProgress.tsx": {
-    "LearnDrillProgress": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/LearnOutOfBookModal.tsx": {
-    "LearnOutOfBookModal": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/LearnPickPrompt.tsx": {
-    "LearnPickPrompt": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx": {
-    "ALL_LINES_CARD_BY_MODE": "component-lookup-table",
-    "LinesPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/ModeToggle.tsx": {
-    "MODE_BY_IS_PLAY": "component-lookup-table",
-    "ModeToggle": "molecule-presentational"
-  },
   "apps/borsouvertures/site/src/components/molecules/OpeningsLoadFailurePanel.tsx": {
     "OpeningsLoadFailurePanel": "molecule-presentational"
   },
   "apps/borsouvertures/site/src/components/molecules/OpeningsLoadingPanel.tsx": {
     "OpeningsLoadingPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx": {
-    "ALL_OPENINGS_CARD_BY_MODE": "component-lookup-table",
-    "OpeningsPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/PlayBookPanel.tsx": {
-    "PlayBookPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/PlayCompletedBanner.tsx": {
-    "PlayCompletedBanner": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/PlayOutOfBookModal.tsx": {
-    "PlayOutOfBookModal": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/PlayStatusPanel.tsx": {
-    "BOOK_STATUS_KEY_BY_IN_BOOK": "component-lookup-table",
-    "PlayStatusPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/ShowMovesToggle.tsx": {
-    "ShowMovesToggle": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/SideSelector.tsx": {
-    "SIDE_BY_IS_BLACK": "component-lookup-table",
-    "SideSelector": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/molecules/TreeVisualizationToggle.tsx": {
-    "TreeVisualizationToggle": "molecule-presentational",
-    "VISUALIZATION_BY_USES_BUTTONS": "component-lookup-table"
-  },
-  "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx": {
-    "ALL_VARIATIONS_CARD_BY_MODE": "component-lookup-table",
-    "VariationsPanel": "molecule-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/CompactOpeningFlow.tsx": {
-    "CompactOpeningFlow": "organism-table-dispatch",
-    "PANEL_BY_STEP": "component-lookup-table"
-  },
-  "apps/borsouvertures/site/src/components/organisms/LearnDrill.tsx": {
-    "CLEARED_BANNER_BY_STATE": "component-lookup-table",
-    "LearnDrill": "organism-machine-bound"
-  },
-  "apps/borsouvertures/site/src/components/organisms/LearnSessionControl.tsx": {
-    "LearnSessionControl": "organism-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.test.tsx": {
-    "describe": "test-component-render"
-  },
-  "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.tsx": {
-    "DRILL_BY_READINESS": "component-lookup-table",
-    "LearnTreeSession": "organism-table-dispatch"
-  },
-  "apps/borsouvertures/site/src/components/organisms/OpeningFlowSelector.tsx": {
-    "FLOW_BY_VIEWPORT": "component-lookup-table",
-    "OpeningFlowSelector": "organism-table-dispatch"
-  },
-  "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx": {
-    "COMPLETED_BANNER_BY_STATE": "component-lookup-table"
-  },
-  "apps/borsouvertures/site/src/components/organisms/PlaySessionControl.tsx": {
-    "PlaySessionControl": "organism-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/SelectionAutoOpponentRow.tsx": {
-    "SelectionAutoOpponentRow": "organism-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/SelectionScreen.tsx": {
-    "AUTO_OPPONENT_ROW_BY_MODE": "component-lookup-table",
-    "SelectionScreen": "organism-table-dispatch"
-  },
-  "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx": {
-    "SESSION_BODY_BY_MODE": "component-lookup-table"
   },
   "apps/borsouvertures/site/src/components/organisms/TopBar.test.tsx": {
     "AppStateProbe": "test-hook-probe",
@@ -696,21 +568,6 @@
   },
   "apps/borsouvertures/site/src/components/organisms/TopBar.tsx": {
     "TopBar": "organism-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/TrainerScreens.tsx": {
-    "TrainerScreens": "component-lookup-table"
-  },
-  "apps/borsouvertures/site/src/components/organisms/WideOpeningFlow.tsx": {
-    "WideOpeningFlow": "organism-presentational"
-  },
-  "apps/borsouvertures/site/src/components/organisms/session.types.ts": {
-    "SessionBodyProps": "shared-props-shape"
-  },
-  "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.ts": {
-    "selectTrainerScreenKind": "core-view-intent"
   },
   "apps/borsouvertures/site/src/i18n/i18n.ts": {
     "applyDocumentLanguage": "i18n-setup"
@@ -724,65 +581,14 @@
   "apps/borsouvertures/site/src/i18n/locale-storage.utils.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/borsouvertures/site/src/lib/paginated-list.hook.ts": {
-    "usePaginatedList": "hook-effect-free-mount"
-  },
   "apps/borsouvertures/site/src/lib/viewport.hook.ts": {
     "useViewportWidth": "hook-external-store"
-  },
-  "apps/borsouvertures/site/src/lib/viewport.utils.test.ts": {
-    "describe": "test-pure-unit"
   },
   "apps/borsouvertures/site/src/lib/viewport.utils.ts": {
     "selectBoardWidth": "utils-pure-module"
   },
   "apps/borsouvertures/site/src/main.tsx": {
     "rootElement": "site-entrypoint"
-  },
-  "apps/borsouvertures/site/src/openings/bookArrows.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/bookArrows.utils.ts": {
-    "selectVisibleBookMoves": "utils-branchless-list"
-  },
-  "apps/borsouvertures/site/src/openings/bookEngine.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/bookEngine.utils.ts": {
-    "computeBookState": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/openings/bookTree.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/bookTree.utils.ts": {
-    "nextMovesAt": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/openings/learnSession.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/learnSession.core.ts": {
-    "findLearnDrillTarget": "core-view-intent"
-  },
-  "apps/borsouvertures/site/src/openings/learnTreeMachine.test-utils.ts": {
-    "buildDriver": "test-machine-driver"
-  },
-  "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.test.ts": {
-    "describe": "test-machine-transition"
-  },
-  "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.ts": {
-    "createLearnTreeMachine": "state-machine-module"
-  },
-  "apps/borsouvertures/site/src/openings/lineDisplay.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/lineDisplay.utils.ts": {
-    "shortLineName": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/openings/openingFlow.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/openingFlow.core.ts": {
-    "buildOpeningFlowLists": "core-view-intent"
   },
   "apps/borsouvertures/site/src/openings/openingIds.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -805,35 +611,11 @@
   "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts": {
     "parseOpenings": "unknown-payload-parser"
   },
-  "apps/borsouvertures/site/src/openings/playScope.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/playScope.core.ts": {
-    "isOpeningActive": "core-view-intent"
-  },
-  "apps/borsouvertures/site/src/openings/playSession.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/playSession.core.ts": {
-    "selectLineLabel": "core-view-intent"
-  },
   "apps/borsouvertures/site/src/openings/previews.utils.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/borsouvertures/site/src/openings/previews.utils.ts": {
     "buildOpeningPreview": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/openings/selectors.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/selectors.utils.ts": {
-    "findOpening": "utils-pure-module"
-  },
-  "apps/borsouvertures/site/src/openings/sessionStart.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/borsouvertures/site/src/openings/sessionStart.core.ts": {
-    "isSessionStartAllowed": "core-view-intent"
   },
   "apps/borsouvertures/site/src/openings/types.ts": {
     "Opening": "domain-types-module"
@@ -2903,9 +2685,6 @@
   },
   "apps/pragma/site/src/components/molecules/member-lineup.core.ts": {
     "buildLineupChips": "core-projection"
-  },
-  "apps/pragma/site/src/components/molecules/online-status.hook.test.tsx": {
-    "describe": "test-hook-probe"
   },
   "apps/pragma/site/src/components/molecules/pool-song-row.core.test.ts": {
     "describe": "test-pure-unit"
