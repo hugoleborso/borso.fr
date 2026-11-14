@@ -90,6 +90,11 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'sessions.view.setlist',
     readsTheSameBecause: '"setlist" is the word French musicians use',
   },
+  { key: 'setlist.addSongsFromCatalogue', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'setlist.addSongsFromSetlists',
+    readsTheSameBecause: '"setlist" is the word French musicians use',
+  },
   { key: 'setlist.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   { key: 'setlist.capoValue', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   {
