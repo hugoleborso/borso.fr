@@ -1,5 +1,7 @@
 /** @Feature audience-voting */
 
+import type { SongStatus } from '@domain/song-status.core';
+
 export const OPEN_ROUND_POLL_INTERVAL_MS = 1_000;
 
 export type VoteDirection = 'cast' | 'retract';
@@ -22,7 +24,7 @@ export interface PoolEntryView {
   readonly songId: string;
   readonly title: string;
   readonly artist: string;
-  readonly status: 'idea' | 'to_play' | 'wip' | 'rehearsed' | 'concert_ready';
+  readonly status: SongStatus;
   readonly voteCount: number;
   readonly isSuggestion: boolean;
 }

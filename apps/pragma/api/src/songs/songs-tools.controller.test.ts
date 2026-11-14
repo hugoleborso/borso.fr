@@ -12,6 +12,7 @@ import {
 } from '../../../test/mcp-utils';
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
 import { songTable } from './songs.schema';
+import { SONG_STATUSES } from '@domain/song-status.core';
 
 const OVERRIDE_SCORE = 9;
 
@@ -148,7 +149,7 @@ describe('songs tools (back-e2e)', () => {
       body: {
         error: 'invalid-input',
         fields: {
-          status: 'Invalid option: expected one of "idea"|"wip"|"rehearsed"|"concert_ready"',
+          status: `Invalid option: expected one of ${SONG_STATUSES.map((status) => `"${status}"`).join('|')}`,
         },
       },
     });

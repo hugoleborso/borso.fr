@@ -2,7 +2,7 @@
 
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { type Lineup, resolveLineup } from '@domain/lineup.core';
-import type { SongStatus } from '../../routes/catalog/song-draft.core';
+import type { SongStatus } from '@domain/song-status.core';
 
 export interface DragTransform {
   readonly x: number;

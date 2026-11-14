@@ -17,8 +17,8 @@ import {
 } from '../mcp/tool-input.schema';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
+import { SONG_STATUSES } from '@domain/song-status.core';
 
-export const SONG_STATUSES = ['idea', 'to_play', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
 // @FollowsBlueprint schema-table-and-input

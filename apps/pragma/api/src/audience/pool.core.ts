@@ -1,6 +1,6 @@
-import { SONG_STATUSES } from '../songs/songs.schema';
+import type { SongStatus } from '@domain/song-status.core';
 
-export type PoolSongStatus = (typeof SONG_STATUSES)[number];
+export type PoolSongStatus = SongStatus;
 
 const CONCERT_READY_STATUS: PoolSongStatus = 'concert_ready';
 

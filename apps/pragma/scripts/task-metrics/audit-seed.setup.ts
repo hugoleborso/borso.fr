@@ -22,6 +22,7 @@ import { createTake, createTakeComment } from '../../api/src/takes/takes.service
 import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
 import { createTask } from '../../api/src/tasks/tasks.service';
 import { saveTransitionComment } from '../../api/src/transitions/transitions.service';
+import type { SongStatus } from '@domain/song-status.core';
 
 const DAY = 24 * 60 * 60 * 1000;
 const HIGH_ENERGY_EVERY = 4;
@@ -45,7 +46,7 @@ type Lineup = Record<string, string[]>;
 interface ExtraSong {
   title: string;
   artist: string;
-  status: 'idea' | 'to_play' | 'wip' | 'rehearsed' | 'concert_ready';
+  status: SongStatus;
   origin: 'cover' | 'original';
   key: string | null;
   energy: number;
