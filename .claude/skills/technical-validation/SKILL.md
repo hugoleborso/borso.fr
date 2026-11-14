@@ -51,7 +51,7 @@ Do **not** invoke when:
 2. **Locate the plan.** `plan_path = docs/features/<app>/<slug>/plan/plan.md`. If missing, surface that to the user and continue — the validator will tag plan-dependent rows UNVERIFIABLE.
    A kaizen sweep (`claude/lessons-from-pr-<N>`) has no spec and no plan. Pass `docs/features/meta/lessons-from-pr-<N>/inventory.md` as `spec_path`, whose `fixed:` and `dantotsu:` decisions are the claims category A checks, and no `plan_path`. The sweep of PR #295 passed its parent feature's spec, and its validator built rows from the inventory anyway and marked the absent plan UNVERIFIABLE.
 3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"` for app workspaces; `@borso/infra` for `<app> = infra`. Check `apps/<app>/package.json` exists and whether it has `test:core` (full-stack) or not, which picks the scoped test command.
-4. **Resolve the base ref.** Default to `origin/main`. Surface explicit override via `BASE_REF` env if the user provides one.
+4. **Resolve the base ref to a SHA, once.** `base_ref=$(git merge-base origin/main HEAD)`, or `BASE_REF` when the user provides one. Pass the 40-character SHA, never `origin/main`: that ref moves when another pull request merges, and on PR #339 it moved mid-review, so a `--changed` base read later ran the tests of #333.
 5. **Build the run paths.**
    ```
    timestamp        = <YYYY-MM-DD-HHmm>
@@ -111,7 +111,7 @@ Same rule as `/visual-validation`:
 
 - Workspaces: `@borso-app/<app>` for `apps/*`; `@borso/infra` for `infra/cdk`; `@borso/shared-infra` for `infra/shared`.
 - `infra/cdk` and `infra/shared` are 100%-coverage gated. CI collects coverage. Pre-push and the validator run only the changed tests.
-- Default base ref is `origin/main`. Feature branches are typically `claude/<slug>` per CLAUDE.md.
+- Default base is `git merge-base origin/main HEAD`, resolved once. Feature branches are typically `claude/<slug>` per CLAUDE.md.
 - Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
 - Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".
 
