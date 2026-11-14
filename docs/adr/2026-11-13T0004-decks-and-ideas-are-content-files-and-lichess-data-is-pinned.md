@@ -1,6 +1,6 @@
 # ADR-2026-11-13T0004: Decks and ideas are content files, and Lichess-derived data is a pinned snapshot
 
-- **Status:** proposed. Decided by the agent on 2026-11-12, delegated by the operator, to ratify at pull-request review.
+- **Status:** accepted
 - **Date:** 2026-11-13
 - **Deciders:** the agent, delegated by Hugo Borsoni
 - **Tags:** opening-trainer, borsouvertures, content, data, licence

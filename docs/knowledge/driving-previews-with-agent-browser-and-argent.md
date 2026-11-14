@@ -54,8 +54,15 @@ scripts/phone.sh stop
 [`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts): it sets a
 375 × 812 mobile viewport with touch emulation, sends
 `Input.dispatchTouchEvent`, and exits 1 unless `touchstart` and a `click` with
-`pointerType: "touch"` reached the element. Swipes and drags as touch are not
-covered; see [`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
+`pointerType: "touch"` reached the element.
+
+A drag as touch is `scripts/phone.sh drag '<from>' '<to>'`, through
+[`scripts/browser/touch-drag.ts`](../../scripts/browser/touch-drag.ts). It moves
+a react-chessboard piece, which `agent-browser click` cannot:
+`scripts/phone.sh drag '#bors-board-piece-bP-e7' '[data-square="e5"]'`. It
+exits 1 when the browser took the gesture to pan (`pointercancel`), so read the
+page back for the outcome; see
+[`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
 
 The `phone` session is its own browser with its own cookies. Sign in there,
 with `agent-browser --session phone`, because a sign-in on the default session

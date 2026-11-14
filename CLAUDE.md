@@ -19,7 +19,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 ## Layout
 
-- `apps/<slug>/` holds one app, openable on its own with `pnpm dev`. No cross-app imports. `borso-fr` and `borsouvertures` have only `site/`. `pragma`, `last-loop-lepin`, `banana-rush` and `talos` add `api/` (Hono on Lambda), `cdk/`, and `domain/` for rules both sides read (`@domain/*`).
+- `apps/<slug>/` holds one app, openable on its own with `pnpm dev`. No cross-app imports. A static app has only `site/`. A full-stack app adds `api/` (Hono on Lambda), `cdk/`, and `domain/` for rules both sides read (`@domain/*`). `ls -d apps/*/api` lists the full-stack ones.
 - `infra/cdk/` holds the shared CDK constructs, gated at 100% coverage. `infra/shared/` holds account-level singletons.
 - `.claude/` holds the skills, agents, commands and hooks, as plain files.
 - `docs/features/<app|meta>/<slug>/` holds a feature's spec, plan, validation and archived friction log.
@@ -101,12 +101,12 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 - `pnpm dev` in a full-stack app runs the whole app here: site, API and a seeded local Postgres. Its `[dev:db]` line prints the seeded sign-in where the app has one. Uploads need a preview, because no bucket runs locally. Reproduce a screen bug there, never on a copied DOM.
 - `agent-browser` checks layout, styles, contrast and content. Call it directly; it needs no flag here. Never run `agent-browser install`.
-- `scripts/phone.sh touch '<selector>'` checks a tap on a phone. A click is not a tap. Traps are in `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`.
+- `scripts/phone.sh touch '<selector>'` checks a tap on a phone, and `scripts/phone.sh drag '<from>' '<to>'` a drag. A click is neither. Traps are in `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`.
 
 ## AWS and production data
 
 - Sessions get read-only AWS. If SessionStart printed `AWS unavailable`, the credentials are placeholders, so do not debug the account. `iam:*` is denied, so probe the one call you need.
-- Read production with `APP=<app> scripts/db-read.sh "<one SELECT>"` for `pragma`, `last-loop-lepin` and `banana-rush`. `talos` is read through its own `POST /api/agent/sql`.
+- Read production with `APP=<app> scripts/db-read.sh "<one SELECT>"` for the apps its header lists. `talos` is read through its own `POST /api/agent/sql`.
 
 ## Deeper references
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook for pattern-based process kills.
 #
-# Refuses `pkill`, `killall`, and `pgrep | xargs kill`. Several agents and
+# Refuses `pkill`, `killall`, `pgrep | xargs kill` and `agent-browser close --all`. Several agents and
 # several long measurements share one machine in this sandbox, and no name
 # pattern distinguishes the caller's own process from someone else's: `node`,
 # `vite`, `vitest` and `stryker run` all appear in every agent's process list.
@@ -60,6 +60,16 @@ fi
 
 if grep -qE 'pgrep[^|]*\|[[:space:]]*xargs[[:space:]]+(-[^[:space:]]+[[:space:]]+)*kill' <<<"$COMMAND_TO_RUN"; then
   block "pgrep piped into xargs kill is pkill spelled differently, with the same blast radius."
+fi
+
+# `agent-browser close --all` is the same broad kill aimed at browsers: it ends
+# every agent's session, and a parallel validator came back on about:blank with
+# a fresh profile in the middle of its check (PR #321, `implementation-04b`).
+if grep -qE '(^|[;&|[:space:]])agent-browser([[:space:]]+[^;&|]*)?[[:space:]]close[[:space:]]+([^;&|]*[[:space:]])?--all([[:space:]]|$)' <<<"$COMMAND_TO_RUN"; then
+  echo "[no-broad-kill] agent-browser close --all closes every agent's browser session, not only yours." >&2
+  echo "[no-broad-kill] Close the session you opened: agent-browser --session <name> close, or agent-browser close for the default one." >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-broad-kill "reached for agent-browser close --all on a machine other agents share"
+  exit 2
 fi
 
 exit 0

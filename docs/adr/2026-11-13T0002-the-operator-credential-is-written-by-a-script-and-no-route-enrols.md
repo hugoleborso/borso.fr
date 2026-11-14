@@ -1,6 +1,6 @@
 # ADR-2026-11-13T0002: The operator's credential is written by a script, and no route enrols anyone
 
-- **Status:** proposed. Decided by the agent on 2026-11-12, delegated by the operator, to ratify at pull-request review.
+- **Status:** accepted
 - **Date:** 2026-11-13
 - **Deciders:** the agent, delegated by Hugo Borsoni
 - **Tags:** opening-trainer, borsouvertures, auth, data

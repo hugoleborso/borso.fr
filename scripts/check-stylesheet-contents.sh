@@ -284,6 +284,19 @@ while read -r stylesheet; do
   failed=1
 done <<<"$(list_application_stylesheets)"
 
+# `font-feature-settings` is applied after every `font-variant-*` property, so a
+# base rule turning `tnum` off beat each `tabular-nums` class in borsouvertures
+# whatever its layer, and no gate noticed (PR #321, `polish-01`). Tailwind's `font-variant-numeric` utilities say the
+# same thing per element and lose to nothing.
+while read -r stylesheet; do
+  [ -n "$stylesheet" ] || continue
+  while IFS=: read -r rule_line _; do
+    printf '\033[31m[stylesheet-contents] FAIL\033[0m %s:%s  font-feature-settings overrides every font-variant utility on the page, whatever the layer. Use the utility (tabular-nums, lining-nums, ...) on the element.\n' \
+      "$stylesheet" "$rule_line"
+    failed=1
+  done < <(/usr/bin/grep -n 'font-feature-settings' "$stylesheet" || true)
+done <<<"$(list_application_stylesheets)"
+
 if [ "$failed" -ne 0 ]; then
   printf '\nAn application keeps one CSS file, holding `@import "tailwindcss"`, its\n'
   printf '`@theme` block, its `@keyframes`, and the base rules it cannot write as\n'

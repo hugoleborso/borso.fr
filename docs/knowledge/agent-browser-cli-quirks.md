@@ -1,11 +1,12 @@
 ---
-summary: 'agent-browser traps: launch flags (`--user-agent`, `--init-script`) ignored by a running daemon, no `resize`, a shared `eval` scope, a session wedging after about forty drives, clicks and fills that do nothing, `record start` without the cookie, a mocked route with no CORS headers, offline emulation that keeps a WebSocket, and a resource timing buffer full under Vite.'
+summary: 'agent-browser traps: launch flags ignored by a running daemon, no `resize`, a shared `eval` scope, sessions that wedge, clicks and fills that do nothing, `record start` without the cookie, uncorsed mocked routes, offline emulation that keeps a WebSocket and lets service-worker and worker requests through, and a full resource timing buffer under Vite.'
 triggers:
   commands:
     - '\bagent-browser\b'
     - 'AGENT_BROWSER_(USER_AGENT|ARGS)'
     - '\baddinitscript\b'
     - '\brecord\s+start\b'
+    - 'setBlockedURLs'
     - 'datetime-local'
   output:
     - 'chrome-error://chromewebdata'
@@ -257,6 +258,23 @@ Logged by the same agent. `Network.emulateNetworkConditions` with
 WebSocket open and delivering. It cannot simulate a phone losing its socket.
 Close the socket from the page (an init script that keeps a handle on each
 `WebSocket`) or hide the tab, if the app closes its socket when hidden.
+
+## Offline emulation and route aborts miss service-worker and worker requests
+
+_2026-11-13_ (PR #321, logged by `visual-validation-01` and `visual-validation-02`):
+`agent-browser set offline` and `network route <url> --abort` act on the page's
+own requests. A fetch that the service worker makes, or answers from its cache,
+goes through. So an "offline and not cached" row passes or fails for the wrong
+reason on any app that registers a worker, which every PWA here does.
+Reproduce that row with the worker never registered: launch the session with an
+init script that replaces `navigator.serviceWorker.register` by a function that
+returns a promise that never resolves, and only then open the page. The
+`--init-script` section below says why the launch has to be fresh.
+
+_2026-11-14_ (PR #321, `board-feel-01`): CDP `Network.setBlockedURLs` does not
+block the script of a dedicated `Worker` either. To simulate a Stockfish worker
+that fails to load, stub the `Worker` class from an init script, with a
+constructor that fires `error` on the next tick.
 
 ## `--init-script` against a running daemon is ignored, and relaunching drops the sign-in
 
