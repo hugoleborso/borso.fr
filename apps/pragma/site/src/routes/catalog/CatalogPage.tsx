@@ -110,7 +110,7 @@ export function CatalogPage(): JSX.Element {
         <div
           role="group"
           aria-label={t('catalog.filterLabel')}
-          className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+          className="-mx-4 flex gap-2 overflow-x-auto overflow-y-hidden transform-gpu px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
         >
           {CATALOG_FILTERS.map((option) => (
             <Chip
