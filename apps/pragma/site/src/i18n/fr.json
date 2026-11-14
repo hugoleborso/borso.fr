@@ -252,11 +252,12 @@
   },
   "compos": {
     "addToCatalogue": "Ajouter au catalogue",
+    "catalogueFailed": "La compo n’a pas été ajoutée au catalogue. Réessayez.",
     "createFailed": "La compo n’a pas été créée. Réessayez.",
     "defaultTitle": "Composition {{number}}",
     "delete": "Supprimer la compo",
     "deleteConfirm": "Supprimer cette compo avec ses pistes et ses extraits ? Son morceau du catalogue et les inspirations restent.",
-    "empty": "Aucune compo pour l’instant. Lancez-en une avec Nouvelle compo.",
+    "empty": "Aucune compo pour l’instant.",
     "inCatalogue": "Au catalogue",
     "new": "Nouvelle compo",
     "openSketch": "Ouvrir l’esquisse",

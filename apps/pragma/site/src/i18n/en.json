@@ -252,11 +252,12 @@
   },
   "compos": {
     "addToCatalogue": "Add to catalogue",
+    "catalogueFailed": "The composition was not added to the catalogue. Try again.",
     "createFailed": "The composition was not created. Try again.",
     "defaultTitle": "Composition {{number}}",
     "delete": "Delete the composition",
     "deleteConfirm": "Delete this composition with its lanes and clips? Its catalogue song and the inspirations stay.",
-    "empty": "No composition yet. Start one with New composition.",
+    "empty": "No composition yet.",
     "inCatalogue": "In the catalogue",
     "new": "New composition",
     "openSketch": "Open the sketch",

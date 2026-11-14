@@ -4,26 +4,21 @@ import { SONG_TEXT_FIELD_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
-import { Badge } from '../../components/atoms/Badge';
+import { useNavigate } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { HintText } from '../../components/atoms/HintText';
-import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { CompositionList } from '../../components/organisms/CompositionList';
 import { NameSheet } from '../../components/organisms/NameSheet';
 import {
   type CompositionRecord,
   useCompositions,
   useCreateComposition,
 } from '../../lib/queries/compositions.queries';
-import { selectNextCompositionNumber } from './compositions-page.core';
+import { COMPOSITION_NUMBER_SLOT, selectNextCompositionNumber } from './compositions-page.core';
 
 const NO_COMPOSITIONS: readonly CompositionRecord[] = [];
-
-const ROW_CLASS =
-  'flex min-h-11 items-center gap-3 rounded-md border border-rule bg-leaf px-3 py-2 text-ink ' +
-  'no-underline transition-colors hover:border-rule-strong focus-visible:outline-3 focus-visible:outline-focus';
 
 // @FollowsBlueprint route-list-page
 export function CompositionsPage(): JSX.Element {
@@ -35,7 +30,10 @@ export function CompositionsPage(): JSX.Element {
 
   const compositions = list.data?.compositions ?? NO_COMPOSITIONS;
   const nextTitle = t('compos.defaultTitle', {
-    number: selectNextCompositionNumber(compositions),
+    number: selectNextCompositionNumber(
+      compositions.map((composition) => composition.title),
+      t('compos.defaultTitle', { number: COMPOSITION_NUMBER_SLOT }),
+    ),
   });
 
   const createComposition = (title: string): void => {
@@ -56,19 +54,7 @@ export function CompositionsPage(): JSX.Element {
       {list.isLoading || compositions.length > 0 ? null : (
         <HintText tone="muted">{t('compos.empty')}</HintText>
       )}
-      <ul className="m-0 flex list-none flex-col gap-1.5 p-0" aria-label={t('compos.title')}>
-        {compositions.map((composition) => (
-          <li key={composition.id}>
-            <Link to={`/compos/${composition.id}/sketch`} className={ROW_CLASS}>
-              <span className="min-w-0 flex-1 truncate text-body">{composition.title}</span>
-              {composition.songId === null ? null : (
-                <Badge tone="accent">{t('compos.inCatalogue')}</Badge>
-              )}
-              <Icon name="compos" size="sm" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <CompositionList compositions={compositions} />
       {isCreating ? (
         <NameSheet
           sheetTitle={t('compos.new')}

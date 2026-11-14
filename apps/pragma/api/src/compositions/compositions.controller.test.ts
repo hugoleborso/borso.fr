@@ -21,6 +21,7 @@ import {
   sendJson,
 } from '../../../test/sketch-utils';
 import { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
+import { compositionTable } from './compositions.schema';
 import { songTable } from '../songs/songs.schema';
 
 const songEnvelope = z.object({
@@ -159,6 +160,31 @@ describe('compositions controller (back-e2e)', () => {
     });
     expect((await readSketch(band, compositionId)).composition.songId).toBe(firstSongId);
     expect(await testDatabase().select({ id: songTable.id }).from(songTable)).toHaveLength(1);
+  });
+
+  it('keeps one composition when two tabs send the same create at the same moment', async () => {
+    const band = await buildAuthenticatedApp();
+    const compositionId = randomUUID();
+    const create = async () =>
+      await sendJson(band, 'POST', '/api/compositions', {
+        id: compositionId,
+        title: 'Avignon Nice',
+      });
+
+    const answers = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('composition'),
+      create,
+      create,
+    );
+
+    expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+    const answeredIds = await Promise.all(
+      answers.map(async (answer) => (await readJson(answer, compositionEnvelope)).composition.id),
+    );
+    expect(answeredIds).toEqual([compositionId, compositionId]);
+    expect(await testDatabase().select({ id: compositionTable.id }).from(compositionTable)).toEqual(
+      [{ id: compositionId }],
+    );
   });
 
   it('creates one song when two members add the same composition at the same moment', async () => {

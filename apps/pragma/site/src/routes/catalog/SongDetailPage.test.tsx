@@ -66,8 +66,25 @@ const OVERVIEW = {
   readiness: null,
 };
 
-function answerSongApi(request: Request): Response {
+const LINKING_COMPOSITION = {
+  id: 'composition-1',
+  title: 'Get Lucky',
+  songId: SONG.id,
+  createdAt: '2026-10-01T00:00:00.000Z',
+};
+const OTHER_COMPOSITION = {
+  id: 'composition-2',
+  title: 'Composition 2',
+  songId: null,
+  createdAt: '2026-10-02T00:00:00.000Z',
+};
+
+function answerSongApi(
+  request: Request,
+  compositions: readonly unknown[] = [OTHER_COMPOSITION],
+): Response {
   const { pathname } = new URL(request.url);
+  if (pathname === '/api/compositions') return jsonResponse({ compositions });
   if (pathname === `/api/songs/${SONG.id}`) return jsonResponse({ song: SONG });
   if (pathname === '/api/setlists') return jsonResponse({ setlists: SETLISTS });
   if (pathname === '/api/me') return jsonResponse({ memberId: 'member-1', firstName: 'Hugo' });
@@ -194,6 +211,27 @@ describe('song page', () => {
     const songWrite = stub?.calls.find((request) => request.method === 'PUT');
     expect(new URL(songWrite?.url ?? '').pathname).toBe(`/api/songs/${SONG.id}`);
     expect(await songWrite?.json()).toEqual({ baseEnergy: 6 });
+  });
+
+  it('links back to the sketch of the composition the song was catalogued from', async () => {
+    stub?.restore();
+    stub = stubFetch((request) =>
+      Promise.resolve(answerSongApi(request, [OTHER_COMPOSITION, LINKING_COMPOSITION])),
+    );
+    renderSongPage();
+
+    const sketchLink = await screen.findByRole('link', { name: 'Open the sketch' });
+    expect(sketchLink.getAttribute('href')).toBe(`/compos/${LINKING_COMPOSITION.id}/sketch`);
+  });
+
+  it('offers no sketch link when no composition links the song', async () => {
+    renderSongPage();
+    await screen.findByRole('heading', { name: 'Get Lucky' });
+    await waitFor(() =>
+      expect(stub?.calls.some((call) => call.url.endsWith('/api/compositions'))).toBe(true),
+    );
+
+    expect(screen.queryByRole('link', { name: 'Open the sketch' })).toBeNull();
   });
 
   it('opens on the Info tab and moves between the same tabs as the setlist sheet', async () => {

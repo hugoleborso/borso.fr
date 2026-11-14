@@ -6,13 +6,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../../components/atoms/Badge';
-import { Button } from '../../components/atoms/Button';
-import { ButtonLink } from '../../components/atoms/ButtonLink';
+import { HintText } from '../../components/atoms/HintText';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { NameSheet } from '../../components/organisms/NameSheet';
 import { SketchEditor } from '../../components/organisms/SketchEditor';
+import { SketchHeaderActions } from '../../components/organisms/SketchHeaderActions';
 import {
   useCatalogueComposition,
   useDeleteComposition,
@@ -70,33 +70,19 @@ export function SketchPage(): JSX.Element {
           )
         }
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button icon="edit" variant="quiet" size="md" onClick={() => setIsRenaming(true)}>
-              {t('compos.rename')}
-            </Button>
-            {composition.songId === null ? (
-              <Button
-                icon="plus"
-                variant="secondary"
-                size="md"
-                disabled={catalogue.isPending}
-                onClick={() => catalogue.mutate({ id: composition.id })}
-              >
-                {t('compos.addToCatalogue')}
-              </Button>
-            ) : (
-              <ButtonLink
-                icon="catalog"
-                variant="secondary"
-                size="md"
-                to={`/catalog/${composition.songId}`}
-              >
-                {t('compos.openSong')}
-              </ButtonLink>
-            )}
-          </div>
+          <SketchHeaderActions
+            songId={composition.songId}
+            isCataloguing={catalogue.isPending}
+            onRename={() => setIsRenaming(true)}
+            onCatalogue={() => catalogue.mutate({ id: composition.id })}
+          />
         }
       />
+      {catalogue.isError ? (
+        <HintText tone="danger" role="alert">
+          {t('compos.catalogueFailed')}
+        </HintText>
+      ) : null}
       <SketchEditor sketch={sketch} inspirations={inspirations} />
       {isRenaming ? (
         <NameSheet

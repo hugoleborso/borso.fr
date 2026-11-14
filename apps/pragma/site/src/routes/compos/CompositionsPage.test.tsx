@@ -19,7 +19,7 @@ const CATALOGUED = {
 };
 const SKETCHING = {
   id: '33333333-3333-4333-8333-333333333333',
-  title: 'Composition 1',
+  title: 'Composition 4',
   songId: null,
   createdAt: '2026-11-12T10:00:00.000Z',
 };
@@ -70,23 +70,23 @@ describe('the compositions page', () => {
     renderCompositionsPage();
     const list = await screen.findByRole('list', { name: 'Compositions' });
     const catalogued = await within(list).findByRole('link', { name: /Avignon Nice/ });
-    const sketching = within(list).getByRole('link', { name: /Composition 1/ });
+    const sketching = within(list).getByRole('link', { name: /Composition 4/ });
 
     expect(catalogued.getAttribute('href')).toBe(`/compos/${CATALOGUED.id}/sketch`);
     expect(within(catalogued).getByText('In the catalogue')).toBeTruthy();
     expect(within(sketching).queryByText('In the catalogue')).toBeNull();
   });
 
-  it('prefills the next composition number, creates it with that title and opens its sketch', async () => {
+  it('prefills one past the highest composition number, creates it with that title and opens its sketch', async () => {
     renderCompositionsPage();
     await screen.findByRole('link', { name: /Avignon Nice/ });
 
     fireEvent.click(screen.getByRole('button', { name: 'New composition' }));
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveProperty('value', 'Composition 3');
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveProperty('value', 'Composition 5');
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(await screen.findByText('sketch opened')).toBeTruthy();
     const creation = stub?.calls.find((call) => call.method === 'POST');
-    expect(await creation?.json()).toEqual({ id: expect.any(String), title: 'Composition 3' });
+    expect(await creation?.json()).toEqual({ id: expect.any(String), title: 'Composition 5' });
   });
 });
