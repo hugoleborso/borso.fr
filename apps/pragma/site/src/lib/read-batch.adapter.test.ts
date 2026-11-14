@@ -362,16 +362,13 @@ describe('a batch that fails on its retry too', () => {
     ]);
   });
 
-  it('rejects every caller when the network drops twice, and reports both tries', async () => {
+  it('rejects every caller when the network drops twice, and reports the second drop only', async () => {
     const offline = new TypeError('Failed to fetch');
     const { tab, songs, profile } = await failTwice((request) => request.fail(offline));
 
     await expect(songs).rejects.toBe(offline);
     await expect(profile).rejects.toBe(offline);
-    expect(tab.failures).toStrictEqual([
-      { status: null, size: 2 },
-      { status: null, size: 2 },
-    ]);
+    expect(tab.failures).toStrictEqual([{ status: null, size: 2 }]);
   });
 
   it('rejects every caller when the answer is not JSON, and reports it', async () => {
@@ -381,7 +378,10 @@ describe('a batch that fails on its retry too', () => {
 
     await expect(songs).rejects.toThrow(SyntaxError);
     await expect(profile).rejects.toThrow(SyntaxError);
-    expect(tab.failures).toHaveLength(2);
+    expect(tab.failures).toStrictEqual([
+      { status: null, size: 2 },
+      { status: null, size: 2 },
+    ]);
   });
 
   it('rejects every caller when the answer holds one answer too few, and reports it', async () => {
@@ -498,6 +498,15 @@ describe('the reads of a failed batch, retried by the transport', () => {
     const responses = await Promise.all([songs, profile]);
     expect(responses.map((response) => response.status)).toStrictEqual([404, 401]);
     expect(tab.retryWaits).toHaveLength(0);
+  });
+
+  it('report nothing when the network drops a batch its retry then answers', async () => {
+    const { tab, pending } = await failBatchOf(['/api/songs', '/api/me'], 'dropped');
+    tab.waitOutRetryDelay();
+    tab.request(1).answer(batchAnswer({ status: 200, body: '[]' }, { status: 200, body: '{}' }));
+
+    await Promise.all(pending);
+    expect(tab.failures).toStrictEqual([]);
   });
 
   it('try a read twice at most', async () => {

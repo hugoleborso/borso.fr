@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   CONFLICTED_WRITE_MAX_ATTEMPTS,
+  conflictRetryDelayAfter,
   isConflictAbort,
   isLostInsertRace,
   isUniqueViolation,
@@ -8,7 +9,12 @@ import {
   retryingConflictAborts,
   retryingStatement,
   retryingConflictAbortsOf,
+  type Wait,
 } from './conflict-abort.core';
+
+async function noWait(): Promise<void> {
+  await Promise.resolve();
+}
 
 // @FollowsBlueprint test-pure-unit
 describe('isConflictAbort', () => {
@@ -74,17 +80,26 @@ describe('isWorthRetrying', () => {
   const conflict = { code: 'OC000' };
 
   it('retries a conflict abort while attempts remain', () => {
-    expect(CONFLICTED_WRITE_MAX_ATTEMPTS).toBe(3);
+    expect(CONFLICTED_WRITE_MAX_ATTEMPTS).toBe(5);
     expect(isWorthRetrying(conflict, 1)).toBe(true);
-    expect(isWorthRetrying(conflict, 2)).toBe(true);
+    expect(isWorthRetrying(conflict, 4)).toBe(true);
   });
 
   it('gives up on the last attempt', () => {
-    expect(isWorthRetrying(conflict, 3)).toBe(false);
+    expect(isWorthRetrying(conflict, 5)).toBe(false);
   });
 
   it('never retries a real failure', () => {
     expect(isWorthRetrying(new Error('timeout'), 1)).toBe(false);
+  });
+});
+
+describe('conflictRetryDelayAfter', () => {
+  it('doubles the wait after each aborted attempt, 1.5 s in all before the last one', () => {
+    const waits = [1, 2, 3, 4].map(conflictRetryDelayAfter);
+
+    expect(waits).toStrictEqual([100, 200, 400, 800]);
+    expect(waits.reduce((total, wait) => total + wait, 0)).toBe(1500);
   });
 });
 
@@ -96,26 +111,30 @@ describe('retryingConflictAborts', () => {
       .fn<() => Promise<string>>()
       .mockRejectedValueOnce(conflict)
       .mockResolvedValueOnce('committed');
-    await expect(retryingConflictAborts(write)).resolves.toBe('committed');
+    await expect(retryingConflictAborts(write, noWait)).resolves.toBe('committed');
     expect(write).toHaveBeenCalledTimes(2);
   });
 
   it('runs the write once when it commits straight away', async () => {
     const write = vi.fn<() => Promise<string>>().mockResolvedValue('committed');
-    await expect(retryingConflictAborts(write)).resolves.toBe('committed');
+    await expect(retryingConflictAborts(write, noWait)).resolves.toBe('committed');
     expect(write).toHaveBeenCalledTimes(1);
   });
 
   it('rethrows the conflict once every attempt has been aborted', async () => {
     const write = vi.fn<() => Promise<string>>().mockRejectedValue(conflict);
-    await expect(retryingConflictAborts(write)).rejects.toBe(conflict);
+    const wait = vi.fn<Wait>().mockResolvedValue(undefined);
+    await expect(retryingConflictAborts(write, wait)).rejects.toBe(conflict);
     expect(write).toHaveBeenCalledTimes(CONFLICTED_WRITE_MAX_ATTEMPTS);
+    expect(wait.mock.calls.map(([milliseconds]) => milliseconds)).toStrictEqual([
+      100, 200, 400, 800,
+    ]);
   });
 
   it('rethrows any other failure without trying again', async () => {
     const failure = new Error('timeout');
     const write = vi.fn<() => Promise<string>>().mockRejectedValue(failure);
-    await expect(retryingConflictAborts(write)).rejects.toBe(failure);
+    await expect(retryingConflictAborts(write, noWait)).rejects.toBe(failure);
     expect(write).toHaveBeenCalledTimes(1);
   });
 });
@@ -147,20 +166,20 @@ function startingStatements(outcomes: readonly (string | Error)[]) {
 describe('retryingStatement', () => {
   it('starts the statement again when the first run lost to a schema change', async () => {
     const start = startingStatements([conflictError('OC001'), 'rows']);
-    await expect(retryingStatement(start)).resolves.toBe('rows');
+    await expect(retryingStatement(start, noWait)).resolves.toBe('rows');
     expect(start).toHaveBeenCalledTimes(2);
   });
 
   it('retries the values form the same way', async () => {
     const start = startingStatements([conflictError('OC001'), 'rows']);
-    await expect(retryingStatement(start).values()).resolves.toBe('rows as values');
+    await expect(retryingStatement(start, noWait).values()).resolves.toBe('rows as values');
     expect(start).toHaveBeenCalledTimes(2);
   });
 
   it('starts nothing before it is awaited and passes any other failure through', async () => {
     const failure = new Error('syntax error');
     const start = startingStatements([failure]);
-    const statement = retryingStatement(start);
+    const statement = retryingStatement(start, noWait);
     expect(start).not.toHaveBeenCalled();
     await expect(statement).rejects.toBe(failure);
     expect(start).toHaveBeenCalledTimes(1);
@@ -171,7 +190,7 @@ describe('retryingConflictAbortsOf', () => {
   it('retries what unsafe starts and hands every other member through untouched', async () => {
     const unsafe = startingStatements([conflictError('OC001'), 'rows']);
     const begin = vi.fn(async () => await Promise.resolve('committed'));
-    const client = retryingConflictAbortsOf({ unsafe, begin, options: { parsers: {} } });
+    const client = retryingConflictAbortsOf({ unsafe, begin, options: { parsers: {} } }, noWait);
 
     await expect(client.unsafe()).resolves.toBe('rows');
 
@@ -185,7 +204,7 @@ describe('retryingConflictAbortsOf', () => {
       .fn<() => Promise<string>>()
       .mockRejectedValueOnce(conflictError('OC000'))
       .mockResolvedValueOnce('committed');
-    const client = retryingConflictAbortsOf({ unsafe, begin });
+    const client = retryingConflictAbortsOf({ unsafe, begin }, noWait);
 
     await expect(client.begin()).resolves.toBe('committed');
 
