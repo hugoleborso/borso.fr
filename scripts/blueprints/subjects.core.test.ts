@@ -225,8 +225,16 @@ describe('acceptSubjects', () => {
     });
   });
 
-  it('rewrites the whole map from the markers on disk when given no path', () => {
-    expect(acceptSubjects(recorded, [claim()], [])).toStrictEqual({
+  it('refreshes every recorded file and records no new one when given no path', () => {
+    const moved = claim({ subject: 'deleteAllEditionRunners' });
+    const unrecorded = claim({ filePath: 'apps/x/new.core.ts', subject: 'select' });
+    expect(acceptSubjects(recorded, [moved, unrecorded], [])).toStrictEqual({
+      [RUNNER_REPOSITORY]: { deleteAllEditionRunners: 'repository-query' },
+    });
+  });
+
+  it('builds the whole map from the markers on disk when nothing is recorded yet', () => {
+    expect(acceptSubjects({}, [claim()], [])).toStrictEqual({
       [RUNNER_REPOSITORY]: { listRunnersForEdition: 'repository-query' },
     });
   });

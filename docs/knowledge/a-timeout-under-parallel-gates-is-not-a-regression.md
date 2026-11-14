@@ -1,5 +1,5 @@
 ---
-summary: 'Four cores and gates in parallel: a test timeout under the pre-push wave is usually contention, not a regression; re-run the suite alone first.'
+summary: 'Four cores and gates in parallel: a test timeout under the pre-push wave is usually contention, not a regression; re-run the suite alone first. Except a page test that suspends: a click outside an awaited `act` drops the Suspense retry only under load.'
 triggers:
   output:
     - 'Test timed out in \d+ms'
@@ -41,6 +41,30 @@ The same shape happened twice more in one session:
   two other agents' in-flight measurements — one at 79% complete. Now
   blocked by a hook; see
   [`broad-pkill-killed-another-agents-measurement.md`](../dantotsus/broad-pkill-killed-another-agents-measurement.md).
+
+## The exception: load can reveal a real defect
+
+_2026-11-13_ (PR #321, `explorer-speed-01`): the borsouvertures Explore page
+test timed out in 3 of 4 runs under load and passed alone, which reads as
+contention. It was a defect in the test. A `user-event` click that makes a
+screen suspend on `use()` runs inside React's synchronous `act`. When that
+`act` closes, React drops the retry it queued for the settled promise, so the
+Suspense fallback never resolves. On an idle machine the promise settles
+before the `act` closes, and the test passes. The same test had already raised
+its `findBy` timeout to 10 s, which hid that the region never appeared rather
+than appeared late. The product was not slow: a position took 13 to 35 ms on
+the full book (measured in that session).
+
+The fix was to click inside an awaited `act`
+(`selectTabAwaitingSuspense` in
+`apps/borsouvertures/site/src/routes/trainer-page.test-utils.tsx`, commit
+`351ef1eca`). So, when a page test that suspends times out only under load,
+check whether the click that suspends runs in an awaited `act` before you
+blame contention, and never raise a `findBy` timeout to make it pass.
+
+`vitest --execArgv=--cpu-prof` writes no profile for a test worker. That
+session profiled the page test with a `node:inspector` session opened inside a
+throwaway copy of the test.
 
 ## The rule
 

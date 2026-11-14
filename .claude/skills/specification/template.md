@@ -12,7 +12,7 @@ The block-quoted prompt under each heading is guidance for the author; delete it
 
 ## Perspectives confronted
 
-> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one `AskUserQuestion` from that perspective, OR has explicitly confirmed (also via `AskUserQuestion`) that the perspective is degenerate for this feature. Silent self-reported "N/A" is the failure mode this gate is built to prevent.*
+> *Hard gate: every checkbox below must be ticked **and** carry a one-line justification before any other section is drafted. A box may be ticked only after the user has answered at least one question from that perspective, OR has explicitly confirmed that the perspective is degenerate for this feature. The main session asks with `AskUserQuestion`. A subagent has no such tool, so it returns the question to its caller, as SKILL.md's *A piloted subagent cannot ask* says, and ticks the box once the answer comes back in its brief. Silent self-reported "N/A" is the failure mode this gate is built to prevent.*
 
 - [ ] **Client / business** — <one-line: what was confirmed; or "user confirmed degenerate because <reason>">
 - [ ] **Product** — <one-line>

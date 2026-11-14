@@ -135,6 +135,17 @@ as the library named it, because renaming it hides the contract.
 | `<domain>.core.ts`       | Pure domain rules, covered fully          |
 | `<topic>.utils.ts`       | Pure cross-cutting helpers, covered fully |
 | `<domain>.types.ts`      | Types shared inside one slice             |
+| `<topic>.middleware.ts`  | One Hono middleware                       |
+| `<topic>.environment.ts` | Reads and parses environment variables    |
+| `<topic>.queries.ts`     | TanStack Query keys, queries and writes   |
+| `<topic>.hook.ts`        | One React hook                            |
+| `<topic>.store.ts`       | A module-level store a hook subscribes to |
+| `<topic>.adapter.ts`     | A wrapper around one outside service      |
+| `<topic>.client.ts`      | A typed client for an API                 |
+| `<topic>.setup.ts`       | Wiring run once at start, such as i18n    |
+| `<Component>.variants.ts`| Class tables for one component's variants |
+| `<topic>.config.ts`      | A tool's configuration file               |
+| `<topic>.d.ts`           | Type declarations only                    |
 | `<Component>.tsx`        | Exactly one React component               |
 
 [02. Purity and core files](./02-purity-and-core-files.md) explains what makes

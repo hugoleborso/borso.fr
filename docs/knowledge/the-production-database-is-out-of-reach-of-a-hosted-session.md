@@ -1,5 +1,5 @@
 ---
-summary: 'A hosted session reads the prod schema of pragma, last-loop-lepin and banana-rush only through scripts/db-read.sh, as a SELECT-only role that cannot see credential, key or token tables; talos goes through its agent API, the admin token stays refused, and every other stage or write goes to a local session.'
+summary: 'A hosted session reads the prod schema of every full-stack app but talos only through scripts/db-read.sh, as a SELECT-only role that cannot see credential, key or token tables; talos goes through its agent API, the admin token stays refused, and every other stage or write goes to a local session.'
 triggers:
   commands:
     - 'dsql-shell\.sh'
@@ -38,10 +38,10 @@ is true of the AWS API and false of the data behind it. A token for the
 database is a key to every row, and the harness treats minting one as
 reading them.
 
-## The read path for pragma, last-loop-lepin and banana-rush `prod`
+## The read path for the `prod` schema of the apps scripts/db-read.sh lists
 
 [ADR-2026-10-25T0054](../adr/2026-10-25T0054-read-only-production-database-access-for-agents.md)
-added one path, for the `prod` schema of pragma, last-loop-lepin and banana-rush:
+added one path, for the `prod` schema of pragma, last-loop-lepin and banana-rush. PR #321 added borsouvertures:
 
 ```bash
 scripts/db-read.sh "SELECT count(*) FROM member"                      # pragma, the default

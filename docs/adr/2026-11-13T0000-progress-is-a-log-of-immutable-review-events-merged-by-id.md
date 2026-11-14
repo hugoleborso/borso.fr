@@ -1,6 +1,6 @@
 # ADR-2026-11-13T0000: Progress is a log of immutable review events, local first, merged by id
 
-- **Status:** proposed. Decided by the agent on 2026-11-12, delegated by the operator, to ratify at pull-request review.
+- **Status:** accepted
 - **Date:** 2026-11-13
 - **Deciders:** the agent, delegated by Hugo Borsoni
 - **Tags:** opening-trainer, borsouvertures, data

@@ -119,13 +119,13 @@ No:
 | [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
 | [2026-11-12T1724](./2026-11-12T1724-api-lambdas-import-the-hono-adapter-from-hono-aws-lambda.md) | API Lambdas import the Hono adapter from `@hono/aws-lambda` | accepted | 2026-11-12 |
 | [2026-11-12T1838](./2026-11-12T1838-the-monorepo-runs-on-node-24.md) | The monorepo runs on Node 24 locally, in CI and in every Lambda | proposed | 2026-11-12 |
-| [2026-11-12T2359](./2026-11-12T2359-borsouvertures-becomes-a-full-stack-app-for-one-account.md) | borsouvertures becomes a full-stack app that serves one account | proposed | 2026-11-12 |
-| [2026-11-13T0000](./2026-11-13T0000-progress-is-a-log-of-immutable-review-events-merged-by-id.md) | Progress is a log of immutable review events, local first, merged by id | proposed | 2026-11-13 |
-| [2026-11-13T0001](./2026-11-13T0001-ts-fsrs-schedules-the-cards-with-fuzz-off.md) | `ts-fsrs` schedules the cards, with fuzz off and a pinned configuration | proposed | 2026-11-13 |
-| [2026-11-13T0002](./2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md) | The operator's credential is written by a script, and no route enrols anyone | proposed | 2026-11-13 |
-| [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | proposed | 2026-11-13 |
-| [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | proposed | 2026-11-13 |
-| [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | proposed | 2026-11-13 |
+| [2026-11-12T2359](./2026-11-12T2359-borsouvertures-becomes-a-full-stack-app-for-one-account.md) | borsouvertures becomes a full-stack app that serves one account | accepted | 2026-11-12 |
+| [2026-11-13T0000](./2026-11-13T0000-progress-is-a-log-of-immutable-review-events-merged-by-id.md) | Progress is a log of immutable review events, local first, merged by id | accepted | 2026-11-13 |
+| [2026-11-13T0001](./2026-11-13T0001-ts-fsrs-schedules-the-cards-with-fuzz-off.md) | `ts-fsrs` schedules the cards, with fuzz off and a pinned configuration | accepted | 2026-11-13 |
+| [2026-11-13T0002](./2026-11-13T0002-the-operator-credential-is-written-by-a-script-and-no-route-enrols.md) | The operator's credential is written by a script, and no route enrols anyone | accepted | 2026-11-13 |
+| [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | accepted | 2026-11-13 |
+| [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
+| [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
 
 ### Data layer
 
