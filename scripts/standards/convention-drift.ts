@@ -27,7 +27,8 @@ function listSourceFiles(): readonly string[] {
     .split('\n')
     .filter((path) => SOURCE_PATH_PATTERN.test(path))
     .filter((path) => !isTestFile(path))
-    .filter((path) => !path.endsWith('.d.ts'));
+    .filter((path) => !path.endsWith('.d.ts'))
+    .filter((path) => existsSync(join(REPOSITORY_ROOT, path)));
 }
 
 function readFileFacts(): readonly FileFact[] {

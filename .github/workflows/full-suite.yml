@@ -109,12 +109,17 @@ jobs:
       # Vitest 5 bump that made every mutant run zero tests reused every old
       # "Killed" and stayed green. See
       # docs/dantotsus/vitest-5-ran-no-test-against-any-mutant.md.
+      #
+      # The second hash covers the code Stryker neither mutates nor diffs: a
+      # fixture, helper or config a test imports. A change to one starts from
+      # an empty cache, as mutate-changed.sh does on a pull request. See
+      # docs/dantotsus/a-fixture-changed-and-stryker-kept-the-verdict.md.
       - uses: actions/cache@v6
         with:
           path: apps/${{ matrix.app }}/reports/mutation/incremental.json
-          key: stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
+          key: stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles(format('apps/{0}/**/*.ts', matrix.app), format('apps/{0}/**/*.tsx', matrix.app), format('apps/{0}/stryker.config.js', matrix.app), '!**/node_modules/**', '!**/*.test.ts', '!**/*.test.tsx', '!**/*.core.ts', '!**/*.utils.ts', '!**/*.adapter.ts') }}-${{ github.sha }}
           restore-keys: |
-            stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
+            stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles(format('apps/{0}/**/*.ts', matrix.app), format('apps/{0}/**/*.tsx', matrix.app), format('apps/{0}/stryker.config.js', matrix.app), '!**/node_modules/**', '!**/*.test.ts', '!**/*.test.tsx', '!**/*.core.ts', '!**/*.utils.ts', '!**/*.adapter.ts') }}-
 
       - name: Mutation testing, every pure file
         run: |
@@ -139,9 +144,9 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: reports/mutation/incremental.json
-          key: stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
+          key: stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles('scripts/**/*.ts', 'stryker.config.js', '!**/*.test.ts', '!**/*.core.ts', '!**/*.utils.ts') }}-${{ github.sha }}
           restore-keys: |
-            stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
+            stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles('scripts/**/*.ts', 'stryker.config.js', '!**/*.test.ts', '!**/*.core.ts', '!**/*.utils.ts') }}-
       - name: Mutation testing, every pure module under scripts/
         run: |
           pnpm exec stryker run \
@@ -165,9 +170,9 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: infra/cdk/reports/mutation/incremental.json
-          key: stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
+          key: stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles('infra/cdk/src/**/*.ts', 'infra/cdk/stryker.config.js', '!**/*.test.ts', '!**/*.utils.ts') }}-${{ github.sha }}
           restore-keys: |
-            stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
+            stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ hashFiles('infra/cdk/src/**/*.ts', 'infra/cdk/stryker.config.js', '!**/*.test.ts', '!**/*.utils.ts') }}-
       - name: Mutation testing, every pure module under infra/cdk
         run: |
           pnpm --filter @borso/infra exec stryker run \
