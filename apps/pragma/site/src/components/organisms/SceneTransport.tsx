@@ -36,7 +36,7 @@ export function SceneTransport({
       />
       <nav
         aria-label={t('scene.rail')}
-        className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto py-0.5 [scrollbar-width:none]"
+        className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden transform-gpu py-0.5 [scrollbar-width:none]"
       >
         {pills.map((pill, index) => (
           <SceneSongPill key={pill.entryId} pill={pill} onSelect={() => onSelect(index)} />

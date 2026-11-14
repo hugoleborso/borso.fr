@@ -77,7 +77,7 @@ export function SectionTabs<Value extends string>({
       <TabList
         ref={setRow}
         aria-label={label}
-        className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto border-b border-rule [scrollbar-width:none]"
+        className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto overflow-y-hidden transform-gpu border-b border-rule [scrollbar-width:none]"
       >
         {tabs.map((tab) => (
           <Tab
