@@ -251,9 +251,9 @@ describe('the callers of a failed read', () => {
   });
 
   it.each([
-    [[firstTry], false],
-    [[firstTry, secondTry], true],
-  ])('says whether a batch holds a caller already on its retry', (callers, isGivenUp) => {
+    ['only callers on their first try', [firstTry], false],
+    ['a caller already on its retry', [firstTry, secondTry], true],
+  ])('says whether a batch holding %s holds a retried caller', (_, callers, isGivenUp) => {
     expect(
       hasRetriedCaller([
         { read: SONGS, callers: [firstTry] },
