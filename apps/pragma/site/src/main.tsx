@@ -18,12 +18,14 @@ import {
   startOfflineReading,
 } from './lib/query-client.setup';
 import { startTakeQueue } from './lib/take-queue.setup';
+import { pinBottomBarsToVisualViewport } from './lib/visual-viewport.adapter';
 import { registerServiceWorker } from './sw/service-worker.setup';
 
 registerServiceWorker();
 startTakeQueue();
 captureInstallPrompt();
 startLiveInvalidation();
+pinBottomBarsToVisualViewport();
 
 /**
  * @Blueprint site-entrypoint

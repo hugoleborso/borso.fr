@@ -21,7 +21,8 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-leaf border-t border-rule pb-[env(safe-area-inset-bottom)]"
+      data-bottom-bar
+      className="lg:hidden fixed bottom-(--visual-viewport-bottom-gap) inset-x-0 z-40 flex items-stretch bg-leaf border-t border-rule pb-[env(safe-area-inset-bottom)] while-typing:hidden"
       aria-label={t('nav.bottomBar')}
     >
       {props.tabs.map((tab) => {
