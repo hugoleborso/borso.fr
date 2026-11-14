@@ -24,6 +24,7 @@ import {
   toEntryPatch,
   toWritableLineup,
 } from './setlists.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 interface OptimisticContext {
   readonly previous: EntriesCache | undefined;
@@ -42,7 +43,8 @@ function restoreEntries(
   context: OptimisticContext | undefined,
 ): void {
   if (context?.previous === undefined) return;
-  queryClient.setQueryData<EntriesCache>(
+  writeKeepingStaleness<EntriesCache>(
+    queryClient,
     setlistKeys.entriesOf(variables.setlistId),
     context.previous,
   );
@@ -117,7 +119,8 @@ export function useAddSetlistEntries() {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
+        writeKeepingStaleness<EntriesCache>(
+          queryClient,
           key,
           appendOptimisticSongs(previous, variables.appends),
         );
@@ -126,14 +129,17 @@ export function useAddSetlistEntries() {
     },
     onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
-        cache === undefined
-          ? cache
-          : settleAppendedEntries(
-              cache,
-              variables.appends.map((append) => append.temporaryId),
-              data.entries,
-            ),
+      writeKeepingStaleness<EntriesCache>(
+        queryClient,
+        setlistKeys.entriesOf(variables.setlistId),
+        (cache) =>
+          cache === undefined
+            ? cache
+            : settleAppendedEntries(
+                cache,
+                variables.appends.map((append) => append.temporaryId),
+                data.entries,
+              ),
       );
     },
   });
@@ -164,7 +170,8 @@ export function useUpdateSetlistEntry() {
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
         const { setlistId: _setlistId, entryId, ...patch } = variables;
-        queryClient.setQueryData<EntriesCache>(
+        writeKeepingStaleness<EntriesCache>(
+          queryClient,
           key,
           applyEntryPatch(previous, entryId, toEntryPatch(patch)),
         );
@@ -193,7 +200,11 @@ export function useDeleteSetlistEntry() {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(key, removeEntryById(previous, variables.entryId));
+        writeKeepingStaleness<EntriesCache>(
+          queryClient,
+          key,
+          removeEntryById(previous, variables.entryId),
+        );
       }
       return { previous };
     },
@@ -260,7 +271,8 @@ export function useRestoreSetlistEntry() {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
+        writeKeepingStaleness<EntriesCache>(
+          queryClient,
           key,
           insertEntryAt(previous, variables.entry, variables.index),
         );
@@ -269,10 +281,13 @@ export function useRestoreSetlistEntry() {
     },
     onError: (_error, variables, context) => restoreEntries(queryClient, variables, context),
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
-        cache === undefined
-          ? cache
-          : settleRestoredEntry(cache, variables.entry.id, data.restored, data.index),
+      writeKeepingStaleness<EntriesCache>(
+        queryClient,
+        setlistKeys.entriesOf(variables.setlistId),
+        (cache) =>
+          cache === undefined
+            ? cache
+            : settleRestoredEntry(cache, variables.entry.id, data.restored, data.index),
       );
     },
   });
@@ -297,7 +312,8 @@ export function useReorderSetlist() {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = snapshotEntries(queryClient, variables.setlistId);
       if (previous !== undefined) {
-        queryClient.setQueryData<EntriesCache>(
+        writeKeepingStaleness<EntriesCache>(
+          queryClient,
           key,
           reorderEntriesByIds(previous, variables.entryIds),
         );

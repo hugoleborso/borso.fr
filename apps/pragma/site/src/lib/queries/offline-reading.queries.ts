@@ -12,6 +12,7 @@ import {
 import { mapEntriesOfSetlists } from './setlist-entries.queries';
 import { mapSetlists, setlistsOfSessionQueryOptions } from './setlists.queries';
 import { songKeys, songsListQueryOptions } from './songs.queries';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const NEVER_STALE = 'static';
 
@@ -33,7 +34,7 @@ async function seedSongDetails(queryClient: QueryClient): Promise<void> {
     .catch(() => undefined);
   for (const song of list?.songs ?? []) {
     if (queryClient.getQueryData(songKeys.byId(song.id)) === undefined) {
-      queryClient.setQueryData(songKeys.byId(song.id), { song });
+      writeKeepingStaleness(queryClient, songKeys.byId(song.id), { song });
     }
   }
 }

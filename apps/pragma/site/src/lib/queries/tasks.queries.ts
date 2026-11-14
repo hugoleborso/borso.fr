@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const TASKS_WRITE_SCOPE = { id: 'tasks-writes' } as const;
 
@@ -64,21 +65,21 @@ export function useCreateTask() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<TasksListResponse>(listKey);
       const temporaryId = crypto.randomUUID();
-      queryClient.setQueryData<TasksListResponse>(listKey, (old) => {
+      writeKeepingStaleness<TasksListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { tasks: [...old.tasks, buildOptimisticTask(temporaryId, variables)] };
       });
       return { previousList, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<TasksListResponse>(taskKeys.list(), (old) => {
+      writeKeepingStaleness<TasksListResponse>(queryClient, taskKeys.list(), (old) => {
         if (old === undefined) return old;
         return { tasks: settleTemporaryEntity(old.tasks, context.temporaryId, data.task) };
       });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(taskKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, taskKeys.list(), context.previousList);
       }
     },
   });
@@ -101,7 +102,7 @@ export function useUpdateTask() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<TasksListResponse>(listKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<TasksListResponse>(listKey, (old) => {
+      writeKeepingStaleness<TasksListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { tasks: replaceEntityById(old.tasks, id, (task) => ({ ...task, ...patch })) };
       });
@@ -109,7 +110,7 @@ export function useUpdateTask() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(taskKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, taskKeys.list(), context.previousList);
       }
     },
   });
@@ -130,7 +131,7 @@ export function useDeleteTask() {
       const listKey = taskKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<TasksListResponse>(listKey);
-      queryClient.setQueryData<TasksListResponse>(listKey, (old) => {
+      writeKeepingStaleness<TasksListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { tasks: old.tasks.filter((task) => task.id !== variables.id) };
       });
@@ -138,7 +139,7 @@ export function useDeleteTask() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(taskKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, taskKeys.list(), context.previousList);
       }
     },
   });

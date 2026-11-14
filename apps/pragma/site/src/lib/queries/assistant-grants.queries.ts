@@ -4,6 +4,7 @@ import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tansta
 import type { InferRequestType, InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { leavePageFor } from '../page-location.adapter';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 export const assistantGrantKeys = {
   all: ['assistant-grants'] as const,
@@ -37,7 +38,7 @@ function withoutGrant(
 }
 
 function forgetRevokedGrant(queryClient: QueryClient, grantId: string): void {
-  queryClient.setQueryData<AssistantGrantSummary[]>(assistantGrantKeys.list(), (grants) =>
+  writeKeepingStaleness<AssistantGrantSummary[]>(queryClient, assistantGrantKeys.list(), (grants) =>
     grants === undefined ? grants : withoutGrant(grants, grantId),
   );
 }
