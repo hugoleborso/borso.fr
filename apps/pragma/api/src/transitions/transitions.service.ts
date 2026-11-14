@@ -21,17 +21,14 @@ async function notifyTransitionChanged(
 ): Promise<void> {
   const [songA, songB] = await Promise.all([findSongById(songAId), findSongById(songBId)]);
   if (songA === null || songB === null) return;
-  await notifyBand(
-    {
-      kind: 'transition-changed',
-      actorMemberId: actor.memberId,
-      songAId,
-      songATitle: songA.title,
-      songBId,
-      songBTitle: songB.title,
-    },
-    actor.now,
-  );
+  await notifyBand({
+    kind: 'transition-changed',
+    actorMemberId: actor.memberId,
+    songAId,
+    songATitle: songA.title,
+    songBId,
+    songBTitle: songB.title,
+  });
 }
 
 // @FollowsBlueprint service-orchestration

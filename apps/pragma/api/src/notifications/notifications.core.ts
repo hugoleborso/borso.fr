@@ -3,18 +3,13 @@ import { z } from 'zod';
 export const NOTIFICATION_CATEGORIES = [
   'takes',
   'take_comments',
+  'songs',
   'sessions',
   'setlists',
   'streak',
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
-
-export const NOTIFICATION_GROUP_WINDOW_MINUTES = 10;
-
-const MILLISECONDS_PER_MINUTE = 60_000;
-const NOTIFICATION_GROUP_WINDOW_MILLISECONDS =
-  NOTIFICATION_GROUP_WINDOW_MINUTES * MILLISECONDS_PER_MINUTE;
 
 export interface WriteActor {
   readonly memberId: string;
@@ -35,6 +30,12 @@ export interface TakeCreatedEvent extends ActedEvent {
 export interface TakeCommentCreatedEvent extends ActedEvent {
   readonly kind: 'take-comment-created';
   readonly takeId: string;
+  readonly songId: string;
+  readonly songTitle: string;
+}
+
+export interface SongCreatedEvent extends ActedEvent {
+  readonly kind: 'song-created';
   readonly songId: string;
   readonly songTitle: string;
 }
@@ -68,6 +69,7 @@ export interface TransitionChangedEvent extends ActedEvent {
 export type NotificationEvent =
   | TakeCreatedEvent
   | TakeCommentCreatedEvent
+  | SongCreatedEvent
   | SessionWrittenEvent
   | SetlistChangedEvent
   | SongLineupChangedEvent
@@ -158,6 +160,8 @@ export function selectCategory(event: NotificationEvent): NotificationCategory {
       return 'takes';
     case 'take-comment-created':
       return 'take_comments';
+    case 'song-created':
+      return 'songs';
     case 'session-created':
     case 'session-changed':
       return 'sessions';
@@ -200,12 +204,14 @@ export function selectRecipients<Subscription extends RecipientSubscription>(
   );
 }
 
-export function buildGroupKey(event: NotificationEvent): string {
+export function buildNotificationTag(event: NotificationEvent): string {
   switch (event.kind) {
     case 'take-created':
       return `take:${event.takeId}`;
     case 'take-comment-created':
       return `take-comment:${event.takeId}`;
+    case 'song-created':
+      return `song:${event.songId}`;
     case 'session-created':
     case 'session-changed':
       return `session:${event.sessionId}`;
@@ -218,11 +224,6 @@ export function buildGroupKey(event: NotificationEvent): string {
   }
 }
 
-export function isGroupDue(lastSentAt: Date | null, now: Date): boolean {
-  if (lastSentAt === null) return true;
-  return now.getTime() - lastSentAt.getTime() >= NOTIFICATION_GROUP_WINDOW_MILLISECONDS;
-}
-
 export function buildNotificationUrl(event: NotificationEvent): string {
   switch (event.kind) {
     case 'take-created':
@@ -233,6 +234,7 @@ export function buildNotificationUrl(event: NotificationEvent): string {
       return `/sessions/${event.sessionId}`;
     case 'setlist-changed':
       return `/setlists/${event.setlistId}`;
+    case 'song-created':
     case 'song-lineup-changed':
       return `/catalog/${event.songId}`;
     case 'transition-changed':
@@ -246,6 +248,7 @@ function selectSubjectParameters(event: NotificationEvent): MessageParameters {
   switch (event.kind) {
     case 'take-created':
     case 'take-comment-created':
+    case 'song-created':
     case 'song-lineup-changed':
       return { songTitle: event.songTitle };
     case 'session-created':
@@ -278,6 +281,6 @@ export function buildNotificationPayload(
       ...selectSubjectParameters(event),
     },
     url: buildNotificationUrl(event),
-    tag: buildGroupKey(event),
+    tag: buildNotificationTag(event),
   };
 }

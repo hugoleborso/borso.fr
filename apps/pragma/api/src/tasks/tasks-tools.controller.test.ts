@@ -57,7 +57,9 @@ describe('tasks tools (back-e2e)', () => {
     expect(mine.body).toMatchObject({ tasks: [{ title: 'Learn the solo', assignee: 'Hugo' }] });
     expect(deleted).toEqual({ isError: false, body: { id: task.id, deleted: true } });
     expect(rows).toEqual([]);
-    expect(readSentNotifications(band.send)).toEqual([]);
+    expect(readSentNotifications(band.send).map((sent) => sent.messageKey)).toEqual([
+      'song-created',
+    ]);
   });
 
   it('answers the refusal codes the routes answer', async () => {

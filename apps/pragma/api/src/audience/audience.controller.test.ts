@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { stubPushService, subscribeDevice } from '../../../test/push-utils';
 import { AUDIENCE_SEARCH_BUDGET, AUDIENCE_WRITE_BUDGET } from './audience-rate-limit.middleware';
 import { votingRoundTable } from './audience.schema';
 
@@ -645,7 +646,10 @@ describe('audience controller (back-e2e)', () => {
   });
 
   it('imports a suggestion naming an unknown track as one idea carrying the provider columns', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const member = await buildAuthenticatedApp();
+    const { app, cookieHeader } = member;
+    const send = stubPushService();
+    await subscribeDevice(member, 'member-phone');
     const sessionId = await createConcert(app, cookieHeader);
     const before = await countCatalogSongs(app, cookieHeader);
     await openRoundOn(app, cookieHeader, sessionId);
@@ -673,6 +677,7 @@ describe('audience controller (back-e2e)', () => {
     );
     expect(state.state.pool.map((entry) => entry.songId)).toEqual([body.song.id]);
     expect(state.state.pool.map((entry) => entry.isSuggestion)).toEqual([true]);
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('imports one song when two audience members suggest the same unknown track at the same moment', async () => {

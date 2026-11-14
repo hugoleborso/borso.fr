@@ -853,6 +853,7 @@
     "categories": {
       "takes": "New takes",
       "takeComments": "Comments on takes",
+      "songs": "New songs in the catalogue",
       "sessions": "Sessions",
       "setlists": "Setlists, lineups and transitions",
       "streak": "Daily flame reminder at 20:00"

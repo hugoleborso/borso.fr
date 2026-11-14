@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { createApp } from '../api/src/app';
 import type { TaggedFailure } from '../api/src/helpers/observability/error-reporting.adapter';
 import { testDatabase, truncateAllTables } from './database-utils';
-import { NOTIFICATION_GROUP_WINDOW_MINUTES } from '../api/src/notifications/notifications.core';
 import {
   type AuthenticatedApp,
   buildAuthenticatedApp,
@@ -30,13 +29,11 @@ const OAUTH_VARIABLES = {
 const registeredClientSchema = z.object({ client_id: z.string() });
 const redirectToSchema = z.object({ redirectTo: z.url() });
 const tokenSchema = z.object({ access_token: z.string(), refresh_token: z.string() });
-const MILLISECONDS_PER_MINUTE = 60_000;
 const textContentSchema = z.array(z.object({ type: z.literal('text'), text: z.string() }));
 
 export interface AssistantHarness {
   readonly app: Hono;
   readonly clock: { now: Date };
-  readonly advanceClock: (milliseconds: number) => void;
   readonly reportFailure: ReturnType<typeof vi.fn<(failure: TaggedFailure) => void>>;
 }
 
@@ -83,10 +80,7 @@ export function buildAssistantHarness(): AssistantHarness {
     oauth: { clock: readClock, reportFailure },
     mcp: { clock: readClock, reportFailure },
   });
-  const advanceClock = (milliseconds: number) => {
-    clock.now = new Date(clock.now.getTime() + milliseconds);
-  };
-  return { app, clock, advanceClock, reportFailure };
+  return { app, clock, reportFailure };
 }
 
 export async function connectAssistant(
@@ -190,11 +184,6 @@ export async function prepareAssistantBand(): Promise<AssistantBand> {
   const tokens = await connectAssistant(harness.app, hugo);
   const assistant = await openMcpClient(harness.app, tokens.accessToken);
   return { harness, hugo, lea, send, assistant };
-}
-
-export function passNotificationGroupWindow(harness: AssistantHarness): void {
-  const windowMilliseconds = (NOTIFICATION_GROUP_WINDOW_MINUTES + 1) * MILLISECONDS_PER_MINUTE;
-  harness.advanceClock(windowMilliseconds);
 }
 
 export function useAssistantToolSuite(): void {

@@ -43,6 +43,7 @@ const ENABLE_FAILURE_KEY: Readonly<Record<EnableFailure, ParseKeys>> = {
 const CATEGORY_LABEL_KEY: Readonly<Record<NotificationCategory, ParseKeys>> = {
   takes: 'notifications.categories.takes',
   take_comments: 'notifications.categories.takeComments',
+  songs: 'notifications.categories.songs',
   sessions: 'notifications.categories.sessions',
   setlists: 'notifications.categories.setlists',
   streak: 'notifications.categories.streak',

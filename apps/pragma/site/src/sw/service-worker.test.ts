@@ -193,6 +193,7 @@ describe('sw.js, push notifications', () => {
   it('renders every message key the API sends, in both languages', async () => {
     const pushes = [
       ['take-comment-created', { songTitle: 'Song' }],
+      ['song-created', { songTitle: 'Song' }],
       ['session-created', { sessionDate: 'not a date' }],
       ['session-changed', { sessionDate: 'not a date' }],
       ['setlist-changed', { setlistName: 'Summer' }],
@@ -211,6 +212,7 @@ describe('sw.js, push notifications', () => {
     }
     expect(english.notifications.map((shown) => shown.title)).toEqual([
       'New comment',
+      'New song',
       'New session',
       'Session changed',
       'Setlist changed',
@@ -222,6 +224,7 @@ describe('sw.js, push notifications', () => {
     ]);
     expect(french.notifications.map((shown) => shown.title)).toEqual([
       'Nouveau commentaire',
+      'Nouveau morceau',
       'Nouvelle session',
       'Session modifiée',
       'Setlist modifiée',
@@ -233,6 +236,7 @@ describe('sw.js, push notifications', () => {
     ]);
     expect(english.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana commented on a take of Song',
+      'Ana added Song to the catalogue',
       'Ana planned a session on not a date',
       'Ana changed the session on not a date',
       'Ana changed the setlist Summer',
@@ -244,6 +248,7 @@ describe('sw.js, push notifications', () => {
     ]);
     expect(french.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana a commenté une prise de Song',
+      'Ana a ajouté Song au catalogue',
       'Ana a prévu une session le not a date',
       'Ana a modifié la session du not a date',
       'Ana a modifié la setlist Summer',
