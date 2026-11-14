@@ -197,6 +197,23 @@ the whole order, so whichever committed last won, and the screen kept showing
 the other one until the next visit refetched. On PR #234 the same race hit the
 study log and undo, which both answered the member's flames.
 
+## A write keeps another member's staleness
+
+In pragma, a cache write goes through `writeKeepingStaleness` or
+`writeEachKeepingStaleness` in `lib/queries/cache-write.queries.ts`, never
+through `setQueryData` or `setQueriesData` directly.
+
+The reason is that `setQueryData` records a successful fetch. It clears the
+invalidation a live-invalidation stale message set, and it stamps the entry as
+just loaded. The persisted cache keeps that freshness across a reload. So when
+Marc changes a song and Hugo then edits a setlist, Hugo's own write can hide
+Marc's change. The helpers write the data, then mark the entry stale again when
+it already was, without refetching it.
+
+A write to a key no stale message can have reached yet is allowed with an inline
+disable that names why the key is new, such as seeding the detail of a row the
+same request just created.
+
 ## One request per item, and the read batch
 
 A site reads a collection in one request. It never sends one request per item of
@@ -243,6 +260,9 @@ whose reason names the bound and where it was measured.
   in the same file. It expands each key through its factory, so a sibling key
   passes and a prefix of a written key does not; a key it cannot expand, such as
   one from a factory declared in another file, counts as covering.
+- `oxlint:borso/no-direct-query-cache-write` rejects a `setQueryData` or
+  `setQueriesData` call under `apps/pragma/site/src` outside
+  `lib/queries/cache-write.queries.ts` and the test files.
 - `oxlint:borso/no-request-fan-out-in-site` rejects, under `apps/*/site`, an
   array iteration (`.map`, `.flatMap`, `.forEach`, `.reduce`, `.filter`, `.some`
   and the rest, or `Array.from`) whose callback sends a request, directly or

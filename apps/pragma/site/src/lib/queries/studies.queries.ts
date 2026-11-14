@@ -5,6 +5,7 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { streakKeys, type StreaksView } from './streaks.queries';
 import { markStudied } from './studies.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 export const studyKeys = {
   all: ['studies'] as const,
@@ -67,7 +68,7 @@ function useStudyToggle(isStudiedToday: boolean) {
       const key = studyKeys.overview();
       await queryClient.cancelQueries({ queryKey: key });
       const previousOverview = queryClient.getQueryData<StudiesOverview>(key);
-      queryClient.setQueryData<StudiesOverview>(key, (old) =>
+      writeKeepingStaleness<StudiesOverview>(queryClient, key, (old) =>
         old === undefined ? old : markStudied(old, target, isStudiedToday),
       );
       return { previousOverview };
@@ -78,11 +79,11 @@ function useStudyToggle(isStudiedToday: boolean) {
       context: { previousOverview: StudiesOverview | undefined } | undefined,
     ) => {
       if (context?.previousOverview !== undefined) {
-        queryClient.setQueryData(studyKeys.overview(), context.previousOverview);
+        writeKeepingStaleness(queryClient, studyKeys.overview(), context.previousOverview);
       }
     },
     onSuccess: (response: { readonly streaks: StreaksView }) => {
-      queryClient.setQueryData(streakKeys.all, response.streaks);
+      writeKeepingStaleness(queryClient, streakKeys.all, response.streaks);
     },
   };
 }

@@ -564,6 +564,7 @@
       "files": ["apps/pragma/site/src/**/*.{ts,tsx}"],
       "rules": {
         "borso/no-arbitrary-tailwind-value": "error",
+        "borso/no-direct-query-cache-write": "error",
         "borso/no-raw-interactive-element": "error",
         "borso/no-vertical-scroll-container": "error"
       }
@@ -576,6 +577,7 @@
       ],
       "rules": {
         "borso/no-arbitrary-tailwind-value": "off",
+        "borso/no-direct-query-cache-write": "off",
         "borso/no-raw-interactive-element": "off",
         "borso/no-vertical-scroll-container": "off"
       }

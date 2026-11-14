@@ -5,6 +5,7 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { buildOptimisticSession } from './optimistic-session.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const SESSIONS_WRITE_SCOPE = { id: 'sessions-writes' } as const;
 
@@ -73,13 +74,13 @@ export function useCreateSession() {
       const previous = queryClient.getQueryData<SessionsListShape>(key);
       const temporaryId = crypto.randomUUID();
       const optimistic = buildOptimisticSession(temporaryId, variables);
-      queryClient.setQueryData<SessionsListShape>(key, (old) =>
+      writeKeepingStaleness<SessionsListShape>(queryClient, key, (old) =>
         old === undefined ? old : { ...old, sessions: [...old.sessions, optimistic] },
       );
       return { previous, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<SessionsListShape>(sessionKeys.list(), (old) =>
+      writeKeepingStaleness<SessionsListShape>(queryClient, sessionKeys.list(), (old) =>
         old === undefined
           ? old
           : {
@@ -90,7 +91,7 @@ export function useCreateSession() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(sessionKeys.list(), context.previous);
+        writeKeepingStaleness(queryClient, sessionKeys.list(), context.previous);
       }
     },
   });
@@ -121,7 +122,7 @@ export function useUpdateSession() {
       const previousList = queryClient.getQueryData<SessionsListShape>(listKey);
       const previousById = queryClient.getQueryData<SessionByIdShape>(byIdKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<SessionsListShape>(listKey, (old) =>
+      writeKeepingStaleness<SessionsListShape>(queryClient, listKey, (old) =>
         old === undefined
           ? old
           : {
@@ -132,7 +133,7 @@ export function useUpdateSession() {
               })),
             },
       );
-      queryClient.setQueryData<SessionByIdShape>(byIdKey, (old) => {
+      writeKeepingStaleness<SessionByIdShape>(queryClient, byIdKey, (old) => {
         if (old === undefined) return old;
         if (!('session' in old)) return old;
         return { session: { ...old.session, ...patch } };
@@ -141,10 +142,10 @@ export function useUpdateSession() {
     },
     onError: (_err, variables, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(sessionKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, sessionKeys.list(), context.previousList);
       }
       if (context?.previousById !== undefined) {
-        queryClient.setQueryData(sessionKeys.byId(variables.id), context.previousById);
+        writeKeepingStaleness(queryClient, sessionKeys.byId(variables.id), context.previousById);
       }
     },
   });
@@ -165,7 +166,7 @@ export function useDeleteSession() {
       const key = sessionKeys.list();
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<SessionsListShape>(key);
-      queryClient.setQueryData<SessionsListShape>(key, (old) =>
+      writeKeepingStaleness<SessionsListShape>(queryClient, key, (old) =>
         old === undefined
           ? old
           : { ...old, sessions: old.sessions.filter((session) => session.id !== id) },
@@ -175,7 +176,7 @@ export function useDeleteSession() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData(sessionKeys.list(), context.previous);
+        writeKeepingStaleness(queryClient, sessionKeys.list(), context.previous);
       }
     },
   });

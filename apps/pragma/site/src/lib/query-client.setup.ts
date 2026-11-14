@@ -9,6 +9,7 @@ import { authKeys, type SessionProbeResult } from './queries/auth.queries';
 import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.queries';
 import { isSignInUpdate } from './queries/offline-reading.utils';
 import { forgetSessionMarker } from './session-marker.adapter';
+import { writeKeepingStaleness } from './queries/cache-write.queries';
 
 const DEFAULT_STALE_TIME_MS = 300_000;
 const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -75,6 +76,6 @@ function isBandDataInCache(query: Query): boolean {
 onSessionEnded(() => {
   forgetSessionMarker();
   queryClient.removeQueries({ predicate: isBandDataInCache });
-  queryClient.setQueryData<SessionProbeResult>(authKeys.session(), ENDED_SESSION);
+  writeKeepingStaleness<SessionProbeResult>(queryClient, authKeys.session(), ENDED_SESSION);
   void queryCachePersister.removeClient();
 });

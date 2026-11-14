@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 export const outreachKeys = {
   all: ['outreach'] as const,
@@ -30,7 +31,7 @@ export function useSaveOutreachTemplate() {
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(outreachKeys.template(), { body: data.body });
+      writeKeepingStaleness(queryClient, outreachKeys.template(), { body: data.body });
     },
   });
 }
