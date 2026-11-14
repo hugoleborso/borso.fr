@@ -92,7 +92,7 @@ describe('songCreateInputSchema', () => {
   });
 
   it('accepts every status in the rehearsal pipeline and nothing else', () => {
-    for (const status of ['idea', 'wip', 'rehearsed', 'concert_ready']) {
+    for (const status of ['idea', 'to_play', 'wip', 'rehearsed', 'concert_ready']) {
       expect(songCreateInputSchema.safeParse(song({ status })).success).toBe(true);
     }
     expect(songCreateInputSchema.safeParse(song({ status: 'retired' })).success).toBe(false);

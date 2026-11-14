@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type SongCardSource, toSongCard } from '../../routes/catalog/catalog-page.core';
 import { EmptyState } from '../molecules/EmptyState';
-import type { SongStatus } from '../molecules/StatusChip';
+import type { SongStatus } from '@domain/song-status.core';
 import { CatalogList } from './CatalogList';
 
 export interface PracticeListedSong extends SongCardSource<SongStatus> {

@@ -40,6 +40,7 @@ const FILTER_LABEL_KEY = {
   concert_ready: 'catalog.filterConcertReady',
   rehearsed: 'catalog.filterRehearsed',
   wip: 'catalog.filterWip',
+  to_play: 'catalog.filterToPlay',
   idea: 'catalog.filterIdea',
 } as const satisfies Readonly<Record<CatalogFilter, string>>;
 

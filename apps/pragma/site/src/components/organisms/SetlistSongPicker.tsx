@@ -19,7 +19,7 @@ import { PickableSongRow } from '../molecules/PickableSongRow';
 import { SectionTabs } from '../molecules/SectionTabs';
 import { SongSearchHits } from '../molecules/SongSearchHits';
 import { Sheet } from '../molecules/Sheet';
-import type { SongStatus } from '../molecules/StatusChip';
+import type { SongStatus } from '@domain/song-status.core';
 import {
   type AddSongsFilter,
   type AddSongsRow,
