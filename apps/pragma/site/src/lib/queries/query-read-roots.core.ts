@@ -2,6 +2,7 @@ import {
   type ApiRoot,
   EVERY_WRITTEN_ROOT,
   expandReadRoots,
+  type WrittenApiRoot,
   type WrittenRoot,
 } from '@domain/stale-scope.core';
 
@@ -12,6 +13,8 @@ export const QUERY_READ_ROOTS: Readonly<Record<string, readonly ApiRoot[]>> = {
   bars: ['bars'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],
+  compositions: ['compositions'],
+  inspirations: ['inspirations'],
   instruments: ['instruments'],
   mastery: ['mastery'],
   me: ['me'],
@@ -20,6 +23,7 @@ export const QUERY_READ_ROOTS: Readonly<Record<string, readonly ApiRoot[]>> = {
   outreach: ['outreach'],
   sessions: ['sessions'],
   setlists: ['setlists'],
+  sketches: ['sketches'],
   songs: ['songs'],
   streaks: ['streaks'],
   studies: ['studies', 'mastery'],
@@ -45,5 +49,15 @@ export function selectStaleQueryRoots(
   if (written.includes(EVERY_WRITTEN_ROOT)) return EVERY_WRITTEN_ROOT;
   return Object.entries(table)
     .filter(([, reads]) => isReadingAny(reads, written))
+    .map(([queryRoot]) => queryRoot);
+}
+
+export function selectQueryRootsDerivedFrom(
+  written: WrittenApiRoot,
+  ownQueryRoot: string,
+  table: Readonly<Record<string, readonly ApiRoot[]>> = QUERY_READ_ROOTS,
+): readonly string[] {
+  return Object.entries(table)
+    .filter(([queryRoot, reads]) => queryRoot !== ownQueryRoot && isReadingAny(reads, [written]))
     .map(([queryRoot]) => queryRoot);
 }

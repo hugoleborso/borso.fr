@@ -96,7 +96,7 @@ in the pool.
 
 ## Band tab
 
-The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, improvements, and the account page last. It holds no list of its own.
+The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, inspirations, improvements, and the account page last. It holds no list of its own.
 
 Lives in: `site/src/routes/band/`
 
@@ -108,6 +108,7 @@ Lives in: `site/src/routes/band/`
   **member**.
 
 Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists the account page last
+Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists inspirations right after compositions
 Held by: `site/src/routes/band/TasksPage.test.tsx` › opens on the signed-in member tasks only
 
 ## Bar
@@ -310,27 +311,42 @@ Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places e
 
 ## Composition
 
-A song the band wrote itself, as opposed to one it covers.
+A piece the band is writing. It becomes a catalogue song only when a member
+adds it.
 
-Lives in: `api/src/songs/` (the `origin` column), read through
-`domain/song-origin.core.ts`
+Lives in: `api/src/compositions/` (`composition`)
 
-- `origin` is one of `cover`, `original`. The column is nullable with no
-  default, because Aurora DSQL cannot add a `NOT NULL` column after the
-  table exists, so a row written before the column reads as `cover`
-  through `resolveSongOrigin`.
-- A composition is not a separate record: it is a song, so it carries the
-  same chord chart, the same default lineup, the same three note fields
-  and the same mastery scores, and it enters a setlist the same way.
-  `selectCompositions` is the only thing that separates the two.
-- The compositions screen reads those fields and adds the tasks pointing
-  at that song; the catalogue screen is where a composition is edited.
+- A composition is its own record: an id chosen by the device, a title of
+  1 to 256 characters, a nullable `song_id` and `created_at`. Creating one
+  asks only for a title, prefilled "Composition N" where N is one past the
+  compositions already there.
+- Its **sketch** is where it is written. The compositions screen lists
+  compositions only, newest first.
+- **Add to catalogue** creates a song with the composition's title,
+  `origin = original` and `status = idea`, and sets `song_id`, in one
+  transaction that claims the composition row first. A second tap, or two
+  members at once, answer the same song.
+- Deleting a composition deletes its lanes and clips and keeps its
+  catalogue song and the inspirations. Deleting the song keeps the
+  composition and clears `song_id`, so **Add to catalogue** is offered
+  again.
+- A song's `origin` only says whether the band wrote it. A song with
+  `origin = original` that no composition links, such as one written
+  outside pragma, stays in Songs and never appears on the compositions
+  screen. The column is nullable with no default, because Aurora DSQL
+  cannot add a `NOT NULL` column after the table exists, so a row written
+  before the column reads as `cover` through `resolveSongOrigin`.
 
+Held by: `api/src/compositions/compositions.controller.test.ts` › creates a composition with only a title, lists newest first and renames one
+Held by: `api/src/compositions/compositions.controller.test.ts` › adds a composition to the catalogue as an original idea, and answers the same song when tapped again
+Held by: `api/src/compositions/compositions.controller.test.ts` › creates one song when two members add the same composition at the same moment
+Held by: `api/src/compositions/compositions.controller.test.ts` › deletes a composition with its lanes and clips, and keeps its song and the inspirations
+Held by: `api/src/songs/songs.controller.test.ts` › keeps the composition and its sketch when its catalogue song is deleted, and clears the link
 Held by: `domain/song-origin.core.test.ts` › reads a row written before the column existed as a cover
-Held by: `domain/song-origin.core.test.ts` › keeps only the songs the band wrote
 
-Not to be confused with: the **song**, which is the record itself. Every
-composition is a song; the word names which kind.
+Not to be confused with: the **song**, which is the catalogue record a
+composition may become. A song with `origin = original` is not a
+composition.
 
 ## Concert
 
@@ -481,6 +497,47 @@ Held by: `api/src/improvements/improvements.controller.test.ts` › counts one v
 
 Not to be confused with: a **vote**, which is the scored, budgeted thing a
 member spends on songs inside a setlist.
+
+## Inspiration
+
+A passage of a published song a member wants the band to take an idea
+from: a YouTube video, a start second, an end second and a note.
+
+Lives in: `api/src/inspirations/`, with its rules in `domain/inspiration.core.ts`
+
+- No audio is stored. The passage is `youtube_video_id`, `start_seconds`
+  and `end_seconds`, played through the YouTube IFrame Player API, which
+  stops at the end second itself.
+- `youtube_video_id` matches `YOUTUBE_VIDEO_ID_PATTERN`, read from a
+  `watch?v=`, `youtu.be/` or `shorts/` link by `parseYoutubeVideoId`.
+- The end comes after the start, and a passage lasts 600 seconds at most
+  (`selectPassageRefusal`). The form and the API apply the same rule.
+- `title`, `artist`, `deezer_track_id` and `deezer_album_id` come from the
+  Deezer search when a member picks a hit, or are typed by hand. Two
+  inspirations may name the same Deezer track.
+- The id is chosen by the device, so a retried create lands on the same
+  row. The library lists them newest first.
+- Every field can be edited, the passage included. A clip already placed
+  from it keeps its offset and takes the new length.
+- Deleting one that a sketch still uses is refused with
+  `inspiration-in-use`, naming those sketches. Deleting its author keeps
+  it, and the card reads *former member*.
+
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › adds an inspiration named after its author and lists the library newest first
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › answers the same inspiration when a create is retried with the same id
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses an id that is not a YouTube video, an end at the start and a passage of 601 s
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › edits every field of an inspiration, and a clip placed from it keeps its offset
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses an edit whose passage the create would refuse
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses to edit an inspiration another member deleted meanwhile
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses to delete an inspiration a sketch uses and names that sketch
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › deletes an unused inspiration once, then answers that it is not found
+Held by: `api/src/inspirations/inspirations.controller.test.ts` › counts the sketches using an inspiration, two clips of one sketch as one
+Held by: `api/src/members/members.controller.test.ts` › keeps the inspirations of a deleted member with no author
+Held by: `domain/inspiration.core.test.ts` › reads the id from watch, youtu.be and shorts links and refuses a playlist or a channel
+
+Not to be confused with: an **improvement**, which is a change the band
+wants in this application, and a **take**, which is the band's own
+recording.
 
 ## Instrument
 
@@ -1329,6 +1386,84 @@ Held by: `api/src/audience/audience.controller.test.ts` › answers every public
 
 Not to be confused with: a session, which is a practice or a concert.
 
+## Sketch
+
+The timeline of one composition, where members lay out inspirations on
+lanes, measured in seconds.
+
+Lives in: `api/src/sketches/`, with its rules in `domain/sketch.core.ts`
+
+- A sketch has no row of its own: it is the **sketch lanes** of one
+  **composition** and the **sketch clips** placed on them.
+  `GET /api/sketches/:compositionId` reads the composition with both.
+- A clip can come from the library, or from an inspiration a member
+  creates from the lane's sheet, which joins the library and lands on that
+  lane at the scroll position the sheet was opened at.
+- Every member edits at once, with no lock. Each write is saved on its own,
+  the last one saved wins, and other open screens refresh through the
+  `sketches` written root.
+- The timeline runs 30 seconds past the last clip's end
+  (`SKETCH_TAIL_SECONDS`).
+- Deleting the composition deletes its lanes and clips and keeps the
+  inspirations.
+
+Held by: `api/src/sketches/sketches.controller.test.ts` › reads an empty sketch with its composition and answers 404 for a composition that does not exist
+Held by: `api/src/sketches/sketches.controller.test.ts` › places an inspiration created from the sketch on the lane it was started from
+Held by: `api/src/sketches/sketches.controller.test.ts` › refuses a lane for a composition deleted while the lane was being added
+Held by: `domain/sketch.core.test.ts` › snaps 3.6 s to 4 and -2 s to 0, and extends the timeline 30 s past the last clip
+
+Not to be confused with: a **chord chart**, which is the written song.
+
+## Sketch lane
+
+One named row of a sketch, such as "drums" or "brass".
+
+Lives in: `api/src/sketches/` (`sketch_lane`)
+
+- A lane belongs to one composition. Every write names the composition in
+  its path, and a lane of another composition reads as `lane-not-found`.
+- Lanes are listed by `position`, then id. A new lane goes under the last.
+- Deleting a lane deletes its clips and keeps their inspirations. The lane
+  row is deleted before its clips, so a clip placed at the same moment is
+  either refused or deleted with the rest.
+
+Held by: `api/src/sketches/sketches.controller.test.ts` › adds lanes in their position, renames one and places a clip on it
+Held by: `api/src/sketches/sketches.controller.test.ts` › deletes a lane with its clips and keeps their inspirations
+Held by: `api/src/sketches/sketches.controller.test.ts` › leaves no orphan clip when its lane is deleted while it is placed
+
+Not to be confused with: a row of the **lineup grid**, and a **Deezer
+track**. The operator's French word is *piste*; it is never written
+*track* in code.
+
+## Sketch clip
+
+One inspiration placed on a sketch lane at a whole second.
+
+Lives in: `api/src/sketches/` (`sketch_clip`)
+
+- `offset_seconds` is a whole number, never below 0:00. The site snaps a
+  drop to the nearest second (`snapOffsetSeconds`), and the API refuses a
+  negative or fractional offset.
+- Its width is its inspiration's length, read at draw time, so editing the
+  inspiration's passage resizes every clip placed from it.
+- Clips may overlap, on one lane or across lanes. Nothing checks it.
+- Placing a clip claims its lane and its inspiration in the same
+  transaction as the insert, and is refused with `lane-not-found` or
+  `inspiration-not-found` when either is gone. A move or a removal of a
+  clip removed meanwhile is refused with `clip-not-found`.
+- Two moves of one clip at the same moment both succeed, and the clip
+  stays at one of the two positions.
+
+Held by: `api/src/sketches/sketches.controller.test.ts` › answers the same clip when a placement is retried with the same id
+Held by: `api/src/sketches/sketches.controller.test.ts` › moves a clip in time and onto another lane, and refuses a negative or fractional offset
+Held by: `api/src/sketches/sketches.controller.test.ts` › leaves the clip at one of two moves sent at the same moment
+Held by: `api/src/sketches/sketches.controller.test.ts` › refuses a clip naming a lane or an inspiration another member deleted, or a lane of another composition
+Held by: `api/src/sketches/sketches.controller.test.ts` › refuses to move a clip removed meanwhile, or onto a lane deleted meanwhile
+Held by: `api/src/sketches/sketches.controller.test.ts` › leaves no orphan clip when its inspiration is deleted while it is placed
+Held by: `site/src/routes/compos/sketch-timeline.core.test.ts` › gives a clip the width of its passage and drops a clip whose inspiration is not in the list
+
+Not to be confused with: a **take**, which is audio the band recorded.
+
 ## Song
 
 One piece of music the band has in its catalogue.
@@ -1817,6 +1952,10 @@ to.
   call the setting a member fills in.
 - **token** for the permission itself: a grant holds tokens, and revoking
   ends the grant, not one token.
+- **track**, **piste** for a row of a sketch: it is a **sketch lane**.
+  *track* names only a Deezer or Spotify track. **reference**, **sample**
+  and **extract** for a passage in the library: it is an **inspiration**,
+  and once placed on a lane it is a **sketch clip**.
 - **musician**, **bandmate**: the person is a **member**. **player**
   names a member only in relation to one instrument (an instrument's
   `players`, `InstrumentPlayerLink`), and `TakePlayer` is the audio

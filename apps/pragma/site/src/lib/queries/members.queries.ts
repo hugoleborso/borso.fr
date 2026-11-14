@@ -3,12 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
+import { refreshReadsDerivedFrom, writeKeepingStaleness } from './cache-write.queries';
 import { instrumentKeys } from './instruments.queries';
 import { predictMemberRoster } from './member-roster.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
-import { writeKeepingStaleness } from './cache-write.queries';
 
 const MEMBERS_WRITE_SCOPE = { id: 'members-writes' } as const;
+const MEMBERS_API_ROOT = 'members';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
@@ -136,6 +137,9 @@ export function useUpdateMember() {
       });
       return { previousList };
     },
+    onSuccess: () => {
+      refreshReadsDerivedFrom(queryClient, MEMBERS_API_ROOT, memberKeys.all[0]);
+    },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         writeKeepingStaleness(queryClient, memberKeys.list(), context.previousList);
@@ -166,6 +170,9 @@ export function useDeleteMember() {
         return { members: old.members.filter((member) => member.id !== variables.id) };
       });
       return { previousList };
+    },
+    onSuccess: () => {
+      refreshReadsDerivedFrom(queryClient, MEMBERS_API_ROOT, memberKeys.all[0]);
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {

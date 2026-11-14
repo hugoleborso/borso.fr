@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { inspirationKeys } from './inspirations.queries';
 import { instrumentKeys } from './instruments.queries';
 import {
   memberKeys,
@@ -55,6 +56,7 @@ function ProbeAssign({
 const SEED_MEMBERS = {
   members: [{ id: 'mem-a', firstName: 'Alice', color: '#abcdef', avatarS3Key: null }],
 };
+const OUTREACH_KEY = ['outreach', 'list'] as const;
 const SEED_INSTRUMENTS = {
   instruments: [
     { id: 'instr-a', name: 'Guitar', isHarmonic: true },
@@ -138,6 +140,40 @@ describe('members mutations — optimistic updates', () => {
     expect(
       queryClient.getQueryData<OptimisticMembersList>(memberKeys.list())?.members,
     ).toHaveLength(1);
+    tree.unmount();
+  });
+
+  it('useDeleteMember makes the writer\'s own inspirations stale, so the card reads "former member", and leaves its list alone', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(memberKeys.list(), SEED_MEMBERS);
+    queryClient.setQueryData(inspirationKeys.list(), { inspirations: [] });
+    queryClient.setQueryData(OUTREACH_KEY, { contacts: [] });
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ ok: true })));
+
+    const slot = createMutateSlot<ReturnType<typeof useDeleteMember>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    await slot.read()({ id: 'mem-a' });
+    await flushMicrotasks();
+
+    expect(queryClient.getQueryState(inspirationKeys.list())?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(memberKeys.list())?.isInvalidated).toBe(false);
+    expect(queryClient.getQueryState(OUTREACH_KEY)?.isInvalidated).toBe(false);
+    tree.unmount();
+  });
+
+  it("useUpdateMember makes the writer's own inspirations stale, so a renamed author shows", async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(memberKeys.list(), SEED_MEMBERS);
+    queryClient.setQueryData(inspirationKeys.list(), { inspirations: [] });
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ ok: true })));
+
+    const slot = createMutateSlot<ReturnType<typeof useUpdateMember>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    await slot.read()({ id: 'mem-a', firstName: 'Alicia' });
+    await flushMicrotasks();
+
+    expect(queryClient.getQueryState(inspirationKeys.list())?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(memberKeys.list())?.isInvalidated).toBe(false);
     tree.unmount();
   });
 

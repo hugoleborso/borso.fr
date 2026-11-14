@@ -251,18 +251,20 @@
     "search": "Chercher"
   },
   "compos": {
-    "addTaskLink": "Ajouter une tâche",
-    "chart": "Grille d’accords",
-    "editLineup": "Modifier le lineup",
-    "empty": "Aucune compo pour l’instant. Marquez un morceau du catalogue comme original pour le voir ici.",
-    "lineup": "Lineup",
-    "noChart": "Pas encore de grille sur cette compo.",
-    "noNotes": "Rien de noté pour l’instant.",
-    "noTasks": "Rien à faire sur cette compo.",
-    "notes": "Notes et commentaires",
-    "openInCatalog": "Ouvrir dans le catalogue",
-    "tasks": "Tâches",
-    "title": "Compos"
+    "addToCatalogue": "Ajouter au catalogue",
+    "catalogueFailed": "La compo n’a pas été ajoutée au catalogue. Réessayez.",
+    "createFailed": "La compo n’a pas été créée. Réessayez.",
+    "defaultTitle": "Composition {{number}}",
+    "delete": "Supprimer la compo",
+    "deleteConfirm": "Supprimer cette compo avec ses pistes et ses extraits ? Son morceau du catalogue et les inspirations restent.",
+    "empty": "Aucune compo pour l’instant.",
+    "inCatalogue": "Au catalogue",
+    "new": "Nouvelle compo",
+    "openSketch": "Ouvrir l’esquisse",
+    "openSong": "Ouvrir le morceau",
+    "rename": "Renommer",
+    "title": "Compos",
+    "titleField": "Titre"
   },
   "crash": {
     "body": "La page s’est arrêtée sur une erreur inattendue. Recharger suffit en général. Si cela revient, videz la copie stockée de l’application et rechargez.",
@@ -296,6 +298,45 @@
     "title": "Améliorations",
     "titleField": "Titre",
     "voteFor": "Voter pour {{title}}"
+  },
+  "inspirations": {
+    "title": "Inspirations",
+    "empty": "Aucune inspiration pour l’instant.",
+    "new": "Nouvelle inspiration",
+    "edit": "Modifier l’inspiration",
+    "editFor": "Modifier {{title}}",
+    "deleteFor": "Supprimer {{title}}",
+    "deleteConfirm": "Supprimer cette inspiration de la bibliothèque ?",
+    "formerMember": "ancien membre",
+    "usedBy_one": "dans {{count}} esquisse",
+    "usedBy_other": "dans {{count}} esquisses",
+    "searchResults": "Sur Deezer",
+    "searchOnYoutube": "Chercher sur YouTube",
+    "setStartHere": "Début ici",
+    "setEndHere": "Fin ici",
+    "fields": {
+      "title": "Titre",
+      "artist": "Artiste",
+      "youtubeLink": "Lien YouTube",
+      "start": "Début (secondes)",
+      "end": "Fin (secondes)",
+      "note": "Note"
+    },
+    "form": {
+      "titleMissing": "Donne un titre au morceau.",
+      "notAYoutubeLink": "Colle le lien d’une vidéo YouTube.",
+      "endNotAfterStart": "La fin doit venir après le début.",
+      "passageTooLong": "Un passage dure 10 minutes au plus."
+    },
+    "refusal": {
+      "inUse": "Utilisée dans {{sketches}}. Retire d’abord ses extraits.",
+      "notFound": "Un autre membre a supprimé cette inspiration.",
+      "unknown": "La modification n’a pas été enregistrée. Réessaie."
+    },
+    "player": {
+      "title": "Lecteur YouTube : {{title}}",
+      "openOnYoutube": "Ouvrir sur YouTube"
+    }
   },
   "instruments": {
     "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
@@ -361,6 +402,7 @@
     "color": "Couleur (hex)",
     "columnAverage": "Moy.",
     "deleteConfirm": "Supprimer ce membre ? Ses niveaux de maîtrise partent avec lui.",
+    "deleteMember": "Supprimer {{name}}",
     "editTitle": "Modifier le membre",
     "firstName": "Prénom",
     "instrumentsAssigned": "Instruments joués",
@@ -376,6 +418,7 @@
     "bottomBar": "Sections principales",
     "compos": "Compos",
     "improvements": "Améliorations",
+    "inspirations": "Inspirations",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",
@@ -661,6 +704,34 @@
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
+  },
+  "sketch": {
+    "title": "Esquisse",
+    "lanes": "Pistes",
+    "timeline": "Frise",
+    "empty": "Aucune piste pour l’instant.",
+    "addLane": "Ajouter une piste",
+    "newLane": "Nouvelle piste",
+    "lane": "Piste",
+    "laneName": "Nom de la piste",
+    "renameLane": "Renommer {{name}}",
+    "deleteLane": "Supprimer la piste",
+    "deleteLaneConfirm": "Supprimer cette piste et ses extraits ? Les inspirations restent dans la bibliothèque.",
+    "addClip": "Ajouter un extrait sur {{name}}",
+    "addClipTitle": "Ajouter depuis la bibliothèque",
+    "emptyLibrary": "La bibliothèque est vide.",
+    "removeClip": "Retirer l’extrait",
+    "clipLabel": "{{title}} à {{start}}",
+    "reloaded": "Un autre membre a modifié cette esquisse. Elle a été rechargée.",
+    "notFound": "Cette composition n’existe plus.",
+    "drag": {
+      "instructions": "Pour déplacer un extrait, appuyez sur Espace pour le saisir. Utilisez les flèches pour le déplacer le long de sa piste ou vers une autre piste. Appuyez de nouveau sur Espace pour le déposer, ou sur Échap pour annuler.",
+      "pickedUp": "Extrait {{clip}} saisi sur la piste {{lane}}.",
+      "over": "L’extrait {{clip}} est au-dessus de la piste {{lane}}.",
+      "outside": "L’extrait {{clip}} est hors des pistes. Le déposer ici le garde sur la piste {{lane}}.",
+      "dropped": "L’extrait {{clip}} a été déposé sur la piste {{lane}}.",
+      "cancelled": "Le déplacement de l’extrait {{clip}} a été annulé. Il reste sur la piste {{lane}}."
+    }
   },
   "songDefaults": {
     "open": "Défauts du morceau",

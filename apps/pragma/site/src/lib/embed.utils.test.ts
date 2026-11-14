@@ -41,8 +41,20 @@ describe('resolveEmbed — YouTube', () => {
   });
 
   it('handles m.youtube.com', () => {
-    const embed = resolveEmbed('https://m.youtube.com/watch?v=abc123');
+    const embed = resolveEmbed('https://m.youtube.com/watch?v=dQw4w9WgXcQ');
     expect(embed.kind).toBe('oembed');
+  });
+
+  it('embeds a YouTube Music song link', () => {
+    expect(resolveEmbed('https://music.youtube.com/watch?v=dQw4w9WgXcQ')).toEqual(
+      expect.objectContaining({ iframeSrc: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }),
+    );
+  });
+
+  it('embeds a shorts link', () => {
+    expect(resolveEmbed('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toEqual(
+      expect.objectContaining({ iframeSrc: 'https://www.youtube.com/embed/dQw4w9WgXcQ' }),
+    );
   });
 
   it('rejects a youtu.be URL with no path', () => {

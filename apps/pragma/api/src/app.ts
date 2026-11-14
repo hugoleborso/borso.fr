@@ -4,12 +4,14 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { buildCompositionsRouter } from './compositions/compositions.controller';
 import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
 import { reportTaggedFailure } from './helpers/observability/error-reporting.adapter';
 import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 import { recordWideEvents } from './helpers/observability/wide-event.middleware';
 import { buildImprovementsRouter } from './improvements/improvements.controller';
+import { buildInspirationsRouter } from './inspirations/inspirations.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
 import { type BuildMcpRouterOptions, buildMcpRouter } from './mcp/mcp.controller';
@@ -25,6 +27,7 @@ import { buildWrittenRootsAnnouncer } from './realtime/stale-scope.middleware';
 import { READ_BATCH_PATH } from '@domain/read-batch.core';
 import { buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
+import { buildSketchesRouter } from './sketches/sketches.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildStreaksRouter } from './streaks/streaks.controller';
 import { buildStudiesRouter } from './studies/studies.controller';
@@ -88,6 +91,9 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/streaks', buildStreaksRouter())
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/takes', buildTakesRouter())
+    .route('/api/inspirations', buildInspirationsRouter())
+    .route('/api/compositions', buildCompositionsRouter())
+    .route('/api/sketches', buildSketchesRouter())
     .route('/api/notifications', buildNotificationsRouter())
     .route('/api/realtime', buildRealtimeRouter())
     .route('/api/audience', audience.publicRouter)

@@ -53,7 +53,7 @@ describe('the members page', () => {
 
   it('opens on the member list alone, with Members and Mastery tabs in its fixed header', async () => {
     renderMembersPage();
-    expect(await screen.findByRole('button', { name: /Ada/ })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Ada' })).toBeTruthy();
     const header = screen.getByRole('heading', { level: 1, name: 'Members' }).closest('header');
     if (header === null) throw new Error('no page header');
     expect(header.classList.contains('sticky')).toBe(true);
@@ -67,6 +67,14 @@ describe('the members page', () => {
     expect(screen.queryByText('Mastery matrix')).toBeNull();
   });
 
+  it('names each delete button after its member, so a screen reader tells them apart', async () => {
+    renderMembersPage();
+    expect(await screen.findByRole('button', { name: 'Delete Ada' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete Bo' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Delete Cy' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+  });
+
   it('opens an empty sheet from New member', async () => {
     renderMembersPage();
     fireEvent.click(await screen.findByRole('button', { name: 'New member' }));
@@ -76,7 +84,7 @@ describe('the members page', () => {
 
   it('opens the same sheet filled in when a member is tapped', async () => {
     renderMembersPage();
-    fireEvent.click(await screen.findByRole('button', { name: /Bo/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Bo' }));
     const sheet = screen.getByRole('dialog', { name: 'Edit member' });
     expect(within(sheet).getByLabelText('First name')).toHaveProperty('value', 'Bo');
   });

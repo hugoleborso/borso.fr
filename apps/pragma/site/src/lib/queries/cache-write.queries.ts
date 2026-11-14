@@ -1,6 +1,8 @@
 /** @Feature live-invalidation */
 
+import type { WrittenApiRoot } from '@domain/stale-scope.core';
 import type { QueryClient, QueryKey, Updater } from '@tanstack/react-query';
+import { selectQueryRootsDerivedFrom } from './query-read-roots.core';
 
 /**
  * @Blueprint query-write-keeping-staleness
@@ -26,5 +28,15 @@ export function writeEachKeepingStaleness<Data>(
 ): void {
   for (const query of queryClient.getQueryCache().findAll({ queryKey: queryKeyPrefix })) {
     writeKeepingStaleness<Data>(queryClient, query.queryKey, update);
+  }
+}
+
+export function refreshReadsDerivedFrom(
+  queryClient: QueryClient,
+  written: WrittenApiRoot,
+  ownQueryRoot: string,
+): void {
+  for (const queryRoot of selectQueryRootsDerivedFrom(written, ownQueryRoot)) {
+    void queryClient.invalidateQueries({ queryKey: [queryRoot] });
   }
 }

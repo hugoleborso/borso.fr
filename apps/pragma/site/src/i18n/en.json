@@ -251,18 +251,20 @@
     "search": "Search"
   },
   "compos": {
-    "addTaskLink": "Add a task",
-    "chart": "Chord chart",
-    "editLineup": "Edit the lineup",
-    "empty": "No composition yet. Mark a catalogue song as an original to see it here.",
-    "lineup": "Lineup",
-    "noChart": "No chart on this composition yet.",
-    "noNotes": "Nothing written down yet.",
-    "noTasks": "Nothing to do on this composition.",
-    "notes": "Notes and comments",
-    "openInCatalog": "Open in the catalog",
-    "tasks": "Tasks",
-    "title": "Compositions"
+    "addToCatalogue": "Add to catalogue",
+    "catalogueFailed": "The composition was not added to the catalogue. Try again.",
+    "createFailed": "The composition was not created. Try again.",
+    "defaultTitle": "Composition {{number}}",
+    "delete": "Delete the composition",
+    "deleteConfirm": "Delete this composition with its lanes and clips? Its catalogue song and the inspirations stay.",
+    "empty": "No composition yet.",
+    "inCatalogue": "In the catalogue",
+    "new": "New composition",
+    "openSketch": "Open the sketch",
+    "openSong": "Open the song",
+    "rename": "Rename",
+    "title": "Compositions",
+    "titleField": "Title"
   },
   "crash": {
     "body": "The page stopped on an unexpected error. Reloading usually clears it. If it comes back, clear the stored copy of the app and reload.",
@@ -296,6 +298,45 @@
     "title": "Improvements",
     "titleField": "Title",
     "voteFor": "Vote for {{title}}"
+  },
+  "inspirations": {
+    "title": "Inspirations",
+    "empty": "No inspiration yet.",
+    "new": "New inspiration",
+    "edit": "Edit the inspiration",
+    "editFor": "Edit {{title}}",
+    "deleteFor": "Delete {{title}}",
+    "deleteConfirm": "Delete this inspiration from the library?",
+    "formerMember": "former member",
+    "usedBy_one": "in {{count}} sketch",
+    "usedBy_other": "in {{count}} sketches",
+    "searchResults": "On Deezer",
+    "searchOnYoutube": "Search on YouTube",
+    "setStartHere": "Set start here",
+    "setEndHere": "Set end here",
+    "fields": {
+      "title": "Title",
+      "artist": "Artist",
+      "youtubeLink": "YouTube link",
+      "start": "Start (seconds)",
+      "end": "End (seconds)",
+      "note": "Note"
+    },
+    "form": {
+      "titleMissing": "Give the song a title.",
+      "notAYoutubeLink": "Paste the link of one YouTube video.",
+      "endNotAfterStart": "The end has to come after the start.",
+      "passageTooLong": "A passage lasts 10 minutes at most."
+    },
+    "refusal": {
+      "inUse": "Used by {{sketches}}. Remove its clips there first.",
+      "notFound": "Another member deleted this inspiration.",
+      "unknown": "The change was not saved. Try again."
+    },
+    "player": {
+      "title": "YouTube player: {{title}}",
+      "openOnYoutube": "Open on YouTube"
+    }
   },
   "instruments": {
     "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
@@ -361,6 +402,7 @@
     "color": "Color (hex)",
     "columnAverage": "Avg",
     "deleteConfirm": "Delete this member? Their mastery scores go with them.",
+    "deleteMember": "Delete {{name}}",
     "editTitle": "Edit member",
     "firstName": "First name",
     "instrumentsAssigned": "Instruments played",
@@ -376,6 +418,7 @@
     "bottomBar": "Main sections",
     "compos": "Compositions",
     "improvements": "Improvements",
+    "inspirations": "Inspirations",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",
@@ -661,6 +704,34 @@
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
+  },
+  "sketch": {
+    "title": "Sketch",
+    "lanes": "Lanes",
+    "timeline": "Timeline",
+    "empty": "No lane yet.",
+    "addLane": "Add a lane",
+    "newLane": "New lane",
+    "lane": "Lane",
+    "laneName": "Lane name",
+    "renameLane": "Rename {{name}}",
+    "deleteLane": "Delete the lane",
+    "deleteLaneConfirm": "Delete this lane and its clips? The inspirations stay in the library.",
+    "addClip": "Add a clip to {{name}}",
+    "addClipTitle": "Add from the library",
+    "emptyLibrary": "The library is empty.",
+    "removeClip": "Remove the clip",
+    "clipLabel": "{{title}} at {{start}}",
+    "reloaded": "Another member changed this sketch. It was reloaded.",
+    "notFound": "This composition no longer exists.",
+    "drag": {
+      "instructions": "To move a clip, press Space to pick it up. Use the arrow keys to move it along its lane or onto another lane. Press Space again to drop it, or Escape to cancel.",
+      "pickedUp": "Picked up the clip {{clip}} on the lane {{lane}}.",
+      "over": "The clip {{clip}} is over the lane {{lane}}.",
+      "outside": "The clip {{clip}} is outside the lanes. Dropping it here keeps it on the lane {{lane}}.",
+      "dropped": "The clip {{clip}} was dropped on the lane {{lane}}.",
+      "cancelled": "Moving the clip {{clip}} was cancelled. It stays on the lane {{lane}}."
+    }
   },
   "songDefaults": {
     "open": "Song defaults",

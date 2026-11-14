@@ -23,6 +23,11 @@ describe('BAND_DESTINATIONS', () => {
     expect(paths).toEqual(expect.arrayContaining(FORMER_DRAWER_DESTINATIONS));
   });
 
+  it('lists inspirations right after compositions', () => {
+    const paths = BAND_DESTINATIONS.map((destination) => destination.to);
+    expect(paths.indexOf('/inspirations')).toBe(paths.indexOf('/compos') + 1);
+  });
+
   it('lists the account page last', () => {
     expect(BAND_DESTINATIONS.at(-1)?.to).toBe('/account');
   });

@@ -21,6 +21,8 @@ describe('selectActiveTab', () => {
     ['/instruments', 'band'],
     ['/bars', 'band'],
     ['/compos', 'band'],
+    ['/compos/song-1/sketch', 'band'],
+    ['/inspirations', 'band'],
     ['/improvements', 'band'],
     ['/account', 'band'],
   ] as const)('lights the tab holding %s up', (pathname, tabId) => {

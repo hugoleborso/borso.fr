@@ -12,8 +12,10 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   audience: ['audience'],
   bars: ['bars'],
   'calendar-feeds': ['me'],
+  compositions: ['compositions'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],
+  inspirations: ['inspirations'],
   instruments: ['instruments'],
   mastery: ['mastery'],
   me: ['me'],
@@ -23,6 +25,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   outreach: ['outreach'],
   sessions: ['sessions'],
   setlists: ['setlists'],
+  sketches: ['sketches'],
   songs: ['songs'],
   streaks: ['streaks'],
   studies: ['studies'],
@@ -44,10 +47,21 @@ const SLICES_HOLDING_NO_BAND_DATA = new Set([
 ]);
 
 const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
+  compositions: ['sketches', 'songs'],
   instruments: ['setlists', 'songs'],
-  members: ['bars', 'calendar-feeds', 'mastery', 'oauth', 'setlists', 'songs', 'studies', 'tasks'],
+  members: [
+    'bars',
+    'calendar-feeds',
+    'inspirations',
+    'mastery',
+    'oauth',
+    'setlists',
+    'songs',
+    'studies',
+    'tasks',
+  ],
   sessions: ['setlists', 'takes', 'tasks'],
-  songs: ['mastery', 'setlists', 'studies', 'takes', 'tasks'],
+  songs: ['compositions', 'mastery', 'setlists', 'studies', 'takes', 'tasks'],
 };
 
 const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {

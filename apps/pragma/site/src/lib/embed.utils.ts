@@ -8,7 +8,8 @@
  * @Feature songs
  */
 
-const YOUTUBE_DOMAINS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
+import { parseYoutubeVideoId } from '@domain/inspiration.core';
+
 const SPOTIFY_HOST = 'open.spotify.com';
 const DEEZER_HOST = 'deezer.com';
 const VIMEO_HOST = 'vimeo.com';
@@ -49,29 +50,15 @@ function pathSegments(sourceUrl: URL): readonly string[] {
 }
 
 function youtubeEmbed(sourceUrl: URL): EmbedResult | null {
-  if (sourceUrl.host === 'youtu.be') {
-    const [videoId] = sourceUrl.pathname.slice(1).split('/');
-    if (videoId === '') return null;
-    return {
-      kind: 'oembed',
-      provider: 'youtube',
-      iframeSrc: `https://www.youtube.com/embed/${videoId}`,
-      width: YOUTUBE_IFRAME_WIDTH,
-      height: YOUTUBE_IFRAME_HEIGHT,
-    };
-  }
-  if (sourceUrl.pathname === '/watch') {
-    const videoId = sourceUrl.searchParams.get('v') ?? '';
-    if (videoId === '') return null;
-    return {
-      kind: 'oembed',
-      provider: 'youtube',
-      iframeSrc: `https://www.youtube.com/embed/${videoId}`,
-      width: YOUTUBE_IFRAME_WIDTH,
-      height: YOUTUBE_IFRAME_HEIGHT,
-    };
-  }
-  return null;
+  const videoId = parseYoutubeVideoId(sourceUrl.toString());
+  if (videoId === null) return null;
+  return {
+    kind: 'oembed',
+    provider: 'youtube',
+    iframeSrc: `https://www.youtube.com/embed/${videoId}`,
+    width: YOUTUBE_IFRAME_WIDTH,
+    height: YOUTUBE_IFRAME_HEIGHT,
+  };
 }
 
 function spotifyEmbed(sourceUrl: URL): EmbedResult | null {
@@ -154,10 +141,8 @@ export function resolveEmbed(url: string): EmbedResult {
   const sourceUrl = tryParse(url);
   if (sourceUrl === null) return { kind: 'plain', href: url };
 
-  if (YOUTUBE_DOMAINS.has(sourceUrl.host)) {
-    const embed = youtubeEmbed(sourceUrl);
-    if (embed !== null) return embed;
-  }
+  const youtube = youtubeEmbed(sourceUrl);
+  if (youtube !== null) return youtube;
   if (sourceUrl.host === SPOTIFY_HOST) {
     const embed = spotifyEmbed(sourceUrl);
     if (embed !== null) return embed;

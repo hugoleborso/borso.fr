@@ -36,6 +36,7 @@ const DESTINATIONS_BY_TAB: readonly (readonly [ShellTabId, readonly string[]])[]
       '/instruments',
       '/bars',
       '/compos',
+      '/inspirations',
       '/improvements',
       '/account',
     ],
