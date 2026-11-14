@@ -15,6 +15,7 @@ export interface SheetProps extends SheetVariantProps {
   readonly headerExtra?: ReactNode;
   readonly subheader?: ReactNode;
   readonly footer?: ReactNode;
+  readonly isFooterHiddenWhileTyping?: boolean;
   readonly isDismissible?: boolean;
   readonly isTitleARecordName?: boolean;
   readonly onSubmit?: (event: SyntheticEvent<HTMLFormElement>) => void;
@@ -24,7 +25,7 @@ export interface SheetProps extends SheetVariantProps {
 
 const FOOTER_CLASS =
   'flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-rule px-4 pt-3 ' +
-  'pb-[max(16px,env(safe-area-inset-bottom))] while-typing:not-has-[[type=submit]]:hidden';
+  'pb-[max(16px,env(safe-area-inset-bottom))]';
 const SCRIM_CLASS =
   'fixed inset-x-0 top-0 z-50 flex h-(--visual-viewport-height) flex-col bg-scrim ' +
   'pt-[env(safe-area-inset-top)]';
@@ -42,6 +43,7 @@ export function Sheet({
   headerExtra,
   subheader,
   footer,
+  isFooterHiddenWhileTyping = false,
   size,
   isDismissible = true,
   isTitleARecordName = false,
@@ -57,7 +59,16 @@ export function Sheet({
       <div data-sheet-body className={SHEET_BODY_CLASS}>
         {children}
       </div>
-      {footer === undefined ? null : <footer className={FOOTER_CLASS}>{footer}</footer>}
+      {footer === undefined ? null : (
+        <footer
+          className={composeClassName(
+            FOOTER_CLASS,
+            isFooterHiddenWhileTyping ? 'while-typing:hidden' : null,
+          )}
+        >
+          {footer}
+        </footer>
+      )}
     </>
   );
   return (
