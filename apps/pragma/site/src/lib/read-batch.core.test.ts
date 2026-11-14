@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasRetriedCaller,
   isRefusedBatch,
   isRetryableStatus,
   keepCallers,
@@ -247,6 +248,18 @@ describe('the callers of a failed read', () => {
     expect(retries).toStrictEqual([{ read: SONGS, caller: { name: 'probe', hasRetried: true } }]);
     expect(settling).toStrictEqual([secondTry]);
     expect(firstTry.hasRetried).toBe(false);
+  });
+
+  it.each([
+    [[firstTry], false],
+    [[firstTry, secondTry], true],
+  ])('says whether a batch holds a caller already on its retry', (callers, isGivenUp) => {
+    expect(
+      hasRetriedCaller([
+        { read: SONGS, callers: [firstTry] },
+        { read: SONGS, callers },
+      ]),
+    ).toBe(isGivenUp);
   });
 
   it('settles every caller when the answer is not worth a retry', () => {

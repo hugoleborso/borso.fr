@@ -106,6 +106,12 @@ export function splitForRetry<Caller extends RetriedCaller>(
   };
 }
 
+export function hasRetriedCaller<Caller extends RetriedCaller>(
+  batch: readonly MergedRead<Caller>[],
+): boolean {
+  return batch.some((entry) => entry.callers.some((caller) => caller.hasRetried));
+}
+
 export function keepCallers<Caller>(
   merged: readonly MergedRead<Caller>[],
   isKept: (caller: Caller) => boolean,
