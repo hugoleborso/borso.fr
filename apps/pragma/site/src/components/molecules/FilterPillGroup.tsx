@@ -37,7 +37,7 @@ export function FilterPillGroup<TValue extends string>({
       selectedKeys={[value]}
       onSelectionChange={choose}
       className={composeClassName(
-        'flex flex-nowrap sm:flex-wrap w-full sm:w-auto max-w-full overflow-x-auto sm:overflow-visible [scrollbar-width:none] gap-2',
+        'flex flex-nowrap sm:flex-wrap w-full sm:w-auto max-w-full overflow-x-auto overflow-y-hidden transform-gpu sm:overflow-visible [scrollbar-width:none] gap-2',
         className,
       )}
     >

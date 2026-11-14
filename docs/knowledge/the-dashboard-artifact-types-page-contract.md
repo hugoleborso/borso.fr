@@ -4,7 +4,9 @@ triggers:
   paths:
     - 'scripts/quality/dashboard/index.html'
   output:
-    - 'is not defined'
+    - 'the page threw: .* is not defined'
+  commands:
+    - 'check-dashboard-page'
 ---
 
 # The Dashboard artifact type's page contract

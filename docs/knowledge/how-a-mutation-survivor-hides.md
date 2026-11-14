@@ -1,9 +1,10 @@
 ---
-summary: 'Ways a mutant survives a test that looks sufficient: a one-line `Stryker disable`, `toContain` blind to a prepended digit, an equivalent mutant, dead code, a call at `describe` level credited to no test, `toHaveBeenCalledWith` blind to `undefined`, and a `vi.resetModules` re-import that makes ignored static constants live.'
+summary: 'Ways a mutant survives a test that looks sufficient: a one-line `Stryker disable`, `toContain` blind to a prepended digit, an equivalent mutant, dead code, a call at `describe` level credited to no test, `toHaveBeenCalledWith` blind to `undefined`, and a `vi.resetModules` re-import that makes ignored static constants live. And the `# timeout` column counts detected mutants, not survivors.'
 triggers:
   output:
     - '#\d+\.\s*\[Survived\]'
     - 'Survived\s*\|?\s*[1-9]'
+    - '# timeout'
 ---
 
 # Three ways a mutant survives a test that looks like it covers it
@@ -175,3 +176,12 @@ Read a surviving constant as a question about which test loads its module.
 Keep `vi.resetModules()` out of a test of a module that imports a gated one,
 or move the constant beside the function that reads it, in a module that
 test does not load.
+
+## The `# timeout` column of the report is not survivors
+
+_2026-11-13_ (PR #321, `mutation-fix-01`): a brief read the `4` under
+`# timeout` in Stryker's clear-text table as four survivors and pointed the fix
+at `review-event-store.adapter.ts`. A timed-out mutant counts as detected. The
+real survivor was in `deck-folders.adapter.ts`, in the `# survived` column.
+Read the survivors from the `[Survived]` lines above the table, which name the
+file and line, not from a column count.

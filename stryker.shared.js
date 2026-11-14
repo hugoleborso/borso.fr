@@ -24,6 +24,8 @@ const ZERO_SURVIVING_MUTANTS = { high: 100, low: 100, break: 100 };
 
 const SANDBOX_EXCLUSIONS = ['.claude/**', 'docs/**'];
 
+const SOURCES_OUTSIDE_VENDORED_SITE_PUBLIC_FILES = '{src,site/src,api,test}/**/*.{js,ts,jsx,tsx}';
+
 const TSCONFIG_THE_SANDBOX_NEVER_REWRITES = 'no-tsconfig-for-stryker-to-rewrite.json';
 
 function sandboxOutsideTheWorkspace() {
@@ -48,7 +50,7 @@ export function defineStrykerConfig({ mutate, vitest }) {
     cleanTempDir: true,
     ignorePatterns: SANDBOX_EXCLUSIONS,
     tsconfigFile: TSCONFIG_THE_SANDBOX_NEVER_REWRITES,
-    disableTypeChecks: '{src,site,api,test}/**/*.{js,ts,jsx,tsx}',
+    disableTypeChecks: SOURCES_OUTSIDE_VENDORED_SITE_PUBLIC_FILES,
     ignoreStatic: true,
     mutate,
     ...(vitest === undefined ? {} : { vitest }),

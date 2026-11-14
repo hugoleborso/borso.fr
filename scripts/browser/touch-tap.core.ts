@@ -13,10 +13,13 @@ const bindingCallSchema = z.object({
   params: z.object({ name: z.string(), payload: z.string() }),
 });
 
-export function readReportedEvent(message: string): RecordedInputEvent | null {
+export function readReportedEvent(
+  message: string,
+  bindingName: string = TOUCH_TAP_BINDING,
+): RecordedInputEvent | null {
   const parsedMessage: unknown = JSON.parse(message);
   const call = bindingCallSchema.safeParse(parsedMessage);
-  if (!call.success || call.data.params.name !== TOUCH_TAP_BINDING) return null;
+  if (!call.success || call.data.params.name !== bindingName) return null;
   const parsedPayload: unknown = JSON.parse(call.data.params.payload);
   const event = recordedInputEventSchema.safeParse(parsedPayload);
   return event.success ? event.data : null;
@@ -109,12 +112,16 @@ const DEFAULT_OPTIONS: Omit<TouchTapOptions, 'selector'> = {
   height: 812,
 };
 
-function readFlag(argumentsGiven: readonly string[], name: string): string | undefined {
+export function readFlag(argumentsGiven: readonly string[], name: string): string | undefined {
   const flagIndex = argumentsGiven.indexOf(`--${name}`);
   return flagIndex === -1 ? undefined : argumentsGiven[flagIndex + 1];
 }
 
-function readNumberFlag(argumentsGiven: readonly string[], name: string, fallback: number): number {
+export function readNumberFlag(
+  argumentsGiven: readonly string[],
+  name: string,
+  fallback: number,
+): number {
   const given = Number(readFlag(argumentsGiven, name) ?? Number.NaN);
   return Number.isInteger(given) && given > 0 ? given : fallback;
 }

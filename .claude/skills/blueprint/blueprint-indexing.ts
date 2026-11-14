@@ -306,10 +306,9 @@ function readAcceptedPaths(): readonly string[] {
 
 function writeSubjectBaseline(followers: readonly FollowerReference[]): void {
   const acceptedPaths = readAcceptedPaths();
-  const recorded =
-    acceptedPaths.length > 0 && fs.existsSync(SUBJECT_BASELINE_FILE)
-      ? (parseSubjectBaseline(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8')) ?? {})
-      : {};
+  const recorded = fs.existsSync(SUBJECT_BASELINE_FILE)
+    ? (parseSubjectBaseline(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8')) ?? {})
+    : {};
   const baseline = acceptSubjects(recorded, toMarkerClaims(followers), acceptedPaths);
   fs.writeFileSync(SUBJECT_BASELINE_FILE, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
 }

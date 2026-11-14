@@ -179,6 +179,29 @@ for clone_list in tableBlocklist tablesToReplace; do
   fi
 done
 
+# 6. The layer suffixes the blueprint tooling knows, and the naming standard.
+#
+# `LAYER_BY_FILE_SUFFIX` in blueprint-utils decides which layer a file belongs
+# to, and the suffix table in docs/standards/01-naming.md is where an agent
+# looks up what a suffix means. The table listed eight suffixes while the code
+# knew eighteen, so an agent naming a `.store.ts` or an `.adapter.ts` found no
+# definition (PR #321, `implementation-02`). See
+# docs/features/meta/lessons-from-pr-321/inventory.md.
+layer_suffixes=$(
+  grep -oE "^  \['\.[a-z.]+\.ts'," .claude/skills/blueprint/blueprint-utils.ts |
+    grep -oE "\.[a-z.]+\.ts" | sort -u
+)
+if [ -z "$layer_suffixes" ]; then
+  fail "read no suffixes out of LAYER_BY_FILE_SUFFIX in .claude/skills/blueprint/blueprint-utils.ts. The list changed shape and this check went blind."
+fi
+naming_table=$(sed -n '/^## A file name says what the file contains/,/^## /p' docs/standards/01-naming.md)
+while IFS= read -r suffix; do
+  [ -n "$suffix" ] || continue
+  if ! grep -qE "^\| \`[^\`]*${suffix//./\\.}\`" <<<"$naming_table"; then
+    fail "blueprint-utils.ts knows the '$suffix' layer and the suffix table in docs/standards/01-naming.md does not define it. Add a row, or drop the suffix from LAYER_BY_FILE_SUFFIX."
+  fi
+done <<<"$layer_suffixes"
+
 if [ "$failed" -ne 0 ]; then
   echo "[check-coupled-lists] two lists that have to agree do not." >&2
   exit 1

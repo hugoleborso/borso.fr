@@ -62,6 +62,10 @@ Last verified: 2026-10-29 — against the live `AI-Dev-ReadOnly` user, where the
 three inline policies now spend 1248 + 377 + 173 = 1798 of 2048. Listing each
 reader ARN both bare and `:*` would have spent 2515, so each became one ARN ending in `*`.
 
+On 2026-11-14 a fourth reader would have pushed the total to about 2050, so the reader statements
+moved to the customer-managed policy `AI-Dev-ReadOnly-prod-agent-readers`. The two inline
+policies left spend 550 + 173 = 723 (measured).
+
 ## See also
 
 - [`docs/aws-setup.md`](../aws-setup.md) §12.7 — the policies this bit.
