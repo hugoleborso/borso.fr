@@ -84,3 +84,6 @@ itself (two), and the broad-kill hook (thirteen refusals).
 | # | Friction | Decision |
 | --- | --- | --- |
 | S1 | The knowledge hook printed the Dashboard artifact entry after `kaizen.sh sweep-input`, because that entry's output trigger `is not defined` matched the friction line "require is not defined" | fixed: this PR. The trigger is now `the page threw: .* is not defined`, the text `check-dashboard-page.ts` prints, plus that command. The old output no longer prints it, and the dashboard error still does (measured) |
+| S2 | `phone.sh touch` run twice on one page reported every event twice, because each run left its listeners on the page | fixed: this PR. Each tap aborts the previous probe's listeners (measured 4, 8, 12 events, now 4, 4, 4) |
+| S3 | A touch drag on react-chessboard sends touchend to the piece node React removed on drop, so a document listener never hears it | fixed: this PR. `touch-drag.ts` also listens on the dragged element and reports each event once |
+| S4 | `setsid` run in the background forks, so `$!` is not the server's process group | merge into PR #334, whose recipe finds the group from the listening port, not from `$!` |
