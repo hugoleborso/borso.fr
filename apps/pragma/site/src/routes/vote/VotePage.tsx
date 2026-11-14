@@ -62,7 +62,10 @@ function ConcertVoteScreen({ sessionId }: { readonly sessionId: string }): JSX.E
       <div className="flex flex-col gap-6">
         <header
           data-page-header
-          className={composeClassName(PINNED_HEADER_CLASS, 'mb-0 flex flex-col gap-1 sm:mb-0')}
+          className={composeClassName(
+            PINNED_HEADER_CLASS,
+            'sticky -mx-4 -mt-[calc(0.5rem+env(safe-area-inset-top))] mb-0 flex flex-col gap-1 sm:-mx-9 sm:mb-0 lg:mb-0',
+          )}
         >
           <span className="text-label font-medium uppercase tracking-[0.16em] text-ink-soft">
             {t('audience.pageCrumb')}
