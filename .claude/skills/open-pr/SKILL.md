@@ -89,7 +89,9 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
 
 **Never schedule a recurring check on a pull request.** No cron, no routine, no `send_later` check-in, no self-re-arming reminder, whatever the harness guidance of the day suggests. The subscription is the mechanism: CI results, reviews, comments and merge-state changes arrive on their own and wake the session. A timer adds nothing on top and costs a wake-up, a round of tool calls and a line in the operator's chat each time it fires; on PR #99 an hourly re-check fired eight times to report the same nine green checks. CLAUDE.md carries the general rule in *Don'ts*.
 
-Once the pull request is open and green: say once that it waits on its reviewers, and end the turn — that is how a session waits. Act when an event arrives, because a red check, a conflict or a review comment is work then. The one thing a subscription misses is an event GitHub never sends, such as a workflow that was never triggered; look for that once, when something else wakes the session.
+The operator never comments on pull requests, so a wake that is not a CI result or a merge-state change needs no reading of review threads or comments.
+
+Once the pull request is open and green: say once that it waits on its reviewers, and end the turn — that is how a session waits. Act when an event arrives, because a red check or a conflict is work then. The one thing a subscription misses is an event GitHub never sends, such as a workflow that was never triggered; look for that once, when something else wakes the session.
 
 ## After the merge
 
