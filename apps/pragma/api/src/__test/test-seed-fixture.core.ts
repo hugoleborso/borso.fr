@@ -1,9 +1,7 @@
 import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
 import type { SongOrigin } from '@domain/song-origin.core';
-import { SONG_STATUSES } from '../songs/songs.schema';
+import type { SongStatus } from '@domain/song-status.core';
 import type { SeedLineupByMemberName } from './test-seed.core';
-
-type SeedSongStatus = (typeof SONG_STATUSES)[number];
 
 export interface SeedInstrument {
   readonly name: string;
@@ -47,7 +45,7 @@ export interface SeedEntryDetail {
 export interface SeedSong {
   readonly title: string;
   readonly artist: string;
-  readonly status: SeedSongStatus;
+  readonly status: SongStatus;
   readonly origin: SongOrigin;
   readonly tonalityStart: string | null;
   readonly baseEnergy: number;

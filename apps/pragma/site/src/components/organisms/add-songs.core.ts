@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import type { SongStatus } from '../molecules/StatusChip';
+import type { SongStatus } from '@domain/song-status.core';
 
 export const ADD_SONGS_FILTERS = [
   'not-in-setlist',

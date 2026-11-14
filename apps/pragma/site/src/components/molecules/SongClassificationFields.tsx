@@ -1,14 +1,10 @@
 /** @Feature songs */
 
 import { SONG_ORIGINS, type SongOrigin } from '@domain/song-origin.core';
+import { SONG_STATUSES, type SongStatus } from '@domain/song-status.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  SONG_ORIGIN_LABEL_KEY,
-  SONG_STATUS_LABEL_KEY,
-  type SongStatus,
-  songStatuses,
-} from '../../routes/catalog/song-draft.core';
+import { SONG_ORIGIN_LABEL_KEY, SONG_STATUS_LABEL_KEY } from '../../routes/catalog/song-draft.core';
 import { EnumSelectField } from './EnumSelectField';
 
 export interface SongClassificationFieldsProps {
@@ -32,7 +28,7 @@ export function SongClassificationFields(props: SongClassificationFieldsProps): 
           label={t('catalog.status')}
           labelClassName={props.labelClassName}
           value={props.status}
-          options={songStatuses}
+          options={SONG_STATUSES}
           labelOf={(status) => t(SONG_STATUS_LABEL_KEY[status])}
           onChange={props.onStatusChange}
           onBlur={props.onStatusBlur}

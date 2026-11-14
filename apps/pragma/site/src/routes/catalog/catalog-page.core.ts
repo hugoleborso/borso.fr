@@ -8,6 +8,7 @@ export const CATALOG_FILTERS = [
   'concert_ready',
   'rehearsed',
   'wip',
+  'to_play',
   'idea',
 ] as const;
 

@@ -5,7 +5,8 @@ import { AlbumCover } from '../atoms/AlbumCover';
 import { Icon } from '../atoms/Icon';
 import type { ChartKindTag } from '../../routes/catalog/chart-kind.utils';
 import { ChartKindIcon } from '../molecules/ChartKindIcon';
-import { type SongStatus, StatusChip } from '../molecules/StatusChip';
+import type { SongStatus } from '@domain/song-status.core';
+import { StatusChip } from '../molecules/StatusChip';
 
 export interface SongCardProps {
   readonly id: string;

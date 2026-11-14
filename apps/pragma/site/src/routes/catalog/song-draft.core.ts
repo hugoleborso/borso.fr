@@ -5,8 +5,8 @@ import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS, type SongOrigin } from '@domain/song
 import type { SongChartKind } from '../../components/organisms/SongChartFields';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
 import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
+import { SONG_STATUSES, type SongStatus } from '@domain/song-status.core';
 
-export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
 export const SONG_ORIGIN_LABEL_KEY = {
@@ -16,10 +16,11 @@ export const SONG_ORIGIN_LABEL_KEY = {
 
 export const SONG_STATUS_LABEL_KEY = {
   idea: 'catalog.statusIdea',
+  to_play: 'catalog.statusToPlay',
   wip: 'catalog.statusWip',
   rehearsed: 'catalog.statusRehearsed',
   concert_ready: 'catalog.statusConcertReady',
-} as const satisfies Record<(typeof songStatuses)[number], string>;
+} as const satisfies Record<SongStatus, string>;
 
 export const linkSchema = z.object({
   url: z.string(),
@@ -31,7 +32,7 @@ export const songSchema = z.object({
   id: z.guid(),
   title: z.string(),
   artist: z.string(),
-  status: z.enum(songStatuses),
+  status: z.enum(SONG_STATUSES),
   origin: z.enum(SONG_ORIGINS).default(DEFAULT_SONG_ORIGIN),
   tonalityStart: z.string().nullable(),
   tonalityEnd: z.string().nullable(),
@@ -59,7 +60,6 @@ export const songSchema = z.object({
 export const singleSongSchema = z.object({ song: songSchema });
 
 export type Song = z.infer<typeof songSchema>;
-export type SongStatus = (typeof songStatuses)[number];
 
 export interface SongDraftState {
   title: string;
