@@ -42,9 +42,10 @@ function answerApi(songId: string | null, catalogueStatus: number) {
   };
 }
 
-function renderSketchPage(): void {
+function renderSketchPage(): ReturnType<typeof createIsolatedQueryClient> {
+  const queryClient = createIsolatedQueryClient();
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/compos/${COMPOSITION_ID}/sketch`]}>
         <Routes>
           <Route path="/compos/:compositionId/sketch" element={<SketchPage />} />
@@ -52,6 +53,7 @@ function renderSketchPage(): void {
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  return queryClient;
 }
 
 // @FollowsBlueprint test-component-render
@@ -94,5 +96,19 @@ describe('the sketch page', () => {
       'disabled',
       false,
     );
+  });
+
+  it("drops the failure once another member's catalogue links the composition", async () => {
+    let songId: string | null = null;
+    stub = stubFetch((request) => answerApi(songId, SERVER_ERROR_STATUS)(request));
+    const queryClient = renderSketchPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add to catalogue' }));
+    await screen.findByRole('alert');
+
+    songId = SONG_ID;
+    await queryClient.invalidateQueries();
+
+    expect(await screen.findByRole('link', { name: 'Open the song' })).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

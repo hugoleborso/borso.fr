@@ -13,6 +13,7 @@ import {
   settleClipInSketch,
   settleLaneInSketch,
 } from './sketch-cache.core';
+import { writeKeepingStaleness } from './cache-write.queries';
 import { inspirationKeys } from './inspirations.queries';
 import { readSketchRefusal } from './sketch-refusal.core';
 
@@ -113,7 +114,7 @@ function settleSketch(
   compositionId: string,
   rewrite: (sketch: SketchShape) => SketchShape,
 ): void {
-  queryClient.setQueryData<SketchResponse>(sketchKeys.detail(compositionId), (old) => {
+  writeKeepingStaleness<SketchResponse>(queryClient, sketchKeys.detail(compositionId), (old) => {
     if (old === undefined) return old;
     return { sketch: rewrite(old.sketch) };
   });
@@ -130,7 +131,7 @@ function restoreSketch(
   error: unknown,
 ): void {
   if (snapshot?.previous !== undefined) {
-    queryClient.setQueryData(sketchKeys.detail(compositionId), snapshot.previous);
+    writeKeepingStaleness(queryClient, sketchKeys.detail(compositionId), snapshot.previous);
   }
   if (readSketchRefusal(error) === null) return;
   void queryClient.invalidateQueries({ queryKey: sketchKeys.detail(compositionId) });

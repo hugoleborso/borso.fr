@@ -9,6 +9,7 @@ import {
   type InspirationFieldsShape,
   mergeInspirationChanges,
 } from './inspiration-cache.core';
+import { writeKeepingStaleness } from './cache-write.queries';
 import { isInspirationDeletedMeanwhile } from './inspiration-refusal.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
@@ -52,7 +53,7 @@ function settleList(
   queryClient: QueryClient,
   rewrite: (inspirations: readonly InspirationRecord[]) => InspirationRecord[],
 ): void {
-  queryClient.setQueryData<InspirationsListResponse>(inspirationKeys.list(), (old) => {
+  writeKeepingStaleness<InspirationsListResponse>(queryClient, inspirationKeys.list(), (old) => {
     if (old === undefined) return old;
     return { inspirations: rewrite(old.inspirations) };
   });
@@ -60,7 +61,7 @@ function settleList(
 
 function restoreList(queryClient: QueryClient, snapshot: ListSnapshot | undefined): void {
   if (snapshot?.previousList === undefined) return;
-  queryClient.setQueryData(inspirationKeys.list(), snapshot.previousList);
+  writeKeepingStaleness(queryClient, inspirationKeys.list(), snapshot.previousList);
 }
 
 function recoverListAfterRefusal(

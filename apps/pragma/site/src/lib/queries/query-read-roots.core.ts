@@ -2,6 +2,7 @@ import {
   type ApiRoot,
   EVERY_WRITTEN_ROOT,
   expandReadRoots,
+  type WrittenApiRoot,
   type WrittenRoot,
 } from '@domain/stale-scope.core';
 
@@ -48,5 +49,15 @@ export function selectStaleQueryRoots(
   if (written.includes(EVERY_WRITTEN_ROOT)) return EVERY_WRITTEN_ROOT;
   return Object.entries(table)
     .filter(([, reads]) => isReadingAny(reads, written))
+    .map(([queryRoot]) => queryRoot);
+}
+
+export function selectQueryRootsDerivedFrom(
+  written: WrittenApiRoot,
+  ownQueryRoot: string,
+  table: Readonly<Record<string, readonly ApiRoot[]>> = QUERY_READ_ROOTS,
+): readonly string[] {
+  return Object.entries(table)
+    .filter(([queryRoot, reads]) => queryRoot !== ownQueryRoot && isReadingAny(reads, [written]))
     .map(([queryRoot]) => queryRoot);
 }

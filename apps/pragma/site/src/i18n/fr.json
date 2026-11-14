@@ -402,6 +402,7 @@
     "color": "Couleur (hex)",
     "columnAverage": "Moy.",
     "deleteConfirm": "Supprimer ce membre ? Ses niveaux de maîtrise partent avec lui.",
+    "deleteMember": "Supprimer {{name}}",
     "editTitle": "Modifier le membre",
     "firstName": "Prénom",
     "instrumentsAssigned": "Instruments joués",
@@ -722,7 +723,15 @@
     "removeClip": "Retirer l’extrait",
     "clipLabel": "{{title}} à {{start}}",
     "reloaded": "Un autre membre a modifié cette esquisse. Elle a été rechargée.",
-    "notFound": "Cette composition n’existe plus."
+    "notFound": "Cette composition n’existe plus.",
+    "drag": {
+      "instructions": "Pour déplacer un extrait, appuyez sur Espace pour le saisir. Utilisez les flèches pour le déplacer le long de sa piste ou vers une autre piste. Appuyez de nouveau sur Espace pour le déposer, ou sur Échap pour annuler.",
+      "pickedUp": "Extrait {{clip}} saisi sur la piste {{lane}}.",
+      "over": "L’extrait {{clip}} est au-dessus de la piste {{lane}}.",
+      "outside": "L’extrait {{clip}} est hors des pistes. Le déposer ici le garde sur la piste {{lane}}.",
+      "dropped": "L’extrait {{clip}} a été déposé sur la piste {{lane}}.",
+      "cancelled": "Le déplacement de l’extrait {{clip}} a été annulé. Il reste sur la piste {{lane}}."
+    }
   },
   "songDefaults": {
     "open": "Défauts du morceau",

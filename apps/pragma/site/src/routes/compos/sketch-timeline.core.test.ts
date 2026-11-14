@@ -1,6 +1,9 @@
 import { SKETCH_TAIL_SECONDS } from '@domain/sketch.core';
 import { describe, expect, it } from 'vitest';
 import {
+  buildClipDragAnnouncements,
+  type ClipDragAnnouncementKey,
+  type ClipDragNames,
   findLaneName,
   isTapKey,
   isTapRightAfterDrag,
@@ -166,5 +169,59 @@ describe('the clip a tap plays', () => {
   it('names the lane a sheet is open on, or none', () => {
     expect(findLaneName(sketch, 'lane-a')).toBe('drums');
     expect(findLaneName(sketch, null)).toBeNull();
+  });
+});
+
+function spell(key: ClipDragAnnouncementKey, names: ClipDragNames): string {
+  return `${key}|${names.clip}|${names.lane}`;
+}
+
+describe('buildClipDragAnnouncements', () => {
+  const timeline = projectSketchTimeline(
+    {
+      composition: COMPOSITION,
+      lanes: [DRUMS, BRASS],
+      clips: [
+        { id: 'clip-1', laneId: 'lane-b', inspirationId: 'inspiration-1', offsetSeconds: 10 },
+      ],
+    },
+    [CALL_ME_MAYBE],
+  );
+  const announcements = buildClipDragAnnouncements(timeline, spell);
+  const clip = { id: 'clip-1' };
+
+  it('names the inspiration and the lane the clip is picked up from, never an identifier', () => {
+    expect(announcements.onDragStart({ active: clip })).toBe(
+      'sketch.drag.pickedUp|Call Me Maybe|brass',
+    );
+  });
+
+  it('names the lane under the clip, or the lane it keeps when it is outside every lane', () => {
+    expect(announcements.onDragOver({ active: clip, over: { id: 'lane-a' } })).toBe(
+      'sketch.drag.over|Call Me Maybe|drums',
+    );
+    expect(announcements.onDragOver({ active: clip, over: null })).toBe(
+      'sketch.drag.outside|Call Me Maybe|brass',
+    );
+  });
+
+  it('names the lane the clip lands on, its own when dropped outside the lanes', () => {
+    expect(announcements.onDragEnd({ active: clip, over: { id: 'lane-a' } })).toBe(
+      'sketch.drag.dropped|Call Me Maybe|drums',
+    );
+    expect(announcements.onDragEnd({ active: clip, over: null })).toBe(
+      'sketch.drag.dropped|Call Me Maybe|brass',
+    );
+  });
+
+  it('names the lane a cancelled move leaves the clip on', () => {
+    expect(announcements.onDragCancel({ active: clip, over: { id: 'lane-a' } })).toBe(
+      'sketch.drag.cancelled|Call Me Maybe|brass',
+    );
+  });
+
+  it('says nothing for a clip or a lane the sketch no longer holds', () => {
+    expect(announcements.onDragStart({ active: { id: 'gone' } })).toBeUndefined();
+    expect(announcements.onDragOver({ active: clip, over: { id: 'lane-gone' } })).toBeUndefined();
   });
 });

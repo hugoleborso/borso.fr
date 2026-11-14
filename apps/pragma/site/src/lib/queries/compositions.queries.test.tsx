@@ -172,6 +172,25 @@ describe('the composition writes', () => {
     tree.unmount();
   });
 
+  it("keeps the list stale after cataloguing when another member's write had already made it stale", async () => {
+    const queryClient = seedCompositions();
+    const othersComposition = { ...COMPOSITION, id: NEW_ID, title: 'Composition 7' };
+    queryClient.setQueryData(compositionKeys.list(), {
+      compositions: [othersComposition, COMPOSITION],
+    });
+    await queryClient.invalidateQueries({ queryKey: compositionKeys.list() });
+    const catalogued = { ...COMPOSITION, songId: SONG_ID };
+    stubTransport(() => Promise.resolve(jsonResponse({ composition: catalogued })));
+    const { writes, tree } = mountWrites(queryClient);
+
+    await writes().catalogue({ id: COMPOSITION.id });
+
+    expect(readList(queryClient)).toEqual([othersComposition, catalogued]);
+    expect(queryClient.getQueryState(compositionKeys.list())?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(sketchKeys.detail(COMPOSITION.id))?.isInvalidated).toBe(false);
+    tree.unmount();
+  });
+
   it('removes a deleted composition at once and brings it back when refused', async () => {
     const queryClient = seedCompositions();
     const pending = deferred<Response>();

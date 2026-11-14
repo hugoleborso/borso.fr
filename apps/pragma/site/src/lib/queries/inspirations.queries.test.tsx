@@ -168,6 +168,23 @@ describe('useUpdateInspiration', () => {
     expect(readList(queryClient)).toEqual([settled]);
     tree.unmount();
   });
+
+  it("keeps the list stale after the edit when another member's write had already made it stale", async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(inspirationKeys.list(), { inspirations: [LISTED] });
+    await queryClient.invalidateQueries({ queryKey: inspirationKeys.list() });
+    const settled = { ...LISTED, note: 'the drum break' };
+    stubTransport(() => Promise.resolve(jsonResponse({ inspiration: settled })));
+    const slot = createMutateSlot<UpdateInspiration>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+
+    await slot.read()({ id: LISTED.id, changes: { ...FIELDS, note: 'the drum break' } });
+    await flushMicrotasks();
+
+    expect(readList(queryClient)).toEqual([settled]);
+    expect(queryClient.getQueryState(inspirationKeys.list())?.isInvalidated).toBe(true);
+    tree.unmount();
+  });
 });
 
 describe('useDeleteInspiration', () => {

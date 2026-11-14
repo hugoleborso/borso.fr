@@ -3,6 +3,7 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful, readErrorBody } from '../api.client';
+import { writeKeepingStaleness } from './cache-write.queries';
 import { inspirationKeys } from './inspirations.queries';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 import { settleCompositionInSketch } from './sketch-cache.core';
@@ -50,7 +51,7 @@ function settleList(
   queryClient: QueryClient,
   rewrite: (compositions: readonly CompositionRecord[]) => CompositionRecord[],
 ): void {
-  queryClient.setQueryData<CompositionsListResponse>(compositionKeys.list(), (old) => {
+  writeKeepingStaleness<CompositionsListResponse>(queryClient, compositionKeys.list(), (old) => {
     if (old === undefined) return old;
     return { compositions: rewrite(old.compositions) };
   });
@@ -68,14 +69,14 @@ async function writeList(
 
 function restoreList(queryClient: QueryClient, snapshot: ListSnapshot | undefined): void {
   if (snapshot?.previousList === undefined) return;
-  queryClient.setQueryData(compositionKeys.list(), snapshot.previousList);
+  writeKeepingStaleness(queryClient, compositionKeys.list(), snapshot.previousList);
 }
 
 function settleComposition(queryClient: QueryClient, composition: CompositionRecord): void {
   settleList(queryClient, (compositions) =>
     replaceEntityById(compositions, composition.id, () => composition),
   );
-  queryClient.setQueryData<SketchResponse>(sketchKeys.detail(composition.id), (old) => {
+  writeKeepingStaleness<SketchResponse>(queryClient, sketchKeys.detail(composition.id), (old) => {
     if (old === undefined) return old;
     return { sketch: settleCompositionInSketch(old.sketch, composition) };
   });
@@ -165,7 +166,7 @@ export function useRenameComposition() {
     onError: (_error, variables, context) => {
       restoreList(queryClient, context);
       if (context?.previousSketch === undefined) return;
-      queryClient.setQueryData(sketchKeys.detail(variables.id), context.previousSketch);
+      writeKeepingStaleness(queryClient, sketchKeys.detail(variables.id), context.previousSketch);
     },
   });
 }

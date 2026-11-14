@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../../components/atoms/Badge';
-import { HintText } from '../../components/atoms/HintText';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -73,16 +72,12 @@ export function SketchPage(): JSX.Element {
           <SketchHeaderActions
             songId={composition.songId}
             isCataloguing={catalogue.isPending}
+            isCatalogueFailed={catalogue.isError}
             onRename={() => setIsRenaming(true)}
             onCatalogue={() => catalogue.mutate({ id: composition.id })}
           />
         }
       />
-      {catalogue.isError ? (
-        <HintText tone="danger" role="alert">
-          {t('compos.catalogueFailed')}
-        </HintText>
-      ) : null}
       <SketchEditor sketch={sketch} inspirations={inspirations} />
       {isRenaming ? (
         <NameSheet

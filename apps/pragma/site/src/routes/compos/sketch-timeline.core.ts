@@ -165,3 +165,66 @@ export function selectPlayedPassage(
 export function findLaneName(sketch: SketchShape, laneId: string | null): string | null {
   return sketch.lanes.find((lane) => lane.id === laneId)?.name ?? null;
 }
+
+export type ClipDragAnnouncementKey =
+  | 'sketch.drag.pickedUp'
+  | 'sketch.drag.over'
+  | 'sketch.drag.outside'
+  | 'sketch.drag.dropped'
+  | 'sketch.drag.cancelled';
+
+export interface ClipDragNames {
+  readonly clip: string;
+  readonly lane: string;
+}
+
+export type ClipDragTranslate = (key: ClipDragAnnouncementKey, names: ClipDragNames) => string;
+
+interface DraggedIdentity {
+  readonly id: string | number;
+}
+
+export interface ClipDragMoment {
+  readonly active: DraggedIdentity;
+  readonly over: DraggedIdentity | null;
+}
+
+export interface ClipDragAnnouncements {
+  readonly onDragStart: (moment: Pick<ClipDragMoment, 'active'>) => string | undefined;
+  readonly onDragOver: (moment: ClipDragMoment) => string | undefined;
+  readonly onDragEnd: (moment: ClipDragMoment) => string | undefined;
+  readonly onDragCancel: (moment: ClipDragMoment) => string | undefined;
+}
+
+// @FollowsBlueprint core-view-projection
+export function buildClipDragAnnouncements(
+  timeline: SketchTimelineView,
+  translate: ClipDragTranslate,
+): ClipDragAnnouncements {
+  const clipById = new Map(
+    timeline.lanes.flatMap((lane) => lane.clips).map((clip) => [clip.id, clip]),
+  );
+  const laneNameById = new Map(timeline.lanes.map((lane) => [lane.id, lane.name]));
+
+  function announce(
+    key: ClipDragAnnouncementKey,
+    activeId: string | number,
+    laneId: string | number | null,
+  ): string | undefined {
+    const clip = clipById.get(String(activeId));
+    if (clip === undefined) return undefined;
+    const lane = laneNameById.get(laneId === null ? clip.laneId : String(laneId));
+    if (lane === undefined) return undefined;
+    return translate(key, { clip: clip.title, lane });
+  }
+
+  return {
+    onDragStart: ({ active }) => announce('sketch.drag.pickedUp', active.id, null),
+    onDragOver: ({ active, over }) =>
+      over === null
+        ? announce('sketch.drag.outside', active.id, null)
+        : announce('sketch.drag.over', active.id, over.id),
+    onDragEnd: ({ active, over }) => announce('sketch.drag.dropped', active.id, over?.id ?? null),
+    onDragCancel: ({ active }) => announce('sketch.drag.cancelled', active.id, null),
+  };
+}

@@ -14,6 +14,7 @@ import type { JSX, RefObject } from 'react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  buildClipDragAnnouncements,
   type ClipPosition,
   isTapRightAfterDrag,
   NEVER_DRAGGED_AT_MS,
@@ -157,6 +158,12 @@ export function SketchTimeline({
           </div>
           <DndContext
             sensors={sensors}
+            accessibility={{
+              announcements: buildClipDragAnnouncements(timeline, (key, { clip, lane }) =>
+                t(key, { clip, lane }),
+              ),
+              screenReaderInstructions: { draggable: t('sketch.drag.instructions') },
+            }}
             onDragEnd={dropClip}
             onDragCancel={() => {
               lastDragEndedAt.current = Date.now();

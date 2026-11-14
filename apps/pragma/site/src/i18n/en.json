@@ -402,6 +402,7 @@
     "color": "Color (hex)",
     "columnAverage": "Avg",
     "deleteConfirm": "Delete this member? Their mastery scores go with them.",
+    "deleteMember": "Delete {{name}}",
     "editTitle": "Edit member",
     "firstName": "First name",
     "instrumentsAssigned": "Instruments played",
@@ -722,7 +723,15 @@
     "removeClip": "Remove the clip",
     "clipLabel": "{{title}} at {{start}}",
     "reloaded": "Another member changed this sketch. It was reloaded.",
-    "notFound": "This composition no longer exists."
+    "notFound": "This composition no longer exists.",
+    "drag": {
+      "instructions": "To move a clip, press Space to pick it up. Use the arrow keys to move it along its lane or onto another lane. Press Space again to drop it, or Escape to cancel.",
+      "pickedUp": "Picked up the clip {{clip}} on the lane {{lane}}.",
+      "over": "The clip {{clip}} is over the lane {{lane}}.",
+      "outside": "The clip {{clip}} is outside the lanes. Dropping it here keeps it on the lane {{lane}}.",
+      "dropped": "The clip {{clip}} was dropped on the lane {{lane}}.",
+      "cancelled": "Moving the clip {{clip}} was cancelled. It stays on the lane {{lane}}."
+    }
   },
   "songDefaults": {
     "open": "Song defaults",
