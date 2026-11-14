@@ -34,4 +34,14 @@ describe('selectBoardWidth', () => {
   it('never goes negative on an empty viewport', () => {
     expect(selectBoardWidth(0)).toBe(260);
   });
+
+  it('gives the evaluation bar its width out of the board, so the two take the same room', () => {
+    expect(selectBoardWidth(375, true)).toBe(351);
+    expect(selectBoardWidth(3000, true)).toBe(536);
+    expect(selectBoardWidth(375, false)).toBe(375);
+  });
+
+  it('keeps the minimum playable size beside the bar', () => {
+    expect(selectBoardWidth(270, true)).toBe(260);
+  });
 });

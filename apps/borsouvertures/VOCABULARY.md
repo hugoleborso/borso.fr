@@ -73,7 +73,9 @@ and the timer in `site/src/openings/machineEffects.ts`
   the game, and the status band names it in place of the move source.
 - The `stockfish` source is the vendored worker, started by
   `site/src/opponent/stockfish.adapter.ts` when a game starts and stopped when
-  it ends. It searches 400 ms a move. No answer to `uci` within 10 s raises
+  it ends. The evaluation bar shares that worker through the adapter's queue,
+  from the one client in `site/src/opponent/stockfish-client.setup.ts`. It
+  searches 400 ms a move. No answer to `uci` within 10 s raises
   `StockfishLoadFailedError`, and the game then ends where the deck ends. A
   move the board refuses raises `StockfishIllegalMoveError`.
 - The strength is one of ten steps in
@@ -276,6 +278,34 @@ Lives in: `site/src/openings/types.ts`
 - Both are plain strings to the parser, which checks the type and nothing about
   the format.
 
+## Evaluation bar
+
+The thin bar beside a board that shows how Stockfish rates the position, with
+White's share filled from White's side and the evaluation written as text.
+
+Lives in: `site/src/opponent/stockfish-evaluation.core.ts`, with the query in
+`site/src/lib/queries/stockfish-evaluation.queries.ts` and the bar in
+`site/src/components/atoms/EvaluationBar.tsx`
+
+- An **evaluation** is a `StockfishEvaluation`, read from White's side
+  whoever is to move. It is `centipawns`, or `mate` with the winner and the
+  number of moves, 0 when the side to move is already mated.
+- Each position is searched to depth 14 and for 500 ms at most, with the
+  strength limit lifted, and the reading is cached by position key.
+- The bar shows in Explore, the line stepper and the deck game, never in a
+  review, and the `isEvaluationBarShown` setting hides it everywhere.
+- The bar shares the deck game's worker. When that worker cannot load, the bar
+  turns invisible in its place and nothing is reported.
+
+Held by: `site/src/opponent/stockfish-evaluation.core.test.ts` › lifts every strength limit, then searches 14 plies deep for 500 ms at most
+Held by: `site/src/opponent/stockfish.adapter.test.ts` › waits for the move search ahead of it, on the same worker
+Held by: `site/src/opponent/stockfish.adapter.test.ts` › stops a running search when its position is left, and hands back nothing
+Held by: `site/src/components/organisms/DeckGame.test.tsx` › evaluates each position of the game on the same worker, and draws the bar beside the board
+Held by: `site/src/components/organisms/DeckGame.test.tsx` › hides the bar quietly, with no report, when the worker cannot load
+
+Not to be confused with: an outcome, which is what a review records. The bar
+records nothing.
+
 ## Explore
 
 The tab that opens the book as a board the reader plays on. The operator's words
@@ -349,8 +379,9 @@ Lives in: `site/src/openings/uciSquare.utils.ts`
   matching `/^[a-h][1-8]$/`, plus an optional promotion piece, one of `q`, `r`,
   `b`, `n`. `toSquare` throws on anything else.
 - SAN is for reading. The explorer and the decks get it by replaying the UCI
-  moves through `chess.js`. A board drop names no promotion piece, so the
-  explorer promotes to a queen.
+  moves through `chess.js`. The board asks for the promotion piece and names
+  it in the UCI move. A move without one still promotes to a queen in the
+  explorer and the deck game.
 
 ## New
 
@@ -605,6 +636,9 @@ A picker column shows variations; the column beside it shows the lines of one.
 - **engine**, **bot**, **AI**. The reply is the **auto opponent**, and it is a
   pick among the book moves weighted by the deck's lines. The program that checks the decks
   is named by its own name, **Stockfish**, and identifiers say `stockfish`.
+- **eval**, **score** for the number on the evaluation bar. It is an
+  **evaluation**, spelt in full in identifiers. `score` stays the word of the
+  UCI lines Stockfish prints.
 - **quiz**, **exercise**, **test** for a card.
 - **game** as a stored entity. A game on a deck page lives in the machine's
   current run.

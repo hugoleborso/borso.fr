@@ -32,7 +32,17 @@
       "french": "FR"
     },
     "settings": "Settings",
-    "close-settings": "Close settings"
+    "close-settings": "Close settings",
+    "evaluation-bar": {
+      "label": "Evaluation bar",
+      "off": "Hidden",
+      "on": "Shown"
+    },
+    "move-sound": {
+      "label": "Move sound",
+      "off": "Off",
+      "on": "On"
+    }
   },
   "account": {
     "sign-in": "Sign in",
@@ -405,6 +415,23 @@
     "mark": {
       "recalled": "Recalled",
       "missed": "Missed"
+    },
+    "promotion": {
+      "queen": "Promote to a queen",
+      "knight": "Promote to a knight",
+      "rook": "Promote to a rook",
+      "bishop": "Promote to a bishop",
+      "cancel": "Cancel the promotion"
+    },
+    "evaluation": {
+      "pending": "Evaluation: Stockfish is looking",
+      "equal": "Evaluation: equal",
+      "white-ahead": "Evaluation: White is better by {{amount}}",
+      "black-ahead": "Evaluation: Black is better by {{amount}}",
+      "white-mates": "Evaluation: White mates in {{moveCount}}",
+      "black-mates": "Evaluation: Black mates in {{moveCount}}",
+      "white-won": "Evaluation: White has won",
+      "black-won": "Evaluation: Black has won"
     }
   },
   "learn": {

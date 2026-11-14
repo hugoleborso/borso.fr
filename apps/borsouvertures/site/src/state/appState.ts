@@ -5,6 +5,8 @@ import {
 } from '@/opponent/opponent-strength.core';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import {
+  IS_EVALUATION_BAR_SHOWN_BY_DEFAULT,
+  IS_MOVE_SOUND_ON_BY_DEFAULT,
   NEW_CARDS_PER_DAY_DEFAULT,
   parsePersistedState,
   type PersistedState,
@@ -21,6 +23,8 @@ const INITIAL_STATE: AppState = {
   boardStyle: 'chesscom',
   newCardsPerDay: NEW_CARDS_PER_DAY_DEFAULT,
   opponentStrength: DEFAULT_OPPONENT_STRENGTH,
+  isEvaluationBarShown: IS_EVALUATION_BAR_SHOWN_BY_DEFAULT,
+  isMoveSoundOn: IS_MOVE_SOUND_ON_BY_DEFAULT,
 };
 
 function readInitialState(): AppState {
@@ -89,6 +93,14 @@ export function setNewCardsPerDay(newCardsPerDay: number): void {
 
 export function setOpponentStrength(opponentStrength: OpponentStrengthId): void {
   update({ opponentStrength });
+}
+
+export function setEvaluationBarShown(isEvaluationBarShown: boolean): void {
+  update({ isEvaluationBarShown });
+}
+
+export function setMoveSoundOn(isMoveSoundOn: boolean): void {
+  update({ isMoveSoundOn });
 }
 
 export function readOpponentStrength(): OpponentStrengthId {

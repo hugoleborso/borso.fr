@@ -18,8 +18,10 @@ import {
   takeBackMove,
 } from '@/explorer/explorer.core';
 import { replaceExplorerMoves, useExplorerMoves } from '@/explorer/explorer.store';
+import { useStockfishEvaluation } from '@/lib/queries/stockfish-evaluation.queries';
 import { useBoardWidth } from '@/lib/viewport.hook';
 import { uciToArrow } from '@/openings/uciSquare.utils';
+import { selectShownEvaluationBar } from '@/opponent/stockfish-evaluation.core';
 import { checkLineAdd, type LineAddRefusal } from '@/personal-deck/personal-deck.core';
 import { recordDeckLineChange } from '@/personal-deck/personal-deck-effects.setup';
 import { usePersonalLines } from '@/personal-deck/personal-decks.hook';
@@ -51,6 +53,10 @@ const SIDE_KEY_BY_SIDE = {
 const SIDE_BY_IS_BLACK: Record<`${boolean}`, Side> = { true: 'black', false: 'white' };
 
 const PAGE_CHROME_REM = 16.25;
+const INLINE_ACTION_BAR_REM = 3.5;
+
+type ExplorerListStyle = CSSProperties &
+  Record<'--explorer-list-phone-height' | '--explorer-list-beside-board-height', string>;
 
 interface OpenExplorerProps {
   lines: ExplorerLine[];
@@ -59,8 +65,8 @@ interface OpenExplorerProps {
 // @FollowsBlueprint organism-history-one-page-at-a-time
 export function OpenExplorer({ lines }: OpenExplorerProps) {
   const { t } = useTranslation();
-  const { side, boardStyle } = useAppState();
-  const boardWidth = useBoardWidth();
+  const { side, boardStyle, isEvaluationBarShown, isMoveSoundOn } = useAppState();
+  const boardWidth = useBoardWidth(isEvaluationBarShown);
   const playedMovesUci = useExplorerMoves();
   const personalLines = usePersonalLines();
   const [notice, setNotice] = useState<string | null>(null);
@@ -68,6 +74,7 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
     () => selectExplorerPosition(lines, playedMovesUci),
     [lines, playedMovesUci],
   );
+  const evaluationReading = useStockfishEvaluation(position.fen, isEvaluationBarShown);
   const { theme } = getBoardAppearance(boardStyle);
   const addCheck = checkLineAdd(personalLines, { side, movesUci: playedMovesUci });
   const isAddBlocked =
@@ -81,8 +88,9 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
       { backgroundColor: theme.highlight },
     ]),
   );
-  const listStyle: CSSProperties = {
-    maxHeight: `calc(100dvh - ${String(boardWidth)}px - ${String(PAGE_CHROME_REM)}rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))`,
+  const listStyle: ExplorerListStyle = {
+    '--explorer-list-phone-height': `calc(100dvh - ${String(boardWidth)}px - ${String(PAGE_CHROME_REM)}rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))`,
+    '--explorer-list-beside-board-height': `calc(${String(boardWidth)}px - ${String(INLINE_ACTION_BAR_REM)}rem)`,
   };
 
   function showMoves(nextMovesUci: readonly string[]): void {
@@ -141,9 +149,14 @@ export function OpenExplorer({ lines }: OpenExplorerProps) {
         boardStyleId={boardStyle}
         boardWidth={boardWidth}
         mark={null}
+        evaluationBar={selectShownEvaluationBar(isEvaluationBarShown, evaluationReading, side)}
+        isMoveSoundOn={isMoveSoundOn}
       />
       <div className="flex flex-col gap-2 w-full min-w-0">
-        <div className="flex flex-col gap-2 overflow-y-auto overscroll-contain" style={listStyle}>
+        <div
+          className="flex flex-col gap-2 overflow-y-auto overscroll-contain max-h-(--explorer-list-phone-height) lg:max-h-(--explorer-list-beside-board-height)"
+          style={listStyle}
+        >
           {notice === null ? null : <Notice message={notice} />}
           {position.isInBook ? null : (
             <p className="text-sm font-bold" role="status">

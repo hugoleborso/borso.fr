@@ -15,7 +15,12 @@ export interface PersistedState {
   boardStyle: BoardThemeId;
   newCardsPerDay: number;
   opponentStrength: OpponentStrengthId;
+  isEvaluationBarShown: boolean;
+  isMoveSoundOn: boolean;
 }
+
+export const IS_EVALUATION_BAR_SHOWN_BY_DEFAULT = true;
+export const IS_MOVE_SOUND_ON_BY_DEFAULT = false;
 
 /**
  * @Blueprint unknown-payload-parser
@@ -46,7 +51,18 @@ export function parsePersistedState(raw: string): PersistedState | null {
   ) {
     return null;
   }
-  return { side, boardStyle, newCardsPerDay, opponentStrength };
+  return {
+    side,
+    boardStyle,
+    newCardsPerDay,
+    opponentStrength,
+    isEvaluationBarShown: isFlagOn(record.isEvaluationBarShown, IS_EVALUATION_BAR_SHOWN_BY_DEFAULT),
+    isMoveSoundOn: isFlagOn(record.isMoveSoundOn, IS_MOVE_SOUND_ON_BY_DEFAULT),
+  };
+}
+
+function isFlagOn(value: unknown, isOnByDefault: boolean): boolean {
+  return typeof value === 'boolean' ? value : isOnByDefault;
 }
 
 function parseOpponentStrength(value: unknown): OpponentStrengthId | null {

@@ -27,6 +27,10 @@ colors:
   dark-recalled: "#3dbe73"
   dark-missed: "#ff6b5a"
   dark-on-state: "#0b0b0b"
+  evaluation-white: "#f4f4f2"
+  on-evaluation-white: "#111111"
+  evaluation-black: "#2b2b2b"
+  on-evaluation-black: "#f4f4f2"
 typography:
   screen-title:
     fontFamily: "'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif"
@@ -114,6 +118,11 @@ components:
     size: "7.5% of the board, on a square's corner"
   mini-board:
     size: "56px"
+  evaluation-bar:
+    width: "24px"
+    backgroundColor: "{colors.evaluation-black}"
+    fill: "{colors.evaluation-white}"
+    text: "9px bold, tabular figures, at the leading side's end"
 ---
 
 # Design System: Borsouvertures
@@ -138,6 +147,7 @@ The strategy is restrained neutrals with colour that only carries meaning. Every
 ### Tertiary
 
 - **Recalled green** (`recalled`) and **missed red** (`missed`): the board mark only, plus the sign-in error. In dark mode they turn bright and carry near-black text.
+- **Evaluation white and black** (`evaluation-white`, `evaluation-black`): the two sides of the evaluation bar only. They mean the two sides of the game, so they stay the same in dark mode.
 - **Signal yellow** (`signal`): notices (an added or refused line in Explore) and text selection.
 
 ### Neutral
@@ -195,6 +205,30 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 - A deck row reads the deck's side and counts, then its retention over the last 30 days.
 - `MiniBoard` is a static 8 × 8 grid of squares and the bundled piece SVGs, 56 px on a phone and 64 px from 601 px, never a live chessboard. A deck shows its first line after six plies, a line shows its last position, both from the reader's side.
 
+### Board (operator, 2026-11-14)
+
+The operator plays on Chess.com every day and asked for the board to behave like that one. `BoardView` copies the interaction model that strong chess sites share, and keeps the app's own themes, pieces and colours. Every board that takes a move has it, in the review, the deck game and Explore. The line stepper takes no move, so it keeps only the highlights and the right click.
+
+- **Tap to move.** A tap on a movable piece selects it and gives its square the theme highlight. Each legal empty square gets a dot and each legal capture a ring, both in ink at 26%. A tap on a target plays. A tap on the piece again, or on a square it cannot reach, deselects. A tap on another movable piece switches to it. The rule that only the side to move drags still holds, and a tap on the other side's pieces selects nothing.
+- **Drag to move.** The piece lifts under the finger. On a touch screen it grows 1.6 times and rises by half a square, so the finger does not hide it. Under a mouse it grows 1.15 times. The square under the finger gets an inner white ring. A drag shows the same dots and rings. A drop on an illegal square or off the board puts the piece back. A drop on its own square leaves it selected.
+- **Last move and check.** The two squares of the move that led to the position take the theme highlight on every board, the opponent's reply included. `BoardView` finds that move by comparing the position with the one before it, so a jump of several moves highlights nothing. A king in check gets a red glow under it.
+- **Promotion.** A pawn reaching the last rank opens a column of queen, knight, rook and bishop over the promotion square, on the page colour, over a scrim. Nothing is picked for the reader. A tap outside the column cancels and the pawn stays.
+- **Coordinates and orientation.** Files and ranks sit inside the edge squares, 11 px bold, in the colour of the opposite square. The board turns for Black.
+- **Desktop.** The mouse does the same as the finger. A right click marks a square in poster red at 60%, a right drag draws an arrow, and a left click clears both. A square is marked when the right button is pressed and released on it, because Chromium on Linux sends `contextmenu` on the press and would mark the start of every arrow.
+- **No premove.** A premove saves time in a game with a clock. The deck game has no clock and Stockfish answers in 400 ms, so a premove would save nothing and add a state to explain. It is worth adding if games get a clock.
+- **Move sound, off by default.** The settings sheet turns it on. It is a click of 70 ms synthesised with the Web Audio API, lower and 110 ms long for a capture, so nothing is fetched and it works offline. Only the reader's own moves click, because the opponent's reply arrives from a machine outside any event handler and the app has no effect to hang a sound on.
+
+### Evaluation bar (operator, 2026-11-14)
+
+- **Where.** A 24 px vertical bar on the left of the board in Explore, the line stepper and the deck game. The board gives up those 24 px, so board and bar take the room the board alone took, and the layout does not move when a reading arrives.
+- **What it shows.** White's share fills from White's side, from the bottom when White is at the bottom and from the top when the board is turned for Black. The share is the winning chance of the centipawn reading (`50 + 50 × (2 / (1 + e^(−0.00368 × cp)) − 1)`), and a mate fills it whole. The text sits at the leading side's end on that side's colour, 9 px bold, as `+0.6`, `-1.2`, `0.0`, `+14` from ten pawns up, `M3` and `-M3` for a mate, `1-0` and `0-1` for a mate on the board. Its accessible name says it in words (*Evaluation: White is better by 0.6*).
+- **Motion.** The fill slides to its new share over 500 ms with the quick ease-out, and jumps under `prefers-reduced-motion`.
+- **Not in the review.** A review card asks the reader to recall the book move. A bar before the answer gives it away, since a swing after the opponent's move tells him something is to be taken. A bar after the answer would need its 24 px kept on every card, which breaks the rule that the board never changes size from one card to the next, for a number the outcome does not use. Explore, the line stepper and the game are where the reader studies a position, so the bar lives there.
+- **Stockfish budget.** Each position is searched to depth 14, stopped at 500 ms. Measured on this sandbox's desktop CPU, five Explore positions took 44 to 139 ms and the game positions up to 247 ms. A phone is slower, so the 500 ms limit is the bound. The reading is cached by position key for 30 minutes, so a position seen again costs nothing, and a search whose position is left is stopped.
+- **One worker.** The bar uses the same vendored worker as the deck game's opponent, through one queue. A second instance measured about 52 MB more renderer memory each, and two searches at once would double the heat. The opponent's search is asked first after the reader's move, so it runs first. Each evaluation lifts the strength limit before it searches, and each opponent search sets its strength again.
+- **Waiting and failing.** Until the first reading arrives the bar sits at half with no text, and later readings keep the previous one until the new one lands. When the worker cannot load, offline before its first download for example, the bar turns invisible in its place and nothing is reported.
+- **Setting.** *Evaluation bar: Hidden / Shown* in the settings sheet, shown by default. Hidden gives the 24 px back to the board.
+
 ### Board mark
 
 `BoardView` draws the mark over the board after the answer and keeps it until *Next*. It is an overlay, so the layout does not move. It scales in over 220 ms and appears without motion under `prefers-reduced-motion`. It carries the `img` role and is named *Recalled* or *Missed*.
@@ -212,7 +246,7 @@ Primary is an ink fill, default is an ink outline, quiet is underlined text. All
 
 ### Settings sheet
 
-The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, the Stockfish strength, Credits and the account. The top bar is 48 px and holds only the name and that button. The sign-in link stays in the sheet (operator delegation, 2026-11-13). When the API answers 401, a signal band under the top bar says the session expired, and its *Sign in* button opens the sheet on the sign-in form. This band and the sync-paused band show only on the screens that draw no board (Today, Opening decks, Stats, Credits), so a board screen keeps its fit at 375 × 812.
+The gear in the top bar opens a bottom sheet (`Modal`) holding the board theme, the language, the Stockfish strength, the evaluation bar and the move sound switches, Credits and the account. The top bar is 48 px and holds only the name and that button. The sign-in link stays in the sheet (operator delegation, 2026-11-13). When the API answers 401, a signal band under the top bar says the session expired, and its *Sign in* button opens the sheet on the sign-in form. This band and the sync-paused band show only on the screens that draw no board (Today, Opening decks, Stats, Credits), so a board screen keeps its fit at 375 × 812.
 
 ### Source credits
 

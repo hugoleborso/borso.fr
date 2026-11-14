@@ -14,6 +14,8 @@ const VALID_STATE: PersistedState = {
   boardStyle: 'nord',
   newCardsPerDay: 10,
   opponentStrength: 'skill-3',
+  isEvaluationBarShown: false,
+  isMoveSoundOn: true,
 };
 
 const OTHER_VALID_STATE: PersistedState = {
@@ -21,6 +23,8 @@ const OTHER_VALID_STATE: PersistedState = {
   boardStyle: 'lichess',
   newCardsPerDay: 0,
   opponentStrength: 'elo-1900',
+  isEvaluationBarShown: true,
+  isMoveSoundOn: false,
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -50,6 +54,28 @@ describe('parsePersistedState', () => {
     expect(parsePersistedState(JSON.stringify(storedBefore))).toEqual({
       ...VALID_STATE,
       opponentStrength: 'elo-2000',
+    });
+  });
+
+  it('shows the evaluation bar and keeps the move sound off for a record stored before either existed', () => {
+    const {
+      isEvaluationBarShown: _isEvaluationBarShown,
+      isMoveSoundOn: _isMoveSoundOn,
+      ...storedBefore
+    } = VALID_STATE;
+    expect(parsePersistedState(JSON.stringify(storedBefore))).toEqual({
+      ...VALID_STATE,
+      isEvaluationBarShown: true,
+      isMoveSoundOn: false,
+    });
+  });
+
+  it('falls back to the default of a setting stored as something else than a flag', () => {
+    const corrupted = { ...VALID_STATE, isEvaluationBarShown: 'no', isMoveSoundOn: 1 };
+    expect(parsePersistedState(JSON.stringify(corrupted))).toEqual({
+      ...VALID_STATE,
+      isEvaluationBarShown: true,
+      isMoveSoundOn: false,
     });
   });
 

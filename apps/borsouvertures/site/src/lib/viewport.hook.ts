@@ -21,6 +21,6 @@ export function useViewportWidth(): number {
   return useSyncExternalStore(subscribeToViewportWidth, readViewportWidth, readServerViewportWidth);
 }
 
-export function useBoardWidth(): number {
-  return selectBoardWidth(useViewportWidth());
+export function useBoardWidth(isEvaluationBarShown = false): number {
+  return selectBoardWidth(useViewportWidth(), isEvaluationBarShown);
 }

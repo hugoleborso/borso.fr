@@ -71,7 +71,7 @@ interface AskedCardProps {
 
 function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
   const { t, i18n } = useTranslation();
-  const { boardStyle } = useAppState();
+  const { boardStyle, isMoveSoundOn } = useAppState();
   const boardWidth = useBoardWidth();
   const isAnswered = snapshot.phase === 'answered';
   const CardBody = CARD_BODY_BY_KIND[reviewCard.card.kind];
@@ -104,6 +104,8 @@ function AskedCard({ reviewCard, snapshot, onLeave }: AskedCardProps) {
         boardStyleId={boardStyle}
         boardWidth={boardWidth}
         mark={selectReviewMark(status, answerMoves, reviewCard.readerSide)}
+        evaluationBar={null}
+        isMoveSoundOn={isMoveSoundOn}
       />
       <div className="flex flex-col gap-3 w-full">
         <CardBody reviewCard={reviewCard} status={status} onChooseName={reviewMachine.chooseName} />

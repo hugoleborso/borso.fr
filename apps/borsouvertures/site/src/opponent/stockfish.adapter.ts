@@ -1,4 +1,5 @@
 import { STOCKFISH_DISTRIBUTION } from './stockfish-distribution.core';
+import { STOCKFISH_SEARCH_STOPPED_ERROR_NAME } from './stockfish-evaluation.core';
 import { isHandshakeDone, isSearchFinished, parseBestMove } from './uci.utils';
 
 export const STOCKFISH_WORKER_URL = `/${STOCKFISH_DISTRIBUTION.publicFolder}/${STOCKFISH_DISTRIBUTION.files.worker.fileName}`;
@@ -14,6 +15,13 @@ export class StockfishLoadFailedError extends Error {
     super('The Stockfish worker failed to load or to answer in time.', { cause });
     this.name = 'StockfishLoadFailedError';
     this.tags = { online: String(isOnline) };
+  }
+}
+
+export class StockfishSearchStoppedError extends Error {
+  constructor() {
+    super('The Stockfish worker was stopped before the search ended.');
+    this.name = STOCKFISH_SEARCH_STOPPED_ERROR_NAME;
   }
 }
 
@@ -40,9 +48,15 @@ export interface StockfishOptions {
   moveTimeMilliseconds?: number;
 }
 
-export interface StockfishOpponent {
+export interface StockfishPositionSearch {
+  commands: readonly string[];
+  signal: AbortSignal;
+}
+
+export interface StockfishClient {
   warmUp: () => void;
   findMove: (search: StockfishSearch) => Promise<string>;
+  searchPosition: (search: StockfishPositionSearch) => Promise<string[] | null>;
   stop: () => void;
 }
 
@@ -50,6 +64,7 @@ interface StockfishSignalHandlers {
   onLine: (line: string) => void;
   onFailure: (cause: unknown) => void;
   onLoadTimeout: () => void;
+  onStop: () => void;
 }
 
 interface StockfishRouting {
@@ -62,6 +77,11 @@ interface StockfishSession {
   process: StockfishProcess;
   routing: StockfishRouting;
   loaded: Promise<void>;
+}
+
+interface SearchAnswer {
+  lines: string[];
+  bestMoveLine: string;
 }
 
 interface StartedProcess {
@@ -77,7 +97,14 @@ const SILENT_HANDLERS: StockfishSignalHandlers = {
   onLine: ignoreSignal,
   onFailure: ignoreSignal,
   onLoadTimeout: ignoreSignal,
+  onStop: ignoreSignal,
 };
+
+const STOP_COMMAND = 'stop';
+
+function isSignalAborted(signal: AbortSignal): boolean {
+  return signal.aborted;
+}
 
 function createRouting(): StockfishRouting {
   const holder = { handlers: SILENT_HANDLERS };
@@ -93,10 +120,19 @@ function createRouting(): StockfishRouting {
 }
 
 // @FollowsBlueprint adapter-external-service
-export function createStockfishOpponent(options: StockfishOptions): StockfishOpponent {
+export function createStockfishClient(options: StockfishOptions): StockfishClient {
   const loadTimeout = options.loadTimeoutMilliseconds ?? DEFAULT_LOAD_TIMEOUT_MILLISECONDS;
   const moveTime = options.moveTimeMilliseconds ?? DEFAULT_MOVE_TIME_MILLISECONDS;
-  const holder: { session: StockfishSession | null } = { session: null };
+  const holder: { session: StockfishSession | null; queueTail: Promise<unknown> } = {
+    session: null,
+    queueTail: Promise.resolve(),
+  };
+
+  function enqueue<Answer>(job: () => Promise<Answer>): Promise<Answer> {
+    const queued = holder.queueTail.then(job);
+    holder.queueTail = queued.catch(ignoreSignal);
+    return queued;
+  }
 
   function closeSession(session: StockfishSession): void {
     session.routing.silence();
@@ -132,6 +168,9 @@ export function createStockfishOpponent(options: StockfishOptions): StockfishOpp
       }
       routing.replace({
         onFailure: failLoad,
+        onStop: () => {
+          reject(new StockfishSearchStoppedError());
+        },
         onLoadTimeout: () => {
           failLoad(new Error(`Stockfish did not answer uci within ${loadTimeout} ms`));
         },
@@ -158,38 +197,72 @@ export function createStockfishOpponent(options: StockfishOptions): StockfishOpp
     return holder.session ?? openSession();
   }
 
-  function search(session: StockfishSession, request: StockfishSearch): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+  function search(session: StockfishSession, commands: readonly string[]): Promise<SearchAnswer> {
+    return new Promise<SearchAnswer>((resolve, reject) => {
+      const lines: string[] = [];
       session.routing.replace({
         onFailure: (cause) => {
           closeSession(session);
           reject(new StockfishLoadFailedError(options.readIsOnline(), cause));
         },
+        onStop: () => {
+          reject(new StockfishSearchStoppedError());
+        },
         onLine: (line) => {
+          lines.push(line);
           const isFinished = isSearchFinished(line);
           if (!isFinished) return;
           session.routing.silence();
-          resolve(parseBestMove(line) ?? line);
+          resolve({ lines, bestMoveLine: line });
         },
       });
-      const commands = [
-        ...request.strengthCommands,
-        `position fen ${request.fen}`,
-        `go movetime ${moveTime}`,
-      ];
       for (const command of commands) session.process.send(command);
     });
   }
 
-  async function findMove(request: StockfishSearch): Promise<string> {
+  async function readLoadedSession(requested: StockfishSession): Promise<StockfishSession> {
+    await requested.loaded;
     const session = readSession();
     await session.loaded;
-    return search(session, request);
+    return session;
+  }
+
+  function findMove(request: StockfishSearch): Promise<string> {
+    const requested = readSession();
+    return enqueue(async () => {
+      const session = await readLoadedSession(requested);
+      const { bestMoveLine } = await search(session, [
+        ...request.strengthCommands,
+        `position fen ${request.fen}`,
+        `go movetime ${moveTime}`,
+      ]);
+      return parseBestMove(bestMoveLine) ?? bestMoveLine;
+    });
+  }
+
+  function searchPosition({ commands, signal }: StockfishPositionSearch): Promise<string[] | null> {
+    const requested = readSession();
+    return enqueue(async () => {
+      if (isSignalAborted(signal)) return null;
+      const session = await readLoadedSession(requested);
+      if (isSignalAborted(signal)) return null;
+      const stopSearch = (): void => {
+        session.process.send(STOP_COMMAND);
+      };
+      signal.addEventListener('abort', stopSearch);
+      try {
+        const { lines } = await search(session, commands);
+        return isSignalAborted(signal) ? null : lines;
+      } finally {
+        signal.removeEventListener('abort', stopSearch);
+      }
+    });
   }
 
   function stop(): void {
     const { session } = holder;
     if (session === null) return;
+    session.routing.read().onStop();
     closeSession(session);
   }
 
@@ -198,6 +271,7 @@ export function createStockfishOpponent(options: StockfishOptions): StockfishOpp
       readSession();
     },
     findMove,
+    searchPosition,
     stop,
   };
 }

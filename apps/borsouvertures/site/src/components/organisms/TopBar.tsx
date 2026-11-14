@@ -8,6 +8,7 @@ import { IconButton } from '@/components/molecules/IconButton';
 import { LanguageSwitcher } from '@/components/molecules/LanguageSwitcher';
 import { OpponentStrengthSelect } from '@/components/molecules/OpponentStrengthSelect';
 import { SessionExpiredBanner } from '@/components/molecules/SessionExpiredBanner';
+import { SettingSwitch } from '@/components/molecules/SettingSwitch';
 import { SignInScreen } from '@/components/organisms/SignInScreen';
 import { selectAccountLinkView } from '@/lib/account-session.core';
 import { useAccountSession, useSignOut } from '@/lib/queries/account.queries';
@@ -15,12 +16,12 @@ import { hasRoomForABand } from '@/navigation/app-screen.core';
 import { openScreen, useAppScreen } from '@/navigation/navigation.store';
 import { isSessionExpiryShown } from '@/review/sync.core';
 import { useSyncStatus } from '@/review/sync.store';
-import { useAppState } from '@/state/appState';
+import { setEvaluationBarShown, setMoveSoundOn, useAppState } from '@/state/appState';
 
 // @FollowsBlueprint organism-presentational
 export function TopBar() {
   const { t } = useTranslation();
-  const { boardStyle, opponentStrength } = useAppState();
+  const { boardStyle, opponentStrength, isEvaluationBarShown, isMoveSoundOn } = useAppState();
   const session = useAccountSession();
   const signOut = useSignOut();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -63,6 +64,20 @@ export function TopBar() {
           <BoardStyleSelect boardStyle={boardStyle} />
           <LanguageSwitcher />
           <OpponentStrengthSelect strength={opponentStrength} />
+          <SettingSwitch
+            label={t('top-bar.evaluation-bar.label')}
+            isOn={isEvaluationBarShown}
+            offLabel={t('top-bar.evaluation-bar.off')}
+            onLabel={t('top-bar.evaluation-bar.on')}
+            onToggle={setEvaluationBarShown}
+          />
+          <SettingSwitch
+            label={t('top-bar.move-sound.label')}
+            isOn={isMoveSoundOn}
+            offLabel={t('top-bar.move-sound.off')}
+            onLabel={t('top-bar.move-sound.on')}
+            onToggle={setMoveSoundOn}
+          />
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-rule">
             <Button
               label={t('credits.link')}

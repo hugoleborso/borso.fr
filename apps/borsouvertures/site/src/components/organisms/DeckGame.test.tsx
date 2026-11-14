@@ -1,9 +1,11 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/i18n/i18n';
 import { buildExampleDocument } from '@/decks/deck.test-utils';
+import { stockfishEvaluationKeys } from '@/lib/queries/stockfish-evaluation.queries';
+import { queryClient } from '@/lib/query-client.setup';
 import { deckGameMachine } from '@/opponent/deck-game-machine.setup';
 import { readReviewLog } from '@/review/review-log.store';
 import {
@@ -49,6 +51,7 @@ class FakeStockfishWorker {
       if (!stockfishScript.canLoad) this.listeners.get('error')?.({ message: 'offline' });
       else if (command === 'uci') this.listeners.get('message')?.({ data: 'uciok' });
       else if (command.startsWith('go ')) {
+        this.listeners.get('message')?.({ data: 'info depth 14 score cp 31 pv a2a3' });
         this.listeners.get('message')?.({ data: `bestmove ${stockfishScript.bestMove}` });
       }
     });
@@ -100,6 +103,7 @@ describe('a game against Stockfish on a deck page', () => {
     });
     stockfishWorkers.length = 0;
     stockfishScript.canLoad = true;
+    queryClient.removeQueries({ queryKey: stockfishEvaluationKeys.all });
     sentry.captureException.mockClear();
     await openApplication();
     await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
@@ -135,13 +139,39 @@ describe('a game against Stockfish on a deck page', () => {
     expect(screen.getByText('Your move')).toBeTruthy();
     const [worker] = stockfishWorkers;
     expect(worker?.url).toBe('/stockfish/stockfish-19-lite-single.js');
-    expect(worker?.commands).toEqual([
-      'uci',
+    expect(worker?.commands[0]).toBe('uci');
+    const moveSearchStart = worker?.commands.indexOf('setoption name UCI_LimitStrength value true');
+    expect(
+      worker?.commands.slice(
+        moveSearchStart,
+        moveSearchStart === undefined ? 0 : moveSearchStart + 4,
+      ),
+    ).toEqual([
       'setoption name UCI_LimitStrength value true',
       'setoption name UCI_Elo value 2000',
       'position fen r1bqkbnr/ppp2ppp/2n5/4P3/2Pp4/5N2/PP2PPPP/RNBQKB1R w KQkq - 2 5',
       'go movetime 400',
     ]);
+  });
+
+  it('evaluates each position of the game on the same worker, and draws the bar beside the board', async () => {
+    await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
+    await screen.findByText('The deck played 1. d4');
+    const bar = await screen.findByRole('img', { name: 'Evaluation: Black is better by 0.3' });
+    expect(bar.textContent).toBe('-0.3');
+    expect(stockfishWorkers).toHaveLength(1);
+    expect(stockfishWorkers[0]?.commands).toContain('go depth 14 movetime 500');
+  });
+
+  it('hides the bar quietly, with no report, when the worker cannot load', async () => {
+    stockfishScript.canLoad = false;
+    await userEvent.click(screen.getByRole('button', { name: 'Start a game' }));
+    await screen.findByText('The deck played 1. d4');
+    const bar = screen.getByRole('img', { name: /^Evaluation/ });
+    await waitFor(() => {
+      expect(bar.className).toContain('invisible');
+    });
+    expect(sentry.captureException).not.toHaveBeenCalled();
   });
 
   it('stores no review, so the counts on Today stay as they were', async () => {
@@ -160,7 +190,9 @@ describe('a game against Stockfish on a deck page', () => {
     );
     await playMainLineToItsEnd();
     await screen.findByText('Stockfish played 5. a3');
-    expect(stockfishWorkers[0]?.commands.slice(1, 3)).toEqual([
+    const commands = stockfishWorkers[0]?.commands ?? [];
+    const skillIndex = commands.indexOf('setoption name Skill Level value 3');
+    expect(commands.slice(skillIndex - 1, skillIndex + 1)).toEqual([
       'setoption name UCI_LimitStrength value false',
       'setoption name Skill Level value 3',
     ]);

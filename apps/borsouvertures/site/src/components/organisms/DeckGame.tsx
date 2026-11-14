@@ -9,6 +9,7 @@ import { StatusBand } from '@/components/atoms/StatusBand';
 import { OpponentStrengthSelect } from '@/components/molecules/OpponentStrengthSelect';
 import type { BuiltDeck } from '@/decks/deck.utils';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
+import { useStockfishEvaluation } from '@/lib/queries/stockfish-evaluation.queries';
 import { useBoardWidth } from '@/lib/viewport.hook';
 import { deckGameMachine } from '@/opponent/deck-game-machine.setup';
 import {
@@ -19,6 +20,7 @@ import {
   type MoveSource,
   selectDeckGameStatus,
 } from '@/opponent/deck-game-machine.utils';
+import { selectShownEvaluationBar } from '@/opponent/stockfish-evaluation.core';
 import { useAppState } from '@/state/appState';
 
 const NO_ARROWS: Arrow[] = [];
@@ -102,8 +104,9 @@ function DeckGameControls({ deck, snapshot }: DeckGameBodyProps) {
 }
 
 function DeckGameBoard({ snapshot }: DeckGameBodyProps) {
-  const { boardStyle } = useAppState();
-  const boardWidth = useBoardWidth();
+  const { boardStyle, isEvaluationBarShown, isMoveSoundOn } = useAppState();
+  const boardWidth = useBoardWidth(isEvaluationBarShown);
+  const evaluationReading = useStockfishEvaluation(snapshot.fen, isEvaluationBarShown);
   return (
     <BoardView
       orientation={snapshot.readerSide}
@@ -115,6 +118,12 @@ function DeckGameBoard({ snapshot }: DeckGameBodyProps) {
       boardStyleId={boardStyle}
       boardWidth={boardWidth}
       mark={null}
+      evaluationBar={selectShownEvaluationBar(
+        isEvaluationBarShown,
+        evaluationReading,
+        snapshot.readerSide,
+      )}
+      isMoveSoundOn={isMoveSoundOn}
     />
   );
 }

@@ -22,7 +22,9 @@ import {
   selectLineStepFen,
 } from '@/decks/line-stepper.utils';
 import type { ComponentByFlag } from '@/lib/componentTable.types';
+import { useStockfishEvaluation } from '@/lib/queries/stockfish-evaluation.queries';
 import { useBoardWidth } from '@/lib/viewport.hook';
+import { selectShownEvaluationBar } from '@/opponent/stockfish-evaluation.core';
 import { isPersonalDeck } from '@/personal-deck/personal-deck.core';
 import { recordDeckLineChange } from '@/personal-deck/personal-deck-effects.setup';
 import { useAppState } from '@/state/appState';
@@ -80,11 +82,13 @@ interface DeckLineStepperProps {
 // @FollowsBlueprint organism-history-one-page-at-a-time
 export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
   const { t } = useTranslation();
-  const { boardStyle } = useAppState();
-  const boardWidth = useBoardWidth();
+  const { boardStyle, isEvaluationBarShown, isMoveSoundOn } = useAppState();
+  const boardWidth = useBoardWidth(isEvaluationBarShown);
   const [position, setPosition] = useState(LINE_START_POSITION);
   const steps = listLineSteps(deck, line);
   const step = selectLineStep(steps, position);
+  const fen = selectLineStepFen(steps, position);
+  const evaluationReading = useStockfishEvaluation(fen, isEvaluationBarShown);
   const { theme } = getBoardAppearance(boardStyle);
   const IdeaSlot = IDEA_BY_READER_STEP[`${isReaderStep(step, deck.side)}`];
   const RemoveLine = REMOVE_BY_PERSONAL_DECK[`${isPersonalDeck(deck.id)}`];
@@ -111,7 +115,7 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
       </div>
       <BoardView
         orientation={deck.side}
-        fen={selectLineStepFen(steps, position)}
+        fen={fen}
         onMove={isBoardMoveAccepted}
         mover="none"
         arrows={NO_ARROWS}
@@ -119,6 +123,8 @@ export function DeckLineStepper({ deck, line, onClose }: DeckLineStepperProps) {
         boardStyleId={boardStyle}
         boardWidth={boardWidth}
         mark={null}
+        evaluationBar={selectShownEvaluationBar(isEvaluationBarShown, evaluationReading, deck.side)}
+        isMoveSoundOn={isMoveSoundOn}
       />
       <div className="flex flex-col gap-2 w-full">
         <LineStepCaption step={step} position={position} stepCount={steps.length} />

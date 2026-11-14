@@ -27,6 +27,13 @@
   --color-signal: #ffd43b;
   --color-on-signal: #111111;
 
+  --color-evaluation-white: #f4f4f2;
+  --color-on-evaluation-white: #111111;
+  --color-evaluation-black: #2b2b2b;
+  --color-on-evaluation-black: #f4f4f2;
+
+  --text-evaluation: 0.5625rem;
+
   --spacing-tab-bar: 3.5rem;
   --spacing-action-bar: 4rem;
 

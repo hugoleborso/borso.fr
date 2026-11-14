@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  createStockfishOpponent,
+  createStockfishClient,
   STOCKFISH_WORKER_URL,
   StockfishLoadFailedError,
   type StockfishProcessListeners,
+  StockfishSearchStoppedError,
 } from './stockfish.adapter';
 
 interface FakeWorker {
@@ -21,15 +22,16 @@ const AFTER_D4_FEN = 'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1
 const SEARCH = { fen: AFTER_D4_FEN, strengthCommands: ELO_1320_COMMANDS };
 
 async function flushPromises(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
 }
 
 function buildFakeStockfish(overrides: { loadTimeoutMilliseconds?: number } = {}) {
   const workers: FakeWorker[] = [];
   const timers: { callback: () => void; delayMilliseconds: number }[] = [];
   const network = { isOnline: true };
-  const opponent = createStockfishOpponent({
+  const opponent = createStockfishClient({
     startProcess: (workerUrl, listeners) => {
       const worker: FakeWorker = { workerUrl, listeners, commands: [], stopCount: 0 };
       workers.push(worker);
@@ -124,7 +126,7 @@ describe('the Stockfish adapter while the worker loads', () => {
 
   it('takes the search time from its options', async () => {
     const stockfish = buildFakeStockfish();
-    const opponent = createStockfishOpponent({
+    const opponent = createStockfishClient({
       startProcess: (workerUrl, listeners) => {
         const worker: FakeWorker = { workerUrl, listeners, commands: [], stopCount: 0 };
         stockfish.workers.push(worker);
@@ -183,7 +185,7 @@ describe('the Stockfish adapter while the worker loads', () => {
   it('ignores a line the worker prints while it starts, and loads it all the same', async () => {
     const commands: string[] = [];
     const held: { listeners: StockfishProcessListeners | null } = { listeners: null };
-    const opponent = createStockfishOpponent({
+    const opponent = createStockfishClient({
       startProcess: (_workerUrl, listeners) => {
         listeners.onLine('Stockfish 19 by the Stockfish developers');
         held.listeners = listeners;
@@ -208,7 +210,7 @@ describe('the Stockfish adapter while the worker loads', () => {
   it('fails the load when the browser refuses to start the worker, then tries again', async () => {
     const refusal = new Error('workers are blocked');
     const attempts = { count: 0 };
-    const opponent = createStockfishOpponent({
+    const opponent = createStockfishClient({
       startProcess: () => {
         attempts.count += 1;
         throw refusal;
@@ -277,9 +279,15 @@ describe('the Stockfish adapter during a search', () => {
     expect(stockfish.workers).toHaveLength(2);
   });
 
-  it('stops the worker, goes deaf to it, and starts a new one for the next game', async () => {
-    const { stockfish } = await startSearch();
+  it('stops the worker, fails its search, goes deaf to it, and starts a new one for the next game', async () => {
+    const { stockfish, pendingMove } = await startSearch();
     stockfish.opponent.stop();
+    const error = await readRejection(pendingMove);
+    expect(error).toBeInstanceOf(StockfishSearchStoppedError);
+    expect(error).toMatchObject({
+      name: 'StockfishSearchStoppedError',
+      message: 'The Stockfish worker was stopped before the search ended.',
+    });
     expect(stockfish.readWorker(0).stopCount).toBe(1);
     stockfish.readWorker(0).listeners.onLine('bestmove g8f6');
     stockfish.readWorker(0).listeners.onFailure('late failure');
@@ -299,5 +307,113 @@ describe('the Stockfish adapter during a search', () => {
     stockfish.opponent.warmUp();
     expect(stockfish.workers).toHaveLength(2);
     expect(stockfish.readWorker(1).stopCount).toBe(0);
+  });
+});
+
+const EVALUATION_COMMANDS = ['position fen evaluated', 'go depth 14 movetime 500'];
+
+function startPositionSearch(stockfish: ReturnType<typeof buildFakeStockfish>) {
+  const controller = new AbortController();
+  const pendingLines = stockfish.opponent.searchPosition({
+    commands: EVALUATION_COMMANDS,
+    signal: controller.signal,
+  });
+  return { controller, pendingLines };
+}
+
+describe('the Stockfish adapter searching a position for its evaluation', () => {
+  it('sends the commands once the worker answered, and hands back every line of the search', async () => {
+    const stockfish = buildFakeStockfish();
+    const { pendingLines } = startPositionSearch(stockfish);
+    expect(stockfish.readWorker(0).commands).toEqual(['uci']);
+    stockfish.readWorker(0).listeners.onLine('uciok');
+    await flushPromises();
+    expect(stockfish.readWorker(0).commands).toEqual(['uci', ...EVALUATION_COMMANDS]);
+    stockfish.readWorker(0).listeners.onLine('info depth 14 score cp 31 pv e2e4');
+    stockfish.readWorker(0).listeners.onLine('bestmove e2e4');
+    await expect(pendingLines).resolves.toEqual([
+      'info depth 14 score cp 31 pv e2e4',
+      'bestmove e2e4',
+    ]);
+  });
+
+  it('waits for the move search ahead of it, on the same worker', async () => {
+    const { stockfish, pendingMove } = await startSearch();
+    const { pendingLines } = startPositionSearch(stockfish);
+    await flushPromises();
+    expect(stockfish.readWorker(0).commands.at(-1)).toBe('go movetime 400');
+    stockfish.readWorker(0).listeners.onLine('bestmove g8f6');
+    await expect(pendingMove).resolves.toBe('g8f6');
+    await flushPromises();
+    expect(stockfish.readWorker(0).commands.slice(-2)).toEqual(EVALUATION_COMMANDS);
+    stockfish.readWorker(0).listeners.onLine('bestmove d2d4');
+    await expect(pendingLines).resolves.toEqual(['bestmove d2d4']);
+    expect(stockfish.workers).toHaveLength(1);
+  });
+
+  it('skips a search whose position was left before its turn, without waiting for the worker', async () => {
+    const stockfish = buildFakeStockfish();
+    const { controller, pendingLines } = startPositionSearch(stockfish);
+    controller.abort();
+    await expect(pendingLines).resolves.toBeNull();
+    expect(stockfish.readWorker(0).commands).toEqual(['uci']);
+  });
+
+  it('skips a search whose position was left while the worker loaded', async () => {
+    const stockfish = buildFakeStockfish();
+    const { controller, pendingLines } = startPositionSearch(stockfish);
+    await flushPromises();
+    controller.abort();
+    stockfish.readWorker(0).listeners.onLine('uciok');
+    await expect(pendingLines).resolves.toBeNull();
+    expect(stockfish.readWorker(0).commands).toEqual(['uci']);
+  });
+
+  it('stops a running search when its position is left, and hands back nothing', async () => {
+    const stockfish = buildFakeStockfish();
+    const { controller, pendingLines } = startPositionSearch(stockfish);
+    stockfish.readWorker(0).listeners.onLine('uciok');
+    await flushPromises();
+    controller.abort();
+    expect(stockfish.readWorker(0).commands.at(-1)).toBe('stop');
+    stockfish.readWorker(0).listeners.onLine('bestmove e2e4');
+    await expect(pendingLines).resolves.toBeNull();
+  });
+
+  it('stops listening for the position once its search ended', async () => {
+    const stockfish = buildFakeStockfish();
+    const { controller, pendingLines } = startPositionSearch(stockfish);
+    stockfish.readWorker(0).listeners.onLine('uciok');
+    await flushPromises();
+    stockfish.readWorker(0).listeners.onLine('bestmove e2e4');
+    await pendingLines;
+    controller.abort();
+    expect(stockfish.readWorker(0).commands.at(-1)).toBe('go depth 14 movetime 500');
+  });
+
+  it('fails the search the client stops while the worker loads, then serves the next one', async () => {
+    const stockfish = buildFakeStockfish();
+    const { pendingLines } = startPositionSearch(stockfish);
+    stockfish.opponent.stop();
+    expect(await readRejection(pendingLines)).toBeInstanceOf(StockfishSearchStoppedError);
+    const next = startPositionSearch(stockfish);
+    stockfish.readWorker(1).listeners.onLine('uciok');
+    await flushPromises();
+    stockfish.readWorker(1).listeners.onLine('bestmove e2e4');
+    await expect(next.pendingLines).resolves.toEqual(['bestmove e2e4']);
+  });
+
+  it('keeps the queue moving after a search failed', async () => {
+    const stockfish = buildFakeStockfish();
+    const failing = startPositionSearch(stockfish);
+    const next = startPositionSearch(stockfish);
+    stockfish.readWorker(0).listeners.onFailure('script load failed');
+    expect(await readRejection(failing.pendingLines)).toBeInstanceOf(StockfishLoadFailedError);
+    expect(await readRejection(next.pendingLines)).toBeInstanceOf(StockfishLoadFailedError);
+    const third = startPositionSearch(stockfish);
+    stockfish.readWorker(1).listeners.onLine('uciok');
+    await flushPromises();
+    stockfish.readWorker(1).listeners.onLine('bestmove e2e4');
+    await expect(third.pendingLines).resolves.toEqual(['bestmove e2e4']);
   });
 });

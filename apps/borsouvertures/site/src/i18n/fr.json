@@ -32,7 +32,17 @@
       "french": "FR"
     },
     "settings": "Réglages",
-    "close-settings": "Fermer les réglages"
+    "close-settings": "Fermer les réglages",
+    "evaluation-bar": {
+      "label": "Barre d'évaluation",
+      "off": "Masquée",
+      "on": "Affichée"
+    },
+    "move-sound": {
+      "label": "Son des coups",
+      "off": "Non",
+      "on": "Oui"
+    }
   },
   "account": {
     "sign-in": "Se connecter",
@@ -405,6 +415,23 @@
     "mark": {
       "recalled": "Retenu",
       "missed": "Manqué"
+    },
+    "promotion": {
+      "queen": "Promouvoir en dame",
+      "knight": "Promouvoir en cavalier",
+      "rook": "Promouvoir en tour",
+      "bishop": "Promouvoir en fou",
+      "cancel": "Annuler la promotion"
+    },
+    "evaluation": {
+      "pending": "Évaluation : Stockfish cherche",
+      "equal": "Évaluation : égalité",
+      "white-ahead": "Évaluation : les Blancs ont {{amount}} d'avance",
+      "black-ahead": "Évaluation : les Noirs ont {{amount}} d'avance",
+      "white-mates": "Évaluation : les Blancs matent en {{moveCount}}",
+      "black-mates": "Évaluation : les Noirs matent en {{moveCount}}",
+      "white-won": "Évaluation : les Blancs ont gagné",
+      "black-won": "Évaluation : les Noirs ont gagné"
     }
   },
   "learn": {
