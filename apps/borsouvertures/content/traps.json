@@ -1,0 +1,369 @@
+{
+  "dumpLastModified": "2026-11-01",
+  "filters": {
+    "minimumRating": 1000,
+    "maximumRating": 1700,
+    "minimumPopularity": 80,
+    "maximumFullMoveNumber": 15,
+    "trapsPerDeck": 10,
+    "openingTagsByDeckId": {
+      "albin-countergambit": ["Queens_Gambit_Declined_Albin_Countergambit"],
+      "scandinavian-qa5": ["Scandinavian_Defense_Main_Line", "Zukertort_Opening_Tennison_Gambit"],
+      "caro-kann-two-knights": ["Caro-Kann_Defense_Two_Knights_Attack"],
+      "vienna-game": ["Vienna_Game"],
+      "grand-prix-attack": ["Sicilian_Defense_Grand_Prix_Attack"]
+    }
+  },
+  "traps": [
+    {
+      "puzzleId": "UPU6H",
+      "deckId": "albin-countergambit",
+      "fen": "1rbqkb1r/ppp2ppp/8/4Pn2/1nPpQ3/1N3N2/PP2PPPP/R1B1KB1R w KQk - 10 9",
+      "movesUci": ["b3d4", "f5d4", "f3d4", "d8d4", "e4d4", "b4c2", "e1d1", "c2d4"],
+      "rating": 1465
+    },
+    {
+      "puzzleId": "FUczt",
+      "deckId": "albin-countergambit",
+      "fen": "r2qk1nr/ppp2pbp/6p1/4n3/1PPp2b1/P4N2/1B1NPPPP/R2QKB1R w KQkq - 0 9",
+      "movesUci": ["f3d4", "e5d3", "e2d3", "g4d1"],
+      "rating": 1237
+    },
+    {
+      "puzzleId": "HMH1s",
+      "deckId": "albin-countergambit",
+      "fen": "r1bqk1nr/ppp2p1p/2n3p1/4b3/2PN4/1P6/PB2PPPP/RN1QKB1R w KQkq - 0 8",
+      "movesUci": ["d4c6", "d8d1", "e1d1", "e5b2"],
+      "rating": 1353
+    },
+    {
+      "puzzleId": "kXzFs",
+      "deckId": "albin-countergambit",
+      "fen": "2kr2nr/ppp1qppp/8/3Bn3/2P5/P2p2P1/1P1QPP1P/RN3RK1 w - - 0 13",
+      "movesUci": ["e2d3", "d8d5", "c4d5", "e5f3", "g1g2", "f3d2"],
+      "rating": 1621
+    },
+    {
+      "puzzleId": "9BaVP",
+      "deckId": "albin-countergambit",
+      "fen": "2kr1b1r/ppp1qppp/6n1/4n3/bPPN4/P5BP/2QNPPP1/R3KB1R w KQ - 1 14",
+      "movesUci": ["c2a4", "e5d3", "e1d1", "d3b2", "d1c2", "b2a4"],
+      "rating": 1399
+    },
+    {
+      "puzzleId": "vLAZz",
+      "deckId": "albin-countergambit",
+      "fen": "r2qk1nr/ppp1bppp/2n5/4P3/2PNb1P1/P4N1P/1P2PP2/R1BQKB1R w KQkq - 1 11",
+      "movesUci": ["f1g2", "c6d4", "f3d4", "e4g2"],
+      "rating": 1474
+    },
+    {
+      "puzzleId": "AtWxG",
+      "deckId": "albin-countergambit",
+      "fen": "r1bqk1nr/ppp3pp/5p2/4P3/1nPpP3/5N2/PP3PPP/RN1QKB1R w KQkq - 0 8",
+      "movesUci": ["f3d4", "d8d4", "d1d4", "b4c2", "e1d2", "c2d4"],
+      "rating": 1460
+    },
+    {
+      "puzzleId": "hFIVa",
+      "deckId": "albin-countergambit",
+      "fen": "r2qkbnr/ppp2ppp/8/4P3/2Pn2b1/5N2/PP3PPP/RNBQKB1R w KQkq - 0 7",
+      "movesUci": ["c1e3", "d4f3", "g2f3", "d8d1", "e1d1", "g4f3"],
+      "rating": 1657
+    },
+    {
+      "puzzleId": "4Nuto",
+      "deckId": "albin-countergambit",
+      "fen": "r1bqkbnr/pp3p1p/2n3p1/2P1P3/3p4/5N2/PP3PPP/RNBQKB1R w KQkq - 0 8",
+      "movesUci": ["f1b5", "d8a5", "b1c3", "d4c3", "b5c6", "b7c6"],
+      "rating": 1480
+    },
+    {
+      "puzzleId": "fMy0r",
+      "deckId": "albin-countergambit",
+      "fen": "3rkb1r/pp3ppp/2n5/4P3/2P5/5P2/PP3P1P/R1B1KB1R w KQk - 1 13",
+      "movesUci": ["f3f4", "f8b4", "e1e2", "c6d4", "e2d3", "d4b3", "d3c2", "b3a1"],
+      "rating": 1389
+    },
+    {
+      "puzzleId": "HEfMs",
+      "deckId": "scandinavian-qa5",
+      "fen": "rn2kb1r/pp2pppp/2p2n2/q7/3P2b1/2N2N2/PPP1BPPP/R1BQK2R w KQkq - 4 7",
+      "movesUci": ["c1g5", "g4f3", "e2f3", "a5g5"],
+      "rating": 1550
+    },
+    {
+      "puzzleId": "jFDn5",
+      "deckId": "scandinavian-qa5",
+      "fen": "rnbqk2r/ppp1bpp1/7p/4p3/2B1P3/8/PPPP2PP/RNBQK2R w KQkq - 2 8",
+      "movesUci": ["e1g1", "d8d4", "g1h1", "d4c4"],
+      "rating": 1372
+    },
+    {
+      "puzzleId": "4ScoW",
+      "deckId": "scandinavian-qa5",
+      "fen": "r3kbnr/p2bpp1p/2B3p1/q7/5Q2/2N5/PPnK1PPP/R1B3NR w kq - 1 12",
+      "movesUci": ["c6a8", "f8h6", "f4h6", "g8h6"],
+      "rating": 1400
+    },
+    {
+      "puzzleId": "GgPDN",
+      "deckId": "scandinavian-qa5",
+      "fen": "rn2k2r/ppq2pp1/2pbp3/8/3P2p1/2N1B3/PPPQBPP1/R4RK1 w kq - 0 15",
+      "movesUci": ["e2g4", "d6h2", "g1h1", "h2g1", "h1g1", "c7h2"],
+      "rating": 1428
+    },
+    {
+      "puzzleId": "M3YUx",
+      "deckId": "scandinavian-qa5",
+      "fen": "rn2k2r/ppp2ppp/3bp3/8/3P2n1/2N2N1q/PPPBBP2/R2QR1K1 w kq - 2 12",
+      "movesUci": ["e2f1", "d6h2", "g1h1", "g4f2"],
+      "rating": 1259
+    },
+    {
+      "puzzleId": "YdIzL",
+      "deckId": "scandinavian-qa5",
+      "fen": "r3kb1r/ppp1pppp/5n2/q7/3n4/2NP1B1P/PPPB1PP1/R2QK2R w KQkq - 1 10",
+      "movesUci": ["c3d5", "d4f3", "d1f3", "a5d5", "f3d5", "f6d5"],
+      "rating": 1498
+    },
+    {
+      "puzzleId": "vx9sC",
+      "deckId": "scandinavian-qa5",
+      "fen": "rn3rk1/pppbbppp/6q1/4p3/1PB5/P2P2N1/2P2PPP/R1B1QRK1 w - - 3 15",
+      "movesUci": ["e1e5", "e7f6", "e5c7", "f6a1"],
+      "rating": 1590
+    },
+    {
+      "puzzleId": "iu9dm",
+      "deckId": "scandinavian-qa5",
+      "fen": "r2qk1nr/ppp1bppp/2n1b3/1B2p3/4P3/5N2/PPPP2PP/RNBQ1RK1 w kq - 5 9",
+      "movesUci": ["f3e5", "d8d4", "g1h1", "d4e5"],
+      "rating": 1397
+    },
+    {
+      "puzzleId": "Wf6sq",
+      "deckId": "scandinavian-qa5",
+      "fen": "rn2k2r/ppp2ppp/3bp3/8/3P2n1/2NB1N1q/PPPB1P2/R2QR1K1 w kq - 2 13",
+      "movesUci": ["d3f1", "d6h2", "g1h1", "g4f2"],
+      "rating": 1308
+    },
+    {
+      "puzzleId": "vDAHd",
+      "deckId": "scandinavian-qa5",
+      "fen": "r2qk2r/pppb1ppp/1bn5/3Np1B1/1P2n3/P2P4/2P2PPP/R2QKB1R w KQkq - 0 11",
+      "movesUci": ["g5d8", "b6f2", "e1e2", "c6d4"],
+      "rating": 1397
+    },
+    {
+      "puzzleId": "6Yjwn",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r3k2r/p4ppp/2p1pn2/3p2Bb/1b1q4/2NB3P/PPPQ1PP1/R4RK1 b kq - 3 14",
+      "movesUci": ["e8g8", "d3h7", "f6h7", "d2d4"],
+      "rating": 1429
+    },
+    {
+      "puzzleId": "MtBDw",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r3k2r/p4ppp/2pbpnb1/3pN3/N2P1BP1/7P/PqP2P2/R2Q1RK1 b kq - 1 14",
+      "movesUci": ["b2c2", "e5g6", "c2g6", "f4d6"],
+      "rating": 1354
+    },
+    {
+      "puzzleId": "PHDB1",
+      "deckId": "caro-kann-two-knights",
+      "fen": "rn1qkb1r/pp3ppp/2p1pn2/6B1/3PN3/5Q1P/PPP2PP1/R3KB1R b KQkq - 0 8",
+      "movesUci": ["d8d4", "e4f6", "g7f6", "g5f6"],
+      "rating": 1411
+    },
+    {
+      "puzzleId": "qBl3H",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r2qkb1r/p2npppp/2Q5/1N1pP3/3P4/5P2/PPP2P2/R3K2R b KQkq - 0 13",
+      "movesUci": ["e7e6", "b5c7", "d8c7", "c6c7"],
+      "rating": 1259
+    },
+    {
+      "puzzleId": "mIaoN",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r4rk1/pp1n1ppp/2pbqpb1/8/3P2PP/4BN2/PPP1QPB1/1K1R3R b - - 0 14",
+      "movesUci": ["e6g4", "g2h3", "g4h5", "h3d7", "a8d8", "d7h3"],
+      "rating": 1417
+    },
+    {
+      "puzzleId": "adxA4",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r1bk1b1r/p3pPpp/2p5/1p6/4p3/1BN1B3/PPP1K1PP/R6n b - - 1 13",
+      "movesUci": ["a7a5", "e3b6", "d8d7", "a1d1"],
+      "rating": 1265
+    },
+    {
+      "puzzleId": "TdkV0",
+      "deckId": "caro-kann-two-knights",
+      "fen": "rn1qk2r/pp2pp1p/2p3p1/8/4QB2/2bP3P/P1P2PP1/1R1K1B1R b kq - 3 12",
+      "movesUci": ["b7b6", "f4b8", "a8b8", "e4c6", "d8d7", "c6c3"],
+      "rating": 1653
+    },
+    {
+      "puzzleId": "n740X",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r2qk1nr/pp1nbNpb/2p1p2p/7P/2B5/6N1/PPPPQPP1/R1B1K2R b KQkq - 0 11",
+      "movesUci": ["e8f7", "e2e6", "f7f8", "e6f7"],
+      "rating": 1187
+    },
+    {
+      "puzzleId": "bjCHi",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r4rk1/ppbnRppp/2p2p2/8/2BP4/2P2Q1P/PP3PPq/R1B2K2 b - - 4 15",
+      "movesUci": ["a8e8", "c4f7", "f8f7", "e7e8"],
+      "rating": 1189
+    },
+    {
+      "puzzleId": "jug2n",
+      "deckId": "caro-kann-two-knights",
+      "fen": "r1b1rnk1/pp3ppp/2p2p2/2P5/3P1q2/3B1N1P/PP3PP1/R2Q1RK1 b - - 0 14",
+      "movesUci": ["c8f5", "g2g3", "f4h6", "d3f5"],
+      "rating": 1592
+    },
+    {
+      "puzzleId": "Kb4zX",
+      "deckId": "vienna-game",
+      "fen": "r2qkbnr/ppp2ppp/3p4/4N3/2BnPpb1/2N5/PPPP2PP/R1BQ1RK1 b kq - 3 7",
+      "movesUci": ["g4d1", "c4f7", "e8e7", "c3d5"],
+      "rating": 1442
+    },
+    {
+      "puzzleId": "St0N4",
+      "deckId": "vienna-game",
+      "fen": "rn2k2r/ppp1nppp/3p4/8/3P2Q1/B1P5/P1PK2Bq/7R b kq - 0 15",
+      "movesUci": ["h7h5", "h1h2", "h5g4", "h2h8"],
+      "rating": 1250
+    },
+    {
+      "puzzleId": "Ft3tg",
+      "deckId": "vienna-game",
+      "fen": "r2q2kr/2p1b1pp/p2p1Pn1/1p4N1/3P2b1/2N5/PPP1Q1PP/R1B2RK1 b - - 0 13",
+      "movesUci": ["g4e2", "f6f7", "g8f8", "g5e6"],
+      "rating": 1347
+    },
+    {
+      "puzzleId": "RHJo7",
+      "deckId": "vienna-game",
+      "fen": "r2qk2r/pppnbpp1/3p2b1/6Pp/2B1PB1P/2NP1Q2/PPP5/4RRK1 b kq - 0 14",
+      "movesUci": ["d7e5", "f4e5", "d6e5", "c4f7", "g6f7", "f3f7"],
+      "rating": 1457
+    },
+    {
+      "puzzleId": "28XQv",
+      "deckId": "vienna-game",
+      "fen": "r2q1b1r/ppp2kpp/5p2/3bpQ2/8/P4N2/1P1P1PPP/R1B1K2R b KQ - 7 15",
+      "movesUci": ["d5c4", "f3e5", "f7g8", "e5c4"],
+      "rating": 1450
+    },
+    {
+      "puzzleId": "fDky9",
+      "deckId": "vienna-game",
+      "fen": "r1bq1rk1/pppnb1pn/3p4/3Np1P1/2BPp2P/5N2/PPPQ2P1/R3K2R b KQ - 1 12",
+      "movesUci": ["e4f3", "d5e7", "g8h8", "e7g6"],
+      "rating": 1423
+    },
+    {
+      "puzzleId": "5JXPv",
+      "deckId": "vienna-game",
+      "fen": "rnbq3r/5k1p/p5p1/bp2Q3/3p4/2P3N1/PBP2PPP/R4RK1 b - - 0 14",
+      "movesUci": ["d8f6", "e5d5", "c8e6", "d5a8"],
+      "rating": 1496
+    },
+    {
+      "puzzleId": "DriCb",
+      "deckId": "vienna-game",
+      "fen": "rn2k2r/ppp2ppp/3p2q1/2bP4/2B1b3/P4N1P/1PP1QPP1/R1B2RK1 b kq - 3 12",
+      "movesUci": ["e8g8", "f3h4", "g6f6", "e2e4"],
+      "rating": 1550
+    },
+    {
+      "puzzleId": "2kK0J",
+      "deckId": "vienna-game",
+      "fen": "r1b1kbnr/ppp2ppp/8/1N6/3pq3/8/PPPP1KPP/R1BQ1B1R b kq - 1 9",
+      "movesUci": ["a7a6", "b5c7", "e8d8", "c7a8", "c8g4", "f1e2"],
+      "rating": 1442
+    },
+    {
+      "puzzleId": "MSAqZ",
+      "deckId": "vienna-game",
+      "fen": "r4rk1/ppp2qpp/2np4/5b2/Q7/4PN2/PPPR2PP/2K2B1R b - - 0 15",
+      "movesUci": ["a7a6", "f1c4", "f5e6", "f3g5", "e6c4", "g5f7"],
+      "rating": 1577
+    },
+    {
+      "puzzleId": "M8HqG",
+      "deckId": "grand-prix-attack",
+      "fen": "r4rk1/p4pbp/1pb1p1p1/2pq4/5P2/3PBN2/PPP1Q1PP/R4R1K b - - 1 14",
+      "movesUci": ["g7b2", "c2c4", "d5d8", "e2b2"],
+      "rating": 1363
+    },
+    {
+      "puzzleId": "RPmKy",
+      "deckId": "grand-prix-attack",
+      "fen": "r3kb1r/ppNqp1pp/3pNn2/2p5/4PPQ1/8/PP1P2PP/n1BK3R b - - 5 12",
+      "movesUci": ["e8f7", "e6g5", "f7g8", "g4d7", "f6d7", "c7a8"],
+      "rating": 1525
+    },
+    {
+      "puzzleId": "Rd5Nm",
+      "deckId": "grand-prix-attack",
+      "fen": "r2qkbnr/pp3ppp/3p4/2p1N3/2BnPPb1/2NP4/PPP3PP/R1BQK2R b KQkq - 0 7",
+      "movesUci": ["g4d1", "c4f7", "e8e7", "c3d5"],
+      "rating": 1331
+    },
+    {
+      "puzzleId": "zzTMX",
+      "deckId": "grand-prix-attack",
+      "fen": "r1bq2kr/pp4bp/2np1Rp1/2p3N1/4P3/2N5/PPP3PP/R1BQ2K1 b - - 0 12",
+      "movesUci": ["g7f6", "d1d5", "g8g7", "d5f7"],
+      "rating": 1520
+    },
+    {
+      "puzzleId": "41uvy",
+      "deckId": "grand-prix-attack",
+      "fen": "r1bq2kr/pp1nb2p/2np2P1/2R4Q/4P3/2NP4/PPP3PP/R1B3K1 b - - 0 15",
+      "movesUci": ["d6c5", "h5d5", "g8g7", "d5f7"],
+      "rating": 1562
+    },
+    {
+      "puzzleId": "QErgT",
+      "deckId": "grand-prix-attack",
+      "fen": "r1bqk2r/pp2bppp/2n2n2/1Bpp4/5P2/2N2N2/PPPPQ1PP/R1B1R1K1 b kq - 5 9",
+      "movesUci": ["e8g8", "b5c6", "b7c6", "e2e7"],
+      "rating": 1491
+    },
+    {
+      "puzzleId": "FEhrG",
+      "deckId": "grand-prix-attack",
+      "fen": "r1b1kbnr/pp1p1ppp/2n5/2p5/2B1P2q/2NP1Q2/PPPK2pP/R1B3NR b kq - 1 8",
+      "movesUci": ["g2h1q", "f3f7", "e8d8", "f7f8", "d8c7", "c3d5", "c7b8", "f8d6"],
+      "rating": 1469
+    },
+    {
+      "puzzleId": "PzTpJ",
+      "deckId": "grand-prix-attack",
+      "fen": "r2q1b1r/pp3kpp/8/2pBpb2/3nN3/5Q2/PPPP2PP/R1B1K2R b KQ - 0 11",
+      "movesUci": ["d8d5", "e4g5", "f7f6", "f3d5"],
+      "rating": 1317
+    },
+    {
+      "puzzleId": "j3HV0",
+      "deckId": "grand-prix-attack",
+      "fen": "r1bq1rk1/p3npbp/1p4pB/2pp2N1/4p2Q/1PNP4/1PP3PP/R4RK1 b - - 1 14",
+      "movesUci": ["f7f6", "h6g7", "f6g5", "f1f8", "d8f8", "g7f8", "g5h4", "f8e7"],
+      "rating": 1604
+    },
+    {
+      "puzzleId": "wxtI1",
+      "deckId": "grand-prix-attack",
+      "fen": "r2qk2r/1p1nppbp/p1b3p1/2p1P3/8/2NP1NQ1/PPP3PP/R1B2RK1 b kq - 2 12",
+      "movesUci": ["d8c7", "e5e6", "c7g3", "e6d7", "e8d7", "h2g3"],
+      "rating": 1688
+    }
+  ]
+}

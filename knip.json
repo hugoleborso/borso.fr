@@ -55,8 +55,27 @@
       "ignoreDependencies": ["tailwindcss"]
     },
     "apps/borsouvertures": {
-      "entry": ["bin/app.ts", "site/**/*.utils.test.ts"],
-      "project": ["bin/**/*.ts", "scripts/**/*.ts", "site/**/*.ts", "site/**/*.tsx"],
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "cdk/test/**/*.test.ts",
+        "site/**/*.utils.test.ts",
+        "domain/**/*.core.test.ts",
+        "scripts/**/*.test.ts",
+        "api/src/main.ts",
+        "api/scripts/*.ts",
+        "api/src/**/*.test.ts",
+        "test/**/*.ts",
+        "vitest.mutation.config.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "scripts/**/*.ts",
+        "site/**/*.ts",
+        "site/**/*.tsx",
+        "domain/**/*.ts",
+        "api/**/*.ts",
+        "test/**/*.ts"
+      ],
       "ignoreDependencies": ["tailwindcss"]
     },
     "apps/last-loop-lepin": {

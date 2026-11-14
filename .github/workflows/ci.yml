@@ -456,6 +456,32 @@ jobs:
       - run: pnpm exec tsx scripts/quality/check-dashboard-page.ts
         if: steps.filter.outputs.page == 'true'
 
+  deck-content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            decks:
+              - 'apps/borsouvertures/content/decks/**'
+              - 'apps/borsouvertures/site/public/stockfish/**'
+              - 'apps/borsouvertures/scripts/check-decks.setup.ts'
+              - 'apps/borsouvertures/scripts/decks/**'
+      - uses: pnpm/action-setup@v6
+        if: steps.filter.outputs.decks == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.filter.outputs.decks == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.filter.outputs.decks == 'true'
+      - run: pnpm --filter @borso-app/borsouvertures run check:decks
+        if: steps.filter.outputs.decks == 'true'
+
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

@@ -7,10 +7,10 @@ related-pr: '#8'
 fix-pr: '#8'
 fix-commits: [683375572c, f97e162c9b]
 eradication-level: 1
-eradication-paths: [apps/borsouvertures/site/src/openings/bookEngine.utils.ts, apps/borsouvertures/site/src/openings/bookEngine.utils.test.ts]
+eradication-paths: [apps/borsouvertures/site/src/openings/openingIds.utils.ts, apps/borsouvertures/site/src/openings/openingIds.utils.test.ts]
 time-to-detect: hours
 tags: [react, identifiers, domain-model, borsouvertures]
-zone: apps/borsouvertures/site/src/openings/bookEngine.utils.ts
+zone: apps/borsouvertures/site/src/openings/openingIds.utils.ts
 ---
 
 # Assumed variation IDs were globally unique — they aren't
@@ -144,3 +144,11 @@ changing the signature again.
 - [`docs/dantotsus/described-screenshot-without-checking-pixels.md`](./described-screenshot-without-checking-pixels.md) —
   the sibling visual-validator finding from the same run (#12 was the
   PASS_WITH_NOTE that surfaced this dantotsu).
+
+## Update, 2026-11-13
+
+The opening trainer pull request (hugoleborso/borso.fr#321) removed the
+Learn and Play screens, and `bookEngine.utils.ts` with them. No screen keys a
+scope by variation id any more. The open explorer matches lines by move
+prefix. The ids that remain are built in `openingIds.utils.ts`, which suffixes
+the name slug with a fingerprint of the moves, and its test holds that.

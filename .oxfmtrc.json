@@ -20,6 +20,8 @@
     "**/__snapshots__/",
     "apps/borsouvertures/site/src/openings/openings.json",
     "apps/borsouvertures/site/public/openings.json",
+    "apps/borsouvertures/site/public/stockfish",
+    "apps/borsouvertures/site/public/decks.json",
     ".claude/skills/plain-writing/SKILL.md",
     ".claude/skills/plain-writing/LICENSE",
     ".claude/skills/writing-great-skills/references/",

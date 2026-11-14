@@ -12,8 +12,8 @@ export function BoardStyleSelect({ boardStyle }: BoardStyleSelectProps) {
   const { t } = useTranslation();
   const label = t('top-bar.board-style.label');
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span>{label}</span>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <span className="font-bold">{label}</span>
       <Select
         value={boardStyle}
         ariaLabel={label}

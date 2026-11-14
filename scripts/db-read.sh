@@ -9,7 +9,7 @@
 #   scripts/db-read.sh "SELECT count(*) FROM member"
 #   APP=last-loop-lepin scripts/db-read.sh "WITH … SELECT …"
 #
-# APP is pragma (default), last-loop-lepin or banana-rush; STAGE is prod.
+# APP is pragma (default), last-loop-lepin, banana-rush or borsouvertures; STAGE is prod.
 # talos is refused: its data is private and agents read it through its own
 # API (ADR-2026-10-16T0716).
 set -euo pipefail
