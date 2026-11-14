@@ -271,6 +271,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-location',
+      icon: '🧭',
+      name: 'Page location',
+      technology: 'Browser location API',
+      description:
+        'Replaces the « Parler à Talos » page with the link to talk to Talos as soon as that link is known, so the page is a redirect rather than a step in the history.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'sentry',
       icon: '🚨',
       name: 'Sentry',
