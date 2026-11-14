@@ -572,6 +572,8 @@ since ADR-2026-10-28T2126 landed.
 | Access keys | one, `Active` |
 | Used by | the Claude cloud environment "Borso Admin" only |
 
+Its network is *Limited* with no allowed host, so beyond the package registries and MCP servers the session proxy answers 403 to every host, preview hosts included (measured with `get_environment` and a `curl` to `pragma-pr-343.preview.borso.fr` on 2026-11-14). The "Borso.fr" environment is unrestricted. Run a check that reaches a preview from a "Borso.fr" session.
+
 That environment sets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_DEFAULT_REGION` and `AWS_ACCOUNT_ID`. Every other environment keeps the `AI-Dev-ReadOnly` key of §12.3.
 
 **Its blast radius is the whole account.** `AI-Dev-ReadOnly` cannot write even if its key leaks. This key can delete production data, change IAM and create resources that cost money. The trade-off at the top of §12 applies in full: anyone who can edit the environment can read the key.
