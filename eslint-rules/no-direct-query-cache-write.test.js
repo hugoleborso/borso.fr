@@ -11,7 +11,8 @@ createRuleTester(QUERY_MODULE, { jsx: false }).run('no-direct-query-cache-write'
     'writeEachKeepingStaleness(queryClient, takeKeys.ofSessions(), (cache) => cache);',
     'const previous = queryClient.getQueryData(songKeys.list());',
     'queryClient.setQueryDefaults(songKeys.all, { staleTime: 0 });',
-    'queryClient["setQueryData"](songKeys.list(), next);',
+    'queryClient[method](songKeys.list(), next);',
+    'queryClient["getQueryData"](songKeys.list());',
     'setQueryData(songKeys.list(), next);',
   ],
   invalid: [
@@ -25,6 +26,10 @@ createRuleTester(QUERY_MODULE, { jsx: false }).run('no-direct-query-cache-write'
     },
     {
       code: 'write.queryClient.setQueryData(audienceKeys.ballot(sessionId), minted);',
+      errors: [{ messageId: 'directCacheWrite', data: { method: 'setQueryData' } }],
+    },
+    {
+      code: 'queryClient["setQueryData"](songKeys.list(), next);',
       errors: [{ messageId: 'directCacheWrite', data: { method: 'setQueryData' } }],
     },
     {

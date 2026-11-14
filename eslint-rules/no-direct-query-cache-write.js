@@ -12,13 +12,16 @@ const CACHE_WRITE_METHODS = new Set(['setQueryData', 'setQueriesData']);
 
 const CACHE_WRITE_MODULE_PATTERN = /(^|\/)lib\/queries\/cache-write\.queries\.ts$/;
 
+function readPropertyName(callee) {
+  if (!callee.computed && callee.property.type === 'Identifier') return callee.property.name;
+  if (callee.computed && callee.property.type === 'Literal') return String(callee.property.value);
+  return null;
+}
+
 export function readCacheWriteMethod(callee) {
-  return callee.type === 'MemberExpression' &&
-    !callee.computed &&
-    callee.property.type === 'Identifier' &&
-    CACHE_WRITE_METHODS.has(callee.property.name)
-    ? callee.property.name
-    : null;
+  if (callee.type !== 'MemberExpression') return null;
+  const name = readPropertyName(callee);
+  return name !== null && CACHE_WRITE_METHODS.has(name) ? name : null;
 }
 
 // @FollowsBlueprint lint-rule

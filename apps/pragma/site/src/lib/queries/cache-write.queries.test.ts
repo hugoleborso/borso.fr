@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { QueryObserver } from '@tanstack/react-query';
+import { describe, expect, it, vi } from 'vitest';
 import { writeEachKeepingStaleness, writeKeepingStaleness } from './cache-write.queries';
-import { createIsolatedQueryClient } from './queries.test-utils';
+import { createIsolatedQueryClient, flushMicrotasks } from './queries.test-utils';
 
 const LIST_KEY = ['compositions', 'list'] as const;
 const OTHER_KEY = ['compositions', 'other'] as const;
@@ -50,6 +51,26 @@ describe('writeKeepingStaleness', () => {
 
     expect(queryClient.getQueryState(LIST_KEY)?.fetchStatus).toBe('idle');
     expect(queryClient.getQueryState(LIST_KEY)?.isInvalidated).toBe(true);
+  });
+
+  it('sends no request for a stale entry a screen is watching', async () => {
+    const queryClient = seed();
+    const fetchList = vi.fn(() => Promise.resolve<ListShape>({ titles: ['Composition 7'] }));
+    const observer = new QueryObserver<ListShape>(queryClient, {
+      queryKey: LIST_KEY,
+      queryFn: fetchList,
+    });
+    const unsubscribe = observer.subscribe(() => undefined);
+    await vi.waitFor(() => expect(observer.getCurrentResult().fetchStatus).toBe('idle'));
+    await queryClient.invalidateQueries({ queryKey: LIST_KEY, exact: true, refetchType: 'none' });
+    fetchList.mockClear();
+
+    writeKeepingStaleness<ListShape>(queryClient, LIST_KEY, addTitle);
+    await flushMicrotasks();
+
+    expect(fetchList).not.toHaveBeenCalled();
+    expect(queryClient.getQueryState(LIST_KEY)?.isInvalidated).toBe(true);
+    unsubscribe();
   });
 
   it('creates nothing for a key the cache does not hold', () => {
