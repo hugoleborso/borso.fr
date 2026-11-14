@@ -3,6 +3,7 @@ import { Chip } from '../atoms/Chip';
 
 const STATUS_LABEL_KEY = {
   idea: 'catalog.statusIdea',
+  to_play: 'catalog.statusToPlay',
   wip: 'catalog.statusWip',
   rehearsed: 'catalog.statusRehearsed',
   concert_ready: 'catalog.statusConcertReady',

@@ -6,7 +6,7 @@ import type { SongChartKind } from '../../components/organisms/SongChartFields';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
 import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
 
-export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
+export const songStatuses = ['idea', 'to_play', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
 export const SONG_ORIGIN_LABEL_KEY = {
@@ -16,6 +16,7 @@ export const SONG_ORIGIN_LABEL_KEY = {
 
 export const SONG_STATUS_LABEL_KEY = {
   idea: 'catalog.statusIdea',
+  to_play: 'catalog.statusToPlay',
   wip: 'catalog.statusWip',
   rehearsed: 'catalog.statusRehearsed',
   concert_ready: 'catalog.statusConcertReady',

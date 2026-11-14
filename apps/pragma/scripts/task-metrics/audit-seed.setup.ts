@@ -45,7 +45,7 @@ type Lineup = Record<string, string[]>;
 interface ExtraSong {
   title: string;
   artist: string;
-  status: 'idea' | 'wip' | 'rehearsed' | 'concert_ready';
+  status: 'idea' | 'to_play' | 'wip' | 'rehearsed' | 'concert_ready';
   origin: 'cover' | 'original';
   key: string | null;
   energy: number;

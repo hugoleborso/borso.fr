@@ -22,7 +22,7 @@ export interface PoolEntryView {
   readonly songId: string;
   readonly title: string;
   readonly artist: string;
-  readonly status: 'idea' | 'wip' | 'rehearsed' | 'concert_ready';
+  readonly status: 'idea' | 'to_play' | 'wip' | 'rehearsed' | 'concert_ready';
   readonly voteCount: number;
   readonly isSuggestion: boolean;
 }
