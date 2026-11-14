@@ -9,6 +9,7 @@ import {
   subscribeToPush,
 } from '../push-subscription.adapter';
 import { setCategoryToggle } from './notifications.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const NOTIFICATIONS_WRITE_SCOPE = { id: 'notifications-writes' } as const;
 
@@ -67,7 +68,7 @@ export function useEnablePush() {
   return useMutation({
     mutationFn: enablePushOnThisDevice,
     onSuccess: (subscription) => {
-      queryClient.setQueryData(notificationKeys.subscription(), subscription);
+      writeKeepingStaleness(queryClient, notificationKeys.subscription(), subscription);
     },
   });
 }
@@ -88,7 +89,7 @@ export function useUpdateNotificationPreference() {
       const preferencesKey = notificationKeys.preferences();
       await queryClient.cancelQueries({ queryKey: preferencesKey });
       const previousPreferences = queryClient.getQueryData<PreferencesResponse>(preferencesKey);
-      queryClient.setQueryData<PreferencesResponse>(preferencesKey, (old) => {
+      writeKeepingStaleness<PreferencesResponse>(queryClient, preferencesKey, (old) => {
         if (old === undefined) return old;
         return {
           preferences: setCategoryToggle(old.preferences, variables.category, variables.enabled),
@@ -97,11 +98,15 @@ export function useUpdateNotificationPreference() {
       return { previousPreferences };
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<PreferencesResponse>(notificationKeys.preferences(), data);
+      writeKeepingStaleness<PreferencesResponse>(queryClient, notificationKeys.preferences(), data);
     },
     onError: (_failure, _variables, context) => {
       if (context?.previousPreferences !== undefined) {
-        queryClient.setQueryData(notificationKeys.preferences(), context.previousPreferences);
+        writeKeepingStaleness(
+          queryClient,
+          notificationKeys.preferences(),
+          context.previousPreferences,
+        );
       }
     },
   });

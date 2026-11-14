@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { selectInvalidationFilters } from '../live-invalidation.core';
 import { songKeys, useCreateSong, useDeleteSong, useUpdateSong } from './songs.queries';
 import {
   createIsolatedQueryClient,
@@ -195,6 +196,40 @@ describe('songs mutations — optimistic updates', () => {
     await flushMicrotasks();
     const after = queryClient.getQueryData<OptimisticListShape>(songKeys.list());
     expect(after?.songs).toHaveLength(1);
+    tree.unmount();
+  });
+});
+
+describe("songs mutations — another member's earlier change", () => {
+  let stub: ReturnType<typeof stubFetch> | null = null;
+
+  afterEach(() => {
+    stub?.restore();
+  });
+
+  it("keeps the songs stale after this member's own update, so the other change still loads", async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(songKeys.list(), SEED_LIST);
+    queryClient.setQueryData(songKeys.byId('song-a'), { song: SEED_LIST.songs[0] });
+    for (const filter of selectInvalidationFilters(['songs'])) {
+      await queryClient.invalidateQueries(filter);
+    }
+    const pending = deferred<Response>();
+    stub = stubFetch(() => pending.promise);
+
+    const slot = createMutateSlot<ReturnType<typeof useUpdateSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
+
+    send({ id: 'song-a', title: 'Renamed' }).catch(() => undefined);
+    await flushMicrotasks();
+    pending.resolve(jsonResponse({ song: { ...SEED_LIST.songs[0], title: 'Renamed' } }));
+    await flushMicrotasks();
+
+    const settled = queryClient.getQueryData<OptimisticListShape>(songKeys.list());
+    expect(settled?.songs[0]?.title).toBe('Renamed');
+    expect(queryClient.getQueryState(songKeys.list())?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(songKeys.byId('song-a'))?.isInvalidated).toBe(true);
     tree.unmount();
   });
 });

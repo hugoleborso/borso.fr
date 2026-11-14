@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 import { applyScoreToBoard, type VoteBoard } from './voting.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const VOTING_WRITE_SCOPE = { id: 'voting-writes' } as const;
 
@@ -60,7 +61,8 @@ export function useScoreSong(setlistId: string, memberId: string) {
       await queryClient.cancelQueries({ queryKey: boardKey });
       const snapshot = queryClient.getQueryData<VoteBoard>(boardKey);
       if (snapshot !== undefined) {
-        queryClient.setQueryData<VoteBoard>(
+        writeKeepingStaleness<VoteBoard>(
+          queryClient,
           boardKey,
           applyScoreToBoard(snapshot, memberId, variables.songId, variables.points),
         );
@@ -69,13 +71,16 @@ export function useScoreSong(setlistId: string, memberId: string) {
     },
     onError: (_error, _variables, context) => {
       if (context?.snapshot !== undefined) {
-        queryClient.setQueryData<VoteBoard>(boardKey, context.snapshot);
+        writeKeepingStaleness<VoteBoard>(queryClient, boardKey, context.snapshot);
       }
     },
     onSuccess: (confirmed) => {
       const current = queryClient.getQueryData<VoteBoard>(boardKey);
       if (current === undefined || !('budget' in confirmed)) return;
-      queryClient.setQueryData<VoteBoard>(boardKey, { ...current, budget: confirmed.budget });
+      writeKeepingStaleness<VoteBoard>(queryClient, boardKey, {
+        ...current,
+        budget: confirmed.budget,
+      });
     },
   });
 }

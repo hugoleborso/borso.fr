@@ -2,6 +2,7 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { isDeviceIos } from '../../lib/display-mode.adapter';
 import { selectSongListenLinks } from '../../lib/listen-links.utils';
 import { useSignedInMember } from '../../lib/queries/me.queries';
@@ -50,6 +51,7 @@ export interface SongDetailProps {
   readonly onSelectTake: (takeId: string | null) => void;
   readonly tab: SongViewTab;
   readonly onTabChange: (tab: SongViewTab) => void;
+  readonly compositionId: string | null;
 }
 
 const NO_SETLISTS: readonly never[] = [];
@@ -127,6 +129,15 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                   <Icon name="setlist" size="sm" />
                   {t(setlistsLine.messageKey, { names: setlistsLine.names })}
                 </p>
+                {props.compositionId === null ? null : (
+                  <Link
+                    to={`/compos/${props.compositionId}/sketch`}
+                    className="inline-flex min-h-11 items-center gap-2 self-start text-meta text-accent"
+                  >
+                    <Icon name="compos" size="sm" />
+                    {t('compos.openSketch')}
+                  </Link>
+                )}
                 <SongRoundActions
                   songId={song.id}
                   defaultLineup={song.defaultLineup}

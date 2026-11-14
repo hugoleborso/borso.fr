@@ -1,5 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { compositionTable } from '../compositions/compositions.schema';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
@@ -214,10 +215,14 @@ export async function findSongByDeezerTrackId(deezerTrackId: string): Promise<So
 }
 
 export async function insertSong(values: SongInsertShape): Promise<SongRow> {
-  const [row] = await getDatabase()
-    .insert(songTable)
-    .values(encodeInsert(values))
-    .returning(PROJECTION);
+  return await insertSongWithin(getDatabase(), values);
+}
+
+export async function insertSongWithin(
+  executor: DatabaseExecutor,
+  values: SongInsertShape,
+): Promise<SongRow> {
+  const [row] = await executor.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSong(row);
 }
@@ -260,6 +265,10 @@ export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);
+    await transaction
+      .update(compositionTable)
+      .set({ songId: null })
+      .where(eq(compositionTable.songId, id));
     const takeObjectKeys = await deleteTakesOfDeletedSong(transaction, id);
     return { outcome: selectDeletionOutcome(deleted.length), takeObjectKeys };
   });

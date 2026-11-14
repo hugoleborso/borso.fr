@@ -180,17 +180,28 @@ fi
 # `network route '**/api/streaks*' --abort` through with a 200 and printed
 # Done; 0.35.2 aborted it. See
 # docs/dantotsus/the-browser-on-path-was-not-the-pinned-one.md.
+expose_global_agent_browser() {
+  command -v agent-browser >/dev/null 2>&1 && return 0
+  local installed
+  installed="$(npm prefix -g 2>/dev/null)/bin/agent-browser"
+  [ -x "$installed" ] || return 0
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$installed" "$HOME/.local/bin/agent-browser"
+  hash -r
+}
 pinned_agent_browser=$(node -p "require('./package.json').devDependencies['agent-browser'] ?? ''" 2>/dev/null || true)
 global_agent_browser=$(agent-browser --version 2>/dev/null | sed -n 's/^agent-browser //p' || true)
 if command -v npm >/dev/null 2>&1; then
   if [ -z "$global_agent_browser" ]; then
     log "agent-browser not found; installing ${pinned_agent_browser:-latest} globally via npm"
     npm install -g "agent-browser@${pinned_agent_browser:-latest}" >/dev/null || true
+    expose_global_agent_browser
     agent-browser install >/dev/null 2>&1 || log "agent-browser install (Chromium provision) failed; /visual-validation will surface this"
   elif [ -n "$pinned_agent_browser" ] && [ "$global_agent_browser" != "$pinned_agent_browser" ]; then
     log "agent-browser $global_agent_browser on PATH, $pinned_agent_browser pinned; installing the pin globally"
     npm install -g "agent-browser@$pinned_agent_browser" >/dev/null ||
       note_missing agent-browser "agent-browser $pinned_agent_browser did not install, so $global_agent_browser drives the browser and the knowledge entries may not describe it."
+    expose_global_agent_browser
   fi
 elif [ -z "$global_agent_browser" ]; then
   log "npm not available; skipping agent-browser install"

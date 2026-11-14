@@ -12,7 +12,7 @@ async function prepareDevelopmentDatabase(): Promise<void> {
   await getDatabase().$client.end();
   process.stdout.write(
     `[dev:db] migrations applied, fixture seeded: ${String(summary.members)} members, shared password "${summary.adminPassword}"\n` +
-      `[dev:db] sign in as any of: ${SEED_MEMBERS.map((member) => member.firstName).join(', ')}\n`,
+      `[dev:db] sign in as any of: ${SEED_MEMBERS.map((member) => member.username).join(', ')}\n`,
   );
 }
 

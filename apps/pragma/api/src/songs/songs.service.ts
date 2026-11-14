@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { DatabaseExecutor } from '../database/client';
 import { DEFAULT_SONG_ORIGIN } from '@domain/song-origin.core';
 import { collapseTracksOfOneSong, type ExternalSongHit } from './deezer.core';
 import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './deezer.adapter';
@@ -40,12 +41,13 @@ import {
   findSongByDeezerTrackId,
   findSongById,
   insertSong,
+  insertSongWithin,
   listSongsNewestFirst,
   type SongInsertShape,
   type SongRow,
   updateSong,
 } from './songs.repository';
-import type { songCreateInputSchema, songUpdateInputSchema } from './songs.schema';
+import { songCreateInputSchema, type songUpdateInputSchema } from './songs.schema';
 
 type SongMasteryToolView = Awaited<ReturnType<typeof readSongMasteryForTool>>;
 
@@ -130,6 +132,16 @@ export async function createSong(
   } catch (error) {
     return await refuseTakenDeezerTrack(error, values.deezerTrackId, null);
   }
+}
+
+const CATALOGUE_SONG_FIELDS = { status: 'idea', origin: 'original' } as const;
+
+export async function createCatalogueSongWithin(
+  executor: DatabaseExecutor,
+  title: string,
+): Promise<SongRow> {
+  const input = songCreateInputSchema.parse({ title, ...CATALOGUE_SONG_FIELDS });
+  return await insertSongWithin(executor, valuesFromCreate(input));
 }
 
 async function notifyIfLineupChanged(

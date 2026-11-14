@@ -5,6 +5,7 @@ import type { InferResponseType } from 'hono/client';
 import { DEFAULT_INSTRUMENT_POSITION, FALLBACK_INSTRUMENT_ICON } from '@domain/instrument.core';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { reorderById, replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const INSTRUMENTS_WRITE_SCOPE = { id: 'instruments-writes' } as const;
 
@@ -57,14 +58,14 @@ export function useCreateInstrument() {
         position: variables.position ?? DEFAULT_INSTRUMENT_POSITION,
         players: [],
       };
-      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { instruments: [...old.instruments, inserted] };
       });
       return { previousList, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<InstrumentsListResponse>(instrumentKeys.list(), (old) => {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, instrumentKeys.list(), (old) => {
         if (old === undefined) return old;
         return {
           instruments: settleTemporaryEntity(old.instruments, context.temporaryId, data.instrument),
@@ -73,7 +74,7 @@ export function useCreateInstrument() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, instrumentKeys.list(), context.previousList);
       }
     },
   });
@@ -99,7 +100,7 @@ export function useUpdateInstrument() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           instruments: replaceEntityById(old.instruments, id, (instrument) => ({
@@ -112,7 +113,7 @@ export function useUpdateInstrument() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, instrumentKeys.list(), context.previousList);
       }
     },
   });
@@ -133,20 +134,20 @@ export function useReorderInstruments() {
       const listKey = instrumentKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
-      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { instruments: reorderById(old.instruments, variables.instrumentIds) };
       });
       return { previousList };
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<InstrumentsListResponse>(instrumentKeys.list(), {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, instrumentKeys.list(), {
         instruments: data.instruments,
       });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, instrumentKeys.list(), context.previousList);
       }
     },
   });
@@ -169,7 +170,7 @@ export function useDeleteInstrument() {
       const listKey = instrumentKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
-      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<InstrumentsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           instruments: old.instruments.filter((instrument) => instrument.id !== variables.id),
@@ -179,7 +180,7 @@ export function useDeleteInstrument() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, instrumentKeys.list(), context.previousList);
       }
     },
   });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { focusFieldAboveKeyboard } from './keyboard-reveal.adapter';
+import { focusFieldAboveKeyboard, keepFocusedFieldAboveKeyboard } from './keyboard-reveal.adapter';
 
 function stubVisualViewport(): EventTarget {
   const visualViewport = new EventTarget();
@@ -64,5 +64,81 @@ describe('focusFieldAboveKeyboard', () => {
 
   it('does nothing when React detaches the field', () => {
     expect(() => focusFieldAboveKeyboard(null)).not.toThrow();
+  });
+});
+
+function startWith(visualViewport: EventTarget): void {
+  keepFocusedFieldAboveKeyboard({
+    visualViewport,
+    document,
+    requestAnimationFrame: (callback) => callback(),
+  });
+}
+
+describe('keepFocusedFieldAboveKeyboard', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it.each(['input', 'textarea'] as const)(
+    'scrolls the focused %s back into view once the keyboard resizes the view',
+    (tagName) => {
+      const visualViewport = new EventTarget();
+      const field = document.createElement(tagName);
+      document.body.append(field);
+      const scrollIntoView = vi.fn();
+      field.scrollIntoView = scrollIntoView;
+      startWith(visualViewport);
+
+      field.focus();
+      visualViewport.dispatchEvent(new Event('resize'));
+
+      expect(scrollIntoView).toHaveBeenCalledExactlyOnceWith({ block: 'nearest' });
+    },
+  );
+
+  it('waits for the next frame, after the sheet has taken its new height', () => {
+    const visualViewport = new EventTarget();
+    const field = document.createElement('textarea');
+    document.body.append(field);
+    const scrollIntoView = vi.fn();
+    field.scrollIntoView = scrollIntoView;
+    const frames: (() => void)[] = [];
+    keepFocusedFieldAboveKeyboard({
+      visualViewport,
+      document,
+      requestAnimationFrame: (callback) => frames.push(callback),
+    });
+    field.focus();
+
+    visualViewport.dispatchEvent(new Event('resize'));
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    for (const frame of frames) frame();
+
+    expect(scrollIntoView).toHaveBeenCalledOnce();
+  });
+
+  it('scrolls nothing when no text field has focus', () => {
+    const visualViewport = new EventTarget();
+    const button = document.createElement('button');
+    document.body.append(button);
+    const scrollIntoView = vi.fn();
+    button.scrollIntoView = scrollIntoView;
+    startWith(visualViewport);
+
+    button.focus();
+    visualViewport.dispatchEvent(new Event('resize'));
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('listens to nothing in a browser with no visual viewport', () => {
+    expect(() =>
+      keepFocusedFieldAboveKeyboard({
+        visualViewport: null,
+        document,
+        requestAnimationFrame: (callback) => callback(),
+      }),
+    ).not.toThrow();
   });
 });

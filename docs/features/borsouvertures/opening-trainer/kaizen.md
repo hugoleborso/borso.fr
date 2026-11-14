@@ -75,3 +75,26 @@ Session: 9499cdc7-5d1f-5719-8d50-a7d5c2d01baf
 - [2026-11-13 12:18] `visual-validation-02` scripts/phone.sh touch takes only a CSS selector, and the borsouvertures action buttons carry no id, test id or aria-label distinct from their text, so a tap on Start or Next needed a data attribute injected by eval first
 - [2026-11-13 12:18] `visual-validation-02` Neither the visual-validator brief nor the CLI help says that 'agent-browser set offline' does not stop service-worker fetches, so an offline-worker row needs an init script that blocks navigator.serviceWorker.register, rediscovered each run
 - [2026-11-13 12:18] `visual-validation-02` The preview bundle carries no Sentry DSN, so the spec's 'Sentry receives it' clause can never be observed from a preview and goes UNVERIFIABLE every run
+- [2026-11-13 15:16] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
+- [2026-11-13 15:33] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 15:34] `operator-feedback-01` convention-drift reads git ls-files, so an unstaged deleted file crashes it with ENOENT and new untracked files are not checked until staged
+- [2026-11-13 15:34] `operator-feedback-01` the deck game picks uniformly among distinct next moves and never tells the reader he left the deck, so a reflex main-line reply after a side-line branch looked like a book lookup bug
+- [2026-11-13 16:16] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 16:24] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
+- [2026-11-13 16:25] `open-explorer-01` convention-drift.ts --check crashes with ENOENT on a tracked file deleted but not staged, so a subagent that may not stage cannot run it without a private GIT_INDEX_FILE copy
+- [2026-11-13 16:25] `open-explorer-01` The daily plan offers new cards in deck order with a limit of 10, so a deck appended after 520 file cards would never be introduced; the brief did not name it and the browser proof found it
+- [2026-11-13 17:04] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 17:35] `explorer-speed-01` A user-event click that makes a screen suspend on use() runs inside React's synchronous act, which drops the suspended retry task when the act queue closes, so under load the Suspense fallback never resolves and the page test times out whatever its findBy timeout.
+- [2026-11-13 17:35] `explorer-speed-01` vitest --execArgv=--cpu-prof writes no profile for a test worker, so profiling a page test needed a node:inspector session inside a throwaway copy of the test.
+- [2026-11-13 17:35] `explorer-speed-01` The explorer page test had already raised its findBy timeouts to 10 s, which hid that the region never appeared rather than appeared slowly.
+- [2026-11-13 18:21] `board-mark-01` convention-drift.ts read files from git ls-files and crashed with ENOENT on a deleted but unstaged file, which every subagent that may not stage hits
+- [2026-11-13 18:25] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 19:15] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 19:15] `polish-01` The body rule font-feature-settings 'tnum' 0 silently overrode every tabular-nums class in borsouvertures, and no gate compares a computed font-variant against the classes on the element.
+- [2026-11-13 19:15] `hook:pre-push-conflict` pre-push refused a branch that conflicts with origin/main
+- [2026-11-13 19:32] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-13 19:35] `tab-icons-01` pnpm dev leaves a four-level process tree, and a subagent without TaskStop has to walk parent PIDs from lsof to stop it
+- [2026-11-14 09:58] `board-feel-01` CDP Network.setBlockedURLs does not block a dedicated worker's script, so simulating an offline Stockfish load needed a stubbed Worker class instead.
+- [2026-11-14 09:58] `board-feel-01` scripts/phone.sh touch cannot prove a tap on a react-chessboard square, because the square calls preventDefault on touchend so no click follows; board taps needed a hand-written CDP touch driver.
+- [2026-11-14 10:39] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-14 19:25] `hook:merge-on-moved-base` tried to merge a pull request beside base commits no CI run tested with it

@@ -158,7 +158,7 @@ export function MembersPage(): JSX.Element {
             <IconButton
               variant="danger"
               icon="trash"
-              label={t('common.delete')}
+              label={t('members.deleteMember', { name: member.firstName })}
               onClick={() => setPendingDeletionId(member.id)}
             />
           </li>

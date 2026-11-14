@@ -6,6 +6,7 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { applyVoteIntent, type VoteIntent } from './improvements.utils';
 import { replaceEntityById } from './optimistic.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const IMPROVEMENTS_WRITE_SCOPE = { id: 'improvements-writes' } as const;
 
@@ -38,7 +39,7 @@ function writeList(
   queryClient: ReturnType<typeof useQueryClient>,
   rewrite: (improvements: readonly ImprovementRow[]) => ImprovementRow[],
 ): void {
-  queryClient.setQueryData<ImprovementsListResponse>(improvementKeys.list(), (old) => {
+  writeKeepingStaleness<ImprovementsListResponse>(queryClient, improvementKeys.list(), (old) => {
     if (old === undefined) return old;
     return { improvements: rankImprovements(rewrite(old.improvements)) };
   });
@@ -84,7 +85,7 @@ export function useUpdateImprovement() {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(improvementKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, improvementKeys.list(), context.previousList);
       }
     },
   });
@@ -112,7 +113,7 @@ export function useDeleteImprovement() {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(improvementKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, improvementKeys.list(), context.previousList);
       }
     },
   });
@@ -157,7 +158,7 @@ export function useVoteOnImprovement() {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(improvementKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, improvementKeys.list(), context.previousList);
       }
     },
   });

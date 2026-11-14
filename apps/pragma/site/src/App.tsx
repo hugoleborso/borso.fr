@@ -9,11 +9,13 @@ import { HomePage } from './routes/home/HomePage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { AddSongPage } from './routes/catalog/AddSongPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
-import { ComposPage } from './routes/compos/ComposPage';
+import { CompositionsPage } from './routes/compos/CompositionsPage';
+import { SketchPage } from './routes/compos/SketchPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { ImprovementsPage } from './routes/improvements/ImprovementsPage';
+import { InspirationsPage } from './routes/inspirations/InspirationsPage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
@@ -68,7 +70,9 @@ export function App(): JSX.Element {
             <Route path="/studies" element={<Navigate to="/catalog?filter=learning" replace />} />
             <Route path="/band" element={<BandPage />} />
             <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/compos" element={<ComposPage />} />
+            <Route path="/compos" element={<CompositionsPage />} />
+            <Route path="/compos/:compositionId/sketch" element={<SketchPage />} />
+            <Route path="/inspirations" element={<InspirationsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />
             <Route path="/account" element={<AccountPage />} />

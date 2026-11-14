@@ -26,6 +26,7 @@ import {
   withOpenedRound,
   withRoundAppended,
 } from './audience.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const AUDIENCE_WRITE_SCOPE = { id: 'audience-writes' } as const;
 
@@ -103,7 +104,7 @@ async function sendCarryingABallot<TAnswer extends { readonly status: number }>(
   if (answer.status !== BALLOT_REJECTED_STATUS) return answer;
   forgetBallotToken(write.sessionId);
   const minted = await requestBallotToken(write.sessionId);
-  write.queryClient.setQueryData(audienceKeys.ballot(write.sessionId), minted);
+  writeKeepingStaleness(write.queryClient, audienceKeys.ballot(write.sessionId), minted);
   return await write.send(minted.ballotToken);
 }
 
@@ -179,14 +180,18 @@ export function useCastVote() {
       const stateKey = audienceKeys.state(variables.sessionId);
       await queryClient.cancelQueries({ queryKey: stateKey });
       const previousState = queryClient.getQueryData<ConcertStateCache>(stateKey);
-      queryClient.setQueryData<ConcertStateCache>(stateKey, (old) =>
+      writeKeepingStaleness<ConcertStateCache>(queryClient, stateKey, (old) =>
         applyVoteToState(old, variables.songId, 'cast'),
       );
       return { previousState };
     },
     onError: (_error, variables, context) => {
       if (context?.previousState !== undefined) {
-        queryClient.setQueryData(audienceKeys.state(variables.sessionId), context.previousState);
+        writeKeepingStaleness(
+          queryClient,
+          audienceKeys.state(variables.sessionId),
+          context.previousState,
+        );
       }
     },
   });
@@ -216,14 +221,18 @@ export function useRetractVote() {
       const stateKey = audienceKeys.state(variables.sessionId);
       await queryClient.cancelQueries({ queryKey: stateKey });
       const previousState = queryClient.getQueryData<ConcertStateCache>(stateKey);
-      queryClient.setQueryData<ConcertStateCache>(stateKey, (old) =>
+      writeKeepingStaleness<ConcertStateCache>(queryClient, stateKey, (old) =>
         applyVoteToState(old, variables.songId, 'retract'),
       );
       return { previousState };
     },
     onError: (_error, variables, context) => {
       if (context?.previousState !== undefined) {
-        queryClient.setQueryData(audienceKeys.state(variables.sessionId), context.previousState);
+        writeKeepingStaleness(
+          queryClient,
+          audienceKeys.state(variables.sessionId),
+          context.previousState,
+        );
       }
     },
   });
@@ -254,8 +263,10 @@ export function useSuggestSong() {
       return response.json();
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ConcertStateCache>(audienceKeys.state(variables.sessionId), (old) =>
-        addSuggestedSongToPool(old, data.song),
+      writeKeepingStaleness<ConcertStateCache>(
+        queryClient,
+        audienceKeys.state(variables.sessionId),
+        (old) => addSuggestedSongToPool(old, data.song),
       );
     },
   });
@@ -303,11 +314,15 @@ export function useOpenRound() {
       return response.json();
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ConcertStateCache>(audienceKeys.state(variables.sessionId), (old) =>
-        withOpenedRound(old, data.round),
+      writeKeepingStaleness<ConcertStateCache>(
+        queryClient,
+        audienceKeys.state(variables.sessionId),
+        (old) => withOpenedRound(old, data.round),
       );
-      queryClient.setQueryData<RoundHistoryCache>(audienceKeys.rounds(variables.sessionId), (old) =>
-        withRoundAppended(old, data.round),
+      writeKeepingStaleness<RoundHistoryCache>(
+        queryClient,
+        audienceKeys.rounds(variables.sessionId),
+        (old) => withRoundAppended(old, data.round),
       );
     },
   });

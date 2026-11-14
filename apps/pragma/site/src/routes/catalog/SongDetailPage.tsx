@@ -6,11 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongDetail } from '../../components/organisms/SongDetail';
+import { useCompositions } from '../../lib/queries/compositions.queries';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMasteryOverridesOfSong } from '../../lib/queries/studies.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSong } from '../../lib/queries/songs.queries';
+import { selectCompositionOfSong } from '../compos/compositions-page.core';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
 import { readSongViewTab, SONG_VIEW_TAB_PARAM, type SongViewTab } from './song-view-tab.core';
@@ -26,6 +28,7 @@ export function SongDetailPage(): JSX.Element {
   const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
+  const compositionsQuery = useCompositions();
   const songOverridesQuery = useMasteryOverridesOfSong(songId ?? '', songId !== undefined);
   const { selectedTakeId, selectTake } = useTakeSelection();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -72,6 +75,11 @@ export function SongDetailPage(): JSX.Element {
     [song, members, instruments, masteryLookup],
   );
 
+  const linkingComposition = selectCompositionOfSong(
+    compositionsQuery.data?.compositions ?? NO_ROWS,
+    songId ?? '',
+  );
+
   if (isLoading) {
     return (
       <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-soft italic text-meta">
@@ -100,6 +108,7 @@ export function SongDetailPage(): JSX.Element {
       onSelectTake={selectTake}
       tab={tab}
       onTabChange={showTab}
+      compositionId={linkingComposition?.id ?? null}
     />
   );
 }

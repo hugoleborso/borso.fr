@@ -4,6 +4,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { ApiError, api } from '../api.client';
 import { startPasskeyLogin } from '../passkey.adapter';
 import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.adapter';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 export const authKeys = {
   all: ['auth'] as const,
@@ -56,7 +57,9 @@ export function useLogin() {
       postLogin(variables.username, variables.password),
     onSuccess: () => {
       rememberSessionMarker();
-      queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });
+      writeKeepingStaleness<SessionProbeResult>(queryClient, authKeys.session(), {
+        authenticated: true,
+      });
     },
   });
 }
@@ -80,7 +83,9 @@ export function useRecoverPassword() {
     mutationFn: postRecoverPassword,
     onSuccess: () => {
       rememberSessionMarker();
-      queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });
+      writeKeepingStaleness<SessionProbeResult>(queryClient, authKeys.session(), {
+        authenticated: true,
+      });
     },
   });
 }
@@ -102,7 +107,9 @@ export function usePasskeyLogin() {
     mutationFn: loginWithPasskey,
     onSuccess: () => {
       rememberSessionMarker();
-      queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });
+      writeKeepingStaleness<SessionProbeResult>(queryClient, authKeys.session(), {
+        authenticated: true,
+      });
     },
   });
 }

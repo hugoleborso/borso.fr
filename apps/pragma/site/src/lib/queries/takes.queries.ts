@@ -13,6 +13,7 @@ import {
   shiftCommentCount,
 } from './takes.utils';
 import { useSignedChartUrl } from './uploads.queries';
+import { writeEachKeepingStaleness, writeKeepingStaleness } from './cache-write.queries';
 
 const TAKES_WRITE_SCOPE = { id: 'takes-writes' } as const;
 
@@ -116,19 +117,23 @@ export async function createTakeRecord(
 
 // @FollowsBlueprint query-settled-from-the-write-response
 export function writeCreatedTake(queryClient: QueryClient, take: ListedTake): void {
-  queryClient.setQueryData<TakesOfSongResponse>(takeKeys.ofSong(take.songId), (cache) => {
+  writeKeepingStaleness<TakesOfSongResponse>(queryClient, takeKeys.ofSong(take.songId), (cache) => {
     if (cache === undefined) return cache;
     return { takes: insertTakeNewestFirst(cache.takes, take) };
   });
   if (take.sessionId === null) return;
-  queryClient.setQueryData<TakesOfSongResponse>(takeKeys.ofSession(take.sessionId), (cache) => {
-    if (cache === undefined) return cache;
-    return { takes: insertTakeNewestFirst(cache.takes, take) };
-  });
+  writeKeepingStaleness<TakesOfSongResponse>(
+    queryClient,
+    takeKeys.ofSession(take.sessionId),
+    (cache) => {
+      if (cache === undefined) return cache;
+      return { takes: insertTakeNewestFirst(cache.takes, take) };
+    },
+  );
 }
 
 function removeTakeFromSessionLists(queryClient: QueryClient, takeId: string): void {
-  queryClient.setQueriesData<TakesOfSongResponse>({ queryKey: takeKeys.ofSessions() }, (cache) => {
+  writeEachKeepingStaleness<TakesOfSongResponse>(queryClient, takeKeys.ofSessions(), (cache) => {
     if (cache === undefined) return cache;
     return { takes: removeTakeById(cache.takes, takeId) };
   });
@@ -149,7 +154,7 @@ export function useDeleteTake() {
       const listKey = takeKeys.ofSong(variables.songId);
       await queryClient.cancelQueries({ queryKey: listKey });
       const previous = queryClient.getQueryData<TakesOfSongResponse>(listKey);
-      queryClient.setQueryData<TakesOfSongResponse>(listKey, (cache) => {
+      writeKeepingStaleness<TakesOfSongResponse>(queryClient, listKey, (cache) => {
         if (cache === undefined) return cache;
         return { takes: removeTakeById(cache.takes, variables.takeId) };
       });
@@ -160,7 +165,7 @@ export function useDeleteTake() {
     },
     onError: (_error, variables, context) => {
       if (context?.previous === undefined) return;
-      queryClient.setQueryData(takeKeys.ofSong(variables.songId), context.previous);
+      writeKeepingStaleness(queryClient, takeKeys.ofSong(variables.songId), context.previous);
     },
   });
 }
@@ -171,11 +176,11 @@ function shiftCommentCountInCache(
   takeId: string,
   delta: number,
 ): void {
-  queryClient.setQueryData<TakesOfSongResponse>(takeKeys.ofSong(songId), (cache) => {
+  writeKeepingStaleness<TakesOfSongResponse>(queryClient, takeKeys.ofSong(songId), (cache) => {
     if (cache === undefined) return cache;
     return { takes: shiftCommentCount(cache.takes, takeId, delta) };
   });
-  queryClient.setQueriesData<TakesOfSongResponse>({ queryKey: takeKeys.ofSessions() }, (cache) => {
+  writeEachKeepingStaleness<TakesOfSongResponse>(queryClient, takeKeys.ofSessions(), (cache) => {
     if (cache === undefined) return cache;
     return { takes: shiftCommentCount(cache.takes, takeId, delta) };
   });
@@ -199,7 +204,8 @@ export function useCreateTakeComment() {
       return response.json();
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<TakeCommentsResponse>(
+      writeKeepingStaleness<TakeCommentsResponse>(
+        queryClient,
         takeKeys.commentsOf(variables.takeId),
         (cache) => {
           if (cache === undefined) return cache;
@@ -228,7 +234,7 @@ export function useDeleteTakeComment() {
       const commentsKey = takeKeys.commentsOf(variables.takeId);
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const previous = queryClient.getQueryData<TakeCommentsResponse>(commentsKey);
-      queryClient.setQueryData<TakeCommentsResponse>(commentsKey, (cache) => {
+      writeKeepingStaleness<TakeCommentsResponse>(queryClient, commentsKey, (cache) => {
         if (cache === undefined) return cache;
         return { comments: removeCommentById(cache.comments, variables.commentId) };
       });
@@ -237,7 +243,7 @@ export function useDeleteTakeComment() {
     },
     onError: (_error, variables, context) => {
       if (context?.previous === undefined) return;
-      queryClient.setQueryData(takeKeys.commentsOf(variables.takeId), context.previous);
+      writeKeepingStaleness(queryClient, takeKeys.commentsOf(variables.takeId), context.previous);
       shiftCommentCountInCache(queryClient, variables.songId, variables.takeId, 1);
     },
   });

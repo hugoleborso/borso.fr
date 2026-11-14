@@ -10,6 +10,7 @@ import {
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
+import { createInspiration, listInspirations } from '../../../test/sketch-utils';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
@@ -407,5 +408,21 @@ describe('members controller (back-e2e)', () => {
       .select({ instrumentId: memberInstrumentTable.instrumentId })
       .from(memberInstrumentTable);
     expect(links).toEqual([{ instrumentId: guitarId }]);
+  });
+
+  it('keeps the inspirations of a deleted member with no author', async () => {
+    const author = await buildAuthenticatedApp('Emma');
+    const otherMember = await buildAuthenticatedApp('Thomas');
+    const inspirationId = await createInspiration(author);
+
+    const response = await jsonRequest(otherMember.app, `/api/members/${author.memberId}`, {
+      method: 'DELETE',
+      cookieHeader: otherMember.cookieHeader,
+    });
+
+    expect(response.status).toBe(200);
+    expect(await listInspirations(otherMember)).toEqual([
+      expect.objectContaining({ id: inspirationId, authorMemberId: null, authorName: null }),
+    ]);
   });
 });
