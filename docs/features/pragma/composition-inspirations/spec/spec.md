@@ -31,7 +31,7 @@ Three screens.
 - a start and an end, set while the embedded video plays, with "set start here" and "set end here" buttons
 - a note
 
-**Compositions** (`/compos`, replacing today's list of original songs). It lists compositions, newest first. **New composition** asks only for a title, prefilled with "Composition N", and opens the empty sketch. A composition added to the catalogue carries an "In the catalogue" badge.
+**Compositions** (`/compos`, replacing today's list of original songs). It lists compositions, newest first. **New composition** asks only for a title, prefilled with "Composition N", where N is one more than the highest number already used, and opens the empty sketch. A composition added to the catalogue carries an "In the catalogue" badge.
 
 **Sketch** (`/compos/:compositionId/sketch`, opened from each composition).  Its header shows the composition's title, which can be renamed, and **Add to catalogue**. That creates a song with the composition's title, `origin = original` and `status = idea`, and links it. The song's page then shows **Open the sketch**. The composition stays on the compositions screen and its sketch stays editable. This is a horizontal timeline with a seconds ruler (0:00, 0:10…). It has any number of named lanes (for example "drums" or "brass"). Each clip is a block whose width is its passage's length.
 
@@ -89,6 +89,7 @@ sequenceDiagram
 - Deleting the composition removes its lanes and clips, keeps the inspirations, and keeps its catalogue song.
 - Deleting the catalogue song keeps the composition and clears its link, so **Add to catalogue** is offered again.
 - **Add to catalogue** tapped twice, or by two members at once, creates one song.
+- **Add to catalogue** that fails (offline, server error) shows an error under the button, and the button can be tapped again.
 - Songs with `origin = original` that no composition links, such as a song written outside pragma, stay in Songs and never appear on the compositions screen.
 - Deleting a member keeps their inspirations, and the card then reads "former member".
 - Some videos are blocked from being embedded by their owner. The player then shows "Open on YouTube", which opens `youtube.com/watch?v=…&t=<start>`.
@@ -199,7 +200,7 @@ apps/pragma/VOCABULARY.md                        UPDATE
   - placing a clip while its inspiration or lane is deleted, leaving no orphan clip
   - a clip naming a deleted lane or inspiration
   - the song and member delete cascades
-- **Visual validation** at 375 px and at 1280 px. It drives happy path steps 1 to 7, including the Deezer search (the plan names how the dev server answers it), a second member's screen updating after a move, and the error messages in the form. It drives input metrics only. A green run does not show that more compositions get written.
+- **Visual validation** at 375 px and at 1280 px. It drives happy path steps 1 to 8, the Add to catalogue edge cases, including the Deezer search (the plan names how the dev server answers it), a second member's screen updating after a move, and the error messages in the form. It drives input metrics only. A green run does not show that more compositions get written.
 - **Not automatable.** Whether a real video starts at the right second in the YouTube player. The validator asserts the `start` and `end` the player is given.
 
 ## Production strategy
@@ -208,7 +209,9 @@ apps/pragma/VOCABULARY.md                        UPDATE
 
 **Input metrics.** These are wide-event fields on the existing request log:
 - `inspiration_created` (author)
-- `sketch_clip_placed` (song)
+- `sketch_clip_placed` (composition)
+- `composition_created`
+- `composition_cataloged`
 - `sketch_clip_moved`
 
 One query to watch is inspirations per week by distinct author. Another is sketches with at least two clips.
@@ -218,5 +221,5 @@ One query to watch is inspirations per week by distinct author. Another is sketc
 ### Zero-defect strategy
 
 - `inspiration-in-use`, `inspiration-not-found`, `lane-not-found` and `clip-not-found` are expected 409 and 404 answers. They are logged with their code and are not sent to Sentry.
-- Any 5xx on `/api/inspirations` or `/api/sketches` goes to Sentry, under a transaction named after the route (for example `POST /api/sketches/:songId/clips`), through the existing shared alert.
+- Any 5xx on `/api/inspirations` or `/api/sketches` goes to Sentry, under a transaction named after the route (for example `POST /api/sketches/:compositionId/clips`), through the existing shared alert.
 - If members report moves that undo each other, that is the signal to revisit the lock decision.
