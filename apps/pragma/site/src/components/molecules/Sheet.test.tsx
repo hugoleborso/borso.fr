@@ -175,6 +175,35 @@ describe('Sheet', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps its footer above the keyboard unless told the footer only navigates', () => {
+    renderSheet(
+      root,
+      <Sheet
+        title={TITLE}
+        label={TITLE}
+        onClose={vi.fn()}
+        footer={<Button icon="check">Save</Button>}
+      >
+        <p>Body</p>
+      </Sheet>,
+    );
+    expect(document.querySelector('footer')?.className).not.toContain('while-typing:hidden');
+
+    renderSheet(
+      root,
+      <Sheet
+        title={TITLE}
+        label={TITLE}
+        onClose={vi.fn()}
+        isFooterHiddenWhileTyping
+        footer={<Button icon="song">Open song</Button>}
+      >
+        <p>Body</p>
+      </Sheet>,
+    );
+    expect(document.querySelector('footer')?.className).toContain('while-typing:hidden');
+  });
+
   it('sets a record name in the display face and a tool title in the sans face', () => {
     renderSheet(
       root,

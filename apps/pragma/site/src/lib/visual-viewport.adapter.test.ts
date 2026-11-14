@@ -54,6 +54,26 @@ describe('pinBottomBarsToVisualViewport', () => {
     expect(readBottomGap()).toBe('180px');
   });
 
+  it('keeps the bars still while the page bounces past its top', () => {
+    const area = visibleArea(0, SCREEN_HEIGHT);
+    pinBottomBarsToVisualViewport({ innerHeight: SCREEN_HEIGHT, visualViewport: area, document });
+
+    area.offsetTop = -60;
+    area.dispatchEvent(new Event('scroll'));
+
+    expect(readBottomGap()).toBe('0px');
+  });
+
+  it('keeps the bars still while the page bounces past its bottom', () => {
+    const area = visibleArea(0, SCREEN_HEIGHT);
+    pinBottomBarsToVisualViewport({ innerHeight: SCREEN_HEIGHT, visualViewport: area, document });
+
+    area.offsetTop = 60;
+    area.dispatchEvent(new Event('scroll'));
+
+    expect(readBottomGap()).toBe('0px');
+  });
+
   it('pulls the bars down when the layout viewport stays shorter than the screen', () => {
     const area = visibleArea(0, SCREEN_HEIGHT);
 
