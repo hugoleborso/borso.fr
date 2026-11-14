@@ -98,6 +98,7 @@ Remove the line once that perspective has been covered. -->
 ## Changes
 - **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
 - **Database changes**: migrations, new columns, indexes.
+- **Records**: one row per table the spec creates, holding the operator's dated answer to two closed questions: is it its own record or part of another one, and which screens create it. Ask them at step 7. PR #327 assumed both and the operator redrew them on the preview.
 - **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.
 - **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's *Test strategy* section for the shape.
 
@@ -120,7 +121,7 @@ Walk the user through these 13 steps, in order. Do not skip ahead — each step 
 | 4 | Map the target behaviour | Use cases / edge cases | End-to-end happy path so inconsistencies are visible at a glance. |
 | 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + any internal blueprint material the user can share. Reduces test-and-learn. |
 | 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
-| 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
+| 7 | Define the business model | Changes / Records | Entities, relationships, shared vocabulary (DDD). For each new record, ask the operator two closed questions: is it its own record or part of another one, and which screens create it. Never infer either from the existing schema. Stabilises business/tech terminology. |
 | 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
 | 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. |
 | 10 | Make component choices | Changes / Q.O.D. | 2–3 alternatives, justified pick. Avoids premature constraints. |
@@ -137,6 +138,7 @@ These are the common mistakes the standard names. Push back on them in real time
 - **"PM does discovery, tech-lead does the tech part."** The spec is the place where every perspective confronts the others. Do not partition. If a perspective has not been challenged in this conversation, flag the spec with the matching `> ⚠️ Missing <perspective> discussion` blockquote and refuse to call it ready.
 - **"I'm writing this because the team asked for it."** Bureaucratic specs hide reasoning. If the *why* of a section is not in the section, delete the section or fix it.
 - **"My vision only."** Ask the user what they have *not* considered. Pull from `docs/` and any internal blueprint / mental-model reference the user can hand over before inventing.
+- **"The schema already says what it is."** A new record is not what the nearest existing table makes it. PR #327 made a composition a song with `origin = original` because the compositions screen already read songs that way, and created inspirations from the library page only. Nobody asked the operator. He redrew both on the preview, which cost six commits, two more validation passes and a migration. Ask both Records questions for every new record, and write the dated answers under *Records*.
 - **"Forgot to link the ADR / Figma / blueprint / BPMN."** Three months from now, missing links force archaeology. Always link.
 - **"The spec is too long."** Iteration becomes impossible. Cut. Two pages of prose is the soft ceiling.
 - **"Adoption is someone else's problem."** Without analytics + alerting, the spec is incomplete. Step 13 is not optional.

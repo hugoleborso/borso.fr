@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { inferLayer, isTestFile } from '../../.claude/skills/blueprint/blueprint-utils.js';
 import { renderHotspotReport, type FileHistory } from './hotspots.core';
@@ -24,7 +24,8 @@ function listTrackedSourceFiles(): readonly string[] {
     .split('\n')
     .filter((path) => SOURCE_PATH_PATTERN.test(path))
     .filter((path) => !isTestFile(path))
-    .filter((path) => !path.endsWith('.d.ts'));
+    .filter((path) => !path.endsWith('.d.ts'))
+    .filter((path) => existsSync(join(REPOSITORY_ROOT, path)));
 }
 
 function countCommitsByPath(commitWindow: number): ReadonlyMap<string, number> {

@@ -25,7 +25,12 @@
 # The rest of the document is a reviewer's job, and deliberately so. A gate that
 # tried to check whether a definition is still true would be checking prose
 # against code, which is the thing no rule can do.
+#
+# It reads apps/ from the repository root whatever the working directory: run
+# from apps/pragma, it once found no vocabulary and passed.
 set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 failed=0
 found_any=0

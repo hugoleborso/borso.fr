@@ -17,6 +17,15 @@
 # file in the Actions cache per pull request: a later push re-tests only what
 # moved since. Stryker writes the file only when a run completes.
 #
+# Stryker diffs only the mutated files and the test files. A fixture, a constant
+# or a config the tests import can change and every verdict is still reused: a
+# fixture that lost its boundary case kept a 100 score, and one that gained it
+# kept the survivor (docs/dantotsus/a-fixture-changed-and-stryker-kept-the-verdict.md).
+# So the file is named after a fingerprint of what Stryker cannot see: the
+# toolchain, the merge base, and every other code file the branch changed in that
+# package. When one of those moves, the run starts from an empty file and the old
+# one is deleted. A push that moves only gated files and tests keeps the cache.
+#
 # The changed set is the branch's commits plus the working tree, untracked files
 # included, so a local run grades the same files CI will once they are committed.
 #
@@ -41,6 +50,8 @@ shift
 committed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
 uncommitted=$(git status --porcelain=v1 --untracked-files=all | sed 's/^...//;s/.* -> //')
 changed=$(printf '%s\n%s\n' "$committed" "$uncommitted" | sed '/^$/d' | sort -u)
+every_change="$changed"
+merge_base=$(git merge-base "$base" HEAD)
 if [ "$#" -gt 0 ]; then
   changed=$(for scope in "$@"; do
     echo "$changed" | awk -v scope="${scope%/}" '$0 == scope || index($0, scope "/") == 1'
@@ -48,7 +59,34 @@ if [ "$#" -gt 0 ]; then
 fi
 failed=()
 runs=0
-incremental=(--incremental --incrementalFile reports/mutation/incremental.json)
+toolchain=(pnpm-lock.yaml stryker.shared.js stryker-zero-test-guard.js)
+
+# Prints the flags for the incremental file of one run. Arguments: the directory
+# the run starts in, a regex for the paths its tests can import, and the files it
+# mutates, as paths from the repository root.
+incremental_for() {
+  local directory="$1" scope="$2" mutated="$3" fingerprint
+  fingerprint=$(
+    {
+      echo "$merge_base"
+      cat "${toolchain[@]}" "$directory/stryker.config.js"
+      if [ -d patches ]; then find patches -type f | sort | xargs -r cat; fi
+      echo "$every_change" |
+        { grep -E "$scope" || true; } |
+        { grep -E '\.(ts|tsx|js|mjs|cjs|json)$' || true; } |
+        { grep -vE '\.(test|spec)\.tsx?$' || true; } |
+        { grep -vxF "$mutated" || true; } |
+        while read -r input; do
+          echo "$input"
+          if [ -f "$input" ]; then cat "$input"; fi
+        done
+    } | sha256sum | cut -c1-16
+  )
+  mkdir -p "$directory/reports/mutation"
+  find "$directory/reports/mutation" -maxdepth 1 -name 'incremental*.json' \
+    ! -name "incremental-$fingerprint.json" -delete
+  echo "--incremental --incrementalFile reports/mutation/incremental-$fingerprint.json"
+}
 
 run_mutation() {
   local label="$1"
@@ -66,8 +104,11 @@ for app in $(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u); do
     while read -r gated; do if [ -n "$gated" ] && [ -f "apps/$app/$gated" ]; then echo "$gated"; fi; done |
     sort -u)
   [ -z "$gated_files" ] && continue
+  # shellcheck disable=SC2046 # the flags hold no space but the one between them
   run_mutation "$app: $(echo "$gated_files" | grep -c .) file(s)" \
-    pnpm --filter "@borso-app/$app" exec stryker run "${incremental[@]}" --mutate "$(echo "$gated_files" | paste -sd, -)"
+    pnpm --filter "@borso-app/$app" exec stryker run \
+    $(incremental_for "apps/$app" "^apps/$app/" "$(echo "$gated_files" | sed "s|^|apps/$app/|")") \
+    --mutate "$(echo "$gated_files" | paste -sd, -)"
 done
 
 tooling_files=$(echo "$changed" |
@@ -76,8 +117,10 @@ tooling_files=$(echo "$changed" |
   while read -r gated; do if [ -n "$gated" ] && [ -f "$gated" ]; then echo "$gated"; fi; done |
   sort -u)
 if [ -n "$tooling_files" ]; then
+  # shellcheck disable=SC2046 # the flags hold no space but the one between them
   run_mutation "tooling: $(echo "$tooling_files" | grep -c .) file(s)" \
-    pnpm exec stryker run "${incremental[@]}" --mutate "$(echo "$tooling_files" | paste -sd, -)"
+    pnpm exec stryker run $(incremental_for . '^([^/]+$|scripts/|\.claude/)' "$tooling_files") \
+    --mutate "$(echo "$tooling_files" | paste -sd, -)"
 fi
 
 infra_files=$(echo "$changed" |
@@ -87,8 +130,11 @@ infra_files=$(echo "$changed" |
   while read -r gated; do if [ -n "$gated" ] && [ -f "infra/cdk/$gated" ]; then echo "$gated"; fi; done |
   sort -u)
 if [ -n "$infra_files" ]; then
+  # shellcheck disable=SC2046 # the flags hold no space but the one between them
   run_mutation "infra-cdk: $(echo "$infra_files" | grep -c .) file(s)" \
-    pnpm --filter @borso/infra exec stryker run "${incremental[@]}" --mutate "$(echo "$infra_files" | paste -sd, -)"
+    pnpm --filter @borso/infra exec stryker run \
+    $(incremental_for infra/cdk '^infra/cdk/' "$(echo "$infra_files" | sed 's|^|infra/cdk/|')") \
+    --mutate "$(echo "$infra_files" | paste -sd, -)"
 fi
 
 if [ "${#failed[@]}" -gt 0 ]; then

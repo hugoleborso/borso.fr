@@ -17,6 +17,10 @@
 # is how CI calls it. The whole-tree read is about twelve seconds.
 set -euo pipefail
 
+# Paths are read from the repository root, so a run from apps/<app> checks the
+# same tree instead of passing on an empty one.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 list_subjects() {
   if [ "$#" -gt 0 ]; then
     printf '%s\n' "$@"
