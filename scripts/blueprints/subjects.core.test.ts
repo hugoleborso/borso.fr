@@ -233,6 +233,13 @@ describe('acceptSubjects', () => {
     });
   });
 
+  it('records only the files it is given when nothing is recorded yet', () => {
+    const unrecorded = claim({ filePath: 'apps/x/new.core.ts', subject: 'select' });
+    expect(acceptSubjects({}, [claim(), unrecorded], [RUNNER_REPOSITORY])).toStrictEqual({
+      [RUNNER_REPOSITORY]: { listRunnersForEdition: 'repository-query' },
+    });
+  });
+
   it('builds the whole map from the markers on disk when nothing is recorded yet', () => {
     expect(acceptSubjects({}, [claim()], [])).toStrictEqual({
       [RUNNER_REPOSITORY]: { listRunnersForEdition: 'repository-query' },
