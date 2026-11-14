@@ -3,6 +3,7 @@ import { ENERGY_MAX, ENERGY_MIN } from '@domain/input-limits.core';
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { EnergyMeterSize } from '../atoms/EnergyMeter';
 import { EnergyMeter } from '../atoms/EnergyMeter';
 import {
   isEnergyStored,
@@ -13,6 +14,7 @@ import {
 export interface SetlistEntryEnergyFieldProps {
   readonly entryEnergy: number | null;
   readonly songEnergy: number | null;
+  readonly size?: EnergyMeterSize;
   readonly onPublish: (level: number) => void;
 }
 
@@ -20,6 +22,7 @@ export interface SetlistEntryEnergyFieldProps {
 export function SetlistEntryEnergyField({
   entryEnergy,
   songEnergy,
+  size,
   onPublish,
 }: SetlistEntryEnergyFieldProps): JSX.Element {
   const { t } = useTranslation();
@@ -35,6 +38,7 @@ export function SetlistEntryEnergyField({
       valueText={isStored ? undefined : t('setlist.energyUnset', { value: level })}
       filledClassName={appearance.filledClassName}
       emptyClassName={appearance.emptyClassName}
+      size={size}
       onChange={onPublish}
     />
   );

@@ -139,6 +139,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                   </div>
                   <SongEnergyField
                     baseEnergy={song.baseEnergy}
+                    size="wide"
                     onChange={(level) => updateSong.mutate({ id: song.id, baseEnergy: level })}
                   />
                 </Card>

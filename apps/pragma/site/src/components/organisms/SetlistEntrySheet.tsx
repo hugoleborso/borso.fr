@@ -197,6 +197,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
                   <SetlistEntryEnergyField
                     entryEnergy={entry.energy}
                     songEnergy={song.baseEnergy}
+                    size="wide"
                     onPublish={(level) => props.onUpdate(entry.id, { energy: level })}
                   />
                 </div>
