@@ -1,6 +1,10 @@
 ---
 summary: 'A 375 px Chromium resize is not a phone test; a real tap here is `scripts/phone.sh touch <selector>`, and the sandbox has no `/dev/kvm` and no Xcode for simulators or emulators.'
 triggers:
+  paths:
+    - 'apps/*/site/src/lib/*viewport*'
+    - 'apps/*/site/src/lib/*keyboard*'
+    - 'apps/*/site/src/components/molecules/Sheet.tsx'
   commands:
     - 'scripts/phone\.sh'
     - '\bset viewport 3[0-9][0-9]\b'
@@ -65,6 +69,32 @@ four differences above are exactly what the phone pass exists to catch.
 
 Real device runs therefore happen on the operator's own machine, and CI keeps
 the Chromium viewport pass.
+
+## A change to the visible screen on iOS
+
+Four pragma fixes shipped in one day, PRs #331, #332, #333 and #337. Each
+passed in mobile Chromium. Each next bug was found by the operator on an
+iPhone, and two of them were caused by the fix before. Chromium here has no
+software keyboard, no rubber-band bounce and no WebKit compositor, so none of
+the four could fail in the sandbox. See
+[`../dantotsus/four-iphone-fixes-checked-in-a-browser-that-could-not-fail.md`](../dantotsus/four-iphone-fixes-checked-in-a-browser-that-could-not-fail.md).
+
+Before touching `visualViewport`, `position: fixed` or `sticky`, a scroll
+container or a sheet's footer, walk every state below in the unit tests and in
+the pull request's iOS section. Name the state the change was not tried in.
+
+| State on an iPhone | What moves | What broke when it was forgotten |
+| --- | --- | --- |
+| Keyboard open on a page | `visualViewport.height` shrinks, `offsetTop` grows as the page scrolls over the keyboard | Bars drifted up the screen (#331) |
+| Keyboard open on a field inside a sheet | The sheet shrinks, the field stays where it was | The setlist note was hidden under the keyboard (#332) |
+| Bounce past the top or the bottom of the page | `offsetTop` leaves the range 0 to keyboard height, with no keyboard open | The tab bar rose at the top (#333) |
+| Bounce while a sticky header holds a horizontal strip | The compositor can drop the strip's layer | The filter chips vanished after a bounce (#337) |
+| A plain button and a submit button in one footer | Nothing, until a rule guesses the role from the DOM | The transition comment Save hid while typing (#333) |
+
+pragma's document no longer bounces (`overscroll-behavior-y: none` on the
+root, #337), and a sheet declares a footer that may hide
+(`isFooterHiddenWhileTyping`, #333). Keep both. A rule that guesses intent
+from markup is the next guess to fail on a screen nobody here can render.
 
 ## A real tap in the sandbox
 
