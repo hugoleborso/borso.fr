@@ -24,7 +24,7 @@ export interface SheetProps extends SheetVariantProps {
 
 const FOOTER_CLASS =
   'flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-rule px-4 pt-3 ' +
-  'pb-[max(16px,env(safe-area-inset-bottom))]';
+  'pb-[max(16px,env(safe-area-inset-bottom))] while-typing:not-has-[[type=submit]]:hidden';
 const SCRIM_CLASS =
   'fixed inset-x-0 top-0 z-50 flex h-(--visual-viewport-height) flex-col bg-scrim ' +
   'pt-[env(safe-area-inset-top)]';
