@@ -24,6 +24,6 @@ Writers of the 8 lines: `main` 1, hooks 3 (`no-broad-kill`, `api-validation`, `n
 | 14 | ci | No red run. | check runs on `0fdd09b`: every job success or skipped | no-op: nothing failed |
 | 15 | post-merge | The merge added no ADR. | `git diff --name-only a5893533d^ a5893533d -- docs/adr/` is empty | no-op: nothing to stamp |
 | 16 | post-merge | A kaizen that touches only tooling waited for the operator's merge and could deploy a preview. | operator's answer on this sweep, 2026-11-14; `preview.yml` fingerprints the whole app tree, so a test-only change in an app built one (read) | fixed: the kaizen skill and CLAUDE.md let the session merge a kaizen whose fan-out names no app, and the preview drops a key whose every change is a test, markdown or test config |
-| 17 | post-merge | Watched pull requests woke the session for comments the operator never writes. | operator's answer on this sweep, 2026-11-14 | fixed: CLAUDE.md and `/open-pr` act on CI results and the merge state only |
+| 17 | post-merge | Watched pull requests woke the session for comments the operator never writes. | operator's answer on this sweep, 2026-11-14 | fixed: CLAUDE.md and `/open-pr` act on CI results, the merge state and comments by `hugoleborso` only |
 
 Counts: 1 dantotsu, 6 fixed, 1 merge, 9 no-op.

@@ -84,7 +84,7 @@ They cover replies, documents, commits and PR bodies.
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, markdown or test configs.
-- The operator never comments on pull requests. On a watched one, act on CI results and the merge state, and do not read its review threads.
+- On a watched pull request, act on CI results and the merge state. Skip every review thread and comment except those written by the operator's login, `hugoleborso`.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.
 - `infra/shared` deploys only when the operator dispatches `shared-deploy`. Do not propose a confirmation step.
