@@ -33,7 +33,7 @@ interface Line {
 const BUNDLED_OUTPUT_PATH = path.resolve('site/src/openings/openings.json');
 const PUBLIC_OUTPUT_PATH = path.resolve('site/public/openings.json');
 const CACHE_VERSION_PATH = path.resolve('site/src/config/openingsCacheVersion.ts');
-const LICHESS_COMMIT = 'refs/heads/master';
+const LICHESS_COMMIT = '3ba6b20d31b2e6125cb0e6a2e792f400717d9d39';
 const TSV_FILES = ['a', 'b', 'c', 'd', 'e'];
 const ECO_NAME_PGN_COLUMN_COUNT = 3;
 const JSON_INDENT_SPACES = 2;

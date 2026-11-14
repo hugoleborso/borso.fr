@@ -1,14 +1,12 @@
 {
-  "case-style:atom.ts": 4,
+  "case-style:atom.ts": 2,
   "case-style:atom.tsx": 1,
-  "case-style:core.ts": 5,
   "case-style:entrypoint.tsx": 4,
-  "case-style:molecule.ts": 1,
-  "case-style:organism.ts": 3,
+  "case-style:organism.ts": 2,
   "case-style:types.ts": 1,
-  "case-style:utils.ts": 12,
+  "case-style:utils.ts": 6,
   "layer-marker:borso-fr": 14,
-  "layer-marker:borsouvertures": 9,
+  "layer-marker:borsouvertures": 8,
   "layer-marker:last-loop-lepin": 6,
   "role-marker:hook": 9
 }

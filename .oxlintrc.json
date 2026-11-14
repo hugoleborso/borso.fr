@@ -50,6 +50,7 @@
     "docs/**",
     "apps/*/api/src/database/migrations/**",
     "apps/*/site/src/openings/openings.json",
+    "apps/borsouvertures/site/public/stockfish/**",
     ".claude/skills/impeccable/**"
   ],
   "rules": {

@@ -1,33 +1,32 @@
-import type { Selection } from '@/openings/selectors.utils';
+import {
+  DEFAULT_OPPONENT_STRENGTH,
+  isOpponentStrengthId,
+  type OpponentStrengthId,
+} from '@/opponent/opponent-strength.core';
 import { type BoardThemeId, isBoardThemeId } from '@/theme/boardThemes.utils';
 
-export type Mode = 'learn' | 'play';
 export type Side = 'white' | 'black';
-export type View = 'select' | 'session';
-export type TreeVisualizationMode = 'arrows' | 'buttons' | null;
 
-export interface PlayScope {
-  openingIds: string[];
-  variationIds: string[];
-  lineIds: string[];
-}
+export const NEW_CARDS_PER_DAY_DEFAULT = 10;
+export const NEW_CARDS_PER_DAY_MAXIMUM = 30;
 
 export interface PersistedState {
-  mode: Mode;
   side: Side;
   boardStyle: BoardThemeId;
-  selection: Selection;
-  view: View;
-  playAutoOpponent: boolean;
-  playScope: PlayScope;
-  treeVisualizationMode: TreeVisualizationMode;
+  newCardsPerDay: number;
+  opponentStrength: OpponentStrengthId;
+  isEvaluationBarShown: boolean;
+  isMoveSoundOn: boolean;
 }
+
+export const IS_EVALUATION_BAR_SHOWN_BY_DEFAULT = true;
+export const IS_MOVE_SOUND_ON_BY_DEFAULT = false;
 
 /**
  * @Blueprint unknown-payload-parser
  * @BlueprintName Unknown Payload Parser
  * @BlueprintUsage Use for any boundary where a value arrives as `unknown`, such as storage, a fetch body, or a bundled JSON import.
- * @BlueprintDescription Annotates the parse result as `const parsed: unknown` rather than asserting a shape onto it, then narrows one field at a time through a small named predicate per field, each returning the typed value or `null`. The returned object is rebuilt field by field from those narrowed values, so TypeScript infers the result type instead of being told it, and a field the payload is missing cannot reach the caller. `treeVisualizationMode` uses `undefined` as its failure marker because `null` is one of its valid values, which is the trap a single nullable sentinel would hide.
+ * @BlueprintDescription Annotates the parse result as `const parsed: unknown` rather than asserting a shape onto it, then narrows one field at a time through a small named predicate per field, each returning the typed value or `null`. The returned object is rebuilt field by field from those narrowed values, so TypeScript infers the result type instead of being told it, and a field the payload is missing cannot reach the caller. A field the record no longer carries, such as the Explore fields a record from before 2026-11-13 still holds, is ignored rather than refused, so an old record keeps the reader's side, board and settings.
  */
 export function parsePersistedState(raw: string): PersistedState | null {
   let record: Record<string, unknown>;
@@ -39,51 +38,59 @@ export function parsePersistedState(raw: string): PersistedState | null {
     return null;
   }
 
-  const mode = parseMode(record.mode);
   const side = parseSide(record.side);
   const boardStyle = parseBoardStyle(record.boardStyle);
-  const selection = parseSelection(record.selection);
-  const view = parseView(record.view);
-  const playAutoOpponent = parseBoolean(record.playAutoOpponent);
-  const playScope = parsePlayScope(record.playScope);
-  const treeVisualizationMode = parseTreeVisualizationMode(record.treeVisualizationMode);
+  const newCardsPerDay = parseNewCardsPerDay(record.newCardsPerDay);
+  const opponentStrength = parseOpponentStrength(record.opponentStrength);
 
   if (
-    mode === null ||
     side === null ||
     boardStyle === null ||
-    selection === null ||
-    view === null ||
-    playAutoOpponent === null ||
-    playScope === null ||
-    treeVisualizationMode === undefined
+    newCardsPerDay === null ||
+    opponentStrength === null
   ) {
     return null;
   }
   return {
-    mode,
     side,
     boardStyle,
-    selection,
-    view,
-    playAutoOpponent,
-    playScope,
-    treeVisualizationMode,
+    newCardsPerDay,
+    opponentStrength,
+    isEvaluationBarShown: isFlagOn(record.isEvaluationBarShown, IS_EVALUATION_BAR_SHOWN_BY_DEFAULT),
+    isMoveSoundOn: isFlagOn(record.isMoveSoundOn, IS_MOVE_SOUND_ON_BY_DEFAULT),
   };
 }
 
-function parseTreeVisualizationMode(value: unknown): TreeVisualizationMode | undefined {
-  if (value === null) return null;
-  if (value === 'arrows' || value === 'buttons') return value;
-  return undefined;
+function isFlagOn(value: unknown, isOnByDefault: boolean): boolean {
+  return typeof value === 'boolean' ? value : isOnByDefault;
+}
+
+function parseOpponentStrength(value: unknown): OpponentStrengthId | null {
+  if (value === undefined) return DEFAULT_OPPONENT_STRENGTH;
+  return isOpponentStrengthId(value) ? value : null;
+}
+
+export function isNewCardsPerDay(value: unknown): value is number {
+  return (
+    Number.isInteger(value) && Number(value) >= 0 && Number(value) <= NEW_CARDS_PER_DAY_MAXIMUM
+  );
+}
+
+function parseNewCardsPerDay(value: unknown): number | null {
+  return isNewCardsPerDay(value) ? value : null;
+}
+
+export function listNewCardsPerDayChoices(): number[] {
+  return Array.from({ length: NEW_CARDS_PER_DAY_MAXIMUM + 1 }, (_unused, count) => count);
+}
+
+export function toNewCardsPerDay(value: string, current: number): number {
+  const count = value.trim() === '' ? Number.NaN : Number(value);
+  return isNewCardsPerDay(count) ? count : current;
 }
 
 export function stringifyPersistedState(state: PersistedState): string {
   return JSON.stringify(state);
-}
-
-function parseMode(value: unknown): Mode | null {
-  return value === 'learn' || value === 'play' ? value : null;
 }
 
 function parseSide(value: unknown): Side | null {
@@ -94,53 +101,7 @@ function parseBoardStyle(value: unknown): BoardThemeId | null {
   return isBoardThemeId(value) ? value : null;
 }
 
-function parseView(value: unknown): View | null {
-  return value === 'select' || value === 'session' ? value : null;
-}
-
-function parseBoolean(value: unknown): boolean | null {
-  return typeof value === 'boolean' ? value : null;
-}
-
-function parseSelection(value: unknown): Selection | null {
-  if (!isPlainRecord(value)) return null;
-  if (
-    !isStringOrNull(value.openingId) ||
-    !isStringOrNull(value.variationId) ||
-    !isStringOrNull(value.lineId)
-  ) {
-    return null;
-  }
-  return {
-    openingId: value.openingId,
-    variationId: value.variationId,
-    lineId: value.lineId,
-  };
-}
-
-function isStringOrNull(value: unknown): value is string | null {
-  return value === null || typeof value === 'string';
-}
-
-function parsePlayScope(value: unknown): PlayScope | null {
-  if (!isPlainRecord(value)) return null;
-  const openingIds = parseStringArray(value.openingIds);
-  const variationIds = parseStringArray(value.variationIds);
-  const lineIds = parseStringArray(value.lineIds);
-  if (openingIds === null || variationIds === null || lineIds === null) return null;
-  return { openingIds, variationIds, lineIds };
-}
-
-function parseStringArray(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  const strings: string[] = [];
-  for (const entry of value) {
-    if (typeof entry !== 'string') return null;
-    strings.push(entry);
-  }
-  return strings;
-}
-
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, a primitive root carries none of the fields, so the parse answers null anyway.
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

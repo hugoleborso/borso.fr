@@ -1,43 +1,47 @@
 import { describe, expect, it } from 'vitest';
-import { isCompactViewport, selectBoardWidth } from './viewport.utils';
+import { selectBoardWidth } from './viewport.utils';
 
-describe('isCompactViewport', () => {
-  it('treats a phone width as compact', () => {
-    expect(isCompactViewport(375)).toBe(true);
-  });
-
-  it('treats the breakpoint itself as compact', () => {
-    expect(isCompactViewport(900)).toBe(true);
-  });
-
-  it('treats a desktop width as not compact', () => {
-    expect(isCompactViewport(901)).toBe(false);
-  });
-});
-
-// @FollowsBlueprint test-pure-unit
 describe('selectBoardWidth', () => {
-  it('gives a desktop viewport a share of its width', () => {
-    expect(selectBoardWidth(1100)).toBe(660);
-  });
-
-  it('caps the board on a very wide viewport', () => {
-    expect(selectBoardWidth(3000)).toBe(700);
-  });
-
-  it('leaves room for the page padding on a phone', () => {
-    expect(selectBoardWidth(375)).toBe(327);
-  });
-
-  it('never goes below the minimum playable size', () => {
-    expect(selectBoardWidth(280)).toBe(260);
-  });
-
-  it('never goes negative when the viewport is narrower than the padding', () => {
-    expect(selectBoardWidth(0)).toBe(260);
+  it('gives a desktop viewport half its width, beside the card column', () => {
+    expect(selectBoardWidth(1100)).toBe(550);
   });
 
   it('uses the desktop share from the breakpoint upwards', () => {
-    expect(selectBoardWidth(1024)).toBe(1024 * 0.6);
+    expect(selectBoardWidth(1024)).toBe(512);
+  });
+
+  it('caps the board on a very wide viewport', () => {
+    expect(selectBoardWidth(3000)).toBe(560);
+  });
+
+  it('caps the board on a tablet just below the desktop breakpoint', () => {
+    expect(selectBoardWidth(1023)).toBe(560);
+  });
+
+  it('leaves room for the page padding from the roomy breakpoint upwards', () => {
+    expect(selectBoardWidth(601)).toBe(553);
+  });
+
+  it('spans the whole width of a phone, edge to edge', () => {
+    expect(selectBoardWidth(375)).toBe(375);
+    expect(selectBoardWidth(600)).toBe(560);
+  });
+
+  it('never goes below the minimum playable size', () => {
+    expect(selectBoardWidth(250)).toBe(260);
+  });
+
+  it('never goes negative on an empty viewport', () => {
+    expect(selectBoardWidth(0)).toBe(260);
+  });
+
+  it('gives the evaluation bar its width out of the board, so the two take the same room', () => {
+    expect(selectBoardWidth(375, true)).toBe(351);
+    expect(selectBoardWidth(3000, true)).toBe(536);
+    expect(selectBoardWidth(375, false)).toBe(375);
+  });
+
+  it('keeps the minimum playable size beside the bar', () => {
+    expect(selectBoardWidth(270, true)).toBe(260);
   });
 });

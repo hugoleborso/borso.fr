@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { isCompactViewport, selectBoardWidth } from './viewport.utils';
+import { selectBoardWidth } from './viewport.utils';
 
 const SERVER_VIEWPORT_WIDTH_PX = 1024;
 
@@ -21,10 +21,6 @@ export function useViewportWidth(): number {
   return useSyncExternalStore(subscribeToViewportWidth, readViewportWidth, readServerViewportWidth);
 }
 
-export function useIsCompactViewport(): boolean {
-  return isCompactViewport(useViewportWidth());
-}
-
-export function useBoardWidth(): number {
-  return selectBoardWidth(useViewportWidth());
+export function useBoardWidth(isEvaluationBarShown = false): number {
+  return selectBoardWidth(useViewportWidth(), isEvaluationBarShown);
 }

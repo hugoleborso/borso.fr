@@ -1,41 +1,29 @@
-import { Chessboard, defaultArrowOptions } from 'react-chessboard';
+import { defaultPieces } from 'react-chessboard';
+import type { Side } from '@/state/persistedState.utils';
 import { getBoardAppearance } from '@/theme/boardAppearance';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
-
-const MINI_BOARD_BORDER_RADIUS = '10px';
-const MINI_BOARD_SHADOW = '0 6px 16px rgba(0,0,0,0.35)';
+import { readBoardPlacement } from './board-placement.utils';
 
 interface MiniBoardProps {
   fen: string;
   boardStyleId: BoardThemeId;
+  orientation?: Side;
 }
 
 // @FollowsBlueprint atom-plain
-export function MiniBoard({ fen, boardStyleId }: MiniBoardProps) {
+export function MiniBoard({ fen, boardStyleId, orientation = 'white' }: MiniBoardProps) {
   const { theme } = getBoardAppearance(boardStyleId);
   return (
-    <div inert aria-hidden className="size-[140px]">
-      <Chessboard
-        options={{
-          id: `mini-${fen}`,
-          position: fen,
-          boardOrientation: 'white',
-          darkSquareStyle: { backgroundColor: theme.dark },
-          lightSquareStyle: { backgroundColor: theme.light },
-          boardStyle: {
-            borderRadius: MINI_BOARD_BORDER_RADIUS,
-            boxShadow: MINI_BOARD_SHADOW,
-          },
-          arrowOptions: {
-            ...defaultArrowOptions,
-            colors: { ...defaultArrowOptions.colors, default: theme.arrow },
-          },
-          allowDragging: false,
-          allowDrawingArrows: false,
-          showAnimations: false,
-          showNotation: false,
-        }}
-      />
+    <div inert aria-hidden className="grid grid-cols-8 shrink-0 size-14 roomy:size-16">
+      {readBoardPlacement(fen, orientation).map((placed) => (
+        <div
+          key={placed.square}
+          className="aspect-square"
+          style={{ backgroundColor: placed.isDark ? theme.dark : theme.light }}
+        >
+          {placed.piece === null ? null : defaultPieces[placed.piece]?.()}
+        </div>
+      ))}
     </div>
   );
 }

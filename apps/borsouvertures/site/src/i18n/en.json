@@ -30,6 +30,306 @@
       "aria-label": "Interface language",
       "english": "EN",
       "french": "FR"
+    },
+    "settings": "Settings",
+    "close-settings": "Close settings",
+    "evaluation-bar": {
+      "label": "Evaluation bar",
+      "off": "Hidden",
+      "on": "Shown"
+    },
+    "move-sound": {
+      "label": "Move sound",
+      "off": "Off",
+      "on": "On"
+    }
+  },
+  "account": {
+    "sign-in": "Sign in",
+    "sign-out": "Sign out",
+    "dialog-title": "Sign in to sync",
+    "dialog-hint": "Only the owner's account syncs. Everyone else keeps their progress in this browser.",
+    "close": "Close",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "sync-paused": "Sync paused. Your reviews stay on this device and will be sent later.",
+    "session-expired": "Session expired. Sign in to keep syncing.",
+    "refusal": {
+      "invalid-credentials": "Wrong password.",
+      "rate-limited": "Too many attempts. Try again later.",
+      "auth-not-bootstrapped": "Sign-in is not set up on this server yet.",
+      "unavailable": "The server cannot be reached. Try again later."
+    }
+  },
+  "tab-bar": {
+    "aria-label": "Main sections",
+    "today": "Today",
+    "decks": "Decks",
+    "explore": "Explore"
+  },
+  "today": {
+    "title": "Today",
+    "due": "due",
+    "new": "new",
+    "start": "Start",
+    "nothing-left": "Nothing is due and no new card is left today. Open a deck to review it ahead.",
+    "review-ahead": "Review a deck ahead",
+    "sections": {
+      "aria-label": "Today sections",
+      "session": "Session",
+      "ahead": "Ahead",
+      "retention": "Retention"
+    }
+  },
+  "stats": {
+    "tab": "Stats",
+    "title": "Stats",
+    "streak": {
+      "label": "Streak",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "recent-retention": {
+      "title": "Retention, last 30 days",
+      "measured": "{{percent}}% · due reviews recalled: {{recalled}}/{{reviews}}",
+      "empty": "No due review yet"
+    },
+    "retention": {
+      "title": "Retention by week",
+      "caption": "The share of due cards recalled on the first try, over the last 12 weeks.",
+      "oldest-week_one": "{{count}} week ago",
+      "oldest-week_other": "{{count}} weeks ago",
+      "latest-week": "This week",
+      "week": {
+        "measured": "Week of {{weekStart}}: {{percent}}%, due reviews recalled: {{recalled}}/{{reviews}}",
+        "empty": "Week of {{weekStart}}: no due review"
+      }
+    },
+    "accuracy": {
+      "title": "Accuracy per deck",
+      "caption": "The share of all reviews recalled, due or not.",
+      "measured": "{{percent}}% · reviews recalled: {{recalled}}/{{reviews}}",
+      "empty": "No review yet"
+    },
+    "sections": {
+      "aria-label": "Stats sections",
+      "retention": "Retention",
+      "accuracy": "Accuracy"
+    }
+  },
+  "review": {
+    "progress": "{{deck}} · {{position}}/{{total}}",
+    "opponent-played": "{{side}} played {{move}}",
+    "first-move": "You make the first move",
+    "side": {
+      "white": "White",
+      "black": "Black"
+    },
+    "status": {
+      "opponent-moving": "Watch the move",
+      "your-move": "Your move",
+      "recalled": "Recalled. You played {{move}}.",
+      "missed": "Missed. The book move is {{move}}."
+    },
+    "idea": {
+      "title": "Idea",
+      "missing": "This move has no idea yet.",
+      "wikipedia-credit": "Based on Wikipedia, CC BY-SA 4.0",
+      "wikipedia-credit-short": "Wikipedia, CC BY-SA",
+      "read-all": "Read all",
+      "close": "Close the idea",
+      "opening-title": "Opening"
+    },
+    "show-move": "Show the move",
+    "next": "Next",
+    "leave": "Leave the session",
+    "completed": {
+      "title": "Session complete",
+      "recalled-share": "{{recalled}} of {{total}} recalled on the first try ({{percent}}%)",
+      "due-tomorrow_one": "{{count}} card due tomorrow",
+      "due-tomorrow_other": "{{count}} cards due tomorrow",
+      "back": "Done"
+    },
+    "progress-not-kept": "This browser cannot store your progress. Reviews from this visit will be lost when you close the page."
+  },
+  "cards": {
+    "name-deck": "Opening names",
+    "name": {
+      "question": "Which opening is this?",
+      "choices": "Opening names to choose from",
+      "status": {
+        "asking": "Pick one of the four names",
+        "recalled": "Recalled. This is the {{name}}, reached by {{moves}}.",
+        "missed": "Missed. This is the {{name}}, reached by {{moves}}."
+      },
+      "show-answer": "Show the name"
+    },
+    "trap": {
+      "opponent-played": "Trap. {{side}} played {{move}}",
+      "status": {
+        "opponent-moving": "Watch the move",
+        "your-move": "Punish it",
+        "recalled": "Recalled. The solution is {{moves}}.",
+        "missed": "Missed. The solution is {{moves}}."
+      },
+      "show-answer": "Show the solution"
+    }
+  },
+  "decks": {
+    "title": "Opening decks",
+    "names": {
+      "albin-countergambit": "Albin Countergambit",
+      "scandinavian-qa5": "Scandinavian with 3...Qa5",
+      "caro-kann-two-knights": "Caro-Kann, Two Knights Attack",
+      "vienna-game": "Vienna Game",
+      "grand-prix-attack": "Grand Prix Attack"
+    },
+    "side": {
+      "white": "You play White",
+      "black": "You play Black"
+    },
+    "counts": "{{cards}} cards · {{due}} due · {{new}} new",
+    "row-counts": "{{side}} · {{cards}} cards · {{due}} due · {{new}} new",
+    "retention": {
+      "measured": "Retention {{percent}}%",
+      "empty": "No retention yet"
+    },
+    "review": "Review this deck",
+    "nothing-to-review": "No card of this deck is due, and today's new cards are used up.",
+    "back": "All opening decks",
+    "lines": "Lines",
+    "new-cards-per-day": {
+      "label": "New cards per day"
+    },
+    "load-failure": {
+      "title": "Couldn't load the decks",
+      "message": "The deck file failed to load. Try reloading the page."
+    },
+    "sections": {
+      "aria-label": "Deck sections",
+      "review": "Review",
+      "lines": "Lines",
+      "play": "Play"
+    },
+    "line-stepper": {
+      "back": "All lines",
+      "start": "Starting position",
+      "position": "{{position}} of {{total}}",
+      "first": "Start of the line",
+      "previous": "Previous move",
+      "next": "Next move",
+      "last": "End of the line",
+      "move": "{{piece}} goes to {{square}}",
+      "capture": "{{piece}} takes on {{square}}",
+      "castle": {
+        "kingside-white": "White castles kingside",
+        "kingside-black": "Black castles kingside",
+        "queenside-white": "White castles queenside",
+        "queenside-black": "Black castles queenside"
+      },
+      "remove": "Remove"
+    },
+    "my-lines": "My lines"
+  },
+  "opponent": {
+    "title": "Play it against Stockfish",
+    "start": "Start a game",
+    "new-game": "New game",
+    "leave": "Leave the game",
+    "strength": {
+      "label": "Stockfish strength",
+      "steps": {
+        "skill-0": "Easiest",
+        "skill-3": "Easier",
+        "skill-6": "Easy",
+        "elo-1320": "1320 rating",
+        "elo-1500": "1500 rating",
+        "elo-1700": "1700 rating",
+        "elo-1900": "1900 rating",
+        "elo-2000": "2000 rating",
+        "elo-2200": "2200 rating",
+        "elo-2500": "2500 rating"
+      }
+    },
+    "source": {
+      "book": "The opponent follows the deck",
+      "stockfish": "The deck has ended, Stockfish plays",
+      "left-deck": "You left the deck, which plays {{move}}"
+    },
+    "last-move": {
+      "book": "The deck played {{move}}",
+      "stockfish": "Stockfish played {{move}}"
+    },
+    "status": {
+      "reader-to-move": "Your move",
+      "book-moving": "The deck is answering",
+      "stockfish-moving": "Stockfish is thinking",
+      "reader-won": "Checkmate. You won.",
+      "opponent-won": "Checkmate. You lost.",
+      "draw": "The game is a draw.",
+      "stockfish-unavailable": "Stockfish could not load, so the game ends where the deck ends. Its first game on a device needs the network.",
+      "stockfish-illegal-move": "Stockfish answered a move the board refuses. The game ends here."
+    }
+  },
+  "explore": {
+    "title": "Explore",
+    "unnamed": "No named opening yet",
+    "start": "Starting position",
+    "out-of-book": "Outside the known openings",
+    "more_one": "+{{count}} more",
+    "more_other": "+{{count}} more",
+    "line-count_one": "{{count}} line",
+    "line-count_other": "{{count}} lines",
+    "groups": {
+      "opening": "Openings",
+      "variation": "Variations",
+      "line": "Lines"
+    },
+    "side": {
+      "aria-label": "Side you play",
+      "white": "White",
+      "black": "Black"
+    },
+    "back": "Take back the last move",
+    "reset": "Back to the starting position",
+    "add": {
+      "action": "Add to my deck",
+      "added": "Added to My lines, {{side}}",
+      "already-in-deck": "My lines already hold this line",
+      "conflicts": "My lines already play {{move}} in a position of this line",
+      "no-reader-move": "This line holds no move of yours",
+      "illegal": "The board refuses this line"
+    }
+  },
+  "credits": {
+    "title": "Credits",
+    "link": "Credits",
+    "lichess": {
+      "name": "Lichess chess-openings",
+      "licence": "CC0 1.0",
+      "description": "The names and moves of the openings in Explore come from the Lichess chess-openings dataset.",
+      "link": "lichess-org/chess-openings on GitHub"
+    },
+    "wikipedia": {
+      "name": "Wikipedia",
+      "licence": "CC BY-SA 4.0",
+      "description": "Some ideas shown with the cards are based on Wikipedia articles. Each one carries a link to its article.",
+      "link": "Albin Countergambit on Wikipedia"
+    },
+    "stockfish": {
+      "name": "Stockfish {{version}}",
+      "licence": "GPL-3.0",
+      "description": "The Stockfish chess engine checks every move of the decks. Its files are distributed with this application unmodified, as a separate program.",
+      "source-link": "Source code at tag {{tag}}",
+      "licence-link": "Licence text",
+      "digests": "SHA-256 of the distributed files"
+    },
+    "sections": {
+      "aria-label": "Credit sections",
+      "lichess": "Lichess",
+      "wikipedia": "Wikipedia",
+      "stockfish": "Stockfish"
     }
   },
   "loading": {
@@ -54,10 +354,6 @@
     "start": {
       "learn": "Drill this variation",
       "play": "Play within this scope"
-    },
-    "hint": {
-      "learn": "Pick an opening + variation to drill its tree.",
-      "play": "Pick at least one opening, variation, or line to play."
     },
     "openings": {
       "title": "Openings",
@@ -93,6 +389,12 @@
       "aria-label": "Tree visualization mode",
       "arrows": "Arrows",
       "buttons": "Buttons"
+    },
+    "sections": {
+      "aria-label": "Session sections",
+      "board": "Board",
+      "status": "Status",
+      "options": "Options"
     }
   },
   "board": {
@@ -109,6 +411,27 @@
       "black-rook": "black rook on {{square}}",
       "black-queen": "black queen on {{square}}",
       "black-king": "black king on {{square}}"
+    },
+    "mark": {
+      "recalled": "Recalled",
+      "missed": "Missed"
+    },
+    "promotion": {
+      "queen": "Promote to a queen",
+      "knight": "Promote to a knight",
+      "rook": "Promote to a rook",
+      "bishop": "Promote to a bishop",
+      "cancel": "Cancel the promotion"
+    },
+    "evaluation": {
+      "pending": "Evaluation: Stockfish is looking",
+      "equal": "Evaluation: equal",
+      "white-ahead": "Evaluation: White is better by {{amount}}",
+      "black-ahead": "Evaluation: Black is better by {{amount}}",
+      "white-mates": "Evaluation: White mates in {{moveCount}}",
+      "black-mates": "Evaluation: Black mates in {{moveCount}}",
+      "white-won": "Evaluation: White has won",
+      "black-won": "Evaluation: Black has won"
     }
   },
   "learn": {

@@ -26,6 +26,7 @@ function listSourceFiles(): readonly string[] {
   return execFileSync('git', ['ls-files'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' })
     .split('\n')
     .filter((path) => SOURCE_PATH_PATTERN.test(path))
+    .filter((path) => existsSync(join(REPOSITORY_ROOT, path)))
     .filter((path) => !isTestFile(path))
     .filter((path) => !path.endsWith('.d.ts'));
 }

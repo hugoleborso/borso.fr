@@ -40,7 +40,7 @@ Docker, so the gate runs anywhere.
 
 The `site` project runs component tests in jsdom with Testing Library.
 
-A front-end-only application (`borsouvertures`, `borso-fr`) defines no projects
+A front-end-only application (`borso-fr`) defines no projects
 at all — one `include` covers its whole suite, because it has no service to
 start and no second environment to separate.
 

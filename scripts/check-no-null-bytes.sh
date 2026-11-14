@@ -29,7 +29,7 @@ failed=0
 while IFS= read -r path; do
   [ -f "$path" ] || continue
   case "$path" in
-    *.png | *.jpg | *.jpeg | *.gif | *.ico | *.webp | *.avif | *.pdf | *.woff | *.woff2 | *.ttf | *.otf | *.gz | *.zip | *.mp4 | *.webm) continue ;;
+    *.png | *.jpg | *.jpeg | *.gif | *.ico | *.webp | *.avif | *.pdf | *.woff | *.woff2 | *.ttf | *.otf | *.gz | *.zip | *.mp4 | *.webm | *.wasm) continue ;;
   esac
   if ! tr -d '\000' <"$path" | cmp -s - "$path"; then
     echo "  $path carries a NUL byte" >&2

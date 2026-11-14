@@ -27,9 +27,10 @@ describe('decideReadTarget', () => {
     });
   });
 
-  it('accepts the other two readable applications', () => {
+  it('accepts the other three readable applications', () => {
     expect(decideReadTarget('last-loop-lepin', 'prod').accepted).toBe(true);
     expect(decideReadTarget('banana-rush', 'prod').accepted).toBe(true);
+    expect(decideReadTarget('borsouvertures', 'prod').accepted).toBe(true);
   });
 
   it('refuses talos by name, pointing at its own agent API', () => {
