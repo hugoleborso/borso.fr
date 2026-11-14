@@ -7,6 +7,7 @@ import {
 } from '../../components/organisms/setlist-breaks.core';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { setlistKeys } from './setlists.queries';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const BREAK_WRITE_SCOPE = { id: 'setlist-entry-writes' } as const;
 
@@ -31,7 +32,7 @@ export function useSetlistBreaks(setlistId: string) {
 function useSettleBreaksFromResponse() {
   const queryClient = useQueryClient();
   return (data: BreaksCache, variables: { readonly setlistId: string }): void => {
-    queryClient.setQueryData<BreaksCache>(setlistKeys.breaksOf(variables.setlistId), {
+    writeKeepingStaleness<BreaksCache>(queryClient, setlistKeys.breaksOf(variables.setlistId), {
       breaks: data.breaks,
     });
   };
@@ -110,9 +111,9 @@ export function useBreaksFollowingEntries(): BreaksFollowingEntries {
     const key = setlistKeys.breaksOf(setlistId);
     const previous = queryClient.getQueryData<BreaksCache>(key);
     if (previous === undefined) return onFailure;
-    queryClient.setQueryData<BreaksCache>(key, { breaks: move(previous.breaks) });
+    writeKeepingStaleness<BreaksCache>(queryClient, key, { breaks: move(previous.breaks) });
     return () => {
-      queryClient.setQueryData<BreaksCache>(key, previous);
+      writeKeepingStaleness<BreaksCache>(queryClient, key, previous);
       onFailure();
     };
   };

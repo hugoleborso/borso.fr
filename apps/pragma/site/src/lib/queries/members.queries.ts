@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { refreshReadsDerivedFrom } from './cache-write.queries';
+import { refreshReadsDerivedFrom, writeKeepingStaleness } from './cache-write.queries';
 import { instrumentKeys } from './instruments.queries';
 import { predictMemberRoster } from './member-roster.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
@@ -89,21 +89,21 @@ export function useCreateMember() {
         phone: variables.phone ?? null,
         email: variables.email ?? null,
       };
-      queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
+      writeKeepingStaleness<MembersListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { members: [...old.members, inserted] };
       });
       return { previousList, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<MembersListResponse>(memberKeys.list(), (old) => {
+      writeKeepingStaleness<MembersListResponse>(queryClient, memberKeys.list(), (old) => {
         if (old === undefined) return old;
         return { members: settleTemporaryEntity(old.members, context.temporaryId, data.member) };
       });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(memberKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, memberKeys.list(), context.previousList);
       }
     },
   });
@@ -129,7 +129,7 @@ export function useUpdateMember() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<MembersListResponse>(listKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
+      writeKeepingStaleness<MembersListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           members: replaceEntityById(old.members, id, (member) => ({ ...member, ...patch })),
@@ -142,7 +142,7 @@ export function useUpdateMember() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(memberKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, memberKeys.list(), context.previousList);
       }
     },
   });
@@ -165,7 +165,7 @@ export function useDeleteMember() {
       const listKey = memberKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<MembersListResponse>(listKey);
-      queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
+      writeKeepingStaleness<MembersListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { members: old.members.filter((member) => member.id !== variables.id) };
       });
@@ -176,7 +176,7 @@ export function useDeleteMember() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(memberKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, memberKeys.list(), context.previousList);
       }
     },
   });
@@ -202,7 +202,7 @@ export function useAssignMemberInstruments() {
       await queryClient.cancelQueries({ queryKey: rosterKey });
       const previousRoster = queryClient.getQueryData<MemberInstrumentsResponse>(rosterKey);
       const catalog = queryClient.getQueryData<InstrumentsListResponse>(instrumentKeys.list());
-      queryClient.setQueryData<MemberInstrumentsResponse>(rosterKey, (old) => {
+      writeKeepingStaleness<MemberInstrumentsResponse>(queryClient, rosterKey, (old) => {
         if (old === undefined) return old;
         return {
           instruments: predictMemberRoster(
@@ -216,7 +216,8 @@ export function useAssignMemberInstruments() {
     },
     onError: (_err, variables, context) => {
       if (context?.previousRoster !== undefined) {
-        queryClient.setQueryData(
+        writeKeepingStaleness(
+          queryClient,
           memberKeys.instrumentsOf(variables.memberId),
           context.previousRoster,
         );

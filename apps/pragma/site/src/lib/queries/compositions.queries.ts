@@ -125,6 +125,7 @@ export function useCreateComposition() {
       settleList(queryClient, (compositions) =>
         settleTemporaryEntity(compositions, context.temporaryId, data.composition),
       );
+      // eslint-disable-next-line borso/no-direct-query-cache-write -- seeds the sketch of the composition this request just created, whose id no stale message can have named yet
       queryClient.setQueryData<SketchResponse>(sketchKeys.detail(data.composition.id), {
         sketch: { composition: data.composition, lanes: [], clips: [] },
       });

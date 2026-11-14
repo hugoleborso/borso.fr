@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ApiError, api } from '../api.client';
 import { startPasskeyEnrolment } from '../passkey.adapter';
 import { freeSlotsKeys } from './free-slots.queries';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const ME_WRITE_SCOPE = { id: 'me-writes' } as const;
 
@@ -100,7 +101,7 @@ export function useAddCalendarFeed() {
     },
     onSuccess: async (body) => {
       if (!('calendarFeeds' in body)) return;
-      queryClient.setQueryData<SignedInMember | null>(meKeys.profile(), (member) =>
+      writeKeepingStaleness<SignedInMember | null>(queryClient, meKeys.profile(), (member) =>
         withCalendarFeeds(member, body.calendarFeeds),
       );
       await queryClient.invalidateQueries({ queryKey: freeSlotsKeys.all });
@@ -120,7 +121,7 @@ export function useRemoveCalendarFeed() {
     },
     onSuccess: async (body) => {
       if (!('calendarFeeds' in body)) return;
-      queryClient.setQueryData<SignedInMember | null>(meKeys.profile(), (member) =>
+      writeKeepingStaleness<SignedInMember | null>(queryClient, meKeys.profile(), (member) =>
         withCalendarFeeds(member, body.calendarFeeds),
       );
       await queryClient.invalidateQueries({ queryKey: freeSlotsKeys.all });
@@ -170,7 +171,7 @@ export function useRenamePasskey() {
       return readReturnedPasskey(await response.json());
     },
     onSuccess: (renamed) => {
-      queryClient.setQueryData<PasskeySummary[]>(meKeys.passkeys(), (passkeys) =>
+      writeKeepingStaleness<PasskeySummary[]>(queryClient, meKeys.passkeys(), (passkeys) =>
         passkeys?.map((passkey) => (passkey.id === renamed.id ? renamed : passkey)),
       );
     },
@@ -194,7 +195,8 @@ export function useRemovePasskey() {
       await queryClient.cancelQueries({ queryKey: passkeysKey });
       const snapshot = queryClient.getQueryData<PasskeySummary[]>(passkeysKey);
       if (snapshot !== undefined) {
-        queryClient.setQueryData<PasskeySummary[]>(
+        writeKeepingStaleness<PasskeySummary[]>(
+          queryClient,
           passkeysKey,
           withoutPasskey(snapshot, variables.passkeyId),
         );
@@ -203,7 +205,7 @@ export function useRemovePasskey() {
     },
     onError: (_error, _variables, context) => {
       if (context?.snapshot !== undefined) {
-        queryClient.setQueryData<PasskeySummary[]>(passkeysKey, context.snapshot);
+        writeKeepingStaleness<PasskeySummary[]>(queryClient, passkeysKey, context.snapshot);
       }
     },
   });

@@ -21,6 +21,16 @@ export function writeKeepingStaleness<Data>(
   if (wasStale) query.invalidate();
 }
 
+export function writeEachKeepingStaleness<Data>(
+  queryClient: QueryClient,
+  queryKeyPrefix: QueryKey,
+  update: Updater<Data | undefined, Data | undefined>,
+): void {
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: queryKeyPrefix })) {
+    writeKeepingStaleness<Data>(queryClient, query.queryKey, update);
+  }
+}
+
 export function refreshReadsDerivedFrom(
   queryClient: QueryClient,
   written: WrittenApiRoot,

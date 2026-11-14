@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertTransitionComment } from './transitions.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const TRANSITIONS_WRITE_SCOPE = { id: 'transitions-writes' } as const;
 
@@ -73,11 +74,11 @@ export function useSaveTransitionComment() {
           updatedAt: new Date().toISOString(),
         },
       };
-      queryClient.setQueryData<TransitionPairCache>(pairKey, optimistic);
+      writeKeepingStaleness<TransitionPairCache>(queryClient, pairKey, optimistic);
       const listKey = transitionKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<TransitionsListResponse>(listKey);
-      queryClient.setQueryData<TransitionsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<TransitionsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { comments: upsertTransitionComment(old.comments, optimistic.comment) };
       });
@@ -85,11 +86,12 @@ export function useSaveTransitionComment() {
     },
     onError: (_err, variables, context) => {
       if (context === undefined) return;
-      queryClient.setQueryData(
+      writeKeepingStaleness(
+        queryClient,
         transitionKeys.byPair(variables.a, variables.b),
         context.previousPair,
       );
-      queryClient.setQueryData(transitionKeys.list(), context.previousList);
+      writeKeepingStaleness(queryClient, transitionKeys.list(), context.previousList);
     },
   });
 }

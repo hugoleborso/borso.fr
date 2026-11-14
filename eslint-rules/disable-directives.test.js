@@ -43,6 +43,20 @@ const CASES = [
     ],
   },
   {
+    rule: 'borso/no-direct-query-cache-write',
+    code: 'borso(no-direct-query-cache-write)',
+    directory: 'apps/pragma/site/src/lib/queries',
+    extension: 'ts',
+    reason: 'seeds the detail of the row this request just created',
+    directiveLine: 2,
+    lines: [
+      "import type { QueryClient } from '@tanstack/react-query';",
+      'export function seedCreatedSong(queryClient: QueryClient, id: string): void {',
+      "  queryClient.setQueryData(['songs', 'by-id', id], { id });",
+      '}',
+    ],
+  },
+  {
     rule: 'borso/no-use-effect',
     code: 'borso(no-use-effect)',
     directory: 'apps/pragma/site/src/components/organisms',

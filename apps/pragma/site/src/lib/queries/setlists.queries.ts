@@ -10,6 +10,7 @@ import {
   renameSetlistInCache,
   type SetlistsCache,
 } from './setlists.utils';
+import { writeEachKeepingStaleness, writeKeepingStaleness } from './cache-write.queries';
 
 const SETLISTS_WRITE_SCOPE = { id: 'setlists-writes' } as const;
 
@@ -86,13 +87,13 @@ type QueryClient = ReturnType<typeof useQueryClient>;
 type SummaryTransform = (cache: SetlistsCache) => SetlistsCache;
 
 function updateListCache(queryClient: QueryClient, transform: SummaryTransform): void {
-  queryClient.setQueryData<SetlistsCache>(setlistKeys.list(), (cache) =>
+  writeKeepingStaleness<SetlistsCache>(queryClient, setlistKeys.list(), (cache) =>
     cache === undefined ? cache : transform(cache),
   );
 }
 
 function updateEverySessionCache(queryClient: QueryClient, transform: SummaryTransform): void {
-  queryClient.setQueriesData<SetlistsCache>({ queryKey: setlistKeys.bySession() }, (cache) =>
+  writeEachKeepingStaleness<SetlistsCache>(queryClient, setlistKeys.bySession(), (cache) =>
     cache === undefined ? cache : transform(cache),
   );
 }
@@ -102,7 +103,7 @@ function updateSessionCache(
   sessionId: string,
   transform: SummaryTransform,
 ): void {
-  queryClient.setQueryData<SetlistsCache>(setlistKeys.bySessionId(sessionId), (cache) =>
+  writeKeepingStaleness<SetlistsCache>(queryClient, setlistKeys.bySessionId(sessionId), (cache) =>
     cache === undefined ? cache : transform(cache),
   );
 }
@@ -122,8 +123,8 @@ async function snapshotSummaryCaches(queryClient: QueryClient): Promise<SummaryC
 }
 
 function restoreSummaryCaches(queryClient: QueryClient, snapshot: SummaryCaches): void {
-  queryClient.setQueryData(setlistKeys.list(), snapshot.list);
-  for (const [key, cache] of snapshot.bySession) queryClient.setQueryData(key, cache);
+  writeKeepingStaleness(queryClient, setlistKeys.list(), snapshot.list);
+  for (const [key, cache] of snapshot.bySession) writeKeepingStaleness(queryClient, key, cache);
 }
 
 /**
@@ -143,6 +144,7 @@ export function useCreateSetlist() {
       return await response.json();
     },
     onSuccess: (data, variables) => {
+      // eslint-disable-next-line borso/no-direct-query-cache-write -- seeds the detail of the setlist this request just created, whose id no stale message can have named yet
       queryClient.setQueryData(setlistKeys.detail(data.setlist.id), data);
       const created: SetlistSummary = {
         id: data.setlist.id,
@@ -185,7 +187,7 @@ export function useRenameSetlist() {
       return { previous };
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(setlistKeys.detail(variables.setlistId), data);
+      writeKeepingStaleness(queryClient, setlistKeys.detail(variables.setlistId), data);
     },
     onError: (_error, _variables, context) => {
       if (context !== undefined) restoreSummaryCaches(queryClient, context.previous);

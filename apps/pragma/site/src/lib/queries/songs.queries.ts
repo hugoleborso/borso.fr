@@ -17,6 +17,7 @@ import {
   selectSongThatLostItsLastWrite,
 } from './song-write-failure.core';
 import { type LastSongWriteFailure, selectLastSongWriteFailure } from './song-save-refusal.core';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const SONGS_WRITE_SCOPE = { id: 'songs-writes' } as const;
 
@@ -114,7 +115,7 @@ export function useCreateSong() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
       const temporaryId = crypto.randomUUID();
-      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<SongsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           songs: [
@@ -126,15 +127,16 @@ export function useCreateSong() {
       return { previousList, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<SongsListResponse>(songKeys.list(), (old) => {
+      writeKeepingStaleness<SongsListResponse>(queryClient, songKeys.list(), (old) => {
         if (old === undefined) return old;
         return { songs: settleTemporaryEntity(old.songs, context.temporaryId, data.song) };
       });
+      // eslint-disable-next-line borso/no-direct-query-cache-write -- seeds the detail of the song this request just created, whose id no stale message can have named yet
       queryClient.setQueryData<SongByIdResponse>(songKeys.byId(data.song.id), data);
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(songKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, songKeys.list(), context.previousList);
       }
     },
   });
@@ -174,13 +176,13 @@ export function useUpdateSong() {
       const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
       const previousById = queryClient.getQueryData<SongByIdResponse>(byIdKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<SongsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           songs: replaceEntityById(old.songs, id, (song) => mergeSongUpdate(song, patch)),
         };
       });
-      queryClient.setQueryData<SongByIdResponse>(byIdKey, (old) => {
+      writeKeepingStaleness<SongByIdResponse>(queryClient, byIdKey, (old) => {
         if (old === undefined) return old;
         if (!('song' in old)) return old;
         return { song: mergeSongUpdate(old.song, patch) };
@@ -188,18 +190,18 @@ export function useUpdateSong() {
       return { previousList, previousById };
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<SongsListResponse>(songKeys.list(), (old) => {
+      writeKeepingStaleness<SongsListResponse>(queryClient, songKeys.list(), (old) => {
         if (old === undefined) return old;
         return { songs: replaceEntityById(old.songs, data.song.id, () => data.song) };
       });
-      queryClient.setQueryData<SongByIdResponse>(songKeys.byId(data.song.id), data);
+      writeKeepingStaleness<SongByIdResponse>(queryClient, songKeys.byId(data.song.id), data);
     },
     onError: (_err, variables, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(songKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, songKeys.list(), context.previousList);
       }
       if (context?.previousById !== undefined) {
-        queryClient.setQueryData(songKeys.byId(variables.id), context.previousById);
+        writeKeepingStaleness(queryClient, songKeys.byId(variables.id), context.previousById);
       }
     },
   });
@@ -243,7 +245,7 @@ export function useDeleteSong() {
       const listKey = songKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<SongsListResponse>(listKey);
-      queryClient.setQueryData<SongsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<SongsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { songs: old.songs.filter((song) => song.id !== variables.id) };
       });
@@ -252,7 +254,7 @@ export function useDeleteSong() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(songKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, songKeys.list(), context.previousList);
       }
     },
   });

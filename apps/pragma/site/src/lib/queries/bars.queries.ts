@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const BARS_WRITE_SCOPE = { id: 'bars-writes' } as const;
 
@@ -89,7 +90,7 @@ export function useCreateBar() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<BarsListResponse>(listKey);
       const temporaryId = crypto.randomUUID();
-      queryClient.setQueryData<BarsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         const inserted = buildOptimisticBar(temporaryId, variables);
         const next = [...old.bars, inserted].toSorted((left, right) =>
@@ -100,14 +101,14 @@ export function useCreateBar() {
       return { previousList, temporaryId };
     },
     onSuccess: (data, _vars, context) => {
-      queryClient.setQueryData<BarsListResponse>(barKeys.list(), (old) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, barKeys.list(), (old) => {
         if (old === undefined) return old;
         return { bars: settleTemporaryEntity(old.bars, context.temporaryId, data.bar) };
       });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(barKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, barKeys.list(), context.previousList);
       }
     },
   });
@@ -133,7 +134,7 @@ export function useUpdateBar() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<BarsListResponse>(listKey);
       const { id, ...patch } = variables;
-      queryClient.setQueryData<BarsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return {
           bars: replaceEntityById(old.bars, id, (bar) => ({ ...bar, ...patch })),
@@ -143,7 +144,7 @@ export function useUpdateBar() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(barKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, barKeys.list(), context.previousList);
       }
     },
   });
@@ -164,7 +165,7 @@ export function useDeleteBar() {
       const listKey = barKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<BarsListResponse>(listKey);
-      queryClient.setQueryData<BarsListResponse>(listKey, (old) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, listKey, (old) => {
         if (old === undefined) return old;
         return { bars: old.bars.filter((bar) => bar.id !== variables.id) };
       });
@@ -172,7 +173,7 @@ export function useDeleteBar() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(barKeys.list(), context.previousList);
+        writeKeepingStaleness(queryClient, barKeys.list(), context.previousList);
       }
     },
   });
