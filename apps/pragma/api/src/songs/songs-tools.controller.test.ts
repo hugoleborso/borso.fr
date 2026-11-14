@@ -12,6 +12,7 @@ import {
 } from '../../../test/mcp-utils';
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
 import { songTable } from './songs.schema';
+import { SONG_STATUSES } from '@domain/song-status.core';
 
 const OVERRIDE_SCORE = 9;
 
@@ -148,7 +149,7 @@ describe('songs tools (back-e2e)', () => {
       body: {
         error: 'invalid-input',
         fields: {
-          status: 'Invalid option: expected one of "idea"|"wip"|"rehearsed"|"concert_ready"',
+          status: `Invalid option: expected one of ${SONG_STATUSES.map((status) => `"${status}"`).join('|')}`,
         },
       },
     });
@@ -183,7 +184,7 @@ describe('songs tools (back-e2e)', () => {
     });
   });
 
-  it('sets the default lineup by name as the member, notifying the other members only', async () => {
+  it('adds a song then sets its default lineup by name as the member, notifying the other members only', async () => {
     const band = await prepareAssistantBand();
     const { assistant } = band;
     await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
@@ -211,8 +212,9 @@ describe('songs tools (back-e2e)', () => {
     });
     expect(read.song).toMatchObject({ lineup: { Léa: 'Guitare' } });
     expect(stored?.defaultLineup).toContain(band.lea.memberId);
-    expect(sent.map((notification) => notification.endpoint)).toEqual([
-      deviceEndpoint('lea-phone'),
+    expect(sent.map(({ endpoint, messageKey }) => ({ endpoint, messageKey }))).toEqual([
+      { endpoint: deviceEndpoint('lea-phone'), messageKey: 'song-created' },
+      { endpoint: deviceEndpoint('lea-phone'), messageKey: 'song-lineup-changed' },
     ]);
     expect(unknownMember).toEqual({
       isError: true,

@@ -139,6 +139,14 @@ request goes to Amazon and not to our API, and the Hono client knows nothing
 about it. The presign call itself still goes through the client and through
 `useMutation`.
 
+## A background exchange no component renders
+
+borsouvertures pushes and pulls its review events in
+`site/src/review/sync.adapter.ts`, over the same Hono client and outside
+TanStack Query. No component renders that exchange, so no query key or cache
+would hold it. The session read and the sign-in that start it still go through
+TanStack Query, in `account.queries.ts`.
+
 ## Forms
 
 A form uses `@tanstack/react-form`, so that field state, validation, dirty

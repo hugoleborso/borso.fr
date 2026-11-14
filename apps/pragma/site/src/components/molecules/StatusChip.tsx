@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Chip } from '../atoms/Chip';
+import type { SongStatus } from '@domain/song-status.core';
 
 const STATUS_LABEL_KEY = {
   idea: 'catalog.statusIdea',
+  to_play: 'catalog.statusToPlay',
   wip: 'catalog.statusWip',
   rehearsed: 'catalog.statusRehearsed',
   concert_ready: 'catalog.statusConcertReady',
-} as const;
-
-export type SongStatus = keyof typeof STATUS_LABEL_KEY;
+} as const satisfies Record<SongStatus, string>;
 
 export interface StatusChipProps {
   status: SongStatus;

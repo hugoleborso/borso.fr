@@ -20,7 +20,7 @@ PR opened                                                               PR close
                           (host-routed to s3://shared-previews/<app>/pr-<n>)
 ```
 
-**Trust pattern.** `PreviewDeployRole` trusts `repo:hugoleborso/borso.fr:pull_request` — no environment, no manual approval. Permissions are PowerUserAccess + IAM scoped to `*-pr-*` and `cdk-*` role ARNs + DSQL cluster lifecycle (resource `*` because cluster IDs aren't predictable). Preview stacks themselves only do an SSM lookup of the prod-owned per-app cluster, so an app must have been deployed to prod at least once before its previews can use a database.
+**Trust pattern.** `PreviewDeployRole` trusts `repo:hugoleborso/borso.fr:pull_request` — no environment, no manual approval. Permissions are PowerUserAccess + IAM scoped to `*-pr-*` and `cdk-*` role ARNs + DSQL cluster lifecycle (resource `*` because cluster IDs aren't predictable). Every full-stack entry point (`apps/<app>/cdk/bin/cdk.ts`) builds the `<app>-cluster` stack itself and hands its cluster to the app stack, so whichever deploy runs first, a preview or prod, creates the cluster. No prod deploy has to come first (read in `apps/banana-rush/cdk/bin/cdk.ts`; the old ordering is `docs/dantotsus/dsql-first-deploy-must-be-prod.md`).
 
 **Concurrency.** `concurrency.group: preview-${PR_NUMBER}`, `cancel-in-progress: false`. Never cancel a preview job mid-deploy; cancellation orphans CFN state.
 
@@ -90,9 +90,9 @@ Three CFN-defined budgets, all at 80% of their monthly threshold:
 | CertsStack (ACM wildcards) | First `pnpm shared:deploy` | Manually, never in normal ops | DNS-validated; safe to leave. |
 | SharedStack | First `pnpm shared:deploy` | Manually, never in normal ops | OIDC, previews bucket+CDN, deploy roles. |
 | Previews bucket | First `pnpm shared:deploy` | Never; `RemovalPolicy.RETAIN` | 60-day lifecycle rule on objects expires orphaned PR uploads. |
-| `<app>-prod` stack | First merge to `main` after the app exists | Manually (`cdk destroy`) | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. Owns the app's DSQL cluster. |
-| DSQL cluster (per-app) | First prod deploy of the app | Never (deletion-protected at AWS level) | One per app. Shared by every stage of that app via SSM lookup. |
-| `<app>-pr-<n>` stack | PR opened | PR closed | Re-created on each `synchronize` event if changed. Looks up the app's cluster via SSM. |
+| `<app>-prod` stack | First merge to `main` after the app exists | Manually (`cdk destroy`) | The bucket inside has `RemovalPolicy.RETAIN` — its content survives stack delete. The app's DSQL cluster lives in `<app>-cluster`, not here. |
+| DSQL cluster (per-app) | First deploy of the app's `<app>-cluster` stack, from a preview or from prod | Never (deletion-protected at AWS level) | One per app, in the `<app>-cluster` stack. Shared by every stage of that app, which receives it from the entry point. A preview's `destroy` targets `<app>-pr-<n>` only, so a closed pull request leaves it. |
+| `<app>-pr-<n>` stack | PR opened | PR closed | Re-created on each `synchronize` event if changed. Receives the app's cluster from the `<app>-cluster` stack. |
 | DSQL schema (preview) | `<app>-pr-<n>` stack create | `<app>-pr-<n>` stack delete | `DROP SCHEMA … CASCADE` in the migration runner. |
 | DSQL schema (prod) | First prod deploy | Manually | Migrations are forward-only. |
 | Lambda CloudWatch logs | First Lambda invocation | After 7 days (configured retention) | Per-app and per-stage. |

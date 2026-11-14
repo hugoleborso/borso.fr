@@ -31,6 +31,10 @@ describe('buildCatalogFilterSearch', () => {
 });
 
 describe('parseCatalogFilter', () => {
+  it('reads the to play filter from the address', () => {
+    expect(parseCatalogFilter('to_play')).toBe('to_play');
+  });
+
   it('reads a filter named in the address', () => {
     expect(parseCatalogFilter('learning')).toBe('learning');
   });

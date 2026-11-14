@@ -108,7 +108,7 @@ question settles.
 
 The spec template gains a `### Records` table, and the specification skill
 asks its two questions at step 7. `scripts/check-spec-records.sh` runs in
-pre-commit on every staged `spec.md` first committed from 2026-11-15:
+pre-commit on every staged `spec.md` that is not on `main` yet:
 
 ```diff
 +run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh

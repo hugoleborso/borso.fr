@@ -64,15 +64,12 @@ async function notifySessionWritten(
   session: SessionRow,
   actor: WriteActor,
 ): Promise<void> {
-  await notifyBand(
-    {
-      kind,
-      actorMemberId: actor.memberId,
-      sessionId: session.id,
-      sessionDate: session.date.toISOString(),
-    },
-    actor.now,
-  );
+  await notifyBand({
+    kind,
+    actorMemberId: actor.memberId,
+    sessionId: session.id,
+    sessionDate: session.date.toISOString(),
+  });
 }
 
 export async function createSession(

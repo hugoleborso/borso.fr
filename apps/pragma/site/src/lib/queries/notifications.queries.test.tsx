@@ -36,6 +36,7 @@ const SEED_PREFERENCES = {
   preferences: [
     { category: 'takes', enabled: true },
     { category: 'take_comments', enabled: true },
+    { category: 'songs', enabled: true },
     { category: 'sessions', enabled: true },
     { category: 'setlists', enabled: true },
   ],

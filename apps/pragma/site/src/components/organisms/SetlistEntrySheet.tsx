@@ -166,6 +166,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
       isTitleARecordName
       subheader={<SongViewTabs value={tab} onChange={setTab} />}
       onClose={close}
+      isFooterHiddenWhileTyping
       footer={
         <>
           <ButtonLink variant="secondary" icon="song" to={`/catalog/${entry.songId}`}>

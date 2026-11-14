@@ -19,7 +19,9 @@ export function pinBottomBarsToVisualViewport(host: ViewportHost = window): void
   const visualViewport = host.visualViewport;
   if (visualViewport === null) return;
   const writeBottomGap = (): void => {
-    const bottomGap = host.innerHeight - visualViewport.offsetTop - visualViewport.height;
+    const keyboardHeight = Math.max(host.innerHeight - visualViewport.height, 0);
+    const scrolledOverKeyboard = Math.min(Math.max(visualViewport.offsetTop, 0), keyboardHeight);
+    const bottomGap = host.innerHeight - scrolledOverKeyboard - visualViewport.height;
     host.document.documentElement.style.setProperty(BOTTOM_GAP_PROPERTY, `${bottomGap}px`);
   };
   writeBottomGap();

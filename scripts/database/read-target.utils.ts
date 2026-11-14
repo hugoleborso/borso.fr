@@ -10,6 +10,7 @@ const READABLE_SCHEMA_BY_TARGET: ReadonlyMap<string, string> = new Map([
   ['pragma/prod', 'prod'],
   ['last-loop-lepin/prod', 'prod'],
   ['banana-rush/prod', 'prod'],
+  ['borsouvertures/prod', 'prod'],
 ]);
 const READABLE_TARGETS_LABEL = [...READABLE_SCHEMA_BY_TARGET.keys()]
   .map((target) => `APP=${target.replace('/', ' STAGE=')}`)

@@ -1,3 +1,5 @@
+import type { CardKind, ReviewOutcome } from '@domain/review-event.core';
+
 const REPORTING_STAGES = ['preview', 'prod'] as const;
 
 const TRACE_SAMPLE_RATE = 1;
@@ -30,3 +32,26 @@ export function selectErrorReportingSettings(
   if (!isConfiguredText(inputs.dsn) || !isReportingStage(inputs.stage)) return undefined;
   return { dsn: inputs.dsn, environment: inputs.stage, tracesSampleRate: TRACE_SAMPLE_RATE };
 }
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function readErrorTags(error: unknown): Record<string, string> {
+  if (!isPlainRecord(error) || !isPlainRecord(error.tags)) return {};
+  const tags: Record<string, string> = {};
+  for (const [name, value] of Object.entries(error.tags)) {
+    if (typeof value === 'string') tags[name] = value;
+  }
+  return tags;
+}
+
+export type ProductEvent =
+  | { name: 'review_session_started' }
+  | { name: 'review_session_completed' }
+  | { name: 'card_reviewed'; cardKind: CardKind; outcome: ReviewOutcome }
+  | { name: 'new_cards_introduced'; count: number }
+  | { name: 'deck_opened'; deckId: string }
+  | { name: 'opponent_game_started'; deckId: string }
+  | { name: 'opponent_left_deck'; deckId: string }
+  | { name: 'sync_completed'; pushed: number; pulled: number };

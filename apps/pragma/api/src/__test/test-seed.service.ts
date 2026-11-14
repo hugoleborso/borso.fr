@@ -9,7 +9,7 @@ import type { WriteActor } from '../notifications/notifications.service';
 import { createSession } from '../sessions/sessions.service';
 import { appendEntry } from '../setlists/setlist-entry.service';
 import { createSetlist } from '../setlists/setlists.service';
-import { createSong } from '../songs/songs.service';
+import { insertSongWithoutNotice } from '../songs/songs.service';
 import { hashToken, selectTokenExpiries } from '../oauth/token.core';
 import { createTask } from '../tasks/tasks.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
@@ -54,7 +54,7 @@ const SEED_SETLIST_NAME = 'Set principal';
 const SEED_TOKEN_BYTES = 32;
 const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
-type SongCreateInput = Parameters<typeof createSong>[0];
+type SongCreateInput = Parameters<typeof insertSongWithoutNotice>[0];
 
 function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput {
   return {
@@ -153,7 +153,7 @@ async function seedSongs(
   const songIds: string[] = [];
   for (const seed of SEED_SONGS) {
     const lineup = buildSeedLineup(seed.lineup, memberIdByName, instrumentIdByName);
-    const created = await createSong(buildSongInput(seed, lineup));
+    const created = await insertSongWithoutNotice(buildSongInput(seed, lineup));
     if (created.kind !== 'ok') throw new Error(`seed song ${seed.title} names a taken track`);
     songIds.push(created.song.id);
   }

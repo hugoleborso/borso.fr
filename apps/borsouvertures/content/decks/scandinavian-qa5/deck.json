@@ -1,0 +1,393 @@
+{
+  "id": "scandinavian-qa5",
+  "order": 2,
+  "nameKey": "decks.names.scandinavian-qa5",
+  "side": "black",
+  "trapFilter": {
+    "openingTags": ["Scandinavian_Defense_Main_Line", "Zukertort_Opening_Tennison_Gambit"]
+  },
+  "lines": [
+    {
+      "name": "Main Line: 8. Nd5",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "Nc3",
+        "Qa5",
+        "d4",
+        "Nf6",
+        "Nf3",
+        "c6",
+        "Bc4",
+        "Bf5",
+        "Bd2",
+        "e6",
+        "Nd5",
+        "Qd8",
+        "Nxf6+",
+        "Qxf6",
+        "Qe2",
+        "Nd7"
+      ]
+    },
+    {
+      "name": "Main Line: 8. Qe2 Bb4",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "Nc3",
+        "Qa5",
+        "d4",
+        "Nf6",
+        "Nf3",
+        "c6",
+        "Bc4",
+        "Bf5",
+        "Bd2",
+        "e6",
+        "Qe2",
+        "Bb4",
+        "O-O-O",
+        "Nbd7",
+        "a3",
+        "Bxc3"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 4. Nc3 and 6. f3",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "Nc3",
+        "Nf6",
+        "Bc4",
+        "e6",
+        "f3",
+        "exf3",
+        "Qxf3",
+        "Nc6",
+        "Bb5",
+        "Qd7"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 5. Qe2",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "Nc3",
+        "Nf6",
+        "Qe2",
+        "Nc6",
+        "Ngxe4",
+        "Nd4",
+        "Qd3",
+        "e5"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 4. d3",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "d3",
+        "exd3",
+        "Bxd3",
+        "Bxd3",
+        "Qxd3",
+        "Qxd3",
+        "cxd3",
+        "Nc6"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 4. Bc4",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "Bc4",
+        "e6",
+        "d3",
+        "exd3",
+        "Bxd3",
+        "Bxd3",
+        "cxd3",
+        "Nc6"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 4. Qe2",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "Qe2",
+        "Nc6",
+        "Qb5",
+        "Qd7",
+        "Qxb7",
+        "Rb8",
+        "Qa6",
+        "Rb6"
+      ]
+    },
+    {
+      "name": "Tennison Gambit: 4. g4",
+      "movesSan": [
+        "e4",
+        "d5",
+        "Nf3",
+        "dxe4",
+        "Ng5",
+        "Bf5",
+        "g4",
+        "Bg6",
+        "Bg2",
+        "Nf6",
+        "Nc3",
+        "Nc6",
+        "Ngxe4",
+        "Nxe4",
+        "Nxe4",
+        "h5"
+      ]
+    },
+    {
+      "name": "Blackmar-Diemer Gambit: 8. Ne5",
+      "movesSan": [
+        "e4",
+        "d5",
+        "d4",
+        "dxe4",
+        "Nc3",
+        "Nf6",
+        "f3",
+        "exf3",
+        "Nxf3",
+        "c6",
+        "Bc4",
+        "Bf5",
+        "O-O",
+        "e6",
+        "Ne5",
+        "Bg6",
+        "Nxg6",
+        "hxg6"
+      ]
+    },
+    {
+      "name": "Blackmar-Diemer Gambit: 8. Ng5",
+      "movesSan": [
+        "e4",
+        "d5",
+        "d4",
+        "dxe4",
+        "Nc3",
+        "Nf6",
+        "f3",
+        "exf3",
+        "Nxf3",
+        "c6",
+        "Bc4",
+        "Bf5",
+        "O-O",
+        "e6",
+        "Ng5",
+        "Bg6",
+        "Qe2",
+        "Be7"
+      ]
+    },
+    {
+      "name": "Blackmar-Diemer Gambit: 5. Qxf3",
+      "movesSan": [
+        "e4",
+        "d5",
+        "d4",
+        "dxe4",
+        "Nc3",
+        "Nf6",
+        "f3",
+        "exf3",
+        "Qxf3",
+        "Qxd4",
+        "Be3",
+        "Qg4",
+        "Qf2",
+        "e5"
+      ]
+    },
+    {
+      "name": "2. d3: Queen Trade",
+      "movesSan": [
+        "e4",
+        "d5",
+        "d3",
+        "dxe4",
+        "dxe4",
+        "Qxd1+",
+        "Kxd1",
+        "e5",
+        "Nf3",
+        "Nc6",
+        "Bb5",
+        "Bd7"
+      ]
+    },
+    {
+      "name": "2. Nc3 d4",
+      "movesSan": ["e4", "d5", "Nc3", "d4", "Nce2", "e5", "Ng3", "Be6", "Nf3", "f6", "Bb5+", "c6"]
+    },
+    {
+      "name": "2. e5 c5",
+      "movesSan": [
+        "e4",
+        "d5",
+        "e5",
+        "c5",
+        "c3",
+        "Nc6",
+        "d4",
+        "Bf5",
+        "Nf3",
+        "e6",
+        "Be2",
+        "cxd4",
+        "cxd4",
+        "Nge7"
+      ]
+    },
+    {
+      "name": "3. Nf3 Bg4: 6. Be3",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "Nf3",
+        "Bg4",
+        "Be2",
+        "Nc6",
+        "d4",
+        "O-O-O",
+        "Be3",
+        "e5",
+        "c4",
+        "Qa5+",
+        "Bd2",
+        "Bb4",
+        "d5",
+        "Bxf3",
+        "Bxf3",
+        "Nd4"
+      ]
+    },
+    {
+      "name": "3. Nf3 Bg4: 4. Nc3",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "Nf3",
+        "Bg4",
+        "Nc3",
+        "Qd7",
+        "Be2",
+        "Nc6",
+        "d4",
+        "e6",
+        "Be3",
+        "O-O-O",
+        "O-O",
+        "Nf6"
+      ]
+    },
+    {
+      "name": "3. d4 Nc6: 6. c4",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "d4",
+        "Nc6",
+        "Nf3",
+        "Bg4",
+        "Be2",
+        "O-O-O",
+        "c4",
+        "Qf5",
+        "Be3",
+        "Bxf3",
+        "Bxf3",
+        "Nxd4",
+        "Bxd4",
+        "Qe6+",
+        "Be2",
+        "Qe4"
+      ]
+    },
+    {
+      "name": "3. d4 Nc6: 6. O-O",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "d4",
+        "Nc6",
+        "Nf3",
+        "Bg4",
+        "Be2",
+        "O-O-O",
+        "O-O",
+        "Bxf3",
+        "Bxf3",
+        "Qxd4"
+      ]
+    },
+    {
+      "name": "Leonhardt Gambit: 4. b4",
+      "movesSan": [
+        "e4",
+        "d5",
+        "exd5",
+        "Qxd5",
+        "Nc3",
+        "Qa5",
+        "b4",
+        "Qxb4",
+        "Rb1",
+        "Qd6",
+        "Nf3",
+        "Nf6",
+        "d4",
+        "c6"
+      ]
+    }
+  ]
+}

@@ -14,8 +14,10 @@
 # <created from where> | <the operator's answer, dated YYYY-MM-DD> |`. The date
 # is the part a script can hold: it says the answer was asked, not assumed.
 #
-# Specs first committed before 2026-11-15 are not held to it, so editing an old
-# spec does not reopen questions its feature already shipped.
+# A spec already on main is not held to it, so editing an old spec, or merging
+# main into a branch, does not reopen questions a merged feature settled. The
+# check holds a spec while its branch writes it, which is when the operator is
+# asked.
 #
 # Usage: scripts/check-spec-records.sh <file>...   (non-spec files are ignored)
 
@@ -24,7 +26,6 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-FIRST_HELD_DAY="2026-11-15"
 DATE_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}'
 
 failed=0
@@ -35,8 +36,7 @@ for spec in "$@"; do
   esac
   [ -f "$spec" ] || continue
 
-  first_commit_day="$(git log --diff-filter=A --follow --format=%cs -- "$spec" 2>/dev/null | tail -1 || true)"
-  if [ -n "$first_commit_day" ] && [[ "$first_commit_day" < "$FIRST_HELD_DAY" ]]; then
+  if git cat-file -e "origin/main:$spec" 2>/dev/null || git cat-file -e "MERGE_HEAD:$spec" 2>/dev/null; then
     continue
   fi
 

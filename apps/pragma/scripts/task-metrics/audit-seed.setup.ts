@@ -16,12 +16,13 @@ import { createCredentialForMember } from '../../api/src/auth/credentials.servic
 import { createSession, getSessions, patchSession } from '../../api/src/sessions/sessions.service';
 import { appendEntry } from '../../api/src/setlists/setlist-entry.service';
 import { createSetlist, getAllSetlists, getEntries } from '../../api/src/setlists/setlists.service';
-import { createSong, getSongs } from '../../api/src/songs/songs.service';
+import { getSongs, insertSongWithoutNotice } from '../../api/src/songs/songs.service';
 import { logStudy } from '../../api/src/studies/studies.service';
 import { createTake, createTakeComment } from '../../api/src/takes/takes.service';
 import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
 import { createTask } from '../../api/src/tasks/tasks.service';
 import { saveTransitionComment } from '../../api/src/transitions/transitions.service';
+import type { SongStatus } from '@domain/song-status.core';
 
 const DAY = 24 * 60 * 60 * 1000;
 const HIGH_ENERGY_EVERY = 4;
@@ -45,7 +46,7 @@ type Lineup = Record<string, string[]>;
 interface ExtraSong {
   title: string;
   artist: string;
-  status: 'idea' | 'wip' | 'rehearsed' | 'concert_ready';
+  status: SongStatus;
   origin: 'cover' | 'original';
   key: string | null;
   energy: number;
@@ -507,7 +508,7 @@ async function main(): Promise<void> {
     );
 
   for (const song of EXTRA_SONGS) {
-    const created = await createSong({
+    const created = await insertSongWithoutNotice({
       title: song.title,
       artist: song.artist,
       status: song.status,

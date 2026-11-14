@@ -9,6 +9,7 @@ export const chipVariants = cva(
         default: 'bg-sunk text-ink-soft',
         solid: 'bg-ink text-paper',
         idea: 'bg-sunk text-ink-soft',
+        to_play: 'bg-accent-soft text-accent-strong',
         wip: 'bg-warn-soft text-warn',
         rehearsed: 'bg-good-soft text-good',
         concert_ready: 'bg-ink text-paper',

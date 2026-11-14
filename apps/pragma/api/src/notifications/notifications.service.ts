@@ -6,12 +6,10 @@ import { reportTaggedFailure } from '../helpers/observability/error-reporting.ad
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
 import {
   buildCategoryToggles,
-  buildGroupKey,
   buildNotificationPayload,
   type CategoryPreference,
   type CategoryToggle,
   countDelivered,
-  isGroupDue,
   type NotificationCategory,
   type NotificationEvent,
   type NotificationPayload,
@@ -27,10 +25,8 @@ import {
   deletePushStateOfMemberWithin,
   deleteSubscription,
   deleteSubscriptions,
-  findDispatchLastSentAt,
   findMemberFirstName,
   findVapidKeyPair,
-  hasClaimedDispatch,
   hasClaimedFirstDispatch,
   insertVapidKeyPairUnlessPresent,
   listPreferencesOfCategory,
@@ -45,7 +41,7 @@ import { deliverWebPush, generateVapidKeyPair, type VapidKeys } from './web-push
 
 export type { NotificationEvent, PersonalPushOutcome, WriteActor } from './notifications.core';
 
-export type NotifyOutcome = 'no-recipients' | 'grouped' | 'sent' | 'timed-out' | 'failed';
+export type NotifyOutcome = 'no-recipients' | 'sent' | 'timed-out' | 'failed';
 
 export interface PushAudience {
   readonly subscriptions: readonly PushSubscriptionRow[];
@@ -116,17 +112,6 @@ export async function deletePushStateOfDeletedMember(
   memberId: string,
 ): Promise<void> {
   await deletePushStateOfMemberWithin(executor, memberId);
-}
-
-async function hasClaimedGroup(groupKey: string, now: Date): Promise<boolean> {
-  const lastSentAt = await findDispatchLastSentAt(groupKey);
-  if (!isGroupDue(lastSentAt, now)) return false;
-  try {
-    return await hasClaimedDispatch(groupKey, lastSentAt, now);
-  } catch (error) {
-    if (isConflictAbort(error)) return false;
-    throw error;
-  }
 }
 
 async function hasClaimedOnlyDispatch(groupKey: string, now: Date): Promise<boolean> {
@@ -213,7 +198,7 @@ async function deliverToRecipients(
   });
 }
 
-async function notifyRecipients(event: NotificationEvent, now: Date): Promise<NotifyOutcome> {
+async function notifyRecipients(event: NotificationEvent): Promise<NotifyOutcome> {
   const category = selectCategory(event);
   const { subscriptions, preferences } = await readPushAudience(category);
   const recipients = selectRecipients(subscriptions, preferences, {
@@ -221,15 +206,13 @@ async function notifyRecipients(event: NotificationEvent, now: Date): Promise<No
     category,
   });
   if (recipients.length === 0) return 'no-recipients';
-  const vapidKeys = await readVapidKeys();
-  if (!(await hasClaimedGroup(buildGroupKey(event), now))) return 'grouped';
-  return await deliverToRecipients(recipients, event, vapidKeys);
+  return await deliverToRecipients(recipients, event, await readVapidKeys());
 }
 
 // @FollowsBlueprint service-orchestration
-export async function notifyBand(event: NotificationEvent, now: Date): Promise<NotifyOutcome> {
+export async function notifyBand(event: NotificationEvent): Promise<NotifyOutcome> {
   try {
-    return await notifyRecipients(event, now);
+    return await notifyRecipients(event);
   } catch (error) {
     const failure = describeThrownValue(error);
     addWideEventFields({

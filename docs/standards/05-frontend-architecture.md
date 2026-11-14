@@ -121,6 +121,16 @@ sidebars, and full screen modals.
 
 Write the mobile layout first, and then opt into the desktop layout with `lg:`.
 
+A screen shows one section at a time when its sections do not all fit on one
+phone screen without scrolling. Split them with tabs or a segmented control
+inside the screen, rather than stacking them past the fold. One list that
+scrolls is one section. The operator asked for this on 2026-11-13 and said it
+was the mistake agents made every time.
+
+Wherever an opening, a song, a route or any other item with a picture of its
+own is named, the name sits beside a small preview of it. A text-only row
+makes the reader recall what the picture would have shown.
+
 ## The interface does not explain itself
 
 A screen carries data and controls, not sentences about the screen. A page
@@ -232,6 +242,9 @@ browser then shows a keyboard ring after a tap.
 - `reviewer` checks that every screen holds together at 375 pixels, using
   `agent-browser` for anything measurable and `scripts/phone.sh` for anything
   touched, because a synthetic click is not a tap.
+- `reviewer` checks, at 375 by 812 pixels, that no screen stacks two sections
+  past the fold where tabs belong, and that a named item with a preview of its
+  own shows it.
 - `reviewer` checks that a prop set has not grown a family of booleans where one
   variant string belongs.
 - `reviewer` checks that a control taking a drag or a slide writes nothing on

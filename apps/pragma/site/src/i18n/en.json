@@ -161,6 +161,7 @@
     "filterConcertReady": "Concert-ready",
     "filterIdea": "Ideas",
     "filterRehearsed": "Rehearsed",
+    "filterToPlay": "To play",
     "filterWip": "In progress",
     "isrcs": "ISRCs",
     "lastSaveFailed": "The last save did not go through — what you read below is the song as it was before the edit.",
@@ -190,6 +191,7 @@
     "statusConcertReady": "Concert ready",
     "statusIdea": "Idea",
     "statusRehearsed": "Rehearsed",
+    "statusToPlay": "To play",
     "statusWip": "In progress",
     "tags": "Tags",
     "title": "Songs",
@@ -818,6 +820,7 @@
     "timeLeft": "Time left",
     "secondsLeft": "{{count}}s",
     "notConcertReadyIdea": "asked for by the room",
+    "notConcertReadyToPlay": "not started yet",
     "notConcertReadyWip": "still being worked on",
     "notConcertReadyRehearsed": "rehearsed, not stage tested",
     "suggestTitle": "Ask for something else",
@@ -930,6 +933,7 @@
     "categories": {
       "takes": "New takes",
       "takeComments": "Comments on takes",
+      "songs": "New songs in the catalogue",
       "sessions": "Sessions",
       "setlists": "Setlists, lineups and transitions",
       "streak": "Daily flame reminder at 20:00"

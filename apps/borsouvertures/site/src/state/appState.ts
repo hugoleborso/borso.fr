@@ -1,33 +1,30 @@
 import { useSyncExternalStore } from 'react';
-import { EMPTY_PLAY_SCOPE, FULL_SELECTION } from '@/openings/playScope.core';
-import type { Selection } from '@/openings/selectors.utils';
+import {
+  DEFAULT_OPPONENT_STRENGTH,
+  type OpponentStrengthId,
+} from '@/opponent/opponent-strength.core';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 import {
-  type Mode,
+  IS_EVALUATION_BAR_SHOWN_BY_DEFAULT,
+  IS_MOVE_SOUND_ON_BY_DEFAULT,
+  NEW_CARDS_PER_DAY_DEFAULT,
   parsePersistedState,
   type PersistedState,
-  type PlayScope,
   type Side,
   stringifyPersistedState,
-  type TreeVisualizationMode,
-  type View,
 } from './persistedState.utils';
-
-export type { Mode, PlayScope, Side, TreeVisualizationMode, View };
 
 const STORAGE_KEY = 'borsouvertures.v1';
 
 export type AppState = PersistedState;
 
 const INITIAL_STATE: AppState = {
-  mode: 'learn',
   side: 'white',
   boardStyle: 'chesscom',
-  selection: FULL_SELECTION,
-  view: 'select',
-  playAutoOpponent: true,
-  playScope: EMPTY_PLAY_SCOPE,
-  treeVisualizationMode: null,
+  newCardsPerDay: NEW_CARDS_PER_DAY_DEFAULT,
+  opponentStrength: DEFAULT_OPPONENT_STRENGTH,
+  isEvaluationBarShown: IS_EVALUATION_BAR_SHOWN_BY_DEFAULT,
+  isMoveSoundOn: IS_MOVE_SOUND_ON_BY_DEFAULT,
 };
 
 function readInitialState(): AppState {
@@ -82,10 +79,6 @@ export function useAppState(): AppState {
   return useSyncExternalStore(subscribe, readSnapshot);
 }
 
-export function setMode(mode: Mode): void {
-  update({ mode });
-}
-
 export function setSide(side: Side): void {
   update({ side });
 }
@@ -94,34 +87,22 @@ export function setBoardStyle(boardStyle: BoardThemeId): void {
   update({ boardStyle });
 }
 
-export function setSelection(selection: Selection): void {
-  update({ selection });
+export function setNewCardsPerDay(newCardsPerDay: number): void {
+  update({ newCardsPerDay });
 }
 
-export function setView(view: View): void {
-  update({ view });
+export function setOpponentStrength(opponentStrength: OpponentStrengthId): void {
+  update({ opponentStrength });
 }
 
-export function setPlayAutoOpponent(isAutoOpponentEnabled: boolean): void {
-  update({ playAutoOpponent: isAutoOpponentEnabled });
+export function setEvaluationBarShown(isEvaluationBarShown: boolean): void {
+  update({ isEvaluationBarShown });
 }
 
-export function setPlayScope(playScope: PlayScope): void {
-  update({ playScope });
+export function setMoveSoundOn(isMoveSoundOn: boolean): void {
+  update({ isMoveSoundOn });
 }
 
-export function setTreeVisualizationMode(treeVisualizationMode: TreeVisualizationMode): void {
-  update({ treeVisualizationMode });
-}
-
-export function resetPlayScopeAndSelection(): void {
-  update({ playScope: EMPTY_PLAY_SCOPE, selection: FULL_SELECTION });
-}
-
-export function startPlayWithVariation(openingId: string, variationId: string): void {
-  update({
-    playScope: { openingIds: [openingId], variationIds: [variationId], lineIds: [] },
-    selection: FULL_SELECTION,
-    mode: 'play',
-  });
+export function readOpponentStrength(): OpponentStrengthId {
+  return store.state.opponentStrength;
 }

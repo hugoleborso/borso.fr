@@ -14,16 +14,16 @@ import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
   defaultLineupSchema,
-  SONG_STATUSES,
   type songExternalLinkSchema,
   songIsrcsRowSchema,
   songLinksRowSchema,
   songTable,
   songTagsRowSchema,
 } from './songs.schema';
+import { SONG_STATUSES, type SongStatus } from '@domain/song-status.core';
 
 const songStatusSchema = z.enum(SONG_STATUSES);
-export type SongStatus = (typeof SONG_STATUSES)[number];
+export type { SongStatus };
 export type SongLink = z.infer<typeof songExternalLinkSchema>;
 export type SongChart = z.infer<typeof chordChartSchema>;
 export type SongDefaultLineup = z.infer<typeof defaultLineupSchema>;

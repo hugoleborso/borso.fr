@@ -1,5 +1,5 @@
 {
-  "app": "tsx bin/app.ts",
+  "app": "tsx cdk/bin/cdk.ts",
   "watch": { "exclude": ["**/*.ts"] },
   "context": {
     "@aws-cdk/aws-iam:minimizePolicies": true,

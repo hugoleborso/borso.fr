@@ -126,6 +126,7 @@ jobs:
       LAST_LOOP_LEPIN_SENTRY_DSN: ${{ matrix.app == 'last-loop-lepin' && vars.SENTRY_DSN || '' }}
       BANANA_RUSH_SENTRY_DSN: ${{ matrix.app == 'banana-rush' && vars.SENTRY_DSN || '' }}
       TALOS_SENTRY_DSN: ${{ matrix.app == 'talos' && vars.SENTRY_DSN || '' }}
+      BORSOUVERTURES_SENTRY_DSN: ${{ matrix.app == 'borsouvertures' && vars.SENTRY_DSN || '' }}
       SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}

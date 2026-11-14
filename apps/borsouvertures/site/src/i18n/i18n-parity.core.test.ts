@@ -11,8 +11,18 @@ import { areCataloguesInParity, diffCatalogues, listIdenticalValueKeys } from '.
  */
 const IDENTICAL_VALUE_REASON_BY_KEY: Readonly<Record<string, string>> = {
   'common.value.none': 'an em dash, not a word',
+  'credits.lichess.licence': 'CC0 1.0, the name of a licence',
+  'credits.lichess.name': 'the name of the Lichess dataset, a proper noun',
+  'credits.sections.lichess': 'the Lichess brand, a proper noun, naming its credits tab',
+  'credits.sections.stockfish': 'the Stockfish engine, a proper noun, naming its credits tab',
+  'credits.stockfish.licence': 'GPL-3.0, the name of a licence',
+  'credits.stockfish.name': 'the Stockfish name and its version number',
+  'credits.wikipedia.licence': 'CC BY-SA 4.0, the name of a licence',
   'learn.lines-visited.value': '"{{visited}} / {{total}}" — two numbers and a slash',
+  'review.progress': 'a deck name, a middle dot and two numbers, with no word of its own',
   'selection.lines.eco': 'ECO is the Encyclopaedia of Chess Openings code, untranslated',
+  'tab-bar.decks':
+    'the short tab label; French players say "deck" too, and the screen title carries the full French name',
   'top-bar.board-style.theme.chesscom': 'the Chess.com brand, a proper noun',
   'top-bar.board-style.theme.lichess': 'the Lichess brand, a proper noun',
   'top-bar.brand': 'the Borsouvertures brand',

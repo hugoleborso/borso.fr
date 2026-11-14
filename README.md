@@ -33,7 +33,7 @@ onto serverless AWS that costs about a coffee a month while idle.
 | | App | What it is | Stack |
 | --- | --- | --- | --- |
 | 🌌 | [**borso.fr**](https://borso.fr) | The landing site: a starfield, a Mondrian generator, a family corner. | Static site |
-| ♟️ | [**Borsouvertures**](https://borsouvertures.borso.fr) | Learn and play chess openings. Works offline. | Static PWA |
+| ♟️ | [**Borsouvertures**](https://borsouvertures.borso.fr) | Learn and play chess openings. Works offline, and syncs the owner's reviews across his devices. | Full stack, PWA |
 | 🏃 | [**Last Loop Lépin**](https://last-loop-lepin.borso.fr) | Live race-day dashboard for a backyard ultra: hourly countdown, standings, course map, runners punching their own laps. | Full stack |
 | 🍌 | [**Banana Rush**](https://banana-rush.borso.fr) | A party game of secret bids, played from phones in the same room, live over WebSocket. | Full stack, real time |
 | 🎸 | [**Pragma**](https://pragma.borso.fr) | The band's private app: songs, setlists, practice sessions, takes, audience voting, and an MCP server so assistants can act on it. | Full stack, real time, PWA |
@@ -141,7 +141,7 @@ More in [Local development](docs/local-dev.md).
 ```text
 apps/
   borso-fr/          static site
-  borsouvertures/    static PWA
+  borsouvertures/    site/ + api/ + domain/ + cdk/
   last-loop-lepin/   site/ + api/ + domain/ + cdk/
   banana-rush/       site/ + api/ + domain/ + cdk/
   pragma/            site/ + api/ + domain/ + cdk/

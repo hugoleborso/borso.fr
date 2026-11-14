@@ -5,11 +5,7 @@ interface LoadingPanelProps {
 // @FollowsBlueprint atom-plain
 export function LoadingPanel({ message }: LoadingPanelProps) {
   return (
-    <div
-      className="p-4 rounded-xl border border-panel-line bg-panel backdrop-blur-[6px]"
-      role="status"
-      aria-live="polite"
-    >
+    <div className="pt-3 border-t-2 border-ink" role="status" aria-live="polite">
       {message}
     </div>
   );

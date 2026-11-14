@@ -10,8 +10,8 @@ import {
   type SongDraftState,
   songFromApi,
   songSchema,
-  songStatuses,
 } from './song-draft.core';
+import { SONG_STATUSES } from '@domain/song-status.core';
 
 const API_SONG: Song = {
   id: '00000000-0000-4000-8000-000000000000',
@@ -66,7 +66,7 @@ describe('songSchema', () => {
 
 describe('SONG_STATUS_LABEL_KEY', () => {
   it('carries a translation key for every status', () => {
-    expect(Object.keys(SONG_STATUS_LABEL_KEY)).toEqual([...songStatuses]);
+    expect(Object.keys(SONG_STATUS_LABEL_KEY)).toEqual([...SONG_STATUSES]);
   });
 });
 
