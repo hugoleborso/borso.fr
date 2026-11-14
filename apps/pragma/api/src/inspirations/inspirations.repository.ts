@@ -1,8 +1,8 @@
 import { desc, eq, sql } from 'drizzle-orm';
+import { compositionTable } from '../compositions/compositions.schema';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { memberTable } from '../members/members.schema';
 import { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
-import { songTable } from '../songs/songs.schema';
 import { inspirationTable } from './inspirations.schema';
 import type {
   InspirationChanges,
@@ -29,8 +29,8 @@ const INSPIRATION_PROJECTION = {
 
 const USAGE_PROJECTION = {
   inspirationId: sketchClipTable.inspirationId,
-  songId: sketchLaneTable.songId,
-  songTitle: songTable.title,
+  compositionId: sketchLaneTable.compositionId,
+  compositionTitle: compositionTable.title,
 } as const;
 
 function selectInspirations(executor: DatabaseExecutor) {
@@ -45,7 +45,7 @@ function selectUsages(executor: DatabaseExecutor) {
     .select(USAGE_PROJECTION)
     .from(sketchClipTable)
     .innerJoin(sketchLaneTable, eq(sketchLaneTable.id, sketchClipTable.laneId))
-    .innerJoin(songTable, eq(songTable.id, sketchLaneTable.songId));
+    .innerJoin(compositionTable, eq(compositionTable.id, sketchLaneTable.compositionId));
 }
 
 // @FollowsBlueprint repository-owned-transaction

@@ -41,7 +41,10 @@ function answerApi(request: Request): Response {
   if (pathname === '/api/inspirations') return jsonResponse({ inspirations: [CALL_ME_MAYBE] });
   if (pathname === `/api/inspirations/${CALL_ME_MAYBE.id}` && request.method === 'DELETE') {
     return jsonResponse(
-      { error: 'inspiration-in-use', sketches: [{ songId: 'song-1', title: 'New 7' }] },
+      {
+        error: 'inspiration-in-use',
+        sketches: [{ compositionId: 'composition-1', title: 'New 7' }],
+      },
       409,
     );
   }

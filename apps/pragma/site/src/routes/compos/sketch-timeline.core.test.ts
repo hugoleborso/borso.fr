@@ -13,8 +13,14 @@ import {
   selectPlayedPassage,
 } from './sketch-timeline.core';
 
-const DRUMS = { id: 'lane-a', songId: 'song-1', name: 'drums', position: 0 };
-const BRASS = { id: 'lane-b', songId: 'song-1', name: 'brass', position: 1 };
+const COMPOSITION = {
+  id: 'composition-1',
+  title: 'New 7',
+  songId: null,
+  createdAt: '2026-11-13T10:00:00.000Z',
+};
+const DRUMS = { id: 'lane-a', compositionId: 'composition-1', name: 'drums', position: 0 };
+const BRASS = { id: 'lane-b', compositionId: 'composition-1', name: 'brass', position: 1 };
 const CALL_ME_MAYBE = {
   id: 'inspiration-1',
   title: 'Call Me Maybe',
@@ -27,7 +33,7 @@ describe('projectSketchTimeline', () => {
   it('gives a clip the width of its passage and drops a clip whose inspiration is not in the list', () => {
     const timeline = projectSketchTimeline(
       {
-        songId: 'song-1',
+        composition: COMPOSITION,
         lanes: [DRUMS, BRASS],
         clips: [
           { id: 'clip-1', laneId: 'lane-b', inspirationId: 'inspiration-1', offsetSeconds: 10 },
@@ -59,7 +65,7 @@ describe('projectSketchTimeline', () => {
   });
 
   it('marks the ruler every ten seconds from 0:00 to the end of the tail', () => {
-    const timeline = projectSketchTimeline({ songId: 'song-1', lanes: [], clips: [] }, []);
+    const timeline = projectSketchTimeline({ composition: COMPOSITION, lanes: [], clips: [] }, []);
     expect(timeline.ticks).toEqual([
       { seconds: 0, label: '0:00', leftPixels: 0 },
       { seconds: 10, label: '0:10', leftPixels: 10 * PIXELS_PER_SECOND },
@@ -124,7 +130,7 @@ describe('isTapRightAfterDrag', () => {
 
 describe('the clip a tap plays', () => {
   const sketch = {
-    songId: 'song-1',
+    composition: COMPOSITION,
     lanes: [DRUMS],
     clips: [
       { id: 'clip-1', laneId: 'lane-a', inspirationId: 'inspiration-1', offsetSeconds: 0 },

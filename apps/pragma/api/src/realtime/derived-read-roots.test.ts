@@ -12,6 +12,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   audience: ['audience'],
   bars: ['bars'],
   'calendar-feeds': ['me'],
+  compositions: ['compositions'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],
   inspirations: ['inspirations'],
@@ -46,6 +47,7 @@ const SLICES_HOLDING_NO_BAND_DATA = new Set([
 ]);
 
 const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
+  compositions: ['sketches', 'songs'],
   instruments: ['setlists', 'songs'],
   members: [
     'bars',
@@ -59,7 +61,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'tasks',
   ],
   sessions: ['setlists', 'takes', 'tasks'],
-  songs: ['mastery', 'setlists', 'sketches', 'studies', 'takes', 'tasks'],
+  songs: ['compositions', 'mastery', 'setlists', 'studies', 'takes', 'tasks'],
 };
 
 const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {

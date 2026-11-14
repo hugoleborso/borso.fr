@@ -11,6 +11,7 @@ export {
   webauthnChallengeTable,
 } from '../auth/credentials.schema';
 export { barTable } from '../bars/bars.schema';
+export { compositionTable } from '../compositions/compositions.schema';
 export { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 export { improvementTable, improvementVoteTable } from '../improvements/improvements.schema';
 export { inspirationTable } from '../inspirations/inspirations.schema';

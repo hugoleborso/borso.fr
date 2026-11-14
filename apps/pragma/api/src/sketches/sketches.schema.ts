@@ -10,11 +10,11 @@ export const sketchLaneTable = pgTable(
   'sketch_lane',
   {
     id: uuid('id').primaryKey(),
-    songId: uuid('song_id').notNull(),
+    compositionId: uuid('composition_id').notNull(),
     name: text('name').notNull(),
     position: integer('position').notNull(),
   },
-  (table) => [index('sketch_lane_song_idx').on(table.songId)],
+  (table) => [index('sketch_lane_composition_idx').on(table.compositionId)],
 );
 
 export const sketchClipTable = pgTable(
@@ -38,9 +38,9 @@ const offsetSecondsSchema = z
   .min(SKETCH_TIMELINE_START_SECONDS)
   .max(SKETCH_OFFSET_LAST_SECOND);
 
-export const sketchPathSchema = z.object({ songId: z.guid() });
-export const sketchLanePathSchema = z.object({ songId: z.guid(), laneId: z.guid() });
-export const sketchClipPathSchema = z.object({ songId: z.guid(), clipId: z.guid() });
+export const sketchPathSchema = z.object({ compositionId: z.guid() });
+export const sketchLanePathSchema = z.object({ compositionId: z.guid(), laneId: z.guid() });
+export const sketchClipPathSchema = z.object({ compositionId: z.guid(), clipId: z.guid() });
 
 export const sketchLaneCreateSchema = z
   .object({

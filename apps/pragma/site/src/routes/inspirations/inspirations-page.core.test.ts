@@ -56,8 +56,8 @@ describe('the refused deletion', () => {
       selectDeletionRefusalMessage({
         kind: 'inspiration-in-use',
         sketches: [
-          { songId: 'song-1', title: 'New 7' },
-          { songId: 'song-2', title: 'New 8' },
+          { compositionId: 'composition-1', title: 'New 7' },
+          { compositionId: 'composition-2', title: 'New 8' },
         ],
       }),
     ).toEqual({ key: 'inspirations.refusal.inUse', sketchTitles: 'New 7, New 8' });

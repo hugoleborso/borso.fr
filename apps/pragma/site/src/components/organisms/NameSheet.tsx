@@ -1,6 +1,5 @@
 /** @Feature sketches */
 
-import { SKETCH_LANE_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,9 +7,13 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Sheet } from '../molecules/Sheet';
 
-export interface SketchLaneSheetProps {
-  readonly isNew: boolean;
+export interface NameSheetProps {
+  readonly sheetTitle: string;
+  readonly fieldLabel: string;
+  readonly maxLength: number;
   readonly initialName: string;
+  readonly isNew: boolean;
+  readonly deleteLabel: string;
   readonly onSave: (name: string) => void;
   readonly onDelete: () => void;
   readonly onClose: () => void;
@@ -19,13 +22,17 @@ export interface SketchLaneSheetProps {
 const FIELD_CLASS = 'flex flex-col gap-1 text-meta text-ink-soft';
 
 // @FollowsBlueprint route-form
-export function SketchLaneSheet({
-  isNew,
+export function NameSheet({
+  sheetTitle,
+  fieldLabel,
+  maxLength,
   initialName,
+  isNew,
+  deleteLabel,
   onSave,
   onDelete,
   onClose,
-}: SketchLaneSheetProps): JSX.Element {
+}: NameSheetProps): JSX.Element {
   const { t } = useTranslation();
   const form = useForm({
     defaultValues: { name: initialName },
@@ -35,7 +42,6 @@ export function SketchLaneSheet({
       onSave(name);
     },
   });
-  const sheetTitle = isNew ? t('sketch.newLane') : t('sketch.lane');
 
   return (
     <Sheet
@@ -53,7 +59,7 @@ export function SketchLaneSheet({
             <span />
           ) : (
             <Button icon="trash" variant="quiet" size="md" onClick={onDelete}>
-              {t('sketch.deleteLane')}
+              {deleteLabel}
             </Button>
           )}
           <Button icon="check" type="submit" variant="primary" size="lg">
@@ -65,11 +71,11 @@ export function SketchLaneSheet({
       <form.Field name="name">
         {(field) => (
           <label className={FIELD_CLASS}>
-            {t('sketch.laneName')}
+            {fieldLabel}
             <Input
               data-sheet-focus
               value={field.state.value}
-              maxLength={SKETCH_LANE_NAME_MAX_LENGTH}
+              maxLength={maxLength}
               onChange={(event) => field.handleChange(event.target.value)}
             />
           </label>

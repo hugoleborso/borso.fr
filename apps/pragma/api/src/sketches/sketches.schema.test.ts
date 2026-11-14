@@ -49,9 +49,9 @@ describe('the sketch input', () => {
     ).toBe(false);
   });
 
-  it('indexes lanes by song and clips by lane and by inspiration', () => {
+  it('indexes lanes by composition and clips by lane and by inspiration', () => {
     expect(getTableConfig(sketchLaneTable).indexes.map((index) => index.config.name)).toEqual([
-      'sketch_lane_song_idx',
+      'sketch_lane_composition_idx',
     ]);
     expect(getTableConfig(sketchClipTable).indexes.map((index) => index.config.name)).toEqual([
       'sketch_clip_lane_idx',

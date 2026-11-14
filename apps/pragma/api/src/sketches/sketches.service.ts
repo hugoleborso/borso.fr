@@ -8,20 +8,20 @@ import type {
   SketchLaneRenameInput,
 } from './sketches.schema';
 import {
-  deleteLanesAndClipsOfSongWithin,
-  didClaimLaneOfSongWithin,
-  didClaimSketchSongWithin,
+  deleteLanesAndClipsOfCompositionWithin,
+  didClaimLaneOfCompositionWithin,
+  didClaimSketchCompositionWithin,
   didDeleteClip,
   didDeleteLaneWithClips,
-  findClipOfSongWithin,
-  findLaneOfSongWithin,
+  findClipOfCompositionWithin,
+  findLaneOfCompositionWithin,
   findMovedClipWithin,
   findRenamedLane,
   hasInsertedClipWithin,
-  hasSong,
+  findSketchComposition,
   insertLaneUnlessPresentWithin,
-  listClipsOfSong,
-  listLanesOfSong,
+  listClipsOfComposition,
+  listLanesOfComposition,
   runInOneSketchTransaction,
 } from './sketches.repository';
 import type {
@@ -38,37 +38,45 @@ function refuse(reason: SketchRefusal): SketchRefused {
   return { kind: 'refused', reason };
 }
 
-export async function readSketch(songId: string): Promise<SketchReadOutcome> {
-  if (!(await hasSong(songId))) return refuse('song-not-found');
-  const [lanes, clips] = await Promise.all([listLanesOfSong(songId), listClipsOfSong(songId)]);
-  return { kind: 'ok', sketch: { songId, lanes, clips } };
+export async function readSketch(compositionId: string): Promise<SketchReadOutcome> {
+  const [composition, lanes, clips] = await Promise.all([
+    findSketchComposition(compositionId),
+    listLanesOfComposition(compositionId),
+    listClipsOfComposition(compositionId),
+  ]);
+  if (composition === null) return refuse('composition-not-found');
+  return { kind: 'ok', sketch: { composition, lanes, clips } };
 }
 
 export async function createLane(
-  songId: string,
+  compositionId: string,
   input: SketchLaneCreateInput,
 ): Promise<SketchLaneOutcome> {
   return await runInOneSketchTransaction(async (executor): Promise<SketchLaneOutcome> => {
-    if (!(await didClaimSketchSongWithin(executor, songId))) return refuse('song-not-found');
-    await insertLaneUnlessPresentWithin(executor, { ...input, songId });
-    const lane = await findLaneOfSongWithin(executor, songId, input.id);
+    if (!(await didClaimSketchCompositionWithin(executor, compositionId)))
+      return refuse('composition-not-found');
+    await insertLaneUnlessPresentWithin(executor, { ...input, compositionId });
+    const lane = await findLaneOfCompositionWithin(executor, compositionId, input.id);
     if (lane === null) return refuse('lane-not-found');
     return { kind: 'ok', lane };
   });
 }
 
 export async function renameLane(
-  songId: string,
+  compositionId: string,
   laneId: string,
   input: SketchLaneRenameInput,
 ): Promise<SketchLaneOutcome> {
-  const lane = await findRenamedLane(songId, laneId, input.name);
+  const lane = await findRenamedLane(compositionId, laneId, input.name);
   if (lane === null) return refuse('lane-not-found');
   return { kind: 'ok', lane };
 }
 
-export async function removeLane(songId: string, laneId: string): Promise<SketchDeletionOutcome> {
-  if (!(await didDeleteLaneWithClips(songId, laneId))) return refuse('lane-not-found');
+export async function removeLane(
+  compositionId: string,
+  laneId: string,
+): Promise<SketchDeletionOutcome> {
+  if (!(await didDeleteLaneWithClips(compositionId, laneId))) return refuse('lane-not-found');
   return { kind: 'ok' };
 }
 
@@ -78,52 +86,56 @@ type ClipPlacement =
 
 // @FollowsBlueprint service-orchestration
 export async function placeClip(
-  songId: string,
+  compositionId: string,
   input: SketchClipCreateInput,
 ): Promise<SketchClipOutcome> {
   const placement = await runInOneSketchTransaction(async (executor): Promise<ClipPlacement> => {
-    if (!(await didClaimLaneOfSongWithin(executor, songId, input.laneId))) {
+    if (!(await didClaimLaneOfCompositionWithin(executor, compositionId, input.laneId))) {
       return refuse('lane-not-found');
     }
     if (!(await didClaimInspirationWithin(executor, input.inspirationId))) {
       return refuse('inspiration-not-found');
     }
     const isNewClip = await hasInsertedClipWithin(executor, input);
-    const clip = await findClipOfSongWithin(executor, songId, input.id);
+    const clip = await findClipOfCompositionWithin(executor, compositionId, input.id);
     if (clip === null) return refuse('clip-not-found');
     return { kind: 'placed', clip, isNewClip };
   });
   if (placement.kind === 'refused') return placement;
-  if (placement.isNewClip) recordProductEvent({ event: 'sketch_clip_placed', song_id: songId });
+  if (placement.isNewClip)
+    recordProductEvent({ event: 'sketch_clip_placed', composition_id: compositionId });
   return { kind: 'ok', clip: placement.clip };
 }
 
 export async function moveClip(
-  songId: string,
+  compositionId: string,
   clipId: string,
   input: SketchClipMoveInput,
 ): Promise<SketchClipOutcome> {
   const outcome = await runInOneSketchTransaction(async (executor): Promise<SketchClipOutcome> => {
-    if (!(await didClaimLaneOfSongWithin(executor, songId, input.laneId))) {
+    if (!(await didClaimLaneOfCompositionWithin(executor, compositionId, input.laneId))) {
       return refuse('lane-not-found');
     }
-    const moved = await findMovedClipWithin(executor, songId, { id: clipId, ...input });
+    const moved = await findMovedClipWithin(executor, compositionId, { id: clipId, ...input });
     if (moved === null) return refuse('clip-not-found');
     return { kind: 'ok', clip: moved };
   });
   if (outcome.kind !== 'ok') return outcome;
-  recordProductEvent({ event: 'sketch_clip_moved', song_id: songId });
+  recordProductEvent({ event: 'sketch_clip_moved', composition_id: compositionId });
   return outcome;
 }
 
-export async function removeClip(songId: string, clipId: string): Promise<SketchDeletionOutcome> {
-  if (!(await didDeleteClip(songId, clipId))) return refuse('clip-not-found');
+export async function removeClip(
+  compositionId: string,
+  clipId: string,
+): Promise<SketchDeletionOutcome> {
+  if (!(await didDeleteClip(compositionId, clipId))) return refuse('clip-not-found');
   return { kind: 'ok' };
 }
 
-export async function deleteSketchOfDeletedSong(
+export async function deleteSketchOfDeletedComposition(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
 ): Promise<void> {
-  await deleteLanesAndClipsOfSongWithin(executor, songId);
+  await deleteLanesAndClipsOfCompositionWithin(executor, compositionId);
 }

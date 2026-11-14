@@ -7,9 +7,11 @@ import type {
 } from './inspirations.types';
 
 function listSketchesOf(usages: readonly InspirationUsage[]): SketchUsingInspiration[] {
-  const titleBySong = new Map(usages.map((usage) => [usage.songId, usage.songTitle]));
-  return [...titleBySong]
-    .map(([songId, title]) => ({ songId, title }))
+  const titleByComposition = new Map(
+    usages.map((usage) => [usage.compositionId, usage.compositionTitle]),
+  );
+  return [...titleByComposition]
+    .map(([compositionId, title]) => ({ compositionId, title }))
     .toSorted((first, second) => first.title.localeCompare(second.title));
 }
 
@@ -17,13 +19,15 @@ function listSketchesOf(usages: readonly InspirationUsage[]): SketchUsingInspira
 export function countSketchesByInspiration(
   usages: readonly InspirationUsage[],
 ): ReadonlyMap<string, number> {
-  const songsByInspiration = new Map<string, Set<string>>();
+  const compositionsByInspiration = new Map<string, Set<string>>();
   for (const usage of usages) {
-    const songs = songsByInspiration.get(usage.inspirationId) ?? new Set<string>();
-    songs.add(usage.songId);
-    songsByInspiration.set(usage.inspirationId, songs);
+    const compositions = compositionsByInspiration.get(usage.inspirationId) ?? new Set<string>();
+    compositions.add(usage.compositionId);
+    compositionsByInspiration.set(usage.inspirationId, compositions);
   }
-  return new Map([...songsByInspiration].map(([id, songs]) => [id, songs.size]));
+  return new Map(
+    [...compositionsByInspiration].map(([id, compositions]) => [id, compositions.size]),
+  );
 }
 
 export function projectInspirationViews(

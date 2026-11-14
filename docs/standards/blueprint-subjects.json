@@ -2717,9 +2717,6 @@
   "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
     "MemberChip": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/MemberLineup.tsx": {
-    "MemberLineup": "molecule-presentational"
-  },
   "apps/pragma/site/src/components/molecules/MemberPartGlyphs.tsx": {
     "MemberPartGlyphs": "molecule-presentational"
   },
@@ -2898,12 +2895,6 @@
   "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts": {
     "useIsMediaQueryMatching": "hook-external-store"
   },
-  "apps/pragma/site/src/components/molecules/member-lineup.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/components/molecules/member-lineup.core.ts": {
-    "buildLineupChips": "core-projection"
-  },
   "apps/pragma/site/src/components/molecules/online-status.hook.test.tsx": {
     "describe": "test-hook-probe"
   },
@@ -3007,9 +2998,6 @@
   },
   "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx": {
     "ChordChartViewer": "organism-presentational"
-  },
-  "apps/pragma/site/src/components/organisms/CompositionDetail.tsx": {
-    "CompositionDetail": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx": {
     "ConcertEditForm": "route-form"
@@ -4057,18 +4045,6 @@
   },
   "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts": {
     "buildTonalityLabel": "utils-formatter"
-  },
-  "apps/pragma/site/src/routes/compos/ComposPage.test.tsx": {
-    "describe": "test-component-render"
-  },
-  "apps/pragma/site/src/routes/compos/ComposPage.tsx": {
-    "ComposPage": "route-list-page"
-  },
-  "apps/pragma/site/src/routes/compos/compos-page.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/routes/compos/compos-page.core.ts": {
-    "selectComposition": "core-view-intent"
   },
   "apps/pragma/site/src/routes/home/HomePage.test.tsx": {
     "describe": "test-component-render"

@@ -1,12 +1,17 @@
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { songTable } from '../songs/songs.schema';
+import { compositionTable } from '../compositions/compositions.schema';
 import { sketchClipTable, sketchLaneTable } from './sketches.schema';
-import type { SketchClipPlacement, SketchClipRow, SketchLaneRow } from './sketches.types';
+import type {
+  SketchClipPlacement,
+  SketchClipRow,
+  SketchComposition,
+  SketchLaneRow,
+} from './sketches.types';
 
 const LANE_PROJECTION = {
   id: sketchLaneTable.id,
-  songId: sketchLaneTable.songId,
+  compositionId: sketchLaneTable.compositionId,
   name: sketchLaneTable.name,
   position: sketchLaneTable.position,
 } as const;
@@ -19,11 +24,11 @@ const CLIP_PROJECTION = {
   offsetSeconds: sketchClipTable.offsetSeconds,
 } as const;
 
-function selectLaneIdsOfSong(executor: DatabaseExecutor, songId: string) {
+function selectLaneIdsOfComposition(executor: DatabaseExecutor, compositionId: string) {
   return executor
     .select({ id: sketchLaneTable.id })
     .from(sketchLaneTable)
-    .where(eq(sketchLaneTable.songId, songId));
+    .where(eq(sketchLaneTable.compositionId, compositionId));
 }
 
 // @FollowsBlueprint repository-owned-transaction
@@ -33,54 +38,61 @@ export async function runInOneSketchTransaction<Result>(
   return await getDatabase().transaction(work);
 }
 
-export async function hasSong(songId: string): Promise<boolean> {
-  const [song] = await getDatabase()
-    .select({ id: songTable.id })
-    .from(songTable)
-    .where(eq(songTable.id, songId))
+export async function findSketchComposition(
+  compositionId: string,
+): Promise<SketchComposition | null> {
+  const [composition] = await getDatabase()
+    .select({
+      id: compositionTable.id,
+      title: compositionTable.title,
+      songId: compositionTable.songId,
+      createdAt: compositionTable.createdAt,
+    })
+    .from(compositionTable)
+    .where(eq(compositionTable.id, compositionId))
     .limit(1);
-  return song !== undefined;
+  return composition ?? null;
 }
 
-export async function listLanesOfSong(songId: string): Promise<SketchLaneRow[]> {
+export async function listLanesOfComposition(compositionId: string): Promise<SketchLaneRow[]> {
   return await getDatabase()
     .select(LANE_PROJECTION)
     .from(sketchLaneTable)
-    .where(eq(sketchLaneTable.songId, songId))
+    .where(eq(sketchLaneTable.compositionId, compositionId))
     .orderBy(asc(sketchLaneTable.position), asc(sketchLaneTable.id));
 }
 
-export async function listClipsOfSong(songId: string): Promise<SketchClipRow[]> {
+export async function listClipsOfComposition(compositionId: string): Promise<SketchClipRow[]> {
   return await getDatabase()
     .select(CLIP_PROJECTION)
     .from(sketchClipTable)
     .innerJoin(sketchLaneTable, eq(sketchLaneTable.id, sketchClipTable.laneId))
-    .where(eq(sketchLaneTable.songId, songId))
+    .where(eq(sketchLaneTable.compositionId, compositionId))
     .orderBy(asc(sketchClipTable.offsetSeconds), asc(sketchClipTable.id));
 }
 
 // @FollowsBlueprint repository-conditional-claim
-export async function didClaimSketchSongWithin(
+export async function didClaimSketchCompositionWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
 ): Promise<boolean> {
   const claimed = await executor
-    .update(songTable)
-    .set({ title: sql`${songTable.title}` })
-    .where(eq(songTable.id, songId))
-    .returning({ id: songTable.id });
+    .update(compositionTable)
+    .set({ title: sql`${compositionTable.title}` })
+    .where(eq(compositionTable.id, compositionId))
+    .returning({ id: compositionTable.id });
   return claimed.length > 0;
 }
 
-export async function didClaimLaneOfSongWithin(
+export async function didClaimLaneOfCompositionWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
   laneId: string,
 ): Promise<boolean> {
   const claimed = await executor
     .update(sketchLaneTable)
     .set({ name: sql`${sketchLaneTable.name}` })
-    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.songId, songId)))
+    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.compositionId, compositionId)))
     .returning({ id: sketchLaneTable.id });
   return claimed.length > 0;
 }
@@ -93,37 +105,40 @@ export async function insertLaneUnlessPresentWithin(
   await executor.insert(sketchLaneTable).values(lane).onConflictDoNothing();
 }
 
-export async function findLaneOfSongWithin(
+export async function findLaneOfCompositionWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
   laneId: string,
 ): Promise<SketchLaneRow | null> {
   const [lane] = await executor
     .select(LANE_PROJECTION)
     .from(sketchLaneTable)
-    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.songId, songId)))
+    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.compositionId, compositionId)))
     .limit(1);
   return lane ?? null;
 }
 
 export async function findRenamedLane(
-  songId: string,
+  compositionId: string,
   laneId: string,
   name: string,
 ): Promise<SketchLaneRow | null> {
   const [lane] = await getDatabase()
     .update(sketchLaneTable)
     .set({ name })
-    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.songId, songId)))
+    .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.compositionId, compositionId)))
     .returning(LANE_PROJECTION);
   return lane ?? null;
 }
 
-export async function didDeleteLaneWithClips(songId: string, laneId: string): Promise<boolean> {
+export async function didDeleteLaneWithClips(
+  compositionId: string,
+  laneId: string,
+): Promise<boolean> {
   return await runInOneSketchTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(sketchLaneTable)
-      .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.songId, songId)))
+      .where(and(eq(sketchLaneTable.id, laneId), eq(sketchLaneTable.compositionId, compositionId)))
       .returning({ id: sketchLaneTable.id });
     if (deleted.length === 0) return false;
     await transaction.delete(sketchClipTable).where(eq(sketchClipTable.laneId, laneId));
@@ -144,23 +159,23 @@ export async function hasInsertedClipWithin(
   return inserted.length > 0;
 }
 
-export async function findClipOfSongWithin(
+export async function findClipOfCompositionWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
   clipId: string,
 ): Promise<SketchClipRow | null> {
   const [clip] = await executor
     .select(CLIP_PROJECTION)
     .from(sketchClipTable)
     .innerJoin(sketchLaneTable, eq(sketchLaneTable.id, sketchClipTable.laneId))
-    .where(and(eq(sketchClipTable.id, clipId), eq(sketchLaneTable.songId, songId)))
+    .where(and(eq(sketchClipTable.id, clipId), eq(sketchLaneTable.compositionId, compositionId)))
     .limit(1);
   return clip ?? null;
 }
 
 export async function findMovedClipWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
   clip: SketchClipPlacement,
 ): Promise<SketchClipRow | null> {
   const [moved] = await executor
@@ -169,34 +184,34 @@ export async function findMovedClipWithin(
     .where(
       and(
         eq(sketchClipTable.id, clip.id),
-        inArray(sketchClipTable.laneId, selectLaneIdsOfSong(executor, songId)),
+        inArray(sketchClipTable.laneId, selectLaneIdsOfComposition(executor, compositionId)),
       ),
     )
     .returning(CLIP_PROJECTION);
   return moved ?? null;
 }
 
-export async function didDeleteClip(songId: string, clipId: string): Promise<boolean> {
+export async function didDeleteClip(compositionId: string, clipId: string): Promise<boolean> {
   const database = getDatabase();
   const deleted = await database
     .delete(sketchClipTable)
     .where(
       and(
         eq(sketchClipTable.id, clipId),
-        inArray(sketchClipTable.laneId, selectLaneIdsOfSong(database, songId)),
+        inArray(sketchClipTable.laneId, selectLaneIdsOfComposition(database, compositionId)),
       ),
     )
     .returning({ id: sketchClipTable.id });
   return deleted.length > 0;
 }
 
-export async function deleteLanesAndClipsOfSongWithin(
+export async function deleteLanesAndClipsOfCompositionWithin(
   executor: DatabaseExecutor,
-  songId: string,
+  compositionId: string,
 ): Promise<void> {
   const deletedLanes = await executor
     .delete(sketchLaneTable)
-    .where(eq(sketchLaneTable.songId, songId))
+    .where(eq(sketchLaneTable.compositionId, compositionId))
     .returning({ id: sketchLaneTable.id });
   if (deletedLanes.length === 0) return;
   await executor.delete(sketchClipTable).where(

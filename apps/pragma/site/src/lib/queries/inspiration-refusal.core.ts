@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ApiError } from '../api.client';
 
 export interface SketchUsingInspiration {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly title: string;
 }
 
@@ -16,7 +16,7 @@ export type InspirationRefusal =
 const inspirationRefusalBodySchema = z.discriminatedUnion('error', [
   z.object({
     error: z.literal('inspiration-in-use'),
-    sketches: z.array(z.object({ songId: z.string(), title: z.string() })),
+    sketches: z.array(z.object({ compositionId: z.string(), title: z.string() })),
   }),
   z.object({ error: z.literal('inspiration-not-found') }),
 ]);

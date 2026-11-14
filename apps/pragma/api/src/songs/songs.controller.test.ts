@@ -7,14 +7,14 @@ import {
   truncateAllTables,
 } from '../../../test/database-utils';
 import {
+  compositionEnvelope,
   createComposition,
   createInspiration,
   createLane,
-  listInspirations,
   placeClip,
+  readSketch,
   sendJson,
 } from '../../../test/sketch-utils';
-import { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
 
 const songSchema = z.object({
@@ -423,27 +423,22 @@ describe('songs controller (back-e2e)', () => {
     ).toBe(404);
   });
 
-  it('deletes the lanes and clips of a deleted composition and keeps its inspirations', async () => {
+  it('keeps the composition and its sketch when its catalogue song is deleted, and clears the link', async () => {
     const band = await buildAuthenticatedApp();
-    const songId = await createComposition(band);
-    const keptSongId = await createComposition(band, 'New 8');
-    const laneId = await createLane(band, songId);
-    const keptLaneId = await createLane(band, keptSongId);
+    const compositionId = await createComposition(band);
+    const laneId = await createLane(band, compositionId);
     const inspirationId = await createInspiration(band);
-    await placeClip(band, { songId, laneId, inspirationId });
-    await placeClip(band, { songId: keptSongId, laneId: keptLaneId, inspirationId });
+    await placeClip(band, { compositionId, laneId, inspirationId });
+    const catalogued = await sendJson(band, 'POST', `/api/compositions/${compositionId}/catalogue`);
+    const { songId } = (await readJson(catalogued, compositionEnvelope)).composition;
 
-    const deletion = await sendJson(band, 'DELETE', `/api/songs/${songId}`);
+    const deletion = await sendJson(band, 'DELETE', `/api/songs/${String(songId)}`);
 
     expect(deletion.status).toBe(200);
-    expect(await testDatabase().select().from(sketchLaneTable)).toEqual([
-      expect.objectContaining({ id: keptLaneId }),
-    ]);
-    expect(await testDatabase().select().from(sketchClipTable)).toEqual([
-      expect.objectContaining({ laneId: keptLaneId }),
-    ]);
-    expect(await listInspirations(band)).toEqual([
-      expect.objectContaining({ id: inspirationId, sketchCount: 1 }),
-    ]);
+    expect(await readSketch(band, compositionId)).toEqual({
+      composition: expect.objectContaining({ id: compositionId, songId: null }),
+      lanes: [expect.objectContaining({ id: laneId })],
+      clips: [expect.objectContaining({ laneId, inspirationId })],
+    });
   });
 });

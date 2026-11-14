@@ -3,10 +3,11 @@
 import type { InferResponseType } from 'hono/client';
 import type { api } from '../api.client';
 
-type SketchResponse = InferResponseType<(typeof api.api.sketches)[':songId']['$get'], 200>;
+type SketchResponse = InferResponseType<(typeof api.api.sketches)[':compositionId']['$get'], 200>;
 export type SketchShape = SketchResponse['sketch'];
 export type SketchLaneShape = SketchShape['lanes'][number];
 export type SketchClipShape = SketchShape['clips'][number];
+export type SketchCompositionShape = SketchShape['composition'];
 
 export interface ClipMove {
   readonly clipId: string;
@@ -61,4 +62,11 @@ export function moveClipInSketch(sketch: SketchShape, move: ClipMove): SketchSha
 
 export function removeClipFromSketch(sketch: SketchShape, clipId: string): SketchShape {
   return { ...sketch, clips: withoutId(sketch.clips, clipId) };
+}
+
+export function settleCompositionInSketch(
+  sketch: SketchShape,
+  composition: SketchCompositionShape,
+): SketchShape {
+  return { ...sketch, composition };
 }

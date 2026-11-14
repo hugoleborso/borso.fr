@@ -26,19 +26,19 @@ const NOT_FOUND_STATUS = 404;
 export function buildSketchesRouter() {
   return new Hono()
     .use('*', requireMemberSession)
-    .get('/:songId', zValidator('param', sketchPathSchema), async (context) => {
-      const outcome = await readSketch(context.req.valid('param').songId);
+    .get('/:compositionId', zValidator('param', sketchPathSchema), async (context) => {
+      const outcome = await readSketch(context.req.valid('param').compositionId);
       if (outcome.kind === 'refused')
         return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
       return context.json({ sketch: outcome.sketch });
     })
     .post(
-      '/:songId/lanes',
+      '/:compositionId/lanes',
       zValidator('param', sketchPathSchema),
       zValidator('json', sketchLaneCreateSchema),
       async (context) => {
         const outcome = await createLane(
-          context.req.valid('param').songId,
+          context.req.valid('param').compositionId,
           context.req.valid('json'),
         );
         if (outcome.kind === 'refused')
@@ -47,35 +47,35 @@ export function buildSketchesRouter() {
       },
     )
     .patch(
-      '/:songId/lanes/:laneId',
+      '/:compositionId/lanes/:laneId',
       zValidator('param', sketchLanePathSchema),
       zValidator('json', sketchLaneRenameSchema),
       async (context) => {
-        const { songId, laneId } = context.req.valid('param');
-        const outcome = await renameLane(songId, laneId, context.req.valid('json'));
+        const { compositionId, laneId } = context.req.valid('param');
+        const outcome = await renameLane(compositionId, laneId, context.req.valid('json'));
         if (outcome.kind === 'refused')
           return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
         return context.json({ lane: outcome.lane });
       },
     )
     .delete(
-      '/:songId/lanes/:laneId',
+      '/:compositionId/lanes/:laneId',
       zValidator('param', sketchLanePathSchema),
       async (context) => {
-        const { songId, laneId } = context.req.valid('param');
-        const outcome = await removeLane(songId, laneId);
+        const { compositionId, laneId } = context.req.valid('param');
+        const outcome = await removeLane(compositionId, laneId);
         if (outcome.kind === 'refused')
           return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
         return context.json({ id: laneId, deleted: true });
       },
     )
     .post(
-      '/:songId/clips',
+      '/:compositionId/clips',
       zValidator('param', sketchPathSchema),
       zValidator('json', sketchClipCreateSchema),
       async (context) => {
         const outcome = await placeClip(
-          context.req.valid('param').songId,
+          context.req.valid('param').compositionId,
           context.req.valid('json'),
         );
         if (outcome.kind === 'refused')
@@ -84,23 +84,23 @@ export function buildSketchesRouter() {
       },
     )
     .patch(
-      '/:songId/clips/:clipId',
+      '/:compositionId/clips/:clipId',
       zValidator('param', sketchClipPathSchema),
       zValidator('json', sketchClipMoveSchema),
       async (context) => {
-        const { songId, clipId } = context.req.valid('param');
-        const outcome = await moveClip(songId, clipId, context.req.valid('json'));
+        const { compositionId, clipId } = context.req.valid('param');
+        const outcome = await moveClip(compositionId, clipId, context.req.valid('json'));
         if (outcome.kind === 'refused')
           return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
         return context.json({ clip: outcome.clip });
       },
     )
     .delete(
-      '/:songId/clips/:clipId',
+      '/:compositionId/clips/:clipId',
       zValidator('param', sketchClipPathSchema),
       async (context) => {
-        const { songId, clipId } = context.req.valid('param');
-        const outcome = await removeClip(songId, clipId);
+        const { compositionId, clipId } = context.req.valid('param');
+        const outcome = await removeClip(compositionId, clipId);
         if (outcome.kind === 'refused')
           return context.json({ error: outcome.reason }, NOT_FOUND_STATUS);
         return context.json({ id: clipId, deleted: true });

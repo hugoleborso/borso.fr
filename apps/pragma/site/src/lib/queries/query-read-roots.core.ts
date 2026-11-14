@@ -12,6 +12,7 @@ export const QUERY_READ_ROOTS: Readonly<Record<string, readonly ApiRoot[]>> = {
   bars: ['bars'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],
+  compositions: ['compositions'],
   inspirations: ['inspirations'],
   instruments: ['instruments'],
   mastery: ['mastery'],

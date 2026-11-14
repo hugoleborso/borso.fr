@@ -7,11 +7,11 @@ describe('readInspirationRefusal', () => {
   it('reads the sketches that still use an inspiration', () => {
     const error = new ApiError(409, 'delete 409', {
       error: 'inspiration-in-use',
-      sketches: [{ songId: 'song-1', title: 'New 7' }],
+      sketches: [{ compositionId: 'composition-1', title: 'New 7' }],
     });
     expect(readInspirationRefusal(error)).toEqual({
       kind: 'inspiration-in-use',
-      sketches: [{ songId: 'song-1', title: 'New 7' }],
+      sketches: [{ compositionId: 'composition-1', title: 'New 7' }],
     });
   });
 

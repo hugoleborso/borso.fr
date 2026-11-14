@@ -28,6 +28,7 @@ const TRACKED_TABLES = [
   'bar',
   'sketch_clip',
   'sketch_lane',
+  'composition',
   'inspiration',
   'take_comment',
   'take',

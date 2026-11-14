@@ -4,6 +4,7 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { buildCompositionsRouter } from './compositions/compositions.controller';
 import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
 import { reportTaggedFailure } from './helpers/observability/error-reporting.adapter';
 import { traceRequests } from './helpers/observability/request-tracing.middleware';
@@ -91,6 +92,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/takes', buildTakesRouter())
     .route('/api/inspirations', buildInspirationsRouter())
+    .route('/api/compositions', buildCompositionsRouter())
     .route('/api/sketches', buildSketchesRouter())
     .route('/api/notifications', buildNotificationsRouter())
     .route('/api/realtime', buildRealtimeRouter())

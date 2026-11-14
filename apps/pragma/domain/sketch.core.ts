@@ -15,7 +15,7 @@ export function selectTimelineLengthSeconds(clipEnds: readonly number[]): number
 }
 
 export const SKETCH_REFUSALS = [
-  'song-not-found',
+  'composition-not-found',
   'lane-not-found',
   'inspiration-not-found',
   'clip-not-found',

@@ -22,9 +22,16 @@ export const inspirationSchema = z.object({
 export const inspirationEnvelope = z.object({ inspiration: inspirationSchema });
 export const inspirationListEnvelope = z.object({ inspirations: z.array(inspirationSchema) });
 
+const compositionSchema = z.object({
+  id: z.guid(),
+  title: z.string(),
+  songId: z.guid().nullable(),
+  createdAt: z.string(),
+});
+
 const laneSchema = z.object({
   id: z.guid(),
-  songId: z.guid(),
+  compositionId: z.guid(),
   name: z.string(),
   position: z.number(),
 });
@@ -37,11 +44,16 @@ const clipSchema = z.object({
 export const laneEnvelope = z.object({ lane: laneSchema });
 export const clipEnvelope = z.object({ clip: clipSchema });
 export const sketchEnvelope = z.object({
-  sketch: z.object({ songId: z.guid(), lanes: z.array(laneSchema), clips: z.array(clipSchema) }),
+  sketch: z.object({
+    composition: compositionSchema,
+    lanes: z.array(laneSchema),
+    clips: z.array(clipSchema),
+  }),
 });
 export const errorEnvelope = z.object({ error: z.string() });
 
-const songIdEnvelope = z.object({ song: z.object({ id: z.guid() }) });
+export const compositionEnvelope = z.object({ composition: compositionSchema });
+export const compositionListEnvelope = z.object({ compositions: z.array(compositionSchema) });
 
 export interface InspirationFields {
   readonly title?: string;
@@ -78,12 +90,8 @@ export async function sendJson(
 }
 
 export async function createComposition(band: AuthenticatedApp, title = 'New 7'): Promise<string> {
-  const response = await sendJson(band, 'POST', '/api/songs', {
-    title,
-    status: 'idea',
-    origin: 'original',
-  });
-  return (await readJson(response, songIdEnvelope)).song.id;
+  const response = await sendJson(band, 'POST', '/api/compositions', { id: randomUUID(), title });
+  return (await readJson(response, compositionEnvelope)).composition.id;
 }
 
 export async function createInspiration(
@@ -106,10 +114,10 @@ export async function listInspirations(band: AuthenticatedApp) {
 
 export async function createLane(
   band: AuthenticatedApp,
-  songId: string,
+  compositionId: string,
   name = 'drums',
 ): Promise<string> {
-  const response = await sendJson(band, 'POST', `/api/sketches/${songId}/lanes`, {
+  const response = await sendJson(band, 'POST', `/api/sketches/${compositionId}/lanes`, {
     id: randomUUID(),
     name,
     position: 0,
@@ -118,7 +126,7 @@ export async function createLane(
 }
 
 export interface ClipPlacement {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly laneId: string;
   readonly inspirationId: string;
   readonly offsetSeconds?: number;
@@ -129,7 +137,7 @@ export async function postClip(
   placement: ClipPlacement,
   clipId: string = randomUUID(),
 ): Promise<Response> {
-  return await sendJson(band, 'POST', `/api/sketches/${placement.songId}/clips`, {
+  return await sendJson(band, 'POST', `/api/sketches/${placement.compositionId}/clips`, {
     id: clipId,
     laneId: placement.laneId,
     inspirationId: placement.inspirationId,
@@ -141,7 +149,7 @@ export async function placeClip(band: AuthenticatedApp, placement: ClipPlacement
   return (await readJson(await postClip(band, placement), clipEnvelope)).clip.id;
 }
 
-export async function readSketch(band: AuthenticatedApp, songId: string) {
-  const response = await sendJson(band, 'GET', `/api/sketches/${songId}`);
+export async function readSketch(band: AuthenticatedApp, compositionId: string) {
+  const response = await sendJson(band, 'GET', `/api/sketches/${compositionId}`);
   return (await readJson(response, sketchEnvelope)).sketch;
 }

@@ -47,10 +47,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: '"lineup" is the word French musicians use here',
   },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
-  {
-    key: 'compos.lineup',
-    readsTheSameBecause: 'the band says lineup in French too, and the vocabulary keeps that word',
-  },
+  { key: 'compos.defaultTitle', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'home.totalHoursMinutes',
     readsTheSameBecause: 'a duration written with the h unit both languages share',

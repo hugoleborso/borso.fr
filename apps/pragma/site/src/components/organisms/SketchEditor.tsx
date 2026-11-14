@@ -1,5 +1,6 @@
 /** @Feature sketches */
 
+import { SKETCH_LANE_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,12 @@ import {
   type TimelineClip,
 } from '../../routes/compos/sketch-timeline.core';
 import { projectInspirationCard } from '../../routes/inspirations/inspirations-page.core';
-import type { InspirationRecord } from '../../lib/queries/inspirations.queries';
+import type { InspirationFieldsShape } from '../../lib/queries/inspiration-cache.core';
+import {
+  type InspirationRecord,
+  useCreateInspiration,
+} from '../../lib/queries/inspirations.queries';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 import { readSketchRefusal } from '../../lib/queries/sketch-refusal.core';
 import {
   type SketchRecord,
@@ -29,9 +35,11 @@ import { Button } from '../atoms/Button';
 import { HintText } from '../atoms/HintText';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { formatDuration } from '../molecules/song-duration.utils';
+import { startInspirationForm } from './inspiration-form.core';
+import { InspirationForm } from './InspirationForm';
 import { InspirationPickerSheet } from './InspirationPickerSheet';
 import { SketchClipSheet } from './SketchClipSheet';
-import { SketchLaneSheet } from './SketchLaneSheet';
+import { NameSheet } from './NameSheet';
 import { SketchTimeline } from './SketchTimeline';
 
 export interface SketchEditorProps {
@@ -43,10 +51,17 @@ interface OpenLaneSheet {
   readonly laneId: string | null;
 }
 
+interface ClipTarget {
+  readonly laneId: string;
+  readonly offsetSeconds: number;
+}
+
+const NEW_INSPIRATION_VALUES = startInspirationForm(null);
+
 // @FollowsBlueprint organism-query-owning
 export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.Element {
   const { t } = useTranslation();
-  const { songId } = sketch;
+  const compositionId = sketch.composition.id;
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const addLane = useAddSketchLane();
   const renameLane = useRenameSketchLane();
@@ -55,7 +70,10 @@ export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.E
   const moveClip = useMoveSketchClip();
   const removeClip = useRemoveSketchClip();
   const [laneSheet, setLaneSheet] = useState<OpenLaneSheet | null>(null);
-  const [pickerLaneId, setPickerLaneId] = useState<string | null>(null);
+  const createInspiration = useCreateInspiration();
+  const signedInMember = useSignedInMember();
+  const [pickerTarget, setPickerTarget] = useState<ClipTarget | null>(null);
+  const [newInspirationTarget, setNewInspirationTarget] = useState<ClipTarget | null>(null);
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
   const [pendingLaneDeletionId, setPendingLaneDeletionId] = useState<string | null>(null);
 
@@ -78,39 +96,61 @@ export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.E
     const laneId = laneSheet?.laneId ?? null;
     if (laneId === null) {
       addLane.mutate({
-        songId,
+        compositionId,
         id: crypto.randomUUID(),
         name,
         position: selectNextLanePosition(sketch.lanes),
       });
     } else {
-      renameLane.mutate({ songId, laneId, name });
+      renameLane.mutate({ compositionId, laneId, name });
     }
     setLaneSheet(null);
   };
 
-  const placeInspiration = (inspirationId: string): void => {
-    const laneId = pickerLaneId;
-    setPickerLaneId(null);
-    if (laneId === null) return;
-    placeClip.mutate({
-      songId,
-      id: crypto.randomUUID(),
+  const openPicker = (laneId: string): void => {
+    setPickerTarget({
       laneId,
-      inspirationId,
       offsetSeconds: selectNewClipOffsetSeconds(scrollerRef.current?.scrollLeft ?? 0),
     });
   };
 
+  const placeOnTarget = (target: ClipTarget, inspirationId: string): void => {
+    placeClip.mutate({ compositionId, id: crypto.randomUUID(), inspirationId, ...target });
+  };
+
+  const placeInspiration = (inspirationId: string): void => {
+    const target = pickerTarget;
+    setPickerTarget(null);
+    if (target === null) return;
+    placeOnTarget(target, inspirationId);
+  };
+
+  const startNewInspiration = (): void => {
+    setNewInspirationTarget(pickerTarget);
+    setPickerTarget(null);
+  };
+
+  const saveNewInspiration = async (fields: InspirationFieldsShape): Promise<void> => {
+    const target = newInspirationTarget;
+    if (target === null) return;
+    const inspirationId = crypto.randomUUID();
+    await createInspiration.mutateAsync({
+      inspiration: { id: inspirationId, ...fields },
+      author: signedInMember.data ?? null,
+    });
+    setNewInspirationTarget(null);
+    placeOnTarget(target, inspirationId);
+  };
+
   const moveClipTo = (clipId: string, position: ClipPosition): void => {
-    moveClip.mutate({ songId, clipId, ...position });
+    moveClip.mutate({ compositionId, clipId, ...position });
   };
 
   const removePlayingClip = (): void => {
     const clipId = playingClipId;
     setPlayingClipId(null);
     if (clipId === null) return;
-    removeClip.mutate({ songId, clipId });
+    removeClip.mutate({ compositionId, clipId });
   };
 
   return (
@@ -128,11 +168,15 @@ export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.E
         onClipMoved={moveClipTo}
         onClipTapped={(clip) => setPlayingClipId(clip.id)}
         onLaneOpened={(laneId) => setLaneSheet({ laneId })}
-        onAddClip={setPickerLaneId}
+        onAddClip={openPicker}
       />
       {laneSheet === null ? null : (
-        <SketchLaneSheet
+        <NameSheet
           key={laneSheet.laneId ?? 'new'}
+          sheetTitle={laneSheet.laneId === null ? t('sketch.newLane') : t('sketch.lane')}
+          fieldLabel={t('sketch.laneName')}
+          maxLength={SKETCH_LANE_NAME_MAX_LENGTH}
+          deleteLabel={t('sketch.deleteLane')}
           isNew={laneSheet.laneId === null}
           initialName={sheetLaneName ?? ''}
           onSave={saveLane}
@@ -143,11 +187,20 @@ export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.E
           onClose={() => setLaneSheet(null)}
         />
       )}
-      {pickerLaneId === null ? null : (
+      {pickerTarget === null ? null : (
         <InspirationPickerSheet
           inspirations={inspirations.map(projectInspirationCard)}
           onPick={placeInspiration}
-          onClose={() => setPickerLaneId(null)}
+          onCreate={startNewInspiration}
+          onClose={() => setPickerTarget(null)}
+        />
+      )}
+      {newInspirationTarget === null ? null : (
+        <InspirationForm
+          isNew
+          initialValues={NEW_INSPIRATION_VALUES}
+          onSave={saveNewInspiration}
+          onClose={() => setNewInspirationTarget(null)}
         />
       )}
       {playedPassage === null ? null : (
@@ -162,7 +215,7 @@ export function SketchEditor({ sketch, inspirations }: SketchEditorProps): JSX.E
           question={t('sketch.deleteLaneConfirm')}
           confirmLabel={t('sketch.deleteLane')}
           onConfirm={() => {
-            deleteLane.mutate({ songId, laneId: pendingLaneDeletionId });
+            deleteLane.mutate({ compositionId, laneId: pendingLaneDeletionId });
             setPendingLaneDeletionId(null);
           }}
           onCancel={() => setPendingLaneDeletionId(null)}

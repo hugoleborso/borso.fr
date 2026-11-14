@@ -20,11 +20,20 @@ import {
   useRenameSketchLane,
 } from './sketches.queries';
 
-const SONG_ID = '11111111-1111-4111-8111-111111111111';
-const DRUMS = { id: 'lane-a', songId: SONG_ID, name: 'drums', position: 0 };
-const BRASS = { id: 'lane-b', songId: SONG_ID, name: 'brass', position: 1 };
+const COMPOSITION_ID = '11111111-1111-4111-8111-111111111111';
+const DRUMS = { id: 'lane-a', compositionId: COMPOSITION_ID, name: 'drums', position: 0 };
+const BRASS = { id: 'lane-b', compositionId: COMPOSITION_ID, name: 'brass', position: 1 };
 const CLIP = { id: 'clip-1', laneId: 'lane-a', inspirationId: 'inspiration-1', offsetSeconds: 0 };
-const SKETCH: SketchRecord = { songId: SONG_ID, lanes: [DRUMS, BRASS], clips: [CLIP] };
+const SKETCH: SketchRecord = {
+  composition: {
+    id: COMPOSITION_ID,
+    title: 'New 7',
+    songId: null,
+    createdAt: '2026-11-13T10:00:00.000Z',
+  },
+  lanes: [DRUMS, BRASS],
+  clips: [CLIP],
+};
 
 type QueryClientUnderTest = ReturnType<typeof createIsolatedQueryClient>;
 
@@ -60,12 +69,13 @@ afterEach(() => {
 
 function seedSketch(): QueryClientUnderTest {
   const queryClient = createIsolatedQueryClient();
-  queryClient.setQueryData(sketchKeys.detail(SONG_ID), { sketch: SKETCH });
+  queryClient.setQueryData(sketchKeys.detail(COMPOSITION_ID), { sketch: SKETCH });
   return queryClient;
 }
 
 function readSketch(queryClient: QueryClientUnderTest): SketchRecord | undefined {
-  return queryClient.getQueryData<{ sketch: SketchRecord }>(sketchKeys.detail(SONG_ID))?.sketch;
+  return queryClient.getQueryData<{ sketch: SketchRecord }>(sketchKeys.detail(COMPOSITION_ID))
+    ?.sketch;
 }
 
 function mountWrites(queryClient: QueryClientUnderTest) {
@@ -83,7 +93,12 @@ describe('useMoveSketchClip', () => {
     const { writes, tree } = mountWrites(queryClient);
 
     writes()
-      .moveClip({ songId: SONG_ID, clipId: 'clip-1', laneId: 'lane-b', offsetSeconds: 4 })
+      .moveClip({
+        compositionId: COMPOSITION_ID,
+        clipId: 'clip-1',
+        laneId: 'lane-b',
+        offsetSeconds: 4,
+      })
       .catch(() => undefined);
     await flushMicrotasks();
     expect(readSketch(queryClient)?.clips).toEqual([
@@ -93,7 +108,7 @@ describe('useMoveSketchClip', () => {
     pending.resolve(jsonResponse({ error: 'boom' }, 500));
     await flushMicrotasks();
     expect(readSketch(queryClient)).toEqual(SKETCH);
-    expect(queryClient.getQueryState(sketchKeys.detail(SONG_ID))?.isInvalidated).toBe(false);
+    expect(queryClient.getQueryState(sketchKeys.detail(COMPOSITION_ID))?.isInvalidated).toBe(false);
     tree.unmount();
   });
 
@@ -103,11 +118,16 @@ describe('useMoveSketchClip', () => {
     const { writes, tree } = mountWrites(queryClient);
 
     await writes()
-      .moveClip({ songId: SONG_ID, clipId: 'clip-1', laneId: 'lane-a', offsetSeconds: 4 })
+      .moveClip({
+        compositionId: COMPOSITION_ID,
+        clipId: 'clip-1',
+        laneId: 'lane-a',
+        offsetSeconds: 4,
+      })
       .catch(() => undefined);
     await flushMicrotasks();
 
-    expect(queryClient.getQueryState(sketchKeys.detail(SONG_ID))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(sketchKeys.detail(COMPOSITION_ID))?.isInvalidated).toBe(true);
     tree.unmount();
   });
 });
@@ -115,7 +135,7 @@ describe('useMoveSketchClip', () => {
 describe('the lane writes', () => {
   it('adds, renames and deletes a lane at once, the deletion taking its clips', async () => {
     const queryClient = seedSketch();
-    const keys = { id: 'lane-0', songId: SONG_ID, name: 'keys', position: 2 };
+    const keys = { id: 'lane-0', compositionId: COMPOSITION_ID, name: 'keys', position: 2 };
     stubTransport((request) =>
       Promise.resolve(
         request.method === 'POST' ? jsonResponse({ lane: keys }, 201) : jsonResponse({ ok: true }),
@@ -123,13 +143,18 @@ describe('the lane writes', () => {
     );
     const { writes, tree } = mountWrites(queryClient);
 
-    await writes().addLane({ songId: SONG_ID, id: 'lane-0', name: 'keys', position: 2 });
-    await writes().renameLane({ songId: SONG_ID, laneId: 'lane-b', name: 'horns' });
-    await writes().deleteLane({ songId: SONG_ID, laneId: 'lane-a' });
+    await writes().addLane({
+      compositionId: COMPOSITION_ID,
+      id: 'lane-0',
+      name: 'keys',
+      position: 2,
+    });
+    await writes().renameLane({ compositionId: COMPOSITION_ID, laneId: 'lane-b', name: 'horns' });
+    await writes().deleteLane({ compositionId: COMPOSITION_ID, laneId: 'lane-a' });
     await flushMicrotasks();
 
     expect(readSketch(queryClient)).toEqual({
-      songId: SONG_ID,
+      composition: SKETCH.composition,
       lanes: [{ ...BRASS, name: 'horns' }, keys],
       clips: [],
     });
@@ -156,8 +181,8 @@ describe('the clip writes', () => {
     const { writes, tree } = mountWrites(queryClient);
 
     queryClient.setQueryData(inspirationKeys.list(), { inspirations: [] });
-    await writes().placeClip({ songId: SONG_ID, ...placed });
-    await writes().removeClip({ songId: SONG_ID, clipId: 'clip-1' });
+    await writes().placeClip({ compositionId: COMPOSITION_ID, ...placed });
+    await writes().removeClip({ compositionId: COMPOSITION_ID, clipId: 'clip-1' });
     await flushMicrotasks();
 
     expect(readSketch(queryClient)?.clips).toEqual([placed]);

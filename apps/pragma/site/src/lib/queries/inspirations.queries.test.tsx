@@ -185,7 +185,7 @@ describe('useDeleteInspiration', () => {
 
     pending.resolve(
       jsonResponse(
-        { error: 'inspiration-in-use', sketches: [{ songId: 's', title: 'New 7' }] },
+        { error: 'inspiration-in-use', sketches: [{ compositionId: 's', title: 'New 7' }] },
         409,
       ),
     );

@@ -23,6 +23,7 @@ const ALL_TABLES: readonly string[] = [
   'bar',
   'sketch_clip',
   'sketch_lane',
+  'composition',
   'inspiration',
   'take_comment',
   'take',

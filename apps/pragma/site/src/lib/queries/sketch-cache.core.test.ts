@@ -6,14 +6,25 @@ import {
   renameLaneInSketch,
   type SketchShape,
   settleClipInSketch,
+  settleCompositionInSketch,
   settleLaneInSketch,
 } from './sketch-cache.core';
 
-const DRUMS = { id: 'lane-a', songId: 'song-1', name: 'drums', position: 0 };
-const BRASS = { id: 'lane-b', songId: 'song-1', name: 'brass', position: 1 };
+const COMPOSITION = {
+  id: 'composition-1',
+  title: 'New 7',
+  songId: null,
+  createdAt: '2026-11-13T10:00:00.000Z',
+};
+const DRUMS = { id: 'lane-a', compositionId: 'composition-1', name: 'drums', position: 0 };
+const BRASS = { id: 'lane-b', compositionId: 'composition-1', name: 'brass', position: 1 };
 const CLIP = { id: 'clip-1', laneId: 'lane-a', inspirationId: 'inspiration-1', offsetSeconds: 0 };
 const OTHER_CLIP = { ...CLIP, id: 'clip-2', laneId: 'lane-b' };
-const SKETCH: SketchShape = { songId: 'song-1', lanes: [DRUMS, BRASS], clips: [CLIP, OTHER_CLIP] };
+const SKETCH: SketchShape = {
+  composition: COMPOSITION,
+  lanes: [DRUMS, BRASS],
+  clips: [CLIP, OTHER_CLIP],
+};
 
 // @FollowsBlueprint test-pure-unit
 describe('the cached sketch', () => {
@@ -45,7 +56,7 @@ describe('the cached sketch', () => {
 
   it('removes a lane with its clips', () => {
     expect(removeLaneFromSketch(SKETCH, 'lane-a')).toEqual({
-      songId: 'song-1',
+      composition: COMPOSITION,
       lanes: [BRASS],
       clips: [OTHER_CLIP],
     });
@@ -69,5 +80,13 @@ describe('the cached sketch', () => {
 
   it('removes one clip', () => {
     expect(removeClipFromSketch(SKETCH, 'clip-1').clips).toEqual([OTHER_CLIP]);
+  });
+
+  it('takes the renamed or catalogued composition and keeps its lanes and clips', () => {
+    const catalogued = { ...COMPOSITION, title: 'Avignon Nice', songId: 'song-1' };
+    expect(settleCompositionInSketch(SKETCH, catalogued)).toEqual({
+      ...SKETCH,
+      composition: catalogued,
+    });
   });
 });

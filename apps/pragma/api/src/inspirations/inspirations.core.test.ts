@@ -25,10 +25,10 @@ const INSPIRATION: InspirationRow = {
 describe('the sketches using an inspiration', () => {
   it('counts two clips of one sketch as one sketch', () => {
     const counts = countSketchesByInspiration([
-      { inspirationId: 'inspiration-1', songId: 'song-1', songTitle: 'New 7' },
-      { inspirationId: 'inspiration-1', songId: 'song-1', songTitle: 'New 7' },
-      { inspirationId: 'inspiration-1', songId: 'song-2', songTitle: 'New 8' },
-      { inspirationId: 'inspiration-2', songId: 'song-2', songTitle: 'New 8' },
+      { inspirationId: 'inspiration-1', compositionId: 'composition-1', compositionTitle: 'New 7' },
+      { inspirationId: 'inspiration-1', compositionId: 'composition-1', compositionTitle: 'New 7' },
+      { inspirationId: 'inspiration-1', compositionId: 'composition-2', compositionTitle: 'New 8' },
+      { inspirationId: 'inspiration-2', compositionId: 'composition-2', compositionTitle: 'New 8' },
     ]);
     expect(counts.get('inspiration-1')).toBe(2);
     expect(counts.get('inspiration-2')).toBe(1);
@@ -37,7 +37,13 @@ describe('the sketches using an inspiration', () => {
   it('gives an unused inspiration a sketch count of zero', () => {
     const views = projectInspirationViews(
       [INSPIRATION, { ...INSPIRATION, id: 'inspiration-2' }],
-      [{ inspirationId: 'inspiration-2', songId: 'song-1', songTitle: 'New 7' }],
+      [
+        {
+          inspirationId: 'inspiration-2',
+          compositionId: 'composition-1',
+          compositionTitle: 'New 7',
+        },
+      ],
     );
     expect(views.map((view) => view.sketchCount)).toEqual([0, 1]);
   });
@@ -46,15 +52,27 @@ describe('the sketches using an inspiration', () => {
     expect(selectInspirationDeletion([])).toEqual({ kind: 'free' });
     expect(
       selectInspirationDeletion([
-        { inspirationId: 'inspiration-1', songId: 'song-2', songTitle: 'New 8' },
-        { inspirationId: 'inspiration-1', songId: 'song-1', songTitle: 'New 7' },
-        { inspirationId: 'inspiration-1', songId: 'song-2', songTitle: 'New 8' },
+        {
+          inspirationId: 'inspiration-1',
+          compositionId: 'composition-2',
+          compositionTitle: 'New 8',
+        },
+        {
+          inspirationId: 'inspiration-1',
+          compositionId: 'composition-1',
+          compositionTitle: 'New 7',
+        },
+        {
+          inspirationId: 'inspiration-1',
+          compositionId: 'composition-2',
+          compositionTitle: 'New 8',
+        },
       ]),
     ).toEqual({
       kind: 'inspiration-in-use',
       sketches: [
-        { songId: 'song-1', title: 'New 7' },
-        { songId: 'song-2', title: 'New 8' },
+        { compositionId: 'composition-1', title: 'New 7' },
+        { compositionId: 'composition-2', title: 'New 8' },
       ],
     });
   });

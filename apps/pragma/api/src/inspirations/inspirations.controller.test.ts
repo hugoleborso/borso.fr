@@ -20,7 +20,7 @@ import { inspirationTable } from './inspirations.schema';
 
 const inUseEnvelope = z.object({
   error: z.literal('inspiration-in-use'),
-  sketches: z.array(z.object({ songId: z.guid(), title: z.string() })),
+  sketches: z.array(z.object({ compositionId: z.guid(), title: z.string() })),
 });
 
 // @FollowsBlueprint test-back-e2e
@@ -98,9 +98,9 @@ describe('inspirations controller (back-e2e)', () => {
   it('edits every field of an inspiration, and a clip placed from it keeps its offset', async () => {
     const band = await buildAuthenticatedApp();
     const inspirationId = await createInspiration(band);
-    const songId = await createComposition(band);
-    const laneId = await createLane(band, songId);
-    await placeClip(band, { songId, laneId, inspirationId, offsetSeconds: 12 });
+    const compositionId = await createComposition(band);
+    const laneId = await createLane(band, compositionId);
+    await placeClip(band, { compositionId, laneId, inspirationId, offsetSeconds: 12 });
 
     const edited = {
       ...buildInspirationChanges({ title: 'Call Me Maybe (live)' }),
@@ -118,7 +118,7 @@ describe('inspirations controller (back-e2e)', () => {
     expect((await readJson(response, inspirationEnvelope)).inspiration).toEqual(
       expect.objectContaining({ ...edited, id: inspirationId, sketchCount: 1 }),
     );
-    expect((await readSketch(band, songId)).clips).toEqual([
+    expect((await readSketch(band, compositionId)).clips).toEqual([
       expect.objectContaining({ inspirationId, laneId, offsetSeconds: 12 }),
     ]);
   });
@@ -150,16 +150,16 @@ describe('inspirations controller (back-e2e)', () => {
   it('refuses to delete an inspiration a sketch uses and names that sketch', async () => {
     const band = await buildAuthenticatedApp();
     const inspirationId = await createInspiration(band);
-    const songId = await createComposition(band, 'New 7');
-    const laneId = await createLane(band, songId);
-    await placeClip(band, { songId, laneId, inspirationId });
+    const compositionId = await createComposition(band, 'New 7');
+    const laneId = await createLane(band, compositionId);
+    await placeClip(band, { compositionId, laneId, inspirationId });
 
     const response = await sendJson(band, 'DELETE', `/api/inspirations/${inspirationId}`);
 
     expect(response.status).toBe(409);
     expect(await readJson(response, inUseEnvelope)).toEqual({
       error: 'inspiration-in-use',
-      sketches: [{ songId, title: 'New 7' }],
+      sketches: [{ compositionId, title: 'New 7' }],
     });
     expect(await listInspirations(band)).toHaveLength(1);
   });
@@ -180,18 +180,26 @@ describe('inspirations controller (back-e2e)', () => {
   it('counts the sketches using an inspiration, two clips of one sketch as one', async () => {
     const band = await buildAuthenticatedApp();
     const inspirationId = await createInspiration(band);
-    const firstSongId = await createComposition(band, 'New 7');
-    const secondSongId = await createComposition(band, 'New 8');
-    const firstLaneId = await createLane(band, firstSongId);
-    const secondLaneId = await createLane(band, secondSongId);
-    await placeClip(band, { songId: firstSongId, laneId: firstLaneId, inspirationId });
+    const firstCompositionId = await createComposition(band, 'New 7');
+    const secondCompositionId = await createComposition(band, 'New 8');
+    const firstLaneId = await createLane(band, firstCompositionId);
+    const secondLaneId = await createLane(band, secondCompositionId);
     await placeClip(band, {
-      songId: firstSongId,
+      compositionId: firstCompositionId,
+      laneId: firstLaneId,
+      inspirationId,
+    });
+    await placeClip(band, {
+      compositionId: firstCompositionId,
       laneId: firstLaneId,
       inspirationId,
       offsetSeconds: 30,
     });
-    await placeClip(band, { songId: secondSongId, laneId: secondLaneId, inspirationId });
+    await placeClip(band, {
+      compositionId: secondCompositionId,
+      laneId: secondLaneId,
+      inspirationId,
+    });
 
     expect(await listInspirations(band)).toEqual([expect.objectContaining({ sketchCount: 2 })]);
   });

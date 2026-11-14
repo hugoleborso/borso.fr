@@ -20,32 +20,32 @@ const SKETCH_WRITE_SCOPE = { id: 'sketch' } as const;
 
 export const sketchKeys = {
   all: ['sketches'] as const,
-  detail: (songId: string) => [...sketchKeys.all, songId] as const,
+  detail: (compositionId: string) => [...sketchKeys.all, compositionId] as const,
 };
 
-type SketchResponse = InferResponseType<(typeof api.api.sketches)[':songId']['$get'], 200>;
+type SketchResponse = InferResponseType<(typeof api.api.sketches)[':compositionId']['$get'], 200>;
 export type SketchRecord = SketchResponse['sketch'];
 
 export interface LaneAddition {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly id: string;
   readonly name: string;
   readonly position: number;
 }
 
 export interface LaneRename {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly laneId: string;
   readonly name: string;
 }
 
 export interface LaneRemoval {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly laneId: string;
 }
 
 export interface ClipPlacement {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly id: string;
   readonly laneId: string;
   readonly inspirationId: string;
@@ -53,11 +53,11 @@ export interface ClipPlacement {
 }
 
 export interface ClipMoveVariables extends ClipMove {
-  readonly songId: string;
+  readonly compositionId: string;
 }
 
 export interface ClipRemoval {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly clipId: string;
 }
 
@@ -78,11 +78,11 @@ async function throwUnlessSuccessful(
 }
 
 // @FollowsBlueprint query-module
-export function useSketch(songId: string, isEnabled = true) {
+export function useSketch(compositionId: string, isEnabled = true) {
   return useQuery({
-    queryKey: sketchKeys.detail(songId),
+    queryKey: sketchKeys.detail(compositionId),
     queryFn: async () => {
-      const response = await api.api.sketches[':songId'].$get({ param: { songId } });
+      const response = await api.api.sketches[':compositionId'].$get({ param: { compositionId } });
       if (!response.ok) {
         throw new ApiError(
           response.status,
@@ -98,22 +98,22 @@ export function useSketch(songId: string, isEnabled = true) {
 
 async function writeSketch(
   queryClient: QueryClient,
-  songId: string,
+  compositionId: string,
   rewrite: (sketch: SketchShape) => SketchShape,
 ): Promise<SketchSnapshot> {
-  const key = sketchKeys.detail(songId);
+  const key = sketchKeys.detail(compositionId);
   await queryClient.cancelQueries({ queryKey: key });
   const previous = queryClient.getQueryData<SketchResponse>(key);
-  settleSketch(queryClient, songId, rewrite);
+  settleSketch(queryClient, compositionId, rewrite);
   return { previous };
 }
 
 function settleSketch(
   queryClient: QueryClient,
-  songId: string,
+  compositionId: string,
   rewrite: (sketch: SketchShape) => SketchShape,
 ): void {
-  queryClient.setQueryData<SketchResponse>(sketchKeys.detail(songId), (old) => {
+  queryClient.setQueryData<SketchResponse>(sketchKeys.detail(compositionId), (old) => {
     if (old === undefined) return old;
     return { sketch: rewrite(old.sketch) };
   });
@@ -125,15 +125,15 @@ function refreshSketchCounts(queryClient: QueryClient): void {
 
 function restoreSketch(
   queryClient: QueryClient,
-  songId: string,
+  compositionId: string,
   snapshot: SketchSnapshot | undefined,
   error: unknown,
 ): void {
   if (snapshot?.previous !== undefined) {
-    queryClient.setQueryData(sketchKeys.detail(songId), snapshot.previous);
+    queryClient.setQueryData(sketchKeys.detail(compositionId), snapshot.previous);
   }
   if (readSketchRefusal(error) === null) return;
-  void queryClient.invalidateQueries({ queryKey: sketchKeys.detail(songId) });
+  void queryClient.invalidateQueries({ queryKey: sketchKeys.detail(compositionId) });
 }
 
 // @FollowsBlueprint query-optimistic-mutation
@@ -142,26 +142,26 @@ export function useAddSketchLane() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, ...lane }: LaneAddition) => {
-      const response = await api.api.sketches[':songId'].lanes.$post({
-        param: { songId },
+    mutationFn: async ({ compositionId, ...lane }: LaneAddition) => {
+      const response = await api.api.sketches[':compositionId'].lanes.$post({
+        param: { compositionId },
         json: lane,
       });
       await throwUnlessSuccessful(response, 'add lane');
       return response.json();
     },
     onMutate: async (variables) =>
-      await writeSketch(queryClient, variables.songId, (sketch) =>
+      await writeSketch(queryClient, variables.compositionId, (sketch) =>
         settleLaneInSketch(sketch, { ...variables }),
       ),
     onSuccess: (data, variables) => {
       if (!('lane' in data)) return;
-      settleSketch(queryClient, variables.songId, (sketch) =>
+      settleSketch(queryClient, variables.compositionId, (sketch) =>
         settleLaneInSketch(sketch, data.lane),
       );
     },
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }
@@ -172,20 +172,20 @@ export function useRenameSketchLane() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, laneId, name }: LaneRename) => {
-      const response = await api.api.sketches[':songId'].lanes[':laneId'].$patch({
-        param: { songId, laneId },
+    mutationFn: async ({ compositionId, laneId, name }: LaneRename) => {
+      const response = await api.api.sketches[':compositionId'].lanes[':laneId'].$patch({
+        param: { compositionId, laneId },
         json: { name },
       });
       await throwUnlessSuccessful(response, 'rename lane');
       return response.json();
     },
     onMutate: async (variables) =>
-      await writeSketch(queryClient, variables.songId, (sketch) =>
+      await writeSketch(queryClient, variables.compositionId, (sketch) =>
         renameLaneInSketch(sketch, variables.laneId, variables.name),
       ),
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }
@@ -196,22 +196,22 @@ export function useDeleteSketchLane() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, laneId }: LaneRemoval) => {
-      const response = await api.api.sketches[':songId'].lanes[':laneId'].$delete({
-        param: { songId, laneId },
+    mutationFn: async ({ compositionId, laneId }: LaneRemoval) => {
+      const response = await api.api.sketches[':compositionId'].lanes[':laneId'].$delete({
+        param: { compositionId, laneId },
       });
       await throwUnlessSuccessful(response, 'delete lane');
       return response.json();
     },
     onMutate: async (variables) =>
-      await writeSketch(queryClient, variables.songId, (sketch) =>
+      await writeSketch(queryClient, variables.compositionId, (sketch) =>
         removeLaneFromSketch(sketch, variables.laneId),
       ),
     onSuccess: () => {
       refreshSketchCounts(queryClient);
     },
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }
@@ -222,25 +222,25 @@ export function usePlaceSketchClip() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, ...clip }: ClipPlacement) => {
-      const response = await api.api.sketches[':songId'].clips.$post({
-        param: { songId },
+    mutationFn: async ({ compositionId, ...clip }: ClipPlacement) => {
+      const response = await api.api.sketches[':compositionId'].clips.$post({
+        param: { compositionId },
         json: clip,
       });
       await throwUnlessSuccessful(response, 'place clip');
       return response.json();
     },
-    onMutate: async ({ songId, ...clip }) =>
-      await writeSketch(queryClient, songId, (sketch) => settleClipInSketch(sketch, clip)),
+    onMutate: async ({ compositionId, ...clip }) =>
+      await writeSketch(queryClient, compositionId, (sketch) => settleClipInSketch(sketch, clip)),
     onSuccess: (data, variables) => {
       refreshSketchCounts(queryClient);
       if (!('clip' in data)) return;
-      settleSketch(queryClient, variables.songId, (sketch) =>
+      settleSketch(queryClient, variables.compositionId, (sketch) =>
         settleClipInSketch(sketch, data.clip),
       );
     },
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }
@@ -251,18 +251,18 @@ export function useMoveSketchClip() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, clipId, laneId, offsetSeconds }: ClipMoveVariables) => {
-      const response = await api.api.sketches[':songId'].clips[':clipId'].$patch({
-        param: { songId, clipId },
+    mutationFn: async ({ compositionId, clipId, laneId, offsetSeconds }: ClipMoveVariables) => {
+      const response = await api.api.sketches[':compositionId'].clips[':clipId'].$patch({
+        param: { compositionId, clipId },
         json: { laneId, offsetSeconds },
       });
       await throwUnlessSuccessful(response, 'move clip');
       return response.json();
     },
-    onMutate: async ({ songId, ...move }) =>
-      await writeSketch(queryClient, songId, (sketch) => moveClipInSketch(sketch, move)),
+    onMutate: async ({ compositionId, ...move }) =>
+      await writeSketch(queryClient, compositionId, (sketch) => moveClipInSketch(sketch, move)),
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }
@@ -273,22 +273,22 @@ export function useRemoveSketchClip() {
   return useMutation({
     scope: SKETCH_WRITE_SCOPE,
     mutationKey: sketchKeys.all,
-    mutationFn: async ({ songId, clipId }: ClipRemoval) => {
-      const response = await api.api.sketches[':songId'].clips[':clipId'].$delete({
-        param: { songId, clipId },
+    mutationFn: async ({ compositionId, clipId }: ClipRemoval) => {
+      const response = await api.api.sketches[':compositionId'].clips[':clipId'].$delete({
+        param: { compositionId, clipId },
       });
       await throwUnlessSuccessful(response, 'remove clip');
       return response.json();
     },
     onMutate: async (variables) =>
-      await writeSketch(queryClient, variables.songId, (sketch) =>
+      await writeSketch(queryClient, variables.compositionId, (sketch) =>
         removeClipFromSketch(sketch, variables.clipId),
       ),
     onSuccess: () => {
       refreshSketchCounts(queryClient);
     },
     onError: (error, variables, context) => {
-      restoreSketch(queryClient, variables.songId, context, error);
+      restoreSketch(queryClient, variables.compositionId, context, error);
     },
   });
 }

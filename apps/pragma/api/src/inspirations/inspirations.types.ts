@@ -12,12 +12,12 @@ export type InspirationView = InspirationRow & { readonly sketchCount: number };
 
 export interface InspirationUsage {
   readonly inspirationId: string;
-  readonly songId: string;
-  readonly songTitle: string;
+  readonly compositionId: string;
+  readonly compositionTitle: string;
 }
 
 export interface SketchUsingInspiration {
-  readonly songId: string;
+  readonly compositionId: string;
   readonly title: string;
 }
 
