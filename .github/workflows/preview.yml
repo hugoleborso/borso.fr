@@ -493,6 +493,9 @@ jobs:
             if ! aws cloudformation describe-stacks \
                 --stack-name "$stack" >/dev/null 2>&1; then
               echo "[skip] $stack: stack does not exist"
+              # A stack already gone can still have left log groups behind.
+              # last-loop-lepin-pr-319 left three this way.
+              ./scripts/preflight-preview-recovery.sh "$app" "$PR_NUMBER"
               continue
             fi
             echo "[teardown] destroying $stack..."
