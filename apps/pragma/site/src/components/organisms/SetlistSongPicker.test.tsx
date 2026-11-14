@@ -30,6 +30,35 @@ vi.mock('../../lib/queries/songs.queries', () => ({
   useSongSearch: songSearch.useSongSearch,
 }));
 
+vi.mock('../../lib/queries/setlists.queries', () => ({
+  useSetlistsList: () => ({
+    data: {
+      setlists: [
+        {
+          id: 'summer',
+          name: 'Summer set',
+          status: 'locked',
+          songCount: 3,
+          songIds: ['dreams', 'hey-ya', 'jolene'],
+          sessionIds: [],
+        },
+        {
+          id: 'wedding',
+          name: 'Wedding',
+          status: 'locked',
+          songCount: 1,
+          songIds: ['jolene'],
+          sessionIds: [],
+        },
+      ],
+    },
+  }),
+}));
+
+vi.mock('../../lib/queries/sessions.queries', () => ({
+  useSessionsList: () => ({ data: undefined }),
+}));
+
 vi.mock('../../observability/error-reporting.adapter', () => ({
   reportSetlistBatchAddFailed: vi.fn(),
 }));
@@ -164,6 +193,33 @@ describe('the Add songs sheet', () => {
     render(<SetlistSongPicker {...buildProps()} />);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Psycho Chicken' } });
     expect(screen.getByRole('button', { name: /New song as an idea/ })).toBeTruthy();
+  });
+
+  it('picks the songs of ticked setlists, and adds only those left ticked', () => {
+    render(<SetlistSongPicker {...buildProps()} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Setlists' }));
+    fireEvent.click(checkbox('Summer set'));
+    fireEvent.click(checkbox('Wedding'));
+    expect(screen.queryByRole('checkbox', { name: /^Hey Ya!/ })).toBeNull();
+    fireEvent.click(checkbox('Dreams'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 song' }));
+    expect(batch.mutate).toHaveBeenCalledWith(
+      {
+        setlistId: expect.stringMatching(/^setlist-/),
+        appends: [{ songId: 'jolene', temporaryId: expect.any(String) }],
+      },
+      expect.anything(),
+    );
+  });
+
+  it('unpicks the songs of a setlist once it is unticked', () => {
+    render(<SetlistSongPicker {...buildProps()} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Setlists' }));
+    fireEvent.click(checkbox('Summer set'));
+    expect(screen.getByRole('button', { name: 'Add 2 songs' })).toBeDefined();
+    fireEvent.click(checkbox('Summer set'));
+    expect(screen.queryByRole('checkbox', { name: /^Dreams/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Add songs' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('searches the music service for a typed title once the typing pauses', () => {

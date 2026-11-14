@@ -12,13 +12,3 @@ export function isSongOrigin(candidate: string | null): candidate is SongOrigin 
 export function resolveSongOrigin(storedOrigin: string | null): SongOrigin {
   return isSongOrigin(storedOrigin) ? storedOrigin : DEFAULT_SONG_ORIGIN;
 }
-
-export function isComposition(song: { readonly origin: SongOrigin }): boolean {
-  return song.origin === 'original';
-}
-
-export function selectCompositions<Song extends { readonly origin: SongOrigin }>(
-  songs: readonly Song[],
-): readonly Song[] {
-  return songs.filter(isComposition);
-}

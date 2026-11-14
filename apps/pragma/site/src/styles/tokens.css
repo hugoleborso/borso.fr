@@ -1,5 +1,29 @@
 @import 'tailwindcss';
 
+@custom-variant while-typing {
+  @media (pointer: coarse) {
+    html:has(
+        :is(
+          input:not(
+            [type='checkbox'],
+            [type='radio'],
+            [type='range'],
+            [type='button'],
+            [type='submit'],
+            [type='reset'],
+            [type='file'],
+            [type='color']
+          ),
+          textarea,
+          [contenteditable='true']
+        ):focus
+      )
+      & {
+      @slot;
+    }
+  }
+}
+
 @theme static {
   --color-*: initial;
   --text-*: initial;
@@ -129,6 +153,7 @@
 @layer base {
   :root {
     color-scheme: light dark;
+    --visual-viewport-bottom-gap: 0px;
   }
 
   html,

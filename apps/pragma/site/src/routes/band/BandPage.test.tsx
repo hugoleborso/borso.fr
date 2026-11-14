@@ -10,6 +10,7 @@ const SECTION_PATHS = [
   '/instruments',
   '/bars',
   '/compos',
+  '/inspirations',
   '/improvements',
   '/account',
 ];

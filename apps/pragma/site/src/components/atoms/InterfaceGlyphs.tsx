@@ -34,6 +34,13 @@ export const INTERFACE_GLYPHS = {
       <circle cx="16" cy="16" r="3" />
     </>
   ),
+  inspiration: (
+    <>
+      <path d="M9 18V6l8-2v5" />
+      <circle cx="6.5" cy="18" r="2.5" />
+      <path d="M18.5 13v6M15.5 16h6" />
+    </>
+  ),
   members: (
     <>
       <circle cx="9" cy="9" r="3.5" />

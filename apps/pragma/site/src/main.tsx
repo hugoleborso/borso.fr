@@ -18,12 +18,16 @@ import {
   startOfflineReading,
 } from './lib/query-client.setup';
 import { startTakeQueue } from './lib/take-queue.setup';
+import { keepFocusedFieldAboveKeyboard } from './lib/keyboard-reveal.adapter';
+import { pinBottomBarsToVisualViewport } from './lib/visual-viewport.adapter';
 import { registerServiceWorker } from './sw/service-worker.setup';
 
 registerServiceWorker();
 startTakeQueue();
 captureInstallPrompt();
 startLiveInvalidation();
+pinBottomBarsToVisualViewport();
+keepFocusedFieldAboveKeyboard();
 
 /**
  * @Blueprint site-entrypoint

@@ -6,6 +6,15 @@ import {
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
+import {
+  compositionEnvelope,
+  createComposition,
+  createInspiration,
+  createLane,
+  placeClip,
+  readSketch,
+  sendJson,
+} from '../../../test/sketch-utils';
 import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
 
 const songSchema = z.object({
@@ -412,5 +421,24 @@ describe('songs controller (back-e2e)', () => {
     expect(
       (await jsonRequest(app, `/api/songs/${missing}`, { method: 'DELETE', cookieHeader })).status,
     ).toBe(404);
+  });
+
+  it('keeps the composition and its sketch when its catalogue song is deleted, and clears the link', async () => {
+    const band = await buildAuthenticatedApp();
+    const compositionId = await createComposition(band);
+    const laneId = await createLane(band, compositionId);
+    const inspirationId = await createInspiration(band);
+    await placeClip(band, { compositionId, laneId, inspirationId });
+    const catalogued = await sendJson(band, 'POST', `/api/compositions/${compositionId}/catalogue`);
+    const { songId } = (await readJson(catalogued, compositionEnvelope)).composition;
+
+    const deletion = await sendJson(band, 'DELETE', `/api/songs/${String(songId)}`);
+
+    expect(deletion.status).toBe(200);
+    expect(await readSketch(band, compositionId)).toEqual({
+      composition: expect.objectContaining({ id: compositionId, songId: null }),
+      lanes: [expect.objectContaining({ id: laneId })],
+      clips: [expect.objectContaining({ laneId, inspirationId })],
+    });
   });
 });

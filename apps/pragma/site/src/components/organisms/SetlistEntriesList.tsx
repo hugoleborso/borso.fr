@@ -4,7 +4,6 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../atoms/Icon';
 import { ListRow } from '../molecules/ListRow';
-import type { LineupMember } from '../molecules/MemberLineup';
 import { warnIfOrphanMemberIds } from './orphan-member-warn.adapter';
 import { type SetlistEntryLineupChange, SetlistEntryRow } from './SetlistEntryRow';
 import {
@@ -32,6 +31,12 @@ interface ListEntry extends SetlistEditorEntry {
   readonly keyOverride: string | null;
   readonly capo: number | null;
   readonly notes: string;
+}
+
+interface LineupMember {
+  readonly id: string;
+  readonly name: string;
+  readonly color: string;
 }
 
 export interface SetlistEntriesListProps {

@@ -6,6 +6,7 @@ import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
 import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
 import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
 import { deleteAssistantStateOfDeletedMember } from '../oauth/oauth.service';
+import { detachInspirationsOfDeletedMember } from '../inspirations/inspirations.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { barTable } from '../bars/bars.schema';
@@ -131,6 +132,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteStudiesOfDeletedMember(transaction, id);
     await deletePushStateOfDeletedMember(transaction, id);
     await deleteAssistantStateOfDeletedMember(transaction, id);
+    await detachInspirationsOfDeletedMember(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectStaleQueryRoots } from './query-read-roots.core';
+import { selectQueryRootsDerivedFrom, selectStaleQueryRoots } from './query-read-roots.core';
 
 const TABLE = {
   studies: ['studies', 'mastery'],
@@ -45,5 +45,20 @@ describe('selectStaleQueryRoots', () => {
 
   it('refreshes only the profile, the members list and free slots after a contact or calendar write', () => {
     expect(selectStaleQueryRoots(['me'])).toStrictEqual(['free-slots', 'me', 'members']);
+  });
+});
+
+describe('selectQueryRootsDerivedFrom', () => {
+  it('names every other query root that reads the written root, leaving the writer its own', () => {
+    expect(selectQueryRootsDerivedFrom('setlists', 'setlists', TABLE)).toStrictEqual([
+      'studies',
+      'voting',
+    ]);
+    expect(selectQueryRootsDerivedFrom('outreach', 'setlists', TABLE)).toStrictEqual([]);
+  });
+
+  it('makes the inspirations stale after a member write, since a card names its author', () => {
+    expect(selectQueryRootsDerivedFrom('members', 'members')).toContain('inspirations');
+    expect(selectQueryRootsDerivedFrom('members', 'members')).not.toContain('members');
   });
 });

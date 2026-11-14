@@ -104,6 +104,7 @@ There is no cache: the whole repository takes under a minute.
 | `borso/atomic-design-import-direction`                 | [05](./05-frontend-architecture.md)                        |
 | `borso/no-query-hooks-outside-organisms`               | [05](./05-frontend-architecture.md)                        |
 | `borso/no-direct-api-fetch-in-site`                    | [06](./06-data-fetching.md)                                |
+| `borso/no-direct-query-cache-write`                    | [06](./06-data-fetching.md)                                |
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
 | `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |

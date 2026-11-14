@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
+import { writeKeepingStaleness } from './cache-write.queries';
 
 const MASTERY_WRITE_SCOPE = { id: 'mastery-writes' } as const;
 
@@ -42,7 +43,7 @@ export function useSaveMasteryDefault() {
       const key = masteryKeys.defaults();
       await queryClient.cancelQueries({ queryKey: key });
       const previousDefaults = queryClient.getQueryData<MasteryDefaultsResponse>(key);
-      queryClient.setQueryData<MasteryDefaultsResponse>(key, (old) => {
+      writeKeepingStaleness<MasteryDefaultsResponse>(queryClient, key, (old) => {
         if (old === undefined) return old;
         return { defaults: upsertMasteryDefault(old.defaults, variables) };
       });
@@ -50,7 +51,7 @@ export function useSaveMasteryDefault() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousDefaults !== undefined) {
-        queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
+        writeKeepingStaleness(queryClient, masteryKeys.defaults(), context.previousDefaults);
       }
     },
   });
@@ -73,7 +74,7 @@ export function useDeleteMasteryDefault() {
       const key = masteryKeys.defaults();
       await queryClient.cancelQueries({ queryKey: key });
       const previousDefaults = queryClient.getQueryData<MasteryDefaultsResponse>(key);
-      queryClient.setQueryData<MasteryDefaultsResponse>(key, (old) => {
+      writeKeepingStaleness<MasteryDefaultsResponse>(queryClient, key, (old) => {
         if (old === undefined) return old;
         return {
           defaults: withoutMasteryDefault(old.defaults, variables.memberId, variables.instrumentId),
@@ -83,7 +84,7 @@ export function useDeleteMasteryDefault() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousDefaults !== undefined) {
-        queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
+        writeKeepingStaleness(queryClient, masteryKeys.defaults(), context.previousDefaults);
       }
     },
   });
