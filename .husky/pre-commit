@@ -301,6 +301,11 @@ run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
   scripts/check-negative-claims-are-dated.sh
 run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
 
+# Each table a spec creates carries the operator's dated answer on what the
+# record is and where it is created from. See
+# docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md.
+run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh
+
 # A pure module whose only consumer is its own test scores 100% on coverage and
 # mutation while running nowhere. Rung-2 eradication of
 # docs/dantotsus/three-green-gates-on-code-that-ran-nowhere.md.

@@ -98,6 +98,7 @@ Remove the line once that perspective has been covered. -->
 ## Changes
 - **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
 - **Database changes**: migrations, new columns, indexes.
+- **Records**: one row per table the spec creates, holding the operator's dated answer to two closed questions: is it its own record or part of another one, and which screens create it. Ask them at step 7. PR #327 assumed both and the operator redrew them on the preview.
 - **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.
 - **Test strategy**: the autonomous validation pipeline that gives confidence the feature ships without defects. Manual sweeps are forbidden — the spec is approved when `/visual-validation` and `/technical-validation` can both pass against it without a human clicking through anything. See the template's *Test strategy* section for the shape.
 

@@ -23,7 +23,7 @@ a dev server.
 
 | # | When | Friction | Sources / evidence | Decision |
 | --- | --- | --- | --- | --- |
-| 01 | conception | The operator changed two product decisions on the preview. A composition became its own record, and an inspiration can now be created from a lane | commit:`abee2077e`, spec rows dated "operator, on the preview" | dantotsu: the-operator-redrew-the-feature-on-the-preview (proposal, operator question) |
+| 01 | conception | The operator changed two product decisions on the preview. A composition became its own record, and an inspiration can now be created from a lane | commit:`abee2077e`, spec rows dated "operator, on the preview" | dantotsu: the-operator-redrew-the-feature-on-the-preview. The operator picked option A on 2026-11-14, so a spec now needs a dated Records row for each table it creates |
 | 02 | validation | The spec revision routed only steps 1 to 7 to visual validation, so the catalogue step and its edge cases had no test (D03, D08) | report:`technical-validation-2026-11-14-0015.md` D03, D08 | merge into the-operator-redrew-the-feature-on-the-preview. Routing was fixed in `e3a6b512a` |
 | 03 | spec | The spec named per-song `sketch:<songId>` scopes and the API's `stale-scope.core.ts`, while written roots are per API root | kaizen:`plan` 21:22 | no-op. The *Written root* entry of `apps/pragma/VOCABULARY.md` says it in one line, and the plan caught it before any code |
 | 04 | spec | Nothing told the spec author that a new `/api` root needs an MCP tool or a `TOOL_EXCLUSIONS` reason | kaizen:`plan` 21:22 | no-op. The *Tool* entry of `VOCABULARY.md` says it, `tool-coverage.test.ts` fails on such a route, and the plan caught it before any code |
