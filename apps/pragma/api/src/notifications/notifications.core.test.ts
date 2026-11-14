@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCategoryToggles,
-  buildGroupKey,
   buildNotificationPayload,
+  buildNotificationTag,
   buildNotificationUrl,
   classifyPushFailure,
   countDelivered,
   isCategoryEnabled,
-  isGroupDue,
   NOTIFICATION_CATEGORIES,
-  NOTIFICATION_GROUP_WINDOW_MINUTES,
   type NotificationEvent,
   type PushDeliveryOutcome,
   readPushFailureStatus,
@@ -230,32 +228,18 @@ describe('selectRecipients', () => {
   });
 });
 
-describe('buildGroupKey', () => {
+describe('buildNotificationTag', () => {
   it.each([
     [TAKE_CREATED, 'take:take-1'],
     [TAKE_COMMENT_CREATED, 'take-comment:take-1'],
-    [SONG_CREATED, 'song-created:member-hugo'],
+    [SONG_CREATED, 'song:song-3'],
     [SESSION_CREATED, 'session:session-1'],
     [SESSION_CHANGED, 'session:session-1'],
     [SETLIST_CHANGED, 'setlist:setlist-1'],
     [SONG_LINEUP_CHANGED, 'song-lineup:song-2'],
     [TRANSITION_CHANGED, 'transition:song-a:song-b'],
-  ] as const)('groups %o under %s', (event, groupKey) => {
-    expect(buildGroupKey(event)).toBe(groupKey);
-  });
-});
-
-describe('isGroupDue', () => {
-  const lastSentAt = new Date('2026-10-23T20:00:00.000Z');
-
-  it('sends a group that never sent', () => {
-    expect(isGroupDue(null, lastSentAt)).toBe(true);
-  });
-
-  it('holds a group inside its window and sends it once the window has passed', () => {
-    expect(NOTIFICATION_GROUP_WINDOW_MINUTES).toBe(10);
-    expect(isGroupDue(lastSentAt, new Date('2026-10-23T20:09:59.999Z'))).toBe(false);
-    expect(isGroupDue(lastSentAt, new Date('2026-10-23T20:10:00.000Z'))).toBe(true);
+  ] as const)('tags %o as %s', (event, tag) => {
+    expect(buildNotificationTag(event)).toBe(tag);
   });
 });
 

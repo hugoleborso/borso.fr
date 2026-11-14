@@ -140,15 +140,12 @@ export async function createSong(
 ): Promise<SongCreateOutcome> {
   const outcome = await insertSongWithoutNotice(input, options);
   if (outcome.kind !== 'ok') return outcome;
-  await notifyBand(
-    {
-      kind: 'song-created',
-      actorMemberId: actor.memberId,
-      songId: outcome.song.id,
-      songTitle: outcome.song.title,
-    },
-    actor.now,
-  );
+  await notifyBand({
+    kind: 'song-created',
+    actorMemberId: actor.memberId,
+    songId: outcome.song.id,
+    songTitle: outcome.song.title,
+  });
   return outcome;
 }
 
@@ -158,15 +155,12 @@ async function notifyIfLineupChanged(
   actor: WriteActor,
 ): Promise<void> {
   if (previous === null || !hasLineupChanged(previous.defaultLineup, song.defaultLineup)) return;
-  await notifyBand(
-    {
-      kind: 'song-lineup-changed',
-      actorMemberId: actor.memberId,
-      songId: song.id,
-      songTitle: song.title,
-    },
-    actor.now,
-  );
+  await notifyBand({
+    kind: 'song-lineup-changed',
+    actorMemberId: actor.memberId,
+    songId: song.id,
+    songTitle: song.title,
+  });
 }
 
 // @FollowsBlueprint service-crud-update

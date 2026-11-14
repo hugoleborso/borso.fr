@@ -19,7 +19,6 @@ import {
 } from '../../../test/push-utils';
 import { buildTakeObjectKey } from '../takes/takes.core';
 
-const ELEVEN_MINUTES_MILLISECONDS = 11 * 60 * 1000;
 const SESSION_DATE = '2026-10-30T18:00:00.000Z';
 
 const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
@@ -54,10 +53,6 @@ async function createSong(band: FanOutContext, title: string): Promise<string> {
   return await createId(band.lea, '/api/songs', 'song', { title, status: 'idea' });
 }
 
-function startNextGroupWindow(): void {
-  vi.setSystemTime(Date.now() + ELEVEN_MINUTES_MILLISECONDS);
-}
-
 function lastSentToLea(band: FanOutContext): SentNotification | undefined {
   return readSentNotifications(band.send).findLast(
     (notification) => notification.endpoint === deviceEndpoint('lea-phone'),
@@ -80,11 +75,9 @@ async function prepareBand(): Promise<FanOutContext> {
 beforeEach(async () => {
   await truncateAllTables(testDatabase());
   vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-  vi.useFakeTimers({ toFake: ['Date'] });
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -117,7 +110,6 @@ describe('the writes that notify the band (back-e2e)', () => {
       url: `/catalog/${songId}?take=${takeId}`,
     });
 
-    startNextGroupWindow();
     await turnCategory(band.lea, 'take_comments', false);
     const before = sentCount(band);
     await writeAs(band.hugo, `/api/takes/${takeId}/comments`, {
@@ -127,7 +119,7 @@ describe('the writes that notify the band (back-e2e)', () => {
     expect(sentCount(band)).toBe(before);
   });
 
-  it('a session created, then changed, grouped on that session', async () => {
+  it('a session created, then each change, under one tag', async () => {
     const band = await prepareBand();
     const sessionId = await createId(band.hugo, '/api/sessions', 'session', {
       kind: 'practice',
@@ -143,9 +135,8 @@ describe('the writes that notify the band (back-e2e)', () => {
       method: 'PUT',
       body: { date: '2026-10-31T18:00:00.000Z' },
     });
-    expect(sentCount(band)).toBe(afterCreate);
+    expect(sentCount(band)).toBe(afterCreate + 1);
 
-    startNextGroupWindow();
     await writeAs(band.hugo, `/api/sessions/${sessionId}`, {
       method: 'PUT',
       body: { date: '2026-11-01T18:00:00.000Z' },
@@ -153,10 +144,11 @@ describe('the writes that notify the band (back-e2e)', () => {
     expect(lastSentToLea(band)).toMatchObject({
       messageKey: 'session-changed',
       parameters: { sessionDate: '2026-11-01T18:00:00.000Z' },
+      tag: `session:${sessionId}`,
     });
   });
 
-  it('every kind of setlist edit, each once its window has passed', async () => {
+  it('every kind of setlist edit, each one sent', async () => {
     const band = await prepareBand();
     const songA = await createSong(band, 'Valerie');
     const songB = await createSong(band, 'Rehab');
@@ -183,7 +175,6 @@ describe('the writes that notify the band (back-e2e)', () => {
       [`/api/setlists/${setlistId}/entries/${entryB}`, { method: 'DELETE' }],
     ];
     for (const [path, options] of edits) {
-      startNextGroupWindow();
       const before = sentCount(band);
       const resolved = path.endsWith('/reorder')
         ? { ...options, body: { entryIds: await readEntryIds(band, setlistId) } }
@@ -214,7 +205,7 @@ describe('the writes that notify the band (back-e2e)', () => {
     });
   });
 
-  it('a song added to the catalogue, grouped per member who adds', async () => {
+  it('a song added to the catalogue, each one sent', async () => {
     const band = await prepareBand();
     const songId = await createId(band.hugo, '/api/songs', 'song', {
       title: 'Valerie',
@@ -224,17 +215,16 @@ describe('the writes that notify the band (back-e2e)', () => {
       messageKey: 'song-created',
       parameters: { actorName: 'Hugo', songTitle: 'Valerie' },
       url: `/catalog/${songId}`,
-      tag: `song-created:${band.hugo.memberId}`,
+      tag: `song:${songId}`,
     });
 
     const before = sentCount(band);
     await createId(band.hugo, '/api/songs', 'song', { title: 'Rehab', status: 'idea' });
-    expect(sentCount(band)).toBe(before);
+    expect(sentCount(band)).toBe(before + 1);
 
-    startNextGroupWindow();
     await turnCategory(band.lea, 'songs', false);
     await createId(band.hugo, '/api/songs', 'song', { title: 'Back to Black', status: 'idea' });
-    expect(sentCount(band)).toBe(before);
+    expect(sentCount(band)).toBe(before + 1);
   });
 
   it('a song whose default lineup changed, and only then', async () => {

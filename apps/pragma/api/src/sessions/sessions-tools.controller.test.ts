@@ -3,12 +3,7 @@ import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
-import {
-  callTool,
-  passNotificationGroupWindow,
-  prepareAssistantBand,
-  useOAuthOrigins,
-} from '../../../test/mcp-utils';
+import { callTool, prepareAssistantBand, useOAuthOrigins } from '../../../test/mcp-utils';
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
 import { sessionTable } from './sessions.schema';
 
@@ -141,7 +136,6 @@ describe('sessions tools (back-e2e)', () => {
       (await callTool(band.assistant, 'save_session', { kind: 'practice', date: PRACTICE_DATE }))
         .body,
     );
-    passNotificationGroupWindow(band.harness);
     await callTool(band.assistant, 'save_session', {
       session: created.id,
       date: MOVED_PRACTICE_DATE,

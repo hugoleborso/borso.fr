@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { memberTable } from '../members/members.schema';
 import type { CategoryPreference, NotificationCategory } from './notifications.core';
@@ -91,14 +91,6 @@ export async function findMemberFirstName(memberId: string): Promise<string | nu
   return member?.firstName ?? null;
 }
 
-export async function findDispatchLastSentAt(groupKey: string): Promise<Date | null> {
-  const [dispatch] = await getDatabase()
-    .select({ lastSentAt: notificationDispatchTable.lastSentAt })
-    .from(notificationDispatchTable)
-    .where(eq(notificationDispatchTable.groupKey, groupKey));
-  return dispatch?.lastSentAt ?? null;
-}
-
 export async function hasClaimedFirstDispatch(groupKey: string, now: Date): Promise<boolean> {
   const claimed = await getDatabase()
     .insert(notificationDispatchTable)
@@ -109,25 +101,6 @@ export async function hasClaimedFirstDispatch(groupKey: string, now: Date): Prom
 }
 
 // @FollowsBlueprint repository-conditional-claim
-export async function hasClaimedDispatch(
-  groupKey: string,
-  previousSentAt: Date | null,
-  now: Date,
-): Promise<boolean> {
-  if (previousSentAt === null) return await hasClaimedFirstDispatch(groupKey, now);
-  const claimed = await getDatabase()
-    .update(notificationDispatchTable)
-    .set({ lastSentAt: now })
-    .where(
-      and(
-        eq(notificationDispatchTable.groupKey, groupKey),
-        eq(notificationDispatchTable.lastSentAt, previousSentAt),
-      ),
-    )
-    .returning({ groupKey: notificationDispatchTable.groupKey });
-  return claimed.length > 0;
-}
-
 export async function deletePushStateOfMemberWithin(
   executor: DatabaseExecutor,
   memberId: string,

@@ -25,7 +25,7 @@ import { songCreateInputSchema } from '../songs/songs.schema';
 import { insertSongWithoutNotice } from '../songs/songs.service';
 import { buildTakeObjectKey } from '../takes/takes.core';
 import { takeTable } from '../takes/takes.schema';
-import { hasClaimedDispatch } from './notifications.repository';
+import { hasClaimedFirstDispatch } from './notifications.repository';
 import {
   notificationPreferenceTable,
   pushSubscriptionTable,
@@ -33,7 +33,6 @@ import {
 } from './notifications.schema';
 
 const PUSH_SEND_DEADLINE_MILLISECONDS = 5_000;
-const ELEVEN_MINUTES_MILLISECONDS = 11 * 60 * 1000;
 
 const preferencesEnvelope = z.object({
   preferences: z.array(z.object({ category: z.string(), enabled: z.boolean() })),
@@ -343,8 +342,6 @@ describe('notifications controller (back-e2e)', () => {
           cookieHeader: hugo.cookieHeader,
         });
       await sendTake();
-      vi.useFakeTimers({ toFake: ['Date'] });
-      vi.setSystemTime(Date.now() + ELEVEN_MINUTES_MILLISECONDS);
       expect((await sendTake()).status).toBe(201);
       expect(send).toHaveBeenCalledTimes(3);
     });
@@ -416,13 +413,13 @@ describe('notifications controller (back-e2e)', () => {
       const { hugo } = await buildBand();
       const songId = await seedSong();
       await testDatabase().execute(
-        sql.raw('ALTER TABLE "notification_dispatch" RENAME TO "notification_dispatch_away"'),
+        sql.raw('ALTER TABLE "notification_preference" RENAME TO "notification_preference_away"'),
       );
       try {
         expect((await postTake(hugo, songId)).status).toBe(201);
       } finally {
         await testDatabase().execute(
-          sql.raw('ALTER TABLE "notification_dispatch_away" RENAME TO "notification_dispatch"'),
+          sql.raw('ALTER TABLE "notification_preference_away" RENAME TO "notification_preference"'),
         );
       }
       expect(send).not.toHaveBeenCalled();
@@ -465,26 +462,24 @@ describe('notifications controller (back-e2e)', () => {
       }
     });
 
-    it('sends one notification for a burst of writes to one setlist, and again after ten minutes', async () => {
+    it('sends on every write to a setlist, under one tag the phone replaces', async () => {
       const send = stubPushService();
       const { hugo, lea } = await buildBand();
       const setlistId = await createId(hugo, '/api/setlists', 'setlist', { name: 'Summer' });
+      expect(send).toHaveBeenCalledTimes(3);
       await jsonRequest(lea.app, `/api/setlists/${setlistId}`, {
         method: 'PUT',
         body: { name: 'Summer tour' },
         cookieHeader: lea.cookieHeader,
       });
-      expect(send).toHaveBeenCalledTimes(3);
-
-      vi.useFakeTimers({ toFake: ['Date'] });
-      vi.setSystemTime(Date.now() + ELEVEN_MINUTES_MILLISECONDS);
+      expect(send).toHaveBeenCalledTimes(5);
       await jsonRequest(hugo.app, `/api/setlists/${setlistId}`, {
         method: 'PUT',
         body: { name: 'Summer tour 2027' },
         cookieHeader: hugo.cookieHeader,
       });
 
-      expect(send).toHaveBeenCalledTimes(6);
+      expect(send).toHaveBeenCalledTimes(8);
       expect(readSentNotifications(send).at(-1)).toMatchObject({
         messageKey: 'setlist-changed',
         parameters: { actorName: 'Hugo', setlistName: 'Summer tour 2027' },
@@ -513,21 +508,14 @@ describe('notifications controller (back-e2e)', () => {
     });
   });
 
-  describe('claiming a group', () => {
-    it('lets exactly one of two concurrent claims win, first send or later', async () => {
-      const firstAt = new Date('2026-10-23T20:00:00.000Z');
-      const firstClaims = await Promise.all([
-        hasClaimedDispatch('setlist:race', null, firstAt),
-        hasClaimedDispatch('setlist:race', null, firstAt),
+  describe('claiming a one-time send', () => {
+    it('lets exactly one of two concurrent claims win', async () => {
+      const claimedAt = new Date('2026-10-23T20:00:00.000Z');
+      const claims = await Promise.all([
+        hasClaimedFirstDispatch('streak:race', claimedAt),
+        hasClaimedFirstDispatch('streak:race', claimedAt),
       ]);
-      expect(firstClaims.filter(Boolean)).toHaveLength(1);
-
-      const laterAt = new Date('2026-10-23T20:11:00.000Z');
-      const laterClaims = await Promise.all([
-        hasClaimedDispatch('setlist:race', firstAt, laterAt),
-        hasClaimedDispatch('setlist:race', firstAt, laterAt),
-      ]);
-      expect(laterClaims.filter(Boolean)).toHaveLength(1);
+      expect(claims.filter(Boolean)).toHaveLength(1);
     });
   });
 });

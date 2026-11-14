@@ -11,12 +11,6 @@ export const NOTIFICATION_CATEGORIES = [
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
 
-export const NOTIFICATION_GROUP_WINDOW_MINUTES = 10;
-
-const MILLISECONDS_PER_MINUTE = 60_000;
-const NOTIFICATION_GROUP_WINDOW_MILLISECONDS =
-  NOTIFICATION_GROUP_WINDOW_MINUTES * MILLISECONDS_PER_MINUTE;
-
 export interface WriteActor {
   readonly memberId: string;
   readonly now: Date;
@@ -210,14 +204,14 @@ export function selectRecipients<Subscription extends RecipientSubscription>(
   );
 }
 
-export function buildGroupKey(event: NotificationEvent): string {
+export function buildNotificationTag(event: NotificationEvent): string {
   switch (event.kind) {
     case 'take-created':
       return `take:${event.takeId}`;
     case 'take-comment-created':
       return `take-comment:${event.takeId}`;
     case 'song-created':
-      return `song-created:${event.actorMemberId}`;
+      return `song:${event.songId}`;
     case 'session-created':
     case 'session-changed':
       return `session:${event.sessionId}`;
@@ -228,11 +222,6 @@ export function buildGroupKey(event: NotificationEvent): string {
     case 'transition-changed':
       return `transition:${event.songAId}:${event.songBId}`;
   }
-}
-
-export function isGroupDue(lastSentAt: Date | null, now: Date): boolean {
-  if (lastSentAt === null) return true;
-  return now.getTime() - lastSentAt.getTime() >= NOTIFICATION_GROUP_WINDOW_MILLISECONDS;
 }
 
 export function buildNotificationUrl(event: NotificationEvent): string {
@@ -292,6 +281,6 @@ export function buildNotificationPayload(
       ...selectSubjectParameters(event),
     },
     url: buildNotificationUrl(event),
-    tag: buildGroupKey(event),
+    tag: buildNotificationTag(event),
   };
 }

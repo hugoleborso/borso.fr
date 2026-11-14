@@ -7,7 +7,6 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
   type AssistantBand,
   callTool,
-  passNotificationGroupWindow,
   prepareAssistantBand,
   seedInstrument,
   useOAuthOrigins,
@@ -322,9 +321,7 @@ describe('setlists tools (back-e2e)', () => {
     await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
     band.send.mockClear();
     const setlistId = await createSetlist(band);
-    passNotificationGroupWindow(band.harness);
     await callTool(band.assistant, 'add_setlist_entries', { setlist: setlistId, songs: [songId] });
-    passNotificationGroupWindow(band.harness);
     await callTool(band.assistant, 'update_setlist_entry', {
       setlist: setlistId,
       entry: songId,

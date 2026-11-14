@@ -46,15 +46,12 @@ async function notifySetlistChanged(
   setlist: Pick<SetlistRow, 'id' | 'name'>,
   actor: WriteActor,
 ): Promise<void> {
-  await notifyBand(
-    {
-      kind: 'setlist-changed',
-      actorMemberId: actor.memberId,
-      setlistId: setlist.id,
-      setlistName: setlist.name,
-    },
-    actor.now,
-  );
+  await notifyBand({
+    kind: 'setlist-changed',
+    actorMemberId: actor.memberId,
+    setlistId: setlist.id,
+    setlistName: setlist.name,
+  });
 }
 
 export async function notifySetlistChangedById(

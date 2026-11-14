@@ -116,16 +116,13 @@ async function notifyBandAboutTake(
 ): Promise<void> {
   const song = await findSongById(take.songId);
   if (song === null) return;
-  await notifyBand(
-    {
-      kind,
-      actorMemberId: command.memberId,
-      takeId: take.id,
-      songId: song.id,
-      songTitle: song.title,
-    },
-    command.now,
-  );
+  await notifyBand({
+    kind,
+    actorMemberId: command.memberId,
+    takeId: take.id,
+    songId: song.id,
+    songTitle: song.title,
+  });
 }
 
 // @FollowsBlueprint service-orchestration
