@@ -7,6 +7,10 @@ describe('selectNotConcertReadyLabelKey', () => {
     expect(selectNotConcertReadyLabelKey('idea')).toBe('audience.notConcertReadyIdea');
   });
 
+  it('marks a song the band chose to play and has not started', () => {
+    expect(selectNotConcertReadyLabelKey('to_play')).toBe('audience.notConcertReadyToPlay');
+  });
+
   it('marks a song the band is still working on', () => {
     expect(selectNotConcertReadyLabelKey('wip')).toBe('audience.notConcertReadyWip');
   });

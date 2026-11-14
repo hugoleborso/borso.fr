@@ -1,8 +1,8 @@
 /** @Feature songs */
 
-import type { songStatuses } from './song-draft.core';
+import type { SongStatus } from '@domain/song-status.core';
 
-export type NewSongStatus = (typeof songStatuses)[number];
+export type NewSongStatus = SongStatus;
 
 export interface PickedServiceTrack {
   readonly deezerTrackId: string;

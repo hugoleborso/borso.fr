@@ -1472,8 +1472,10 @@ Lives in: `api/src/songs/`
 
 - `title` is `NOT NULL`, trimmed, 1 to 256 characters. `artist` is
   `NOT NULL` and defaults to the empty string. `status` is `NOT NULL`.
-- `status` is one of `idea`, `wip`, `rehearsed`, `concert_ready`
-  (`SONG_STATUSES`).
+- `status` is one of `idea`, `to_play`, `wip`, `rehearsed`, `concert_ready`
+  (`SONG_STATUSES`). `to_play` is a song the band has chosen to play and
+  has not started working on yet. The column is plain `text`, so a new
+  status needs no migration.
 - `links` holds up to 16 external links, each with a URL, a provider
   (`spotify`, `deezer`, `youtube`, `other`) and a comment.
 - Deezer enrichment lands in `deezerTrackId`, `deezerAlbumId`, `album`,

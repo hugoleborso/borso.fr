@@ -1,5 +1,6 @@
 const NOT_CONCERT_READY_LABEL_KEY = {
   idea: 'audience.notConcertReadyIdea',
+  to_play: 'audience.notConcertReadyToPlay',
   wip: 'audience.notConcertReadyWip',
   rehearsed: 'audience.notConcertReadyRehearsed',
 } as const;

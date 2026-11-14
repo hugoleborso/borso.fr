@@ -20,7 +20,7 @@ import {
   shouldSearchMusicServiceFor,
   startAddSongDraft,
 } from '../../routes/catalog/add-song.core';
-import { SONG_STATUS_LABEL_KEY, songStatuses } from '../../routes/catalog/song-draft.core';
+import { SONG_STATUS_LABEL_KEY } from '../../routes/catalog/song-draft.core';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
@@ -28,6 +28,7 @@ import { Chip } from '../atoms/Chip';
 import { Input } from '../atoms/Input';
 import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { SongActionRow } from '../molecules/PickableSongRow';
+import { SONG_STATUSES } from '@domain/song-status.core';
 
 export interface AddSongFormProps {
   readonly initialTitle: string;
@@ -117,7 +118,7 @@ export function AddSongForm({ initialTitle }: AddSongFormProps): JSX.Element {
       />
       <span className={LABEL_CLASS}>{t('catalog.status')}</span>
       <div role="group" aria-label={t('catalog.status')} className="flex flex-wrap gap-2">
-        {songStatuses.map((status) => (
+        {SONG_STATUSES.map((status) => (
           <Chip
             key={status}
             pressed={draft.status === status}

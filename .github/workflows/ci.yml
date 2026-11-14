@@ -116,6 +116,9 @@ jobs:
       # vocabulary.
       - run: ./scripts/check-vocabulary-paths.sh
       - run: ./scripts/check-no-null-bytes.sh
+      # A hook named by a relative path exits 127 once the session leaves the
+      # repository root, and the action it guards goes through unchecked.
+      - run: ./scripts/check-hook-commands-are-anchored.sh
       - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
       # A package every Lambda bundles resolves to one version in the
       # lockfile. Two resolutions put both copies in each bundle, and pragma's
