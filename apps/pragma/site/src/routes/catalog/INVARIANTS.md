@@ -12,8 +12,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   the chosen size nor below the 16 px floor, and scrolls sideways past
   that (`buildTabFontSize`).
 - Transposing a chart also transposes its tab blocks
-  (`transposeChordChart` in `tab-transpose.core.ts`). A run of consecutive
-  staff lines is one **system**. Every fret number on a staff shifts by
+  (`transposeChordChart` in `tab-transpose.core.ts`). Inside a tab block a
+  staff needs one dash (`isTabBlockStaffLine`), so a single-dash tab
+  transposes too; detecting pasted staves still needs two. A run of
+  consecutive staff lines is one **system**. Every fret number on a staff shifts by
   the semitones. A fret that would fall below 0 moves up an octave (+12).
   The string name, the bar lines, every technique mark and a repeat count
   such as `x2` stay as written. Where a fret gains or loses a digit, every
@@ -27,6 +29,7 @@ Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › shifts the num
 Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › pads every string where a fret gains a digit, so each note keeps its column
 Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › trims the filler on every string where a fret loses a digit
 Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › keeps the chord line above the staves column for column
+Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › transposes a tab written with single dashes inside a tab block
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps below the floor
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps above the ceiling
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › fits the widest tab line to the width, never above the chosen size nor below the floor

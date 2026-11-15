@@ -2,7 +2,7 @@
 
 import { transposeChord, transposeLines } from '../../lib/chordpro.utils';
 import type { ChordProLine } from '../../lib/chordpro.utils';
-import { isChordLine, isTabStaffLine } from './chords-above-lyrics.core';
+import { isChordLine, isTabBlockStaffLine } from './chords-above-lyrics.core';
 
 const FRET_PATTERN = /(?<![x\d])\d+/g;
 const WORD_PATTERN = /\S+/g;
@@ -130,7 +130,7 @@ function groupSystems(tabLines: readonly string[]): readonly TabBlockGroup[] {
   const groups: TabBlockGroup[] = [];
   for (const line of tabLines) {
     const previous = groups.at(-1);
-    if (!isTabStaffLine(line)) groups.push({ line });
+    if (!isTabBlockStaffLine(line)) groups.push({ line });
     else if (previous !== undefined && 'staves' in previous) previous.staves.push(line);
     else groups.push({ staves: [line] });
   }

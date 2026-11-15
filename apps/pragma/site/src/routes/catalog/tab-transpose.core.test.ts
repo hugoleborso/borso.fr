@@ -147,6 +147,13 @@ describe('transposeTabLines', () => {
     ]);
   });
 
+  it('transposes a tab written with single dashes inside a tab block', () => {
+    expect(transposeTabLines(['e|-3h5-5p3-|', 'B|-1---1---|'], 2)).toEqual([
+      'e|-5h7-7p5-|',
+      'B|-3---3---|',
+    ]);
+  });
+
   it('keeps a line that is neither a staff nor chords as written', () => {
     expect(transposeTabLines(['Palm mute, let ring', 'e|--9--|'], 1)).toEqual([
       'Palm mute, let ring',

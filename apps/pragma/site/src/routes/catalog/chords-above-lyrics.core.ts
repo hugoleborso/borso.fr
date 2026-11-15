@@ -11,6 +11,8 @@ const LINE_BREAK_PATTERN = /\r\n?/g;
 const TAB_STOP = 8;
 const TAB_STAFF_LINE_PATTERN =
   /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()<>^*.: ]*-{2}[-\d|hpbrsvx/\\~()<>^*.: ]*$/;
+const TAB_BLOCK_STAFF_LINE_PATTERN =
+  /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()<>^*.: ]*-[-\d|hpbrsvx/\\~()<>^*.: ]*$/;
 const TAB_BLOCK_START_PATTERN = /^\s*\{(?:start_of_tab|sot)(?::[^}]*)?\}\s*$/;
 const TAB_BLOCK_END_PATTERN = /^\s*\{(?:end_of_tab|eot)\}\s*$/;
 const TAB_BLOCK_START = '{start_of_tab}';
@@ -71,6 +73,10 @@ export function isChordPro(text: string): boolean {
 
 export function isTabStaffLine(line: string): boolean {
   return TAB_STAFF_LINE_PATTERN.test(line);
+}
+
+export function isTabBlockStaffLine(line: string): boolean {
+  return TAB_BLOCK_STAFF_LINE_PATTERN.test(line);
 }
 
 function isBlank(line: string): boolean {

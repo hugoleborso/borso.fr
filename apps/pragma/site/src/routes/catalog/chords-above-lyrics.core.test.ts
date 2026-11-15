@@ -5,6 +5,7 @@ import {
   isChordLine,
   isChordPro,
   isChordSymbol,
+  isTabBlockStaffLine,
   isTabStaffLine,
 } from './chords-above-lyrics.core';
 
@@ -140,6 +141,18 @@ describe('convertChordsAboveLyrics', () => {
       hasChords: false,
       isChanged: false,
     });
+  });
+});
+
+describe('isTabBlockStaffLine', () => {
+  it('reads a single-dash staff that the paste detector leaves alone', () => {
+    expect(isTabBlockStaffLine('e|-3h5-5p3-|')).toBe(true);
+    expect(isTabStaffLine('e|-3h5-5p3-|')).toBe(false);
+  });
+
+  it('still needs a bar and a dash', () => {
+    expect(isTabBlockStaffLine('e|3h5|')).toBe(false);
+    expect(isTabBlockStaffLine('Palm mute - let ring')).toBe(false);
   });
 });
 
