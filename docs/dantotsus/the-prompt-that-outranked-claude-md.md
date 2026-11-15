@@ -6,7 +6,7 @@ severity: low
 related-pr: '#350'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [scripts/check-docs-are-english.sh, .husky/pre-commit]
+eradication-paths: [scripts/check-docs-are-english.sh, scripts/check-docs-are-english.test.ts, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: minutes
 tags: [gates, pre-commit, agents, harness, process]
 zone: CLAUDE.md
@@ -44,7 +44,7 @@ credited it to the operator.
 
 ## Detection failure causes
 
-- **Pre-commit:** no gate read the language of a document. `scripts/check-adr-criteria.sh` and `scripts/check-numbered-sequences.sh` read an ADR's structure only, so the French ADR committed and pushed green.
+- **Pre-commit and CI:** no gate read the language of a document. `scripts/check-adr-criteria.sh` and `scripts/check-numbered-sequences.sh` read an ADR's structure only, so the French ADR committed and pushed green.
 - **Harness:** the Talos repository holds a second copy of how borso.fr writes, which nothing here can read or check. This sweep was refused access to it.
 
 ## Countermeasure
@@ -57,7 +57,20 @@ words. It refuses at 15 or more that make 40 or more per thousand words.
 
 A file already on `main` is not held. Fourteen specs and plans written before
 the rule are French, from 103 to 205 per thousand (measured on the tree
-of `9b8d380ed`), and editing one should not trip the gate.
+of `9b8d380ed`), and editing one should not trip the gate. A staged file is
+read from the index. `ci.yml` runs the same script over the whole tree, so a
+commit that skipped the hook still fails.
+
+Earning the run, measured 2026-11-15: the hook's scope matched 46 of the last
+100 commits on `main` (`git diff-tree` over `git log -100 origin/main`), and a
+whole-tree run takes 0.46 s. Fifteen French ADRs, specs, plans and transcripts
+reached `main` before it, so it guards a defect that recurs.
+
+`scripts/check-docs-are-english.test.ts` holds the gate. It refuses a French ADR
+and a nested spec file, passes an English ADR that quotes French labels and a
+French spec already on `main`, and reads the index. Raising the threshold to
+4000 per thousand fails four of its seven tests, and removing the exemption
+fails one.
 
 The second copy of the rules is removed where it lives, which needs a right
 this session lacks:

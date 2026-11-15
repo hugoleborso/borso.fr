@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# Pre-commit gate: an ADR, a spec and a plan are written in English.
-#
-# PR #350's first ADR was written in French, because the prompt of the session
-# that wrote it said so. Another session wrote that prompt, from a procedure
-# kept outside this repository, and CLAUDE.md's English rule lost to it. A rule
-# held only in prose loses to whichever prompt is read last. See
-# docs/dantotsus/the-prompt-that-outranked-claude-md.md.
+# Gate: an ADR, a spec or a plan is written in English, whatever a prompt asks.
+# See docs/dantotsus/the-prompt-that-outranked-claude-md.md.
 #
 # The test: the prose of a file, once code, quotes and French product strings
 # are removed, holds at least MINIMUM_HITS French function words, and they are
@@ -13,7 +8,13 @@
 # backticks, « guillemets », "double quotes" and > blockquotes, which is how
 # every English document here already quotes them.
 #
-# Usage: scripts/check-docs-are-english.sh <file>...   (other files are ignored)
+# A file already on main is not held: specs written before the rule are
+# French, and editing one or merging main must not trip the gate. A staged file
+# is read from the index, so what is checked is what is committed.
+#
+# Usage: scripts/check-docs-are-english.sh [<file>...]
+#   With files, as pre-commit runs it; other paths are ignored.
+#   With none, every tracked held file, as ci.yml runs it.
 
 set -euo pipefail
 
@@ -22,18 +23,24 @@ cd "$REPO_ROOT"
 
 MINIMUM_HITS=15
 MINIMUM_PERMILLE=40
-HELD_PATHS='^docs/(adr/[^/]+|features/[^/]+/[^/]+/(spec|plan)/[^/]+)\.md$'
+HELD_PATHS='^docs/(adr/[^/]+|features/[^/]+/[^/]+/(spec|plan)/.+)\.md$'
+
+if [ "$#" -eq 0 ]; then
+  set -- $(git ls-files -- 'docs/adr/*.md' 'docs/features/*.md')
+fi
+
+read_file() {
+  if git cat-file -e ":$1" 2>/dev/null; then git show ":$1"; else cat -- "$1"; fi
+}
 
 status=0
 for file in "$@"; do
   [[ "$file" =~ $HELD_PATHS ]] || continue
-  [ -f "$file" ] || continue
-  # Fourteen specs and plans written before the rule are French. A file already
-  # on main is not held, so editing one or merging main does not trip it.
+  [ -f "$file" ] || git cat-file -e ":$file" 2>/dev/null || continue
   if git cat-file -e "origin/main:$file" 2>/dev/null || git cat-file -e "MERGE_HEAD:$file" 2>/dev/null; then
     continue
   fi
-  read -r hits words < <(awk '
+  read -r hits words < <(read_file "$file" | awk '
     BEGIN {
       split("le la les des du une est pour dans avec sur qui que pas cette sont aux et nous vous il elle ne", list, " ")
       for (i in list) french[list[i]] = 1
@@ -55,7 +62,7 @@ for file in "$@"; do
       }
     }
     END { print hits + 0, words + 0 }
-  ' "$file")
+  ')
   if [ "$hits" -ge "$MINIMUM_HITS" ] && [ $((hits * 1000)) -ge $((words * MINIMUM_PERMILLE)) ]; then
     echo "[docs-are-english] $file reads as French: $hits French function words in $words." >&2
     status=1

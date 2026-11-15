@@ -143,6 +143,9 @@ jobs:
       # Every knowledge entry declares the paths, commands or output it applies
       # to, so a hook can deliver it. Mirrors the pre-commit hook.
       - run: ./scripts/check-knowledge-triggers.sh
+      # Every ADR, spec and plan main does not hold yet is written in English.
+      # Mirrors the pre-commit hook, so a commit that skipped it still fails.
+      - run: ./scripts/check-docs-are-english.sh
       # Two lists that have to say the same thing — the generator's trigger
       # paths, and the suffixes the coverage gate and the sibling-test rule both
       # name. Each half reads correctly alone; only the pair is wrong.
