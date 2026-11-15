@@ -56,7 +56,7 @@ function listItems(section: string | null): string[] {
 }
 
 function listOptions(section: string | null): string[] {
-  const options = listItems(section).filter((option) => option !== '');
+  const options = [...new Set(listItems(section).filter((option) => option !== ''))];
   return options.length < MINIMUM_OPTION_COUNT ? [] : options;
 }
 

@@ -124,7 +124,7 @@ None of the options unlocks call history, iMessage or WhatsApp. [`CXCallObserver
 
 ## Implementation pointers
 
-- Spec: none; the change is the « Options » section and the choice buttons this pull request ships.
+- Spec: [`docs/features/talos/multi-choice-proposals/spec/spec.md`](../features/talos/multi-choice-proposals/spec/spec.md).
 - Plan: none.
 - Commit: stamped by `/after-task-kaizen` on merge.
 - Files: `apps/talos/domain/proposal.core.ts`, `apps/talos/api/src/proposals/`, `apps/talos/site/src/components/organisms/ProposalDecisionForm.tsx`, `apps/talos/CONTRAT.md`.

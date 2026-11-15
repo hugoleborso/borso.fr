@@ -156,6 +156,23 @@ describe('the proposal routes', () => {
     expect(page).toContain('## Décision\n- 2026-10-05 10:12 : acceptée (jeudi) — le soir');
   });
 
+  it('records a choice with the longest comment the API accepts', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => await answerSession(SESSION_URL)),
+    );
+    const { app } = buildTestContext();
+    const comment = 'x'.repeat(2000);
+    const response = await requestJson(app, `/api/proposals/${PROPOSAL_WITH_OPTIONS}/decision`, {
+      method: 'POST',
+      body: { decision: 'acceptee', option: 'pas cette semaine', comment },
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(200);
+    const page = await readStoredProposalPage(PROPOSAL_WITH_OPTIONS);
+    expect(page).toContain(`- 2026-10-05 10:12 : acceptée (pas cette semaine) — ${comment}`);
+  });
+
   it.each([
     [
       'an option the proposal does not offer',

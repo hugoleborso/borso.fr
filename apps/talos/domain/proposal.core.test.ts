@@ -109,6 +109,22 @@ describe('parseProposal', () => {
     expect(parseProposal('x', withTwo)?.options).toEqual(['mardi', 'jeudi']);
   });
 
+  it('keeps one button per distinct option', () => {
+    const withDuplicate = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n- mardi\n- jeudi\n\n## Décision',
+    );
+    expect(parseProposal('x', withDuplicate)?.options).toEqual(['mardi', 'jeudi']);
+  });
+
+  it('gives no option when the only items repeat one choice', () => {
+    const withRepeat = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n- mardi\n\n## Décision',
+    );
+    expect(parseProposal('x', withRepeat)?.options).toEqual([]);
+  });
+
   it('gives no option for a section with a single item', () => {
     const withOne = PROPOSAL_FILE.replace(
       '## Décision',
