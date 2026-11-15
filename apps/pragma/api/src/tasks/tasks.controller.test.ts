@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
+import { CONFLICTED_WRITE_MAX_ATTEMPTS } from '../helpers/persistence/conflict-abort.core';
 import {
   abortCommitsWritingTable,
   type LockHold,
@@ -365,7 +366,10 @@ describe('tasks controller (back-e2e)', () => {
 
   it('gives up and writes nothing once every commit has lost a conflict', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
-    const removeSimulatedConflict = await abortCommitsWritingTable('member', 3);
+    const removeSimulatedConflict = await abortCommitsWritingTable(
+      'member',
+      CONFLICTED_WRITE_MAX_ATTEMPTS,
+    );
     try {
       const create = await jsonRequest(app, '/api/tasks', {
         method: 'POST',

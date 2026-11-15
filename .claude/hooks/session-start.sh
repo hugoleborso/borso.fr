@@ -13,4 +13,10 @@ bash "$REPO_ROOT/scripts/install-repo-deps.sh"
 # Persist user-bin PATH for subsequent tool calls in this session.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   printf 'export PATH="$HOME/.local/bin:$PATH"\n' >> "$CLAUDE_ENV_FILE"
+  # The workspace Playwright asks for a Chromium revision the image never
+  # installed; point it at a folder where that revision exists.
+  aligned_browsers="$(bash "$REPO_ROOT/scripts/browser/playwright-browsers.sh" || true)"
+  if [ -n "$aligned_browsers" ]; then
+    printf 'export PLAYWRIGHT_BROWSERS_PATH=%q\n' "$aligned_browsers" >> "$CLAUDE_ENV_FILE"
+  fi
 fi

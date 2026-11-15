@@ -4,6 +4,12 @@ const SURVIVED = 'Survived';
 
 const FAILURE_EXIT_CODE = 1;
 
+const PATTERN_CHARACTERS = /[*?[\]{}!:]/;
+
+function selectNamedFilesWithNoMutant(mutate, files) {
+  return mutate.filter((entry) => !PATTERN_CHARACTERS.test(entry) && !(entry in files));
+}
+
 function isCoveredMutantThatRanNoTests(mutant) {
   const coveringTestCount = mutant.coveredBy?.length ?? 0;
   return mutant.status === SURVIVED && coveringTestCount > 0 && mutant.testsCompleted === 0;
@@ -18,13 +24,19 @@ function selectCoveredMutantsThatRanNoTests(files) {
 }
 
 class ZeroTestGuardReporter {
-  static inject = ['logger'];
+  static inject = ['logger', 'options'];
 
-  constructor(logger) {
+  constructor(logger, options) {
     this.logger = logger;
+    this.mutate = options.mutate;
   }
 
   onMutationTestReportReady(report) {
+    for (const fileName of selectNamedFilesWithNoMutant(this.mutate, report.files)) {
+      this.logger.info(
+        `${fileName} has no row: Stryker made no mutant in it, so its tests are its only pin. See docs/knowledge/a-file-of-constant-tables-passes-mutation-with-no-mutant.md.`,
+      );
+    }
     const offenders = selectCoveredMutantsThatRanNoTests(report.files);
     if (offenders.length === 0) return;
     this.logger.error(

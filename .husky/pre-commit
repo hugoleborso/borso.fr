@@ -16,6 +16,11 @@ path_lines="
 $touched_paths
 "
 
+# A merge of main can bring a lockfile this checkout never installed, and the
+# type-aware oxlint rules then fail on modules they cannot resolve. See
+# scripts/ensure-installed.sh.
+scripts/ensure-installed.sh pre-commit
+
 results=$(mktemp -d)
 trap 'rm -rf "$results"' EXIT
 
@@ -309,6 +314,11 @@ run_check_on_files pwa-assets '^apps/[^/]+/site/' scripts/check-pwa-assets.sh
 run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
   scripts/check-negative-claims-are-dated.sh
 run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
+
+# Each table a spec creates carries the operator's dated answer on what the
+# record is and where it is created from. See
+# docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md.
+run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh
 
 # A pure module whose only consumer is its own test scores 100% on coverage and
 # mutation while running nowhere. Rung-2 eradication of

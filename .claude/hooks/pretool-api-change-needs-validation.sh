@@ -12,6 +12,11 @@
 # docs/features/<app|meta>/<slug>/validation/. It answers both ways a session
 # opens one: `mcp__github__create_pull_request` and a Bash `gh pr create`.
 #
+# The operator added the front end on 2026-11-14: 7 of the 8 latest pragma
+# features had opened with no /visual-validation report. A diff that touches
+# source under apps/<app>/site/ (tests and markdown aside) must add a
+# visual-validation report the same way.
+#
 # Output contract: exit 0 lets the call run, exit 2 with stderr refuses it.
 
 set -euo pipefail
@@ -38,15 +43,26 @@ fi
 
 CHANGED="$(git -C "$REPO_ROOT" diff --name-only "origin/main...$COMPARED_HEAD" 2>/dev/null || true)"
 API_FILES="$(grep -E '^apps/[^/]+/api/' <<<"$CHANGED" || true)"
-[[ -n "$API_FILES" ]] || exit 0
-grep -qE '^docs/features/[^/]+/[^/]+/validation/technical-validation-[^/]+\.md$' <<<"$CHANGED" && exit 0
+SITE_FILES="$(grep -E '^apps/[^/]+/site/' <<<"$CHANGED" | grep -vE '\.(test\.tsx?|md)$' || true)"
 
-{
-  echo "[api-validation] this branch changes $(wc -l <<<"$API_FILES" | tr -d ' ') file(s) under apps/*/api/ and commits no technical-validation report."
-  echo "[api-validation] Run /technical-validation, commit its report under docs/features/<app>/<slug>/validation/, then open the pull request."
-  echo "[api-validation] Run it on finished work. A branch gets two rounds, and a round run on unfinished code to get past this gate is spent: PR #298 merged on a FAIL verdict that way."
-  echo "[api-validation] If the work needs its preview before it is finished, ask the operator."
-  echo "[api-validation] First files: $(head -3 <<<"$API_FILES" | tr '\n' ' ')"
-} >&2
-"$(dirname "$0")/kaizen-refusal.sh" api-validation "opened a pull request changing an API without a technical-validation report"
-exit 2
+if [[ -n "$API_FILES" ]] && ! grep -qE '^docs/features/[^/]+/[^/]+/validation/technical-validation-[^/]+\.md$' <<<"$CHANGED"; then
+  {
+    echo "[api-validation] this branch changes $(wc -l <<<"$API_FILES" | tr -d ' ') file(s) under apps/*/api/ and commits no technical-validation report."
+    echo "[api-validation] Run /technical-validation, commit its report under docs/features/<app>/<slug>/validation/, then open the pull request."
+    echo "[api-validation] Run it on finished work. A branch gets two rounds, and a round run on unfinished code to get past this gate is spent: PR #298 merged on a FAIL verdict that way."
+    echo "[api-validation] If the work needs its preview before it is finished, ask the operator."
+    echo "[api-validation] First files: $(head -3 <<<"$API_FILES" | tr '\n' ' ')"
+  } >&2
+  "$(dirname "$0")/kaizen-refusal.sh" api-validation "opened a pull request changing an API without a technical-validation report"
+  exit 2
+fi
+
+if [[ -n "$SITE_FILES" ]] && ! grep -qE '^docs/features/[^/]+/[^/]+/validation/visual-validation-[^/]+\.md$' <<<"$CHANGED"; then
+  {
+    echo "[visual-validation] this branch changes $(wc -l <<<"$SITE_FILES" | tr -d ' ') front-end file(s) under apps/*/site/ and commits no visual-validation report."
+    echo "[visual-validation] Run /visual-validation once the work is finished, commit its report under docs/features/<app>/<slug>/validation/, then open the pull request."
+    echo "[visual-validation] First files: $(head -3 <<<"$SITE_FILES" | tr '\n' ' ')"
+  } >&2
+  "$(dirname "$0")/kaizen-refusal.sh" visual-validation "opened a pull request changing a front end without a visual-validation report"
+  exit 2
+fi

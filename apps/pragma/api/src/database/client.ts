@@ -52,6 +52,10 @@ function createDsqlClient(config: DatabaseConfig): Sql {
   return postgres(buildDsqlClientOptions(config, () => signer.getDbConnectAuthToken()));
 }
 
+async function waitFor(milliseconds: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 function createLocalClient(config: LocalConfig): Sql {
   return postgres(config.databaseUrl, buildLocalClientOptions());
 }
@@ -60,7 +64,7 @@ function createLocalClient(config: LocalConfig): Sql {
  * @Blueprint database-client
  * @BlueprintName Database Client Singleton
  * @BlueprintUsage Use for the one module a repository imports to reach the database.
- * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be. Both clients turn `fetch_types` off, because postgres.js otherwise sends one `pg_catalog` query on every new connection to learn the array types, 313 ms of a 716 ms first connection on DSQL; the price is that an array comes back as its text form, so a schema that gains an array column turns it back on.
+ * @BlueprintDescription Builds the Drizzle client once per process and caches it, choosing the DSQL connection when the endpoint and schema variables are set and the plain `DATABASE_URL` otherwise. The DSQL password is a callback rather than a value, so the signer mints a fresh token per connection instead of one that expires with the container. `DatabaseExecutor` above widens the client to include a transaction handle, which is how a repository runs the same query inside or outside a transaction. Every statement and every transaction is retried on a DSQL conflict, OC001 included when a deploy migrates the schema under live traffic, because a refused one committed nothing. The attempts wait 100, 200, 400 then 800 ms apart, because on 2026-11-14 a schema change on the shared cluster (inferred, previews migrate and clone their schemas there) failed three immediate attempts within 61 ms, and the same container answered again 1.24 s later (measured). A statement run alone is retried by itself; a transaction is retried whole, since one of its statements alone cannot be. Both clients turn `fetch_types` off, because postgres.js otherwise sends one `pg_catalog` query on every new connection to learn the array types, 313 ms of a 716 ms first connection on DSQL; the price is that an array comes back as its text form, so a schema that gains an array column turns it back on.
  */
 export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;
@@ -73,6 +77,6 @@ export function getDatabase(): Database {
       'Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA+DSQL_ROLE or DATABASE_URL.',
     );
   }
-  cachedDatabase = drizzle(retryingConflictAbortsOf(client), { schema });
+  cachedDatabase = drizzle(retryingConflictAbortsOf(client, waitFor), { schema });
   return cachedDatabase;
 }

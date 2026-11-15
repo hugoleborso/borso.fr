@@ -1,9 +1,12 @@
 ---
-summary: 'arXiv `/abs/` parses and `/pdf/` does not, and a third-party GitHub repository is reachable only through the rendered page or `add_repo`.'
+summary: 'arXiv `/abs/` parses and `/pdf/` does not, a third-party GitHub repository is reachable only through the rendered page or `add_repo`, and the container has no man pages: use `git <sub> -h`, `help <builtin>` or man7.org.'
 triggers:
   commands:
     - 'arxiv\.org/pdf'
     - 'raw\.githubusercontent\.com'
+    - '(^|[;&|\s])(man|git\s+help)\s+[a-z0-9]'
+  output:
+    - 'This system has been minimized'
 ---
 
 # Reading a paper or a third-party repository from inside a session
@@ -42,3 +45,19 @@ directory tree is not worth the tokens.
 
 See also
 [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md).
+
+## Man pages: the container has none
+
+_Added 2026-11-14, from the sweep of PR #334._ The image is a minimized Ubuntu.
+`man kill` and `git help mv` both print *"This system has been minimized by
+removing packages and content"*, and `/usr/share/man/man2` does not exist
+(measured). A subagent writing a dantotsu on PR #327's sweep needed to quote
+kill(2) and `git mv`, and had to find the pages elsewhere.
+
+| Need | What works here (measured) |
+| --- | --- |
+| A git subcommand's options | `git mv -h` prints the usage. A subagent may run it: the staging hook lets `-h` and `--help` through |
+| A shell builtin | `help kill` |
+| A system call or a full man page | `WebFetch` on `https://man7.org/linux/man-pages/man2/kill.2.html` |
+| The full git manual | `WebFetch` on `https://git-scm.com/docs/git-mv` |
+

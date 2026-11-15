@@ -59,17 +59,18 @@ jobs:
         id: filter
         with:
           filters: .github/path-filters.yml
-      # Only a dependency change needs the workspace installed here: the
-      # lockfile is read by a script, which costs about 25 s of install that
-      # every other pull request skips.
-      - if: contains(steps.filter.outputs.changes, 'deps')
+      # A pull request that matches any filter needs the workspace installed
+      # here, because the scripts below read the diff and the lockfile. That
+      # costs about 25 s; one that matches none, docs and tooling outside
+      # apps/ and infra/, skips it.
+      - if: steps.filter.outputs.changes != '[]'
         uses: pnpm/action-setup@v6
-      - if: contains(steps.filter.outputs.changes, 'deps')
+      - if: steps.filter.outputs.changes != '[]'
         uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - if: contains(steps.filter.outputs.changes, 'deps')
+      - if: steps.filter.outputs.changes != '[]'
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
@@ -102,11 +103,13 @@ jobs:
           # production for a lint script. Such keys are dropped here; any
           # error keeps the changes as they were.
           # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
-          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
-            if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-              "$BASE" "$CHANGES"); then
-              CHANGES="$kept"
-            fi
+          # `--tooling` also drops a key whose every change is a test, a
+          # markdown file or a test config: a preview of those would serve the
+          # same build. The operator asked on 2026-11-14 for no preview on a
+          # kaizen that touches only tooling. Production keeps the narrower rule.
+          if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
+            "$BASE" "$CHANGES" --tooling); then
+            CHANGES="$kept"
           fi
 
           # If infra/cdk changed, redeploy every app's preview — constructs
@@ -493,6 +496,9 @@ jobs:
             if ! aws cloudformation describe-stacks \
                 --stack-name "$stack" >/dev/null 2>&1; then
               echo "[skip] $stack: stack does not exist"
+              # A stack already gone can still have left log groups behind.
+              # last-loop-lepin-pr-319 left three this way.
+              ./scripts/preflight-preview-recovery.sh "$app" "$PR_NUMBER"
               continue
             fi
             echo "[teardown] destroying $stack..."
