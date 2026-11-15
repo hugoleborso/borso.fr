@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#341'
-fix-pr: none (the kaizen pull request of PR #341, numbered once opened)
+fix-pr: '#355'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-relayed-merge-clearance.sh, .claude/settings.json]
@@ -47,7 +47,7 @@ recurs: none (the earlier merge entries are about what a merge tests, not who ma
 
 **Type:** DevX check (level 2)
 
-**Reference:** the commit adding this file, on the kaizen pull request of PR #341
+**Reference:** [PR #355](https://github.com/hugoleborso/borso.fr/pull/355), the commit adding this file
 
 ```diff
 +      {
