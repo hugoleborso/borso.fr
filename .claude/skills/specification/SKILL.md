@@ -84,6 +84,7 @@ Remove the line once that perspective has been covered. -->
 
 ## Result
 - The final, visible result: Figma / wireframes / API endpoints / dashboard / before-and-after screens.
+- A feature that is mostly front end gets 3 or 4 alternative mockups before the spec settles. Publish them side by side on one Design canvas artifact, with real data read from the app, at 375 px wide. Link the canvas here and record the variant the operator picked. Read the app's `VOCABULARY.md` first, because it holds visual rules such as what a colour means.
 - "No visible result" is a red flag — name it.
 
 ## Use cases / edge cases
@@ -122,7 +123,7 @@ Walk the user through these 13 steps, in order. Do not skip ahead — each step 
 | 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
 | 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
 | 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
-| 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. |
+| 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. For a mostly front-end feature, 3 or 4 alternatives on one Design canvas, with real data. |
 | 10 | Make component choices | Changes / Q.O.D. | 2–3 alternatives, justified pick. Avoids premature constraints. |
 | 11 | Identify key implementation points | Changes / Q.O.D. | Sequence, risks, critical dependencies. |
 | 12 | Identify inconsistencies in the spec | Q.O.D. | Re-read the whole document looking for problem/solution misalignment. This is the step the skill exists for. |
