@@ -35,6 +35,7 @@ than it, so it is never committed and never stale for long.
 See docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
 """
 
+import warnings
 import json
 import os
 import re
@@ -154,10 +155,19 @@ def read_entries(directory, root):
                     entry_problems.append(f"has an empty {kind} trigger")
                     continue
                 pattern = glob_to_regex(raw) if kind == "paths" else raw
+                # Python warns, and still compiles, on a pattern it will read
+                # differently later, such as `[[:space:]]`: it has no POSIX
+                # classes and reads a nested set that never matches as meant.
+                # The warning was the only sign on PR #334's sweep.
                 try:
-                    re.compile(pattern)
-                except re.error as error:
-                    entry_problems.append(f"{kind} trigger {raw!r} does not compile: {error}")
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error")
+                        re.compile(pattern)
+                except (re.error, FutureWarning) as error:
+                    entry_problems.append(
+                        f"{kind} trigger {raw!r} does not compile cleanly: {error}. "
+                        "Python's re has no POSIX classes; write \\s, not [[:space:]]"
+                    )
                     continue
                 compiled[kind].append(pattern)
         if not any(compiled.values()):
