@@ -22,3 +22,5 @@ Session: 5f88009b-90c6-5b60-9ed2-246d632f7869
 - [2026-11-15 07:04] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
 - [2026-11-15 07:11] `multi-choice-impl` A hook that blocks one segment of a compound command drops the whole command, so earlier edits in the same call silently never ran and had to be re-sent.
 - [2026-11-15 07:18] `technical-validator` The proposals schema accepts a 2000-character comment while the memory change schema caps a decision line at 500, and no document states the combined limit, so the gap was found only by a hand-run probe.
+- [2026-11-15 07:21] `hook:pre-push-conflict` pre-push refused a branch that conflicts with origin/main
+- [2026-11-15 07:25] `technical-validator-r2` A dismissal resting on what the Talos routine does could only be checked against CONTRAT.md, because the routine's own prompts live in the private memory repository and not here.
