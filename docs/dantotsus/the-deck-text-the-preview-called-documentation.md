@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#340'
-fix-pr: '#353'
+fix-pr: '#356'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/dependencies/check-only-change.core.ts, scripts/pr/deploy-fanout.core.ts, scripts/pr/deploy-fanout.ts, .github/workflows/deploy.yml]
@@ -72,7 +72,7 @@ prediction agree.
 
 **Type:** structural impossibility (level 1)
 
-**Reference:** PR #353 · the commit adding this file
+**Reference:** PR #356 · the commit adding this file
 
 ```diff
  const TOOLING_FILE_PATTERN =
