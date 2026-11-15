@@ -17,3 +17,5 @@ This file is gitignored. Before the pull request opens, run
 Session: e2713dd1-c4e5-5963-98a6-c5a77286a2e5
 - [2026-11-15 06:15] `hook:merge-on-moved-base` tried to merge a pull request beside base commits no CI run tested with it
 - [2026-11-15 06:19] `hook:merge-on-moved-base` tried to merge a pull request beside base commits no CI run tested with it
+- [2026-11-15 06:50] `hook:no-discarding-reset` ran a git command that would discard uncommitted work
+- [2026-11-15 06:50] `readme-lists` The operator's no-lists-in-READMEs rule collides with check-dated-records-are-append-only, which freezes the file indexes in docs/**/validation/**/README.md.
