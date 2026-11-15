@@ -102,6 +102,12 @@ bar off the bottom of the visible screen or a focused field the keyboard
 hides (`screen-placement.adapter.ts`). Search Sentry for it before closing an
 iOS screen fix.
 
+Every site sends its User-Agent to Sentry, and pragma, talos and banana-rush
+tag `display.mode` as `standalone` or `browser`. On an iPhone, read
+`browser.version`, the real Safari version. `os.version` says 18.x on every
+iOS from 26, because Safari freezes it in the User-Agent (WebKit bug 298473,
+read 2026-11-15).
+
 ## A real tap in the sandbox
 
 ```bash

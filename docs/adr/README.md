@@ -114,7 +114,6 @@ No:
 | [2026-11-11T1306](./2026-11-11T1306-talos-keeps-the-conversation-of-each-routine-run.md) | Talos keeps the conversation of each routine run in a table of its own database | accepted | 2026-11-11 |
 | [2026-11-11T1318](./2026-11-11T1318-pragma-api-emits-one-wide-event-per-request.md) | the pragma API emits one wide event per request, to stdout and onto its Sentry span | accepted | 2026-11-11 |
 | [2026-11-11T1658](./2026-11-11T1658-lambda-source-maps-go-to-sentry-not-into-the-bundle.md) | Lambda source maps go to Sentry, not into the bundle | accepted | 2026-11-11 |
-| [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | proposed | 2026-11-11 |
 | [2026-11-11T1903](./2026-11-11T1903-every-app-traces-to-sentry-at-full-rate.md) | every app traces to Sentry at sample rate 1.0, and each API's wide event lands on its request span | accepted | 2026-11-11 |
 | [2026-11-12T0008](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) | API Lambdas bundle with Sentry's esbuild plugin, so the database shows in traces | accepted | 2026-11-12 |
 | [2026-11-12T1724](./2026-11-12T1724-api-lambdas-import-the-hono-adapter-from-hono-aws-lambda.md) | API Lambdas import the Hono adapter from `@hono/aws-lambda` | accepted | 2026-11-12 |
@@ -126,6 +125,7 @@ No:
 | [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | accepted | 2026-11-13 |
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
+| [2026-11-15T0620](./2026-11-15T0620-sites-send-the-user-agent-to-sentry.md) | every site sends its User-Agent to Sentry, and installed apps tag their display mode | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -196,6 +196,7 @@ No:
 - 2026-11-11T1318. the pragma API emits one wide event per request, built by a Hono middleware over `AsyncLocalStorage`, written as one JSON line to stdout and as attributes on the Sentry request span, with `member.id`, no sampling and `console.*` banned by lint.
 
 - 2026-11-11T1903. every app traces to Sentry at sample rate 1.0 with pragma's request span and browser tracing, and each API's wide event lands on its span, because the measured worst case is 2.8M spans a month against the free plan's 5M.
+- 2026-11-15T0620. every site sends its User-Agent to Sentry, and pragma, talos and banana-rush tag `display.mode`.
 - [`2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md`](./2026-11-12T0008-api-lambdas-bundle-with-sentrys-esbuild-plugin.md) — `LambdaApi` bundles with esbuild's JS API and Sentry's Orchestrion plugin, because the inlined `postgres` driver yields database spans only when rewritten at bundle time.
 
 ### Tooling / DevX

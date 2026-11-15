@@ -24,12 +24,19 @@ type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   userInfo: false,
   cookies: false,
-  httpHeaders: false,
+  httpHeaders: { allow: ['User-Agent'] },
   httpBodies: [],
   urlQueryParams: false,
 };
 
 const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
+
+const STANDALONE_DISPLAY_QUERY = '(display-mode: standalone)';
+
+function readDisplayMode(): 'standalone' | 'browser' {
+  const isStandalone = window.matchMedia(STANDALONE_DISPLAY_QUERY).matches;
+  return isStandalone ? 'standalone' : 'browser';
+}
 
 // @FollowsBlueprint adapter-external-service
 export function startErrorReporting(settings: ErrorReportingSettings | undefined): void {
@@ -37,7 +44,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
   Sentry.init({
     dsn: settings.dsn,
     environment: settings.environment,
-    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
+    initialScope: { tags: { ...SHARED_PROJECT_APP_TAGS, 'display.mode': readDisplayMode() } },
     dataCollection: PRIVATE_DATA_COLLECTION,
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: [...settings.tracePropagationTargets],

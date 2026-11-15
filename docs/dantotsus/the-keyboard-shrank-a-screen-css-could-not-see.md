@@ -91,10 +91,12 @@ without code.
 
 The browsers that honour it are Chrome for Android from 108, Firefox for
 Android from 133 and Safari on iOS from 27.3 (measured, MDN
-browser-compat-data 8.1.9). Whether Safari 27.3 has shipped, and which iOS
-the band runs, is unknown. pragma's Sentry events carry no browser or OS
-(measured, every prod error has an empty `browser`), because the app
-collects no headers by design.
+browser-compat-data 8.1.9). Whether Safari 27.3 has shipped, and which Safari the band runs, was
+unknown: pragma's Sentry events carried no browser or OS (measured, every prod
+error had an empty `browser`), because no site sent a header. Every site now
+sends its User-Agent and nothing else, and the installed apps tag
+`display.mode` (ADR-2026-11-15T0620). Read `browser.version`: from Safari 26
+the User-Agent freezes the iOS version at 18.x.
 
 So pragma's emulation stays for older iPhones:
 `visual-viewport.adapter.ts`, `keyboard-reveal.adapter.ts`, and
