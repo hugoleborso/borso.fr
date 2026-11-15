@@ -350,6 +350,17 @@ case "$current_branch" in
     # docs/dantotsus/one-sample-could-not-tell-the-hook-from-the-runner.md.
     printf '   CI has not run on %s yet. Call the branch passing only once\n' "$(git rev-parse --short HEAD)" >&2
     printf '   get_check_runs for this sha is green.\n\n' >&2
+    # The validation gate reads a pull request only when it opens, and PR #354
+    # gained its API after opening, so it merged unreviewed. The operator chose
+    # a notice over a refusal on 2026-11-15: run the review before the last
+    # push and its report rides with it, at no extra CI run. See
+    # docs/dantotsus/the-review-gate-that-only-watched-the-door.md.
+    branch_changes=$(git diff --name-only origin/main...HEAD 2>/dev/null || true)
+    api_changes=$(printf '%s\n' "$branch_changes" | grep -cE '^apps/[^/]+/api/' || true)
+    if [ "$api_changes" -gt 0 ] && ! printf '%s\n' "$branch_changes" | grep -qE '^docs/features/[^/]+/[^/]+/validation/technical-validation-[^/]+\.md$'; then
+      printf '⚠️  [pre-push] this branch changes %s file(s) under apps/*/api/ and carries no technical-validation report.\n' "$api_changes" >&2
+      printf '   The review is owed before merge. Run /technical-validation on the finished work and push its report with your last change.\n\n' >&2
+    fi
 
     ;;
 esac

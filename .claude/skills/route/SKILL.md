@@ -70,6 +70,8 @@ Tier 3 means several agents in one checkout, and that has two failure modes this
 - **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself — and while any agent is still running, stage explicit paths rather than `git add -A`, or you will sweep its half-written files into a commit about something else. That is the same failure from the dispatcher's side and it is the easier one to hit, because `git add -A` is the reflex.
 - **Whole-repository generators.** `blueprint-indexing.ts` and `convention-drift.ts` read the entire tree and have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
 
+- **One app, half-built by others.** While several agents change one app, its typecheck and lint stay red on whoever is mid-change, so a whole-app run proves nothing about one agent's files. Tell each agent to check only its own: `scripts/lint-staged-files.sh <its files>` lints them with every rule, and the app's `pnpm typecheck` output filtered with `grep -F -e <file>` per file reads its type errors. Three of PR #354's agents rebuilt that filter by hand.
+
 When agents genuinely need to build in parallel without seeing each other, give them `isolation: "worktree"` instead of a shared checkout.
 
 ## Write the task list
