@@ -17,3 +17,4 @@ This file is gitignored. Before the pull request opens, run
 Session: 5f88009b-90c6-5b60-9ed2-246d632f7869
 
 - [2026-11-15 06:36] `main` Apple developer documentation pages render in JavaScript, so WebFetch returns only the title; the JSON at developer.apple.com/tutorials/data/documentation/<path>.json carries the text.
+- [2026-11-15 06:55] `main` The ADR was written in French because a system-wrapped prompt asked for it, against CLAUDE.md's English rule, and the PR body attributed that request to the operator.
