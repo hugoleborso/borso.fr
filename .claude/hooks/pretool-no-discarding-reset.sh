@@ -81,6 +81,33 @@ is_staged_only_restore() {
     && ! grep -qE '(^|[[:space:]])(--worktree|-W)([[:space:]]|$)' <<<"$1"
 }
 
+# The paths a `git restore` or `git checkout --` names, one per line. A
+# path-scoped command discards only those, so the dirty files elsewhere in the
+# tree are not at stake and listing them buried the ones that were (PR #354).
+# `git reset --hard` names none and is judged on the whole tree.
+named_paths() {
+  local -a words
+  read -r -a words <<<"$1"
+  local index=0 subcommand_seen=0 after_separator=0 skip_value=0 word
+  for word in "${words[@]}"; do
+    index=$((index + 1))
+    if [[ "$subcommand_seen" -eq 0 ]]; then
+      [[ "$word" == restore || "$word" == checkout ]] && subcommand_seen=1
+      continue
+    fi
+    if [[ "$skip_value" -eq 1 ]]; then skip_value=0; continue; fi
+    if [[ "$after_separator" -eq 0 ]]; then
+      case "$word" in
+        --) after_separator=1; continue ;;
+        -s | --source) skip_value=1; continue ;;
+        -*) continue ;;
+      esac
+      [[ "$1" =~ [[:space:]]checkout[[:space:]] ]] && continue
+    fi
+    printf '%s\n' "$word"
+  done
+}
+
 # The command acts on the checkout it names, which is not always the one this
 # hook runs in: a `git -C <path>` or an earlier `cd <path>` points it at another
 # worktree, and the dirty files that matter are that worktree's. Each command
@@ -117,8 +144,10 @@ while IFS= read -r segment; do
   # `|| DIFF_STATUS=$?` keeps exit 1, the answer "there are changes", away
   # from the ERR trap. `set +e` did not: the trap fires on any failing simple
   # command, so every dirty tree read as an unreadable checkout.
+  PATHS=()
+  while IFS= read -r named; do PATHS+=("$named"); done < <(named_paths "$segment")
   DIFF_STATUS=0
-  git -C "$TARGET_DIRECTORY" diff --quiet 2>/dev/null || DIFF_STATUS=$?
+  git -C "$TARGET_DIRECTORY" diff --quiet -- "${PATHS[@]}" 2>/dev/null || DIFF_STATUS=$?
   if [[ "$DIFF_STATUS" -eq 0 ]]; then
     continue
   fi
@@ -127,11 +156,15 @@ while IFS= read -r segment; do
   fi
 
   echo "[no-discarding-reset] \`$segment\` discards tracked changes that are not committed in $TARGET_DIRECTORY:" >&2
-  git -C "$TARGET_DIRECTORY" diff --name-only | sed 's/^/[no-discarding-reset]     /' >&2
+  git -C "$TARGET_DIRECTORY" diff --name-only -- "${PATHS[@]}" | sed 's/^/[no-discarding-reset]     /' >&2
   echo "[no-discarding-reset] Commit them first — a commit is cheap and amendable:" >&2
   echo "[no-discarding-reset]   git add <those paths> && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
   echo "[no-discarding-reset] Or park them where the command cannot reach:" >&2
-  echo "[no-discarding-reset]   git stash push -u -m 'before the probe'" >&2
+  if [[ "${#PATHS[@]}" -gt 0 ]]; then
+    echo "[no-discarding-reset]   git stash push -m 'before the probe' -- ${PATHS[*]}" >&2
+  else
+    echo "[no-discarding-reset]   git stash push -u -m 'before the probe'" >&2
+  fi
   "$(dirname "$0")/kaizen-refusal.sh" no-discarding-reset "ran \`${segment:0:120}\`, which would discard uncommitted work"
   exit 2
 done < <(tr ';&|' '\n\n\n' <<<"$COMMAND_TO_RUN")
