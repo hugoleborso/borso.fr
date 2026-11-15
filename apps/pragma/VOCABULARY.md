@@ -50,9 +50,21 @@ Invariants: `api/src/audience/INVARIANTS.md`
 Not to be confused with: a vote, which is a ballot's tap on a song already
 in the pool.
 
+## Band link
+
+An address the whole band keeps on the band tab, under a name, such as
+the shared folder of the band's photos. A member types it in the app.
+
+Lives in: `api/src/band-links/` (`band_link`), with its rule in `domain/band-link.core.ts`
+
+Invariants: `api/src/band-links/INVARIANTS.md`
+
+Not to be confused with: a song's listening links, which belong to one
+song, nor the links of the band tab's menu, which open pragma's own pages.
+
 ## Band tab
 
-The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, inspirations, improvements, and the account page last. It holds no list of its own.
+The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, inspirations, improvements, and the account page last. Under that menu it keeps the **band links**.
 
 Lives in: `site/src/routes/band/`
 

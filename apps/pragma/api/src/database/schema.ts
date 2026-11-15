@@ -10,6 +10,7 @@ export {
   memberPasskeyTable,
   webauthnChallengeTable,
 } from '../auth/credentials.schema';
+export { bandLinkTable } from '../band-links/band-links.schema';
 export { barTable } from '../bars/bars.schema';
 export { compositionTable } from '../compositions/compositions.schema';
 export { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';

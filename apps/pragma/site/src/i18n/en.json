@@ -984,6 +984,18 @@
     "noTaskOfMine": "Nothing on my list.",
     "linksLabel": "The band"
   },
+  "bandLinks": {
+    "title": "Links",
+    "add": "Add a link",
+    "label": "Name",
+    "url": "Address",
+    "delete": "Delete the link",
+    "deleteConfirm": "Delete the link “{{label}}”? What it opens stays where it is.",
+    "labelMissing": "Give the link a name.",
+    "urlNotHttps": "The address must start with https://.",
+    "saveFailed": "The link was not saved. Try again.",
+    "failed": "The links could not be loaded or changed. Try again."
+  },
   "practice": {
     "actions": "Practice actions",
     "chords": "Chords",

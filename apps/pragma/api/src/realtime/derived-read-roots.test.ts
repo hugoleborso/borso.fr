@@ -10,6 +10,7 @@ const SLICE_IMPORT = /^import\s+(?!type\b)[^;]*?from '\.\.\/([\w-]+)\/[^']*';/gm
 
 const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>> = {
   audience: ['audience'],
+  'band-links': ['band-links'],
   bars: ['bars'],
   'calendar-feeds': ['me'],
   compositions: ['compositions'],

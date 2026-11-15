@@ -984,6 +984,18 @@
     "noTaskOfMine": "Rien sur ma liste.",
     "linksLabel": "Le groupe"
   },
+  "bandLinks": {
+    "title": "Liens",
+    "add": "Ajouter un lien",
+    "label": "Nom",
+    "url": "Adresse",
+    "delete": "Supprimer le lien",
+    "deleteConfirm": "Supprimer le lien « {{label}} » ? Ce qu’il ouvre reste où il est.",
+    "labelMissing": "Donne un nom au lien.",
+    "urlNotHttps": "L’adresse doit commencer par https://.",
+    "saveFailed": "Le lien n’a pas été enregistré. Réessaie.",
+    "failed": "Les liens n’ont pas pu être chargés ou modifiés. Réessaie."
+  },
   "practice": {
     "actions": "Actions de la répétition",
     "chords": "Accords",

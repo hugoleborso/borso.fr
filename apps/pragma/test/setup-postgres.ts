@@ -25,6 +25,7 @@ const TRACKED_TABLES = [
   'improvement',
   'auth_attempt',
   'outreach_template',
+  'band_link',
   'bar',
   'sketch_clip',
   'sketch_lane',

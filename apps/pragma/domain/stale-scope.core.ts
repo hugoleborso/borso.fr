@@ -4,6 +4,7 @@ export const EVERY_WRITTEN_ROOT = 'all';
 
 export const WRITTEN_API_ROOTS = [
   'audience',
+  'band-links',
   'bars',
   'compositions',
   'improvements',

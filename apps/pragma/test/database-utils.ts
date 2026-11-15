@@ -20,6 +20,7 @@ const ALL_TABLES: readonly string[] = [
   'improvement',
   'auth_attempt',
   'outreach_template',
+  'band_link',
   'bar',
   'sketch_clip',
   'sketch_lane',

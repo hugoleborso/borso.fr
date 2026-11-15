@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { BandLinksSection } from '../../components/organisms/BandLinksSection';
 import { BAND_DESTINATIONS } from './band-destinations.core';
 
 const ROW_CLASS =
@@ -31,6 +32,7 @@ export function BandPage(): JSX.Element {
           ))}
         </ul>
       </nav>
+      <BandLinksSection />
     </section>
   );
 }

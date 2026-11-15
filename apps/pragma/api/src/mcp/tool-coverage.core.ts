@@ -24,6 +24,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   '* /api/admin/*': 'Setting and rotating the credentials of the operator stays with the operator.',
   '* /api/__test/*': 'The test seed, mounted only outside production.',
   '* /api/audience/*': 'The ballot of the concert audience, used by the public and not by members.',
+  '* /api/band-links/*':
+    'Band links have no assistant tool yet; members keep them on the band tab, and a tool would spend the shared tool list budget.',
   '* /api/uploads/*':
     'Presigned addresses the upload flow of the app uses; takes have request_take_upload.',
   '* /api/oauth/*':
