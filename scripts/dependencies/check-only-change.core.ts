@@ -2,6 +2,8 @@ const CHECK_ONLY_SCRIPT_NAMES: ReadonlySet<string> = new Set(['lint', 'typecheck
 const CHECK_ONLY_SCRIPT_PREFIXES = ['test:', 'dev:', 'db:local:'] as const;
 const SCRIPTS_FIELD = 'scripts';
 const MANIFEST_FILE = 'package.json';
+const TOOLING_FILE_PATTERN =
+  /(\.test\.tsx?|\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
 
 type JsonRecord = Readonly<Record<string, unknown>>;
 
@@ -55,5 +57,20 @@ export function isCheckOnlyChange(
   const manifestPath = manifestPathOf(directory);
   if (changedFiles.length === 0) return false;
   if (changedFiles.some((file) => file !== manifestPath)) return false;
+  return hasOnlyCheckScriptChanges(manifests.before, manifests.after);
+}
+
+export function isToolingFile(path: string): boolean {
+  return TOOLING_FILE_PATTERN.test(path);
+}
+
+export function isToolingOnlyChange(
+  directory: string,
+  changedFiles: readonly string[],
+  manifests: { readonly before: unknown; readonly after: unknown },
+): boolean {
+  const manifestPath = manifestPathOf(directory);
+  if (changedFiles.length === 0) return false;
+  if (!changedFiles.every((file) => file === manifestPath || isToolingFile(file))) return false;
   return hasOnlyCheckScriptChanges(manifests.before, manifests.after);
 }
