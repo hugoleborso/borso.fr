@@ -1,14 +1,17 @@
 /** @Feature songs */
 
-import { useMemo } from 'react';
+import { type JSX, useMemo } from 'react';
 import {
   type ChordProLine,
+  type ChordProSection,
   groupChordProSections,
   hasSectionHeading,
   isTitleDirective,
   parseChordPro,
   transposeLines,
+  widestTabLineLength,
 } from '../../lib/chordpro.utils';
+import { buildTabFontSize } from '../../routes/catalog/scene-view.core';
 import type { ChordChartTone } from '../atoms/chart-tone';
 import { ChordProSectionHeading } from '../molecules/ChordProSectionHeading';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -72,6 +75,13 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
       </p>
     );
   }
+  if (line.kind === 'tab-line') {
+    return (
+      <div key={key} className={composeClassName('whitespace-pre', LYRIC_CLASS_BY_TONE[tone])}>
+        {line.text}
+      </div>
+    );
+  }
   if (line.kind === 'plain-line') {
     return (
       <p
@@ -102,6 +112,22 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
           </span>
         );
       })}
+    </div>
+  );
+}
+
+function renderSectionLines(
+  section: ChordProSection,
+  sectionKey: string,
+  tone: ChordChartTone,
+): JSX.Element | readonly JSX.Element[] {
+  const lines = section.lines.map((line, lineIndex) =>
+    renderLine(line, `${sectionKey}-${lineIndex}`, tone),
+  );
+  if (section.kind !== 'tab') return lines;
+  return (
+    <div className="@container overflow-x-auto">
+      <div style={{ fontSize: buildTabFontSize(widestTabLineLength(section.lines)) }}>{lines}</div>
     </div>
   );
 }
@@ -139,9 +165,7 @@ export function ChordChartViewer({
                 />
               </div>
             )}
-            {section.lines.map((line, lineIndex) =>
-              renderLine(line, `${sectionKey}-${lineIndex}`, tone),
-            )}
+            {renderSectionLines(section, sectionKey, tone)}
           </section>
         );
       })}

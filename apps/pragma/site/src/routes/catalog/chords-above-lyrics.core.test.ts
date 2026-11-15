@@ -5,6 +5,7 @@ import {
   isChordLine,
   isChordPro,
   isChordSymbol,
+  isTabStaffLine,
 } from './chords-above-lyrics.core';
 
 describe('isChordSymbol', () => {
@@ -137,6 +138,69 @@ describe('convertChordsAboveLyrics', () => {
     expect(convertChordsAboveLyrics('Just words\nand more words')).toEqual({
       chordPro: 'Just words\nand more words',
       hasChords: false,
+      isChanged: false,
+    });
+  });
+});
+
+describe('isTabStaffLine', () => {
+  it.each(['e|-----0-----|-----0------|', 'D#|--5h7--5p3--|', '|---3---|', '  G|-0-------0-|  x2'])(
+    'reads %s as a tab staff',
+    (line) => {
+      expect(isTabStaffLine(line)).toBe(true);
+    },
+  );
+
+  it.each(['| la la ---', 'e|-|', 'Em   C', 'Hello -- world'])(
+    'does not read %s as a tab staff',
+    (line) => {
+      expect(isTabStaffLine(line)).toBe(false);
+    },
+  );
+});
+
+describe('convertChordsAboveLyrics with a tab', () => {
+  const RIFF = ['e|-----0-----|', 'B|---0---0---|'];
+
+  it('fences the staves with the chord line above them, and never splices a chord into a string', () => {
+    const pasted = ['[Intro]', '   Em        C', ...RIFF, '', 'Am  G', 'Hello world'].join('\n');
+    expect(convertChordsAboveLyrics(pasted)).toEqual({
+      chordPro: [
+        '{comment: Intro}',
+        '{start_of_tab}',
+        '   Em        C',
+        ...RIFF,
+        '{end_of_tab}',
+        '',
+        '[Am]Hell[G]o world',
+      ].join('\n'),
+      hasChords: true,
+      isChanged: true,
+    });
+  });
+
+  it('keeps two systems of staves in one block across the blank line between them', () => {
+    const pasted = [...RIFF, '', '  Em', ...RIFF, ''].join('\n');
+    expect(convertChordsAboveLyrics(pasted)).toEqual({
+      chordPro: ['{start_of_tab}', ...RIFF, '', '  Em', ...RIFF, '{end_of_tab}', ''].join('\n'),
+      hasChords: false,
+      isChanged: true,
+    });
+  });
+
+  it('fences bare staves pasted into a chart already in ChordPro', () => {
+    expect(convertChordsAboveLyrics(['[C]Hello', ...RIFF].join('\n'))).toEqual({
+      chordPro: ['[C]Hello', '{start_of_tab}', ...RIFF, '{end_of_tab}'].join('\n'),
+      hasChords: true,
+      isChanged: true,
+    });
+  });
+
+  it('leaves a tab block the author fenced as written', () => {
+    const authored = ['{start_of_tab: Riff}', ...RIFF, '{end_of_tab}', '[C]Hello'].join('\n');
+    expect(convertChordsAboveLyrics(authored)).toEqual({
+      chordPro: authored,
+      hasChords: true,
       isChanged: false,
     });
   });

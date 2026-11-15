@@ -32,7 +32,12 @@ export interface BlankLine {
   readonly kind: 'blank';
 }
 
-export type ChordProLine = DirectiveLine | ChordLine | PlainLine | BlankLine;
+export interface TabLine {
+  readonly kind: 'tab-line';
+  readonly text: string;
+}
+
+export type ChordProLine = DirectiveLine | ChordLine | PlainLine | BlankLine | TabLine;
 
 const CHORD_PATTERN = /\[[^\]]+\]/g;
 const DIRECTIVE_PATTERN = /^\{[a-zA-Z_]+(?::\s*.+)?\}$/;
@@ -71,10 +76,6 @@ export function parseChordProLine(line: string): ChordProLine {
   const tail = line.slice(cursor);
   if (tail.length > 0) tokens.push({ kind: 'lyric', text: tail });
   return { kind: 'chord-line', tokens };
-}
-
-export function parseChordPro(source: string): readonly ChordProLine[] {
-  return source.split(/\r?\n/).map(parseChordProLine);
 }
 
 const TITLE_DIRECTIVE_NAMES = new Set(['title', 't']);
@@ -148,6 +149,33 @@ const SECTION_END_DIRECTIVES = new Set([
   'end_of_tab',
   'eot',
 ]);
+
+const TAB_SECTION_KIND = 'tab';
+
+export function parseChordPro(source: string): readonly ChordProLine[] {
+  let isInsideTab = false;
+  return source.split(/\r?\n/).map((rawLine) => {
+    const line = parseChordProLine(rawLine);
+    if (line.kind === 'directive') {
+      const startedKind = SECTION_START_DIRECTIVES.get(line.name);
+      if (startedKind !== undefined) isInsideTab = startedKind === TAB_SECTION_KIND;
+      if (SECTION_END_DIRECTIVES.has(line.name)) isInsideTab = false;
+      return line;
+    }
+    if (isInsideTab && line.kind !== 'blank') return { kind: 'tab-line', text: rawLine };
+    return line;
+  });
+}
+
+const NO_TAB_COLUMNS = 0;
+
+export function widestTabLineLength(lines: readonly ChordProLine[]): number {
+  let widest = NO_TAB_COLUMNS;
+  for (const line of lines) {
+    if (line.kind === 'tab-line') widest = Math.max(widest, line.text.trimEnd().length);
+  }
+  return widest;
+}
 
 interface AccumulatingSection {
   readonly kind: ChordProSectionKind;
