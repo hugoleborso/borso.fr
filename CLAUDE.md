@@ -106,7 +106,7 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 ## AWS and production data
 
-- Sessions get read-only AWS. If SessionStart printed `AWS unavailable`, the credentials are placeholders, so do not debug the account. `iam:*` is denied, so probe the one call you need.
+- Sessions get read-only AWS, except in the "Borso Admin" environment, which runs as `Borso-Admin` (`docs/aws-setup.md` §12.8). If SessionStart printed `AWS unavailable`, the credentials are placeholders, so do not debug the account. `iam:*` is denied, so probe the one call you need.
 - Read production with `APP=<app> scripts/db-read.sh "<one SELECT>"` for the apps its header lists. `talos` is read through its own `POST /api/agent/sql`.
 
 ## Deeper references
