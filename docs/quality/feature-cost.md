@@ -3,10 +3,9 @@
 PR #224 cut review rounds, per-call context and harness to bring a feature
 under $150 of tokens. Its Kaizen, step 6, set the targets below for the next
 three feature pull requests. The `/after-task-kaizen` sweep of each merged
-feature pull request owns the measurement: it adds one row to the table below,
-in its own kaizen pull request. The sweep that writes the third feature row
-compares the three rows with the targets and says in its pull request which
-targets failed and what that decides.
+pull request owns the measurement. It writes one row, under the header of the
+table below, to `docs/features/meta/lessons-from-pr-<N>/cost.md` in its own
+kaizen pull request.
 
 ## Targets
 
@@ -29,7 +28,13 @@ before reaching for `list_events`.
 
 ## Measurements
 
-One row per merged pull request. Only `feature` rows count toward the three.
+One row per merged pull request. The table below stops at the rows merged on 2026-11-15. Later rows
+live in each sweep's folder, because a table every sweep appended to made
+parallel sweeps collide on every merge. Read them all with:
+
+```
+grep -h '^| #' docs/quality/feature-cost.md docs/features/meta/*/cost.md
+```
 
 | PR | Kind | Sessions | Cost | Final context | Cache-write ceiling | Review rounds | Swept by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -73,4 +78,5 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | #345 | fix | `session_01K69KnFDtDxF758bU9CPdnK` | $9.52 at worker epoch 4, idle after the merge; whether it counts earlier epochs is unknown | 265,888 | $3.97 (495,924 tokens) | 1 | lessons from PR #345 |
 | #338 | ci | `session_01K69KnBWUks1AB8z9biPXPA` | $7.83 at worker epoch 5, idle after the merge; whether it counts earlier epochs is unknown | 239,904 | $2.47 (309,176 tokens) | none | lessons from PR #338 |
 | #334 | meta | `session_01K69KnFLwd3HHcvc6ffTinG` | $24.04 at worker epoch 4, idle after the merge; whether it counts earlier epochs is unknown | 321,190 | $7.96 (995,159 tokens) | none | lessons from PR #334 |
+| #343 | fix | `session_01K69KnFKamw16kPJs4YikHZ`, which also shipped #331 to #337 | $37.63 at worker epoch 12, archived, for all six pull requests; the share of #343 is unknown | 483,979 | $15.63 (1,954,219 tokens) | none | lessons from PR #343 |
 | #346 | meta | `session_01K69KnC2diD8ccHgxavCrSR`, which also ran this sweep | $9.68 at worker epoch 3, still running; whether it counts earlier epochs is unknown | 297,263 | $3.49 (436,745 tokens) | none | lessons from PR #346 |

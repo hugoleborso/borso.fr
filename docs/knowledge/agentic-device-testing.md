@@ -1,6 +1,11 @@
 ---
 summary: 'A 375 px Chromium resize is not a phone test; a real tap here is `scripts/phone.sh touch <selector>`, and the sandbox has no `/dev/kvm` and no Xcode for simulators or emulators.'
 triggers:
+  paths:
+    - 'apps/*/site/index.html'
+    - 'apps/*/site/src/lib/*viewport*'
+    - 'apps/*/site/src/lib/*keyboard*'
+    - 'apps/*/site/src/components/molecules/Sheet.tsx'
   commands:
     - 'scripts/phone\.sh'
     - '\bset viewport 3[0-9][0-9]\b'
@@ -65,6 +70,44 @@ four differences above are exactly what the phone pass exists to catch.
 
 Real device runs therefore happen on the operator's own machine, and CI keeps
 the Chromium viewport pass.
+
+## A change to the visible screen on iOS
+
+By default the keyboard shrinks only the visual viewport. `position: fixed`,
+`%` and `dvh` measure the layout viewport, which keeps its full height, so a
+bar or a field lands under the keyboard or slides off the visible screen.
+Every app page now declares `interactive-widget=resizes-content`, and
+`scripts/check-viewport-follows-keyboard.sh` refuses a page without it. See
+[`../dantotsus/the-keyboard-shrank-a-screen-css-could-not-see.md`](../dantotsus/the-keyboard-shrank-a-screen-css-could-not-see.md).
+
+Safari honours it from iOS 27.3 (MDN browser-compat-data 8.1.9, read
+2026-11-15). Below that, only pragma copes, in JavaScript:
+`visual-viewport.adapter.ts` and `keyboard-reveal.adapter.ts`. Do not copy
+them into another app. Move an element in-flow, or hide it while typing, before
+reaching for `visualViewport`.
+
+Chromium here opens no keyboard and has no rubber-band bounce, so these states
+never occur in the sandbox:
+
+| State on an iPhone | What moves | What broke when it was forgotten |
+| --- | --- | --- |
+| Keyboard open on a page | `visualViewport.height` shrinks, `offsetTop` grows as the page scrolls over the keyboard | Bars drifted up the screen (#331) |
+| Keyboard open on a field inside a sheet | The sheet shrinks, the field stays where it was | The setlist note was hidden under the keyboard (#332) |
+| Bounce past the top or the bottom of the page | `offsetTop` leaves the range 0 to keyboard height, with no keyboard open | The tab bar rose at the top (#333) |
+| Bounce while a sticky header holds a horizontal strip | The compositor can drop the strip's layer | The filter chips vanished after a bounce (#337) |
+
+#337 turned pragma's document bounce off, and #343 turned it back on. Below
+`lg` the page header and the tab bar are fixed, so the bounce moves only the
+content. pragma also reports to Sentry, as `ScreenPlacementBreach`, a tab
+bar off the bottom of the visible screen or a focused field the keyboard
+hides (`screen-placement.adapter.ts`). Search Sentry for it before closing an
+iOS screen fix.
+
+Every site sends its User-Agent to Sentry, and pragma, talos and banana-rush
+tag `display.mode` as `standalone` or `browser`. On an iPhone, read
+`browser.version`, the real Safari version. `os.version` says 18.x on every
+iOS from 26, because Safari freezes it in the User-Agent (WebKit bug 298473,
+read 2026-11-15).
 
 ## A real tap in the sandbox
 

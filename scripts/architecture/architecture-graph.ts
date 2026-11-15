@@ -1546,6 +1546,14 @@ function buildDiffReport(input: DiffReportInput): DiffReport {
   };
 }
 
+function scanApplicationFiles(applicationRoot: string, scanRoot: string): ArchitectureFile[] {
+  return listSourceFiles(applicationRoot)
+    .map((absolutePath) => relative(scanRoot, absolutePath))
+    .filter((path) => !isTestFile(path))
+    .sort()
+    .map((path) => buildArchitectureFile(join(scanRoot, path), scanRoot, applicationRoot));
+}
+
 interface BuildOptions {
   readonly manifest: ArchitectureManifest;
   readonly applicationRoot: string;
@@ -1571,11 +1579,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     placeLevel,
   } = options;
 
-  const files = listSourceFiles(applicationRoot)
-    .map((absolutePath) => relative(scanRoot, absolutePath))
-    .filter((path) => !isTestFile(path))
-    .sort()
-    .map((path) => buildArchitectureFile(join(scanRoot, path), scanRoot, applicationRoot));
+  const files = scanApplicationFiles(applicationRoot, scanRoot);
 
   const problems = validateExternals(files, manifest);
   if (problems.length > 0) {
@@ -1761,9 +1765,30 @@ function readDiffSummaries(outputDirectory: string): ReadonlyMap<string, DiffSum
   return summaries;
 }
 
+const CHECK_EXTERNALS_FLAG = '--check-externals';
+
+function checkExternalsOfEveryApplication(): void {
+  const problems = ARCHITECTURE_MANIFESTS.flatMap((manifest) =>
+    validateExternals(
+      scanApplicationFiles(join(REPOSITORY_ROOT, 'apps', manifest.application), REPOSITORY_ROOT),
+      manifest,
+    ),
+  );
+  for (const problem of problems) console.error(`  ${problem}`);
+  if (problems.length === 0) return;
+  console.error(
+    `${problems.length} architecture manifest problem(s). Declare the system in scripts/architecture/manifests/<app>.manifest.ts, or drop the tag.`,
+  );
+  process.exit(1);
+}
+
 async function main(): Promise<void> {
   if (process.argv.includes('--list')) {
     for (const manifest of ARCHITECTURE_MANIFESTS) console.log(manifest.application);
+    return;
+  }
+  if (process.argv.includes(CHECK_EXTERNALS_FLAG)) {
+    checkExternalsOfEveryApplication();
     return;
   }
   const isCheck = process.argv.includes('--check');

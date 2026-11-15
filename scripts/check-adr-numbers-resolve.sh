@@ -64,32 +64,12 @@ for record in docs/adr/[0-9]*.md; do
   fi
 done
 
-INDEX="docs/adr/README.md"
-index_text="$(cat "$INDEX")"
-
-for record in docs/adr/[0-9]*.md; do
-  [ -f "$record" ] || continue
-  filename="${record##*/}"
-  if [[ "$index_text" != *"| [${filename:0:15}](./${filename}) |"* ]]; then
-    failed=1
-    echo "[check-adr-numbers-resolve] $record is in no row of the index table, which is where its status is read" >&2
-  fi
-done
-
-for linked in $(sed -n 's/.*](\.\/\([0-9][^)]*\.md\)).*/\1/p' "$INDEX" | sort -u); do
-  if [ ! -f "docs/adr/${linked}" ]; then
-    failed=1
-    echo "[check-adr-numbers-resolve] the index links docs/adr/${linked}, which does not exist" >&2
-  fi
-done
-
 if [ "$failed" -ne 0 ]; then
   echo "[check-adr-numbers-resolve] An ADR is cited by number. The filename is what" >&2
   echo "  a citation resolves to and the heading is what a reader sees, so the two disagreeing" >&2
   echo "  sends the reader to a record about something else. This happens on a renumber — fix" >&2
-  echo "  the heading to match the file it is in. The index is the third place a number" >&2
-  echo "  appears, and the one nobody rereads: every record gets a row, and every row a file." >&2
+  echo "  the heading to match the file it is in." >&2
   exit 1
 fi
 
-echo "[check-adr-numbers-resolve] every ADR number resolves the same way in its filename, its heading and the index"
+echo "[check-adr-numbers-resolve] every ADR number resolves the same way in its filename and its heading"

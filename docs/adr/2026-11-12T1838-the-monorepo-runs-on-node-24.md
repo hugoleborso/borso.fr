@@ -1,6 +1,6 @@
 # ADR-2026-11-12T1838: The monorepo runs on Node 24 locally, in CI and in every Lambda
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-12
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, cdk, tooling

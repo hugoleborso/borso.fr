@@ -2,6 +2,10 @@
 
 `talos` is a progressive web app for one person, its owner, over a memory database that scheduled agent runs keep up to date. The memory's keys and headings are written in French; the code is in English. This file names the English word to use for each notion, in identifiers, routes, JSON fields and file names. The file formats themselves are in [`CONTRAT.md`](./CONTRAT.md).
 
+The rules each term holds, and the tests that hold them, sit beside the code
+in the `INVARIANTS.md` its `Invariants:` line names. The repository's own
+words are in [`docs/VOCABULARY.md`](../../docs/VOCABULARY.md).
+
 ## Focus
 
 The owner's current priorities, three at most, read from `focus.md`.
@@ -9,8 +13,8 @@ The owner's current priorities, three at most, read from `focus.md`.
 Lives in: `api/src/focus/`
 
 - Code: `Focus` (`updatedOn` for `maj`, `items`), `FocusItem` (`title`, `why` for `pourquoi`, `horizon`).
-- `focusUpdateSchema` refuses more than three items.
-- The pure parsing and writing rules are in `domain/focus.core.ts`, read by both the API and the focus editor.
+
+Invariants: `api/src/focus/INVARIANTS.md`
 
 Not to be confused with: a todo, which is a single task with a due date.
 
@@ -21,11 +25,8 @@ One task, one line of `todo.md`.
 Lives in: `api/src/todos/`
 
 - Code: `Todo` (`text`, `done`, `dueDate` for `échéance`, `commitment` for `engagement`, `source` for `src`, `addedOn` for `ajouté`, `doneOn` for `fait`).
-- Deleting one answers the removed `line` and its `position` among the task lines, which is what a restoration (`reinstateTodo`) needs to put it back.
-- Its id is `sha1(text + "|" + addedOn)` cut to 10 hexadecimal characters (`domain/todo-id.core.ts`), so it survives a reordering of the file.
-- Attributes the code does not know are kept on rewrite (`domain/line-attributes.core.ts`).
-- Two files hold todos, each a `TodoList` named by `TodoListName` (`domain/todo-list.core.ts`): `main` for `todo.md`, `work` for `todo-taff.md`, the day-to-day work of the owner's assignments. Only `main` reaches the today screen (`isTodoListShownOnToday`).
-- The Todo screen shows one list or both: a `TodoListChoice` is `main`, `work` or `both` (`site/src/components/organisms/todo-list.core.ts`). The kept choice is the one the device remembers (`site/src/lib/todo-list-choice.adapter.ts`).
+
+Invariants: `api/src/todos/INVARIANTS.md`
 
 Not to be confused with: a commitment, which is a promise with a page of its own that a todo may point at.
 
@@ -35,11 +36,9 @@ Something Talos suggests doing, waiting for the owner's decision, one file under
 
 Lives in: `api/src/proposals/`
 
-- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `options` for « Options », `decisions`).
-- An **option** is one of the 2 to 4 choices a proposal may list under « Options ». Choosing one is an acceptance that names it, `acceptée (jeudi)`, carried as `option` on the decision. `checkDecisionOption` says whether a decision names a choice the proposal offers. Not to be confused with a decision, which stays `acceptee` or `refusee`.
-- The values `proposee`, `acceptee`, `refusee` stay in French: they are data the repository holds, not identifiers.
-- A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`), kept as a routine run.
-- A cancellation (`cancelProposalDecision`) takes back an `acceptee` or `refusee` decision before Talos acts on it: the status returns to `proposee`, a `décision annulée` line is appended, and no run fires. It is not a third decision, which is why it is not in `PROPOSAL_DECISIONS`.
+- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `options` for « Options », each one an `option` a decision may name, `decisions`).
+
+Invariants: `api/src/proposals/INVARIANTS.md`
 
 Not to be confused with: a draft, which Talos prepares for the owner to send.
 
@@ -58,8 +57,8 @@ A promise, made by or to the owner, one file under `engagements/`.
 Lives in: `api/src/commitments/`
 
 - Code: `Commitment` (`path`, `title`, `direction`, `counterpart` for a wikilink in `qui`, `counterpartName` for a plain name in `qui`, `action` for `quoi`, `dueDate` for `echeance`). `direction` is `owed` for `moi->eux` (the owner promised) and `awaited` for `eux->moi`.
-- A todo whose `engagement` names it claims it, and the agenda shows only the todo (`selectUnclaimedCommitments`).
-- Read only, open ones only (`statut: ouvert`).
+
+Invariants: `api/src/commitments/INVARIANTS.md`
 
 ## Source
 
@@ -78,7 +77,8 @@ The people the owner should get back in touch with and the coming birthdays, rea
 Lives in: `api/src/relations/`
 
 - Code: `RelationsDigest` (`generatedAt` for `genere`, `toReconnect` for `a_recontacter`, `birthdays` for `anniversaires`), `PersonToReconnect` (`page`, `title` for `titre`, `closeness` for `proximite`, `lastContactOn` for `dernier_contact`, `silentDays` for `jours`), `UpcomingBirthday` (`date`, `daysUntil` for `dans_jours`, `age`).
-- `silentDays` and `daysUntil` are moved to today from the day of `genere`, so a file written the day before still reads right.
+
+Invariants: `api/src/relations/INVARIANTS.md`
 
 Not to be confused with: a relation of the graph, which links two pages.
 
@@ -89,9 +89,8 @@ A task Talos redoes at a fixed cadence, such as a weekly watch, read from the me
 Lives in: `api/src/recurring-tasks/`
 
 - Code: `RecurringTasks` (`generatedAt` for `genere`, `tasks` for `taches`), `RecurringTask` (`id`, `title` for `titre`, `cadence`, `routine`, `what` for `quoi`, `lastRunOn` for `dernier`, `nextRunOn` for `prochain`, `isDue` for `due`).
-- The values of `cadence` (`hebdomadaire`, `mensuelle`, `trimestrielle`) and of `routine` (`nuit`, `dimanche`, `collecte-mac`) stay in French: they are data.
-- Read only. The app never writes the state.
-Held by: `api/src/recurring-tasks/recurring-tasks.controller.test.ts` › answers 404 to a POST, a PUT and a DELETE and leaves the state as written
+
+Invariants: `api/src/recurring-tasks/INVARIANTS.md`
 
 Not to be confused with: a routine run, which is one firing of the routine by a decision or a message; a todo, which the owner does himself.
 
@@ -102,9 +101,8 @@ How late the summaries of the pages are, read from the memory state `freshness` 
 Lives in: `api/src/freshness/`
 
 - Code: `Freshness` (`generatedAt` for `genere`, `lateCount` for `en_retard`, `pages`), `LatePage` (`slug`, `title` for `titre`, `kind` for `type`, `closeness` for `proximite`, `summarizedOn` for `resume_le`, `factCount` for `faits`, `containedFactCount` for `faits_englobes`, `lateness` for `retard`).
-- A page is **late** when it is among the `pages` of the state. The **summary day** of an entity (`summarizedOn`) is `resume_le`, else `maj`, else the day of its last update (`selectSummaryDay`, `api/src/memory/computed-sections.core.ts`).
-- Read only. The app never writes the state.
-Held by: `api/src/freshness/freshness.controller.test.ts` › answers 404 to a POST, a PUT and a DELETE and leaves the state as written
+
+Invariants: `api/src/freshness/INVARIANTS.md`
 
 Not to be confused with: an overdue todo, which the « En retard » tile counts; a recurring task that is due.
 
@@ -114,10 +112,9 @@ A section of a rendered entity whose lines come from the tables at every read an
 
 Lives in: `api/src/memory/computed-sections.core.ts`
 
-Held by: `api/src/agent/agent-page.controller.test.ts` › stores no computed line when a page read is written back, the headings kept in place
-
 - Code: `ComputedSection` (`heading`, `lines`), `Containment` (what « Comprend » and « Faits récents » are built from). A page **contains** another through an open relation of verb `comprend`; the **contained** pages are one level down, the **descendants** two.
-- `dropComputedLines` removes their lines, and those of « Faits », « Historique » and « Relations », from a body an `entity.upsert` receives; `hideHandWrittenCopy` (`api/src/pages/pages.core.ts`) removes « Projets liés » from what the PWA reads.
+
+Invariants: `api/src/memory/INVARIANTS.md`
 
 Not to be confused with: « Faits », « Historique » and « Relations », whose lines are rows of the page itself.
 
@@ -128,7 +125,8 @@ A message Talos prepared for the owner to send by hand, one file under `etat/bro
 Lives in: `api/src/drafts/`
 
 - Code: `Draft` (`channel` for `canal`, `recipients` for `destinataire`, `subject` for `sujet`, `link` for `lien`, `status` for `statut`, `createdOn` for `cree`, `source` for `src`, `proposal` for `proposition`, `sentOn` for `envoye`, `body`), `DraftRecipient` (`name`, `page`).
-- The app writes `statut` and `envoye` only (`applyDraftStatus`). The values `pret`, `envoye`, `abandonne` stay in French: they are data.
+
+Invariants: `api/src/drafts/INVARIANTS.md`
 
 Not to be confused with: the draft of a proposal (« Ce que Talos propose »), which runs when the owner accepts it, while a draft is sent by the owner.
 
@@ -139,7 +137,8 @@ The past briefs and the weekly reviews of `journal/`.
 Lives in: `api/src/history/`
 
 - Code: `HistoryIndex` (`briefs`, `reviews`), `BriefEntry` (`date`), `ReviewEntry` (`week` for the `AAAA-Sxx` of the file name, `title`), `Review` (`markdown`).
-- A brief is read with `readBrief` of `api/src/today/today.core.ts`, the same rule as the today screen.
+
+Invariants: `api/src/history/INVARIANTS.md`
 
 ## Run report
 
@@ -164,8 +163,8 @@ The relations between pages, `etat/graphe.jsonl`.
 Lives in: `api/src/graph/`
 
 - Code: `Graph`, `GraphNode` (`id`, `title`, `type`, `proximity` for `proximite`), `GraphEdge` (`source`, `target`, `relation`, `since` for `depuis`, `until` for `jusqu'à`, `seen` for `vu`, `isClosed`).
-- With a date, only the relations begun by that date are returned, those already ended marked `isClosed` (`domain/graph.core.ts`).
-- `RelationTie` (`family`, `friendship`, `work`, `other`) groups the relation verbs by how close they hold two pages; it sets link length and pull (`site/src/components/organisms/graph-layout.core.ts`).
+
+Invariants: `api/src/graph/INVARIANTS.md`
 
 ## Page
 
@@ -174,7 +173,8 @@ One markdown file of the private repository's notes.
 Lives in: `api/src/pages/`
 
 - Code: `Page` (`path`, `title`, `type`, `frontMatter`, `markdown`, `outgoingLinks`, `incomingLinks`, `summarizedOn` for the summary day of an entity, null otherwise).
-- A page's title is its first `# ` heading (`domain/markdown-page.core.ts`).
+
+Invariants: `api/src/pages/INVARIANTS.md`
 
 ## Talk to Talos
 
@@ -183,7 +183,8 @@ The « Parler à Talos » link at the end of the tab bar, on every screen. It op
 Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`, `site/src/lib/talk-to-talos.*`
 
 - Code: `ClaudeCodeTarget` (`repository`, `environments`), what `GET /api/messages/claude-code` answers so the site can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link; `useTalkToTalosLink` gives it to the tab bar and to `/talk`.
-- The repository Claude Code opens is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
+
+Invariants: `api/src/messages/INVARIANTS.md`
 
 Not to be confused with: « Discuter », which opens the same kind of link from the action sheet, about one item, on the reading environment.
 
@@ -194,10 +195,8 @@ One successful fire of the Claude Code routine, started by a decision on a propo
 Lives in: `api/src/routine/`, `site/src/lib/routine-run.core.ts`
 
 - Code: `routineRunTable` and its row `RoutineRunRow` (`firedAt`, `trigger`, `subject`, `sessionUrl`), answered by the API as `RoutineRun`; `RoutineTrigger` (`proposition` or `message`, the word that starts the fired line, so it stays in French for a decision).
-- `subject` is the proposal's memory slug, or for an older `message` run the message cut to 200 characters.
-- `sessionUrl` is the address of the Claude Code conversation the fire created, kept only when it is `https://claude.ai/code/` followed by a plain path (`readSessionUrl`), `null` otherwise.
-- A fire that fails, or that is skipped because no `fire-url` is set, leaves no run.
-Held by: `api/src/proposals/proposals.controller.test.ts` › commits the decision even when no routine is configured
+
+Invariants: `api/src/routine/INVARIANTS.md`
 
 Not to be confused with: a run report, which says when a scheduled scan last went through; a routine run is started by the owner and has a conversation to open.
 
@@ -208,7 +207,8 @@ What is not content, held in the DSQL database.
 Lives in: `api/src/auth/`
 
 - Code: `Passkey`, `Session`, `PushSubscription` (the last in `api/src/push/`).
-- The last passkey cannot be removed, so the owner cannot lock themselves out.
+
+Invariants: `api/src/auth/INVARIANTS.md`
 
 ## Memory
 
@@ -217,11 +217,8 @@ The owner's memory once it lives in the database: the `memory_*` tables of [`MEM
 Lives in: `api/src/memory/`
 
 - Code: `memory_entity` rows are **entities** (a page of `second-brain/`: a person, an organisation, a project…; `kind` for the front-matter `type`, `closeness` for `proximite`), with their **aliases**, **facts** (a dated line of « Faits » or « Historique », `section` `facts` or `history`) and **relations** (a dated line of « Relations », `verb` from the **verb** table). A **source** is an immutable file of `sources/`, a **citation** links an entity to the source reference it cites, a **journal entry** is a file of `journal/`, and a **memory document** is any other file kept whole (`preferences/…`, `etat/questions`…).
-- The **closeness** of an entity (`proximite` in the front matter) is an integer or nothing. It runs from 0 to 5 for every kind (`CLOSENESS_SCALE`, `domain/closeness.core.ts`), and each level has a name the owner sees (`selectClosenessNameKey`, `site/src/lib/closeness-name.core.ts`). For a person: 0 « Contacts », 1 « Bonnes relations », 2 « Copains », 3 « Amis », 4 « Proches », 5 « Intimes ». For every other kind, where the score says how much the page matters to him: 0 « Périphérie », 1 « Contexte », 2 « Secondaire », 3 « Suivi », 4 « Important », 5 « Au cœur ». A 0 is a score, and no closeness is the absence of one.
-- A **slug** is the repository path without `.md`, so every `[[…]]` link stays valid.
-- A **memory event** records one applied operation (actor, token, run, before and after); a **change batch** remembers the answer to one idempotency key. Nothing is deleted: an entity is archived, a todo is removed by a flag.
-- `renderEntityPage` (`page-rendering.core.ts`) writes an entity back as the markdown file it came from.
-- The **cutover** is the `memory_state` key that recorded the move from git to the database; it is only reported by `/status`.
+
+Invariants: `api/src/memory/INVARIANTS.md`
 
 Not to be confused with: a **page**, which the PWA reads through `api/src/pages/` as a rendered memory slug; a **memory document** is the database row that holds such a file once it is not modelled by a table of its own.
 

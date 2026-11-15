@@ -214,17 +214,29 @@ not a lap. That question has no rule, and it is the one that decides whether two
 people writing in the same folder agree.
 
 So each application with a domain of its own carries an `apps/<app>/VOCABULARY.md`:
-one section per noun the application talks about, saying what it is, which
-bounded context owns it, the invariants that hold, and the word it is most often
-confused with. Read it before naming a new type, column, function or file, and
-add to it when a new noun appears.
+a glossary, one section per noun the application talks about, saying what it is,
+which folder owns it on a `Lives in:` line, the identifiers it is spelled as on
+a `- Code:` bullet, and the word it is most often confused with. Read it before
+naming a new type, column, function or file, and add to it when a new noun
+appears. The words of the repository itself, such as kaizen, dantotsu,
+blueprint and preview, are in [`docs/VOCABULARY.md`](../VOCABULARY.md), which
+also lists every application's glossary.
+
+The rules a term holds do not go in the glossary. They go in an `INVARIANTS.md`
+in the folder the term lives in, under a heading that repeats the term exactly,
+and the term carries an `Invariants:` line naming that file. Every agent reads
+the glossary before naming anything; only the agent changing a folder needs
+that folder's rules. Pragma's single file had grown to 2,028 lines, 302 of them
+`Held by` lines, before the split
+([the ADR](../adr/2026-11-15T0628-glossary-and-invariants-are-two-files.md)).
 
 It closes the same gap the English-only rule leaves open. The rule says not to
 write `porteurTonal`, and it cannot say what to write instead; the vocabulary
 can, because the word already exists somewhere in the tree.
 
 An invariant that promises behaviour, something a person is allowed to do or
-is refused, names the test that holds it on a line of its own under the term:
+is refused, names the test that holds it on a line of its own under the term in
+`INVARIANTS.md`:
 
 ```markdown
 Held by: `api/src/punch/punch.service.test.ts` › punches a runner again for a loop whose punch was voided
@@ -294,14 +306,17 @@ meanings each. None of that is visible from any one file.
   named and the calendar is not. See
   [the dantotsu](../dantotsus/the-rule-that-made-the-repository-name-the-calendar.md). Off in a test file, where a
   fixture literal belongs next to the assertion that gives it meaning.
-- `script:scripts/check-vocabulary-paths.sh` fails a `VOCABULARY.md` whose term
-  points at a folder that is not there, and one whose `Held by:` line names a
-  test file or a test title that is not there. Those two lines are the only
-  mechanically checkable facts in the document, and the ones that rot first,
+- `script:scripts/check-vocabulary-paths.sh` fails a glossary whose term points
+  at a folder that is not there, an `INVARIANTS.md` whose `Held by:` line names
+  a test file or a test title that is not there, a term whose `Invariants:`
+  file lacks its section, a section no term points at, and a glossary that
+  carries a `Held by` line or a rule bullet. The paths and titles are the only
+  mechanically checkable facts in either file, and the ones that rot first,
   because a slice gets renamed, or a test retitled, by a change with no reason
   to open the vocabulary.
-- `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which
-  is prose against code and therefore nothing a rule can do.
+- `reviewer` checks that a definition in a `VOCABULARY.md` and a rule in an
+  `INVARIANTS.md` are still true, which is prose against code and therefore
+  nothing a rule can do.
 - `reviewer` checks that an invariant promising behaviour carries a `Held by:`
   line, because telling a promise from a definition is reading prose.
 - `reviewer` checks the half of the verb table the rule above cannot reach: that

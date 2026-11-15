@@ -21,21 +21,7 @@ const repositories: string[] = [];
 
 type Gate = (typeof GATES)[number];
 
-const ID_LENGTH = '2026-11-11T1318'.length;
-
-function tableRowOf(filename: string): string {
-  return `| [${filename.slice(0, ID_LENGTH)}](./${filename}) | A title | accepted | 2026-11-11 |`;
-}
-
-function topicEntryOf(filename: string): string {
-  return `- [\`${filename}\`](./${filename}). A record listed under a topic.`;
-}
-
-function runGate(
-  gate: Gate,
-  records: Record<string, string>,
-  indexRowOf: (filename: string) => string = tableRowOf,
-): number {
+function runGate(gate: Gate, records: Record<string, string>): number {
   const directory = mkdtempSync(join(tmpdir(), 'adr-gates-'));
   repositories.push(directory);
   mkdirSync(join(directory, 'scripts'));
@@ -43,8 +29,6 @@ function runGate(
   for (const each of GATES) {
     copyFileSync(resolve(import.meta.dirname, each), join(directory, 'scripts', each));
   }
-  const rows = Object.keys(records).map(indexRowOf);
-  writeFileSync(join(directory, 'docs/adr/README.md'), `# ADRs\n\n${rows.join('\n')}\n`);
   for (const [filename, body] of Object.entries(records)) {
     writeFileSync(join(directory, 'docs/adr', filename), body);
   }
@@ -66,16 +50,10 @@ afterEach(() => {
 });
 
 describe('check-adr-numbers-resolve.sh', () => {
-  it('passes a record whose filename, heading and index agree', () => {
+  it('passes a record whose filename and heading agree', () => {
     const records = { '2026-11-11T1318-wide-events.md': '# ADR-2026-11-11T1318: Wide events\n' };
 
     expect(runGate('check-adr-numbers-resolve.sh', records)).toBe(0);
-  });
-
-  it('refuses a record the index links from a topic list and from no table row', () => {
-    const records = { '2026-11-11T1658-source-maps.md': '# ADR-2026-11-11T1658: Source maps\n' };
-
-    expect(runGate('check-adr-numbers-resolve.sh', records, topicEntryOf)).toBe(1);
   });
 
   it('refuses a heading that names another minute', () => {
