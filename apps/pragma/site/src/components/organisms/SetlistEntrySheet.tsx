@@ -4,7 +4,7 @@ import type { Lineup } from '@domain/lineup.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { SongViewTab } from '../../routes/catalog/song-view-tab.core';
+import { SONG_VIEW_TABS, type SongViewTab } from '../../routes/catalog/song-view-tab.core';
 import type { SongRecord } from '../../lib/queries/songs.queries';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
@@ -164,7 +164,9 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
       }
       label={song.title}
       isTitleARecordName
-      subheader={<SongViewTabs value={tab} onChange={setTab} />}
+      subheader={
+        <SongViewTabs tabs={SONG_VIEW_TABS} value={tab} takeCount={null} onChange={setTab} />
+      }
       onClose={close}
       isFooterHiddenWhileTyping
       footer={

@@ -205,6 +205,7 @@ describe('selectSessionPills', () => {
         sessionId: 's',
         firstSetlistId: null,
         isPracticeModeOffered: false,
+        practiceSongCount: 0,
       }),
     ).toEqual({
       practicePath: null,
@@ -213,6 +214,7 @@ describe('selectSessionPills', () => {
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
       chooseSongsVariant: null,
+      isOrderSongsShown: false,
     });
   });
 
@@ -225,6 +227,7 @@ describe('selectSessionPills', () => {
         sessionId: 's',
         firstSetlistId: null,
         isPracticeModeOffered: false,
+        practiceSongCount: 0,
       }),
     ).toEqual({
       practicePath: null,
@@ -233,6 +236,7 @@ describe('selectSessionPills', () => {
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: true,
       chooseSongsVariant: null,
+      isOrderSongsShown: false,
     });
   });
 
@@ -245,6 +249,7 @@ describe('selectSessionPills', () => {
         sessionId: 's',
         firstSetlistId: 'set-1',
         isPracticeModeOffered: false,
+        practiceSongCount: 0,
       }),
     ).toEqual({
       practicePath: null,
@@ -253,6 +258,7 @@ describe('selectSessionPills', () => {
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
       chooseSongsVariant: null,
+      isOrderSongsShown: false,
     });
   });
 
@@ -265,6 +271,7 @@ describe('selectSessionPills', () => {
         sessionId: 's',
         firstSetlistId: 'set-1',
         isPracticeModeOffered: true,
+        practiceSongCount: 0,
       }),
     ).toEqual({
       practicePath: '/sessions/s/practice',
@@ -273,6 +280,7 @@ describe('selectSessionPills', () => {
       setlistLabelKey: 'sessions.setlist',
       isAddSetlistShown: false,
       chooseSongsVariant: null,
+      isOrderSongsShown: false,
     });
   });
 });
@@ -283,6 +291,7 @@ describe('selectSessionPills on a practice', () => {
     isPractice: true,
     sessionId: 's',
     firstSetlistId: 'set-1',
+    practiceSongCount: 2,
     view: 'songs',
   } as const;
 
@@ -294,6 +303,7 @@ describe('selectSessionPills on a practice', () => {
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
       chooseSongsVariant: 'primary',
+      isOrderSongsShown: true,
     });
   });
 
@@ -305,6 +315,7 @@ describe('selectSessionPills on a practice', () => {
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
       chooseSongsVariant: 'secondary',
+      isOrderSongsShown: true,
     });
   });
 
@@ -329,6 +340,17 @@ describe('selectSessionPills on a practice', () => {
     expect(
       selectSessionPills({ ...practice, view: 'takes', isPracticeModeOffered: true }).practicePath,
     ).toBe('/sessions/s/practice');
+  });
+  it('offers Order songs on the Songs tab once the practice holds two songs', () => {
+    for (const isPracticeModeOffered of [false, true]) {
+      const offered = { ...practice, isPracticeModeOffered };
+      expect(selectSessionPills({ ...offered, practiceSongCount: 1 }).isOrderSongsShown).toBe(
+        false,
+      );
+      expect(selectSessionPills(offered).isOrderSongsShown).toBe(true);
+      expect(selectSessionPills({ ...offered, view: 'tasks' }).isOrderSongsShown).toBe(false);
+      expect(selectSessionPills({ ...offered, isLoading: true }).isOrderSongsShown).toBe(false);
+    }
   });
 });
 

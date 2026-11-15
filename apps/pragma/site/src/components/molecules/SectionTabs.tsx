@@ -29,7 +29,10 @@ const TAB_CLASS =
   'aria-selected:border-ink aria-selected:text-ink focus-visible:outline-3 focus-visible:outline-focus';
 const TAB_CLASS_BY_LAYOUT = {
   inline: TAB_CLASS,
-  stacked: composeClassName(TAB_CLASS, 'flex-1 flex-col justify-center gap-0.5 px-0.5 text-label'),
+  stacked: composeClassName(
+    TAB_CLASS,
+    'flex-1 flex-col justify-center gap-0.5 px-0.5 text-label whitespace-nowrap lg:px-3',
+  ),
 } as const satisfies Readonly<Record<SectionTabsLayout, string>>;
 const CUE_CLASS =
   'pointer-events-none absolute top-0 bottom-px flex w-10 items-center text-ink-soft from-paper';

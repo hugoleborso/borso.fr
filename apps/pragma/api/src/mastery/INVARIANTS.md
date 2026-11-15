@@ -29,5 +29,5 @@ Held by: `api/src/songs/songs.controller.test.ts` › cascades the mastery overr
 
 Held by: `api/src/mastery/mastery.controller.test.ts` › appends one history row per override write and none for a default write
 Held by: `api/src/mastery/mastery.controller.test.ts` › writes no history row when deleting an override with no default behind it
-Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the song
-Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the member
+Held by: `api/src/studies/studies.controller.test.ts` › removes score history with the song
+Held by: `api/src/studies/studies.controller.test.ts` › removes score history with the member

@@ -15,6 +15,7 @@ import {
   removeSong,
   searchExternalSongs,
 } from './songs.service';
+import { readSongPreview } from './song-preview.service';
 
 /**
  * @Blueprint controller-dispatch
@@ -42,6 +43,15 @@ export function buildSongsRouter() {
       const song = await findSongById(id);
       if (song === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ song });
+    })
+    .get('/:id/preview', zValidator('param', songIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const outcome = await readSongPreview(id);
+      if (outcome.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+      if (outcome.kind === 'unavailable') {
+        return context.json({ error: 'external-preview-unavailable' }, 503);
+      }
+      return context.json({ previewUrl: outcome.previewUrl });
     })
     .post('/', zValidator('json', songCreateInputSchema), async (context) => {
       const input = context.req.valid('json');

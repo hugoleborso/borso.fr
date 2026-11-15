@@ -10,6 +10,7 @@ export const QUERY_READ_ROOTS: Readonly<Record<string, readonly ApiRoot[]>> = {
   'assistant-grants': ['assistant-grants', 'oauth'],
   audience: ['audience'],
   auth: ['instruments'],
+  'band-links': ['band-links'],
   bars: ['bars'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],

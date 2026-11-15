@@ -15,7 +15,6 @@ export function projectOverviewForTool(
       instrument: nameEntity(instruments, item.instrumentId),
       score: item.score,
       isReady: item.isReady,
-      isStudiedToday: item.isStudiedToday,
     })),
     readiness:
       readiness === null

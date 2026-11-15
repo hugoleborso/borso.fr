@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type AuthenticatedApp,
@@ -14,7 +13,7 @@ import {
   turnCategory,
 } from '../../../test/push-utils';
 import { pushSubscriptionTable } from '../notifications/notifications.schema';
-import { studyTable } from '../studies/studies.schema';
+import { presenceTable } from './streaks.schema';
 import { STREAK_REMINDER_JOB } from '@domain/scheduled-job.core';
 import { runInWideEvent } from '../helpers/observability/wide-event.adapter';
 import { handler } from '../main';
@@ -39,18 +38,10 @@ function silenceProductEvents() {
   return vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 }
 
-async function logStudies(memberId: string, days: readonly string[]): Promise<void> {
+async function logPresences(memberId: string, days: readonly string[]): Promise<void> {
   await testDatabase()
-    .insert(studyTable)
-    .values(
-      days.map((studiedOn) => ({
-        memberId,
-        songId: randomUUID(),
-        instrumentId: randomUUID(),
-        studiedOn,
-        createdAt: PARIS_EVENING,
-      })),
-    );
+    .insert(presenceTable)
+    .values(days.map((presentOn) => ({ memberId, presentOn, createdAt: PARIS_EVENING })));
 }
 
 async function prepareBand(): Promise<Band> {
@@ -62,8 +53,8 @@ async function prepareBand(): Promise<Band> {
   await subscribeDevice(hugo, 'hugo-phone');
   await subscribeDevice(lea, 'lea-phone');
   await subscribeDevice(tom, 'tom-phone');
-  await logStudies(hugo.memberId, LAST_THREE_DAYS);
-  await logStudies(lea.memberId, [TODAY]);
+  await logPresences(hugo.memberId, LAST_THREE_DAYS);
+  await logPresences(lea.memberId, [TODAY]);
   return { hugo, lea, tom, send, productEvents };
 }
 

@@ -111,9 +111,6 @@ export const INTERFACE_GLYPHS = {
     </>
   ),
   text: <path d="M5 5h14M9 5v14M5 12h8" />,
-  comment: (
-    <path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
-  ),
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
   edit: <path d="M14 4l6 6L8 22H2v-6L14 4z" />,
   play: <path d="M6 4l14 8-14 8V4z" />,

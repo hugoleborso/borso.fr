@@ -129,6 +129,29 @@ describe('the query cache saved on the phone', () => {
   });
 });
 
+describe('a song preview address', () => {
+  afterEach(() => {
+    queryClient.clear();
+    localStorage.clear();
+  });
+
+  it('is never saved on the phone, since Deezer lets it expire', async () => {
+    queryClient.setQueryData(songKeys.preview('song-1'), {
+      previewUrl: 'https://cdn.example/a.mp3',
+    });
+    queryClient.setQueryData(songKeys.byId('song-1'), { song: { id: 'song-1' } });
+
+    await persistQueryClientSave({ queryClient, ...queryCachePersistOptions });
+    queryClient.clear();
+    await persistQueryClientRestore({ queryClient, ...queryCachePersistOptions });
+
+    expect(queryClient.getQueryData(songKeys.preview('song-1'))).toBeUndefined();
+    expect(queryClient.getQueryData(songKeys.byId('song-1'))).toStrictEqual({
+      song: { id: 'song-1' },
+    });
+  });
+});
+
 describe('a member who signs in', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

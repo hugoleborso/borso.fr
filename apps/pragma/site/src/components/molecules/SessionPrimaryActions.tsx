@@ -13,6 +13,7 @@ export interface SessionPrimaryActionsProps {
   readonly isAddingSetlist: boolean;
   readonly onAddSetlist: () => void;
   readonly onChooseSongs: () => void;
+  readonly orderSongs: { readonly order: () => void; readonly isPending: boolean };
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -21,6 +22,7 @@ export function SessionPrimaryActions({
   isAddingSetlist,
   onAddSetlist,
   onChooseSongs,
+  orderSongs,
 }: SessionPrimaryActionsProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -40,6 +42,17 @@ export function SessionPrimaryActions({
           {t('practice.start')}
         </ButtonLink>
       )}
+      {pills.isOrderSongsShown ? (
+        <Button
+          icon="reorder"
+          variant="secondary"
+          labelDisplay="wide-only"
+          disabled={orderSongs.isPending}
+          onClick={orderSongs.order}
+        >
+          {t('sessions.practiceSongs.order')}
+        </Button>
+      ) : null}
       {pills.chooseSongsVariant === null ? null : (
         <Button
           icon="song"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSceneAddressFromPractice,
+  buildTabFontSize,
   selectSceneExitPath,
   canScrollFaster,
   canScrollSlower,
@@ -172,5 +173,17 @@ describe('buildSceneAddressFromPractice', () => {
     expect(buildSceneAddressFromPractice('song-1', '/sessions/abc/practice')).toBe(
       '/catalog/song-1/scene?back=%2Fsessions%2Fabc%2Fpractice',
     );
+  });
+});
+
+describe('buildTabFontSize', () => {
+  it('fits the widest tab line to the width, never above the chosen size nor below the floor', () => {
+    expect(buildTabFontSize(27)).toBe(
+      `min(1em, max(${FONT_SIZE_FLOOR_PX}px, calc(100cqw / 0.6 / 27)))`,
+    );
+  });
+
+  it('leaves the size inherited when the tab has no column', () => {
+    expect(buildTabFontSize(0)).toBeUndefined();
   });
 });

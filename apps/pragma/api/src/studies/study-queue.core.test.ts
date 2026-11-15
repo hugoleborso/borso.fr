@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildStudyQueue, studyKey } from './study-queue.core';
+import { buildStudyQueue } from './study-queue.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('study-queue.core', () => {
@@ -15,16 +15,13 @@ describe('study-queue.core', () => {
       ],
       defaults: { hugo: { guitar: 5, voice: 3 } },
       overrides: { ready: { hugo: { guitar: 2 } } },
-      keysStudiedToday: new Set([studyKey('two', 'voice')]),
     });
-    expect(
-      queue.map((item) => [item.songId, item.instrumentId, item.score, item.isStudiedToday]),
-    ).toEqual([
-      ['unknown', 'bass', null, false],
-      ['two', 'voice', 3, true],
-      ['two', 'guitar', 5, false],
-      ['same', 'guitar', 5, false],
-      ['ready', 'guitar', 2, false],
+    expect(queue.map((item) => [item.songId, item.instrumentId, item.score])).toEqual([
+      ['unknown', 'bass', null],
+      ['two', 'voice', 3],
+      ['two', 'guitar', 5],
+      ['same', 'guitar', 5],
+      ['ready', 'guitar', 2],
     ]);
   });
 
@@ -36,7 +33,6 @@ describe('study-queue.core', () => {
       ],
       defaults: {},
       overrides: {},
-      keysStudiedToday: new Set(),
     });
     expect(queue.map((item) => item.instrumentId)).toEqual(['guitar', 'voice']);
   });

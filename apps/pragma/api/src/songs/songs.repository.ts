@@ -8,7 +8,6 @@ import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { deleteScoreHistoryOfDeletedSong } from '../mastery/mastery.service';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
-import { deleteStudiesOfDeletedSong } from '../studies/studies.service';
 import { deleteTakesOfDeletedSong } from '../takes/takes.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
@@ -261,7 +260,6 @@ export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
       .returning({ id: songTable.id });
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
     await deleteScoreHistoryOfDeletedSong(transaction, id);
-    await deleteStudiesOfDeletedSong(transaction, id);
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);

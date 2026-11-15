@@ -17,7 +17,7 @@ import { createSession, getSessions, patchSession } from '../../api/src/sessions
 import { appendEntry } from '../../api/src/setlists/setlist-entry.service';
 import { createSetlist, getAllSetlists, getEntries } from '../../api/src/setlists/setlists.service';
 import { getSongs, insertSongWithoutNotice } from '../../api/src/songs/songs.service';
-import { logStudy } from '../../api/src/studies/studies.service';
+import { recordPresence } from '../../api/src/streaks/presences.service';
 import { createTake, createTakeComment } from '../../api/src/takes/takes.service';
 import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
 import { createTask } from '../../api/src/tasks/tasks.service';
@@ -794,13 +794,8 @@ async function main(): Promise<void> {
       },
       now,
     );
-    await logStudy({
-      songId: id(title),
-      instrumentId: requireValue(instrumentId.get('Clavier'), 'instrument Clavier'),
-      memberId: sarah,
-      now,
-    });
   }
+  await recordPresence(sarah, now);
 
   if (process.env.AUDIT_SEED_VARIANT === NO_UPCOMING_SESSION_VARIANT) {
     await movePastEverySession(hugo);

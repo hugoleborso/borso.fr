@@ -15,7 +15,12 @@ import {
 import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { InstallOffer } from './InstallOffer';
-import { selectActiveTab, SHELL_TABS, type ShellTab } from './navigation-active.core';
+import {
+  RETURN_PATH_PARAM,
+  selectActiveTab,
+  SHELL_TABS,
+  type ShellTab,
+} from './navigation-active.core';
 import { scrollPageToTop } from '../../lib/page-scroll.adapter';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 
@@ -33,7 +38,10 @@ export function AppShell(): JSX.Element {
   const signedInMember = useSignedInMember();
   const signedInName = signedInMember.data?.firstName ?? '';
   const signedInColor = signedInMember.data?.color ?? MEMBER_LOADING_COLOR;
-  const activeTab = selectActiveTab(location.pathname);
+  const activeTab = selectActiveTab(
+    location.pathname,
+    new URLSearchParams(location.search).get(RETURN_PATH_PARAM),
+  );
 
   return (
     <div className="min-h-dvh flex bg-paper text-ink pt-[var(--page-header-height,env(safe-area-inset-top))] lg:pt-[env(safe-area-inset-top)]">

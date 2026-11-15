@@ -50,9 +50,21 @@ Invariants: `api/src/audience/INVARIANTS.md`
 Not to be confused with: a vote, which is a ballot's tap on a song already
 in the pool.
 
+## Band link
+
+An address the whole band keeps on the band tab, under a name, such as
+the shared folder of the band's photos. A member types it in the app.
+
+Lives in: `api/src/band-links/` (`band_link`), with its rule in `domain/band-link.core.ts`
+
+Invariants: `api/src/band-links/INVARIANTS.md`
+
+Not to be confused with: a song's listening links, which belong to one
+song, nor the links of the band tab's menu, which open pragma's own pages.
+
 ## Band tab
 
-The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, inspirations, improvements, and the account page last. It holds no list of its own.
+The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, inspirations, improvements, and the account page last. Under that menu it keeps the **band links**.
 
 Lives in: `site/src/routes/band/`
 
@@ -636,16 +648,28 @@ Lives in: `api/src/songs/`
 
 Invariants: `api/src/songs/INVARIANTS.md`
 
-## Study
+## Study queue
 
-One member saying they worked one song on one instrument on one day.
+For one member, each song and instrument they hold in a lineup, ordered so
+the songs least ready to play come first. The Songs tab shows it as the
+**To learn** filter.
 
-Lives in: `api/src/studies/`
+Lives in: `api/src/studies/` (`study-queue.core.ts`)
 
 Invariants: `api/src/studies/INVARIANTS.md`
 
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
+
+## Presence
+
+One member opening the app on one calendar day in `Europe/Paris`.
+
+Lives in: `api/src/streaks/` (`presence`, `presences.service.ts`)
+
+Invariants: `api/src/streaks/INVARIANTS.md`
+
+Not to be confused with: a **session**, which the band plays together.
 
 ## Flame
 
@@ -681,9 +705,6 @@ One recorded performance of one song, optionally from one session.
 Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 
 Invariants: `api/src/takes/INVARIANTS.md`
-
-Not to be confused with: a **study**, which records that a member worked a
-song and holds no audio.
 
 ## Take comment
 
@@ -836,9 +857,9 @@ to.
   plays: the measure is **mastery** and the number is a **score**.
   In the domain, **level** names only an **energy** value
   (`resolveEnergyLevel`).
-- **revision**, **review**, **practice session**, **homework**: a member's
-  own work on a song is a **study**. **revision** reads as a version in
-  code, and **practice** is already the band playing together.
+- **revision**, **review**, **practice session**, **homework**: the songs a
+  member has to work on are their **study queue**. **revision** reads as a
+  version in code, and **practice** is already the band playing together.
 - **recording**, **version**, **track** for audio: one recorded
   performance of a song is a **take**. *recording* is the act of making
   one, which the screen may say, and *version* is refused for the same

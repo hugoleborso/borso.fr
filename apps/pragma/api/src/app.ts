@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
+import { buildBandLinksRouter } from './band-links/band-links.controller';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildCompositionsRouter } from './compositions/compositions.controller';
 import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
@@ -85,6 +86,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
+    .route('/api/band-links', buildBandLinksRouter())
     .route('/api/outreach', buildOutreachRouter())
     .route('/api/tasks', buildTasksRouter())
     .route('/api/studies', buildStudiesRouter())

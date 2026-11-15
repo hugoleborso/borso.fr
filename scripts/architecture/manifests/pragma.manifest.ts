@@ -313,7 +313,7 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'Page location',
       technology: 'Browser location API',
       description:
-        'Reads the page origin so the Account page shows the assistant server address of the stage it runs on, and leaves the page for the address an assistant registered once the member allows or denies it.',
+        'Reads the page origin so the Account page shows the assistant server address of the stage it runs on, leaves the page for the address an assistant registered once the member allows or denies it, and reads the previous history entry so a back link returns to its parent page instead of stacking a new one.',
       boundary: 'browser-platform',
       access: 'open',
     },

@@ -37,7 +37,7 @@ import { SessionViewTabs } from '../molecules/SessionViewTabs';
 import { AttachSetlistDialog } from './AttachSetlistDialog';
 import { PracticeSongList } from './PracticeSongList';
 import { PracticeSongsSheet } from './PracticeSongsSheet';
-import { usePracticeSongs } from './practice-songs.hook';
+import { useOrderPracticeSongs, usePracticeSongs } from './practice-songs.hook';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
 import { SessionSetlistPreviews } from './SessionSetlistPreviews';
@@ -112,7 +112,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const isPractice = session.kind === 'practice';
   const songs = songsQuery.data?.songs ?? NO_ROWS;
   const practiceSongs = usePracticeSongs(isPractice, setlists, songs);
-  const songCount = setlists.reduce((total, setlist) => total + setlist.songCount, 0);
+  const orderSongs = useOrderPracticeSongs(session, setlists, practiceSongs);
   const now = new Date(nowEpochMs);
   const isPickerShown = isPreparedConcertPickerShown({
     sessionDate: session.date,
@@ -134,9 +134,10 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     isPracticeModeOffered: isPracticeModeOffered({
       kind: session.kind,
       date: session.date,
-      songCount,
+      songCount: setlists.reduce((total, setlist) => total + setlist.songCount, 0),
       now,
     }),
+    practiceSongCount: practiceSongs.songIds.length,
     view,
   });
 
@@ -182,13 +183,12 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     );
   };
 
-  const isSetlistChooserOpen = CHOOSER_OPENNESS[setlistChooser];
-  const offersNewSetlist = DOES_CHOOSER_OFFER_NEW[setlistChooser];
   const createSetlistFromChooser = (): void => {
     setSetlistChooser('closed');
     addSongsToNewSetlist();
   };
 
+  const shownError = localError ?? orderSongs.failure;
   const formattedDate = formatSessionDateTime(session.date, i18n.language);
   const sessionFacts = selectSessionFacts({
     isConcert,
@@ -276,18 +276,18 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         <SessionViewTabs views={views} value={view} onChange={showView} />
       </PageHeader>
 
-      {localError === null ? null : (
+      {shownError === null ? null : (
         <p className="m-0 text-meta text-danger" role="alert">
-          {localError}
+          {shownError}
         </p>
       )}
       {panelByView[view]}
 
-      {isSetlistChooserOpen ? (
+      {CHOOSER_OPENNESS[setlistChooser] ? (
         <AttachSetlistDialog
           sessionId={session.id}
           onClose={() => setSetlistChooser('closed')}
-          onCreateNew={offersNewSetlist ? createSetlistFromChooser : null}
+          onCreateNew={DOES_CHOOSER_OFFER_NEW[setlistChooser] ? createSetlistFromChooser : null}
         />
       ) : null}
       <SetlistSongPicker
@@ -315,6 +315,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         isAddingSetlist={createSetlist.isPending}
         onAddSetlist={addSongsToNewSetlist}
         onChooseSongs={() => setIsChoosingSongs(true)}
+        orderSongs={orderSongs}
       />
     </section>
   );

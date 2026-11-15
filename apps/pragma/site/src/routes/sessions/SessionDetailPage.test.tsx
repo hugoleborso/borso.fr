@@ -1,6 +1,7 @@
+import type { JSX } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
 import {
@@ -202,6 +203,38 @@ const CONCERT_SETLISTS = [
   },
 ];
 const NEW_PRACTICE_SETLIST_ID = '12345678-8888-4888-8888-888888888888';
+const OWN_PRACTICE_SETLIST = {
+  id: '23456789-9999-4999-8999-999999999999',
+  name: 'Practice',
+  status: null,
+  songCount: 2,
+  songIds: ['s1', 's2'],
+  sessionIds: [PRACTICE.id],
+};
+const SHARED_CONCERT_SETLIST = {
+  id: '34567890-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  name: 'Recent',
+  status: 'locked',
+  songCount: 2,
+  songIds: ['s2', 's3'],
+  sessionIds: [RECENT_CONCERT.id, PRACTICE.id],
+};
+
+function entryOf(setlistId: string, songId: string, position: number) {
+  return { id: `${setlistId}-${songId}`, setlistId, songId, position, energy: null };
+}
+
+const ENTRIES_BY_SETLIST_PATH: Readonly<Record<string, readonly unknown[]>> = {
+  [`/api/setlists/${OWN_PRACTICE_SETLIST.id}/entries`]: [
+    entryOf(OWN_PRACTICE_SETLIST.id, 's1', 0),
+    entryOf(OWN_PRACTICE_SETLIST.id, 's2', 1),
+  ],
+  [`/api/setlists/${SHARED_CONCERT_SETLIST.id}/entries`]: [
+    entryOf(SHARED_CONCERT_SETLIST.id, 's2', 1),
+    entryOf(SHARED_CONCERT_SETLIST.id, 's3', 0),
+  ],
+};
+const practiceSetlists: { current: readonly unknown[] } = { current: [] };
 
 interface RecordedWrite {
   readonly method: string;
@@ -213,7 +246,7 @@ function answerPracticeApi(writes: RecordedWrite[]) {
   return async (request: Request): Promise<Response> => {
     const { pathname } = new URL(request.url);
     if (request.method !== 'GET') {
-      const body: unknown = await request.json();
+      const body: unknown = request.method === 'DELETE' ? null : await request.json();
       writes.push({ method: request.method, pathname, body });
       if (pathname === '/api/setlists') {
         return jsonResponse({ setlist: { id: NEW_PRACTICE_SETLIST_ID, name: 'Practice' } }, 201);
@@ -227,9 +260,17 @@ function answerPracticeApi(writes: RecordedWrite[]) {
     if (pathname === '/api/members') return jsonResponse({ members: [] });
     if (pathname === '/api/setlists') return jsonResponse({ setlists: CONCERT_SETLISTS });
     if (pathname === '/api/songs') return jsonResponse({ songs: PRACTICE_SONGS });
-    if (pathname.includes('by-session')) return jsonResponse({ setlists: [] });
+    if (pathname.includes('by-session'))
+      return jsonResponse({ setlists: practiceSetlists.current });
+    const setlistEntries = ENTRIES_BY_SETLIST_PATH[pathname];
+    if (setlistEntries !== undefined) return jsonResponse({ entries: setlistEntries });
     return new Response(null, { status: 404 });
   };
+}
+
+function ShownAddress(): JSX.Element {
+  const location = useLocation();
+  return <p data-testid="address">{`${location.pathname}${location.search}`}</p>;
 }
 
 function renderPracticePage(): void {
@@ -238,6 +279,7 @@ function renderPracticePage(): void {
       <MemoryRouter initialEntries={[`/sessions/${PRACTICE.id}`]}>
         <Routes>
           <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
+          <Route path="/setlists/:setlistId/order" element={<ShownAddress />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -256,6 +298,45 @@ describe('the practice page', () => {
   afterEach(() => {
     cleanup();
     stub?.restore();
+    practiceSetlists.current = [];
+  });
+
+  it('opens the Order screen of its own setlist, writing nothing, and comes back to the practice', async () => {
+    practiceSetlists.current = [OWN_PRACTICE_SETLIST];
+    renderPracticePage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Order songs' }));
+    expect((await screen.findByTestId('address')).textContent).toBe(
+      `/setlists/${OWN_PRACTICE_SETLIST.id}/order?back=%2Fsessions%2F${PRACTICE.id}`,
+    );
+    expect(writes).toEqual([]);
+  });
+
+  it('copies the songs of a concert setlist into its own before ordering, keeping the concert setlist untouched', async () => {
+    practiceSetlists.current = [SHARED_CONCERT_SETLIST];
+    renderPracticePage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Order songs' }));
+    expect((await screen.findByTestId('address')).textContent).toBe(
+      `/setlists/${NEW_PRACTICE_SETLIST_ID}/order?back=%2Fsessions%2F${PRACTICE.id}`,
+    );
+    expect(writes).toEqual([
+      expect.objectContaining({ method: 'POST', pathname: '/api/setlists' }),
+      {
+        method: 'POST',
+        pathname: `/api/setlists/${NEW_PRACTICE_SETLIST_ID}/entries/batch`,
+        body: { songIds: ['s3', 's2'] },
+      },
+      {
+        method: 'DELETE',
+        pathname: `/api/setlists/${SHARED_CONCERT_SETLIST.id}/sessions/${PRACTICE.id}`,
+        body: null,
+      },
+    ]);
+  });
+
+  it('offers no Order songs while the practice holds fewer than two songs', async () => {
+    renderPracticePage();
+    await screen.findByRole('button', { name: 'Choose songs' });
+    expect(screen.queryByRole('button', { name: 'Order songs' })).toBeNull();
   });
 
   it('shows its songs instead of a setlist, with Choose songs as the primary action', async () => {

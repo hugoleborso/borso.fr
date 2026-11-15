@@ -79,6 +79,8 @@ const OTHER_COMPOSITION = {
   createdAt: '2026-10-02T00:00:00.000Z',
 };
 
+const PREVIEW_URL = 'https://cdnt-preview.dzcdn.net/api/1/1/c/8/a/0/c8a6.mp3?hdnea=exp=1';
+
 function answerSongApi(
   request: Request,
   compositions: readonly unknown[] = [OTHER_COMPOSITION],
@@ -86,17 +88,16 @@ function answerSongApi(
   const { pathname } = new URL(request.url);
   if (pathname === '/api/compositions') return jsonResponse({ compositions });
   if (pathname === `/api/songs/${SONG.id}`) return jsonResponse({ song: SONG });
+  if (pathname === `/api/songs/${SONG.id}/preview`)
+    return jsonResponse({ previewUrl: PREVIEW_URL });
   if (pathname === '/api/setlists') return jsonResponse({ setlists: SETLISTS });
   if (pathname === '/api/me') return jsonResponse({ memberId: 'member-1', firstName: 'Hugo' });
   if (pathname === '/api/studies/overview') return jsonResponse(OVERVIEW);
-  if (pathname === '/api/studies' && request.method === 'POST') {
-    return jsonResponse({ study: {} }, 201);
-  }
   if (pathname === '/api/members') {
     return jsonResponse({ members: [{ id: 'member-1', firstName: 'Hugo', color: '#d4806a' }] });
   }
   if (pathname === '/api/instruments') {
-    return jsonResponse({ instruments: [{ id: 'bass', name: 'Bass' }] });
+    return jsonResponse({ instruments: [{ id: 'bass', name: 'Bass', icon: 'bass', position: 1 }] });
   }
   if (pathname === '/api/mastery/defaults') return jsonResponse({ defaults: [] });
   if (pathname.startsWith('/api/mastery/')) return jsonResponse({ overrides: [], history: [] });
@@ -111,6 +112,7 @@ function renderSongPage(search = ''): void {
       <MemoryRouter initialEntries={[`/catalog/${SONG.id}${search}`]}>
         <Routes>
           <Route path="/catalog/:songId" element={<SongDetailPage />} />
+          <Route path="/catalog/:songId/edit" element={<p>Song edit form</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -132,8 +134,8 @@ describe('song page', () => {
     vi.unstubAllGlobals();
   });
 
-  it('offers one way into stage mode, and no button inside a link', async () => {
-    renderSongPage();
+  it('offers one way into stage mode, from the Chords tab, and no button inside a link', async () => {
+    renderSongPage('?tab=chords');
     await screen.findByRole('heading', { name: 'Get Lucky' });
 
     const stageLinks = screen
@@ -141,12 +143,9 @@ describe('song page', () => {
       .filter((link) => link.getAttribute('href')?.endsWith('/scene'));
     expect(stageLinks.map((link) => link.textContent)).toEqual(['Full screen']);
     expect(document.querySelectorAll('a button')).toHaveLength(0);
-    expect(screen.getByRole('link', { name: 'Edit' }).getAttribute('href')).toBe(
-      `/catalog/${SONG.id}/edit`,
-    );
   });
 
-  it('keeps the title and the Edit button apart in a fixed header with a back link', async () => {
+  it('keeps the title in a fixed header with a back link, and Edit in its menu', async () => {
     renderSongPage();
     const title = await screen.findByRole('heading', { level: 1, name: 'Get Lucky' });
     const header = title.closest('header');
@@ -155,11 +154,25 @@ describe('song page', () => {
     expect(within(header).getByRole('link', { name: 'Songs' }).getAttribute('href')).toBe(
       '/catalog',
     );
-    const edit = within(header).getByRole('link', { name: 'Edit' });
-    expect(title.contains(edit)).toBe(false);
+    expect(within(header).queryByRole('link', { name: 'Edit' })).toBeNull();
+    expect(within(header).queryByText('F#m')).toBeNull();
     expect(title.classList.contains('wrap-anywhere')).toBe(true);
     expect(title.classList.contains('line-clamp-3')).toBe(true);
-    expect(edit.parentElement?.classList.contains('shrink-0')).toBe(true);
+
+    fireEvent.click(within(header).getByRole('button', { name: 'More actions on this song' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+    expect(await screen.findByText('Song edit form')).toBeTruthy();
+  });
+
+  it('plays the Deezer excerpt from the button over the cover', async () => {
+    renderSongPage();
+    const play = await screen.findByRole('button', { name: 'Play a 30-second excerpt' });
+    const header = play.closest('header');
+    expect(header).not.toBeNull();
+    expect(document.querySelector('audio')?.getAttribute('src')).toBe(PREVIEW_URL);
+    expect(
+      stub?.calls.some((call) => new URL(call.url).pathname === `/api/songs/${SONG.id}/preview`),
+    ).toBe(true);
   });
 
   it('shows one listen link per link the song has, Spotify always among them, and names its setlists', async () => {
@@ -174,28 +187,23 @@ describe('song page', () => {
     expect(await screen.findByText('In Concert')).toBeTruthy();
   });
 
-  it('logs a study for each instrument the member holds when Practised is tapped', async () => {
+  it('offers no Practised toggle, because opening the app is what lights the flame', async () => {
     renderSongPage();
-    const practised = await screen.findByRole('button', { name: 'Practised' });
-    await waitFor(() => {
-      expect(practised).toHaveProperty('disabled', false);
-    });
-
-    fireEvent.click(practised);
-
-    await waitFor(() => {
-      expect(practised.getAttribute('aria-pressed')).toBe('true');
-    });
-    const studyWrites = stub?.calls.filter((request) => request.method === 'POST') ?? [];
-    expect(studyWrites).toHaveLength(1);
-    expect(await studyWrites[0]?.json()).toEqual({ songId: SONG.id, instrumentId: 'bass' });
+    await screen.findByRole('heading', { name: 'Get Lucky' });
+    expect(screen.queryByRole('button', { name: 'Practised' })).toBeNull();
   });
 
-  it('opens the song comments in a sheet when Comments is tapped', async () => {
+  it('shows the comments inline, then the lineup as chips with no mastery', async () => {
     renderSongPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Comments' }));
-    const sheet = await screen.findByRole('dialog', { name: 'Comments' });
-    expect(within(sheet).getByText('Count in four.')).toBeTruthy();
+    expect(await screen.findByText('Count in four.')).toBeTruthy();
+    const lineup = await screen.findByRole('region', { name: 'Default lineup' });
+    expect(within(lineup).getByRole('img', { name: 'Bass' })).toBeTruthy();
+    expect(within(lineup).getByText('Hugo')).toBeTruthy();
+    expect(screen.queryByText('My part')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Comments' })).toBeNull();
+
+    fireEvent.click(within(lineup).getByRole('button', { name: 'Edit' }));
+    expect(await screen.findByRole('dialog', { name: 'Default lineup' })).toBeTruthy();
   });
 
   it('saves the base energy the member sets on the Info tab', async () => {
@@ -234,24 +242,32 @@ describe('song page', () => {
     expect(screen.queryByRole('link', { name: 'Open the sketch' })).toBeNull();
   });
 
-  it('opens on the Info tab and moves between the same tabs as the setlist sheet', async () => {
+  it('opens on the Info tab and moves between Info, Chords and Takes', async () => {
     renderSongPage();
     await screen.findByRole('heading', { name: 'Get Lucky' });
+    await screen.findByRole('tab', { name: 'Takes (0)' });
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
       'Info',
-      'Lineup',
       'Chords',
-      'Takes',
+      'Takes (0)',
     ]);
     expect(screen.getByRole('tab', { name: 'Info' }).getAttribute('aria-selected')).toBe('true');
-    fireEvent.click(screen.getByRole('tab', { name: 'Takes' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Takes (0)' }));
     expect(await screen.findByRole('heading', { name: 'Takes' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Takes' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'Takes (0)' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+  });
+
+  it('lands an old address naming the retired Lineup tab on Info', async () => {
+    renderSongPage('?tab=lineup');
+    await screen.findByRole('heading', { name: 'Get Lucky' });
+    expect(screen.getByRole('tab', { name: 'Info' }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('opens on the Takes tab when the address selects a take', async () => {
     renderSongPage('?take=take-1');
     await screen.findByRole('heading', { name: 'Get Lucky' });
-    expect(screen.getByRole('tab', { name: 'Takes' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: /^Takes/ }).getAttribute('aria-selected')).toBe('true');
   });
 });

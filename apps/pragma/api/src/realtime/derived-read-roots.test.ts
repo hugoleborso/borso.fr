@@ -10,6 +10,7 @@ const SLICE_IMPORT = /^import\s+(?!type\b)[^;]*?from '\.\.\/([\w-]+)\/[^']*';/gm
 
 const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>> = {
   audience: ['audience'],
+  'band-links': ['band-links'],
   bars: ['bars'],
   'calendar-feeds': ['me'],
   compositions: ['compositions'],
@@ -57,11 +58,11 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'oauth',
     'setlists',
     'songs',
-    'studies',
+    'streaks',
     'tasks',
   ],
   sessions: ['setlists', 'takes', 'tasks'],
-  songs: ['compositions', 'mastery', 'setlists', 'studies', 'takes', 'tasks'],
+  songs: ['compositions', 'mastery', 'setlists', 'takes', 'tasks'],
 };
 
 const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {

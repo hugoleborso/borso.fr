@@ -40,7 +40,7 @@ for spec in "$@"; do
     continue
   fi
 
-  tables="$(grep -oiE 'CREATE TABLE( IF NOT EXISTS)? [a-z_][a-z0-9_]*' "$spec" | awk '{print tolower($NF)}' | sort -u || true)"
+  tables="$( (grep -oiE 'CREATE TABLE( IF NOT EXISTS)? [a-z_][a-z0-9_]*' "$spec" || true) | awk '{print tolower($NF)}' | sort -u)"
   [ -n "$tables" ] || continue
 
   records="$(awk '/^### Records/{inside=1; next} /^#/{inside=0} inside' "$spec")"
