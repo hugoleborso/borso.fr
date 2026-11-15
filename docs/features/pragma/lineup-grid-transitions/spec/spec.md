@@ -38,7 +38,7 @@ Edge cases:
 | Question | Options | Decision |
 | --- | --- | --- |
 | How should a change be shown? | A banner between songs, continuous lanes, handoff arrows, faded stable cells, or mixes of these | Variant I: a continuous pale lane, full colour on a change, compact unchanged rows (operator, 2026-11-15) |
-| What does colour mean? | Member, instrument, or change state | Member only. A change is shown by intensity and text, never by another hue (`apps/pragma/VOCABULARY.md`, Member) |
+| What does colour mean? | Member, instrument, or change state | Member only. A change is shown by intensity and text. The highlighter, the hue reserved for changes, marks only the row badge (`apps/pragma/VOCABULARY.md`, Member) |
 | Instrument names or icons in cells | Text, icons | Icons (operator, 2026-11-15) |
 | Does a voice change count? | Ignore Chœurs only, ignore every `vocal` instrument | Ignore every `vocal` instrument (operator, 2026-11-15) |
 
