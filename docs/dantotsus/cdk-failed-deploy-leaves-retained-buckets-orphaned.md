@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [a1bcefe385]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/static-site.ts, infra/cdk/test/unit/eradication-checks.test.ts]

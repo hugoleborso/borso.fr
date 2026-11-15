@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#278'
-fix-pr: none (the kaizen pull request for #278, not opened when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/lib/read-batch.adapter.ts, apps/pragma/site/src/lib/read-batch.core.ts, apps/pragma/site/src/lib/query-client.setup.ts]

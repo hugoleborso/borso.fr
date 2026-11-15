@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#63'
-fix-pr: '#71'
 fix-commits: [957846c4d2]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]

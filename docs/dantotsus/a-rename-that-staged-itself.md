@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#55'
-fix-pr: none (lands with the kaizen pull request for PR #327)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-subagent-no-staging.sh, .claude/settings.json]

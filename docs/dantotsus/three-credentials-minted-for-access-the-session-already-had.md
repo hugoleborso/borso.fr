@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#263'
-fix-pr: none (shipped by the lessons-from-pr-263 kaizen pull request, numbered once it opens)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/specification/template.md]

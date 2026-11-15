@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#216'
-fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.claude/hooks/pretool-no-discarding-reset.sh]

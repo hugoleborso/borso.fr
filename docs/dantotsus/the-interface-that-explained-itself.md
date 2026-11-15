@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#151'
-fix-pr: '#151'
 fix-commits: [67bab828]
 eradication-level: 5
 time-to-detect: hours

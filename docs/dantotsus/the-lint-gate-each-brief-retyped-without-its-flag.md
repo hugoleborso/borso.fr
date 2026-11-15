@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#295'
-fix-pr: none (the kaizen pull request of PR #295 lands it; its number is not known when this is written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.oxlintrc.json, scripts/lint-staged-files.sh]

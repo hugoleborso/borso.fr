@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#327'
-fix-pr: none (opened by the kaizen pull request for #327)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/check-vocabulary-paths.sh, scripts/check-app-registration.sh, scripts/check-migration-sql-dsql-compat.sh, scripts/check-no-comments-in-styles-and-markup.sh, scripts/check-no-null-bytes.sh]

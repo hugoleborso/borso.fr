@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#218'
-fix-pr: '#220'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh]

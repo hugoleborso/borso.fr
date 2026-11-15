@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: qa
 severity: medium
 related-pr: '#327'
-fix-pr: '#334'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/check-spec-records.sh, .husky/pre-commit, .claude/skills/specification/template.md]

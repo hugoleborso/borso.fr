@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [9703c82c8e, 1b060daaf3]
 eradication-level: 2
 eradication-paths: [scripts/check-hook-decisions.sh]

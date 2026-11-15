@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#193'
-fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]

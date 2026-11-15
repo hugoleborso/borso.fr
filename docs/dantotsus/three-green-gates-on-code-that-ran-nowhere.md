@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#46'
-fix-pr: '#46'
 fix-commits: [28fd613e01]
 eradication-level: 2
 eradication-paths: [scripts/check-pure-modules-have-callers.sh]

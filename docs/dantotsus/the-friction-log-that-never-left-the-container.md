@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#199'
-fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-gh-pr-create.sh, .gitignore]

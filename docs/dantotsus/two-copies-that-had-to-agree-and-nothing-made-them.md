@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [01e8a281d5, e065cd169c, b5c02e572e]
 eradication-level: 2
 eradication-paths: [scripts/check-coupled-lists.sh]

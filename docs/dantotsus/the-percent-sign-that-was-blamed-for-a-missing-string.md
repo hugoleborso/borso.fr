@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#327'
-fix-pr: none (opened by the kaizen pull request for #327)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/agent-reader/read-only-query.utils.ts]

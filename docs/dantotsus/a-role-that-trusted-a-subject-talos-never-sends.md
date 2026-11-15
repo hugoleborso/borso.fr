@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: '#128'
-fix-pr: '#137'
 fix-commits: [99b73ba1e4]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/oidc-subject.utils.ts, infra/shared/oidc-subject-prefixes.json]

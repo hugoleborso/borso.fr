@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#26'
-fix-pr: '#30'
 fix-commits: [8776ee26d6]
 eradication-level: 2
 eradication-paths: [scripts/check-migration-sql-dsql-compat.sh]

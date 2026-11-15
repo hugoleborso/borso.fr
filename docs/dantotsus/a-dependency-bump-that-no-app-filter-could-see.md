@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#65, #66'
-fix-pr: '#80'
 fix-commits: [21ed4b0b46]
 eradication-level: 2
 eradication-paths: [.github/path-filters.yml, scripts/check-app-registration.sh]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#314'
-fix-pr: none (lands with the kaizen pull request for PR #314)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/vitest-jsdom-animation-event.js, apps/talos/vitest.config.ts, apps/pragma/vitest.config.ts]

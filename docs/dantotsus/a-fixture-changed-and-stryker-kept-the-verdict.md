@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#327'
-fix-pr: none (opened by the kaizen pull request for #327)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/mutate-changed.sh, .github/workflows/ci.yml, .github/workflows/full-suite.yml]

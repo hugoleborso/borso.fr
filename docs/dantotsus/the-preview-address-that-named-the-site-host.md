@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#206'
-fix-pr: none (the kaizen pull request for PR #206 that adds this file)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [scripts/pr/pr-body.core.ts, scripts/pr/pr-body.core.test.ts]

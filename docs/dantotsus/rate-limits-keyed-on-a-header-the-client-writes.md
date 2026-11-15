@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: none (introduced by commits e2693a3e in pragma and 5353b6de in last-loop-lepin)
-fix-pr: '#165'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-client-supplied-address-header.js, apps/pragma/api/src/helpers/client-address/client-address.core.ts, infra/cdk/src/internal/cf-api-viewer-address.code.js]

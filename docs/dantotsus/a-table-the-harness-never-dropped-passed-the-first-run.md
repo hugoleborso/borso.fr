@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#104'
-fix-pr: '#105'
 fix-commits: [60fcd964e8]
 eradication-level: 2
 eradication-paths: [scripts/check-coupled-lists.sh]

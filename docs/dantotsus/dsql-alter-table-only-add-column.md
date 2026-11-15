@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: high
 related-pr: '#23'
-fix-pr: '#24'
 fix-commits: [c5eb3e0b3d]
 eradication-level: 2
 eradication-paths: [scripts/check-migration-sql-dsql-compat.sh]

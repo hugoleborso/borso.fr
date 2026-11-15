@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#31'
-fix-pr: '#84'
 fix-commits: [c933140e0f, a5f609da82]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-refetch-of-optimistically-written-query.js]

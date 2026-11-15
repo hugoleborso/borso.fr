@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: qa
 severity: high
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [e5cb098bf0]
 eradication-level: 5
 eradication-paths: []

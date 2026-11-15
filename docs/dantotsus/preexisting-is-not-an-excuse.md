@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#27'
-fix-pr: '#27'
 fix-commits: [e138811ba9]
 eradication-level: 2
 eradication-paths: [apps/borso-fr/package.json]

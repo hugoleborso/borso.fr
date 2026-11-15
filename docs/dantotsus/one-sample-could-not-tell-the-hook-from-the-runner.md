@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: '#197'
-fix-pr: none (the kaizen pull request for PR #197 that adds this file)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/check-pre-commit-budget.sh, .husky/pre-push]

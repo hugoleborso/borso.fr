@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#6'
-fix-pr: none (never shipped)
 fix-commits: none (the Stop hook this entry describes was never committed; no commit on main contains it)
 eradication-level: 5
 eradication-paths: []

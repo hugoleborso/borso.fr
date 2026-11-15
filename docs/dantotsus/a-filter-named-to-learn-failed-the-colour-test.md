@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#216'
-fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [apps/pragma/site/src/lib/design-tokens.utils.ts]

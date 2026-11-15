@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#251'
-fix-pr: none (the kaizen pull request of PR #251, not opened when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/vitest.config.ts, apps/banana-rush/vitest.config.ts, apps/borso-fr/vitest.config.ts, apps/borsouvertures/vitest.config.ts, apps/last-loop-lepin/vitest.config.ts, apps/talos/vitest.config.ts, infra/cdk/vitest.config.ts, infra/shared/vitest.config.ts, vitest.config.ts]

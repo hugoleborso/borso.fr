@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#118, #163'
-fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/ensure-infra-built.sh, apps/pragma/package.json, scripts/lint-workspace.sh, .husky/pre-commit, .husky/pre-push]

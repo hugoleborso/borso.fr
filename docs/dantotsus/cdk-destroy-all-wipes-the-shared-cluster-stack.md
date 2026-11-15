@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#26'
-fix-pr: '#30'
 fix-commits: [b35a066dc8, 3a5c9f6e01]
 eradication-level: 2
 eradication-paths: [apps/last-loop-lepin/package.json, apps/pragma/package.json]

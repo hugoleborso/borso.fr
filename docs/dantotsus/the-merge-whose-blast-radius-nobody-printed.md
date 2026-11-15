@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#95'
-fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh, scripts/pr/deploy-fanout.core.ts, plugins/borso-harness/scripts/check-hook-decisions.sh]

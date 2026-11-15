@@ -4,7 +4,6 @@ introduced-at: self-validation
 detected-at: review
 severity: medium
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [aea99b0cc8]
 eradication-level: 5
 eradication-paths: []

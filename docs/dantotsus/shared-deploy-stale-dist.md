@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#2'
-fix-pr: '#2'
 fix-commits: [daf6ebbde6]
 eradication-level: 1
 eradication-paths: [infra/shared/package.json]

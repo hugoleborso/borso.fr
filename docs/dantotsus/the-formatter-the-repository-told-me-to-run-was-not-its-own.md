@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#49'
-fix-pr: '#59'
 fix-commits: [86f23945ab]
 eradication-level: 2
 eradication-paths: [scripts/check-coupled-lists.sh]

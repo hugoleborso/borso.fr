@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#2'
-fix-pr: '#4'
 fix-commits: [a3cd942c34, 92d6ae2442, d5714aebf0]
 eradication-level: 4
 eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/eradication-checks.test.ts]

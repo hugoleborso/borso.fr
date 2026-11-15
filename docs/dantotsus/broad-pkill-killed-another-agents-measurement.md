@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [cac22f1e9b]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-broad-kill.sh]

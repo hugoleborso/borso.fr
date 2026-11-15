@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [57fb0a3834]
 eradication-level: 2
 eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
