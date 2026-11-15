@@ -96,7 +96,7 @@ Remove the line once that perspective has been covered. -->
 - Include what is explicitly **out of scope**.
 
 ## Changes
-- **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary.
+- **Types / domain model** (DDD): entities, value objects, relationships, shared vocabulary. A new term goes in `apps/<app>/VOCABULARY.md`; the rules it holds go in the `INVARIANTS.md` of the folder it lives in, each with the test that will hold it.
 - **Database changes**: migrations, new columns, indexes.
 - **Records**: one row per table the spec creates, holding the operator's dated answer to two closed questions: is it its own record or part of another one, and which screens create it. Ask them at step 7. PR #327 assumed both and the operator redrew them on the preview.
 - **Files to change**: backend + frontend, each path called out, marked NEW / UPDATE. Pure helpers go in `*.utils.ts` (see CLAUDE.md "Clean code") so the test runner can enforce 100% coverage on them.

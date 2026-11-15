@@ -141,6 +141,15 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-agent-work-folder.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__claude-code-remote__send_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-relayed-merge-clearance.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [

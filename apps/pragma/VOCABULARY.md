@@ -10,6 +10,10 @@ This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is
 taken from the schema, core rule or repository named beside it.
 
+The rules each term holds, and the tests that hold them, sit beside the code
+in the `INVARIANTS.md` its `Invariants:` line names. The repository's own
+words are in [`docs/VOCABULARY.md`](../../docs/VOCABULARY.md).
+
 ## Assistant client
 
 An AI assistant that registered itself with pragma's authorization server:
@@ -17,21 +21,7 @@ Claude Code, Mistral Vibe, claude.ai or Le Chat.
 
 Lives in: `api/src/oauth/` (`assistant_client`)
 
-- Registers itself through `POST /oauth/register` (RFC 7591) and is always
-  a public client: it holds no secret and proves itself with PKCE `S256`.
-- Its redirect addresses are `https://`, or a loopback `http://` address
-  (`localhost`, `127.0.0.1`, `[::1]`) that matches on any port, because
-  each terminal client picks its own callback port (RFC 8252).
-- One address may register ten clients an hour; the eleventh is refused.
-- A client older than 30 days that holds no **assistant grant** is deleted
-  the next time any client registers, so the open endpoint cannot fill the
-  table and nothing runs on a schedule.
-- Kept out of every preview's copy of production and out of the read-only
-  reader's reach, like the two tables below.
-
-Held by: `api/src/oauth/oauth.controller.test.ts` › registers the clients Claude Code and Vibe describe, and refuses any other redirect address
-Held by: `api/src/oauth/oauth.controller.test.ts` › refuses the eleventh registration in an hour from one address and reports it
-Held by: `api/src/oauth/oauth.controller.test.ts` › sweeps clients older than 30 days that hold no grant when another registers
+Invariants: `api/src/oauth/INVARIANTS.md`
 
 Not to be confused with: an **assistant grant**, which is one member
 allowing one client; a client with no grant can do nothing.
@@ -43,26 +33,7 @@ that member.
 
 Lives in: `api/src/oauth/` (`assistant_grant`, `assistant_authorization_code`)
 
-- Created when the member allows the client on the consent page and the
-  client exchanges the one-use authorization code, which lives 60 seconds
-  and is bound to the client, its redirect address and its PKCE challenge.
-- Holds an access token (one hour) and a refresh token (90 days), stored as
-  SHA-256 hashes only. Every refresh rotates both. Every refresh token of a
-  grant starts with the same family secret, and presenting any token of the
-  family other than the current one, however many rotations old, revokes the
-  whole grant.
-- Carries the member's session epoch from when it was issued, the same
-  number a **sign-in session** carries, so a password change ends every
-  grant the way it ends every cookie.
-- Revoked from the Account page, by the client through `POST /oauth/revoke`,
-  or by deleting the member, which deletes the member's grants and pending
-  codes in the same transaction.
-
-Held by: `api/src/oauth/oauth.controller.test.ts` › runs the whole flow: consent, code, tokens, and the code cannot be spent twice
-Held by: `api/src/oauth/oauth.controller.test.ts` › rotates the refresh token, and a replay of the old one revokes the grant and is reported
-Held by: `api/src/oauth/oauth.controller.test.ts` › revokes the grant when a token two rotations old is replayed after a thief refreshed twice
-Held by: `api/src/oauth/oauth.controller.test.ts` › ends every grant of a member who changes password
-Held by: `api/src/oauth/oauth.controller.test.ts` › deletes the grants and pending codes of a deleted member
+Invariants: `api/src/oauth/INVARIANTS.md`
 
 Not to be confused with: a **sign-in session**, which is a browser's
 cookie; a grant is what a terminal or a chat assistant holds instead.
@@ -74,22 +45,7 @@ room asked for it.
 
 Lives in: `api/src/audience/`
 
-- `audience_suggestion` holds `session_id`, `song_id`, `ballot_token` and
-  `suggested_at`. It anchors on the concert, never on a setlist.
-- Only a picked search result is accepted: `suggestionCreateSchema` is
-  `.strict()` and takes a Deezer `trackId` and nothing else, so no free
-  text the band has not seen can ever be displayed.
-- The track is read from Deezer first. One a catalogue song already links
-  resolves to that song; any other creates a song with status `idea`
-  (`acceptSuggestion` through `resolveCatalogueSongForTrack`).
-- A song already in a manual setlist attached to tonight is refused: the
-  band is playing it anyway.
-
-Held by: `api/src/audience/audience.schema.test.ts` › carry no setlist identifier, because a round anchors on the concert
-Held by: `api/src/audience/audience.controller.test.ts` › refuses a suggestion body carrying free text beside the picked result
-Held by: `api/src/audience/audience.controller.test.ts` › resolves a suggestion naming a catalogue song onto that song, adding none
-Held by: `api/src/audience/audience.controller.test.ts` › imports a suggestion naming an unknown track as one idea carrying the provider columns
-Held by: `api/src/audience/audience.controller.test.ts` › refuses a suggestion naming a song the band already planned for tonight
+Invariants: `api/src/audience/INVARIANTS.md`
 
 Not to be confused with: a vote, which is a ballot's tap on a song already
 in the pool.
@@ -100,16 +56,10 @@ The screen that lists every page about the band itself: tasks first, then member
 
 Lives in: `site/src/routes/band/`
 
-- **Tasks** (`/tasks`) opens on **My tasks**, the signed-in member's
-  tasks in the order the API gives them; **Everyone** shows one column
-  per member. The choice is the `view` search parameter, so a reload
-  keeps it. **New task** is its one primary action, in the bottom strip.
 - Not to be confused with the band as the set of people, which is
   **member**.
 
-Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists the account page last
-Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists inspirations right after compositions
-Held by: `site/src/routes/band/TasksPage.test.tsx` › opens on the signed-in member tasks only
+Invariants: `site/src/routes/band/INVARIANTS.md`
 
 ## Bar
 
@@ -118,35 +68,7 @@ conversation with it has got to.
 
 Lives in: `api/src/bars/`
 
-- `name` and `status` are `NOT NULL`; `notes` is `NOT NULL` and defaults
-  to the empty string.
-- `status` is one of `lead`, `contacted`, `booked`, `played`, `cold`
-  (`BAR_STATUSES` in `domain/bar-profile.core.ts`), and the bars page groups the rows
-  into one kanban column per status.
-- `ownerMemberId` names the one band member carrying the conversation
-  with that venue, and may be null: a bar nobody has taken on is a normal
-  bar. Deleting a member clears it on every bar they owned
-  (`unassignBarsOwnedByMember` in `api/src/members/members.repository.ts`)
-  and deletes no bar.
-- `concertMood` is how big a night the bar is up for: `chill`, `gig` or
-  `ticketed` (`CONCERT_MOODS` in `domain/bar-profile.core.ts`). It may be null,
-  which means nobody has judged the venue yet and is not a fourth mood.
-- `availableSupport` is what the bar lends the band, any number of
-  `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
-  column. An empty list and a null column both mean it lends nothing.
-- The `last_interaction_at` column is no longer read or written: the
-  follow-up reminder it fed was removed, and the column stays only because
-  Aurora DSQL refuses `DROP COLUMN`.
-
-A bar is added either by hand or from a **place**, the OpenStreetMap
-record a member picked in the search (`mapNominatimToBarSearchHits` in
-`api/src/bars/bar-search.core.ts`). A place fills the name, the city and
-the phone number of a new bar's form (`buildBarFormFromPlace` in
-`site/src/routes/bars/bar-form.core.ts`) and is never stored as such.
-
-Held by: `api/src/bars/bars.controller.test.ts` › persists every spec status value
-Held by: `api/src/bars/bars.controller.test.ts` › carries the owner through create and clears it when that member goes
-Held by: `api/src/bars/bars.controller.test.ts` › defaults a bar nobody qualified to no mood and no support
+Invariants: `api/src/bars/INVARIANTS.md`
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
@@ -158,20 +80,7 @@ the server mints.
 
 Lives in: `api/src/audience/`
 
-- A ballot is not a person and carries nothing about one. The token is
-  random bytes the server encodes (`mintBallotToken`), never derived from
-  an address, a header or a device.
-- The browser keeps it in local storage under `pragma.ballot.<sessionId>`,
-  so a visitor at a second concert is a second ballot
-  (`site/src/lib/ballot-token.adapter.ts`).
-- A ballot is the second column of `audience_vote`'s primary key, so one
-  ballot holds at most one vote per song per round.
-- Clearing local storage yields a fresh ballot with no votes. Nobody's
-  identity is checked in a bar, and nothing here prevents it.
-
-Held by: `api/src/audience/ballot-token.utils.test.ts` › reads two different byte sequences back as two different ballots
-Held by: `site/src/lib/ballot-token.adapter.test.ts` › is keyed by concert, so a visitor at a second concert is a second ballot
-Held by: `api/src/audience/audience.schema.test.ts` › identify a vote by the round, the ballot and the song, so one ballot votes once per song
+Invariants: `api/src/audience/INVARIANTS.md`
 
 Not to be confused with: a member credential, which signs a band member in
 and reaches gated routes a ballot never does.
@@ -182,28 +91,7 @@ The username and password one member signs in with.
 
 Lives in: `api/src/auth/`
 
-- Keyed on `memberId`, so a member holds one credential or none.
-  `username` is lowercase, unique through its own index
-  (`member_credential_username_idx`), and 2 to 64 characters of letters,
-  digits, dot, dash or underscore, starting with a letter or a digit.
-- `passwordHash` is argon2id. `sessionEpoch` is a whole number that goes
-  up by one on every password change and every recovery
-  (`nextSessionEpoch`), and a cookie carrying an older epoch stops
-  verifying, which signs that member out everywhere else.
-- No route creates one. `createCredentialForMember` is reached only from
-  the test-seed route and the test helpers, so a new member needs an
-  operator. Deleted with the member, in the same transaction that scrubs
-  them from the lineups (`deleteMemberWithLinks`).
-- Recovered rather than recreated: a member who forgot their password
-  proves the shared password on the recovery route, and the same row is
-  updated in place, which is why their passkeys survive it.
-
-Held by: `api/src/auth/credentials.schema.test.ts` › lowercases and trims a username
-Held by: `api/src/auth/auth.controller.test.ts` › no longer serves the enrolment endpoints
-Held by: `api/src/auth/auth.controller.test.ts` › changes a password, keeps that member signed in here and drops their other browsers
-Held by: `api/src/auth/auth.controller.test.ts` › drops the sessions the member had open elsewhere when they recover
-Held by: `api/src/auth/auth.controller.test.ts` › keeps the member passkeys alive through a recovery
-Held by: `api/src/auth/credentials.repository.test.ts` › deletes a member credential with the member it belongs to
+Invariants: `api/src/auth/INVARIANTS.md`
 
 Not to be confused with: the shared password in `app_config`, which now
 opens the recovery route and nothing else.
@@ -215,18 +103,7 @@ application and edited from the bars page.
 
 Lives in: `api/src/outreach/`
 
-- One row, keyed on `OUTREACH_TEMPLATE_ROW_ID`, the way `app_config` is.
-  No row means nobody has edited the pitch and the front end renders the
-  translated default.
-- The body carries three placeholders, `{{bar}}`, `{{phone}}` and
-  `{{email}}`, replaced by `renderOutreachMessage` in
-  `site/src/routes/bars/outreach-message.core.ts` when a member copies the
-  message for one bar. The phone number and the address come from the
-  **member** copying it.
-
-Held by: `api/src/outreach/outreach.controller.test.ts` › overwrites the single template row rather than adding a second one
-Held by: `site/src/routes/bars/outreach-message.core.test.ts` › falls back when nothing was ever saved
-Held by: `site/src/routes/bars/outreach-message.core.test.ts` › names the bar and signs with the member contact details
+Invariants: `api/src/outreach/INVARIANTS.md`
 
 Not to be confused with: a bar's `notes`, which are what happened with
 that one venue.
@@ -238,31 +115,7 @@ that member's calendars.
 
 Lives in: `api/src/calendar-feeds/`
 
-- Up to ten per member (`CALENDAR_FEEDS_PER_MEMBER_MAX`), each with its
-  own `id`, in their own table, `calendar_feed`, so no read of `member`
-  carries them (ADR-2026-10-02T1352). One member never holds the same address twice.
-  `member_calendar_feed`, the one-per-member table before it, is left
-  empty and unread, because DSQL cannot change a primary key.
-- Carries the `name` its feed declares in `X-WR-CALNAME` (Google Calendar
-  sets it to the calendar's title), read when the address is saved and
-  capped at 120 characters. A feed that could not be read then, or that
-  declares no name, is saved with none, and the page shows its position.
-- Accepted only as `https`, or `webcal` rewritten to `https`, on port
-  443, with a public host name and no user info (`judgeFeedAddress`).
-  The same check runs again on every redirect when the feed is read.
-- Added through `POST /api/me/calendar-feeds` and removed one by one
-  through `DELETE /api/me/calendar-feeds/:id`. No route ever returns the
-  address: the API answers each feed's `id` and `name`, and a feed that
-  failed is logged with the member id and the status, never the address.
-- Left out of every preview clone through `tableBlocklist`, and deleted
-  with its member.
-
-Held by: `api/src/calendar-feeds/feed-address.core.test.ts` › turns a webcal address into https
-Held by: `api/src/calendar-feeds/calendar-feed.adapter.test.ts` › refuses a redirect to the Lambda runtime API
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › saves an address under the name its feed declares, and never sends the address back
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › keeps several calendars of one member, and saving one twice keeps one copy
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › refuses one calendar more than the cap, and says why
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › deletes every address with its member
+Invariants: `api/src/calendar-feeds/INVARIANTS.md`
 
 Not to be confused with: a **busy interval**, which is what the API keeps
 from the feed for one request and never stores.
@@ -273,17 +126,7 @@ A span of time during which one member's calendar says they are taken.
 
 Lives in: `api/src/calendar-feeds/`
 
-- Read from a calendar feed by `readBusyIntervals` in `ics.core.ts`,
-  recurring events expanded, for the request that asked and never stored.
-- An event marked free (`TRANSP:TRANSPARENT`) or cancelled is not busy.
-  An all-day event is busy for the whole Paris day.
-- A named IANA zone is read in that zone even without a `VTIMEZONE`
-  block. A floating time, or a zone name that is not IANA, is read as
-  Europe/Paris time.
-
-Held by: `api/src/calendar-feeds/ics.core.test.ts` › leaves out an event marked free, and a cancelled one
-Held by: `api/src/calendar-feeds/ics.core.test.ts` › makes an all-day event busy for the whole Paris day
-Held by: `api/src/calendar-feeds/ics.core.test.ts` › reads a floating time, or a zone name that is not IANA, as Paris time
+Invariants: `api/src/calendar-feeds/INVARIANTS.md`
 
 Not to be confused with: a **session**, which is the band's own
 commitment, not one member's.
@@ -295,19 +138,7 @@ The written music for a song, in one of three forms.
 Lives in: `api/src/songs/` (the `chart` column), with the file itself
 uploaded through `api/src/uploads/`
 
-- Exactly one of three kinds: `chordpro` with inline text up to 64 000
-  characters, `pdf` with an S3 object key, or `image` with an S3 object
-  key (`chordChartSchema`).
-- The column is nullable, and stored as JSON in a TEXT column.
-- Its text comes from what a member pastes or from a PDF's text layer, read
-  in the browser, in the "chords above lyrics" layout chord sites give; it
-  is saved as ChordPro (`convertChordsAboveLyrics` in
-  `site/src/routes/catalog/chords-above-lyrics.core.ts`), and text already
-  in ChordPro is kept as is. A photo and a PDF with no text layer stay
-  `image` and `pdf` files, which cannot be transposed.
-
-Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants
-Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Composition
 
@@ -316,33 +147,7 @@ adds it.
 
 Lives in: `api/src/compositions/` (`composition`)
 
-- A composition is its own record: an id chosen by the device, a title of
-  1 to 256 characters, a nullable `song_id` and `created_at`. Creating one
-  asks only for a title, prefilled "Composition N" where N is one past the
-  compositions already there.
-- Its **sketch** is where it is written. The compositions screen lists
-  compositions only, newest first.
-- **Add to catalogue** creates a song with the composition's title,
-  `origin = original` and `status = idea`, and sets `song_id`, in one
-  transaction that claims the composition row first. A second tap, or two
-  members at once, answer the same song.
-- Deleting a composition deletes its lanes and clips and keeps its
-  catalogue song and the inspirations. Deleting the song keeps the
-  composition and clears `song_id`, so **Add to catalogue** is offered
-  again.
-- A song's `origin` only says whether the band wrote it. A song with
-  `origin = original` that no composition links, such as one written
-  outside pragma, stays in Songs and never appears on the compositions
-  screen. The column is nullable with no default, because Aurora DSQL
-  cannot add a `NOT NULL` column after the table exists, so a row written
-  before the column reads as `cover` through `resolveSongOrigin`.
-
-Held by: `api/src/compositions/compositions.controller.test.ts` › creates a composition with only a title, lists newest first and renames one
-Held by: `api/src/compositions/compositions.controller.test.ts` › adds a composition to the catalogue as an original idea, and answers the same song when tapped again
-Held by: `api/src/compositions/compositions.controller.test.ts` › creates one song when two members add the same composition at the same moment
-Held by: `api/src/compositions/compositions.controller.test.ts` › deletes a composition with its lanes and clips, and keeps its song and the inspirations
-Held by: `api/src/songs/songs.controller.test.ts` › keeps the composition and its sketch when its catalogue song is deleted, and clears the link
-Held by: `domain/song-origin.core.test.ts` › reads a row written before the column existed as a cover
+Invariants: `api/src/compositions/INVARIANTS.md`
 
 Not to be confused with: the **song**, which is the catalogue record a
 composition may become. A song with `origin = original` is not a
@@ -354,19 +159,7 @@ A date the band plays in front of an audience.
 
 Lives in: `api/src/sessions/`
 
-- A row in `session` whose `kind` is `concert`.
-- Carries `venue` (1 to 256 characters), `capacity` (0 to 100 000),
-  `gear` (up to 2 048 characters, default empty) and
-  `friendsCountPerMember`, a map from member id to a count between 0 and
-  1 000.
-- `concertCreateSchema` is `.strict()`, so a body carrying a practice-only
-  key is rejected at the controller.
-- A concert is upcoming when its date is strictly after now
-  (`selectUpcomingConcerts` in `domain/upcoming-concerts.core.ts`).
-
-Held by: `api/src/sessions/sessions.schema.test.ts` › refuses a field it does not own, rather than dropping it silently
-Held by: `api/src/sessions/sessions.schema.test.ts` › refuses a capacity outside what a room can hold
-Held by: `domain/upcoming-concerts.core.test.ts` › treats a concert starting exactly now as already started
+Invariants: `api/src/sessions/INVARIANTS.md`
 
 Not to be confused with: a practice, which is the other `kind` of session.
 
@@ -377,22 +170,7 @@ How much the room lifts during a song, on a scale of 1 to 10.
 Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
 (`energy` on an entry)
 
-- Both columns are whole numbers from 1 to 10 and both may be null.
-- `baseEnergy` is the song's usual level; the entry's `energy` is what
-  that song is worth in this particular setlist. The sparkline draws the
-  entry's `energy`, and the song's `baseEnergy` for an entry that has none
-  (`SetlistEditor.tsx`).
-- An entry with no energy anywhere draws its bar in the muted palette,
-  filled to `ENERGY_DEFAULT`, which is 5
-  (`site/src/components/molecules/setlist-entry-energy.core.ts`). The bar
-  is ten segments, one per level, each carrying its own number, which a
-  thumb taps or slides along; the value is the last number still filled,
-  so the row shows it nowhere else
-  (`site/src/components/atoms/EnergyBar.tsx`).
-
-Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › falls back to the song energy when the entry stores none
-Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › falls back to the midpoint when neither is set
-Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › mutes the filled segments while nothing is stored
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Free slot
 
@@ -401,22 +179,7 @@ with a readable calendar feed is busy.
 
 Lives in: `api/src/free-slots/`
 
-- Searched over 28 days, from 18:00 to midnight on weekdays and from
-  10:00 to midnight at weekends, Europe/Paris (`buildSearchWindows`).
-- Starts on the next quarter hour, and is shown whole, not cut to two
-  hours (`selectFreeSlots`).
-- Every readable feed of every member is subtracted. A member without a
-  feed is listed as left out. Each feed the provider no longer serves, or
-  that could not be read, is listed with its member, its name and the
-  reason, and that member's other feeds still count.
-- Booking one creates a practice whose `origin` is `free_slot`.
-- Listed on the **Find a slot** page (`/sessions/slots`, `site/src/routes/sessions/FindSlotPage.tsx`), reached from the Sessions header; the Sessions list itself shows none.
-
-Held by: `api/src/free-slots/free-slots.core.test.ts` › opens at 18:00 on weekdays and 10:00 at weekends, until midnight, Paris time
-Held by: `api/src/free-slots/free-slots.core.test.ts` › keeps free time of at least two hours, starting on a quarter hour
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › names the calendar whose address is gone, and the one whose provider is down
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › subtracts every calendar of a member, and never puts an address in the slots response
-Held by: `api/src/sessions/sessions.core.test.ts` › keeps only the prepared concert and the origin for a practice
+Invariants: `api/src/free-slots/INVARIANTS.md`
 
 Not to be confused with: a **practice**, which only exists once someone
 books the slot.
@@ -427,19 +190,10 @@ The start screen, at `/`: the next session, then the signed-in member's part in 
 
 Lives in: `site/src/routes/home/`
 
-- The next session is the earliest one whose calendar day in Paris is
-  today or later (`selectNextSession` in `domain/session-schedule.core.ts`),
-  practice or concert alike.
-- Its one primary action is **Start the practice** on a practice's own
-  day when practice mode is offered; otherwise it opens that session's
-  first setlist, or the session when it has none; with no session ahead
-  it offers **New session**.
-- The member's open tasks list the ones naming the next session first.
 - Not to be confused with the **catalogue**, which was the start screen
   before.
 
-Held by: `site/src/routes/home/home.core.test.ts` › lists the songs where the member plays, an override included, with the instruments
-Held by: `site/src/routes/home/HomePage.test.tsx` › shows an empty state with New session when no session is ahead
+Invariants: `site/src/routes/home/INVARIANTS.md`
 
 ## Improvement
 
@@ -448,31 +202,7 @@ member it annoys.
 
 Lives in: `api/src/improvements/`
 
-- `title` is `NOT NULL`, trimmed, 1 to 200 characters. `details` is
-  `NOT NULL` and defaults to the empty string.
-- `status` is one of `idea`, `planned`, `building`, `shipped`, `declined`
-  (`IMPROVEMENT_STATUSES`, declared in `domain/improvement.core.ts` and
-  again in `improvements.schema.ts`), and the backlog is ranked in that
-  order, then by vote count, then oldest first (`rankImprovements` in
-  `domain/improvement.core.ts`).
-- `kind` is one of `idea` and `bug` (`IMPROVEMENT_KINDS` in
-  `domain/improvement.core.ts`), and a new improvement is an `idea` unless
-  the member says otherwise. An **idea** asks for something the
-  application does not do yet; a **bug report** is an improvement with
-  `kind = 'bug'`, saying something the application already does is
-  broken. The column is nullable because DSQL cannot add a column with a
-  default, and a null, which only a row filed before the column existed
-  carries, reads as an idea (`resolveImprovementKind`). The quality
-  dashboard counts bug reports, so a reader outside the application
-  filters on `kind = 'bug'` and a null never matches it.
-- `authorMemberId` is the member who filed it, taken from the session
-  rather than from the request body, and `createdAt` is written by the
-  application.
-- Deleting one deletes its improvement votes in the same call.
-
-Held by: `api/src/improvements/improvements.controller.test.ts` › files a new improvement as an idea authored by the signed-in member
-Held by: `api/src/improvements/improvements.controller.test.ts` › ranks the open statuses first and the most voted first inside a status
-Held by: `api/src/improvements/improvements.controller.test.ts` › deletes an improvement with its votes and answers 404 the second time
+Invariants: `api/src/improvements/INVARIANTS.md`
 
 Not to be confused with: a song's notes (`structureNotes`, `gimmickNotes`,
 `notes`), which are about the music rather than about the tool that tracks it.
@@ -487,13 +217,7 @@ One member saying they want one improvement.
 
 Lives in: `api/src/improvements/` (`improvement_vote`)
 
-- Keyed on `(improvementId, memberId)`, so a member either wants an
-  improvement or does not. There are no points and no budget: casting the
-  same vote twice changes nothing but the `castAt` stamp.
-- The list endpoint reads every vote once and folds it into a count plus a
-  flag for the reader (`summariseVotes` in `improvements.core.ts`).
-
-Held by: `api/src/improvements/improvements.controller.test.ts` › counts one vote per member, however many times it is cast
+Invariants: `api/src/improvements/INVARIANTS.md`
 
 Not to be confused with: a **vote**, which is the scored, budgeted thing a
 member spends on songs inside a setlist.
@@ -505,35 +229,7 @@ from: a YouTube video, a start second, an end second and a note.
 
 Lives in: `api/src/inspirations/`, with its rules in `domain/inspiration.core.ts`
 
-- No audio is stored. The passage is `youtube_video_id`, `start_seconds`
-  and `end_seconds`, played through the YouTube IFrame Player API, which
-  stops at the end second itself.
-- `youtube_video_id` matches `YOUTUBE_VIDEO_ID_PATTERN`, read from a
-  `watch?v=`, `youtu.be/` or `shorts/` link by `parseYoutubeVideoId`.
-- The end comes after the start, and a passage lasts 600 seconds at most
-  (`selectPassageRefusal`). The form and the API apply the same rule.
-- `title`, `artist`, `deezer_track_id` and `deezer_album_id` come from the
-  Deezer search when a member picks a hit, or are typed by hand. Two
-  inspirations may name the same Deezer track.
-- The id is chosen by the device, so a retried create lands on the same
-  row. The library lists them newest first.
-- Every field can be edited, the passage included. A clip already placed
-  from it keeps its offset and takes the new length.
-- Deleting one that a sketch still uses is refused with
-  `inspiration-in-use`, naming those sketches. Deleting its author keeps
-  it, and the card reads *former member*.
-
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › adds an inspiration named after its author and lists the library newest first
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › answers the same inspiration when a create is retried with the same id
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses an id that is not a YouTube video, an end at the start and a passage of 601 s
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › edits every field of an inspiration, and a clip placed from it keeps its offset
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses an edit whose passage the create would refuse
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses to edit an inspiration another member deleted meanwhile
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › refuses to delete an inspiration a sketch uses and names that sketch
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › deletes an unused inspiration once, then answers that it is not found
-Held by: `api/src/inspirations/inspirations.controller.test.ts` › counts the sketches using an inspiration, two clips of one sketch as one
-Held by: `api/src/members/members.controller.test.ts` › keeps the inspirations of a deleted member with no author
-Held by: `domain/inspiration.core.test.ts` › reads the id from watch, youtu.be and shorts links and refuses a playlist or a channel
+Invariants: `api/src/inspirations/INVARIANTS.md`
 
 Not to be confused with: an **improvement**, which is a change the band
 wants in this application, and a **take**, which is the band's own
@@ -545,40 +241,7 @@ Something a member can hold on a song.
 
 Lives in: `api/src/instruments/`
 
-- `name` is `NOT NULL`, trimmed, 1 to 64 characters.
-- `family` is nullable in the database. Every write sets both `family` and
-  the older `is_harmonic` boolean from the same value (`encodeFamily`),
-  and every read resolves the two through `resolveInstrumentFamily`, which
-  falls back to the boolean for rows written before the column existed.
-- `icon` names one of the eighteen glyphs the application ships and is nullable
-  in the database, like `family`. Reads resolve it through
-  `resolveInstrumentIcon`, which falls back to `music`. It is a stored
-  value such as `mic-vocal`, never the camelCase key of the icon registry.
-- `position` is where the instrument sits in the fixed column order, also
-  nullable, resolved through `resolveInstrumentPosition`. A new instrument
-  takes the rank of its family (`defaultPositionForFamily`) rather than the
-  head of the order.
-- The list is sorted by `position`, then by `name` to break a tie. It is
-  never sorted by name alone, because an alphabetical column hides an
-  instrument changing hands, which is the whole point of the column.
-- Deleting an instrument removes its row and then every `member_instrument`
-  link naming it, in one retried transaction (`deleteInstrumentWithLinks`).
-- A reorder names every instrument, each once, or is refused as `stale`
-  (`isReorderOfTheSameIds`). It claims every named instrument row, reads
-  the ids again and writes every position in one transaction, which runs
-  again when Aurora DSQL aborts it at commit
-  (`runInOneInstrumentTransaction`). An instrument deleted before the claim
-  reaches it makes the reorder stale and moves nothing; one created at the
-  same moment keeps the position it was created with.
-
-Held by: `api/src/instruments/instruments.controller.test.ts` › orders the list by family rather than by name, which is what the column reads
-Held by: `api/src/instruments/instrument-players.core.test.ts` › breaks a tie on the name, so two instruments at one position still settle
-Held by: `domain/instrument.core.test.ts` › falls back to the boolean when the column was never written
-Held by: `domain/instrument.core.test.ts` › falls back to the generic glyph when the column was never written
-Held by: `api/src/members/members.controller.test.ts` › removes the links of a deleted instrument from every member who played it
-Held by: `api/src/instruments/instruments.controller.test.ts` › refuses a reorder that does not name every instrument, with 409
-Held by: `api/src/instruments/instruments.controller.test.ts` › refuses a reorder naming an instrument deleted while it was being written, and moves nothing
-Held by: `api/src/instruments/instruments.controller.test.ts` › reorders once when the first commit loses a conflict on the claimed instruments
+Invariants: `api/src/instruments/INVARIANTS.md`
 
 ## Instrument family
 
@@ -587,14 +250,7 @@ transition rule reads.
 
 Lives in: `domain/instrument.core.ts`
 
-- Exactly four values: `harmonic`, `percussive`, `vocal`, `other`.
-- `other` is the default (`DEFAULT_INSTRUMENT_FAMILY`).
-- A harmonic instrument carries chords. A percussive or a vocal one covers
-  a gap without holding harmony, which is why the transition rule ranks
-  them behind.
-
-Held by: `domain/transition.core.test.ts` › names the percussive and vocal keepers as support, behind the harmonic ones
-Held by: `domain/transition.core.test.ts` › leaves an instrument of the other family out of both lists
+Invariants: `domain/INVARIANTS.md`
 
 ## Lineup
 
@@ -603,29 +259,7 @@ that member holds.
 
 Lives in: `domain/lineup.core.ts`
 
-- The value is a list, because one person can hold two instruments at
-  once. An empty list means that member sits the song out.
-- Older rows carry a single instrument id, or `null` for a member sitting
-  out. `normalizeLineup` accepts all three shapes and always returns lists.
-- `resolveLineup` merges a song's `defaultLineup` with a setlist entry's
-  `lineupOverride`: a member the override names takes the override's
-  value, and a member it does not name keeps the default.
-- `memberInstrumentPairs` yields one pair per instrument held. That is the
-  grain mastery is scored at, so a member on drums and vocals is scored
-  twice.
-- When a member is deleted, their id is scrubbed out of every song's
-  default lineup and every entry's override, inside one transaction
-  (`deleteMemberWithLinks` with `scrubMemberFromLineup`).
-- A lineup says who holds what on one song. Which instruments a member
-  plays at all is the `member_instrument` link. A member has no main
-  instrument: the link's `is_primary` column stays in the database,
-  because Aurora DSQL refuses `DROP COLUMN`, and nothing reads or writes
-  it.
-
-Held by: `domain/lineup.core.test.ts` › lifts a single instrument id written before one member could hold two
-Held by: `domain/lineup.core.test.ts` › keeps default members not mentioned in the override
-Held by: `domain/lineup.core.test.ts` › answers one pair per instrument held
-Held by: `api/src/members/members.controller.test.ts` › scrubs the member from every song default lineup and setlist entry override on delete
+Invariants: `domain/INVARIANTS.md`
 
 ## Lineup slot
 
@@ -636,19 +270,7 @@ stored colour, in whichever of the two inks reads better on it
 
 Lives in: `site/src/components/molecules/`
 
-- A song draws one slot per instrument held, so two singers draw two
-  microphones. An instrument nobody holds on that song draws nothing;
-  there is no empty slot.
-- Slots are ordered by the instrument's `position`, then by its name, then
-  by member order for a shared instrument (`buildLineupColumn`).
-- The whole lineup is drawn when the row has room. What the width drops
-  is counted as `+N`, whose title names the instruments that fell off.
-  The column yields; the song title never truncates to make room for it.
-
-Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › draws one slot per instrument held, ordered by the stored position, never by name
-Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › leaves out every instrument nobody holds on this song
-Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › draws a slot per holder when two members share one instrument, in member order
-Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › counts the slots the width dropped and names them for the tooltip
+Invariants: `site/src/components/molecules/INVARIANTS.md`
 
 Not to be confused with: **Lineup**, which is the record a slot is drawn
 from.
@@ -661,19 +283,7 @@ setlist as one lane in their stored colour.
 
 Lives in: `site/src/components/organisms/`
 
-- A column exists only for a member who holds an instrument in at least
-  one entry; a member who plays nowhere in the setlist has no column.
-- A cell where the member plays is filled with their stored colour and
-  holds their instrument glyphs; a cell where they sit out shows a dot
-  of that colour on the column's tint.
-- A cell is marked as changed when its member plays and holds another set
-  of instruments than on the entry before. The mark is a highlighter bar
-  and an ink corner tick, never another fill: the colour means the member
-  and nothing else (`buildLineupGrid`).
-
-Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › keeps a column only for the members who play in the setlist, in the order given
-Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › marks a played cell whose instruments differ from the entry before, and only that
-Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › marks a cell that changed from the song before, without changing its fill
+Invariants: `site/src/components/organisms/INVARIANTS.md`
 
 Not to be confused with: **Lineup slot**, the single mark a Songs row
 draws for one instrument held.
@@ -684,18 +294,7 @@ How well a member plays a given instrument, as a whole number from 0 to 10.
 
 Lives in: `api/src/mastery/`
 
-- A default row is keyed on `(memberId, instrumentId)`, which is its
-  primary key. An override row is keyed on
-  `(memberId, instrumentId, songId)`.
-- `score` is `NOT NULL` on both tables and validated to 0 to 10.
-- The effective score is the override when one exists, and the default
-  otherwise (`effective`). A score of 0 is a real answer and wins over the
-  default, so the resolution tests for `undefined` explicitly.
-- Deleting a song deletes its override rows
-  (`deleteSongWithCascade`).
-
-Held by: `api/src/mastery/mastery.controller.test.ts` › respects override score=0 as a legitimate "ne joue pas" — does not duplicate
-Held by: `api/src/songs/songs.controller.test.ts` › cascades the mastery overrides on song delete
+Invariants: `api/src/mastery/INVARIANTS.md`
 
 ## Mastery score change
 
@@ -704,17 +303,7 @@ instrument for one song, and when.
 
 Lives in: `api/src/mastery/` (the `mastery_score_change` table)
 
-- Appended in the same transaction as every write of a per-song score, and
-  never updated. Removing a per-song score appends the default it falls
-  back to, when there is one.
-- A change to a default score appends nothing, because a default is not
-  about any one song.
-- Deleted with its song and with its member.
-
-Held by: `api/src/mastery/mastery.controller.test.ts` › appends one history row per override write and none for a default write
-Held by: `api/src/mastery/mastery.controller.test.ts` › writes no history row when deleting an override with no default behind it
-Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the song
-Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the member
+Invariants: `api/src/mastery/INVARIANTS.md`
 
 Not to be confused with: the per-song score itself, which holds only the
 latest value.
@@ -725,31 +314,7 @@ One person in the band.
 
 Lives in: `api/src/members/`
 
-- `firstName` is `NOT NULL`, trimmed, 1 to 64 characters. `color` is
-  `NOT NULL` and must match a hex pattern. `avatarS3Key` may be null.
-- `phone` and `email` are the member's own contact details, both nullable,
-  filled in on the account page and used to sign the outreach message.
-- A member created without a colour is given palette slot N of five
-  (coral, teal, mustard, plum, sage), wrapping round
-  (`pickNextPaletteHex`). The five values live in
-  `domain/member-palette.core.ts`, which the API and the member form both
-  read. A stored colour is never rewritten: it is the member's identity on
-  every lineup.
-- `member_instrument` links a member to the instruments they can play. Its
-  primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
-- Assigning instruments replaces the whole set, and is refused when any of
-  the ids is unknown (`assignInstrumentsToMember`). The replacement claims
-  every named instrument row and then the member row in one retried
-  transaction, and writes nothing when a claim finds no row. Deleting a
-  member or an instrument removes its row before its `member_instrument`
-  links, so no link outlives either end.
-
-Held by: `api/src/members/member-palette.utils.test.ts` › wraps via modulo (5 -> 0)
-Held by: `api/src/members/members.controller.test.ts` › rejects hex colors that do not match the pattern
-Held by: `api/src/members/members.controller.test.ts` › rejects an assignment that references an unknown instrument
-Held by: `api/src/members/members.controller.test.ts` › writes no instrument rows for a member deleted while the assignment was being checked
-Held by: `api/src/members/members.controller.test.ts` › leaves no link to an instrument deleted while it was being assigned
-Held by: `api/src/members/members.controller.test.ts` › assigns the instruments once when the first commit loses a conflict on the claimed member
+Invariants: `api/src/members/INVARIANTS.md`
 
 Not to be confused with: the member ids inside a lineup, which say who
 plays on one song rather than who is in the band.
@@ -760,13 +325,7 @@ One member's toggle for one category of notification.
 
 Lives in: `api/src/notifications/` (`notification_preference`)
 
-- Keyed on `(member_id, category)`. A missing row reads as enabled, so a
-  member who turns push on gets every category without a write per
-  category.
-- Deleted with the member.
-
-Held by: `api/src/notifications/notifications.controller.test.ts` › reads every category as on before the member touches one
-Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
+Invariants: `api/src/notifications/INVARIANTS.md`
 
 ## Push subscription
 
@@ -774,18 +333,7 @@ One device of one member that accepted notifications.
 
 Lives in: `api/src/notifications/` (`push_subscription`)
 
-- One row per push `endpoint`, unique, so a device that subscribes again
-  replaces its row rather than adding one. A member with two devices has
-  two rows and is notified on both.
-- Kept out of every preview's copy of the production schema, so a preview
-  never pushes to the band's phones (ADR-2026-10-23T0932).
-- Deleted with the member, and when the push service answers that the
-  endpoint is gone.
-
-Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one subscription per device, owned by the member who last subscribed it
-Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one subscription when a device subscribes twice at the same moment
-Held by: `api/src/notifications/notifications.controller.test.ts` › deletes a subscription its push service says is gone, and the write still succeeds
-Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
+Invariants: `api/src/notifications/INVARIANTS.md`
 
 ## Realtime connection
 
@@ -794,19 +342,7 @@ hear that band data went stale (live invalidation, ADR-2026-09-19T2140's channel
 
 Lives in: `api/src/realtime/` (`realtime_connection`)
 
-- `client_id` is the random id the tab drew once. Every write from that tab
-  carries it in `X-Pragma-Client`, so the write's own tab is never told.
-- Opened only with a **realtime ticket**; `$connect` refuses a missing,
-  expired or forged one. `$disconnect` and a gone (410) answer delete the
-  row. A frame the tab sends changes nothing.
-- Kept out of every preview's copy of production and out of the read-only
-  reader's reach.
-
-Held by: `api/src/realtime/realtime.controller.test.ts` › posts the root the write touched to every tab but the writer’s own
-Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address or a ballot token
-Held by: `cdk/test/stack.test.ts` › clones prod into a preview with its passwords and its takes, but no passkey, no avatar key, and no push subscription or key pair
-Held by: `api/src/realtime/realtime.controller.test.ts` › refuses a forged ticket
-Held by: `api/src/realtime/realtime.controller.test.ts` › forgets a connection API Gateway reports gone
+Invariants: `api/src/realtime/INVARIANTS.md`
 
 Not to be confused with: a **sign-in session**, which proves who the member
 is; the connection only listens.
@@ -817,11 +353,7 @@ A signed, sixty-second pass that lets a tab open a **realtime connection**.
 
 Lives in: `api/src/realtime/realtime-ticket.utils.ts`
 
-- Signed with the same HMAC key as the session cookie, over a purpose
-  prefix the cookie never carries, so neither verifies as the other.
-
-Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a session cookie open a socket
-Held by: `api/src/realtime/realtime-ticket.utils.test.ts` › never lets a ticket pass as a session cookie
+Invariants: `api/src/realtime/INVARIANTS.md`
 
 ## Derived read root
 
@@ -830,14 +362,7 @@ through them (`studies` reads `setlists`, `sessions`, `songs`, `mastery`…).
 
 Lives in: `domain/stale-scope.core.ts` (`DERIVED_READ_ROOTS`)
 
-- A slice's row lists every slice its services and repositories import,
-  except an import used only by an assistant **tool**. A write that cascades
-  into another slice, such as deleting a song, puts the writer in the row of
-  the slice it cascades into.
-- Expanded transitively, so a read hears what its own sources aggregate.
-
-Held by: `api/src/realtime/derived-read-roots.test.ts` › lists in a slice’s row every slice its services and repositories read
-Held by: `api/src/realtime/derived-read-roots.test.ts` › lists the writer in the row of every slice a write cascades into
+Invariants: `domain/INVARIANTS.md`
 
 ## Query read roots
 
@@ -847,13 +372,7 @@ functions read (`studies` reads `studies` and `mastery`, `voting` reads
 
 Lives in: `site/src/lib/queries/query-read-roots.core.ts` (`QUERY_READ_ROOTS`)
 
-- A **stale message** invalidates every query key root whose read roots,
-  expanded through the **derived read roots**, include a **written root**.
-  `all` invalidates every query.
-- Every API root a write can announce is read by some query.
-
-Held by: `site/src/lib/queries/query-key-roots.test.ts` › lists under each key root every API root its query module reads
-Held by: `site/src/lib/queries/query-key-roots.test.ts` › reads every root the API can announce from some query, or names it as read by none
+Invariants: `site/src/lib/queries/INVARIANTS.md`
 
 ## Stale message
 
@@ -862,11 +381,7 @@ The frame the API posts on a **realtime connection** after a write:
 
 Lives in: `domain/stale-scope.core.ts`
 
-- Carries what was written, never which queries to refresh; the site decides
-  that from its **query read roots**.
-- A written root the tab does not know is read as `all`.
-
-Held by: `site/src/lib/live-invalidation.core.test.ts` › reads a root this tab does not know as everything, so a newer API is never missed
+Invariants: `domain/INVARIANTS.md`
 
 ## Written root
 
@@ -875,14 +390,7 @@ The API root a write touched: the first path segment after `/api/`
 
 Lives in: `domain/stale-scope.core.ts`, `api/src/realtime/stale-scope.core.ts`
 
-- Read off the path of a 2xx write. A write that changes no band data another
-  member reads (sign-in, passkeys, password, push, uploads) announces
-  nothing; every other write route must name a written root.
-- A write through an assistant **tool** announces the roots of the write
-  routes that tool declares.
-
-Held by: `api/src/realtime/stale-scope-coverage.test.ts` › decides every write route, so a new slice cannot ship without saying what it writes
-Held by: `api/src/mcp/mcp-stale-scope.test.ts` › sends the roots a writing tool’s routes touch, not everything
+Invariants: `domain/INVARIANTS.md`
 
 ## VAPID key pair
 
@@ -891,18 +399,7 @@ subscribes with.
 
 Lives in: `api/src/notifications/` (`vapid_key_pair`)
 
-- One row, always under id 1. The API generates the pair with `web-push`
-  the first time push needs it, inserts it with `ON CONFLICT DO NOTHING`
-  and reads back what was stored, so two first uses at the same moment
-  keep one pair (ADR-2026-10-23T0932, revision 2026-10-24).
-- Kept out of every preview's copy of the production schema, so a preview
-  generates its own pair and never signs as production.
-- Replacing the pair would orphan every subscription made with the old
-  public key, so nothing in the application rewrites the row.
-
-Held by: `api/src/notifications/notifications.controller.test.ts` › is generated on first use, stored, and given unchanged afterwards
-Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one pair when two members ask for the first key at the same moment
-Held by: `api/src/notifications/notifications.controller.test.ts` › stores the pair once when its first insert loses a conflict
+Invariants: `api/src/notifications/INVARIANTS.md`
 
 Not to be confused with: a **push subscription**, which is the device's own
 key and address rather than the stage's.
@@ -915,14 +412,7 @@ read the catalogue and the next setlist with no signal
 
 Lives in: `site/src/lib/queries/offline-reading.queries.ts`
 
-- Reads the songs list and the sessions list, seeds each song's detail from
-  the songs list, then reads the next session, its setlists and their entries.
-- The next session is the one home shows (`selectNextSession`), so a session
-  that started earlier today still counts.
-- Starts only from a probe answer already in the cache, and never probes.
-
-Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › preloads a session that started earlier today, as home shows it
-Held by: `site/src/lib/queries/offline-reading.queries.test.ts` › never probes the session itself, so a start with no probe answer sends nothing
+Invariants: `site/src/lib/queries/INVARIANTS.md`
 
 ## Read batch
 
@@ -932,28 +422,7 @@ needs more of the API's ten seats than it has batches in flight
 
 Lives in: `domain/read-batch.core.ts`, `api/src/read-batch/`, `site/src/lib/read-batch.adapter.ts`
 
-- Holds 1 to 10 reads (`MOST_READS_PER_BATCH`, the database pool's default
-  size). Each read is a path under `/api/` and the headers of
-  `PRAGMA_REQUEST_HEADERS` it needs. A batch never holds itself, a path that
-  climbs out of `/api/`, or a write.
-- Each read runs through the whole app as a `GET` with the batch's cookie,
-  so the session gate, validation and controllers answer it as they answer
-  a lone read.
-- Answers `200` with one status, content type and body per read, in order.
-  One read that fails or throws fails only its own answer.
-- A malformed batch answers `400` `read-batch-invalid` and runs nothing.
-- In the tab, the reads of one task form one group. A group of one leaves
-  as a plain `GET`, and at most two read requests are in flight
-  (`MOST_READS_IN_FLIGHT`). Writes never join a group.
-- The tab retries a read once, never a query. When a request is refused
-  with `429` or a `5xx`, or the network drops, its reads leave again
-  together one second later. A read that answered `429` or a `5xx` inside an
-  answered batch is retried the same way. Queries keep `retry: 0`.
-
-Held by: `api/src/read-batch/read-batch.controller.test.ts` › fails only the gated read when the batch carries no cookie
-Held by: `api/src/read-batch/read-batch.controller.test.ts` › answers 500 for a read that throws while the others answer 200
-Held by: `site/src/lib/read-batch.adapter.test.ts` › hold a third group until one of the two answers
-Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed read once, after the app client has spent its retry
+Invariants: `domain/INVARIANTS.md`
 
 Not to be confused with: a **written root**, which a write announces; the
 batch writes nothing and announces nothing.
@@ -965,20 +434,7 @@ while the cache holds no band data, until the first band data lands.
 
 Lives in: `site/src/components/organisms/session-gate.core.ts`, `site/src/components/organisms/OpeningScreen.tsx`, `site/src/components/atoms/PragmaMark.tsx`
 
-- Shows only when no band query holds data: a first open, a cache older
-  than 7 days, or the open right after sign-in. A warm open renders the
-  cached screen at once.
-- The route mounts beneath it, inert and hidden, so the session probe and
-  the route's reads leave in one read batch.
-- Ends when one band query holds data. When nothing is in flight and a
-  read failed or paused offline, it shows the failure and a retry that
-  refetches every active query in one batch.
-- The mark plays "the downbeat" (keys pressed in an arpeggio, the notes
-  swinging in), and stays still under reduced motion and on failure.
-
-Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a read paused offline as failed, so an offline cold open never waits forever
-Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
-Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
+Invariants: `site/src/components/organisms/INVARIANTS.md`
 
 Not to be confused with: the offline banner, which a signed in
 member sees over cached screens while the browser is offline.
@@ -992,15 +448,7 @@ order.
 
 Lives in: `site/src/routes/setlists/`
 
-- One bar per entry, its height the entry's energy, read from the entry,
-  then from its song, then the default level drawn muted
-  (`buildEnergyBars`).
-- While a row is lifted, its bar is drawn in the action blue and the curve
-  follows the order the drop would give (`projectOrder`).
-- The order is written on each drop, through the setlist's reorder route.
-
-Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › reads the entry energy first, then the song energy, then the default level unstored
-Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › moves the lifted row to the place of the row it is over, downwards and upwards
+Invariants: `site/src/routes/setlists/INVARIANTS.md`
 
 Not to be confused with: **Energy**, the level each entry or song holds,
 which the Order screen only draws.
@@ -1013,20 +461,7 @@ a password.
 Lives in: `api/src/auth/` (`member_passkey`), verified through
 `passkey.adapter.ts`
 
-- Stores the credential id, the public key as `bytea`, the signature
-  counter and a label: the device kind guessed from the user agent at
-  creation, which the member confirms or changes right after
-  (`PATCH /api/me/passkeys/:passkeyId`). The credential id is unique.
-- It is an alternative to the password, not a second factor: a member
-  signs in with either. The password stays as the way back when a device
-  is lost.
-- The challenge of a registration or an assertion lives one row in
-  `webauthn_challenge` for two minutes (`CHALLENGE_TTL_MS`), because the
-  options call and the verify call are two Lambda invocations sharing no
-  memory.
-
-Held by: `api/src/auth/auth.controller.test.ts` › keeps the member passkeys alive through a recovery
-Held by: `api/src/me/me.controller.test.ts` › answers 404 for a passkey of another member and leaves it as it was
+Invariants: `api/src/auth/INVARIANTS.md`
 
 ## Deezer track
 
@@ -1038,19 +473,7 @@ member can also type by hand on the song form
 Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
 `site/src/lib/listen-links.utils.ts`
 
-- Nullable. A song typed in by hand names no track until someone links it,
-  and the listen dialog then offers a Deezer *search* instead of the track
-  page. Both are ordinary, not faults.
-- Distinct from the **Deezer album**, which is what the cover is fetched
-  by, and from the **Spotify track**, which the API resolves from this
-  track's ISRC. Picking a search result sets the first two and clears the
-  third, which is then resolved again on save.
-- One track belongs to at most one song: `song_deezer_track_id_unique`
-  refuses a second. A create or an update naming a track another song
-  holds answers 409 `deezer-track-taken` with that song's id and title.
-
-Held by: `api/src/songs/songs.controller.test.ts` › refuses a second song naming a Deezer track another song holds, and names the holder
-Held by: `api/src/songs/songs.controller.test.ts` › refuses moving a song onto a Deezer track another song holds, and lets a song keep its own
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Spotify track
 
@@ -1060,21 +483,7 @@ the ISRC Deezer returned rather than from the song's title.
 Lives in: `api/src/songs/` (the `spotify_track_id` column), read by
 `site/src/lib/listen-links.utils.ts`
 
-- Nullable, and ordinarily so. Spotify and Deezer do not carry identical
-  catalogues, a song typed in by hand names no ISRC to resolve from, and a
-  song predating the column has none until it is re-linked. Each of those
-  falls back to a Spotify *search* address in the listen dialog.
-- No form field writes it, unlike the **Deezer track**, which a member may
-  type. The song form sends back the value it read, and the API fills it
-  from the ISRC when a save carries none (`withResolvedSpotifyTrack`).
-  Picking a new Deezer result clears it (`applyExternalIdentityToDraft`),
-  so an id can never outlive the Deezer track it was found for.
-- Distinct from the **Deezer track**: the two name the same recorded song on
-  two services, and the ISRC is what joins them. See
-  [ADR-2026-09-15T2023](../../docs/adr/2026-09-15T2023-spotify-track-ids-resolved-by-isrc-at-link-time.md).
-
-Held by: `site/src/routes/catalog/song-draft.core.test.ts` › overwrites the metadata fields and leaves the rest of the draft alone
-Held by: `site/src/lib/listen-links.utils.test.ts` › falls back to a search when the song names no track
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Deezer album
 
@@ -1084,21 +493,7 @@ the cover by.
 Lives in: `api/src/songs/` (the `deezer_album_id` column), read by
 `site/src/lib/cover-art.utils.ts`
 
-- Distinct from the **Deezer track**, which is what `deezer_track_id`
-  holds. One track belongs to one album; an album has one front cover.
-- Nullable, because Aurora DSQL cannot add a `NOT NULL` column after the
-  table exists, and because a song typed in by hand names no album.
-- A song with no Deezer album renders a tile carrying the song's initials
-  instead. That case is ordinary, not a fault.
-- Most confused with **album**, which is the album's *title* as text and
-  is what the interface prints; the Deezer album is the identifier the
-  cover is fetched by.
-- The columns `mbid` and `release_id` are the MusicBrainz identifiers this
-  replaced. Aurora DSQL drops no column, so they stay in the table and
-  nothing reads them; a MusicBrainz identifier names nothing on Deezer, so
-  the old values were not carried over.
-
-Held by: `site/src/lib/cover-art.utils.test.ts` › has no address for a song that names no album
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Practice
 
@@ -1107,15 +502,7 @@ concert.
 
 Lives in: `api/src/sessions/`
 
-- A row in `session` whose `kind` is `practice`.
-- Carries `preparedConcertId`, which may be null, and `origin`, which is
-  `free_slot` for a practice booked from a free slot and null otherwise
-  (`SESSION_ORIGINS`). Nothing else beyond the shared columns.
-- `practiceCreateSchema` is `.strict()`, so a body carrying a concert-only
-  key is rejected at the controller.
-
-Held by: `api/src/sessions/sessions.schema.test.ts` › refuses a venue, which belongs to the other kind
-Held by: `api/src/sessions/sessions.controller.test.ts` › moves a practice onto another concert it prepares
+Invariants: `api/src/sessions/INVARIANTS.md`
 
 ## Practice mode
 
@@ -1125,23 +512,7 @@ played is one tap.
 
 Lives in: `site/src/routes/sessions/`
 
-- Offered only for a practice, on its own calendar day in Paris, once its
-  setlists hold a song (`isPracticeModeOffered`). A session has a date and
-  no end time, so a practice running past midnight loses the mode the
-  next day.
-- The songs follow the session's setlists in their order, then each
-  entry's position (`buildPracticeSongs`).
-- The current song is held on each device, in local storage under the
-  session, never on the server: two phones in the same practice move
-  independently. A position stored on another day is ignored, and when
-  the stored song has left the setlist the following one becomes current
-  (`resolvePracticeIndex`).
-- Moving between songs writes nothing to the server. A take recorded here
-  carries the current song and the practice, as any take does; the quick
-  note writes the current setlist entry's note.
-
-Held by: `site/src/routes/sessions/practice-mode.core.test.ts` › makes the following song current when the stored one was removed
-Held by: `site/src/routes/sessions/PracticeModePage.test.tsx` › starts on the first song, and Next song moves on without writing to the server
+Invariants: `site/src/routes/sessions/INVARIANTS.md`
 
 Not to be confused with: the **scene view**, which reads one song's chart
 on stage and records nothing.
@@ -1152,12 +523,7 @@ The full-screen reading of a song's chart, for use on stage.
 
 Lives in: `site/src/routes/catalog/`
 
-- The transpose offset is clamped to -11 to +11 semitones, which is the
-  whole range with distinct output, and the font size runs from 16 px to
-  48 px in steps of 2 px, starting at 24 px (`scene-view.core.ts`).
-
-Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps below the floor
-Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps above the ceiling
+Invariants: `site/src/routes/catalog/INVARIANTS.md`
 
 ## Session
 
@@ -1165,34 +531,7 @@ One dated thing the band does together, either a practice or a concert.
 
 Lives in: `api/src/sessions/`
 
-- One table for both kinds, keyed on the `kind` column. `kind` and `date`
-  are `NOT NULL`.
-- The API validates the body as a discriminated union on `kind`, so a
-  concert and a practice cannot borrow each other's columns.
-- The API lists sessions with the coming ones first, nearest at the top,
-  then the past ones, newest first (`orderSessionsForListing` in
-  `domain/session-schedule.core.ts`). The Sessions screen shows one side at
-  a time: the coming ones nearest first (`selectComingSessions`) or the past
-  ones newest first (`selectPastSessions`). A session is still coming for the
-  whole of its calendar day in the band's time zone, so a practice that
-  started this morning stays the next session until midnight in Paris
-  (`selectNextSession`, which Home reads).
-- Deleting a session detaches the setlists it carried and keeps them
-  (`deleteSessionWithCascade`). Another session may be playing the same
-  one, and the setlists index holds it either way. It also keeps the takes
-  recorded in it and clears their `session_id`, and keeps the tasks
-  naming it and clears theirs.
-- The session page shows, in order, a preview of each setlist (count,
-  total time, the first three songs with their lineup, never their key),
-  **Who does what** (the tasks naming the session), and the takes recorded
-  at it grouped by song.
-
-Held by: `api/src/sessions/sessions.controller.test.ts` › lists coming sessions first, nearest at the top, then past ones
-Held by: `domain/session-schedule.core.test.ts` › keeps a session from earlier today as the next one until midnight
-Held by: `domain/session-schedule.core.test.ts` › keeps the sessions of past days, newest first
-Held by: `api/src/sessions/sessions.controller.test.ts` › rejects a payload that mixes concert-only with practice-only fields
-Held by: `api/src/sessions/sessions.controller.test.ts` › detaches the setlists on session delete, and keeps them
-Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
+Invariants: `api/src/sessions/INVARIANTS.md`
 
 Not to be confused with: a sign-in session, which is a browser cookie and
 has nothing to do with a date in the calendar.
@@ -1205,35 +544,7 @@ prepared in a practice is the same one played at the concert.
 
 Lives in: `api/src/setlists/`
 
-- The row holds `id`, `name`, `kind`, `status` and `targetSongCount`.
-  `name` is `NOT NULL` and defaults
-  to the empty string, because a setlist is often written in a hurry and
-  named afterwards.
-- The physical table is `setlist_sheet`. The original `setlist` table
-  declared `session_id` `NOT NULL UNIQUE`, and Aurora DSQL accepts
-  neither `DROP COLUMN` nor `DROP CONSTRAINT`, so one setlist per
-  session could not be relaxed in place; `0003_setlists_across_sessions.sql`
-  moved the rows and left the old table unread.
-- `createSetlist` writes the setlist, and the link when the caller names
-  a session, in one transaction. Its only refusal is `session-not-found`.
-- `kind` is `manual` or `audience_choice` (`resolveSetlistKind` in
-  `setlists.core.ts`). The column is nullable in the database because
-  Aurora DSQL accepts no `ADD COLUMN ... NOT NULL`, so every read narrows
-  a null to `manual`.
-- An `audience_choice` setlist is created at the first voting round of a
-  concert and refuses `renameSetlist`: its title is the band's promise to
-  the room, not an editable field.
-- A concert has one `audience_choice` setlist. The setlist is created with
-  the concert's id as its own (`selectAudienceChoiceSetlistId`), so the
-  primary key refuses a second one when two first rounds open together.
-  One created before that rule keeps its random id and is found by its
-  link to the concert.
-
-Held by: `api/src/setlists/setlists.controller.test.ts` › refuses to create a setlist on a session that does not exist
-Held by: `api/src/setlists/setlists.controller.test.ts` › plays one setlist in two sessions, and lists it under both
-Held by: `api/src/setlists/setlists.core.test.ts` › reads a row written before the column existed as manual
-Held by: `api/src/audience/audience.controller.test.ts` › creates the audience-choice setlist at the first round and refuses to rename it
-Held by: `api/src/audience/audience.controller.test.ts` › creates one audience-choice setlist when two first rounds are opened at the same moment
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 ## Session setlist link
 
@@ -1241,26 +552,7 @@ Which sessions carry which setlist, and in what order within a session.
 
 Lives in: `api/src/setlists/`
 
-- `session_setlist` holds `session_id`, `setlist_id` and `position`, keyed
-  on the first two, so one pair is stored once however many times it is
-  attached.
-- A setlist joining a session lands one past the highest position already
-  taken, so the order the band wrote survives. Every attach first claims
-  the session row in the same retried transaction, so two setlists joining
-  one session at the same moment read the highest position one after the
-  other and never share it.
-- A link joins a setlist and a session that both still exist. Attaching an
-  existing setlist claims the setlist row and then the session row, each
-  claim reporting whether it found its row, and when either did not the
-  attach is refused before anything is written, with the same 404 as for
-  an unknown id. Deleting a session or a setlist removes its row before
-  its links, so an attach that claimed the row first has its link removed
-  with it.
-
-Held by: `api/src/setlists/setlists.controller.test.ts` › carries several setlists on one session, in the order they were attached
-Held by: `api/src/setlists/setlists.controller.test.ts` › gives two setlists joining one session at the same moment a position each
-Held by: `api/src/setlists/setlists.controller.test.ts` › leaves no link behind when the session is deleted while a setlist joins it
-Held by: `api/src/setlists/setlists.controller.test.ts` › leaves no link to a setlist deleted while it was joining a session
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 ## Setlist status
 
@@ -1270,18 +562,7 @@ plays.
 Lives in: `api/src/setlists/` (the `status` column), resolved by
 `resolveSetlistStatus` in `domain/setlist-vote.core.ts`
 
-- Exactly two values: `voting` and `locked`. The column is nullable with
-  no default, because Aurora DSQL cannot add a `NOT NULL` column after
-  the table exists, so a row written before the column reads as `locked`.
-- `targetSongCount` is how many songs the band wants out of the vote. It
-  may be null, and then it reads as 15.
-- Closing a vote writes the entries and moves the status to `locked`.
-  Reopening moves it back and keeps every vote.
-
-Held by: `api/src/setlists/voting.controller.test.ts` › reads a setlist that was never voted on as locked
-Held by: `api/src/setlists/voting.core.test.ts` › falls back to the default target when the setlist names none
-Held by: `api/src/setlists/voting.controller.test.ts` › closes a vote into an ordinary setlist, in the order it was handed
-Held by: `api/src/setlists/voting.controller.test.ts` › reopens a closed vote with every point still posted
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 ## Setlist entry
 
@@ -1289,33 +570,7 @@ One song in one setlist, with the decisions that apply to it that night.
 
 Lives in: `api/src/setlists/`
 
-- `setlistId`, `songId` and `position` are `NOT NULL`; `notes` is
-  `NOT NULL` and defaults to the empty string.
-- Optional per-entry values: `energy` (1 to 10), `lineupOverride`,
-  `keyOverride` (up to 16 characters) and `capo` (0 to 11).
-- An appended entry takes the position after the last item of the
-  setlist, entry or **setlist break** (`selectNextItemPosition`).
-- Deleting an entry compacts the remaining entries and breaks back to a
-  gapless run (`removeEntryAndCompact`).
-- A reorder is refused as `stale` unless the submitted ids are exactly the
-  entry ids, or the entry and break ids, already stored for that setlist,
-  each once (`arrangeReorder`).
-- An append, a delete and a reorder each run in one transaction that first
-  writes the setlist's own row (`didClaimSetlistWithin`), so two of them on
-  one setlist cannot interleave: Postgres makes the second wait, and
-  Aurora DSQL aborts it at commit and `runInOneSetlistTransaction` runs it
-  again. When the claim finds no row the write is refused with a 404, and
-  deleting a setlist removes its row before its entries, so no entry
-  outlives its setlist.
-
-Held by: `api/src/setlists/setlists.controller.test.ts` › appends entries with increasing positions
-Held by: `api/src/setlists/setlists.controller.test.ts` › compacts positions after a delete
-Held by: `api/src/setlists/setlists.controller.test.ts` › refuses a reorder payload whose ids do not match the current set
-Held by: `api/src/setlists/setlists.controller.test.ts` › answers 404 when writing the entries of a setlist that does not exist
-Held by: `api/src/setlists/setlists.controller.test.ts` › refuses an entry for a setlist deleted while the entry was being written
-Held by: `api/src/setlists/setlists.controller.test.ts` › gives each of two entries appended at the same moment a position of its own
-Held by: `api/src/setlists/setlists.controller.test.ts` › applies one of two reorders sent at the same moment whole, never a mix of both
-Held by: `api/src/setlists/setlists.controller.test.ts` › keeps positions distinct when an append and a reorder land at the same moment
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 ## Setlist break
 
@@ -1324,29 +579,7 @@ between two sets.
 
 Lives in: `api/src/setlists/` (`setlist_break`)
 
-- `setlistId`, `position` and `label` are `NOT NULL`; `label` defaults to the
-  empty string, which the site shows as "Break". It holds up to 80
-  characters.
-- A break is not a **setlist entry**: `setlist_entry.song_id` is
-  `NOT NULL` and Aurora DSQL cannot relax it. So every reader of entries
-  (studies, audience, voting, mastery) keeps reading songs only.
-- A break shares the `position` sequence of its setlist's entries. An
-  append takes the position after the last item, songs or breaks
-  (`selectNextItemPosition`), and a delete of either compacts both.
-- Inserted right after a named entry (`placeBreakAfter`), in the same
-  claimed transaction as any other write to the setlist.
-- A reorder naming the song ids only keeps every break in its slot; one
-  naming every id moves breaks too (`arrangeReorder`).
-- Read with `songsBefore`, the number of songs played before it, which is
-  how the site places it.
-- Deleting the setlist or closing its vote deletes its breaks.
-
-Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › places a break after the song it names, and counts the songs played before it
-Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › keeps every break in its slot when a reorder names the songs only
-Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › compacts songs and breaks into one gapless run after either is deleted
-Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › deletes the breaks of a deleted setlist
-Held by: `api/src/setlists/voting.controller.test.ts` › drops the breaks of a setlist whose vote closes again
-Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › keeps every position distinct when a break lands while a song is appended
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 Not to be confused with: a song **note**, which is text on one entry; a
 break is its own row in the running order.
@@ -1357,32 +590,7 @@ Proof that this browser is a named member.
 
 Lives in: `api/src/auth/`
 
-- One `app_config` row, keyed `id = 1`, still holds the HMAC key that
-  signs cookies, and a password hash the recovery route alone reads.
-- The cookie is named `pragma_session` and is `payload.signature`, where
-  the payload carries the member id, that member's session epoch, and the
-  issue and expiry times. It lasts 30 days.
-- The gate reads the cookie and the credential behind it: only the second
-  read can see a password change.
-- `requireBearerSession` is the second door: it resolves the member from an
-  **assistant grant**'s access token, applies the same session epoch rule,
-  and writes the same member id, so a service never knows which door was
-  used.
-- Rotating the shared password mints a fresh HMAC key, so every member's
-  cookie stops verifying.
-- Login attempts are counted per hashed client IP and rate limited.
-- Every route passes `requireMemberSession` except sign-in, recovery,
-  bootstrap and the passkey challenge (`auth.controller.ts`), the
-  audience's public routes, which a ballot reaches
-  (`audience.controller.ts`, which gates its two band routes one by one),
-  the OAuth discovery, registration, authorization, token and revocation
-  routes an **assistant client** calls (`oauth.controller.ts`), and the
-  test-seed route.
-
-Held by: `api/src/auth/auth.controller.test.ts` › gates a protected route on the member session cookie
-Held by: `api/src/auth/auth.controller.test.ts` › refuses rotate-password without a session and rotates it with one
-Held by: `api/src/auth/auth.controller.test.ts` › rate-limits after 5 attempts in 15 min on the same ip
-Held by: `api/src/audience/audience.controller.test.ts` › answers every public route without a session cookie and gates the two band routes
+Invariants: `api/src/auth/INVARIANTS.md`
 
 Not to be confused with: a session, which is a practice or a concert.
 
@@ -1393,24 +601,7 @@ lanes, measured in seconds.
 
 Lives in: `api/src/sketches/`, with its rules in `domain/sketch.core.ts`
 
-- A sketch has no row of its own: it is the **sketch lanes** of one
-  **composition** and the **sketch clips** placed on them.
-  `GET /api/sketches/:compositionId` reads the composition with both.
-- A clip can come from the library, or from an inspiration a member
-  creates from the lane's sheet, which joins the library and lands on that
-  lane at the scroll position the sheet was opened at.
-- Every member edits at once, with no lock. Each write is saved on its own,
-  the last one saved wins, and other open screens refresh through the
-  `sketches` written root.
-- The timeline runs 30 seconds past the last clip's end
-  (`SKETCH_TAIL_SECONDS`).
-- Deleting the composition deletes its lanes and clips and keeps the
-  inspirations.
-
-Held by: `api/src/sketches/sketches.controller.test.ts` › reads an empty sketch with its composition and answers 404 for a composition that does not exist
-Held by: `api/src/sketches/sketches.controller.test.ts` › places an inspiration created from the sketch on the lane it was started from
-Held by: `api/src/sketches/sketches.controller.test.ts` › refuses a lane for a composition deleted while the lane was being added
-Held by: `domain/sketch.core.test.ts` › snaps 3.6 s to 4 and -2 s to 0, and extends the timeline 30 s past the last clip
+Invariants: `api/src/sketches/INVARIANTS.md`
 
 Not to be confused with: a **chord chart**, which is the written song.
 
@@ -1420,16 +611,7 @@ One named row of a sketch, such as "drums" or "brass".
 
 Lives in: `api/src/sketches/` (`sketch_lane`)
 
-- A lane belongs to one composition. Every write names the composition in
-  its path, and a lane of another composition reads as `lane-not-found`.
-- Lanes are listed by `position`, then id. A new lane goes under the last.
-- Deleting a lane deletes its clips and keeps their inspirations. The lane
-  row is deleted before its clips, so a clip placed at the same moment is
-  either refused or deleted with the rest.
-
-Held by: `api/src/sketches/sketches.controller.test.ts` › adds lanes in their position, renames one and places a clip on it
-Held by: `api/src/sketches/sketches.controller.test.ts` › deletes a lane with its clips and keeps their inspirations
-Held by: `api/src/sketches/sketches.controller.test.ts` › leaves no orphan clip when its lane is deleted while it is placed
+Invariants: `api/src/sketches/INVARIANTS.md`
 
 Not to be confused with: a row of the **lineup grid**, and a **Deezer
 track**. The operator's French word is *piste*; it is never written
@@ -1441,26 +623,7 @@ One inspiration placed on a sketch lane at a whole second.
 
 Lives in: `api/src/sketches/` (`sketch_clip`)
 
-- `offset_seconds` is a whole number, never below 0:00. The site snaps a
-  drop to the nearest second (`snapOffsetSeconds`), and the API refuses a
-  negative or fractional offset.
-- Its width is its inspiration's length, read at draw time, so editing the
-  inspiration's passage resizes every clip placed from it.
-- Clips may overlap, on one lane or across lanes. Nothing checks it.
-- Placing a clip claims its lane and its inspiration in the same
-  transaction as the insert, and is refused with `lane-not-found` or
-  `inspiration-not-found` when either is gone. A move or a removal of a
-  clip removed meanwhile is refused with `clip-not-found`.
-- Two moves of one clip at the same moment both succeed, and the clip
-  stays at one of the two positions.
-
-Held by: `api/src/sketches/sketches.controller.test.ts` › answers the same clip when a placement is retried with the same id
-Held by: `api/src/sketches/sketches.controller.test.ts` › moves a clip in time and onto another lane, and refuses a negative or fractional offset
-Held by: `api/src/sketches/sketches.controller.test.ts` › leaves the clip at one of two moves sent at the same moment
-Held by: `api/src/sketches/sketches.controller.test.ts` › refuses a clip naming a lane or an inspiration another member deleted, or a lane of another composition
-Held by: `api/src/sketches/sketches.controller.test.ts` › refuses to move a clip removed meanwhile, or onto a lane deleted meanwhile
-Held by: `api/src/sketches/sketches.controller.test.ts` › leaves no orphan clip when its inspiration is deleted while it is placed
-Held by: `site/src/routes/compos/sketch-timeline.core.test.ts` › gives a clip the width of its passage and drops a clip whose inspiration is not in the list
+Invariants: `api/src/sketches/INVARIANTS.md`
 
 Not to be confused with: a **take**, which is audio the band recorded.
 
@@ -1470,33 +633,7 @@ One piece of music the band has in its catalogue.
 
 Lives in: `api/src/songs/`
 
-- `title` is `NOT NULL`, trimmed, 1 to 256 characters. `artist` is
-  `NOT NULL` and defaults to the empty string. `status` is `NOT NULL`.
-- `status` is one of `idea`, `to_play`, `wip`, `rehearsed`, `concert_ready`
-  (`SONG_STATUSES`). `to_play` is a song the band has chosen to play and
-  has not started working on yet. The column is plain `text`, so a new
-  status needs no migration.
-- `links` holds up to 16 external links, each with a URL, a provider
-  (`spotify`, `deezer`, `youtube`, `other`) and a comment.
-- Deezer enrichment lands in `deezerTrackId`, `deezerAlbumId`, `album`,
-  `durationSeconds` and `isrcs` (Deezer names one per track). `spotifyTrackId`
-  follows, resolved from that ISRC when the song is saved. `tags` (up to
-  16) is kept for the songs imported from MusicBrainz before the move and
-  is no longer filled by a search.
-- Three separate note fields, each up to 4 096 characters:
-  `structureNotes`, `gimmickNotes` and `notes`, all read back as the empty
-  string when the column is null.
-- The catalogue is listed newest first by `createdAt`.
-- Deleting a song removes its row, its mastery overrides, its score
-  history, its studies, every setlist entry and vote naming it, and its
-  takes with their comments, and clears it from the tasks naming it, all in
-  one transaction (`deleteSongWithCascade`); the takes' audio objects are
-  deleted once the transaction commits.
-
-Held by: `api/src/songs/songs.controller.test.ts` › creates, reads, updates and deletes a song
-Held by: `api/src/songs/songs.controller.test.ts` › cascades the mastery overrides on song delete
-Held by: `api/src/setlists/voting.controller.test.ts` › deletes the votes of a song with the song
-Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
+Invariants: `api/src/songs/INVARIANTS.md`
 
 ## Study
 
@@ -1504,31 +641,7 @@ One member saying they worked one song on one instrument on one day.
 
 Lives in: `api/src/studies/`
 
-- Keyed on member, song, instrument and `studied_on`, so a second tap on the
-  same day changes nothing.
-- `studied_on` is the calendar day in `Europe/Paris` of the server clock
-  (`parisCalendarDay`). The request carries no date, so a study cannot be
-  back-dated, and only a study of today can be undone.
-- Accepted only for an instrument the member holds in the song's default
-  lineup or in a lineup override of one of its setlist entries.
-- A study never changes a score; the two are separate writes.
-- Logged from the song page's **Practised**, once per instrument the member
-  holds on the song. The songs a member has to learn are the **To learn**
-  filter of the Songs tab: their study queue, one row per song, ready songs
-  left out (`selectSongsToLearn`). The Studies page this replaced is gone.
-- A study names only a song and an instrument that still exist: the write
-  claims both rows, reads the lineups and inserts in one retried
-  transaction, and is refused with `song-not-found` or
-  `instrument-not-found` when a claim finds no row.
-
-Held by: `api/src/studies/studies.controller.test.ts` › logs a study once per day
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a body carrying a date, so a study cannot be back-dated
-Held by: `api/src/studies/studies.controller.test.ts` › refuses to undo a study of yesterday
-Held by: `api/src/studies/studies.controller.test.ts` › accepts an instrument held only through a setlist lineup override
-Held by: `api/src/studies/studies.controller.test.ts` › refuses an instrument the member does not hold in the song lineup
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a study of a song deleted while the study was being written
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a study on an instrument deleted while the study was being written
-Held by: `api/src/studies/studies.controller.test.ts` › logs the study once when its first commit loses a conflict on the claimed song
+Invariants: `api/src/studies/INVARIANTS.md`
 
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
@@ -1540,42 +653,7 @@ today.
 
 Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 
-- A day is the `Europe/Paris` calendar day. It is active for a member when
-  that member logged a **study** that day, or when a **session** of either
-  kind is dated that day. Takes do not count.
-- The personal flame walks back from today. Today never breaks it: while
-  today is not active, the walk starts from yesterday. An active day adds 1.
-- A missed day spends one joker of its Monday-to-Sunday week, and each week
-  has 3. A gap is bridged whole or not at all, so jokers are spent only on a
-  gap with an active day on its older side; while today is open, today
-  stands as the newer side. A day bridged by a joker adds nothing.
-- Jokers left this week is 3 minus the jokers the walk spent since Monday.
-- The band flame counts a day when any current member is active, and has no
-  joker: its first missed day ends it. A deleted member's studies drop out.
-- Not stored: it is computed on every read from the last 400 days of studies
-  and sessions (`STREAK_LOOKBACK_DAYS`).
-- Shown on Home as two chips that open the streak sheet: the member's own
-  flame and the band's. Both are drawn marks, not `Icon` glyphs. The
-  personal flame is the `BlazeMark`, one flame in three layers with sparks.
-  The band flame is the `BonfireMark`, three tilted flames. Each reads a
-  tone. `counted` (today counts) layers `flame-deep`, `flame-mid` and
-  `flame-core` under a `flame-glow` drop shadow, and the bonfire flickers
-  unless motion is reduced. `open` (today not yet) is `accent-soft` with an
-  `accent` outline and a faint core. `out` (0 days) is an `ink-faint`
-  outline with no spark. Logging or undoing a study settles it from the
-  flames the write answers, read in the write's own transaction.
-
-Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
-Held by: `site/src/lib/queries/streaks.queries.test.tsx` › settles the flames from the answer once a study is logged
-Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
-Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
-Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers
-Held by: `domain/practice-flame.core.test.ts` › ends the flame on a fourth missed day in one week
-Held by: `domain/practice-flame.core.test.ts` › spends no joker on a gap it cannot bridge whole
-Held by: `domain/practice-flame.core.test.ts` › counts jokers left this week from the jokers spent since Monday
-Held by: `domain/practice-flame.core.test.ts` › ends the band flame on its first missed day, with no joker
-Held by: `api/src/streaks/streaks.core.test.ts` › ignores the study of a member who was deleted
-Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’s day when a session is dated today
+Invariants: `domain/INVARIANTS.md`
 
 ## Streak
 
@@ -1585,12 +663,7 @@ count: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the
 
 Lives in: `api/src/streaks/`
 
-- The `streak-reminder` job runs at 20:00 `Europe/Paris` in production only.
-  A member whose day has not counted gets at most one push that day, claimed
-  on the group key `streak:<memberId>:<day>`.
-
-Held by: `api/src/streaks/streaks.controller.test.ts` › counts today after a study and drops it after the undo
-Held by: `api/src/streaks/streak-reminder.service.test.ts` › sends one push per open member and claims each group once when run twice
+Invariants: `api/src/streaks/INVARIANTS.md`
 
 ## Concert readiness
 
@@ -1598,15 +671,7 @@ Whether the band can play the next concert's songs.
 
 Lives in: `api/src/studies/` (`concert-readiness.core.ts`)
 
-- The next concert is the earliest concert strictly after now; its songs
-  are those of every setlist linked to it, counted once.
-- A song is ready when, for every lineup it is played with in those
-  setlists, each member and instrument has a score and the mean is 7 or
-  more. One member with nothing recorded keeps the song not ready.
-
-Held by: `api/src/studies/concert-readiness.core.test.ts` › is ready when the lineup mean is exactly the threshold
-Held by: `api/src/studies/concert-readiness.core.test.ts` › is not ready with one silent player even when the others would carry the mean
-Held by: `api/src/studies/studies.controller.test.ts` › counts the songs of every setlist linked to the next concert, once each
+Invariants: `api/src/studies/INVARIANTS.md`
 
 ## Take
 
@@ -1614,41 +679,7 @@ One recorded performance of one song, optionally from one session.
 
 Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 
-- The id is chosen by the device that recorded it, so a create retried
-  after a lost answer lands on the same row (`hasInsertedTakeWithin`).
-- `song_id` is required and `session_id` is optional. Deleting the session
-  keeps the take and clears `session_id`; deleting the song deletes the
-  take, its comments and its audio object.
-- A take names only a song and a session that still exist: the create
-  claims both rows in the same retried transaction as the insert, and is
-  refused with `song-not-found` or `session-not-found` when a claim finds
-  no row.
-- The audio is one of the types in `TAKE_CONTENT_TYPES`, at most 200 MiB,
-  and S3 enforces that length because the signed upload carries it. The
-  object key is `take/<songId>/<takeId>.<extension>` (`buildTakeObjectKey`),
-  and a create naming any other key is refused.
-- Listed by `recorded_at` descending, not by upload time, so a take
-  uploaded a week late sits where it happened.
-- Deleting its author keeps the take; `authorName` reads null and the
-  screen says *former member*. Any member can delete any take.
-- The answer to a create is the take read back inside the transaction that
-  stored it (`getWrittenTakeWithin`), never a second read on another
-  connection, so a stored take is never answered 404 and the device's
-  queue never gives it up.
-
-Held by: `api/src/takes/takes.controller.test.ts` › answers the same take when a create is retried with the same id
-Held by: `api/src/takes/takes.controller.test.ts` › keeps one take when two tabs send the same create at the same moment
-Held by: `api/src/takes/takes.controller.test.ts` › refuses an object key other than the one the take was signed for
-Held by: `api/src/takes/takes.controller.test.ts` › refuses a take one byte over 200 MiB
-Held by: `api/src/takes/takes.controller.test.ts` › lists takes by recording time, newest first, whatever order they were uploaded in
-Held by: `api/src/takes/takes.controller.test.ts` › lets any member delete another member’s take, its comments and its audio
-Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
-Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
-Held by: `api/src/takes/takes.controller.test.ts` › deleting the author keeps their takes and comments, with no name to show
-Held by: `api/src/takes/takes.controller.test.ts` › refuses a take for a song deleted while the take was being written
-Held by: `api/src/takes/takes.controller.test.ts` › refuses a take for a session deleted while the take was being written
-Held by: `api/src/takes/takes.controller.test.ts` › writes the take once when its first commit loses a conflict on the claimed song
-Held by: `api/src/takes/takes.controller.test.ts` › answers the take it stored even when another connection deletes it before the answer is read
+Invariants: `api/src/takes/INVARIANTS.md`
 
 Not to be confused with: a **study**, which records that a member worked a
 song and holds no audio.
@@ -1659,30 +690,7 @@ A note on a take, with an optional moment in seconds.
 
 Lives in: `api/src/takes/` (`take_comment`)
 
-- `at_seconds` is null for a comment in the thread only, and otherwise a
-  whole number from 0 to the take's duration (`isMomentWithinTake`).
-- `body` is trimmed, 1 to 4 096 characters. Comments are listed oldest
-  first, a tie broken on id (`orderCommentsByTime`).
-- Deleted with its take; kept, with no author name, when its author is
-  deleted.
-- A comment names only a take that still exists: the create claims the take
-  row, checks the moment against it and inserts in one retried transaction
-  (`findClaimedTakeWithin`), and is refused with `take-not-found` when the
-  claim finds no row. Deleting a take, alone or with its song, removes the
-  take row before its comments, so a comment that claimed the row first is
-  removed with the rest.
-- The answer to a create or an edit is the comment read back inside the
-  transaction that wrote it, so a stored comment is never answered 404.
-
-Held by: `api/src/takes/takes.controller.test.ts` › accepts a moment at the very end and refuses one a second past it
-Held by: `api/src/takes/takes.controller.test.ts` › keeps a comment with a moment and one without, oldest first, and counts them
-Held by: `api/src/takes/takes.controller.test.ts` › lets another member delete a comment, once
-Held by: `api/src/takes/takes.controller.test.ts` › edits a comment’s body and moment, and refuses a moment past the end
-Held by: `api/src/takes/takes.controller.test.ts` › leaves no comment on a take deleted while the comment was being written
-Held by: `api/src/takes/takes.controller.test.ts` › leaves no comment on a take whose song is deleted while the comment was being written
-Held by: `api/src/takes/takes.controller.test.ts` › writes one comment when its first commit loses a conflict
-Held by: `api/src/takes/takes.controller.test.ts` › deletes the take once when its first commit loses a conflict
-Held by: `api/src/takes/takes.controller.test.ts` › answers the comment it stored even when another connection deletes it before the answer is read
+Invariants: `api/src/takes/INVARIANTS.md`
 
 Not to be confused with: a **transition comment**, which is about the gap
 between two songs and belongs to no take.
@@ -1694,33 +702,7 @@ composition it is about.
 
 Lives in: `api/src/tasks/`
 
-- `title` and `status` are `NOT NULL`; `notes` is `NOT NULL` and defaults
-  to the empty string.
-- `status` is one of `todo`, `doing`, `done` (`TASK_STATUSES` in
-  `domain/task-status.core.ts`). Every status but `done` counts as open.
-- `assigneeId` and `songId` are both nullable, and neither carries a
-  foreign key, because DSQL has none. A task names only a member and a
-  song that still exist: the write claims both rows in the same
-  transaction as the task, which runs again when Aurora DSQL aborts it at
-  commit, and is refused with `assignee-not-found` or
-  `song-not-found` when a claim finds no row. Deleting a member or a song
-  removes its row first and then nulls the tasks naming it, in one
-  transaction, so a task write that claimed the row first is nulled with
-  the rest.
-- The list comes back ordered by what is most urgent: in progress first,
-  then waiting, then done; within a status, by the nearest due date, with
-  a task carrying no date behind every dated one; then by title
-  (`compareTasksByUrgency`).
-- The tasks screen draws one column per member, in the order the members
-  come back, and adds an unclaimed column only when something is
-  unassigned.
-
-Held by: `api/src/tasks/tasks.controller.test.ts` › orders the list by what is most urgent
-Held by: `site/src/routes/band/band-tasks.core.test.ts` › adds the unassigned column only when something is unassigned
-Held by: `api/src/tasks/tasks.controller.test.ts` › keeps a task when the member it was assigned to is deleted
-Held by: `api/src/tasks/tasks.controller.test.ts` › never leaves a task assigned to a member deleted while the assignment was written
-Held by: `api/src/tasks/tasks.controller.test.ts` › writes the task once when its first two commits lose a conflict on the claimed member
-Held by: `api/src/tasks/tasks.controller.test.ts` › gives up and writes nothing once every commit has lost a conflict
+Invariants: `api/src/tasks/INVARIANTS.md`
 
 Not to be confused with: a **setlist entry**, which is a decision about
 one song for one night rather than work owed by a person.
@@ -1731,16 +713,7 @@ The key a song starts in and the key it ends in.
 
 Lives in: `domain/tonality.core.ts`, stored in `api/src/songs/`
 
-- Derived from a ChordPro source by reading the first and the last
-  recognisable chord, and reported as root plus quality, for example `C`,
-  `F#m`, `Dmaj7`. A slash chord reports only its root.
-- Ambiguous or missing input gives null, which the form shows as an empty
-  field the reader can fill in by hand.
-- Stored as `tonalityStart` and `tonalityEnd`, both nullable, up to 16
-  characters.
-
-Held by: `domain/tonality.core.test.ts` › reports the root only for slash chords
-Held by: `domain/tonality.core.test.ts` › returns null for both ends when nothing parses as a chord
+Invariants: `domain/INVARIANTS.md`
 
 ## Vote
 
@@ -1748,16 +721,7 @@ What one member gives one song inside one setlist being voted on.
 
 Lives in: `api/src/setlists/` (`setlist_vote`)
 
-- Keyed on `(setlistId, memberId, songId)`, so a member holds one score
-  per song per setlist. `points` is a whole number from 0 to 3, and a
-  score of 0 deletes the row rather than storing it.
-- A member's budget is three points per targeted song. Unspent points are
-  simply not counted; nothing forces a member to spend them.
-- Deleted with the member who cast it and with the song it names.
-
-Held by: `api/src/setlists/voting.core.test.ts` › removes a vote scored zero and stores every other score
-Held by: `api/src/setlists/voting.controller.test.ts` › deletes the votes of a member with the member
-Held by: `api/src/setlists/voting.controller.test.ts` › deletes the votes of a song with the song
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 Not to be confused with: an **improvement vote**, which carries no points
 and no budget.
@@ -1768,14 +732,7 @@ How many points one member still has to spend in one vote.
 
 Lives in: `api/src/setlists/voting.core.ts`
 
-- `total` is `targetSongCount × 3`, `spent` is the sum of that member's
-  votes, and `remaining` is the difference.
-- A score is refused as `budget-exhausted` when it would exceed what is
-  left, counting the points the same song already holds as free again.
-
-Held by: `api/src/setlists/voting.core.test.ts` › gives three points per targeted song
-Held by: `api/src/setlists/voting.core.test.ts` › frees the points a song already held when it is rescored
-Held by: `api/src/setlists/voting.controller.test.ts` › refuses a score beyond the budget and says what is left
+Invariants: `api/src/setlists/INVARIANTS.md`
 
 ## Tool
 
@@ -1786,58 +743,7 @@ call.
 Lives in: `api/src/mcp/` (the transport and the registry); each tool sits in
 its own slice as `<domain>-tools.controller.ts`
 
-- Served at `POST /mcp`, stateless: every request builds a fresh server,
-  answers one JSON body and keeps no session, so `GET` and `DELETE` answer
-  405.
-- Reached only with an **assistant grant**'s access token, through
-  `requireBearerSession`; the member it resolves is the actor of every
-  write, so push skips that member exactly as for a change made in the app.
-- Takes the route's own Zod limits, but names things the way a person
-  does: a song, member, instrument, setlist, bar, task or improvement is a
-  *reference*, its id or its name in any case and with or without accents,
-  and a session is its id, `next`, `next-concert`, `next-practice`, `last`
-  or a day. A reference that matches several answers `<noun>-ambiguous`
-  with the candidates; one that matches nothing answers `<noun>-not-found`.
-- Answers a compact projection rather than the route's body: ids plus what
-  the next step needs, names where a person would say a name, no field that
-  is null or empty, and a short confirmation for a write. A refusal is a
-  tool error carrying the route's `{ error }` code; an unexpected throw is
-  reported as `McpToolFailed` and answers `internal-error`.
-- A `save_<noun>` tool both creates and changes: without a reference it
-  creates, and a creation missing a required field answers `invalid-input`
-  with the fields; with a reference it changes only the fields given. One
-  `delete` tool takes `{ kind, id }` for a bar, improvement, session,
-  setlist, song, take or task, and its description tells the assistant to
-  confirm with the user first.
-- Every mounted route has a tool, unless `TOOL_EXCLUSIONS` in
-  `mcp/tool-coverage.core.ts` names it with a reason: credentials,
-  state bound to one browser, the audience ballot, the test seed, the
-  OAuth and MCP endpoints themselves, and what the operator kept away from
-  assistants on 2026-10-29 (every vote, notification preferences, take and
-  transition comments, the instrument list, mastery defaults, the outreach
-  template, and adding, renaming or removing members). A route with neither,
-  a tool naming a route that is gone, and an exclusion matching no route each
-  fail `mcp/tool-coverage.test.ts`. One tool may cover several routes, as
-  `get_setlist` reads a setlist and its entries and `set_song_mastery`
-  both writes and removes a score.
-- The size of the tool list and of the answers to ten typical band tasks
-  are budgets held by `mcp/tool-budget.test.ts`.
-
-Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
-Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
-Held by: `api/src/songs/songs-tools.controller.test.ts` › answers the refusal codes the routes answer
-Held by: `api/src/sessions/sessions-tools.controller.test.ts` › creates a concert with the fields the route requires
-Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
-Held by: `api/src/setlists/setlists-tools.controller.test.ts` › reads what the band wrote about each transition into the next song, which the tools never write
-Held by: `api/src/takes/takes-tools.controller.test.ts` › signs an upload, then records the take as the granting member
-Held by: `api/src/mcp/tool-coverage.test.ts` › serves a tool for every mounted route that is not excluded with a reason
-Held by: `api/src/mcp/tool-coverage.test.ts` › maps every tool to a route that is mounted
-Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route that is no longer mounted
-Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
-Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
-Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement as the granting member, and lists whether that member voted for it
-Held by: `api/src/me/me-tools.controller.test.ts` › logs a study of today as the granting member, shows it in get_me, then undoes it
-Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details
+Invariants: `api/src/mcp/INVARIANTS.md`
 
 Not to be confused with: a route, which a browser calls with a cookie; a
 tool calls the same service with a bearer token.
@@ -1849,18 +755,7 @@ across it.
 
 Lives in: `domain/transition.core.ts`
 
-- The verdict is `covered` when at least one member keeps a harmonic
-  instrument across both songs, and `risky` otherwise.
-- Members keeping a percussive or vocal instrument, and no harmonic one,
-  are the support carriers, and the view lists them after the harmonic
-  carriers.
-- The comparison is instrument by instrument, so a drummer who also sings
-  and moves to guitar keeps nothing, while a guitarist picking up a second
-  guitar keeps one.
-
-Held by: `domain/transition.core.test.ts` › covers the gap when somebody keeps a harmonic instrument across both songs
-Held by: `domain/transition.core.test.ts` › calls the transition risky when nobody keeps a harmonic instrument
-Held by: `domain/transition.core.test.ts` › treats a member sitting the second song out as keeping nothing
+Invariants: `domain/INVARIANTS.md`
 
 Not to be confused with: a transition comment, which is what the band
 wrote about that gap.
@@ -1871,16 +766,7 @@ A note the band leaves about going from one specific song into another.
 
 Lives in: `api/src/transitions/`
 
-- One row per ordered pair `(songAId, songBId)`, held by the unique index
-  `transition_comment_ordered_pair`, so A into B and B into A are two
-  separate rows.
-- `comment` is `NOT NULL`, trimmed, 1 to 4 096 characters. `updatedAt` is
-  `NOT NULL` and defaults to the write time.
-- An assistant reads it, as `transitionComment` on the setlist entry it
-  leaves from in `get_setlist`, and never writes it.
-
-Held by: `api/src/transitions/transitions.controller.test.ts` › treats A→B and B→A as distinct rows
-Held by: `api/src/transitions/transitions.schema.test.ts` › refuses whitespace alone, which would read as a comment and say nothing
+Invariants: `api/src/transitions/INVARIANTS.md`
 
 ## Upload
 
@@ -1889,21 +775,7 @@ a chart back.
 
 Lives in: `api/src/uploads/`
 
-- The content type must be one of `application/pdf`, `image/png`,
-  `image/jpeg`, `image/webp`, `image/heic`.
-- The declared length is capped at 10 MiB, and a signed URL is valid for
-  5 minutes.
-- The object key is `chart/<songId>/<randomId>.<extension>`
-  (`buildChartObjectKey`). The slice stores no row of its own: a chart's
-  key is kept in `song.chart`.
-- The same slice signs a take's audio upload (`mintObjectUpload`, called
-  by the takes slice with the take's own limits) and deletes stored
-  objects (`deleteStoredObjects`); a take's key is kept in
-  `take.object_key`.
-
-Held by: `api/src/uploads/uploads.controller.test.ts` › rejects an unsupported content type
-Held by: `api/src/uploads/uploads.controller.test.ts` › rejects content-length over the 10 MiB ceiling
-Held by: `api/src/uploads/uploads.adapter.test.ts` › signs the declared length, so S3 refuses a body of any other size
+Invariants: `api/src/uploads/INVARIANTS.md`
 
 ## Voting round
 
@@ -1912,36 +784,7 @@ most one winner.
 
 Lives in: `api/src/audience/`
 
-- `voting_round` holds `session_id`, `opened_at`, `closes_at`,
-  `settled_at` and `winning_song_id`. `ROUND_DURATION_MS` in
-  `round.core.ts` is the window.
-- A second round is refused while one is open on that concert, and a round
-  is refused on a session whose `kind` is `practice`. The check and the
-  insert run in one transaction that first writes the concert's
-  audience-choice setlist row (`didClaimSetlistWithin`), so two rounds
-  asked for at the same moment cannot both pass it. When that setlist was
-  deleted in the meantime the round is refused as `not-a-concert`, and a
-  settlement whose setlist is gone writes nothing, so the next read
-  creates a new audience-choice setlist and settles the round into it
-  (`settleIfDue`).
-- Settlement is lazy: the first read after `closes_at` settles the round,
-  and settling twice changes nothing (`settleRound`).
-- The winner is the song with the most surviving votes; a tie goes to the
-  song whose latest surviving vote is the earliest, and a tie that
-  survives that is broken on `songId` ascending.
-- A round that closes with no vote is blank: `settled_at` is written,
-  `winning_song_id` stays null, and nothing is appended.
-- **The person voting is deliberately not modelled.** There is no row for
-  a voter and no field that identifies one; only the ballot exists.
-
-Held by: `api/src/audience/round.core.test.ts` › closes thirty seconds after it opened
-Held by: `api/src/audience/audience.controller.test.ts` › refuses a round on a practice, because rounds belong to concerts
-Held by: `api/src/audience/audience.controller.test.ts` › refuses a second round while one is running on that concert
-Held by: `api/src/audience/audience.controller.test.ts` › opens one round when two are asked for on the same concert at the same moment
-Held by: `api/src/audience/round.core.test.ts` › answers already-settled the second time, so a settlement that runs twice changes nothing
-Held by: `api/src/audience/round.core.test.ts` › breaks a tie on the song whose latest surviving vote is the earliest
-Held by: `api/src/audience/round.core.test.ts` › is blank when the room cast nothing
-Held by: `api/src/audience/audience.schema.test.ts` › identify a vote by the round, the ballot and the song, so one ballot votes once per song
+Invariants: `api/src/audience/INVARIANTS.md`
 
 Not to be confused with: a session, which is the concert the round belongs
 to.
