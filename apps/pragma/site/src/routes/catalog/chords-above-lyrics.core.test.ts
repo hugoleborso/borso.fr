@@ -144,12 +144,15 @@ describe('convertChordsAboveLyrics', () => {
 });
 
 describe('isTabStaffLine', () => {
-  it.each(['e|-----0-----|-----0------|', 'D#|--5h7--5p3--|', '|---3---|', '  G|-0-------0-|  x2'])(
-    'reads %s as a tab staff',
-    (line) => {
-      expect(isTabStaffLine(line)).toBe(true);
-    },
-  );
+  it.each([
+    'e|-----0-----|-----0------|',
+    'D#|--5h7--5p3--|',
+    '|---3---|',
+    '  G|-0-------0-|  x2',
+    'B|--<12>--<7>--|',
+  ])('reads %s as a tab staff', (line) => {
+    expect(isTabStaffLine(line)).toBe(true);
+  });
 
   it.each(['| la la ---', 'e|-|', 'Em   C', 'Hello -- world'])(
     'does not read %s as a tab staff',
@@ -191,6 +194,52 @@ describe('convertChordsAboveLyrics with a tab', () => {
   it('fences bare staves pasted into a chart already in ChordPro', () => {
     expect(convertChordsAboveLyrics(['[C]Hello', ...RIFF].join('\n'))).toEqual({
       chordPro: ['[C]Hello', '{start_of_tab}', ...RIFF, '{end_of_tab}'].join('\n'),
+      hasChords: true,
+      isChanged: true,
+    });
+  });
+
+  it('closes the block at a line of text, and opens a new one for the staves after it', () => {
+    const pasted = [...RIFF, 'Hello world', ...RIFF].join('\n');
+    expect(convertChordsAboveLyrics(pasted).chordPro).toBe(
+      [
+        '{start_of_tab}',
+        ...RIFF,
+        '{end_of_tab}',
+        'Hello world',
+        '{start_of_tab}',
+        ...RIFF,
+        '{end_of_tab}',
+      ].join('\n'),
+    );
+  });
+
+  it('reads a line of spaces between two systems as blank, so both stay in one block', () => {
+    const pasted = [...RIFF, '   ', ...RIFF].join('\n');
+    expect(convertChordsAboveLyrics(pasted).chordPro).toBe(
+      ['{start_of_tab}', ...RIFF, '   ', ...RIFF, '{end_of_tab}'].join('\n'),
+    );
+  });
+
+  it('fences the chord line right above the staves, however many lines come before it', () => {
+    const pasted = ['Hello', 'there', '  Em', ...RIFF].join('\n');
+    expect(convertChordsAboveLyrics(pasted).chordPro).toBe(
+      ['Hello', 'there', '{start_of_tab}', '  Em', ...RIFF, '{end_of_tab}'].join('\n'),
+    );
+  });
+
+  it('fences bare staves that come after a tab block the author closed', () => {
+    const authored = ['{start_of_tab}', ...RIFF, '{end_of_tab}', 'Hello', ...RIFF].join('\n');
+    expect(convertChordsAboveLyrics(authored)).toEqual({
+      chordPro: [
+        '{start_of_tab}',
+        ...RIFF,
+        '{end_of_tab}',
+        'Hello',
+        '{start_of_tab}',
+        ...RIFF,
+        '{end_of_tab}',
+      ].join('\n'),
       hasChords: true,
       isChanged: true,
     });

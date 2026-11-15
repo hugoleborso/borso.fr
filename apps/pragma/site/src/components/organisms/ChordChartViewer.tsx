@@ -8,10 +8,10 @@ import {
   hasSectionHeading,
   isTitleDirective,
   parseChordPro,
-  transposeLines,
   widestTabLineLength,
 } from '../../lib/chordpro.utils';
 import { buildTabFontSize } from '../../routes/catalog/scene-view.core';
+import { transposeChordChart } from '../../routes/catalog/tab-transpose.core';
 import type { ChordChartTone } from '../atoms/chart-tone';
 import { ChordProSectionHeading } from '../molecules/ChordProSectionHeading';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -140,7 +140,7 @@ export function ChordChartViewer({
   tone = 'light',
 }: ChordChartViewerProps): JSX.Element {
   const lines = useMemo(() => parseChordPro(source), [source]);
-  const transposed = useMemo(() => transposeLines(lines, semitones), [lines, semitones]);
+  const transposed = useMemo(() => transposeChordChart(lines, semitones), [lines, semitones]);
   const sections = useMemo(() => groupChordProSections(transposed), [transposed]);
   return (
     <div

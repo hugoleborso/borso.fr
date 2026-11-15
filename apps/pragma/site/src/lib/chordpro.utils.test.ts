@@ -385,7 +385,11 @@ describe('parseChordPro inside a tab block', () => {
     expect(parseChordPro('{sot}\ne|---|\n{soc}\n[C]Hi')[3]?.kind).toBe('chord-line');
   });
 
-  it('leaves a tab line untouched when the chart is transposed', () => {
+  it('stays in the tab block across a directive that opens no section', () => {
+    expect(parseChordPro('{sot}\n{comment: Riff}\ne|---|\n{eot}')[2]?.kind).toBe('tab-line');
+  });
+
+  it('leaves the tab lines to the tab transposer when the chords are transposed', () => {
     const lines = parseChordPro('{sot}\n  Em  [C]\n{eot}');
     expect(transposeLines(lines, 2)[1]).toEqual({ kind: 'tab-line', text: '  Em  [C]' });
   });

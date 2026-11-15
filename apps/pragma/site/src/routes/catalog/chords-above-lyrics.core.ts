@@ -10,7 +10,7 @@ const WORD_PATTERN = /\S+/g;
 const LINE_BREAK_PATTERN = /\r\n?/g;
 const TAB_STOP = 8;
 const TAB_STAFF_LINE_PATTERN =
-  /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()^*.: ]*-{2}[-\d|hpbrsvx/\\~()^*.: ]*$/;
+  /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()<>^*.: ]*-{2}[-\d|hpbrsvx/\\~()<>^*.: ]*$/;
 const TAB_BLOCK_START_PATTERN = /^\s*\{(?:start_of_tab|sot)(?::[^}]*)?\}\s*$/;
 const TAB_BLOCK_END_PATTERN = /^\s*\{(?:end_of_tab|eot)\}\s*$/;
 const TAB_BLOCK_START = '{start_of_tab}';

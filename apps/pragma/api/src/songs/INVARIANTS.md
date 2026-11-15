@@ -17,8 +17,9 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   `image` and `pdf` files, which cannot be transposed.
 - A tablature lives inside a ChordPro chart as a **tab block**, the lines
   between `{start_of_tab}` (or `{sot}`) and `{end_of_tab}` (or `{eot}`).
-  Each line in it is a `tab-line`, kept verbatim: no chord is read from
-  it, transposed in it, or derived from it as tonality. On save, a run of
+  Each line in it is a `tab-line`, stored verbatim: no chord is read from
+  it or derived from it as tonality. The scene view transposes it on
+  screen only (see the catalog's Scene view invariants). On save, a run of
   ASCII staff lines (`e|--0--|`) and the chord line right above it are
   fenced into a tab block, in pasted text and in ChordPro alike.
 

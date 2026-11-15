@@ -36,9 +36,10 @@ describe('a chord chart holding a tab', () => {
     expect(closestElement('e|-----0-----|-----0------|', '.overflow-x-auto')).toBeDefined();
   });
 
-  it('keeps the chord line above the staff column for column when the song is transposed', () => {
+  it('transposes the frets and the chord line of the tab along with the song', () => {
     render(<ChordChartViewer source={CHART_WITH_A_RIFF} semitones={2} tone="dark" />);
-    expect(screen.getByText('   Em        C', { normalizer: (text) => text })).toBeDefined();
+    expect(screen.getByText('   F#m       D', { normalizer: (text) => text })).toBeDefined();
+    expect(screen.getByText('e|-----2-----|-----2------|')).toBeDefined();
     expect(screen.getByText('[D]')).toBeDefined();
   });
 });
