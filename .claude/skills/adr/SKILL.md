@@ -1,6 +1,6 @@
 ---
 name: adr
-description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.md`, where `<id>` is the UTC minute it was written, `YYYY-MM-DDTHHMM`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `.claude/skills/adr/`.
+description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.md`, where `<id>` is the UTC minute it was written, `YYYY-MM-DDTHHMM`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator`, or by any session that already weighed the options, with the slug, decision summary, alternatives, and triggers in hand, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `.claude/skills/adr/`.
 ---
 
 # ADR skill
@@ -90,7 +90,10 @@ The asymmetry is deliberate. An author-raised alternative is rejected by the rub
 
 Then call the *Procedure* below to write the file.
 
-## Mode B — Piloted by `/tech-lead-orchestrator`
+## Mode B — Piloted by `/tech-lead-orchestrator` or by a session that already chose
+
+A main session that weighed the options with the operator, or in its own spec, pilots the skill the same way: it passes the inputs below in `args`. It leaves out `feature-path`, `run-id` and `step`, and then no verdict YAML is written. The session of PR #353 had no such mode and wrote its ADR from the template by hand, outside *Procedure*'s id and conflict checks.
+
 
 The orchestrator invokes this skill via the `Skill` tool with a payload describing one ratified ADR candidate. Expected inputs in the invocation prompt:
 
@@ -123,7 +126,7 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
 5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Criteria, Decision, Consequences, Alternatives considered (chosen first), Scores, Implementation pointers.
 6. **Write the file** at `docs/adr/<id>-<slug>.md` with the rendered markdown. Header reads `# ADR-<id>: <title>`, with the same id as the filename; `check-adr-numbers-resolve.sh` refuses the two disagreeing.
 7. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-<id>`, leave the rest of the file untouched.
-8. **Piloted mode only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
+8. **Piloted by the orchestrator only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
    ```yaml
    ---
    status: done

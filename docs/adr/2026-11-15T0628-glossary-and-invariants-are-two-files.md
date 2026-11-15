@@ -1,6 +1,6 @@
 # ADR-2026-11-15T0628: The glossary stays in VOCABULARY.md and each term's rules move to an INVARIANTS.md in its folder
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-15
 - **Deciders:** operator
 - **Tags:** meta, vocabulary, harness
