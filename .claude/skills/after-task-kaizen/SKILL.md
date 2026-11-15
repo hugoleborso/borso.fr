@@ -143,9 +143,18 @@ size cannot fit, and the two requirements contradicted each other from
 the moment the budget landed. A committed file is the better home
 anyway — the body is an index, and the inventory is the evidence.
 
-| # | When | Friction | Sources / evidence | Decision |
-| --- | --- | --- | --- | --- |
-| 01 | spec | … | <commit / report / chat snippet> | dantotsu / knowledge / no-op (with one-line reason) |
+| # | When | Friction | Sources / evidence | Rock | Decision |
+| --- | --- | --- | --- | --- | --- |
+| 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | dantotsu / knowledge / no-op (with one-line reason) |
+
+Lower the water, do not bail. The `Rock` cell names what makes the friction
+possible at all: a file every pull request appends to, a step done by hand,
+two places that hold one rule. A `fixed:` or `dantotsu:` decision removes that
+rock. A guard, a message or a script that catches the friction after it
+happens leaves the rock and adds inventory, so it is not an eradication. If no
+removal is possible here, say so in the cell and ask the operator. The sweep of
+PR #351 first shipped a stop script, a refusal message and a corrected guard,
+three buckets over rocks it had not named, and the operator sent it back.
 
 Conventions:
 

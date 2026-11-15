@@ -21,6 +21,24 @@ $touched_paths
 # scripts/ensure-installed.sh.
 scripts/ensure-installed.sh pre-commit
 
+# The commit formats what it carries, so nobody formats by hand. The format
+# hook formats a Write or an Edit, but a sed, a heredoc or a script rewrites a
+# file without one, and the format check then refused the commit. Agents formatted
+# by hand, reached for Prettier, and nineteen archived friction lines record it.
+# A file whose whole change is staged is formatted and staged again. A file
+# with unstaged changes is left to the check below, because restaging it would
+# commit work its author held back.
+set --
+for candidate in $(printf '%s\n' "$touched" |
+  sed -nE 's/^[AM] (.*\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html))$/\1/p'); do
+  if [ -f "$candidate" ] && git diff --quiet -- "$candidate"; then set -- "$@" "$candidate"; fi
+done
+if [ "$#" -gt 0 ] && [ -x node_modules/.bin/oxfmt ]; then
+  node_modules/.bin/oxfmt --no-error-on-unmatched-pattern "$@" >/dev/null
+  git add -- "$@"
+fi
+set --
+
 results=$(mktemp -d)
 trap 'rm -rf "$results"' EXIT
 

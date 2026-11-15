@@ -4,10 +4,10 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#351'
-fix-pr: none (lands with the kaizen pull request for PR #351)
-fix-commits: [self]
+fix-pr: '#352'
+fix-commits: [8230bcebe]
 eradication-level: 1
-eradication-paths: [.husky/pre-push]
+eradication-paths: [scripts/check-coupled-lists.sh]
 time-to-detect: hours
 tags: [git, gates, ci, github-actions]
 zone: .husky/pre-push
@@ -82,29 +82,29 @@ file, which is where its status now lives.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). The guard now computes GitHub's
-merge: attributes come from the empty tree, so no driver in any checkout can
-make a conflicted branch look clean.
+**Type:** structural impossibility (level 1), shipped by PR #352 before this
+sweep looked.
 
-**Reference:** this commit.
+**Reference:** commit `8230bcebe` (PR #352). The rock was a file every pull
+request appended to. PR #352 split each such list into one file per record and
+deleted the `merge=union` lines with them, so two branches no longer write the
+same lines and no checkout merges differently from GitHub.
 
 ```diff
--  merge_base=$(git merge-base HEAD origin/main 2>/dev/null || true)
--  if [ -n "$merge_base" ] &&
--    git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
-+  empty_tree=$(git hash-object -t tree /dev/null)
-+  conflict_status=0
-+  GIT_ATTR_SOURCE="$empty_tree" git merge-tree --write-tree --name-only HEAD origin/main \
-+    >/dev/null 2>&1 || conflict_status=$?
-+  if [ "$conflict_status" -eq 1 ]; then
+-docs/quality/feature-cost.md merge=union
+-docs/adr/README.md merge=union
 ```
 
-**Proof it can fail:** the guard block run on the clone above, with the
-branch's `.gitattributes` in the worktree, prints the refusal and exits 1. The
-old block exits 0 on the same state. With `origin/main` at the branch's parent
-the new block exits 0.
+This sweep first made the pre-push guard read no attributes, so it would agree
+with GitHub even under a driver. That was a bucket over a rock already gone,
+and it was withdrawn. The guard is right on main as it is, because main
+declares no merge driver.
 
-**Similar instances:** `git grep -n 'merge-tree' -- .husky scripts .claude`
-finds one other caller, `scripts/pre-push-range.sh`. It computes which files
-the gates read, not whether GitHub can merge, so it is left as is. `git ls-files '*.gitattributes'` finds none on main
-since PR #352, so no merge driver is left to diverge from GitHub's.
+**Proof it can fail:** on a clone at `4c0193b` with the branch's
+`.gitattributes`, the guard exits 0 on a conflicted branch. With that file gone,
+as on main, the same merge reports the conflict and the guard exits 1.
+
+**Similar instances:** `git log origin/main -60 --format= --name-only | sort |
+uniq -c | sort -rn` ranks the files most pull requests touch. After the lists
+PR #352 split, `docs/operator-backlog.md` remains, touched by 13 of the last 60
+pull requests. It is the next file that makes branches conflict.
