@@ -2,44 +2,43 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { isDeviceIos } from '../../lib/display-mode.adapter';
 import { selectSongListenLinks } from '../../lib/listen-links.utils';
-import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistsList } from '../../lib/queries/setlists.queries';
 import {
   type SongRecord,
   useLastSongWriteFailure,
+  useSongPreview,
   useUpdateSong,
 } from '../../lib/queries/songs.queries';
-import { describeSetlistsOfSong, selectMemberLineupRow } from '../../routes/catalog/song-page.core';
+import { useTakesOfSong } from '../../lib/queries/takes.queries';
+import { describeSetlistsOfSong } from '../../routes/catalog/song-page.core';
 import type {
   LineupInstrument,
   LineupMember,
   SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
-import type { SongViewTab } from '../../routes/catalog/song-view-tab.core';
+import { SONG_PAGE_TABS, type SongPageTab } from '../../routes/catalog/song-view-tab.core';
 import { BottomActions } from '../atoms/BottomActions';
-import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
+import { ButtonLink } from '../atoms/ButtonLink';
+import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { LineupEditor, type LineupRecord } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { ListenRow } from '../molecules/ListenRow';
 import { SongEnergyField } from '../molecules/SongEnergyField';
+import { SongLineupChips } from '../molecules/SongLineupChips';
 import { SongViewTabs } from '../molecules/SongViewTabs';
-import { MasteryProgressChart } from './MasteryProgressChart';
 import { RecordingSheetDialogs } from './RecordingSheet';
 import { useRecordingSheet } from './recording-sheet.hook';
 import { SongChartPreviews } from './SongChartPreviews';
 import { SongDetailHeader } from './SongDetailHeader';
-import { SongDetailSidebar } from './SongDetailSidebar';
 import { SongLinksCard } from './SongLinksCard';
 import { SongNotesCard } from './SongNotesCard';
-import { SongRoundActions } from './SongRoundActions';
 import { SongTakes } from './SongTakes';
-import { SongYourPart } from './SongYourPart';
 
 export interface SongDetailProps {
   readonly song: SongRecord;
@@ -49,21 +48,25 @@ export interface SongDetailProps {
   readonly hasSideLoadFailed: boolean;
   readonly selectedTakeId: string | null;
   readonly onSelectTake: (takeId: string | null) => void;
-  readonly tab: SongViewTab;
-  readonly onTabChange: (tab: SongViewTab) => void;
+  readonly tab: SongPageTab;
+  readonly onTabChange: (tab: SongPageTab) => void;
   readonly compositionId: string | null;
 }
 
 const NO_SETLISTS: readonly never[] = [];
+const ENERGY_LABEL_CLASS =
+  'm-0 shrink-0 whitespace-nowrap text-label tracking-wider uppercase text-ink-soft font-medium';
 
 // @FollowsBlueprint organism-query-owning
 export function SongDetail(props: SongDetailProps): JSX.Element {
   const { song, members, instruments } = props;
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const updateSong = useUpdateSong();
   const lastWriteFailure = useLastSongWriteFailure(song.id);
-  const memberQuery = useSignedInMember();
   const setlistsQuery = useSetlistsList();
+  const previewQuery = useSongPreview(song.id, song.deezerTrackId !== null);
+  const takesQuery = useTakesOfSong(song.id);
   const recording = useRecordingSheet();
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
@@ -77,7 +80,6 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
   );
   const listenLinks = useMemo(() => selectSongListenLinks(song, { isIos: isDeviceIos() }), [song]);
   const setlistsLine = describeSetlistsOfSong(setlistsQuery.data?.setlists ?? NO_SETLISTS, song.id);
-  const memberRow = selectMemberLineupRow(props.lineupRows, memberQuery.data?.memberId ?? null);
 
   const saveSongLineup = (lineup: LineupRecord | null): void => {
     updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
@@ -87,7 +89,14 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
     <section className="flex max-w-3xl flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
       <SongDetailHeader
         song={song}
+        previewUrl={previewQuery.data?.previewUrl ?? null}
         menuItems={[
+          {
+            label: t('common.edit'),
+            icon: 'edit',
+            tone: 'default',
+            onSelect: () => void navigate(`/catalog/${song.id}/edit`),
+          },
           {
             label: t('catalog.editLineup'),
             icon: 'members',
@@ -97,7 +106,14 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
         ]}
       />
 
-      <SongViewTabs value={props.tab} onChange={props.onTabChange} />
+      <ListenRow links={listenLinks} />
+
+      <SongViewTabs
+        tabs={SONG_PAGE_TABS}
+        value={props.tab}
+        takeCount={takesQuery.data?.takes.length ?? null}
+        onChange={props.onTabChange}
+      />
 
       {props.hasSideLoadFailed ? (
         <p className="text-danger text-meta" role="alert">
@@ -124,11 +140,24 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
           {
             info: (
               <>
-                <ListenRow links={listenLinks} />
+                <SongNotesCard song={song} />
+                <Card
+                  variant="flat"
+                  className="flex items-center gap-3 bg-sunk border-0 py-1 sm:py-1"
+                >
+                  <h2 className={ENERGY_LABEL_CLASS}>{t('catalog.baseEnergy')}</h2>
+                  <SongEnergyField
+                    baseEnergy={song.baseEnergy}
+                    size="wide"
+                    onChange={(level) => updateSong.mutate({ id: song.id, baseEnergy: level })}
+                  />
+                </Card>
+                <SongLineupChips rows={props.lineupRows} onEdit={() => setLineupEditorOpen(true)} />
                 <p className="m-0 flex items-center gap-2 text-meta text-ink-soft">
                   <Icon name="setlist" size="sm" />
                   {t(setlistsLine.messageKey, { names: setlistsLine.names })}
                 </p>
+                <SongLinksCard links={song.links} />
                 {props.compositionId === null ? null : (
                   <Link
                     to={`/compos/${props.compositionId}/sketch`}
@@ -138,33 +167,22 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                     {t('compos.openSketch')}
                   </Link>
                 )}
-                <SongRoundActions songId={song.id} notes={song} />
-                <SongYourPart row={memberRow} />
-                <Card variant="flat" className="flex flex-col gap-1 bg-sunk border-0">
-                  <div className="text-label tracking-wider uppercase text-ink-soft font-medium">
-                    {t('catalog.baseEnergy')}
-                  </div>
-                  <SongEnergyField
-                    baseEnergy={song.baseEnergy}
-                    size="wide"
-                    onChange={(level) => updateSong.mutate({ id: song.id, baseEnergy: level })}
-                  />
-                </Card>
-                <SongNotesCard song={song} />
-                <SongLinksCard links={song.links} />
               </>
             ),
-            lineup: (
+            chords: (
               <>
-                <SongDetailSidebar lineupRows={props.lineupRows} />
-                <MasteryProgressChart
-                  songId={song.id}
-                  members={members}
-                  instruments={instruments}
-                />
+                <ButtonLink
+                  to={`/catalog/${song.id}/scene`}
+                  variant="secondary"
+                  size="sm"
+                  icon="expand"
+                  className="self-start"
+                >
+                  {t('catalog.fullScreen')}
+                </ButtonLink>
+                <SongChartPreviews chart={song.chart} />
               </>
             ),
-            chords: <SongChartPreviews chart={song.chart} />,
             takes: (
               <SongTakes
                 songId={song.id}

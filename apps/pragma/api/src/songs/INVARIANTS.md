@@ -58,9 +58,16 @@ Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › m
 - One track belongs to at most one song: `song_deezer_track_id_unique`
   refuses a second. A create or an update naming a track another song
   holds answers 409 `deezer-track-taken` with that song's id and title.
+- The 30-second excerpt the song page plays is never stored. Deezer signs
+  its address with an expiry, so `GET /api/songs/:id/preview` reads the
+  track again at each call. A song naming no track, or a track Deezer
+  holds no excerpt of, answers `previewUrl: null` and the page draws no
+  play button.
 
 Held by: `api/src/songs/songs.controller.test.ts` › refuses a second song naming a Deezer track another song holds, and names the holder
 Held by: `api/src/songs/songs.controller.test.ts` › refuses moving a song onto a Deezer track another song holds, and lets a song keep its own
+Held by: `api/src/songs/songs.deezer.controller.test.ts` › resolves a fresh preview of the song track from Deezer at every read
+Held by: `api/src/songs/songs.deezer.controller.test.ts` › answers no preview without asking Deezer for a song that names no track
 
 ## Spotify track
 

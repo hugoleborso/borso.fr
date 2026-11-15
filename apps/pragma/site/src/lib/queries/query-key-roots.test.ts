@@ -68,7 +68,7 @@ describe('the API roots each site query reads', () => {
     expect(modules.find((module) => module.name === 'studies')).toStrictEqual({
       name: 'studies',
       keyRoots: ['studies'],
-      apiReads: ['studies', 'mastery'],
+      apiReads: ['studies'],
     });
     expect(modules.find((module) => module.name === 'setlist-entries')?.keyRoots).toStrictEqual([
       'setlists',

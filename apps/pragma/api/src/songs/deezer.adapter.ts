@@ -10,6 +10,7 @@ import {
   mapDeezerTrack,
   mapDeezerTracks,
   readDeezerErrorCode,
+  readDeezerPreviewUrl,
 } from './deezer.core';
 import { rankExternalHits } from './search-ranking.core';
 
@@ -108,18 +109,39 @@ export async function searchExternal(
   return { kind: 'ok', hits: [...hits] };
 }
 
+async function readTrackPayload(
+  trackId: string,
+  options: SearchExternalOptions,
+): Promise<DeezerRead | typeof REFUSED> {
+  const state = options.state ?? externalSearchState;
+  const now = options.now ?? Date.now;
+  await waitForRateSlot(state, now);
+  state.lastCallAt = now();
+  return await readDeezer(`${DEEZER_TRACK_URL}${encodeURIComponent(trackId)}`, options);
+}
+
 // @FollowsBlueprint adapter-rate-limited-fetch
 export async function readDeezerTrack(
   trackId: string,
   options: SearchExternalOptions = {},
 ): Promise<TrackReadOutcome> {
-  const state = options.state ?? externalSearchState;
-  const now = options.now ?? Date.now;
-  await waitForRateSlot(state, now);
-  state.lastCallAt = now();
-  const read = await readDeezer(`${DEEZER_TRACK_URL}${encodeURIComponent(trackId)}`, options);
+  const read = await readTrackPayload(trackId, options);
   if (read === REFUSED) return { kind: 'unavailable' };
   const track = mapDeezerTrack(read.body);
   if (track === null) return { kind: 'unknown' };
   return { kind: 'ok', track };
+}
+
+export type PreviewReadOutcome =
+  | { readonly kind: 'ok'; readonly previewUrl: string | null }
+  | { readonly kind: 'unavailable' };
+
+// @FollowsBlueprint adapter-rate-limited-fetch
+export async function readDeezerTrackPreview(
+  trackId: string,
+  options: SearchExternalOptions = {},
+): Promise<PreviewReadOutcome> {
+  const read = await readTrackPayload(trackId, options);
+  if (read === REFUSED) return { kind: 'unavailable' };
+  return { kind: 'ok', previewUrl: readDeezerPreviewUrl(read.body) };
 }

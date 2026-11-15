@@ -110,6 +110,16 @@ export function mapDeezerTrack(payload: unknown): ExternalSongHit | null {
   return mapDeezerTracks({ data: [payload] })[0] ?? null;
 }
 
+const PREVIEW_URL_PREFIX = 'https://';
+
+const previewSchema = z.object({ preview: z.string().startsWith(PREVIEW_URL_PREFIX) });
+
+// @FollowsBlueprint core-parse-untrusted
+export function readDeezerPreviewUrl(payload: unknown): string | null {
+  const track = previewSchema.safeParse(payload);
+  return track.success ? track.data.preview : null;
+}
+
 /**
  * @Blueprint core-collapse-on-what-the-reader-can-tell-apart
  * @BlueprintName Collapse On What The Reader Can Tell Apart

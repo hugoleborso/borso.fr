@@ -1,149 +1,61 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildEffectiveMasteryLookup,
-  buildMasteryKey,
-  buildSongLineupRows,
-  flattenMasteryRows,
-  isMasteryBarFilled,
-  MASTERY_BAR_COUNT,
-} from './song-lineup.core';
+import { buildSongLineupRows, type LineupInstrument } from './song-lineup.core';
 
 const MEMBERS = [
   { id: 'ana', firstName: 'Ana', color: '#111111' },
   { id: 'bruno', firstName: 'Bruno', color: '#222222' },
 ];
 
-const INSTRUMENTS = [
-  { id: 'guitar', name: 'Guitar' },
-  { id: 'bass', name: 'Bass' },
+const INSTRUMENTS: readonly LineupInstrument[] = [
+  { id: 'guitar', name: 'Guitar', icon: 'guitar' },
+  { id: 'bass', name: 'Bass', icon: 'bass' },
 ];
 
 // @FollowsBlueprint test-pure-unit
-describe('buildMasteryKey', () => {
-  it('joins the pair the mastery lookup is keyed by', () => {
-    expect(buildMasteryKey('ana', 'guitar')).toBe('ana::guitar');
-  });
-});
-
-describe('buildEffectiveMasteryLookup', () => {
-  it('lets the per-song score win over the default, including a zero', () => {
-    const lookup = buildEffectiveMasteryLookup(
-      [
-        { memberId: 'hugo', instrumentId: 'guitar', score: 5 },
-        { memberId: 'lea', instrumentId: 'drums', score: 6 },
-      ],
-      [{ memberId: 'hugo', instrumentId: 'guitar', score: 0 }],
-    );
-    expect(lookup.get(buildMasteryKey('hugo', 'guitar'))).toBe(0);
-    expect(lookup.get(buildMasteryKey('lea', 'drums'))).toBe(6);
-  });
-});
-
-describe('isMasteryBarFilled', () => {
-  it('fills as many bars as the score', () => {
-    expect(isMasteryBarFilled(3, 0)).toBe(true);
-    expect(isMasteryBarFilled(3, 2)).toBe(true);
-    expect(isMasteryBarFilled(3, 3)).toBe(false);
-  });
-
-  it('fills nothing for a member nobody has rated', () => {
-    expect(isMasteryBarFilled(null, 0)).toBe(false);
-  });
-
-  it('fills every bar at the top score', () => {
-    expect(isMasteryBarFilled(MASTERY_BAR_COUNT, MASTERY_BAR_COUNT - 1)).toBe(true);
-  });
-});
-
 describe('buildSongLineupRows', () => {
   it('reads a sitting-out member as holding nothing', () => {
-    const rows = buildSongLineupRows({ ana: [] }, MEMBERS, INSTRUMENTS, new Map());
+    const rows = buildSongLineupRows({ ana: [] }, MEMBERS, INSTRUMENTS);
 
     expect(rows).toStrictEqual([
       { memberId: 'ana', memberName: 'Ana', memberColor: '#111111', instruments: [] },
     ]);
   });
 
-  it('resolves the member, the instrument and the mastery score', () => {
-    const rows = buildSongLineupRows(
-      { ana: ['guitar'] },
-      MEMBERS,
-      INSTRUMENTS,
-      new Map([['ana::guitar', 7]]),
-    );
+  it('resolves the member, the instrument and its icon', () => {
+    const rows = buildSongLineupRows({ ana: ['guitar'] }, MEMBERS, INSTRUMENTS);
 
     expect(rows).toStrictEqual([
       {
         memberId: 'ana',
         memberName: 'Ana',
         memberColor: '#111111',
-        instruments: [{ instrumentId: 'guitar', instrumentName: 'Guitar', masteryScore: 7 }],
+        instruments: [{ instrumentId: 'guitar', instrumentName: 'Guitar', icon: 'guitar' }],
       },
     ]);
   });
 
-  it('carries every instrument a member holds, each with its own score', () => {
-    const rows = buildSongLineupRows(
-      { ana: ['guitar', 'bass'] },
-      MEMBERS,
-      INSTRUMENTS,
-      new Map([['ana::guitar', 7]]),
-    );
+  it('carries every instrument a member holds, in the order the lineup stores them', () => {
+    const rows = buildSongLineupRows({ ana: ['bass', 'guitar'] }, MEMBERS, INSTRUMENTS);
 
     expect(rows[0]?.instruments).toStrictEqual([
-      { instrumentId: 'guitar', instrumentName: 'Guitar', masteryScore: 7 },
-      { instrumentId: 'bass', instrumentName: 'Bass', masteryScore: null },
+      { instrumentId: 'bass', instrumentName: 'Bass', icon: 'bass' },
+      { instrumentId: 'guitar', instrumentName: 'Guitar', icon: 'guitar' },
     ]);
   });
 
   it('drops a member who is no longer in the band', () => {
-    const rows = buildSongLineupRows({ ghost: ['guitar'] }, MEMBERS, INSTRUMENTS, new Map());
+    const rows = buildSongLineupRows({ ghost: ['guitar'] }, MEMBERS, INSTRUMENTS);
 
     expect(rows).toStrictEqual([]);
   });
 
   it('drops an instrument the band no longer has', () => {
-    const rows = buildSongLineupRows({ bruno: ['kazoo'] }, MEMBERS, INSTRUMENTS, new Map());
+    const rows = buildSongLineupRows({ bruno: ['kazoo'] }, MEMBERS, INSTRUMENTS);
 
     expect(rows[0]?.instruments).toStrictEqual([]);
   });
 
   it('leaves an empty lineup empty', () => {
-    expect(buildSongLineupRows({}, MEMBERS, INSTRUMENTS, new Map())).toStrictEqual([]);
-  });
-});
-
-describe('flattenMasteryRows', () => {
-  it('answers one row per instrument held, carrying the member', () => {
-    const rows = buildSongLineupRows(
-      { ana: ['guitar', 'bass'] },
-      MEMBERS,
-      INSTRUMENTS,
-      new Map([['ana::guitar', 7]]),
-    );
-
-    expect(flattenMasteryRows(rows)).toStrictEqual([
-      {
-        memberId: 'ana',
-        memberName: 'Ana',
-        memberColor: '#111111',
-        instrumentId: 'guitar',
-        instrumentName: 'Guitar',
-        masteryScore: 7,
-      },
-      {
-        memberId: 'ana',
-        memberName: 'Ana',
-        memberColor: '#111111',
-        instrumentId: 'bass',
-        instrumentName: 'Bass',
-        masteryScore: null,
-      },
-    ]);
-  });
-
-  it('answers nothing for a member holding nothing', () => {
-    const rows = buildSongLineupRows({ ana: [] }, MEMBERS, INSTRUMENTS, new Map());
-    expect(flattenMasteryRows(rows)).toStrictEqual([]);
+    expect(buildSongLineupRows({}, MEMBERS, INSTRUMENTS)).toStrictEqual([]);
   });
 });

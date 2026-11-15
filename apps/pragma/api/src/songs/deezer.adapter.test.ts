@@ -11,6 +11,7 @@ import {
   type ExternalFetcher,
   type ExternalSearchState,
   readDeezerTrack,
+  readDeezerTrackPreview,
   searchExternal,
 } from './deezer.adapter';
 import type { ExternalSearchCacheEntry } from './deezer.core';
@@ -227,6 +228,49 @@ describe('readDeezerTrack', () => {
       const outcome = await readDeezerTrack('3135556');
       expect(platformFetch).toHaveBeenCalledTimes(1);
       expect(outcome.kind).toBe('ok');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('readDeezerTrackPreview', () => {
+  const PREVIEW_URL = 'https://cdnt-preview.dzcdn.net/api/1/1/c/8/a/0/c8a6.mp3?hdnea=exp=1';
+
+  it('asks the track route for a fresh preview, since the address it signs expires', async () => {
+    const fetcher = vi.fn(respondWith({ id: 3135556, preview: PREVIEW_URL }));
+    const state = freshState();
+    const outcome = await readDeezerTrackPreview('3135556', { fetcher, now: () => 7, state });
+    expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.deezer.com/track/3135556');
+    expect(state.lastCallAt).toBe(7);
+    expect(outcome).toEqual({ kind: 'ok', previewUrl: PREVIEW_URL });
+  });
+
+  it('reads an unknown track as a track with no preview', async () => {
+    const outcome = await readDeezerTrackPreview('1', {
+      fetcher: respondWith({ error: { type: 'DataException', code: 800 } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'ok', previewUrl: null });
+  });
+
+  it('reports a quota refusal stated inside a 200 as unavailable', async () => {
+    const outcome = await readDeezerTrackPreview('3135556', {
+      fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('falls back to its own state, clock and fetch when the caller names none', async () => {
+    const platformFetch = vi.fn(respondWith({ id: 3135556, preview: PREVIEW_URL }));
+    vi.stubGlobal('fetch', platformFetch);
+    try {
+      const outcome = await readDeezerTrackPreview('3135556');
+      expect(platformFetch).toHaveBeenCalledTimes(1);
+      expect(outcome).toEqual({ kind: 'ok', previewUrl: PREVIEW_URL });
     } finally {
       vi.unstubAllGlobals();
     }

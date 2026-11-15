@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  describeSetlistsOfSong,
-  selectMemberLineupRow,
-  selectSetlistsOfSong,
-} from './song-page.core';
+import { describeSetlistsOfSong, selectSetlistsOfSong } from './song-page.core';
 
 describe('selectSetlistsOfSong', () => {
   it('keeps the setlists holding the song, in the order given', () => {
@@ -37,19 +33,5 @@ describe('describeSetlistsOfSong', () => {
       messageKey: 'catalog.inNoSetlist',
       names: '',
     });
-  });
-});
-
-describe('selectMemberLineupRow', () => {
-  const rows = [
-    { memberId: 'member-1', memberName: 'Ana', memberColor: '#000000', instruments: [] },
-  ];
-
-  it('finds the row of the member', () => {
-    expect(selectMemberLineupRow(rows, 'member-1')?.memberName).toBe('Ana');
-  });
-
-  it('answers null for a member who does not play the song', () => {
-    expect(selectMemberLineupRow(rows, 'member-2')).toBeNull();
   });
 });

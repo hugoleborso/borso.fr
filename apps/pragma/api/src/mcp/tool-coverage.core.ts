@@ -64,6 +64,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'PUT /api/instruments/:id': NOT_FOR_ASSISTANTS,
   'DELETE /api/instruments/:id': NOT_FOR_ASSISTANTS,
   '* /api/mastery/defaults/*': NOT_FOR_ASSISTANTS,
+  'GET /api/songs/:id/preview':
+    'A signed audio address that expires within minutes, for the player of the song page; get_song names the Deezer track.',
   '* /api/outreach/*': NOT_FOR_ASSISTANTS,
   'POST /api/members': NOT_FOR_ASSISTANTS,
   'PUT /api/members/:id': NOT_FOR_ASSISTANTS,
