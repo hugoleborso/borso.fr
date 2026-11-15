@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: low
 related-pr: '#161'
-fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/package.json, apps/talos/package.json, apps/last-loop-lepin/package.json, apps/banana-rush/package.json]

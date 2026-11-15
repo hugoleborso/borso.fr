@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#108'
-fix-pr: '#109'
 fix-commits: [2d5502de8f]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/sw/service-worker.test-utils.ts, apps/pragma/api/src/mastery/mastery.core.ts]

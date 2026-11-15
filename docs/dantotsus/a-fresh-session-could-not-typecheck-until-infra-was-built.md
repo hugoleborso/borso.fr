@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#36'
-fix-pr: '#45'
 fix-commits: [ebabfe7650]
 eradication-level: 2
 eradication-paths: [scripts/install-repo-deps.sh]

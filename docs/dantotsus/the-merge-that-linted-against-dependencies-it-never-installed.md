@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#197'
-fix-pr: none (lands with the kaizen pull request for PR #334)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/ensure-installed.sh, .husky/pre-commit, .husky/pre-push, scripts/lint-workspace.sh]

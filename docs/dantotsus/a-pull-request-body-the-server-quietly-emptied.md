@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#60'
-fix-pr: '#62'
 fix-commits: [0f55859e99]
 eradication-level: 2
 eradication-paths: [.claude/hooks/strip-markdown-code.py, .claude/hooks/pretool-github-pr-body.sh]

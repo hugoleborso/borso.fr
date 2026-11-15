@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#274'
-fix-pr: none (opened by the kaizen pull request for #274)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/last-loop-lepin/test/setup-postgres.ts, apps/last-loop-lepin/package.json]

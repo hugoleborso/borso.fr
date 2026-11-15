@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: none (the round rules predate the move of the harness in #266; the gap bit on #327)
-fix-pr: none (lands with the kaizen pull request for PR #327)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md]

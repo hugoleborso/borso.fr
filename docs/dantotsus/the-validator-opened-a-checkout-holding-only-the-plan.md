@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#193'
-fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/commands/feature-pipeline.md, .claude/hooks/pretool-validation-runs-as-its-agent.sh, .claude/settings.json, .claude/skills/tech-lead-orchestrator/SKILL.md]

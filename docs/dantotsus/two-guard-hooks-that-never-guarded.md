@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#60'
-fix-pr: '#62'
 fix-commits: [195b354e2d]
 eradication-level: 2
 eradication-paths: [.claude/hooks/strip-heredocs.py]

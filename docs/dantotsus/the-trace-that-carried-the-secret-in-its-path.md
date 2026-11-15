@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: '#118'
-fix-pr: '#118'
 fix-commits: [52684a2]
 eradication-level: 1
 eradication-paths: [apps/pragma/api/src/helpers/observability/error-reporting.core.ts, apps/pragma/api/src/helpers/observability/error-reporting.adapter.ts]

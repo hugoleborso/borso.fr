@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: low
 related-pr: '#118, #163, #167'
-fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/skills/adr/SKILL.md, scripts/check-numbered-sequences.sh]

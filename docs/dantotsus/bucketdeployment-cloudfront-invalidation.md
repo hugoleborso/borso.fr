@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#2'
-fix-pr: '#2'
 fix-commits: [2a4aef4902]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/static-site.ts]

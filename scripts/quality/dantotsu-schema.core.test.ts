@@ -21,7 +21,6 @@ const VALID_FIELDS: Readonly<Record<string, string>> = {
   'detected-at': 'ci',
   severity: 'medium',
   'related-pr': "'#40'",
-  'fix-pr': "'#41'",
   'fix-commits': '[abc1234]',
   'eradication-level': '2',
   'eradication-paths': '[scripts/check-a.sh]',
@@ -81,13 +80,11 @@ describe('selectSchemaProblems', () => {
     const entry = buildEntry('bare-fields', {
       date: null,
       'related-pr': null,
-      'fix-pr': null,
       'fix-commits': null,
     });
     expect(check([entry])).toEqual([
       'bare-fields: `date:` is missing',
       'bare-fields: `related-pr:` is missing',
-      'bare-fields: `fix-pr:` is missing',
       'bare-fields: `fix-commits:` is missing',
     ]);
   });
@@ -128,21 +125,22 @@ describe('selectSchemaProblems', () => {
   it('accepts a pull-request list and a none with a reason, and refuses anything else', () => {
     expect(
       check([
-        buildEntry('pulls', { 'related-pr': "'#65, #66'", 'fix-pr': 'none (never shipped)' }),
+        buildEntry('pulls', { 'related-pr': "'#65, #66'" }),
+        buildEntry('no-pull', { 'related-pr': 'none (never shipped)' }),
       ]),
     ).toEqual([]);
-    expect(check([buildEntry('bad-pull', { 'fix-pr': 'https://github.com/o/r/pull/40' })])).toEqual(
-      [
-        "bad-pull: `fix-pr: https://github.com/o/r/pull/40` is neither '#<number>' nor none (<reason>)",
-      ],
-    );
+    expect(
+      check([buildEntry('bad-pull', { 'related-pr': 'https://github.com/o/r/pull/40' })]),
+    ).toEqual([
+      "bad-pull: `related-pr: https://github.com/o/r/pull/40` is neither '#<number>' nor none (<reason>)",
+    ]);
     expect(check([buildEntry('suffixed-pull', { 'related-pr': '#40 later' })])).toHaveLength(1);
   });
 
   it('refuses a placeholder in the front matter and in the text', () => {
     expect(
-      check([buildEntry('placeholder', { 'fix-pr': '<to-be-filled-by-kaizen-pr>' })]),
-    ).toContain('placeholder: `fix-pr: <to-be-filled-by-kaizen-pr>` is a placeholder');
+      check([buildEntry('placeholder', { 'related-pr': '<to-be-filled-by-kaizen-pr>' })]),
+    ).toContain('placeholder: `related-pr: <to-be-filled-by-kaizen-pr>` is a placeholder');
     expect(check([buildEntry('tbd', { 'time-to-detect': 'TBD' })])).toEqual([
       'tbd: `time-to-detect: TBD` is a placeholder',
     ]);

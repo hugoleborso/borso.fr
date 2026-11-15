@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#136'
-fix-pr: '#141'
 fix-commits: [a1ca9efee5]
 eradication-level: 1
 eradication-paths: [.claude/skills/blueprint/blueprint-indexing.ts]

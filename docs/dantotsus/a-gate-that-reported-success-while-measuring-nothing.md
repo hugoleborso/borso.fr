@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [0bf0ad517b]
 eradication-level: 2
 eradication-paths: [.github/workflows/ci.yml, apps/last-loop-lepin/vitest.config.ts]

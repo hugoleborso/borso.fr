@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#2'
-fix-pr: '#9'
 fix-commits: [8b581dc9eb, 663267998b]
 eradication-level: 2
 eradication-paths: [apps/borso-fr/package.json, infra/cdk/test/unit/eradication-checks.test.ts]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#8'
-fix-pr: '#8'
 fix-commits: [683375572c, f97e162c9b]
 eradication-level: 1
 eradication-paths: [apps/borsouvertures/site/src/openings/openingIds.utils.ts, apps/borsouvertures/site/src/openings/openingIds.utils.test.ts]

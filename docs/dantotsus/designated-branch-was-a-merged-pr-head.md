@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#24'
-fix-pr: '#28'
 fix-commits: [9199b11e70]
 eradication-level: 2
 eradication-paths: [scripts/check-branch-context.sh]

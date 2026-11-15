@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#26'
-fix-pr: '#45'
 fix-commits: [2c7e27affa]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/oidc.ts]

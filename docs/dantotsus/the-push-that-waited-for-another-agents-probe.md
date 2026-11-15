@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#334'
-fix-pr: none (lands with the kaizen pull request for PR #334)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/knip/skip-untracked-files.ts, scripts/knip/untracked-files.core.ts, .husky/pre-push, knip.json]

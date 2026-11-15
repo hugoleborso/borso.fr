@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: none (the hook grew by one reasonable check per pull request over several months; no single pull request made it slow)
-fix-pr: none (the branch claude/tool-runtime-budgets carries the eradication and had no pull request when this was written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.husky/pre-commit, .husky/pre-push, scripts/check-pre-commit-budget.sh, scripts/check-ci-job-timeouts.sh, .github/workflows/ci.yml]

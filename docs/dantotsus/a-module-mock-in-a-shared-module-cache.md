@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#295'
-fix-pr: none (the kaizen pull request of PR #295 lands it; its number is not known when this is written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/vitest.config.ts, apps/last-loop-lepin/vitest.config.ts, apps/banana-rush/vitest.config.ts, apps/talos/vitest.config.ts]

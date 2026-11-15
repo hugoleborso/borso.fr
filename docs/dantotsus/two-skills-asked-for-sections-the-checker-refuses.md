@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [50410b2179]
 eradication-level: 1
 eradication-paths: [scripts/pr/check-pr-body.ts]

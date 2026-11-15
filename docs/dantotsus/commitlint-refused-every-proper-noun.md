@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#314'
-fix-pr: none (lands with the kaizen pull request for PR #314)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [commitlint.config.js]

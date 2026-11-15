@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#89'
-fix-pr: '#106'
 fix-commits: [96a3ed4ad5]
 eradication-level: 2
 eradication-paths: [scripts/check-named-paths-exist.sh, scripts/docs/check-doc-links.ts]

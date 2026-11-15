@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: none (introduced by commit a285b836, pushed without a pull request)
-fix-pr: '#169'
 fix-commits: [20004695]
 eradication-level: 1
 time-to-detect: days (Dependabot previews from 2026-10-05, first refused deploy 2026-10-10)

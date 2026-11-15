@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [d49af83ae0]
 eradication-level: 2
 eradication-paths: [.husky/pre-push]

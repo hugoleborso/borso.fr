@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: linter
 severity: low
 related-pr: '#153'
-fix-pr: '#155'
 fix-commits: [24b9318e]
 eradication-level: 1
 time-to-detect: minutes

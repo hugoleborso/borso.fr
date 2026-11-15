@@ -4,7 +4,6 @@ introduced-at: self-validation
 detected-at: local
 severity: high
 related-pr: '#122'
-fix-pr: '#130'
 fix-commits: [d4cd29d898, f578e1332c]
 eradication-level: 2
 eradication-paths: [stryker-zero-test-guard.js]

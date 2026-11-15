@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#261'
-fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [06abedfd9, self]
 eradication-level: 1
 eradication-paths: [apps/pragma/domain/request-headers.core.ts, apps/pragma/cdk/lib/stack.ts, infra/cdk/src/constructs/lambda-api.ts, infra/cdk/src/constructs/previewable-app.ts, apps/pragma/cdk/test/stack.test.ts]

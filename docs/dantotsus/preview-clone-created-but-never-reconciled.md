@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [450e82316d]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts]

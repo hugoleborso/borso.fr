@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#340'
-fix-pr: '#356'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/dependencies/check-only-change.core.ts, scripts/pr/deploy-fanout.core.ts, scripts/pr/deploy-fanout.ts, .github/workflows/deploy.yml]

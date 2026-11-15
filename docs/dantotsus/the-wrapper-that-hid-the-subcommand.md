@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#203'
-fix-pr: none (opened by this kaizen sweep, number not known when written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh, scripts/kaizen.sh]

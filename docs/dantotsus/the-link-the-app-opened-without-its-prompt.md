@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#149'
-fix-pr: '#149'
 fix-commits: [7921a44c5c]
 eradication-level: 4
 eradication-paths: [apps/talos/site/src/lib/claude-code-address.core.ts]

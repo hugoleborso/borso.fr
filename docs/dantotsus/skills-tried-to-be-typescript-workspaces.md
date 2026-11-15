@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#14'
-fix-pr: '#14'
 fix-commits: [959b1e747d]
 eradication-level: 1
 eradication-paths: [pnpm-workspace.yaml, knip.json]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#12'
-fix-pr: '#12'
 fix-commits: [902c4b7215]
 eradication-level: 4
 eradication-paths: [infra/cdk/src/constructs/lambda-api.ts]

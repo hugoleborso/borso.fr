@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: low
 related-pr: '#40'
-fix-pr: '#45'
 fix-commits: [1fad0d792d]
 eradication-level: 1
 eradication-paths: [infra/shared/test/unit/shared-stack.test.ts, infra/shared/test/unit/__snapshots__/borso-shared.template.json]

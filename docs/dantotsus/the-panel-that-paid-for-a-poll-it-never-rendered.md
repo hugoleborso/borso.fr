@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#89'
-fix-pr: '#89'
 fix-commits: [7986167b6e]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/components/molecules/pool-song-row.core.ts]

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#131'
-fix-pr: '#131'
 fix-commits: [a7274029bd, bf93d2d593]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-scroll-container-on-main.js]

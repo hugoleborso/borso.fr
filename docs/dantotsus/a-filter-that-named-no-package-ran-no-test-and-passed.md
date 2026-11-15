@@ -4,7 +4,6 @@ introduced-at: code-review
 detected-at: review
 severity: medium
 related-pr: '#321'
-fix-pr: none (opened by the kaizen pull request for #321)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.npmrc]

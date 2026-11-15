@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: staging
 severity: high
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [e3af9d248a, 4aaab634c7]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts]

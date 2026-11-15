@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#23'
-fix-pr: '#24'
 fix-commits: [c5eb3e0b3d]
 eradication-level: 1
 eradication-paths: [apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx]

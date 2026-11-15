@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#162'
-fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/quality/check-dantotsu-front-matter.ts, scripts/install-repo-deps.sh]

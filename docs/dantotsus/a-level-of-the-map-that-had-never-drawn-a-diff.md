@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#83'
-fix-pr: '#86'
 fix-commits: [a89d6aadaa]
 eradication-level: 4
 eradication-paths: [scripts/architecture/architecture-graph.ts]

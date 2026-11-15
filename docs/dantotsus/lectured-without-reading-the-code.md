@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#24'
-fix-pr: '#28'
 fix-commits: [9199b11e70]
 eradication-level: 5
 eradication-paths: []

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#49'
-fix-pr: '#79'
 fix-commits: [fae5f30a5d, bf04c32fb1]
 eradication-level: 1
 eradication-paths: [stryker.shared.js]

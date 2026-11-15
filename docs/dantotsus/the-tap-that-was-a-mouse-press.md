@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#193'
-fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [scripts/browser/touch-tap.ts, scripts/browser/touch-tap.core.ts, scripts/argent.sh]

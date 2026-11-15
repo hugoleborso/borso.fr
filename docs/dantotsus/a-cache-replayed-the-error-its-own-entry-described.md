@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: linter
 severity: medium
 related-pr: '#95'
-fix-pr: '#97'
 fix-commits: [5d140956dd]
 eradication-level: 4
 eradication-paths: [.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh]

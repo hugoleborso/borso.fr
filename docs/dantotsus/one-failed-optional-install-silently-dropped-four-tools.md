@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [1cf220368d]
 eradication-level: 2
 eradication-paths: [scripts/install-repo-deps.sh]

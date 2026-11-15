@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: high
 related-pr: '#247'
-fix-pr: none (the pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [apps/pragma/site/src/lib/queries/offline-reading.queries.ts, apps/pragma/site/src/lib/queries/offline-reading.queries.test.ts, apps/pragma/site/src/lib/query-client.setup.ts]

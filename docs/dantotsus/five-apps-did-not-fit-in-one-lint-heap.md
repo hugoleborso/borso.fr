@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#110'
-fix-pr: '#119'
 fix-commits: [3d7adaa065]
 eradication-level: 1
 eradication-paths: [scripts/lint-repository.sh]

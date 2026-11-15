@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: low
 related-pr: '#51'
-fix-pr: '#51'
 fix-commits: [69574f6e88]
 eradication-level: 4
 eradication-paths: [.github/workflows/preview.yml]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#171'
-fix-pr: none (the kaizen pull request that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.claude/hooks/posttool-format-write.sh]

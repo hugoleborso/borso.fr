@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#197'
-fix-pr: none (the kaizen pull request for PR #197 that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/pre-push-range.sh, scripts/pre-push-range.test.ts, .husky/pre-push]

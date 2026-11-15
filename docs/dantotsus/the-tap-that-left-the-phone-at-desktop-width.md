@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#327'
-fix-pr: none (the kaizen pull request for PR #327 that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/phone.sh]

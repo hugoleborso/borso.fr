@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: high
 related-pr: '#11'
-fix-pr: '#11'
 fix-commits: [c2eea65058, 374c8c9fe1]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/static-site.ts]

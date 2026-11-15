@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#274'
-fix-pr: '#274'
 fix-commits: [6250f706a]
 eradication-level: 4
 eradication-paths: [apps/pragma/api/src/bars/bars.schema.ts, apps/pragma/api/src/bars/bars.schema.test.ts, apps/last-loop-lepin/api/src/helpers/validation/invalid-input.middleware.ts, apps/last-loop-lepin/api/src/helpers/validation/invalid-input.middleware.test.ts]

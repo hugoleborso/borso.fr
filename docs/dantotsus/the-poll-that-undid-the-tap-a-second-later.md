@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#89'
-fix-pr: '#89'
 fix-commits: [a36b358d27]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/lib/queries/audience.utils.ts]

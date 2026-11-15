@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#231'
-fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/migration-runner/concurrency-retry.utils.ts, infra/cdk/src/internal/migration-runner/concurrency-retry.ts, infra/cdk/src/internal/migration-runner/index.ts]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#59'
-fix-pr: '#62'
 fix-commits: [0770ef3fe4]
 eradication-level: 1
 eradication-paths: [scripts/check-no-racy-pipelines.sh]

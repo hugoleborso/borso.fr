@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: low
 related-pr: '#321'
-fix-pr: none (opened by the kaizen pull request for #321)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [CLAUDE.md, scripts/check-coupled-lists.sh, docs/standards/01-naming.md]

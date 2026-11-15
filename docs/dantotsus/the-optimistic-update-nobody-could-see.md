@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#50'
-fix-pr: '#51'
 fix-commits: [531e6e472f, 4065faa447]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-discarded-await-before-navigation.js]

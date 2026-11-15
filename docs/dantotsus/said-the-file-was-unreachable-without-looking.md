@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#50'
-fix-pr: '#51'
 fix-commits: [8f609a79eb]
 eradication-level: 2
 eradication-paths: [scripts/session-attachments.sh]

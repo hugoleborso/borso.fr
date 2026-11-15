@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#157'
-fix-pr: '#166'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-api-import-in-site.js, eslint-rules/no-api-declaration-repeated-in-site.js]

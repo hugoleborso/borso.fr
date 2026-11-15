@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [88b1178cf6]
 eradication-level: 5
 eradication-paths: []

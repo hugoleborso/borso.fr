@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: high
 related-pr: '#151'
-fix-pr: '#151'
 fix-commits: [67bab828]
 eradication-level: 4
 time-to-detect: days

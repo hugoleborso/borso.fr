@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#286'
-fix-pr: none (the kaizen pull request of PR #292, not numbered when this was written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-one-pull-request-per-session.sh, .claude/settings.json]

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: low
 related-pr: '#236'
-fix-pr: none (the kaizen pull request for PR #236 carries it)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh, scripts/install-repo-deps.sh]

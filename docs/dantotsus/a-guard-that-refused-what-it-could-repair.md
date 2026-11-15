@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#250'
-fix-pr: none (the kaizen pull request of PR #250, number unknown when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh]
