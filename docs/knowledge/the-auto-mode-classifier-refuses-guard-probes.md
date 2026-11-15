@@ -80,7 +80,7 @@ So before the first IAM call, ask the operator one closed question that names
 the policy, the principal and the actions, for example *"Create the managed
 policy `AI-Dev-ReadOnly-prod-agent-readers` allowing `lambda:InvokeFunction`
 on the four readers, attach it to `AI-Dev-ReadOnly`, and delete the inline
-`Prod-db-read`?"*. `docs/operator-backlog.md` asks for that question in its
+`Prod-db-read`?"*. `docs/operator-backlog/README.md` asks for that question in its
 rules.
 
 ## What does not work

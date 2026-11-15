@@ -84,7 +84,7 @@ Remove the line once that perspective has been covered. -->
 
 ## Result
 - The final, visible result: Figma / wireframes / API endpoints / dashboard / before-and-after screens.
-- A feature that is mostly front end gets 3 or 4 alternative mockups before the spec settles. Publish them side by side on one Design canvas artifact, with real data read from the app, at 375 px wide. Link the canvas here and record the variant the operator picked. Read the app's `VOCABULARY.md` first, because it holds visual rules such as what a colour means.
+- A feature that is mostly front end gets 3 or 4 alternative mockups before the spec settles. Publish them side by side on one Design canvas artifact, with real data read from the app, at 375 px wide. Link the canvas here and record the variant the operator picked.
 - "No visible result" is a red flag — name it.
 
 ## Use cases / edge cases

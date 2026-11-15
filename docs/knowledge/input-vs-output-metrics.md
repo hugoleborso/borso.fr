@@ -57,6 +57,18 @@ Two anti-patterns it prevents:
 Pair every output metric with at least one input metric. Visual-validation gates the input
 metrics; humans review monthly whether the input metrics still proxy the output metric.
 
+## An input metric measured on production rows ships as a test
+
+PR #351's input metric read "on Alliance 3, Marcia baila shows zero changes and
+Take on me exactly two". Those rows existed only in production. Both validators
+then rebuilt them on their own: the technical validator with a hand-written
+probe feeding `db-read.sh` rows to `buildLineupGrid`, the visual validator by
+recreating four rows through the local API. Neither could read a test name.
+
+When a metric names production data, copy the rows it needs into a fixture of
+the pure function's test, with a test named after the metric, and write that
+test's path in the spec beside the metric. The validator then runs one test.
+
 ## Where this is enforced
 
 - [`.claude/skills/specification/standard.md`](../../.claude/skills/specification/standard.md#input-vs-output-metrics-amazon-flywheel) — the rule.
