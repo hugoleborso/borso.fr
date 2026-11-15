@@ -26,10 +26,10 @@ The owner decided on 2026-11-15 to keep the PWA and its web push rather than bui
 
 ## S2. The API records the choice
 
-- S2.1 `POST /api/proposals/:slug/decision` with `{ decision: "acceptee", option }`, where `option` is one of the proposal's options, records the decision line of the data shape and fires the Talos Claude Code routine as any decision does, through the same `POST <fire-url>` and the same stored routine run.
+- S2.1 `POST /api/proposals/:slug/decision` with `{ decision: "acceptee", option }`, where `option` is one of the proposal's options, records the decision line of the data shape and fires the Talos Claude Code routine as an acceptance does, through the same `POST <fire-url>` and the same stored routine run.
 - S2.1b When an option was chosen, the fire text gains a third line, `choix: <option>`, after `proposition: etat/propositions/<slug>`, so the session knows the choice without reading the proposal. A decision without an option sends the same two lines as today. A test asserts the fire happens, and its text, for a chosen option.
 - S2.2 The API answers 400 `{ error: "Ce choix n'est pas proposé." }` and records nothing when `option` is not one of the proposal's options, when `option` comes with `refusee`, or when `acceptee` comes without `option` on a proposal that has options.
-- S2.3 Refuse without `option` works on every proposal.
+- S2.3 Refuse without `option` works on every proposal. A refusal is recorded in the memory and fires no routine; the owner decided on 2026-11-15 that nothing should start Talos when there is nothing to do.
 - S2.4 Cancelling a decision is unchanged. The card offers the choices again.
 
 ## S3. The agent learns the section

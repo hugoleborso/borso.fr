@@ -376,6 +376,22 @@ describe('the proposal routes', () => {
     expect(await response.json()).toEqual([]);
   });
 
+  it('records a refusal in the memory without firing the routine', async () => {
+    const fetcher = vi.fn(async () => await answerSession(SESSION_URL));
+    vi.stubGlobal('fetch', fetcher);
+    const { app } = buildTestContext();
+    configureRoutine();
+    const response = await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {
+      method: 'POST',
+      body: { decision: 'refusee' },
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(200);
+    expect(await readStoredProposalPage()).toContain('statut: refusee');
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(await getDatabase().select().from(routineRunTable)).toEqual([]);
+  });
+
   it('commits the decision even when no routine is configured', async () => {
     const { app } = buildTestContext();
     const response = await requestJson(app, `/api/proposals/${STORED_PROPOSAL}/decision`, {

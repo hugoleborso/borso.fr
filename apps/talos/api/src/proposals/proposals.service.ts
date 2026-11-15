@@ -2,6 +2,7 @@ import { stripMarkdownExtension } from '@domain/markdown-page.core';
 import {
   formatCancellationLine,
   formatDecisionLine,
+  isDecisionActionable,
   PENDING_PROPOSAL_STATUS,
   type Proposal,
   type ProposalDecision,
@@ -103,6 +104,7 @@ export async function decideProposal(params: {
     now: params.now,
   });
   const proposal = readDecidedProposal(outcome);
+  if (!isDecisionActionable(params.decision)) return proposal;
   await launchProposalRun(
     stripMarkdownExtension(buildProposalPath(params.slug)),
     params.now,

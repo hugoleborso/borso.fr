@@ -82,7 +82,7 @@ The exact draft (email, message, change) that runs if the owner accepts.
 
 « Options » is optional. When Talos asks for a choice rather than a yes or no, it lists 2 to 4 choices there, one `- ` item each, short enough for a button. The PWA then shows one button per choice instead of Accept, with Refuse and Comment kept. A section with fewer than two non-empty items counts as no options, and the card offers Accept as before. The long-press sheet of a proposal with options offers Refuse only, because the choice is made on the card.
 
-On a decision the API sets `statut` to `acceptee` or `refusee`, appends a line `- 2026-10-05 10:12 : acceptée — <comment>` under « Décision », and fires the "message" run (see below). Talos later sets the status to `faite`.
+On a decision the API sets `statut` to `acceptee` or `refusee`, appends a line `- 2026-10-05 10:12 : acceptée — <comment>` under « Décision », and, for an acceptance only, fires the routine (see below). A refusal is recorded in the memory and fires nothing; the next scheduled run reads it. Talos later sets the status to `faite`.
 
 A chosen option is an accepted decision. Its line names the choice in brackets, `- 2026-10-05 10:12 : acceptée (jeudi) — <comment>`, and `statut` is `acceptee`. A run reads the choice from the last decision line once `statut` is `acceptee`.
 
@@ -319,13 +319,13 @@ The routes above answer from the memory tables; what the files alone did not say
 
 ### Firing a run
 
-A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<trigger>: <subject>" }`. The line is `proposition: etat/propositions/<slug>`. When the owner chose an option, a third line follows it, `choix: <option>` (`choix: jeudi`), so the session knows the choice without reading the proposal; a decision without an option sends the same two lines. Runs fired by the former Message screen, with the line `message: <the whole text>`, stay in the table with the trigger `message`.
+An acceptance of a proposal, with or without a chosen option, calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<trigger>: <subject>" }`. The line is `proposition: etat/propositions/<slug>`. When the owner chose an option, a third line follows it, `choix: <option>` (`choix: jeudi`), so the session knows the choice without reading the proposal; a decision without an option sends the same two lines. Runs fired by the former Message screen, with the line `message: <the whole text>`, stay in the table with the trigger `message`.
 
 The endpoint answers `{ "type": "routine_fire", "claude_code_session_id": "session_…", "claude_code_session_url": "https://claude.ai/code/session_…" }` (read in the Claude Code documentation on 2026-11-11; the endpoint is a research preview).
 
 Each successful fire is stored as a **routine run**, one row of the `routine_run` table: `id` (uuid), `fired_at`, `trigger` (`proposition` or `message`), `subject` (the proposal's memory slug, or the message cut to 200 characters) and `session_url`. The address is kept only when it is `https://claude.ai/code/` followed by letters, digits, `_`, `-` or `/`, 300 characters at most; anything else, or an answer that is not JSON, is stored as null. Decision record: [ADR-2026-11-11T1306](../../docs/adr/2026-11-11T1306-talos-keeps-the-conversation-of-each-routine-run.md).
 
-For a decision, the answer and the status never depend on the fire. Without `fire-url`, or when the fire fails, the decision is still recorded, no run is stored, and the next scheduled run picks the decision up. A run that cannot be stored is reported and does not fail the decision. Cancelling a decision fires nothing and stores nothing.
+For a decision, the answer and the status never depend on the fire. Without `fire-url`, or when the fire fails, the decision is still recorded, no run is stored, and the next scheduled run picks the decision up. A run that cannot be stored is reported and does not fail the decision. A refusal and a cancellation fire nothing and store nothing.
 
 ## Discussing an item with Talos
 

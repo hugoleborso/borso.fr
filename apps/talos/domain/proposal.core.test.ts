@@ -4,6 +4,7 @@ import {
   applyProposalDecision,
   checkDecisionOption,
   formatDecisionLine,
+  isDecisionActionable,
   isDecisionRevocable,
   isProposalExpired,
   isProposalPending,
@@ -135,6 +136,16 @@ describe('parseProposal', () => {
 
   it('ignores a file that is not a proposal', () => {
     expect(parseProposal('2026-10-05', '---\ntype: journal\n---\n# Notes')).toBeNull();
+  });
+});
+
+describe('isDecisionActionable', () => {
+  it('acts on an acceptance, with or without a choice', () => {
+    expect(isDecisionActionable('acceptee')).toBe(true);
+  });
+
+  it('leaves a refusal to the memory alone', () => {
+    expect(isDecisionActionable('refusee')).toBe(false);
   });
 });
 

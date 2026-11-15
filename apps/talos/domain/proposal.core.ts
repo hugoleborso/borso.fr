@@ -96,6 +96,10 @@ export function isProposalExpired(proposal: ProposalLifecycle, today: string): b
   return proposal.status === PENDING_PROPOSAL_STATUS && hasExpired(proposal, today);
 }
 
+export function isDecisionActionable(decision: ProposalDecision): boolean {
+  return decision === 'acceptee';
+}
+
 export function isDecisionRevocable(status: string): boolean {
   return REVOCABLE_STATUSES.includes(status);
 }
