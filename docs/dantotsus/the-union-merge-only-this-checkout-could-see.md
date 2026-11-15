@@ -118,4 +118,5 @@ the branch's parent, the new guard exits 0.
 **Similar instances:** `git log origin/main -60 --format= --name-only | sort |
 uniq -c | sort -rn` ranks the files most pull requests touch. After the lists
 PR #352 split, `docs/operator-backlog.md` remains, touched by 13 of the last 60
-pull requests. It is the next file that makes branches conflict.
+pull requests. This pull request splits it into one file per task under
+`docs/operator-backlog/`, at the operator's choice.

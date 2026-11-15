@@ -151,10 +151,11 @@ Not to be confused with: a dantotsu, which needs a defect and an eradication.
 
 ## Operator backlog
 
-The list of tasks that need a right no session holds: AWS write, IAM,
-repository settings, a secret, an operator dispatch or a third-party console.
+The tasks that need a right no session holds: AWS write, IAM, repository
+settings, a secret, an operator dispatch or a third-party console. One file per
+task, done by a "Borso Admin" session; the operator does not read them.
 
-Lives in: `docs/operator-backlog.md`
+Lives in: `docs/operator-backlog/`
 
 Not to be confused with: a follow-up issue, which this repository does not
 open.

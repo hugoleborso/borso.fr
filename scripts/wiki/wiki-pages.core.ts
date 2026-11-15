@@ -85,7 +85,7 @@ const START_HERE: readonly (readonly [string, string])[] = [
   ['docs/adding-an-app.md', 'Adding an app'],
   ['docs/adding-a-fullstack-app.md', 'Adding a full-stack app'],
   ['docs/aws-setup.md', 'AWS setup'],
-  ['docs/operator-backlog.md', 'Operator backlog'],
+  ['docs/operator-backlog/README.md', 'Operator backlog'],
   ['docs/VOCABULARY.md', 'Vocabulary'],
   ['docs/architecture/README.md', 'Architecture maps'],
   ['CLAUDE.md', 'Agent instructions'],

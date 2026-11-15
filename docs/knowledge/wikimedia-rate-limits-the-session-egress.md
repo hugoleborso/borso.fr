@@ -28,5 +28,5 @@ The sweep sent a descriptive `User-Agent` on the last two requests and still got
 - Check the saved file with `file <path>` before using it. A 429 writes HTML under
   the name you asked for.
 - Do not loop on retries. Each one keeps the egress on the list.
-- Ask the operator for the file, or write a row in `docs/operator-backlog.md`
+- Ask the operator for the file, or add a task under `docs/operator-backlog/`
   naming the file and where it lives. The Talos icon row is the example.
