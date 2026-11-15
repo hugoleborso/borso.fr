@@ -267,7 +267,8 @@ run_check app-registration \
 # only when a `Held by` line names it, since the check reads its titles; any
 # other test edit left the check reading files it could not have changed. A
 # `Held by` path is relative to the application folder, the first two parts of
-# the invariants file's path.
+# the invariants file's path. A removal anywhere a term of docs/VOCABULARY.md
+# lives can break its `Lives in:` line, so those removals are in scope too.
 held_tests=$(
   git ls-files -- 'apps/*/INVARIANTS.md' | xargs -r awk '
     FNR == 1 { split(FILENAME, part, "/"); folder = part[1] "/" part[2] "/" }
@@ -276,7 +277,7 @@ held_tests=$(
     sort -u | paste -sd '|' -
 )
 run_check vocabulary-paths \
-  "^. (apps/[^/]+/VOCABULARY\\.md|apps/.+/INVARIANTS\\.md|docs/VOCABULARY\\.md)\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
+  "^. (apps/[^/]+/VOCABULARY\\.md|apps/.+/INVARIANTS\\.md|docs/VOCABULARY\\.md)\$|^D (apps|docs|scripts|\\.claude|\\.husky|\\.github)/|^D CLAUDE\\.md\$${held_tests:+|^M (${held_tests})\$}" \
   scripts/check-vocabulary-paths.sh
 
 # A dated record of a past review is not editable: it is true as of the day in

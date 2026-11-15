@@ -126,14 +126,14 @@ check_glossary() {
 
 # Every invariants file is read in one pass: one grep per file and per kind of
 # line cost 1.5 s of CPU on a commit, nine times the single-file check it
-# replaced. Prints `section`, `held`, `indented` and `citation` records, each
-# `kind<TAB>file<TAB>value`.
+# replaced. Prints `section`, `held` and `indented` records, each
+# `kind<TAB>file<TAB>value`. Comment citations are one grep over every file,
+# because awk -v turns the pattern's `\b` into a backspace and matched nothing.
 read_invariants() {
-  awk -v citation="$COMMENT_CITATION" '
+  awk '
     /^## / { print "section\t" FILENAME "\t" substr($0, 4); next }
     /^Held by:/ { print "held\t" FILENAME "\t" $0; next }
     /^[[:space:]]+Held by:/ { print "indented\t" FILENAME "\t" FNR ": " $0 }
-    tolower($0) ~ citation { print "citation\t" FILENAME "\t" FNR ": " $0 }
   ' "$@"
 }
 
@@ -144,7 +144,6 @@ check_invariants() {
     app_directory=${invariants#apps/}
     app_directory=apps/${app_directory%%/*}
     case $kind in
-      citation) fail "$invariants sources a claim from a comment: $value" ;;
       indented) fail "$invariants has an indented Held by line, which the check above never reads; start it at column 0: $value" ;;
       section)
         if [ -z "${term_owner["$invariants|$value"]+named}" ]; then
@@ -171,6 +170,7 @@ check_invariants() {
   done < <(printf '%s\n' "${invariants_records[@]}")
 }
 
+invariants_files=()
 mapfile -t invariants_files < <(git ls-files --cached --others --exclude-standard -- 'apps/*/INVARIANTS.md')
 if [ "${#invariants_files[@]}" -gt 0 ]; then
   mapfile -t invariants_records < <(read_invariants "${invariants_files[@]}")
@@ -190,6 +190,22 @@ for vocabulary in apps/*/VOCABULARY.md; do
 done
 
 check_invariants
+if [ "${#invariants_files[@]}" -gt 0 ]; then
+  while IFS= read -r citation; do
+    [ -n "$citation" ] || continue
+    fail "${citation%%:*} sources a claim from a comment: ${citation#*:}"
+  done < <(grep -HnEi "$COMMENT_CITATION" "${invariants_files[@]}" || true)
+fi
+
+# The repository glossary is the map of every application glossary, so an
+# application whose glossary it does not link is one nobody finds from there.
+if [ -f docs/VOCABULARY.md ]; then
+  for vocabulary in apps/*/VOCABULARY.md; do
+    [ -f "$vocabulary" ] || continue
+    grep -qF "(../$vocabulary)" docs/VOCABULARY.md ||
+      fail "docs/VOCABULARY.md does not list $vocabulary under ## Glossaries"
+  done
+fi
 
 if [ "$found_any" -eq 0 ]; then
   echo "[check-vocabulary-paths] no application ships a VOCABULARY.md"

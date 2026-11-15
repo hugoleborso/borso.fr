@@ -1,4 +1,4 @@
-# Invariants — borso-fr, `site/src/art/mondrian`
+# Invariants of borso-fr, in `site/src/art/mondrian`
 
 The rules the terms of [the vocabulary](../../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/borso-fr/`.

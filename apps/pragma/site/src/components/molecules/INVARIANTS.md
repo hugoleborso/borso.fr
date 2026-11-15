@@ -1,4 +1,4 @@
-# Invariants — pragma, `site/src/components/molecules`
+# Invariants of pragma, in `site/src/components/molecules`
 
 The rules the terms of [the vocabulary](../../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.

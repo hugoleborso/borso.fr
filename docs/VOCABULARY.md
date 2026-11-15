@@ -1,4 +1,4 @@
-# Vocabulary — the repository
+# Vocabulary of the repository
 
 The words of the monorepo and of the way it is built, shared by every
 application. Use them in skills, hooks, scripts, commits and specs. Each

@@ -1,4 +1,4 @@
-# Invariants — pragma, `site/src/lib/queries`
+# Invariants of pragma, in `site/src/lib/queries`
 
 The rules the terms of [the vocabulary](../../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.

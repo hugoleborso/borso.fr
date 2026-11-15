@@ -1,4 +1,4 @@
-# Invariants — pragma, `api/src/notifications`
+# Invariants of pragma, in `api/src/notifications`
 
 The rules the terms of [the vocabulary](../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.

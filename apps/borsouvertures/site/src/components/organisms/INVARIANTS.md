@@ -1,4 +1,4 @@
-# Invariants — borsouvertures, `site/src/components/organisms`
+# Invariants of borsouvertures, in `site/src/components/organisms`
 
 The rules the terms of [the vocabulary](../../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/borsouvertures/`.

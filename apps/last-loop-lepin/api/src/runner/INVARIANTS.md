@@ -1,4 +1,4 @@
-# Invariants — last-loop-lepin, `api/src/runner`
+# Invariants of last-loop-lepin, in `api/src/runner`
 
 The rules the terms of [the vocabulary](../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/last-loop-lepin/`.
