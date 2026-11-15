@@ -46,7 +46,6 @@ const CATEGORY_LABEL_KEY: Readonly<Record<NotificationCategory, ParseKeys>> = {
   songs: 'notifications.categories.songs',
   sessions: 'notifications.categories.sessions',
   setlists: 'notifications.categories.setlists',
-  streak: 'notifications.categories.streak',
 };
 
 function readEnableFailure(failure: Error): EnableFailure {

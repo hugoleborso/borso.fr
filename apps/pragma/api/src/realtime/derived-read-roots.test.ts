@@ -57,12 +57,10 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'oauth',
     'setlists',
     'songs',
-    'streaks',
-    'studies',
     'tasks',
   ],
   sessions: ['setlists', 'takes', 'tasks'],
-  songs: ['compositions', 'mastery', 'setlists', 'studies', 'takes', 'tasks'],
+  songs: ['compositions', 'mastery', 'setlists', 'takes', 'tasks'],
 };
 
 const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {

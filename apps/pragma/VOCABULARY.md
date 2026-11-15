@@ -635,34 +635,23 @@ Lives in: `api/src/songs/`
 
 Invariants: `api/src/songs/INVARIANTS.md`
 
-## Study
+## Study queue
 
-One member having said they worked one song on one instrument on one day.
-Nothing writes a study any more: a **presence** replaced it as what lights
-a member's flame.
+For one member, each song and instrument they hold in a lineup, ordered so
+the songs least ready to play come first. The Songs tab shows it as the
+**To learn** filter.
 
-Lives in: `api/src/studies/`
+Lives in: `api/src/studies/` (`study-queue.core.ts`)
 
 Invariants: `api/src/studies/INVARIANTS.md`
 
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
 
-## Presence
-
-One member opening the app on one calendar day in `Europe/Paris`.
-
-Lives in: `api/src/streaks/` (`presence`, `presences.service.ts`)
-
-Invariants: `api/src/streaks/INVARIANTS.md`
-
-Not to be confused with: a **study**, the older record a member logged by
-hand, which no longer lights a flame but still counts as history.
-
 ## Flame
 
-How many days a member, or the band, has kept practising, counted back from
-today.
+How many days the band has kept playing together, counted back from today
+over the days with a **session**.
 
 Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 
@@ -671,8 +660,7 @@ Invariants: `domain/INVARIANTS.md`
 ## Streak
 
 The feature that shows **flames**. The word names its surface, never the
-count: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the
-`streak` push category and the `streak-reminder` job.
+count: `GET /api/streaks`, the `streaks/` slice and the streak sheet.
 
 Lives in: `api/src/streaks/`
 
@@ -693,9 +681,6 @@ One recorded performance of one song, optionally from one session.
 Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 
 Invariants: `api/src/takes/INVARIANTS.md`
-
-Not to be confused with: a **study**, which records that a member worked a
-song and holds no audio.
 
 ## Take comment
 
@@ -848,9 +833,9 @@ to.
   plays: the measure is **mastery** and the number is a **score**.
   In the domain, **level** names only an **energy** value
   (`resolveEnergyLevel`).
-- **revision**, **review**, **practice session**, **homework**: a member's
-  own work on a song is a **study**. **revision** reads as a version in
-  code, and **practice** is already the band playing together.
+- **revision**, **review**, **practice session**, **homework**: the songs a
+  member has to work on are their **study queue**. **revision** reads as a
+  version in code, and **practice** is already the band playing together.
 - **recording**, **version**, **track** for audio: one recorded
   performance of a song is a **take**. *recording* is the act of making
   one, which the screen may say, and *version* is refused for the same

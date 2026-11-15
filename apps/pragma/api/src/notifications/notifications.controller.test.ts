@@ -25,7 +25,6 @@ import { songCreateInputSchema } from '../songs/songs.schema';
 import { insertSongWithoutNotice } from '../songs/songs.service';
 import { buildTakeObjectKey } from '../takes/takes.core';
 import { takeTable } from '../takes/takes.schema';
-import { hasClaimedFirstDispatch } from './notifications.repository';
 import {
   notificationPreferenceTable,
   pushSubscriptionTable,
@@ -255,7 +254,6 @@ describe('notifications controller (back-e2e)', () => {
           { category: 'songs', enabled: true },
           { category: 'sessions', enabled: true },
           { category: 'setlists', enabled: true },
-          { category: 'streak', enabled: true },
         ],
       });
     });
@@ -505,17 +503,6 @@ describe('notifications controller (back-e2e)', () => {
         deviceEndpoint('sam-phone'),
       ]);
       expect(await testDatabase().select().from(notificationPreferenceTable)).toEqual([]);
-    });
-  });
-
-  describe('claiming a one-time send', () => {
-    it('lets exactly one of two concurrent claims win', async () => {
-      const claimedAt = new Date('2026-10-23T20:00:00.000Z');
-      const claims = await Promise.all([
-        hasClaimedFirstDispatch('streak:race', claimedAt),
-        hasClaimedFirstDispatch('streak:race', claimedAt),
-      ]);
-      expect(claims.filter(Boolean)).toHaveLength(1);
     });
   });
 });

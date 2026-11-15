@@ -6,7 +6,6 @@ export const NOTIFICATION_CATEGORIES = [
   'songs',
   'sessions',
   'setlists',
-  'streak',
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -76,8 +75,6 @@ export type NotificationEvent =
   | TransitionChangedEvent;
 
 export type PushDelivery = 'delivered' | 'expired' | 'failed';
-
-export type PersonalPushOutcome = 'already-sent' | 'sent' | 'timed-out';
 
 export interface PushDeliveryOutcome {
   readonly delivery: PushDelivery;
@@ -261,10 +258,8 @@ function selectSubjectParameters(event: NotificationEvent): MessageParameters {
   }
 }
 
-export type StreakReminderKey = 'streak-at-risk' | 'streak-band-count' | 'streak-band-count-one';
-
 export interface NotificationPayload {
-  readonly messageKey: NotificationEvent['kind'] | StreakReminderKey;
+  readonly messageKey: NotificationEvent['kind'];
   readonly parameters: MessageParameters;
   readonly url: string;
   readonly tag: string;

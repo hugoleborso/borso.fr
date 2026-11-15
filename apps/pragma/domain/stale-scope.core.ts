@@ -80,7 +80,7 @@ export const DERIVED_READ_ROOTS: Readonly<Partial<Record<ApiRoot, readonly ApiRo
   setlists: ['instruments', 'members', 'sessions', 'songs'],
   sketches: ['compositions', 'inspirations'],
   songs: ['compositions', 'instruments', 'members'],
-  streaks: ['members', 'sessions', 'studies'],
+  streaks: ['sessions'],
   studies: ['instruments', 'mastery', 'members', 'sessions', 'setlists', 'songs'],
   takes: ['members', 'sessions', 'songs'],
   tasks: ['instruments', 'members', 'sessions', 'songs'],

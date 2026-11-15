@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { masteryScoreChangeTable } from '../mastery/mastery.schema';
-import { studyTable } from './studies.schema';
 
 type TestApp = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
@@ -17,7 +16,6 @@ const overviewSchema = z.object({
       instrumentId: z.string(),
       score: z.number().nullable(),
       isReady: z.boolean().nullable(),
-      isStudiedToday: z.boolean(),
     }),
   ),
   readiness: z
@@ -150,16 +148,9 @@ describe('studies controller (back-e2e)', () => {
     expect(overview.readiness).toBeNull();
   });
 
-  it('removes studies and score history with the song', async () => {
+  it('removes score history with the song', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
-    await testDatabase().insert(studyTable).values({
-      memberId,
-      songId,
-      instrumentId,
-      studiedOn: '2026-10-12',
-      createdAt: new Date(),
-    });
     await jsonRequest(app, '/api/mastery/overrides', {
       method: 'PUT',
       body: { memberId, instrumentId, songId, score: 4 },
@@ -167,23 +158,15 @@ describe('studies controller (back-e2e)', () => {
     });
     await jsonRequest(app, `/api/songs/${songId}`, { method: 'DELETE', cookieHeader });
 
-    expect(await testDatabase().select().from(studyTable)).toHaveLength(0);
     expect(await testDatabase().select().from(masteryScoreChangeTable)).toHaveLength(0);
   });
 
-  it('removes studies and score history with the member', async () => {
+  it('removes score history with the member', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
     const otherMemberId = await createId(app, cookieHeader, '/api/members', 'member', {
       firstName: 'Other',
       color: '#abc',
-    });
-    await testDatabase().insert(studyTable).values({
-      memberId: otherMemberId,
-      songId,
-      instrumentId,
-      studiedOn: '2026-10-12',
-      createdAt: new Date(),
     });
     await jsonRequest(app, '/api/mastery/overrides', {
       method: 'PUT',
@@ -192,7 +175,6 @@ describe('studies controller (back-e2e)', () => {
     });
     await jsonRequest(app, `/api/members/${otherMemberId}`, { method: 'DELETE', cookieHeader });
 
-    expect(await testDatabase().select().from(studyTable)).toHaveLength(0);
     expect(await testDatabase().select().from(masteryScoreChangeTable)).toHaveLength(0);
   });
 });

@@ -118,7 +118,7 @@ Held by: `site/src/lib/cover-art.utils.test.ts` › has no address for a song th
   string when the column is null.
 - The catalogue is listed newest first by `createdAt`.
 - Deleting a song removes its row, its mastery overrides, its score
-  history, its studies, every setlist entry and vote naming it, and its
+  history, every setlist entry and vote naming it, and its
   takes with their comments, and clears it from the tasks naming it, all in
   one transaction (`deleteSongWithCascade`); the takes' audio objects are
   deleted once the transaction commits.

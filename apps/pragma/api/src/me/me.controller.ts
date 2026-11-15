@@ -17,7 +17,7 @@ import {
   changePassword,
   finishPasskeyRegistration,
   listPasskeys,
-  readSignedInMemberOnOpening,
+  readSignedInMember,
   removeCalendarFeed,
   removePasskey,
   renamePasskey,
@@ -40,7 +40,7 @@ export function buildMeRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/', async (context) => {
-      const member = await readSignedInMemberOnOpening(readMemberId(context), readNow());
+      const member = await readSignedInMember(readMemberId(context));
       if (member === null) return context.json({ error: 'unknown-member' }, 404);
       return context.json(member);
     })

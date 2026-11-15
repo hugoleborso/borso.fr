@@ -374,7 +374,6 @@ describe('the small helpers', () => {
   it('filters the queries under every query root that reads a written root, or every query', () => {
     expect(selectInvalidationFilters(['mastery'])).toStrictEqual([
       { queryKey: ['mastery'] },
-      { queryKey: ['streaks'] },
       { queryKey: ['studies'] },
     ]);
     expect(selectInvalidationFilters(['all'])).toStrictEqual([{}]);

@@ -27,9 +27,6 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': 'Setlist changed',
       'song-lineup-changed': 'Lineup changed',
       'transition-changed': 'Transition changed',
-      'streak-at-risk': 'Flame at risk',
-      'streak-band-count': 'Practice time',
-      'streak-band-count-one': 'Practice time',
     },
     templates: {
       'take-created': '{actorName} posted a take of {songTitle}',
@@ -40,9 +37,6 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} changed the setlist {setlistName}',
       'song-lineup-changed': '{actorName} changed the lineup of {songTitle}',
       'transition-changed': '{actorName} changed the transition {songATitle} → {songBTitle}',
-      'streak-at-risk': 'Keep your {days}-day flame alive. Open Pragma before midnight.',
-      'streak-band-count': '{count} members already lit their flame today. Your turn?',
-      'streak-band-count-one': '1 member already lit their flame today. Your turn?',
     },
   },
   fr: {
@@ -58,9 +52,6 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': 'Setlist modifiée',
       'song-lineup-changed': 'Composition modifiée',
       'transition-changed': 'Transition modifiée',
-      'streak-at-risk': 'Flamme en danger',
-      'streak-band-count': 'À toi de jouer',
-      'streak-band-count-one': 'À toi de jouer',
     },
     templates: {
       'take-created': '{actorName} a publié une prise de {songTitle}',
@@ -71,9 +62,6 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} a modifié la setlist {setlistName}',
       'song-lineup-changed': '{actorName} a modifié la composition de {songTitle}',
       'transition-changed': '{actorName} a modifié la transition {songATitle} → {songBTitle}',
-      'streak-at-risk': 'Garde ta flamme de {days} jours. Ouvre Pragma avant minuit.',
-      'streak-band-count': '{count} membres ont déjà allumé leur flamme aujourd’hui. À toi ?',
-      'streak-band-count-one': '1 membre a déjà allumé sa flamme aujourd’hui. À toi ?',
     },
   },
 };

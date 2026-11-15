@@ -844,25 +844,6 @@
     "winnerUnnamed": "winner not found"
   },
   "studies": {
-    "title": "Studies",
-    "subtitle": "What everyone worked on, and whether we are ready for the next concert.",
-    "notReady": "not ready",
-    "ready": "ready",
-    "scoreLabel": "My mastery",
-    "scoreDown": "Lower my mastery",
-    "scoreUp": "Raise my mastery",
-    "studied": "Studied",
-    "undo": "Undo",
-    "queueEmpty": "You play on no song here.",
-    "queueConcert": "To study for the next concert",
-    "queueCatalogue": "My least mastered songs",
-    "readinessTitle": "Next concert",
-    "readyCount": "{{ready}} of {{total}} songs ready",
-    "readinessLabel": "Songs ready for the concert",
-    "noConcert": "No concert planned.",
-    "bandTitle": "The band",
-    "thisWeek_one": "{{count}} study this week",
-    "thisWeek_other": "{{count}} studies this week",
     "progressTitle": "Progress"
   },
   "takes": {
@@ -936,8 +917,7 @@
       "takeComments": "Comments on takes",
       "songs": "New songs in the catalogue",
       "sessions": "Sessions",
-      "setlists": "Setlists, lineups and transitions",
-      "streak": "Daily flame reminder at 20:00"
+      "setlists": "Setlists, lineups and transitions"
     }
   },
   "install": {
@@ -993,8 +973,7 @@
     "jokersLeft_other": "{{count}} jokers left this week",
     "noFlame": "No flame yet",
     "sheetTitle": "Flames",
-    "bandTitle": "Band",
-    "studyASong": "Study a song"
+    "bandTitle": "Band"
   },
   "band": {
     "title": "Band",

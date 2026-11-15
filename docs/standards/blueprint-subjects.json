@@ -2060,17 +2060,6 @@
   "apps/pragma/api/src/studies/studies.controller.ts": {
     "buildStudiesRouter": "controller-dispatch"
   },
-  "apps/pragma/api/src/studies/studies.repository.ts": {
-    "STUDY_PROJECTION": "repository-projection",
-    "insertStudyIfAbsentWithin": "repository-idempotent-upsert",
-    "runInOneStudyTransaction": "repository-owned-transaction"
-  },
-  "apps/pragma/api/src/studies/studies.schema.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/studies/studies.schema.ts": {
-    "studyTable": "schema-dsql-constraints"
-  },
   "apps/pragma/api/src/studies/studies.service.ts": {
     "logStudy": "service-clock-injected"
   },

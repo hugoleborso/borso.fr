@@ -5,8 +5,6 @@ import { useTranslation } from 'react-i18next';
 import type { StreaksView } from '../../lib/queries/streaks.queries';
 import { BlazeMark } from '../atoms/BlazeMark';
 import { BonfireMark } from '../atoms/BonfireMark';
-import { ButtonLink } from '../atoms/ButtonLink';
-import { MemberMark } from '../atoms/MemberMark';
 import { Overline } from '../atoms/Overline';
 import { selectFlameStatusKey, selectFlameTone } from '../molecules/flame-tone.core';
 import { Sheet } from '../molecules/Sheet';
@@ -16,23 +14,12 @@ export interface StreakSheetProps {
   readonly onClose: () => void;
 }
 
-const TO_LEARN_PATH = '/catalog?filter=learning';
-
 // @FollowsBlueprint organism-presentational
 export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
   const { t } = useTranslation();
   const title = t('streaks.sheetTitle');
   return (
-    <Sheet
-      title={title}
-      label={title}
-      onClose={onClose}
-      footer={
-        <ButtonLink to={TO_LEARN_PATH} variant="secondary" icon="catalog">
-          {t('streaks.studyASong')}
-        </ButtonLink>
-      }
-    >
+    <Sheet title={title} label={title} onClose={onClose}>
       <div className="flex flex-col gap-5 pb-2">
         <section className="flex items-center gap-3">
           <BlazeMark tone={selectFlameTone(view.mine)} size="lg" />
@@ -59,24 +46,6 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
           </div>
           <span className="text-heading text-ink tabular-nums">{view.band.days}</span>
         </section>
-
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {view.members.map((member) => (
-            <li key={member.memberId} className="flex items-center gap-3">
-              <MemberMark shape="dot" color={member.color} />
-              <span className="min-w-0 flex-auto truncate text-body text-ink">
-                {member.firstName}
-              </span>
-              <span className="flex shrink-0 items-center gap-1 text-meta font-semibold text-ink tabular-nums">
-                <BlazeMark tone={selectFlameTone(member.flame)} size="sm" />
-                {member.flame.days}
-              </span>
-              <span className="shrink-0 text-meta text-ink-soft first-letter:uppercase">
-                {t(selectFlameStatusKey(member.flame))}
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
     </Sheet>
   );

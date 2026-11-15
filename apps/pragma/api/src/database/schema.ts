@@ -23,7 +23,6 @@ export {
 } from '../mastery/mastery.schema';
 export { memberInstrumentTable, memberTable } from '../members/members.schema';
 export {
-  notificationDispatchTable,
   notificationPreferenceTable,
   pushSubscriptionTable,
   vapidKeyPairTable,
@@ -45,8 +44,6 @@ export {
 } from '../setlists/setlists.schema';
 export { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 export { songTable } from '../songs/songs.schema';
-export { presenceTable } from '../streaks/streaks.schema';
-export { studyTable } from '../studies/studies.schema';
 export { takeCommentTable, takeTable } from '../takes/takes.schema';
 export { taskTable } from '../tasks/tasks.schema';
 export { transitionCommentTable } from '../transitions/transitions.schema';

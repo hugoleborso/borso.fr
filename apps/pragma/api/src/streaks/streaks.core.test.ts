@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildMemberFlames,
-  buildOwnFlame,
   buildStreaksView,
   collectSessionDays,
   firstLookbackDay,
@@ -10,180 +8,34 @@ import {
 
 const TODAY = '2026-10-29';
 const YESTERDAY = '2026-10-28';
-const LEA = { id: 'member-lea', firstName: 'Léa', color: '#e0533a' };
-const TOM = { id: 'member-tom', firstName: 'Tom', color: '#3a7be0' };
-const NO_SESSION = new Set<string>();
-const NO_PRESENCE: readonly never[] = [];
-const NO_STUDY: readonly never[] = [];
-const LEA_ROW = { memberId: LEA.id, firstName: LEA.firstName, color: LEA.color };
-const TOM_ROW = { memberId: TOM.id, firstName: TOM.firstName, color: TOM.color };
+const TWO_DAYS_AGO = '2026-10-27';
+const FOUR_DAYS_AGO = '2026-10-25';
 
 // @FollowsBlueprint test-pure-unit
 describe('buildStreaksView', () => {
-  it('forms each member’s days from their studies and every session', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: LEA.id,
-      members: [LEA, TOM],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
-      presences: NO_PRESENCE,
-      sessionDays: new Set([YESTERDAY]),
-    });
-    expect(view).toEqual({
+  it('counts the session days for my flame and the band’s', () => {
+    expect(buildStreaksView({ today: TODAY, sessionDays: new Set([TODAY, YESTERDAY]) })).toEqual({
       today: TODAY,
       mine: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
       band: { days: 2, isTodayCounted: true },
-      members: [
-        {
-          memberId: LEA.id,
-          firstName: 'Léa',
-          color: '#e0533a',
-          flame: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
-        },
-        {
-          memberId: TOM.id,
-          firstName: 'Tom',
-          color: '#3a7be0',
-          flame: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 },
-        },
-      ],
     });
   });
 
-  it('counts a band day when any one member studied it', () => {
+  it('bridges a gap between sessions with jokers for my flame, never for the band’s', () => {
     const view = buildStreaksView({
       today: TODAY,
-      memberId: TOM.id,
-      members: [LEA, TOM],
-      studies: [
-        { memberId: LEA.id, studiedOn: TODAY },
-        { memberId: TOM.id, studiedOn: YESTERDAY },
-      ],
-      presences: NO_PRESENCE,
-      sessionDays: NO_SESSION,
+      sessionDays: new Set([YESTERDAY, FOUR_DAYS_AGO]),
     });
-    expect(view.band).toEqual({ days: 2, isTodayCounted: true });
-    expect(view.mine).toEqual({ days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 });
+    expect(view.mine).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 1 });
+    expect(view.band).toEqual({ days: 1, isTodayCounted: false });
   });
 
-  it('ignores the study of a member who was deleted', () => {
-    const view = buildStreaksView({
+  it('answers no flame without a session', () => {
+    expect(buildStreaksView({ today: TODAY, sessionDays: new Set() })).toEqual({
       today: TODAY,
-      memberId: LEA.id,
-      members: [LEA],
-      studies: [{ memberId: 'member-gone', studiedOn: TODAY }],
-      presences: NO_PRESENCE,
-      sessionDays: NO_SESSION,
+      mine: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 },
+      band: { days: 0, isTodayCounted: false },
     });
-    expect(view.band).toEqual({ days: 0, isTodayCounted: false });
-    expect(view.members.map((member) => member.memberId)).toEqual([LEA.id]);
-  });
-
-  it('lights a member’s day and the band’s from the member opening the app', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: LEA.id,
-      members: [LEA, TOM],
-      studies: NO_STUDY,
-      presences: [
-        { memberId: LEA.id, presentOn: TODAY },
-        { memberId: TOM.id, presentOn: YESTERDAY },
-      ],
-      sessionDays: NO_SESSION,
-    });
-    expect(view.mine).toEqual({ days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 });
-    expect(view.band).toEqual({ days: 2, isTodayCounted: true });
-    expect(view.members[1]?.flame).toEqual({
-      days: 1,
-      isTodayCounted: false,
-      jokersLeftThisWeek: 3,
-    });
-  });
-
-  it('keeps counting a study logged before presences replaced it, beside a presence', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: LEA.id,
-      members: [LEA],
-      studies: [{ memberId: LEA.id, studiedOn: YESTERDAY }],
-      presences: [{ memberId: LEA.id, presentOn: TODAY }],
-      sessionDays: NO_SESSION,
-    });
-    expect(view.mine).toEqual({ days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 });
-  });
-
-  it('ignores the presence of a member who was deleted', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: LEA.id,
-      members: [LEA],
-      studies: NO_STUDY,
-      presences: [{ memberId: 'member-gone', presentOn: TODAY }],
-      sessionDays: NO_SESSION,
-    });
-    expect(view.band).toEqual({ days: 0, isTodayCounted: false });
-  });
-
-  it('answers the empty flame for a signed-in member who is not in the band', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: 'member-unknown',
-      members: [LEA],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
-      presences: NO_PRESENCE,
-      sessionDays: new Set([TODAY]),
-    });
-    expect(view.mine).toEqual({ days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 });
-  });
-});
-
-describe('buildMemberFlames', () => {
-  it('answers every member’s flame without a signed-in member', () => {
-    const flames = buildMemberFlames({
-      today: TODAY,
-      members: [LEA, TOM],
-      studies: [{ memberId: TOM.id, studiedOn: TODAY }],
-      presences: NO_PRESENCE,
-      sessionDays: NO_SESSION,
-    });
-    expect(flames).toEqual([
-      { ...LEA_ROW, flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 } },
-      { ...TOM_ROW, flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 } },
-    ]);
-  });
-});
-
-describe('buildOwnFlame', () => {
-  it('reads only the member’s own studies, with every session', () => {
-    expect(
-      buildOwnFlame({
-        today: TODAY,
-        memberId: TOM.id,
-        studies: [
-          { memberId: LEA.id, studiedOn: TODAY },
-          { memberId: TOM.id, studiedOn: YESTERDAY },
-        ],
-        presences: NO_PRESENCE,
-        sessionDays: new Set(['2026-10-27']),
-      }),
-    ).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 3 });
-  });
-});
-
-describe('buildOwnFlame with presences', () => {
-  it('reads only the member’s own presences', () => {
-    expect(
-      buildOwnFlame({
-        today: TODAY,
-        memberId: TOM.id,
-        studies: NO_STUDY,
-        presences: [
-          { memberId: LEA.id, presentOn: YESTERDAY },
-          { memberId: TOM.id, presentOn: TODAY },
-        ],
-        sessionDays: NO_SESSION,
-      }),
-    ).toEqual({ days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 });
   });
 });
 
@@ -211,19 +63,11 @@ describe('collectSessionDays', () => {
 });
 
 describe('projectStreaksForTool', () => {
-  it('keeps both flames and each member’s count, without ids or colours', () => {
-    const view = buildStreaksView({
-      today: TODAY,
-      memberId: LEA.id,
-      members: [LEA],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
-      presences: NO_PRESENCE,
-      sessionDays: NO_SESSION,
-    });
+  it('keeps both flames and drops the day', () => {
+    const view = buildStreaksView({ today: TODAY, sessionDays: new Set([TWO_DAYS_AGO]) });
     expect(projectStreaksForTool(view)).toEqual({
-      mine: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 },
-      band: { days: 1, isTodayCounted: true },
-      members: [{ firstName: 'Léa', days: 1, isTodayCounted: true }],
+      mine: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 2 },
+      band: { days: 0, isTodayCounted: false },
     });
   });
 });

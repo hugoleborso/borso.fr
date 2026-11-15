@@ -3,8 +3,6 @@ import { deleteCredentialsOfMember } from '../auth/credentials.service';
 import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
 import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
-import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
-import { deletePresencesOfDeletedMember } from '../streaks/presences.service';
 import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
 import { deleteAssistantStateOfDeletedMember } from '../oauth/oauth.service';
 import { detachInspirationsOfDeletedMember } from '../inspirations/inspirations.service';
@@ -130,8 +128,6 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteVotesOfDeletedMember(transaction, id);
     await unassignTasksOfMemberBeingDeleted(transaction, id);
     await deleteScoreHistoryOfDeletedMember(transaction, id);
-    await deleteStudiesOfDeletedMember(transaction, id);
-    await deletePresencesOfDeletedMember(transaction, id);
     await deletePushStateOfDeletedMember(transaction, id);
     await deleteAssistantStateOfDeletedMember(transaction, id);
     await detachInspirationsOfDeletedMember(transaction, id);

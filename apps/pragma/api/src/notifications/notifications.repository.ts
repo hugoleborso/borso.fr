@@ -3,7 +3,6 @@ import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { memberTable } from '../members/members.schema';
 import type { CategoryPreference, NotificationCategory } from './notifications.core';
 import {
-  notificationDispatchTable,
   notificationPreferenceTable,
   pushSubscriptionTable,
   vapidKeyPairTable,
@@ -89,15 +88,6 @@ export async function findMemberFirstName(memberId: string): Promise<string | nu
     .from(memberTable)
     .where(eq(memberTable.id, memberId));
   return member?.firstName ?? null;
-}
-
-export async function hasClaimedFirstDispatch(groupKey: string, now: Date): Promise<boolean> {
-  const claimed = await getDatabase()
-    .insert(notificationDispatchTable)
-    .values({ groupKey, lastSentAt: now })
-    .onConflictDoNothing()
-    .returning({ groupKey: notificationDispatchTable.groupKey });
-  return claimed.length > 0;
 }
 
 // @FollowsBlueprint repository-conditional-claim

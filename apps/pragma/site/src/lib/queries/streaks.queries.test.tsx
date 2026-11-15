@@ -23,7 +23,6 @@ const STREAKS = {
   today: '2026-10-29',
   mine: { days: 12, isTodayCounted: false, jokersLeftThisWeek: 2 },
   band: { days: 4, isTodayCounted: true },
-  members: [],
 };
 
 function ProbeStreaks(): null {

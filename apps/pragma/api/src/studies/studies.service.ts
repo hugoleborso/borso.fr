@@ -1,4 +1,3 @@
-import type { DatabaseExecutor } from '../database/client';
 import { projectOverviewForTool } from './study-tool.core';
 import { indexDefaultScores, indexOverrideScores } from '../mastery/mastery.core';
 import { getAllMasteryOverrides, getMasteryDefaults } from '../mastery/mastery.service';
@@ -13,14 +12,8 @@ import {
   type SongLineups,
 } from './concert-readiness.core';
 import { parisCalendarDay } from '@domain/paris-day.core';
-import {
-  deleteStudiesOfMember,
-  deleteStudiesOfSong,
-  listStudiesOfMemberSince,
-} from './studies.repository';
-export { listStudiesSince } from './studies.repository';
 import type { ConcertReadiness, StudiesOverview } from './studies.types';
-import { buildStudyQueue, type StudyCandidateSong, studyKey } from './study-queue.core';
+import { buildStudyQueue, type StudyCandidateSong } from './study-queue.core';
 
 interface ConcertScope {
   readonly readiness: ConcertReadiness | null;
@@ -76,46 +69,26 @@ async function readConcertScope(
 
 // @FollowsBlueprint service-clock-injected
 export async function readStudiesOverview(memberId: string, now: Date): Promise<StudiesOverview> {
-  const today = parisCalendarDay(now);
-  const [songs, defaultRows, overrideRows, studiesOfToday] = await Promise.all([
+  const [songs, defaultRows, overrideRows] = await Promise.all([
     getSongs(),
     getMasteryDefaults(),
     getAllMasteryOverrides(),
-    listStudiesOfMemberSince(memberId, today),
   ]);
   const defaults = indexDefaultScores(defaultRows);
   const overrides = indexOverrideScores(overrideRows);
   const scope = await readConcertScope(songs, now, (song) =>
     isSongReady(defaults, overrides, song),
   );
-  const keysStudiedToday = new Set(
-    studiesOfToday.map((study) => studyKey(study.songId, study.instrumentId)),
-  );
   return {
-    today,
+    today: parisCalendarDay(now),
     queue: buildStudyQueue({
       memberId,
       songs: scope.candidates,
       defaults,
       overrides,
-      keysStudiedToday,
     }),
     readiness: scope.readiness,
   };
-}
-
-export async function deleteStudiesOfDeletedMember(
-  executor: DatabaseExecutor,
-  memberId: string,
-): Promise<void> {
-  await deleteStudiesOfMember(executor, memberId);
-}
-
-export async function deleteStudiesOfDeletedSong(
-  executor: DatabaseExecutor,
-  songId: string,
-): Promise<void> {
-  await deleteStudiesOfSong(executor, songId);
 }
 
 export async function readStudiesOverviewForTool(memberId: string, now: Date) {

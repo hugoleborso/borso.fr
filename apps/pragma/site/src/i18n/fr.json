@@ -844,25 +844,6 @@
     "winnerUnnamed": "gagnant introuvable"
   },
   "studies": {
-    "title": "Révisions",
-    "subtitle": "Ce que chacun a bossé, et si on est prêts pour le prochain concert.",
-    "notReady": "pas prêt",
-    "ready": "prêt",
-    "scoreLabel": "Ma maîtrise",
-    "scoreDown": "Baisser ma maîtrise",
-    "scoreUp": "Monter ma maîtrise",
-    "studied": "Révisé",
-    "undo": "Annuler",
-    "queueEmpty": "Tu ne joues sur aucun morceau ici.",
-    "queueConcert": "À réviser pour le prochain concert",
-    "queueCatalogue": "Mes morceaux les moins maîtrisés",
-    "readinessTitle": "Prochain concert",
-    "readyCount": "{{ready}} morceaux prêts sur {{total}}",
-    "readinessLabel": "Morceaux prêts pour le concert",
-    "noConcert": "Aucun concert prévu.",
-    "bandTitle": "Le groupe",
-    "thisWeek_one": "{{count}} révision cette semaine",
-    "thisWeek_other": "{{count}} révisions cette semaine",
     "progressTitle": "Progression"
   },
   "takes": {
@@ -936,8 +917,7 @@
       "takeComments": "Les commentaires sur les prises",
       "songs": "Les nouveaux morceaux du catalogue",
       "sessions": "Les sessions",
-      "setlists": "Les setlists, compositions et transitions",
-      "streak": "Rappel de flamme chaque jour à 20 h"
+      "setlists": "Les setlists, compositions et transitions"
     }
   },
   "install": {
@@ -993,8 +973,7 @@
     "jokersLeft_other": "{{count}} jokers restants cette semaine",
     "noFlame": "Pas encore de flamme",
     "sheetTitle": "Flammes",
-    "bandTitle": "Groupe",
-    "studyASong": "Étudier un morceau"
+    "bandTitle": "Groupe"
   },
   "band": {
     "title": "Groupe",

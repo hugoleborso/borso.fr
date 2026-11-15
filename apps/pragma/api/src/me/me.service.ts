@@ -4,7 +4,6 @@ import type { CalendarFeedSummary } from '../calendar-feeds/calendar-feeds.types
 import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 import { confirmUpdate, type ToolActor } from '../mcp/mcp.service';
 import { projectStreaksForTool } from '../streaks/streaks.core';
-import { recordPresence } from '../streaks/presences.service';
 import { readStreaks } from '../streaks/streaks.service';
 import { readStudiesOverviewForTool } from '../studies/studies.service';
 
@@ -50,15 +49,6 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
   };
 }
 
-export async function readSignedInMemberOnOpening(
-  memberId: string,
-  now: Date,
-): Promise<SignedInMember | null> {
-  const member = await readSignedInMember(memberId);
-  if (member !== null) await recordPresence(memberId, now);
-  return member;
-}
-
 export async function saveOwnContactDetails(
   memberId: string,
   contact: { phone?: string | null; email?: string | null },
@@ -89,7 +79,7 @@ export async function readMeForTool(memberId: string, now: Date) {
   const [member, studies, streaks] = await Promise.all([
     readSignedInMember(memberId),
     readStudiesOverviewForTool(memberId, now),
-    readStreaks(memberId, now),
+    readStreaks(now),
   ]);
   if (member === null) return null;
   return { ...member, studies, flames: projectStreaksForTool(streaks) };

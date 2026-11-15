@@ -199,9 +199,6 @@ describe('sw.js, push notifications', () => {
       ['setlist-changed', { setlistName: 'Summer' }],
       ['song-lineup-changed', { songTitle: 'Song' }],
       ['transition-changed', { songATitle: 'One', songBTitle: 'Two' }],
-      ['streak-at-risk', { days: '12' }],
-      ['streak-band-count', { count: '3' }],
-      ['streak-band-count-one', { count: '1' }],
     ] as const;
     const english = loadServiceWorker(failAlways, { language: 'en' });
     const french = loadServiceWorker(failAlways, { language: 'fr' });
@@ -218,9 +215,6 @@ describe('sw.js, push notifications', () => {
       'Setlist changed',
       'Lineup changed',
       'Transition changed',
-      'Flame at risk',
-      'Practice time',
-      'Practice time',
     ]);
     expect(french.notifications.map((shown) => shown.title)).toEqual([
       'Nouveau commentaire',
@@ -230,9 +224,6 @@ describe('sw.js, push notifications', () => {
       'Setlist modifiée',
       'Composition modifiée',
       'Transition modifiée',
-      'Flamme en danger',
-      'À toi de jouer',
-      'À toi de jouer',
     ]);
     expect(english.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana commented on a take of Song',
@@ -242,9 +233,6 @@ describe('sw.js, push notifications', () => {
       'Ana changed the setlist Summer',
       'Ana changed the lineup of Song',
       'Ana changed the transition One → Two',
-      'Keep your 12-day flame alive. Open Pragma before midnight.',
-      '3 members already lit their flame today. Your turn?',
-      '1 member already lit their flame today. Your turn?',
     ]);
     expect(french.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana a commenté une prise de Song',
@@ -254,9 +242,6 @@ describe('sw.js, push notifications', () => {
       'Ana a modifié la setlist Summer',
       'Ana a modifié la composition de Song',
       'Ana a modifié la transition One → Two',
-      'Garde ta flamme de 12 jours. Ouvre Pragma avant minuit.',
-      '3 membres ont déjà allumé leur flamme aujourd’hui. À toi ?',
-      '1 membre a déjà allumé sa flamme aujourd’hui. À toi ?',
     ]);
   });
 

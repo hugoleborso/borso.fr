@@ -11,7 +11,7 @@ describe('me.schema', () => {
     expect(meUpdateToolInputSchema.parse({})).toEqual({});
   });
 
-  it('refuses a study, which no longer lights a flame', () => {
+  it('refuses a key it does not know', () => {
     expect(
       meUpdateToolInputSchema.safeParse({ study: { song: 'Creep', instrument: 'Guitar' } }).success,
     ).toBe(false);

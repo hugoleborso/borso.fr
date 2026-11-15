@@ -3,18 +3,16 @@
 The rules the terms of [the vocabulary](../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
-## Study
+## Study queue
 
-- Keyed on member, song, instrument and `studied_on`. The rows logged before
-  the song page's **Practised** toggle was removed stay as history and keep
-  counting in the **flame**, so no member lost a flame to the change.
 - The songs a member has to learn are the **To learn** filter of the Songs
   tab: their study queue, one row per song, ready songs left out
-  (`selectSongsToLearn`). The Studies page this replaced is gone.
-- Deleted with its song or its member.
+  (`selectSongsToLearn`). It is read from mastery scores and lineups only.
+- No code reads or writes the `study` table. It stays in the database
+  until the operator decides to drop it.
 
-Held by: `api/src/streaks/streaks.controller.test.ts` › keeps counting a study logged before presences replaced it
-Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the member
+Held by: `api/src/studies/study-queue.core.test.ts` › lists one row per instrument I hold, not-ready first, then lowest score, then title
+Held by: `site/src/routes/catalog/catalog-page.core.test.ts` › leaves out a ready song, a song no longer in the catalogue and a song the search misses
 
 ## Concert readiness
 
