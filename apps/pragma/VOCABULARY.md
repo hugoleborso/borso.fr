@@ -735,6 +735,9 @@ Lives in: `api/src/members/`
   `domain/member-palette.core.ts`, which the API and the member form both
   read. A stored colour is never rewritten: it is the member's identity on
   every lineup.
+- On every screen, colour means a member and nothing else. An instrument, a
+  state or a change never gets its own hue. Show those by shape, intensity
+  or text.
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of
