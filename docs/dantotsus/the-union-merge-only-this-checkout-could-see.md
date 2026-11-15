@@ -61,6 +61,13 @@ The guard's own comment named GitHub's merge ref as what it predicts. The
 two tables, and their comment said only that "a union merge keeps both sides".
 Neither text says the union happens on one side of the comparison only.
 
+The union was a tool laid over a layout problem. Two branches conflicted on
+those tables because every pull request appended to the same file. What stops
+that conflict is one file per record, which PR #352 shipped: the ADR index,
+the cost table and the README inventories became one file each, found with
+`ls` or `grep`, and the `.gitattributes` lines went with them. The union then
+only had harm left to do, on branches cut before it was removed.
+
 ## Detection failure causes
 
 - **pre-push:** it measured a different merge than the one it guards, so it passed.
