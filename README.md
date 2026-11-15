@@ -2,7 +2,7 @@
 
 # borso.fr
 
-**Six apps, one operator, a team of AI agents.**
+**Several apps, one operator, a team of AI agents.**
 
 A personal monorepo where Claude Code agents ship features in parallel, each in its own sandbox,<br/>
 onto serverless AWS that costs about a coffee a month while idle.
@@ -17,10 +17,7 @@ onto serverless AWS that costs about a coffee a month while idle.
 ![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-D97757?logo=anthropic&logoColor=white)
 
 [**Wiki**](https://github.com/hugoleborso/borso.fr/wiki) ·
-[Architecture](docs/architecture.md) ·
-[How it is built](docs/how-it-is-built.md) ·
-[Decisions](docs/adr/README.md) ·
-[Local development](docs/local-dev.md)
+[Docs](docs/README.md)
 
 <br/>
 
@@ -30,14 +27,7 @@ onto serverless AWS that costs about a coffee a month while idle.
 
 ## The apps
 
-| | App | What it is | Stack |
-| --- | --- | --- | --- |
-| 🌌 | [**borso.fr**](https://borso.fr) | The landing site: a starfield, a Mondrian generator, a family corner. | Static site |
-| ♟️ | [**Borsouvertures**](https://borsouvertures.borso.fr) | Learn and play chess openings. Works offline, and syncs the owner's reviews across his devices. | Full stack, PWA |
-| 🏃 | [**Last Loop Lépin**](https://last-loop-lepin.borso.fr) | Live race-day dashboard for a backyard ultra: hourly countdown, standings, course map, runners punching their own laps. | Full stack |
-| 🍌 | [**Banana Rush**](https://banana-rush.borso.fr) | A party game of secret bids, played from phones in the same room, live over WebSocket. | Full stack, real time |
-| 🎸 | [**Pragma**](https://pragma.borso.fr) | The band's private app: songs, setlists, practice sessions, takes, audience voting, and an MCP server so assistants can act on it. | Full stack, real time, PWA |
-| 🏛️ | [**Talos**](https://talos.borso.fr) | A personal chief of staff: focus, todos, daily brief, a notes graph, push notifications, and a button that starts a Claude Code session. | Full stack, PWA, passkeys |
+Each folder under `apps/` holds one app, and `ls apps` lists them. An app runs at `https://<slug>.borso.fr`, except `borso-fr`, which is the apex `https://borso.fr`. The first lines of an app's `README.md`, or of its `VOCABULARY.md` when it has no README, say what the app is.
 
 Every page is built mobile first and works at 375 px wide. Every visible string exists in English and French.
 
@@ -90,15 +80,9 @@ flowchart LR
 
 Every lesson is turned into structure, so the next agent cannot repeat the mistake.
 
-| | |
-| --- | --- |
-| **50** custom lint rules | such as no `useEffect`, no type assertion, no SQL outside a repository |
-| **25** agent hooks | that stop a known mistake before it runs |
-| **61** architecture decisions | each with its options and criteria |
-| **296** root-cause analyses | one per real defect, with its countermeasure |
-| **146** knowledge entries | printed to an agent the moment a command matches one |
+The lesson lands in one of these places. `eslint-rules/` holds the custom lint rules and `.claude/hooks/` the agent hooks. `docs/adr/` holds the architecture decisions, `docs/dantotsus/` the root-cause analyses and `docs/knowledge/` the knowledge entries. Run `ls` on a folder to see what it holds today.
 
-Counts measured on 2026-11-12. The full story is in [How it is built](docs/how-it-is-built.md).
+The full story is in [How it is built](docs/how-it-is-built.md).
 
 ## Quick start
 
@@ -138,22 +122,7 @@ More in [Local development](docs/local-dev.md).
 
 ## Repository layout
 
-```text
-apps/
-  borso-fr/          static site
-  borsouvertures/    site/ + api/ + domain/ + cdk/
-  last-loop-lepin/   site/ + api/ + domain/ + cdk/
-  banana-rush/       site/ + api/ + domain/ + cdk/
-  pragma/            site/ + api/ + domain/ + cdk/
-  talos/             site/ + api/ + domain/ + cdk/
-infra/
-  cdk/               @borso/infra, the shared CDK constructs
-  shared/            account singletons: OIDC, deploy roles, previews CDN, budgets
-docs/                architecture, flows, standards, ADRs, root-cause analyses, knowledge
-eslint-rules/        the project's own lint rules
-scripts/             repository gates, reports, the wiki builder
-.claude/             skills, agents, commands and hooks for Claude Code
-```
+`apps/<slug>/` holds one app. A static app has only `site/`. A full-stack app adds `api/`, `domain/` and `cdk/`. `infra/cdk/` holds `@borso/infra`, the shared CDK constructs, and `infra/shared/` the account singletons. Run `ls` at the root and in any folder to see what it holds. `CLAUDE.md` describes the layout for agents.
 
 Each app opens on its own with `pnpm dev`. No app imports another.
 
@@ -169,10 +138,4 @@ New app? Follow [Adding an app](docs/adding-an-app.md) or [Adding a full-stack a
 
 The [wiki](https://github.com/hugoleborso/borso.fr/wiki) is the easiest way to read the docs. It is generated from this repository on every merge to `main` by [`scripts/wiki/build-wiki.ts`](scripts/wiki/build-wiki.ts), so edit the markdown here, never in the wiki. Its [Reports](https://github.com/hugoleborso/borso.fr/wiki/Reports) page holds the reports built from the code at that merge (hotspots, temporal coupling, convention drift, rule provenance, the blueprint index) and links the interactive [architecture maps](https://hugoleborso.github.io/borso.fr/), which the `architecture` workflow rebuilds on demand.
 
-| Start here | Then |
-| --- | --- |
-| [Architecture](docs/architecture.md) | [Code standards](docs/standards/README.md) |
-| [Deploy flows](docs/flows.md) | [Architecture decisions](docs/adr/README.md) |
-| [How it is built](docs/how-it-is-built.md) | [Root-cause analyses](docs/dantotsus) |
-| [Local development](docs/local-dev.md) | [Knowledge](docs/knowledge/README.md) |
-| [AWS setup](docs/aws-setup.md) | [Agent instructions](CLAUDE.md) |
+Every document lives under `docs/`, and [docs/README.md](docs/README.md) says how to find the one you need.
