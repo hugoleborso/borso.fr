@@ -49,7 +49,7 @@ export function AddSongsSearchBar({
       <div
         role="group"
         aria-label={t('setlist.addSongsFilterLabel')}
-        className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
+        className="-mx-4 flex gap-2 overflow-x-auto overflow-y-hidden transform-gpu px-4 [scrollbar-width:none]"
       >
         {ADD_SONGS_FILTERS.map((option) => (
           <Chip

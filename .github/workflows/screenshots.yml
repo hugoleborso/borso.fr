@@ -26,9 +26,12 @@ on:
         required: true
         type: number
 
+# One group per pull request, so two runs never write the comment at once. Only
+# a push cancels: a dispatch waits for the running pull_request run, whose
+# cancellation would leave a cancelled check on the pull request's head.
 concurrency:
   group: screenshots-${{ inputs.pr || github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

@@ -65,7 +65,10 @@ unchanged, so the names in the design and the names in the code stay the same.
 ## Variants
 
 A component with more than two visual variants uses `cva` from
-`class-variance-authority`, so the variants are one typed table.
+`class-variance-authority`, or a frozen record keyed by the prop union as the
+`atom-lookup-variants` blueprint shows. Both make the variants one typed table.
+An app that does not depend on `class-variance-authority` uses the record,
+because adding the dependency is an ADR decision.
 
 ```ts
 const buttonVariants = cva('inline-flex items-center rounded-md font-medium', {
@@ -156,7 +159,7 @@ and `lg:` for wider screens. See
   because half the class attributes in this repository are in an entry point no
   linter opens.
 - `reviewer` checks that a set of more than two visual variants goes through
-  `cva` rather than a conditional expression.
+  `cva` or a lookup record rather than a conditional expression.
 - `reviewer` checks that a visual effect added to an existing screen is made out
   of what that screen already renders, where it can be. An effect drawn over a
   page that already draws something similar is two of that thing, one of them

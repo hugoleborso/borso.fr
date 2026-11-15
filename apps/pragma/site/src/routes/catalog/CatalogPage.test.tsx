@@ -42,12 +42,16 @@ describe('the songs page', () => {
 
   it('pins the title, the search and the filters together at the top', () => {
     renderCatalogPage();
-    const pinned = screen.getByRole('heading', { level: 1, name: 'Songs' }).closest('.sticky');
+    const pinned = screen
+      .getByRole('heading', { level: 1, name: 'Songs' })
+      .closest('[data-page-header]');
     expect(pinned).not.toBeNull();
     expect(pinned?.classList.contains('top-0')).toBe(true);
     expect(pinned?.contains(screen.getByRole('searchbox'))).toBe(true);
     expect(pinned?.contains(screen.getByRole('group', { name: 'Show' }))).toBe(true);
-    expect(pinned?.querySelector('[class*="overflow-y"]')).toBeNull();
+    expect(
+      pinned?.querySelector('[class*="overflow-y-auto"], [class*="overflow-y-scroll"]'),
+    ).toBeNull();
   });
 
   it('opens the Add a song page, carrying no title when nothing was searched', () => {

@@ -22,7 +22,7 @@ export function SongDetailHeader({ song, menuItems }: SongDetailHeaderProps): JS
 
   return (
     <PageHeader
-      className="mb-0 sm:mb-0"
+      className="mb-0 sm:mb-0 lg:mb-0"
       back={{ to: '/catalog', label: t('catalog.title') }}
       leading={<AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="md" />}
       title={song.title}

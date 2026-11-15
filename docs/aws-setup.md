@@ -436,112 +436,68 @@ and the caller is authenticated by SigV4 as the IAM user it already is.
 **`AI-Dev-ReadOnly` therefore holds no DSQL right at all.** The user used to carry
 `dsql:DbConnect` on the three cluster ARNs, kept as break-glass for a laptop holding its access
 key. That is gone: the execution role of each reader function is what the database maps now, and
-the user's only production right is `lambda:InvokeFunction` on those three functions. A laptop
+the user's only production right is `lambda:InvokeFunction` on the reader functions. A laptop
 that needs the database has `borso-admin`, which is a better fallback than a read role with no
 blocklist in front of it. Verified by simulation on 2026-10-29: `dsql:DbConnect` on the pragma
 cluster is `explicitDeny` for this user.
 
-#### The grant is one verb on three functions
+#### The grant is one managed policy over every reader
 
-The function names are deterministic — `<app>-<stage>-<handler>`, the same rule every Lambda in
-this account is named by — so these ARNs survive a redeploy. They do **not** survive a rename of
+The function names are deterministic, `<app>-<stage>-<handler>`, the same rule every Lambda in
+this account is named by, so these ARNs survive a redeploy. They do **not** survive a rename of
 the handler slug, which is why `db-read.sh` reads the name from the stack's
 `AgentReaderFunctionName` output rather than building it, and why a stack with no such output is
 refused before anything is invoked.
 
-`Prod-db-read` is the whole allow, saved as `prod-db-read.json`:
+Since 2026-11-14 the whole grant lives in one customer-managed policy,
+`AI-Dev-ReadOnly-prod-agent-readers`, attached to the user. It holds three statements over the
+same list of reader ARNs:
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "InvokeTheProductionReaders",
-      "Effect": "Allow",
-      "Action": "lambda:InvokeFunction",
-      "Resource": [
-        "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader*",
-        "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader*",
-        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader*"
-      ]
-    }
-  ]
-}
-```
+- `InvokeTheProductionReaders` allows `lambda:InvokeFunction` on them.
+- `DenyLambdaInvokeOutsideTheReaders` denies `lambda:Invoke*` on every other function, the API
+  Lambdas and talos's among them.
+- `DenyEveryLambdaActionOnTheReadersButInvoke` denies every other Lambda action on them, such as
+  `UpdateFunctionCode`, `GetFunction` and `AddPermission`.
 
-#### The deny has to stop covering that one verb
+**An explicit `Deny` beats any `Allow`**, so the blanket statement of the inline
+`Explicit-write-deny` (§12.6) must not list `lambda:Invoke*`. It lists `lambda:Create*`,
+`lambda:Delete*` and `lambda:Update*` only. The inline `Prod-db-read` that used to hold the allow
+is deleted.
 
-**An explicit `Deny` beats any `Allow`**, and §12.6's deny lists `lambda:Invoke*` on
-`Resource: "*"`. That line has to leave the blanket statement and come back as two statements
-that cover everything except `InvokeFunction` on these three functions. The deployed deny is
-unreadable from a session (`iam:GetUserPolicy` is inside it), so its content is unverified from
-there. Read it first with the admin profile:
+Adding an application's reader is one new ARN in the list, three times, then a new policy
+version. Read the current one first:
 
 ```bash
-aws --profile borso-admin iam get-user-policy \
-  --user-name AI-Dev-ReadOnly --policy-name Explicit-write-deny \
-  --query PolicyDocument --output json > deny.json
+ARN=arn:aws:iam::756586757578:policy/AI-Dev-ReadOnly-prod-agent-readers
+VERSION=$(aws --profile borso-admin iam get-policy --policy-arn "$ARN" \
+  --query Policy.DefaultVersionId --output text)
+aws --profile borso-admin iam get-policy-version --policy-arn "$ARN" --version-id "$VERSION" \
+  --query PolicyVersion.Document --output json > readers.json
+NEW='arn:aws:lambda:eu-west-3:756586757578:function:<app>-prod-agent-reader*'
+jq -c --arg fn "$NEW" '.Statement |= map(
+    if .Resource then .Resource = (.Resource + [$fn] | unique)
+    else .NotResource = (.NotResource + [$fn] | unique) end)' readers.json > readers-new.json
+aws --profile borso-admin iam create-policy-version --policy-arn "$ARN" \
+  --policy-document file://readers-new.json --set-as-default
 ```
 
-One `jq` makes every edit, and running it twice leaves the same policy. It removes
-`lambda:Invoke*` from the blanket statement, puts `dsql:*` back into it — ADR-2026-10-25T0054's two DSQL
-narrowing statements are what ADR-2026-10-28T2126 retired — and appends the two Lambda ones. The `-c` is
-not cosmetic; see *The 2048-character wall* below.
+IAM keeps five versions of a managed policy. Delete the oldest non-default one with
+`delete-policy-version` when `create-policy-version` refuses for that reason.
 
-```bash
-jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader*","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader*","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader*"]' '
-  .Statement |= (
-    map(select(.Sid | test("Dsql|Lambda") | not))
-    | map(if .Resource == "*" and (.Action | type) == "array"
-          then .Action = ((.Action - ["lambda:Invoke*", "dsql:*"]) + ["dsql:*"] | unique)
-          else . end)
-    + [
-      {Sid: "DenyLambdaInvokeOutsideTheReaders", Effect: "Deny", Action: "lambda:Invoke*", NotResource: $fns},
-      {Sid: "DenyEveryLambdaActionOnTheReadersButInvoke", Effect: "Deny", NotAction: "lambda:InvokeFunction", Resource: $fns}
-    ])' deny.json > deny-narrowed.json
-```
-
-The first added statement keeps every other function denied, the API Lambdas and talos's among
-them. The second keeps `UpdateFunctionCode`, `GetFunction`, `AddPermission` and the rest denied
-on the three readers. Only `InvokeFunction` on those three ARNs is left undenied. If
-`lambda:Invoke*` appears in any other statement with `Resource: "*"`, the hole stays shut, and
-the simulation below says so.
-
-Apply both:
-
-```bash
-aws --profile borso-admin iam put-user-policy \
-  --user-name AI-Dev-ReadOnly \
-  --policy-name Explicit-write-deny \
-  --policy-document file://deny-narrowed.json
-
-aws --profile borso-admin iam put-user-policy \
-  --user-name AI-Dev-ReadOnly \
-  --policy-name Prod-db-read \
-  --policy-document file://prod-db-read.json
-```
-
-In the console the same edits are: **IAM → Users → `AI-Dev-ReadOnly` → Permissions**. Open the
-inline policy `Explicit-write-deny`, choose **Edit**, switch to the **JSON** tab, make the change
-above and save. Then open `Prod-db-read` and replace its document with the allow.
-
-Do not copy either change to the `ClaudeDev` permission set. The reader functions are invoked as
+Do not copy this grant to the `ClaudeDev` permission set. The reader functions are invoked as
 this user, and the database role is mapped to each function's execution role, so the permission
 set's role would get an invoke right it has no reason to hold.
 
 #### The 2048-character wall
 
 **IAM caps the inline policies of one user at 2048 characters in aggregate, not per policy.**
-Not 2048 each, and the error says only *"Maximum policy size of 2048 bytes exceeded for user
-AI-Dev-ReadOnly"*, which reads as if the document you just sent were too large. It was not: the
-first attempt here sent a 1887-character deny, under the limit on its own, and was refused
-because `Prod-db-read` and `Screenshots-publish` were already spending 525 of the budget.
-
-Two things follow. Compact the JSON — IAM counts whitespace, so `jq -c` buys about a third of
-the document back. And treat the budget as a shared one: as of 2026-10-29 the three policies
-spend 1248 + 377 + 173 = 1798 of 2048, which leaves room for roughly three more ARNs anywhere.
-The next thing that does not fit moves to a customer-managed policy, which is capped at 6144 and
-attaches to the user the same way; do not golf the Sids to buy another hundred characters.
+The error says only *"Maximum policy size of 2048 bytes exceeded for user AI-Dev-ReadOnly"*,
+which reads as if the document you just sent were too large. On 2026-10-29 an 1887-character deny
+was refused because the other two inline policies already spent 525. On 2026-11-14 the three
+inline policies spent 1798, and a fourth reader would have cost about 252 more (measured), which
+is why the reader statements moved to the managed policy. A managed policy is capped at 6144
+characters, per policy. The two remaining inline policies spend 723 (measured). IAM counts
+whitespace, so compact any document with `jq -c` before sending it.
 
 Measure before applying:
 
@@ -560,7 +516,7 @@ The simulator answers without invoking anything, and one resource per call — a
 several collapses them into one templated answer that tells you nothing:
 
 ```bash
-for f in pragma-prod-agent-reader last-loop-lepin-prod-agent-reader \
+for f in pragma-prod-agent-reader last-loop-lepin-prod-agent-reader borsouvertures-prod-agent-reader \
          banana-rush-prod-agent-reader pragma-prod-api; do
   printf '%s -> %s\n' "$f" "$(aws --profile borso-admin iam simulate-principal-policy \
     --policy-source-arn arn:aws:iam::756586757578:user/AI-Dev-ReadOnly \

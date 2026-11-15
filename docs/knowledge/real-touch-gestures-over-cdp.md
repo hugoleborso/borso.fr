@@ -1,5 +1,5 @@
 ---
-summary: 'A real tap is `scripts/phone.sh touch <selector>`; a real swipe or drag is `Input.dispatchTouchEvent` sent yourself over CDP, to the port of `agent-browser get cdp-url`. Overrides end with the CDP session that set them. Headless Chromium scrolls nothing from a touch-source scroll, ignores DPR in a screencast and draws no keyboard.'
+summary: 'A real tap is `scripts/phone.sh touch <selector>`, a real drag between two elements is `scripts/phone.sh drag <from> <to>`; any other swipe is `Input.dispatchTouchEvent` sent yourself over CDP, to the port of `agent-browser get cdp-url`. Overrides end with the CDP session that set them. Headless Chromium scrolls nothing from a touch-source scroll, ignores DPR in a screencast and draws no keyboard.'
 triggers:
   commands:
     - 'Input\.dispatchTouchEvent'
@@ -25,18 +25,34 @@ differently under them, and that difference is where the bugs are; see
 | --- | --- |
 | Layout, sizes, overflow, screenshots | `agent-browser` |
 | Does a real tap land, as touch, at phone width | `scripts/phone.sh touch '<css selector>'` |
-| Does a swipe or a drag do the right thing on touch | CDP `Input.dispatchTouchEvent`, below |
+| Does a touch drag from one element to another land | `scripts/phone.sh drag '<from>' '<to>'` |
+| Any other swipe on touch | CDP `Input.dispatchTouchEvent`, below |
 | Mouse-only behaviour (text selection, hover) | `agent-browser` |
 
-## The recipe for a swipe or a drag
+## What `drag` proves and what it does not
+
+`drag` exits 0 when a `touchstart` reached the from element, a `touchmove` and
+a `touchend` fired, no `pointercancel` came, and the touch lifted over the to
+element. It does not say the page acted on the drop, so read that back with
+`agent-browser --session phone eval`. Measured 2026-11-14 on a static page:
+
+- An element with no touch listener and no `touch-action: none` gets a
+  `pointercancel` after the first move, because the browser takes the gesture
+  to pan. Headless Chromium then scrolls nothing, so without that gate the
+  drag would read as passing while a phone would scroll the page.
+- react-chessboard replaces the dragged piece's node on drop, so `touchend`
+  goes to a detached node and never reaches `document`. The driver listens on
+  the from element too.
+
+## The recipe for any other swipe
 
 Every `agent-browser` session exposes CDP. `agent-browser --session phone get
 cdp-url` prints `ws://127.0.0.1:<port>/…`; list the page targets at
 `http://127.0.0.1:<port>/json/list` and open the page's
 `webSocketDebuggerUrl`. Measured 2026-10-29: a raw CDP client and
 `agent-browser` drive the same page in turn without either one timing out.
-[`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts) is the
-working client to copy.
+[`scripts/browser/cdp-session.ts`](../../scripts/browser/cdp-session.ts) holds
+the client both drivers share.
 
 ```js
 async function touch(type, x, y) {

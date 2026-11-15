@@ -106,8 +106,11 @@ export function acceptSubjects(
   current: readonly MarkerClaim[],
   acceptedPaths: readonly string[],
 ): SubjectBaseline {
-  if (acceptedPaths.length === 0) return buildSubjectBaseline(current);
-  const accepted = new Set(acceptedPaths);
+  const recordedPaths = Object.keys(recorded);
+  if (acceptedPaths.length === 0 && recordedPaths.length === 0) {
+    return buildSubjectBaseline(current);
+  }
+  const accepted = new Set(acceptedPaths.length > 0 ? acceptedPaths : recordedPaths);
   const kept: MarkerClaim[] = Object.entries(recorded)
     .filter(([filePath]) => !accepted.has(filePath))
     .flatMap(([filePath, subjects]) =>

@@ -196,7 +196,7 @@ export function decideReadOnlyQuery(source: string): QueryDecision {
       `the query uses ${forbidden.join(', ').toUpperCase()}, which a read never needs.`,
     );
   }
-  return { accepted: true, statement: source.slice(0, code.trimEnd().length) };
+  return { accepted: true, statement: source.slice(0, code.length).trimEnd() };
 }
 
 export function listBlocklistedTables(source: string, blocklist: readonly string[]): string[] {

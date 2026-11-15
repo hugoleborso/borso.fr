@@ -1,6 +1,6 @@
 # ADR-2026-11-13T1619: The personal deck is a log of immutable line events, merged by id like the reviews
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-13
 - **Deciders:** the agent, on the operator's product call of 2026-11-13
 - **Tags:** opening-trainer, borsouvertures, data

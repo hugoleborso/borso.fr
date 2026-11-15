@@ -164,6 +164,7 @@
 
   html {
     overflow-x: hidden;
+    scroll-padding-top: var(--page-header-height, 0px);
   }
 
   html:has(dialog[open]) {
