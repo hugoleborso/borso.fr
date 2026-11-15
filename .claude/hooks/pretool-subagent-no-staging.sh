@@ -33,6 +33,12 @@ COMMAND_TO_RUN="$(printf '%s' "$COMMAND" |
   python3 "$(dirname "$0")/strip-heredocs.py" |
   python3 "$(dirname "$0")/strip-quoted-strings.py")"
 
+# `git mv -h` prints the usage and writes nothing. The container has no man
+# pages, so a subagent quoting git for a dantotsu reaches for it, and on PR #334
+# this hook refused it. Help invocations are cut before the match.
+HELP_INVOCATION='git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(add|mv|rm|commit)[[:space:]]+(-h|--help)([[:space:]]*($|[;&|)]))'
+COMMAND_TO_RUN="$(sed -E "s/${HELP_INVOCATION}/true\\5/g" <<<"$COMMAND_TO_RUN")"
+
 STAGING_PATTERN='(^|[;&|(]|\bthen\b|\bdo\b)[[:space:]]*git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(add|mv|rm|commit)([[:space:]]|$)'
 STAGING="$(grep -oE "$STAGING_PATTERN" <<<"$COMMAND_TO_RUN" | head -1 || true)"
 if [[ -z "$STAGING" ]]; then exit 0; fi

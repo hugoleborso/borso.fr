@@ -16,6 +16,11 @@ path_lines="
 $touched_paths
 "
 
+# A merge of main can bring a lockfile this checkout never installed, and the
+# type-aware oxlint rules then fail on modules they cannot resolve. See
+# scripts/ensure-installed.sh.
+scripts/ensure-installed.sh pre-commit
+
 results=$(mktemp -d)
 trap 'rm -rf "$results"' EXIT
 

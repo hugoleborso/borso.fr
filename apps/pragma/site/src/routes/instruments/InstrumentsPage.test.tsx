@@ -94,7 +94,7 @@ describe('the instruments page', () => {
     const header = (await screen.findByRole('heading', { level: 1, name: 'Instruments' })).closest(
       'header',
     );
-    expect(header?.classList.contains('sticky')).toBe(true);
+    expect(header?.classList.contains('fixed')).toBe(true);
     expect(
       within(header ?? document.body)
         .getByRole('link', { name: 'Band' })

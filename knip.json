@@ -15,6 +15,7 @@
         "scripts/quality/*.ts",
         "scripts/browser/*.ts",
         "scripts/wiki/*.ts",
+        "scripts/knip/*.ts",
         "scripts/**/*.test.ts",
         "eslint-rules/js-plugins/*.js",
         "eslint-rules/**/*.test.js"

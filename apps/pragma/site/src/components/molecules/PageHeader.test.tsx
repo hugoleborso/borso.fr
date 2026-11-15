@@ -18,7 +18,7 @@ describe('PageHeader', () => {
   it('stays pinned at the top while the page scrolls', () => {
     const header = renderHeader(<PageHeader title="Members" />);
     expect(header.hasAttribute('data-page-header')).toBe(true);
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(header.classList.contains('top-0')).toBe(true);
   });
 
