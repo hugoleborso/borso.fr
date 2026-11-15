@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   recordTakeBreadcrumb,
   reportReadBatchFailed,
@@ -7,6 +7,7 @@ import {
   reportSetlistBatchAddFailed,
   reportStreaksReadFailed,
   reportTakeQueueWriteFailed,
+  reportScreenPlacementBreach,
   reportTakeUploadFailed,
   startErrorReporting,
 } from './error-reporting.adapter';
@@ -29,7 +30,33 @@ vi.mock('@sentry/react', () => sentry);
 const DSN = 'https://public-key@o1.ingest.de.sentry.io/2';
 const API_ONLY = /^https:\/\/pragma\.borso\.fr\/api\//;
 
+function displayStandalone(isStandalone: boolean): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: isStandalone && query === '(display-mode: standalone)',
+  }));
+}
+
 describe('startErrorReporting', () => {
+  beforeEach(() => {
+    displayStandalone(false);
+  });
+
+  it('tags an app opened from the home screen as standalone', () => {
+    displayStandalone(true);
+    startErrorReporting({
+      dsn: DSN,
+      environment: 'prod',
+      tracesSampleRate: 1,
+      tracePropagationTargets: [],
+    });
+
+    expect(sentry.init).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialScope: { tags: { app: 'pragma', 'display.mode': 'standalone' } },
+      }),
+    );
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -51,11 +78,11 @@ describe('startErrorReporting', () => {
     expect(sentry.init).toHaveBeenCalledWith({
       dsn: DSN,
       environment: 'prod',
-      initialScope: { tags: { app: 'pragma' } },
+      initialScope: { tags: { app: 'pragma', 'display.mode': 'browser' } },
       dataCollection: {
         userInfo: false,
         cookies: false,
-        httpHeaders: false,
+        httpHeaders: { allow: ['User-Agent'] },
         httpBodies: [],
         urlQueryParams: false,
       },
@@ -197,6 +224,22 @@ describe('reportReadBatchFailed', () => {
     expect(sentry.captureMessage).toHaveBeenCalledWith('read-batch-failed', {
       level: 'error',
       tags: { 'read_batch.status': 'none', 'read_batch.size': '2' },
+    });
+  });
+});
+
+describe('screen placement', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports a breach tagged with its kind and the measured spans', () => {
+    const measurement = { element: { top: 744, bottom: 800 }, visible: { top: 0, bottom: 500 } };
+    reportScreenPlacementBreach('tab-bar-off-visible-bottom', measurement);
+    expect(sentry.captureMessage).toHaveBeenCalledWith('ScreenPlacementBreach', {
+      level: 'error',
+      tags: { 'screen.breach': 'tab-bar-off-visible-bottom' },
+      extra: measurement,
     });
   });
 });

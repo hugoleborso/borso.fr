@@ -19,6 +19,7 @@ import {
 } from './lib/query-client.setup';
 import { startTakeQueue } from './lib/take-queue.setup';
 import { keepFocusedFieldAboveKeyboard } from './lib/keyboard-reveal.adapter';
+import { watchScreenPlacement } from './lib/screen-placement.adapter';
 import { pinBottomBarsToVisualViewport } from './lib/visual-viewport.adapter';
 import { registerServiceWorker } from './sw/service-worker.setup';
 
@@ -28,6 +29,7 @@ captureInstallPrompt();
 startLiveInvalidation();
 pinBottomBarsToVisualViewport();
 keepFocusedFieldAboveKeyboard();
+watchScreenPlacement();
 
 /**
  * @Blueprint site-entrypoint

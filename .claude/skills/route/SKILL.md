@@ -27,13 +27,15 @@ Answer all five. Answer them by **looking**, not by guessing: run the greps, ope
 
 **Tier 0 — do it.** One or two files, no open decision, a blueprint exists, and a test can prove it.
 No spec, no plan, no task list. Write it, test it, commit it. Reaching for a skill here is the waste this repo's north star names.
+A change under `apps/<app>/api/` is Tier 1 at least, whatever its size. The `api-validation` hook refuses its pull request without a `/technical-validation` report, and that report reads a spec.
 
 **Tier 1 — chained.** Several files inside one application, no open product decision, precedent exists.
 Task list:
-1. `/code-standards` for the layers you are touching
-2. implement, marking new files `// @FollowsBlueprint <id>`
-3. the affected tests (`pnpm --filter <app> exec vitest run --project core --changed <base>`, or `exec vitest run --changed <base>` on a front-end-only app); coverage, mutation and the whole suites run in CI
-4. `/technical-validation`, which also checks what lint cannot, two rounds at most
+1. write `docs/features/<app>/<slug>/spec/spec.md` before the code: who it is for, each behaviour with its evidence, what is out of scope. No `/specification` walk. Step 5 reviews the code against it, and a spec written after the code describes the code
+2. `/code-standards` for the layers you are touching
+3. implement, marking new files `// @FollowsBlueprint <id>`
+4. the affected tests (`pnpm --filter <app> exec vitest run --project core --changed <base>`, or `exec vitest run --changed <base>` on a front-end-only app); coverage, mutation and the whole suites run in CI
+5. `/technical-validation`, which also checks what lint cannot, two rounds at most
 
 **Tier 2 — specified.** New user-visible behaviour, or a change crossing back end and front end, or any open decision.
 Task list:

@@ -91,12 +91,15 @@ fi
 # through the pipe, which is everything the refusal was protecting, so the hook
 # hands the harness the same command with `set -o pipefail;` in front of it.
 # See docs/dantotsus/a-guard-that-refused-what-it-could-repair.md.
+# Under pipefail the status is the last non-zero stage's, not git's: on PR
+# #346 a `| grep` matching nothing exited 1 after a push that had landed, and
+# the old hint, "the exit status is git's", read it as a failed push.
 if grep -qE '(^|[|[:space:]])git[[:space:]]+(push|commit)([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
   jq -c '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       updatedInput: (.tool_input + {command: ("set -o pipefail; " + .tool_input.command)}),
-      additionalContext: "[no-swallowed-push] The command ran with set -o pipefail in front, so the exit status is git'"'"'s, not the last pipe stage'"'"'s."
+      additionalContext: "[no-swallowed-push] The command ran with set -o pipefail in front, so a failed git exits non-zero. A later stage can too on its own: grep exits 1 when nothing matches, after a push that succeeded. Before calling a push failed, read git ls-remote origin <branch>."
     }
   }' <<<"$INPUT"
   exit 0

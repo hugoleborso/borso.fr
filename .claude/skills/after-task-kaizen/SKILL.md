@@ -183,18 +183,17 @@ think about this later".**
 
 ### 1b. Measure what the pull request cost
 
-Add one row to `docs/quality/feature-cost.md`, by the sources its *Targets*
-table names: `get_session` on every session in the commits' `Claude-Session`
-trailers, and the feature's validation reports. When the row is the third
-`feature` row, compare the rows with the targets in the kaizen pull request's
-*Patterns* section.
+Write `docs/features/meta/lessons-from-pr-<N>/cost.md`, one row under the
+header of `docs/quality/feature-cost.md`, by the sources its *Targets* table
+names: `get_session` on every session in the commits' `Claude-Session`
+trailers, and the feature's validation reports. The row goes in the sweep's
+own folder because a shared table made every pair of parallel sweeps collide.
 
 ### 1c. Stamp the ADRs the merge shipped
 
 `git diff --name-only <merge>^ <merge> -- docs/adr/` lists the ADRs the pull
 request added. Set each one still marked `- **Status:** proposed` to
-`accepted`, in the file and in its row of `docs/adr/README.md`, as `/adr`'s
-lifecycle says. No other step does it: twenty-five ADRs
+`accepted` in the file, as `/adr`'s lifecycle says. No other step does it: twenty-five ADRs
 merged from `0010` to `0046` were still `proposed` when the sweep of PR #234
 looked.
 
@@ -327,6 +326,12 @@ For each surviving subject:
    closed question, and build only the option he picks. The sweep of
    PR #310 built four such mechanisms unasked and removed all four once
    he read them.
+   **No option hands the operator a task per pull request.** A manual
+   check, a checklist or a device walk-through for each change is not an
+   option to offer. Find the detection that needs nobody, such as a check
+   the app runs on itself and reports to Sentry, and ship that. The sweep
+   of PRs #331 to #337 offered a per-PR iPhone checklist, and the operator
+   refused it for that detection.
 
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
@@ -347,7 +352,6 @@ For each surviving subject:
    lesson into an existing entry that has one, or into a hook, a gate
    or a skill instead. `scripts/check-knowledge-triggers.sh` refuses an
    entry without triggers.
-4. Add a one-line entry to `docs/knowledge/README.md` index.
 
 ### 4. Cross-link
 
@@ -427,7 +431,7 @@ not its volume, is what keeps the system improving.
 
 ## Output checklist before declaring done
 
-- [ ] A row for this pull request in `docs/quality/feature-cost.md`.
+- [ ] A `cost.md` row for this pull request in `docs/features/meta/lessons-from-pr-<N>/`.
 - [ ] Every ADR the merge added reads `accepted`.
 - [ ] Inventory built from the archived friction log + commits +
       review comments + CI runs, not just memory.
@@ -447,7 +451,6 @@ not its volume, is what keeps the system improving.
       passes once the friction log is archived; three unfiled lines
       about the same wall are a wall to add to
       `docs/quality/working-conditions.md`.
-- [ ] `docs/knowledge/README.md` lists every new or extended entry.
 - [ ] Cross-links to existing entries added where chains overlap.
 - [ ] All eradication commits exist on the kaizen branch (verify
       `git log --oneline` shows them).

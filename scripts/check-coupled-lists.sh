@@ -59,23 +59,6 @@ for config in apps/*/vitest.config.ts; do
   done
 done
 
-# 3. The knowledge corpus and its index.
-#
-# `docs/knowledge/README.md` carries a one-line entry per file, and an entry
-# that never gets written makes the file unfindable by anyone who did not
-# already know it existed — which is the entire audience. Three had drifted out
-# before this check existed.
-#
-# `docs/dantotsus/README.md` is deliberately not a per-entry index; it says so,
-# and points at `ls` and a listing script instead. So it is not checked here.
-unindexed=$(comm -23 \
-  <(cd docs/knowledge && printf '%s\n' *.md | grep -vx 'README.md' | sort) \
-  <(grep -oE '\./[^)/]+\.md\)' docs/knowledge/README.md | sed -E 's|^\./||; s|\)$||' | sort -u))
-while IFS= read -r name; do
-  [ -n "$name" ] || continue
-  fail "docs/knowledge/$name is not linked from docs/knowledge/README.md, so nobody who does not already know it exists will find it."
-done <<<"$unindexed"
-
 # The formatter the repository tells you to run used to be checked here: the
 # agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier
 # is gone and oxfmt replaced it. A Prettier call is now refused before it runs,

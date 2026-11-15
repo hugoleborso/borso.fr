@@ -106,20 +106,3 @@ Why: {{...}}
 Implication for the original decision: still valid \| re-evaluate \| supersede with ADR-<id>
 -->
 ```
-
----
-
-## Index update
-
-After writing the ADR file, the skill appends one line to
-`docs/adr/README.md` under the right heading (CDK, App architecture,
-Observability, Data, …). Mirror the format of `docs/dantotsus/README.md`:
-
-```markdown
-- [`<id>-kebab-slug.md`](./<id>-kebab-slug.md) — one-line summary
-  including the chosen path. Example: "Aurora DSQL over RDS Postgres
-  for race-day persistence; idle cost dominated."
-```
-
-If the chosen heading doesn't exist yet, create it. The README is
-manually curated; the skill never reorders existing entries.
