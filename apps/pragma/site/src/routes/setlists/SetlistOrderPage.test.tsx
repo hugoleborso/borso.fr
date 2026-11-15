@@ -1,8 +1,13 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
+
+function SessionProbe(): JSX.Element {
+  const location = useLocation();
+  return <p>{`${location.search} by ${useNavigationType()}`}</p>;
+}
 
 const order = vi.hoisted(() => ({
   entries: {
@@ -106,6 +111,41 @@ describe('SetlistOrderPage', () => {
     root = createRoot(container);
     renderPage('/setlists/set-1/order?back=%2Fsessions%2Fsession-1');
     expect(new Set(readExitPaths())).toEqual(new Set(['/sessions/session-1']));
+  });
+
+  it('steps back to the session it came from on Done, keeping the view chosen there', () => {
+    order.entries.isFetchedAfterMount = true;
+    vi.stubGlobal('navigation', {
+      currentEntry: { index: 1 },
+      entries: () => [
+        { url: 'https://pragma.borso.fr/sessions/session-1?view=songs' },
+        { url: 'https://pragma.borso.fr/setlists/set-1/order' },
+      ],
+    });
+    act(() => {
+      root.render(
+        <MemoryRouter
+          initialEntries={[
+            '/sessions/session-1?view=songs',
+            '/setlists/set-1/order?back=%2Fsessions%2Fsession-1',
+          ]}
+          initialIndex={1}
+        >
+          <Routes>
+            <Route path="/setlists/:setlistId/order" element={<SetlistOrderPage />} />
+            <Route path="/sessions/:sessionId" element={<SessionProbe />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+    const done = Array.from(container.querySelectorAll('a')).find(
+      (link) => link.textContent === 'Done',
+    );
+    act(() => {
+      done?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+    });
+    vi.unstubAllGlobals();
+    expect(container.textContent).toContain('?view=songs by POP');
   });
 
   it('saves the energy changed on a row, and says so when the save fails', () => {

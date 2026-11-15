@@ -1,10 +1,7 @@
-import type { JSX, MouseEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { readPreviousEntryUrl } from '../../lib/page-location.adapter';
+import type { JSX } from 'react';
+import { Link } from 'react-router-dom';
 import { Icon } from '../atoms/Icon';
-import { selectBackLinkMove } from './back-link.core';
-
-const ONE_ENTRY_BACK = -1;
+import { useStepBackTo } from './step-back.hook';
 
 export interface BackLinkProps {
   readonly to: string;
@@ -13,12 +10,7 @@ export interface BackLinkProps {
 
 // @FollowsBlueprint molecule-presentational
 export function BackLink({ to, label }: BackLinkProps): JSX.Element {
-  const navigate = useNavigate();
-  const stepBackToParent = (event: MouseEvent<HTMLAnchorElement>): void => {
-    if (selectBackLinkMove(event, readPreviousEntryUrl(), to) === 'follow-link') return;
-    event.preventDefault();
-    void navigate(ONE_ENTRY_BACK);
-  };
+  const stepBackToParent = useStepBackTo(to);
   return (
     <Link
       to={to}

@@ -23,6 +23,7 @@ import {
 import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
+import { useStepBackTo } from '../../components/molecules/step-back.hook';
 import { useCopySetlistOrder } from './copy-setlist-order.hook';
 import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 import { ORDER_BACK_PARAM, selectOrderExitPath } from './setlist-order.core';
@@ -42,6 +43,8 @@ export function SetlistOrderPage(): JSX.Element {
 function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+  const exitPath = selectOrderExitPath(setlistId, searchParams.get(ORDER_BACK_PARAM));
+  const stepBackToExit = useStepBackTo(exitPath);
   const setlistQuery = useSetlist(setlistId);
   const entriesQuery = useSetlistEntriesToReorder(setlistId);
   const breaksQuery = useSetlistBreaks(setlistId);
@@ -85,7 +88,6 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   }
 
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
-  const exitPath = selectOrderExitPath(setlistId, searchParams.get(ORDER_BACK_PARAM));
   const rows = toOrderRows(
     interleaveBreaks(setlistEntries, breaksQuery.data?.breaks ?? NO_ROWS),
     songsById,
@@ -150,7 +152,14 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
         <Button variant="secondary" icon="copy" size="lg" onClick={copyOrder.copy}>
           {t('setlist.copyOrder')}
         </Button>
-        <ButtonLink to={exitPath} variant="primary" icon="check" size="lg">
+        <ButtonLink
+          to={exitPath}
+          replace
+          onClick={stepBackToExit}
+          variant="primary"
+          icon="check"
+          size="lg"
+        >
           {t('setlist.orderDone')}
         </ButtonLink>
       </BottomActions>

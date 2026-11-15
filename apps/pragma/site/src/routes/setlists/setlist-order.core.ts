@@ -1,6 +1,8 @@
 /** @Feature setlists */
 
-export const ORDER_BACK_PARAM = 'back';
+import { RETURN_PATH_PARAM } from '../../components/organisms/navigation-active.core';
+
+export const ORDER_BACK_PARAM = RETURN_PATH_PARAM;
 const SESSION_PATH_PATTERN = /^\/sessions\/[\w-]+$/;
 
 // @FollowsBlueprint core-decision
