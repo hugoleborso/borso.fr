@@ -34,6 +34,12 @@ describe('buildFireBody', () => {
     });
   });
 
+  it('adds the chosen option on a third line', () => {
+    expect(
+      JSON.parse(buildFireBody('phrase', 'proposition', 'etat/propositions/a', 'jeudi')),
+    ).toEqual({ text: 'phrase\nproposition: etat/propositions/a\nchoix: jeudi' });
+  });
+
   it('leaves the phrase empty when none is configured', () => {
     expect(JSON.parse(buildFireBody(undefined, 'proposition', 'p.md'))).toEqual({
       text: '\nproposition: p.md',

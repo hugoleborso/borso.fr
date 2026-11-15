@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#194'
-fix-pr: none (opened by the kaizen pull request for #194)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/browser.sh, scripts/argent.sh]

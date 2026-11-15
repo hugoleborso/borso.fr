@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#2'
-fix-pr: '#4'
 fix-commits: [1758f91690, d5714aebf0]
 eradication-level: 4
 eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts, infra/cdk/test/unit/eradication-checks.test.ts]

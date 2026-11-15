@@ -3,6 +3,7 @@ import {
   findProposal,
   selectProposalStatus,
   buildDecisionPayload,
+  selectSheetDecisions,
   partitionProposals,
   selectCategoryLabelKey,
   selectPriorityLabelKey,
@@ -124,14 +125,32 @@ describe('the proposal labels', () => {
 
 describe('buildDecisionPayload', () => {
   it('sends a trimmed comment', () => {
-    expect(buildDecisionPayload('acceptee', '  vas-y ')).toEqual({
+    expect(buildDecisionPayload({ decision: 'acceptee' }, '  vas-y ')).toEqual({
       decision: 'acceptee',
       comment: 'vas-y',
     });
   });
 
   it('omits a blank comment', () => {
-    expect(buildDecisionPayload('refusee', '   ')).toEqual({ decision: 'refusee' });
+    expect(buildDecisionPayload({ decision: 'refusee' }, '   ')).toEqual({ decision: 'refusee' });
+  });
+
+  it('carries the chosen option with the comment', () => {
+    expect(buildDecisionPayload({ decision: 'acceptee', option: 'jeudi' }, ' le soir ')).toEqual({
+      decision: 'acceptee',
+      option: 'jeudi',
+      comment: 'le soir',
+    });
+  });
+});
+
+describe('selectSheetDecisions', () => {
+  it('offers to accept or refuse a proposal without options', () => {
+    expect(selectSheetDecisions([])).toEqual(['acceptee', 'refusee']);
+  });
+
+  it('offers only the refusal when the choice needs the card', () => {
+    expect(selectSheetDecisions(['mardi', 'jeudi'])).toEqual(['refusee']);
   });
 });
 

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#89'
-fix-pr: '#106'
 fix-commits: [4154b33a23]
 eradication-level: 2
 eradication-paths: [scripts/check-adr-numbers-resolve.sh, scripts/check-numbered-sequences.sh]

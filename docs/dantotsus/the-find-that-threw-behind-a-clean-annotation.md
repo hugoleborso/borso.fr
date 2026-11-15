@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#193'
-fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/verb-promises-match-return-type.js]

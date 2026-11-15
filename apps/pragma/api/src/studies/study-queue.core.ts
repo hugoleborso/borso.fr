@@ -15,7 +15,6 @@ export interface StudyQueueItem {
   readonly instrumentId: string;
   readonly score: number | null;
   readonly isReady: boolean | null;
-  readonly isStudiedToday: boolean;
 }
 
 export interface StudyQueueInput {
@@ -23,14 +22,9 @@ export interface StudyQueueInput {
   readonly songs: readonly StudyCandidateSong[];
   readonly defaults: DefaultMap;
   readonly overrides: OverrideMap;
-  readonly keysStudiedToday: ReadonlySet<string>;
 }
 
 const UNKNOWN_SCORE_RANK = -1;
-
-export function studyKey(songId: string, instrumentId: string): string {
-  return `${songId}:${instrumentId}`;
-}
 
 function readinessRank(isReady: boolean | null): number {
   return isReady === true ? 1 : 0;
@@ -61,7 +55,6 @@ export function buildStudyQueue(input: StudyQueueInput): StudyQueueItem[] {
           songId: song.songId,
         }),
         isReady: song.isReady,
-        isStudiedToday: input.keysStudiedToday.has(studyKey(song.songId, instrumentId)),
       });
     }
   }

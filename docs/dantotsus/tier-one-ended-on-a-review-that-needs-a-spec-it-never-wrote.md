@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#345'
-fix-pr: none (the kaizen pull request of PR #345, not numbered when this was written)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/route/SKILL.md]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: low
 related-pr: '#281'
-fix-pr: none (the kaizen pull request for PR #281 carries it)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/quality/dashboard-page.core.ts, scripts/quality/check-dashboard-page.ts]

@@ -65,6 +65,13 @@ export function computeScrollStepPx(pixelsPerSecond: number, tickMs: number): nu
   return (pixelsPerSecond * tickMs) / MILLISECONDS_IN_SECOND;
 }
 
+const MONOSPACE_ADVANCE_EM = 0.6;
+
+export function buildTabFontSize(columns: number): string | undefined {
+  if (columns <= 0) return undefined;
+  return `min(1em, max(${SCENE_FONT_SIZE_MIN_PX}px, calc(100cqw / ${MONOSPACE_ADVANCE_EM} / ${columns})))`;
+}
+
 export const SCENE_BACK_PARAM = 'back';
 const SESSION_PATH_PATTERN = /^\/sessions\/[\w-]+\/practice$/;
 

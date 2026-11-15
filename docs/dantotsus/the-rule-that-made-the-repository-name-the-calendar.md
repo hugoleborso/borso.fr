@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#55'
-fix-pr: '#73'
 fix-commits: [8c08c5d872]
 eradication-level: 2
 eradication-paths: [.oxlintrc.json]

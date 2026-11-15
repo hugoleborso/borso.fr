@@ -1,3 +1,5 @@
+import { parisCalendarDay } from '@domain/paris-day.core';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
@@ -7,6 +9,7 @@ import {
   readJson,
 } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { presenceTable } from './streaks.schema';
 
 type TestApp = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
@@ -30,39 +33,19 @@ const streaksEnvelope = z
     ),
   })
   .strict();
-const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.guid() }) });
 
 const COUNTED_TODAY = { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 };
 const NO_FLAME = { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 };
 
-async function createId(
-  app: TestApp,
-  cookieHeader: string,
-  path: string,
-  key: string,
-  body: unknown,
-): Promise<string> {
-  const response = await jsonRequest(app, path, { method: 'POST', body, cookieHeader });
-  const created = (await readJson(response, idEnvelope(key)))[key];
-  if (created === undefined) throw new Error(`no ${key} in the response`);
-  return created.id;
-}
-
-async function seedSongPlayedBy(app: TestApp, cookieHeader: string, memberId: string) {
-  const instrumentId = await createId(app, cookieHeader, '/api/instruments', 'instrument', {
-    name: 'Guitar',
-    family: 'harmonic',
-  });
-  const songId = await createId(app, cookieHeader, '/api/songs', 'song', {
-    title: 'Song',
-    status: 'idea',
-    defaultLineup: { [memberId]: [instrumentId] },
-  });
-  return { songId, instrumentId };
-}
-
 async function readStreaks(app: TestApp, cookieHeader: string) {
   return await readJson(await jsonRequest(app, '/api/streaks', { cookieHeader }), streaksEnvelope);
+}
+
+async function readPresencesOf(memberId: string) {
+  return await testDatabase()
+    .select()
+    .from(presenceTable)
+    .where(eq(presenceTable.memberId, memberId));
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -76,22 +59,38 @@ describe('streaks controller (back-e2e)', () => {
     expect((await jsonRequest(app, '/api/streaks')).status).toBe(401);
   });
 
-  it('counts today after a study and drops it after the undo', async () => {
+  it('counts today once the member opens the app, with one presence for the day', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
-    const study = await seedSongPlayedBy(app, cookieHeader, memberId);
 
-    await jsonRequest(app, '/api/studies', { method: 'POST', body: study, cookieHeader });
-    const afterStudy = await readStreaks(app, cookieHeader);
-    await jsonRequest(app, `/api/studies/${study.songId}/${study.instrumentId}`, {
-      method: 'DELETE',
-      cookieHeader,
-    });
-    const afterUndo = await readStreaks(app, cookieHeader);
+    const first = await readStreaks(app, cookieHeader);
+    const second = await readStreaks(app, cookieHeader);
 
-    expect(afterStudy.mine).toEqual(COUNTED_TODAY);
-    expect(afterStudy.band).toEqual({ days: 1, isTodayCounted: true });
-    expect(afterUndo.mine).toEqual(NO_FLAME);
-    expect(afterUndo.band).toEqual({ days: 0, isTodayCounted: false });
+    expect(first.mine).toEqual(COUNTED_TODAY);
+    expect(first.band).toEqual({ days: 1, isTodayCounted: true });
+    expect(second.mine).toEqual(COUNTED_TODAY);
+    expect(await readPresencesOf(memberId)).toHaveLength(1);
+  });
+
+  it('records the opening of the app from the signed-in member read', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+
+    expect((await jsonRequest(app, '/api/me', { cookieHeader })).status).toBe(200);
+
+    expect(await readPresencesOf(memberId)).toEqual([
+      expect.objectContaining({ memberId, presentOn: parisCalendarDay(new Date()) }),
+    ]);
+  });
+
+  it('removes the presences of a deleted member', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const leaId = await createMemberDirectly(app, 'Léa');
+    await testDatabase()
+      .insert(presenceTable)
+      .values({ memberId: leaId, presentOn: '2026-10-12', createdAt: new Date() });
+
+    await jsonRequest(app, `/api/members/${leaId}`, { method: 'DELETE', cookieHeader });
+
+    expect(await readPresencesOf(leaId)).toEqual([]);
   });
 
   it('counts every member’s day when a session is dated today', async () => {
@@ -119,7 +118,7 @@ describe('streaks controller (back-e2e)', () => {
 
     expect(streaks.members).toEqual([
       { memberId: leaId, firstName: 'Léa', color: '#ff8a65', flame: NO_FLAME },
-      expect.objectContaining({ memberId, flame: NO_FLAME }),
+      expect.objectContaining({ memberId, flame: COUNTED_TODAY }),
     ]);
   });
 });

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#171'
-fix-pr: '#171'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [apps/talos/site/src/components/atoms/class-name.utils.test.ts, apps/talos/site/src/components/atoms/class-name.utils.ts]

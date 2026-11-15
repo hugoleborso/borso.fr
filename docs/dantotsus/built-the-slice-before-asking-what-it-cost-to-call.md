@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#104'
-fix-pr: '#105'
 fix-commits: [60fcd964e8]
 eradication-level: 1
 eradication-paths: [scripts/architecture/architecture-manifest.ts]

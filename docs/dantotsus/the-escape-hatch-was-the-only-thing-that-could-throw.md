@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#101'
-fix-pr: '#101'
 fix-commits: [48120e6780]
 eradication-level: 1
 eradication-paths: [apps/pragma/api/src/songs/spotify.adapter.ts]

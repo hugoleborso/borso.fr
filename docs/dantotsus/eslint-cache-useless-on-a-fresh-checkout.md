@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [cbc90eca88]
 eradication-level: 1
 eradication-paths: [.github/workflows/ci.yml, .husky/pre-commit]

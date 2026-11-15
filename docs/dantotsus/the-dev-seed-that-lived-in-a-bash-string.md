@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#290'
-fix-pr: '#290'
 fix-commits: [2d59df1c1, self]
 eradication-level: 1
 eradication-paths: [apps/last-loop-lepin/test/dev-database.setup.ts, apps/last-loop-lepin/package.json]

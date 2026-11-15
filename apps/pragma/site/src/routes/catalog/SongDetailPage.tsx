@@ -8,14 +8,12 @@ import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongDetail } from '../../components/organisms/SongDetail';
 import { useCompositions } from '../../lib/queries/compositions.queries';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
-import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
-import { useMasteryOverridesOfSong } from '../../lib/queries/studies.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSong } from '../../lib/queries/songs.queries';
 import { selectCompositionOfSong } from '../compos/compositions-page.core';
 import { selectMissingSongMessageKey } from './missing-song.core';
-import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
-import { readSongViewTab, SONG_VIEW_TAB_PARAM, type SongViewTab } from './song-view-tab.core';
+import { buildSongLineupRows } from './song-lineup.core';
+import { readSongPageTab, SONG_VIEW_TAB_PARAM, type SongPageTab } from './song-view-tab.core';
 import { useTakeSelection } from './take-selection.hook';
 
 const NO_ROWS: readonly never[] = [];
@@ -27,13 +25,11 @@ export function SongDetailPage(): JSX.Element {
   const songQuery = useSong(songId ?? '', songId !== undefined);
   const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
-  const masteryQuery = useMasteryDefaults();
   const compositionsQuery = useCompositions();
-  const songOverridesQuery = useMasteryOverridesOfSong(songId ?? '', songId !== undefined);
   const { selectedTakeId, selectTake } = useTakeSelection();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = readSongViewTab(searchParams.get(SONG_VIEW_TAB_PARAM), selectedTakeId !== null);
-  const showTab = (next: SongViewTab): void => {
+  const tab = readSongPageTab(searchParams.get(SONG_VIEW_TAB_PARAM), selectedTakeId !== null);
+  const showTab = (next: SongPageTab): void => {
     setSearchParams(
       (current) => {
         const nextParams = new URLSearchParams(current);
@@ -50,29 +46,12 @@ export function SongDetailPage(): JSX.Element {
     () => instrumentsQuery.data?.instruments ?? NO_ROWS,
     [instrumentsQuery.data],
   );
-  const masteryDefaults = useMemo(
-    () => masteryQuery.data?.defaults ?? NO_ROWS,
-    [masteryQuery.data],
-  );
-  const isLoading =
-    songQuery.isLoading ||
-    membersQuery.isLoading ||
-    instrumentsQuery.isLoading ||
-    masteryQuery.isLoading;
-  const hasSideLoadFailed =
-    (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) !== null;
+  const isLoading = songQuery.isLoading || membersQuery.isLoading || instrumentsQuery.isLoading;
+  const hasSideLoadFailed = (membersQuery.error ?? instrumentsQuery.error) !== null;
 
-  const songOverrides = useMemo(
-    () => songOverridesQuery.data?.overrides ?? NO_ROWS,
-    [songOverridesQuery.data],
-  );
-  const masteryLookup = useMemo(
-    () => buildEffectiveMasteryLookup(masteryDefaults, songOverrides),
-    [masteryDefaults, songOverrides],
-  );
   const lineupRows = useMemo(
-    () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments, masteryLookup),
-    [song, members, instruments, masteryLookup],
+    () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments),
+    [song, members, instruments],
   );
 
   const linkingComposition = selectCompositionOfSong(

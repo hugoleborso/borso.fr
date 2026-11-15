@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: staging
 severity: medium
 related-pr: '#290'
-fix-pr: '#290'
 fix-commits: [2d59df1c1, self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/stage-wiring.utils.ts, scripts/preflight-preview-recovery.sh, scripts/preflight-preview-recovery.test.ts, .github/workflows/preview.yml]

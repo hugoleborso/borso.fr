@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#224'
-fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/quality/dantotsu-corpus.ts, scripts/quality/weak-points.ts, scripts/quality/check-dantotsu-front-matter.ts]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: high
 related-pr: '#23'
-fix-pr: '#24'
 fix-commits: [c5eb3e0b3d]
 eradication-level: 1
 eradication-paths: [eslint-rules/no-inline-subscribe-in-use-sync-external-store.js]

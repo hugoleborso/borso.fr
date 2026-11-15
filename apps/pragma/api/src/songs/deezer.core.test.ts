@@ -11,6 +11,7 @@ import {
   mapDeezerTrack,
   mapDeezerTracks,
   readDeezerErrorCode,
+  readDeezerPreviewUrl,
   type ExternalSearchCacheEntry,
   type ExternalSongHit,
 } from './deezer.core';
@@ -204,5 +205,31 @@ describe('collapseTracksOfOneSong', () => {
 
   it('collapses nothing in an empty list', () => {
     expect(collapseTracksOfOneSong([])).toEqual([]);
+  });
+});
+
+describe('readDeezerPreviewUrl', () => {
+  const PREVIEW_URL = 'https://cdnt-preview.dzcdn.net/api/1/1/c/8/a/0/c8a6.mp3?hdnea=exp=1';
+
+  it('reads the preview address of the captured track', () => {
+    expect(readDeezerPreviewUrl(FIXTURE.data[0])).toBe(FIXTURE.data[0]?.preview);
+  });
+
+  it('reads the preview a track carries', () => {
+    expect(readDeezerPreviewUrl({ id: 1, preview: PREVIEW_URL })).toBe(PREVIEW_URL);
+  });
+
+  it('reads the empty preview Deezer gives a track it cannot excerpt as none', () => {
+    expect(readDeezerPreviewUrl({ id: 1, preview: '' })).toBeNull();
+  });
+
+  it('refuses a preview served over anything but https, since the page plays it as is', () => {
+    expect(
+      readDeezerPreviewUrl({ id: 1, preview: 'http://cdnt-preview.dzcdn.net/a.mp3' }),
+    ).toBeNull();
+  });
+
+  it('reads the error object of an unknown track as no preview', () => {
+    expect(readDeezerPreviewUrl({ error: { type: 'DataException', code: 800 } })).toBeNull();
   });
 });

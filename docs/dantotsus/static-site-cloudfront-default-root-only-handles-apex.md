@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [d736fbb22d]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/cf-static-site-index-rewrite.code.js, infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts]

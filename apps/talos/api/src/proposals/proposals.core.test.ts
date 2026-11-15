@@ -89,6 +89,27 @@ describe('decideProposalFile', () => {
       outcome: { kind: 'already-decided' },
     });
   });
+
+  it('records the chosen option in the decision line', () => {
+    const withOptions = proposalFile('proposee', '2026-10-04').replace(
+      '## Décision',
+      '## Options\n- mardi\n- jeudi\n\n## Décision',
+    );
+    const edit = decideProposalFile('p', withOptions, { ...RECORD, option: 'jeudi' });
+    expect(edit.outcome).toMatchObject({
+      kind: 'decided',
+      proposal: { status: 'acceptee', decisions: ['2026-10-05 10:12 : acceptée (jeudi) — ok'] },
+    });
+  });
+
+  it('writes nothing for an option the proposal does not offer', () => {
+    expect(
+      decideProposalFile('p', proposalFile('proposee', '2026-10-04'), {
+        ...RECORD,
+        option: 'jeudi',
+      }),
+    ).toEqual({ content: null, outcome: { kind: 'option-not-offered' } });
+  });
 });
 
 describe('cancelProposalDecisionFile', () => {

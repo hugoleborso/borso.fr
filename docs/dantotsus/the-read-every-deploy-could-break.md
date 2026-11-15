@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#193'
-fix-pr: none (the pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/api/src/database/client.ts, apps/pragma/api/src/helpers/persistence/conflict-abort.core.ts, apps/pragma/api/src/database/client.test.ts]

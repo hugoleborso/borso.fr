@@ -20,6 +20,8 @@ export const SHELL_TABS: readonly ShellTab[] = [
   { id: 'band', to: '/band', labelKey: 'nav.band', icon: 'members' },
 ];
 
+export const RETURN_PATH_PARAM = 'back';
+
 const HOME_PATH = '/';
 const PATH_SEPARATOR = '/';
 
@@ -48,7 +50,11 @@ function isAtOrBelow(pathname: string, destination: string): boolean {
 }
 
 // @FollowsBlueprint core-decision
-export function selectActiveTab(pathname: string): ShellTabId | null {
+export function selectActiveTab(
+  pathname: string,
+  returnPath: string | null = null,
+): ShellTabId | null {
+  if (returnPath !== null) return selectActiveTab(returnPath);
   if (pathname === HOME_PATH) return 'home';
   const holder = DESTINATIONS_BY_TAB.find(([, destinations]) =>
     destinations.some((destination) => isAtOrBelow(pathname, destination)),

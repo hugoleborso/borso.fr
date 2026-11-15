@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#218'
-fix-pr: '#219'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/database/smoke-agent-reader.ts, scripts/smoke-agent-reader.sh, .github/workflows/deploy.yml]

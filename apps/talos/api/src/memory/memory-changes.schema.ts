@@ -6,11 +6,13 @@ const MAXIMUM_IDEMPOTENCY_KEY_LENGTH = 200;
 const MAXIMUM_SLUG_LENGTH = 500;
 const MAXIMUM_TEXT_BYTES = 1_048_576;
 const MAXIMUM_FOCUS_ITEMS = 3;
+const MAXIMUM_DECISION_LINE_LENGTH = 2500;
 
 const slugSchema = z.string().min(1).max(MAXIMUM_SLUG_LENGTH);
 const longTextSchema = z.string().max(MAXIMUM_TEXT_BYTES);
 const shortTextSchema = z.string().max(MAXIMUM_SLUG_LENGTH);
 const dateTextSchema = z.string().min(1).max(MAXIMUM_SLUG_LENGTH);
+const decisionLineSchema = z.string().max(MAXIMUM_DECISION_LINE_LENGTH);
 const attributeValueSchema = z.union([z.string(), z.array(z.string())]);
 export const attributesSchema = z.record(z.string(), attributeValueSchema);
 
@@ -180,7 +182,7 @@ export const changeOperationSchema = z.discriminatedUnion('op', [
     op: z.literal('proposal.status'),
     slug: slugSchema,
     status: shortTextSchema.min(1),
-    decisionLine: shortTextSchema.optional(),
+    decisionLine: decisionLineSchema.optional(),
     expectedStatus: shortTextSchema.min(1).optional(),
   }),
   z.object({

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: linter
 severity: low
 related-pr: '#343'
-fix-pr: none (the kaizen pull request of PR #343 lands it; its number is not known when this is written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/posttool-lint-write.sh, .claude/settings.json]

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import type { StreaksView } from '../../lib/queries/streaks.queries';
 import { BlazeMark } from '../atoms/BlazeMark';
 import { BonfireMark } from '../atoms/BonfireMark';
-import { ButtonLink } from '../atoms/ButtonLink';
 import { MemberMark } from '../atoms/MemberMark';
 import { Overline } from '../atoms/Overline';
 import { selectFlameStatusKey, selectFlameTone } from '../molecules/flame-tone.core';
@@ -16,23 +15,12 @@ export interface StreakSheetProps {
   readonly onClose: () => void;
 }
 
-const TO_LEARN_PATH = '/catalog?filter=learning';
-
 // @FollowsBlueprint organism-presentational
 export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
   const { t } = useTranslation();
   const title = t('streaks.sheetTitle');
   return (
-    <Sheet
-      title={title}
-      label={title}
-      onClose={onClose}
-      footer={
-        <ButtonLink to={TO_LEARN_PATH} variant="secondary" icon="catalog">
-          {t('streaks.studyASong')}
-        </ButtonLink>
-      }
-    >
+    <Sheet title={title} label={title} onClose={onClose}>
       <div className="flex flex-col gap-5 pb-2">
         <section className="flex items-center gap-3">
           <BlazeMark tone={selectFlameTone(view.mine)} size="lg" />

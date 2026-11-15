@@ -4,7 +4,6 @@ introduced-at: self-validation
 detected-at: local
 severity: low
 related-pr: '#302'
-fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.claude/hooks/stop-screens-shown-not-described.py]

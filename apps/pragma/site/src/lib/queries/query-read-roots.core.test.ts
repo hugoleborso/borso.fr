@@ -39,7 +39,7 @@ describe('selectStaleQueryRoots', () => {
   });
 
   it('reads the application table when no table is passed', () => {
-    expect(selectStaleQueryRoots(['mastery'])).toStrictEqual(['mastery', 'streaks', 'studies']);
+    expect(selectStaleQueryRoots(['mastery'])).toStrictEqual(['mastery', 'studies']);
     expect(selectStaleQueryRoots(['outreach'])).toStrictEqual(['outreach']);
   });
 

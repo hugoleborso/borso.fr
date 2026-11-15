@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#249'
-fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-hidden-role-query.js, eslint-rules/no-hidden-role-query.test.js, .oxlintrc.json]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#298'
-fix-pr: none (the kaizen pull request for PRs #293 and #298 that adds this file)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/agents/technical-validator.md, .claude/skills/technical-validation/SKILL.md]

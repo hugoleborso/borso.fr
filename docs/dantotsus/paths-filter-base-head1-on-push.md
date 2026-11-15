@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#2'
-fix-pr: '#4'
 fix-commits: [b13966a29e, 181f2667ac]
 eradication-level: 2
 eradication-paths: [.husky/pre-push, .github/workflows/deploy.yml]

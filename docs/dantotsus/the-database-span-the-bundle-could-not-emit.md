@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#295'
-fix-pr: none (the kaizen pull request of PR #295 lands it; its number is not known when this is written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/lambda-api.ts, infra/cdk/src/internal/handler-bundle.utils.ts, infra/cdk/src/internal/handler-bundler.mjs]

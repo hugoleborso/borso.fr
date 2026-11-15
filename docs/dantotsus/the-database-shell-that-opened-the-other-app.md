@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [cda3dd2c41]
 eradication-level: 1
 eradication-paths: [scripts/dsql-shell.sh]

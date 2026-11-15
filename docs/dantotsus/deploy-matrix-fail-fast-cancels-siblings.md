@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#12'
-fix-pr: '#16'
 fix-commits: [cd3aab2b31]
 eradication-level: 1
 eradication-paths: [.github/workflows/deploy.yml]

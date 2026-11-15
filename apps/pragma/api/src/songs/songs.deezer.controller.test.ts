@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
@@ -16,6 +16,28 @@ const songSchema = z.object({
 });
 
 const singleEnvelope = z.object({ song: songSchema.loose() });
+
+async function createSong(
+  app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
+  cookieHeader: string,
+  deezerTrackId: string | null,
+): Promise<string> {
+  const create = await jsonRequest(app, '/api/songs', {
+    method: 'POST',
+    body: { title: 'Get Lucky', status: 'wip', deezerTrackId },
+    cookieHeader,
+  });
+  return (await readJson(create, singleEnvelope)).song.id;
+}
+
+function answerDeezer(body: unknown, status = 200) {
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    }),
+  );
+}
 
 // @FollowsBlueprint test-back-e2e
 describe('songs controller — Deezer enrichment columns (back-e2e)', () => {
@@ -79,5 +101,65 @@ describe('songs controller — Deezer enrichment columns (back-e2e)', () => {
     expect(created.song.durationSeconds).toBe(null);
     expect(created.song.tags).toEqual([]);
     expect(created.song.isrcs).toEqual([]);
+  });
+
+  describe('the preview a song plays in its page', () => {
+    const PREVIEW_URL = 'https://cdnt-preview.dzcdn.net/api/1/1/c/8/a/0/c8a6.mp3?hdnea=exp=1';
+    const previewEnvelope = z.object({ previewUrl: z.string().nullable() });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('requires a session', async () => {
+      const { app } = await buildAuthenticatedApp();
+      const response = await jsonRequest(app, `/api/songs/${crypto.randomUUID()}/preview`);
+      expect(response.status).toBe(401);
+    });
+
+    it('resolves a fresh preview of the song track from Deezer at every read', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const songId = await createSong(app, cookieHeader, '67238735');
+      const fetchSpy = answerDeezer({ id: 67238735, preview: PREVIEW_URL });
+      const response = await jsonRequest(app, `/api/songs/${songId}/preview`, { cookieHeader });
+      expect(response.status).toBe(200);
+      expect(await readJson(response, previewEnvelope)).toEqual({ previewUrl: PREVIEW_URL });
+      const calledInput = fetchSpy.mock.calls[0]?.[0];
+      const calledUrl = calledInput instanceof Request ? calledInput.url : String(calledInput);
+      expect(calledUrl).toBe('https://api.deezer.com/track/67238735');
+    });
+
+    it('answers no preview without asking Deezer for a song that names no track', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const songId = await createSong(app, cookieHeader, null);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+      const response = await jsonRequest(app, `/api/songs/${songId}/preview`, { cookieHeader });
+      expect(await readJson(response, previewEnvelope)).toEqual({ previewUrl: null });
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('answers no preview for a track Deezer holds no excerpt of', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const songId = await createSong(app, cookieHeader, '67238735');
+      answerDeezer({ id: 67238735, preview: '' });
+      const response = await jsonRequest(app, `/api/songs/${songId}/preview`, { cookieHeader });
+      expect(await readJson(response, previewEnvelope)).toEqual({ previewUrl: null });
+    });
+
+    it('answers 503 when Deezer refuses, so the page can tell it from a track with no excerpt', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const songId = await createSong(app, cookieHeader, '67238735');
+      answerDeezer({ error: { type: 'Exception', code: 4 } });
+      const response = await jsonRequest(app, `/api/songs/${songId}/preview`, { cookieHeader });
+      expect(response.status).toBe(503);
+    });
+
+    it('answers 404 for a song that does not exist', async () => {
+      const { app, cookieHeader } = await buildAuthenticatedApp();
+      const response = await jsonRequest(app, `/api/songs/${crypto.randomUUID()}/preview`, {
+        cookieHeader,
+      });
+      expect(response.status).toBe(404);
+    });
   });
 });

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#84'
-fix-pr: '#85'
 fix-commits: [77473535c1, 2672da66f9]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]

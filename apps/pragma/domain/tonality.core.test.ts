@@ -83,4 +83,12 @@ describe('deriveTonality', () => {
   it('returns null when there are only blank lines', () => {
     expect(deriveTonality('\n\n\n')).toEqual({ start: null, end: null });
   });
+
+  it('reads no chord from a tab block, whose string names look like roots', () => {
+    expect(
+      deriveTonality(
+        '[Am]Hello\n{start_of_tab}\nE|---0---|\n{end_of_tab}\n[C]End\n{sot}\n D\n{eot}',
+      ),
+    ).toEqual({ start: 'Am', end: 'C' });
+  });
 });

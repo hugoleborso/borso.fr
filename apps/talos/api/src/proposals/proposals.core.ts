@@ -1,6 +1,7 @@
 import {
   applyDecisionCancellation,
   applyProposalDecision,
+  checkDecisionOption,
   type DecisionRecord,
   isDecisionRevocable,
   parseProposal,
@@ -13,7 +14,8 @@ import type { FileEdit } from '../content/content.service';
 export type DecisionOutcome =
   | { readonly kind: 'decided'; readonly proposal: Proposal }
   | { readonly kind: 'not-found' }
-  | { readonly kind: 'already-decided' };
+  | { readonly kind: 'already-decided' }
+  | { readonly kind: 'option-not-offered' };
 
 export type CancellationOutcome =
   | { readonly kind: 'cancelled'; readonly proposal: Proposal }
@@ -58,6 +60,9 @@ export function decideProposalFile(
   if (proposal === null) return { content: null, outcome: { kind: 'not-found' } };
   if (proposal.status !== PENDING_PROPOSAL_STATUS) {
     return { content: null, outcome: { kind: 'already-decided' } };
+  }
+  if (checkDecisionOption(proposal.options, record.decision, record.option) === 'not-offered') {
+    return { content: null, outcome: { kind: 'option-not-offered' } };
   }
   const content = applyProposalDecision(current, record);
   return {

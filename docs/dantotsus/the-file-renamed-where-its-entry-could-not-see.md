@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#118'
-fix-pr: '#181'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/knowledge-triggers.sh, plugins/borso-harness/scripts/check-hook-decisions.sh, scripts/check-numbered-sequences.sh]

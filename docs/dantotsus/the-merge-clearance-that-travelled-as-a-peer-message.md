@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#341'
-fix-pr: '#355'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-relayed-merge-clearance.sh, .claude/settings.json]

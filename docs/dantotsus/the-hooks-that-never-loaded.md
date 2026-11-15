@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#194'
-fix-pr: none (opened by the kaizen pull request for #194)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/check-claude-harness-active.sh, .husky/pre-commit, .claude/hooks/session-start.sh]

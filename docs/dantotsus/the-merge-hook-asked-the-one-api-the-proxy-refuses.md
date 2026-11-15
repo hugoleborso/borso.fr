@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#245'
-fix-pr: none (opened by the kaizen pull request for #257)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh]

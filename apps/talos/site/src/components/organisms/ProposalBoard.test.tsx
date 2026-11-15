@@ -24,6 +24,7 @@ interface StoredProposal {
   createdOn: string;
   why: string;
   draft: string;
+  options: string[];
   decisions: string[];
   expiresOn?: string;
 }
@@ -38,12 +39,14 @@ function buildProposal(slug: string, status: string, title: string): StoredPropo
     createdOn: '2026-10-04',
     why: 'Parce que.',
     draft: 'Un message.',
+    options: [],
     decisions: [],
   };
 }
 
 const DECISION_PATH = /^\/api\/proposals\/([a-z0-9-]+)\/decision$/;
-const decisionBodySchema = z.object({ decision: z.string() });
+const decisionBodySchema = z.object({ decision: z.string(), option: z.string().optional() });
+const sentDecisions: z.infer<typeof decisionBodySchema>[] = [];
 
 function serveProposals(proposals: StoredProposal[]): FetchStub {
   return stubFetch(async (request) => {
@@ -57,7 +60,9 @@ function serveProposals(proposals: StoredProposal[]): FetchStub {
       proposal.decisions.push('2026-10-05 10:13 : décision annulée');
       return jsonResponse(proposal);
     }
-    proposal.status = decisionBodySchema.parse(await request.json()).decision;
+    const body = decisionBodySchema.parse(await request.json());
+    sentDecisions.push(body);
+    proposal.status = body.decision;
     return jsonResponse(proposal);
   });
 }
@@ -77,6 +82,39 @@ function mountBoard(): MountedTree {
     </>,
   );
 }
+
+describe('a proposal that offers choices on the Décider tab', () => {
+  let fetchStub: FetchStub | null = null;
+
+  afterEach(() => {
+    act(() => {
+      dismissToast();
+    });
+    fetchStub?.restore();
+  });
+
+  it('shows one button per option instead of Accept, and one tap sends the choice', async () => {
+    fetchStub = serveProposals([
+      {
+        ...buildProposal('2026-10-04-course', 'proposee', 'Caler la course'),
+        options: ['mardi', 'jeudi', 'pas cette semaine'],
+      },
+    ]);
+    sentDecisions.splice(0);
+    const tree = mountBoard();
+    await flushUntil(() => findButton(tree, 'jeudi') !== undefined);
+    expect(findButton(tree, 'mardi')).toBeDefined();
+    expect(findButton(tree, 'pas cette semaine')).toBeDefined();
+    expect(findButton(tree, 'Refuser')).toBeDefined();
+    expect(findButton(tree, 'Accepter')).toBeUndefined();
+    act(() => {
+      findButton(tree, 'jeudi')?.click();
+    });
+    await flushUntil(() => sentDecisions.length > 0);
+    expect(sentDecisions).toEqual([{ decision: 'acceptee', option: 'jeudi' }]);
+    tree.unmount();
+  });
+});
 
 describe('going back on a proposal decision', () => {
   let fetchStub: FetchStub | null = null;

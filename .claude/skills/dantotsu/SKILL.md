@@ -150,7 +150,7 @@ pre-commit, pre-push and CI.
 
 - `introduced-at`, `detected-at`, `severity` and `eradication-level` take
   only the values the template lists.
-- A pull request is `'#<n>'` or `none (<reason>)`.
+- `related-pr` is `'#<n>'` or `none (<reason>)`. There is no field for the fixing pull request: its number is unknown when the entry is written, and `git log` on the fix commit names it.
 - `fix-commits` is `[self]` when the eradication ships in the same commit as
   the entry (a squash merge renames branch commits), or `none (<reason>)`,
   and then the level is 5.

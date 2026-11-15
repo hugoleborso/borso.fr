@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#60'
-fix-pr: '#62'
 fix-commits: [f6463f6071]
 eradication-level: 1
 eradication-paths: [scripts/install-repo-deps.sh, scripts/browser.sh]

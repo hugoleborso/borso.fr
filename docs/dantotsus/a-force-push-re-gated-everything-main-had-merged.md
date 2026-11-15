@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#174'
-fix-pr: none (the kaizen pull request that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.husky/pre-push]

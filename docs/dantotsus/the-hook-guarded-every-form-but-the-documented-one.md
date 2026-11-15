@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#83'
-fix-pr: '#86'
 fix-commits: [a7f4378899]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-github-pr-body.sh, scripts/check-hook-decisions.sh]

@@ -11,6 +11,7 @@ import {
   readTitle,
   transposeChord,
   transposeLines,
+  widestTabLineLength,
 } from './chordpro.utils';
 
 // @FollowsBlueprint test-pure-unit
@@ -360,5 +361,46 @@ describe('hasSectionHeading', () => {
 
   it('reports no heading for an unmarked body run', () => {
     expect(hasSectionHeading(sectionOf('Plain line'))).toBe(false);
+  });
+});
+
+describe('parseChordPro inside a tab block', () => {
+  it('keeps every non-blank line of a tab block verbatim, brackets included', () => {
+    expect(parseChordPro('{sot}\ne|--[12]--|\n\n  Em   C\n{eot}')).toEqual([
+      { kind: 'directive', name: 'sot', value: '' },
+      { kind: 'tab-line', text: 'e|--[12]--|' },
+      { kind: 'blank' },
+      { kind: 'tab-line', text: '  Em   C' },
+      { kind: 'directive', name: 'eot', value: '' },
+    ]);
+  });
+
+  it('reads chords again once the tab block ends', () => {
+    expect(parseChordPro('{start_of_tab}\ne|---|\n{end_of_tab}\n[C]Hi')[3]?.kind).toBe(
+      'chord-line',
+    );
+  });
+
+  it('reads chords again once another section opens without closing the tab', () => {
+    expect(parseChordPro('{sot}\ne|---|\n{soc}\n[C]Hi')[3]?.kind).toBe('chord-line');
+  });
+
+  it('stays in the tab block across a directive that opens no section', () => {
+    expect(parseChordPro('{sot}\n{comment: Riff}\ne|---|\n{eot}')[2]?.kind).toBe('tab-line');
+  });
+
+  it('leaves the tab lines to the tab transposer when the chords are transposed', () => {
+    const lines = parseChordPro('{sot}\n  Em  [C]\n{eot}');
+    expect(transposeLines(lines, 2)[1]).toEqual({ kind: 'tab-line', text: '  Em  [C]' });
+  });
+});
+
+describe('widestTabLineLength', () => {
+  it('counts the columns of the widest tab line, trailing spaces left out', () => {
+    expect(widestTabLineLength(parseChordPro('{sot}\ne|-----|   \nB|---|\n{eot}'))).toBe(8);
+  });
+
+  it('is zero when the lines hold no tab line', () => {
+    expect(widestTabLineLength(parseChordPro('[C]Hello world'))).toBe(0);
   });
 });

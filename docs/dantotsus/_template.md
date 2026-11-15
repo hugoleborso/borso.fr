@@ -4,7 +4,6 @@ introduced-at: <stage>              # conception | implementation | self-validat
 detected-at: <layer>                # typing | linter | local | ci | review | qa | staging | production | operator-deploy
 severity: <level>                   # low | medium | high
 related-pr: '#<n>'                  # the PR where the defect first lived, or none (<reason>)
-fix-pr: '#<n>'                      # the PR that landed the eradication, or none (<reason>)
 fix-commits: [<sha>, …]             # commits on main that moved the eradication; [self] = the commit adding this file; or none (<reason>)
 eradication-level: <1-5>            # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
 eradication-paths: [<path>, …]      # the files the eradication lives in; levels 1-4 need one that is not markdown
@@ -51,7 +50,7 @@ side by side with what the user sees and what each costs.>
 
 **Type:** <structural impossibility · DevX check · vendor patch · detection · knowledge> (level <N>)
 
-**Reference:** [PR #<n>](url) · commit [`<sha>`](url)
+**Reference:** commit [`<sha>`](url), or "the commit adding this file" for `fix-commits: [self]`. Its pull request is the one `git log` names, never a number guessed before it opens.
 
 ```diff
 - <removed>

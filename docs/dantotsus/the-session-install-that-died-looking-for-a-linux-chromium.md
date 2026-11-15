@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: none (the agent-browser block predates the gate that exposed it)
-fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/install-repo-deps.sh]

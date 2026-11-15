@@ -98,17 +98,6 @@ export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]>
   return rows.map((row) => rowToEntry(row));
 }
 
-export async function listEntriesOfSongWithin(
-  executor: DatabaseExecutor,
-  songId: string,
-): Promise<SetlistEntryRow[]> {
-  const rows = await executor
-    .select(ENTRY_PROJECTION)
-    .from(setlistEntryTable)
-    .where(eq(setlistEntryTable.songId, songId));
-  return rows.map((row) => rowToEntry(row));
-}
-
 export async function listEntriesOfSetlists(
   setlistIds: readonly string[],
 ): Promise<SetlistEntryRow[]> {

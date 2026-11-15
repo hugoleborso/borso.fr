@@ -54,7 +54,11 @@ export function readStatus(value: string): ImprovementStatus {
   return resolveImprovementStatus(value);
 }
 
-export type StatusFilter = ImprovementStatus | 'all';
+export type StatusFilter = ImprovementStatus | 'all' | 'open';
+
+export const DEFAULT_STATUS_FILTER: StatusFilter = 'open';
+
+const CLOSED_STATUSES: ReadonlySet<string> = new Set<ImprovementStatus>(['shipped', 'declined']);
 
 export interface FilterableImprovement {
   readonly status: string;
@@ -65,6 +69,9 @@ export function filterByStatus<TImprovement extends FilterableImprovement>(
   filter: StatusFilter,
 ): TImprovement[] {
   if (filter === 'all') return [...improvements];
+  if (filter === 'open') {
+    return improvements.filter((improvement) => !CLOSED_STATUSES.has(improvement.status));
+  }
   return improvements.filter((improvement) => improvement.status === filter);
 }
 

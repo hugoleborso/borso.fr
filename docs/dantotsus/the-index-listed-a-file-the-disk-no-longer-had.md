@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#327'
-fix-pr: none (opened by the kaizen pull request for #327)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/standards/convention-drift.ts, scripts/standards/hotspots.ts]

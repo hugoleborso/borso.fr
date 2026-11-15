@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: high
 related-pr: '#49'
-fix-pr: '#80'
 fix-commits: [a9e0d1be4e]
 eradication-level: 4
 eradication-paths: [.github/workflows/full-suite.yml]

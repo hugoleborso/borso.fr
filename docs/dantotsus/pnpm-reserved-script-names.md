@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: high
 related-pr: '#2'
-fix-pr: '#4'
 fix-commits: [10f3f10e3a, 181f2667ac]
 eradication-level: 2
 eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml]

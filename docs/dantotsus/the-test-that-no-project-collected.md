@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#108'
-fix-pr: '#109'
 fix-commits: [2d5502de8f]
 eradication-level: 2
 eradication-paths: [scripts/check-every-test-is-collected.sh]

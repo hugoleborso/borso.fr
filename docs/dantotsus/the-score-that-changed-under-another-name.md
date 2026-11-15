@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#261'
-fix-pr: '#261'
 fix-commits: [06abedfd9]
 eradication-level: 2
 eradication-paths: [apps/pragma/site/src/lib/queries/query-key-roots.test.ts, apps/pragma/api/src/realtime/derived-read-roots.test.ts, apps/pragma/site/src/lib/queries/query-read-roots.core.ts, apps/pragma/domain/stale-scope.core.ts]

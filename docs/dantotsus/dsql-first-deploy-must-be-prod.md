@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#2'
-fix-pr: '#4'
 fix-commits: [9e78acb176]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/constructs/dsql-cluster-stack.ts, infra/cdk/src/constructs/previewable-app.ts]

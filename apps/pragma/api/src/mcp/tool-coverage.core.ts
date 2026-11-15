@@ -24,6 +24,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   '* /api/admin/*': 'Setting and rotating the credentials of the operator stays with the operator.',
   '* /api/__test/*': 'The test seed, mounted only outside production.',
   '* /api/audience/*': 'The ballot of the concert audience, used by the public and not by members.',
+  '* /api/band-links/*':
+    'Band links have no assistant tool yet; members keep them on the band tab, and a tool would spend the shared tool list budget.',
   '* /api/uploads/*':
     'Presigned addresses the upload flow of the app uses; takes have request_take_upload.',
   '* /api/oauth/*':
@@ -62,6 +64,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'PUT /api/instruments/:id': NOT_FOR_ASSISTANTS,
   'DELETE /api/instruments/:id': NOT_FOR_ASSISTANTS,
   '* /api/mastery/defaults/*': NOT_FOR_ASSISTANTS,
+  'GET /api/songs/:id/preview':
+    'A signed audio address that expires within minutes, for the player of the song page; get_song names the Deezer track.',
   '* /api/outreach/*': NOT_FOR_ASSISTANTS,
   'POST /api/members': NOT_FOR_ASSISTANTS,
   'PUT /api/members/:id': NOT_FOR_ASSISTANTS,

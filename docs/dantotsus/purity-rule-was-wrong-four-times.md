@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [39c7588cd2]
 eradication-level: 2
 eradication-paths: [eslint-rules/impurity.js]

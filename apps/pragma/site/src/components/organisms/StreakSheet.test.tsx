@@ -1,5 +1,4 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { StreakSheet } from './StreakSheet';
@@ -31,11 +30,7 @@ const VIEW = {
 const RENDERED_NAVY = 'rgb(31, 58, 95)';
 
 function renderSheet(view: typeof VIEW): HTMLElement {
-  render(
-    <MemoryRouter>
-      <StreakSheet view={view} onClose={vi.fn()} />
-    </MemoryRouter>,
-  );
+  render(<StreakSheet view={view} onClose={vi.fn()} />);
   return screen.getByRole('dialog', { name: 'Flames' });
 }
 
@@ -107,15 +102,9 @@ describe('StreakSheet', () => {
     expect(bonfire?.getAttribute('class')).not.toContain('animate-flame-flicker');
   });
 
-  it('says No flame yet for a flame of zero days', () => {
+  it('says No flame yet for a flame of zero days, and offers no action', () => {
     const sheet = renderSheet({ ...VIEW, mine: TOM.flame, members: [TOM] });
     expect(within(sheet).getAllByText('No flame yet')).toHaveLength(2);
-  });
-
-  it('sends Study a song to the songs left to learn', () => {
-    const sheet = renderSheet(VIEW);
-    expect(within(sheet).getByRole('link', { name: 'Study a song' }).getAttribute('href')).toBe(
-      '/catalog?filter=learning',
-    );
+    expect(within(sheet).queryByRole('link')).toBeNull();
   });
 });

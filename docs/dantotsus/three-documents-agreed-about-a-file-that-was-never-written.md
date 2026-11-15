@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: low
 related-pr: '#105'
-fix-pr: '#106'
 fix-commits: [24eaf9b2d2]
 eradication-level: 2
 eradication-paths: [scripts/check-named-paths-exist.sh]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: low
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [3f7264b624]
 eradication-level: 1
 eradication-paths: [scripts/architecture/architecture-page.ts]

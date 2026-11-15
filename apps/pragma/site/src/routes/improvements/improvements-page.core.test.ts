@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   IMPROVEMENT_KINDS,
   IMPROVEMENT_STATUSES,
+  DEFAULT_STATUS_FILTER,
   filterByStatus,
   readStatus,
   selectErrorMessageKey,
@@ -38,6 +39,25 @@ describe('selectKindBadgeKey', () => {
 
 describe('filterByStatus', () => {
   const rows = [{ status: 'idea' }, { status: 'shipped' }, { status: 'idea' }];
+  const mixedRows = [
+    { status: 'idea' },
+    { status: 'planned' },
+    { status: 'building' },
+    { status: 'shipped' },
+    { status: 'declined' },
+  ];
+
+  it('opens on the rows still to do', () => {
+    expect(DEFAULT_STATUS_FILTER).toBe('open');
+  });
+
+  it('hides shipped and declined rows from the open filter', () => {
+    expect(filterByStatus(mixedRows, 'open')).toEqual([
+      { status: 'idea' },
+      { status: 'planned' },
+      { status: 'building' },
+    ]);
+  });
 
   it('keeps every row when nothing is filtered', () => {
     expect(filterByStatus(rows, 'all')).toHaveLength(3);

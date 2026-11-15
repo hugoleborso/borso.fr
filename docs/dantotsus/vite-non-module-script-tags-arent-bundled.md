@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: staging
 severity: high
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [7c62539f2c]
 eradication-level: 2
 eradication-paths: [scripts/check-non-module-scripts.sh]

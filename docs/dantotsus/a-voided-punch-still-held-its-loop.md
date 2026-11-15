@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: '#12'
-fix-pr: '#161'
 fix-commits: [self]
 eradication-level: 1
 time-to-detect: months

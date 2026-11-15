@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#278'
-fix-pr: none (the kaizen pull request of PR #316, not yet numbered)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [apps/pragma/site/src/components/organisms/RequireSession.test.tsx, .claude/agents/technical-validator.md]

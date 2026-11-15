@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#206'
-fix-pr: none (the kaizen pull request for PR #206 that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/api/src/__test/test-seed.repository.ts, apps/pragma/api/src/__test/test-seed.controller.test.ts]

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#6'
-fix-pr: '#7'
 fix-commits: [88b1178cf6]
 eradication-level: 2
 eradication-paths: [scripts/preflight-cloudfront-aliases.sh]

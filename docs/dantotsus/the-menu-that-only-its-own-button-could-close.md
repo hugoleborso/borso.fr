@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#151'
-fix-pr: none (the pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/components/molecules/Menu.tsx, apps/pragma/site/src/styles/tokens.css, apps/pragma/site/src/components/molecules/Menu.test.tsx]

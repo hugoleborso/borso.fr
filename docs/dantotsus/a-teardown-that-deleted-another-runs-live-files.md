@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [64d0ce43b9]
 eradication-level: 1
 eradication-paths: [scripts/vitest-cdk-outdir-teardown.js]

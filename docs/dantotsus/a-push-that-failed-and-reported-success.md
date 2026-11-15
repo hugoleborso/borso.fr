@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#55'
-fix-pr: '#73'
 fix-commits: [50545c5bc1]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh]

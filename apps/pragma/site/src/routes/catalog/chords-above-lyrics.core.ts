@@ -9,6 +9,14 @@ const SECTION_LABEL_PATTERN = /^\s*\[([^\]]+)\]\s*$/;
 const WORD_PATTERN = /\S+/g;
 const LINE_BREAK_PATTERN = /\r\n?/g;
 const TAB_STOP = 8;
+const TAB_STAFF_LINE_PATTERN =
+  /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()<>^*.: ]*-{2}[-\d|hpbrsvx/\\~()<>^*.: ]*$/;
+const TAB_BLOCK_STAFF_LINE_PATTERN =
+  /^\s*(?:[A-Ga-g][#b]?\s*)?\|[-\d|hpbrsvx/\\~()<>^*.: ]*-[-\d|hpbrsvx/\\~()<>^*.: ]*$/;
+const TAB_BLOCK_START_PATTERN = /^\s*\{(?:start_of_tab|sot)(?::[^}]*)?\}\s*$/;
+const TAB_BLOCK_END_PATTERN = /^\s*\{(?:end_of_tab|eot)\}\s*$/;
+const TAB_BLOCK_START = '{start_of_tab}';
+const TAB_BLOCK_END = '{end_of_tab}';
 
 export interface ChordConversion {
   readonly chordPro: string;
@@ -63,6 +71,51 @@ export function isChordPro(text: string): boolean {
     .some((line) => DIRECTIVE_LINE_PATTERN.test(line) || hasBracketedChord(line));
 }
 
+export function isTabStaffLine(line: string): boolean {
+  return TAB_STAFF_LINE_PATTERN.test(line);
+}
+
+export function isTabBlockStaffLine(line: string): boolean {
+  return TAB_BLOCK_STAFF_LINE_PATTERN.test(line);
+}
+
+function isBlank(line: string): boolean {
+  return line.trim().length === 0;
+}
+
+function hasTabStaffAhead(lines: readonly string[], from: number): boolean {
+  for (const line of lines.slice(from)) {
+    if (isTabStaffLine(line)) return true;
+    if (!isBlank(line) && !isChordLine(line)) return false;
+  }
+  return false;
+}
+
+function fenceTabStaves(lines: readonly string[]): readonly string[] {
+  const fenced: string[] = [];
+  let isInsideAuthoredTab = false;
+  let isInsideFence = false;
+  for (const [index, line] of lines.entries()) {
+    if (isInsideFence && !hasTabStaffAhead(lines, index)) {
+      fenced.push(TAB_BLOCK_END);
+      isInsideFence = false;
+    }
+    if (TAB_BLOCK_START_PATTERN.test(line)) isInsideAuthoredTab = true;
+    if (TAB_BLOCK_END_PATTERN.test(line)) isInsideAuthoredTab = false;
+    if (!isInsideFence && !isInsideAuthoredTab && isTabStaffLine(line)) {
+      const lineAbove = fenced.at(-1);
+      const chordLineAbove =
+        lineAbove !== undefined && isChordLine(lineAbove) ? fenced.pop() : undefined;
+      fenced.push(TAB_BLOCK_START);
+      if (chordLineAbove !== undefined) fenced.push(chordLineAbove);
+      isInsideFence = true;
+    }
+    fenced.push(line);
+  }
+  if (isInsideFence) fenced.push(TAB_BLOCK_END);
+  return fenced;
+}
+
 function placeChordsInLyric(chords: readonly PlacedChord[], lyric: string): string {
   let merged = lyric;
   for (const chord of chords.toReversed()) {
@@ -93,11 +146,21 @@ function readChords(line: string): readonly PlacedChord[] {
 // @FollowsBlueprint core-projection
 export function convertChordsAboveLyrics(pastedText: string): ChordConversion {
   const text = pastedText.replace(LINE_BREAK_PATTERN, '\n');
-  if (isChordPro(text)) return { chordPro: text, hasChords: true, isChanged: false };
+  const fencedText = fenceTabStaves(text.split('\n')).join('\n');
+  const isFenced = fencedText !== text;
+  if (isChordPro(text)) return { chordPro: fencedText, hasChords: true, isChanged: isFenced };
+  const fencedLines = fenceTabStaves(text.split('\n').map(expandTabs));
   const converted: string[] = [];
   let pendingChordLine: string | null = null;
   let hasChords = false;
-  for (const line of text.split('\n').map(expandTabs)) {
+  let isInsideTab = false;
+  for (const line of fencedLines) {
+    if (TAB_BLOCK_START_PATTERN.test(line)) isInsideTab = true;
+    if (isInsideTab) {
+      converted.push(line);
+      if (TAB_BLOCK_END_PATTERN.test(line)) isInsideTab = false;
+      continue;
+    }
     if (pendingChordLine !== null && isLyricLine(line)) {
       converted.push(placeChordsInLyric(readChords(pendingChordLine), line));
       pendingChordLine = null;
@@ -113,7 +176,7 @@ export function convertChordsAboveLyrics(pastedText: string): ChordConversion {
     converted.push(rewriteSectionLabel(line));
   }
   if (pendingChordLine !== null) converted.push(bracketChordLine(pendingChordLine));
-  if (!hasChords) return { chordPro: text, hasChords: false, isChanged: false };
+  if (!hasChords) return { chordPro: fencedText, hasChords: false, isChanged: isFenced };
   return { chordPro: converted.join('\n'), hasChords: true, isChanged: true };
 }
 

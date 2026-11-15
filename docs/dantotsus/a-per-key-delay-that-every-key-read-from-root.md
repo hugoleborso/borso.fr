@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#278'
-fix-pr: none (the kaizen pull request for #278, not opened when this was written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/check-stylesheet-contents.sh]

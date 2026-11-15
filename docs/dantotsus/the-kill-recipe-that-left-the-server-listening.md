@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#40'
-fix-pr: none (lands with the kaizen pull request for PR #327)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-broad-kill.sh]

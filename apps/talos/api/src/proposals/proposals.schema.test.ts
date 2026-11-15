@@ -44,6 +44,19 @@ describe('proposalDecisionSchema', () => {
       proposalDecisionSchema.safeParse({ decision: 'acceptee', comment: 'x'.repeat(2000) }).success,
     ).toBe(true);
   });
+
+  it('carries an optional option of at most 200 characters', () => {
+    expect(proposalDecisionSchema.parse({ decision: 'acceptee', option: 'jeudi' })).toEqual({
+      decision: 'acceptee',
+      option: 'jeudi',
+    });
+    expect(
+      proposalDecisionSchema.safeParse({ decision: 'acceptee', option: 'x'.repeat(200) }).success,
+    ).toBe(true);
+    expect(
+      proposalDecisionSchema.safeParse({ decision: 'acceptee', option: 'x'.repeat(201) }).success,
+    ).toBe(false);
+  });
 });
 
 describe('proposalStatusQuerySchema', () => {

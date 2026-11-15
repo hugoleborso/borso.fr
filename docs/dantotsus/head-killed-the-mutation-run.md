@@ -4,7 +4,6 @@ introduced-at: self-validation
 detected-at: local
 severity: medium
 related-pr: '#193'
-fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]

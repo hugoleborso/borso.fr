@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#50'
-fix-pr: '#51'
 fix-commits: [e79224055f, 2e581bcfec]
 eradication-level: 2
 eradication-paths: [scripts/argent.sh, scripts/check-negative-claims-are-dated.sh]

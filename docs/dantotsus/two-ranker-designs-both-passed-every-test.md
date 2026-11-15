@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#52'
-fix-pr: '#53'
 fix-commits: [2b6c6bc5a2]
 eradication-level: 4
 eradication-paths: [apps/pragma/api/src/songs/search-ranking.core.test.ts]

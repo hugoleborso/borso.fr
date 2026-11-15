@@ -39,6 +39,26 @@
   },
   {
     "op": "proposal.upsert",
+    "slug": "etat/propositions/{{day+0}}-seance-course",
+    "category": "logistique",
+    "status": "proposee",
+    "title": "Caler la séance de course de la semaine",
+    "priority": "normale",
+    "createdOn": "{{day+0}}",
+    "expiresOn": "{{day+5}}",
+    "attributes": {
+      "type": "proposition",
+      "categorie": "logistique",
+      "statut": "proposee",
+      "titre": "Caler la séance de course de la semaine",
+      "priorite": "normale",
+      "cree": "{{day+0}}",
+      "expire": "{{day+5}}"
+    },
+    "body": "## Pourquoi\nAucune séance de course n'est posée cette semaine.\n\n## Ce que Talos propose\nBloquer une heure de course à pied en fin de journée.\n\n## Options\n- mardi\n- jeudi\n- pas cette semaine\n\n## Décision\n"
+  },
+  {
+    "op": "proposal.upsert",
     "slug": "etat/propositions/{{day+0}}-faits",
     "category": "action",
     "status": "proposee",

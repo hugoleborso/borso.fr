@@ -29,6 +29,13 @@ const CRASH_ON_RELOAD = {
   kind: 'bug',
   voteCount: 1,
 };
+const SHIPPED_PLACEHOLDER = {
+  ...DARK_MODE,
+  id: 'improvement-placeholder',
+  title: 'Lineup placeholder is empty',
+  status: 'shipped',
+  voteCount: 0,
+};
 
 function answerApi(request: Request): Response {
   const { pathname } = new URL(request.url);
@@ -36,7 +43,7 @@ function answerApi(request: Request): Response {
     return jsonResponse({ improvement: { ...DARK_MODE, id: 'improvement-new' } }, 201);
   }
   if (pathname === '/api/improvements')
-    return jsonResponse({ improvements: [DARK_MODE, CRASH_ON_RELOAD] });
+    return jsonResponse({ improvements: [DARK_MODE, CRASH_ON_RELOAD, SHIPPED_PLACEHOLDER] });
   return new Response(null, { status: 404 });
 }
 
@@ -116,5 +123,14 @@ describe('the improvements page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const creation = stub?.calls.find((request) => request.method === 'POST');
     expect(await creation?.clone().json()).toMatchObject({ title: 'Crash', kind: 'bug' });
+  });
+
+  it('hides shipped improvements until Shipped or All is picked', async () => {
+    renderImprovementsPage();
+    expect(await screen.findByText('Dark mode on stage')).toBeTruthy();
+    expect(screen.queryByText('Lineup placeholder is empty')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /shipped/i }));
+    expect(screen.getByText('Lineup placeholder is empty')).toBeTruthy();
+    expect(screen.queryByText('Dark mode on stage')).toBeNull();
   });
 });

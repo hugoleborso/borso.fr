@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#206'
-fix-pr: none (the kaizen pull request for PR #206 that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/browser/touch-tap.ts, scripts/browser/touch-tap.core.ts, scripts/browser/touch-tap.core.test.ts]

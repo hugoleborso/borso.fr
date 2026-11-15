@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [f4f14f2ff5]
 eradication-level: 1
 eradication-paths: [scripts/vitest-cdk-outdir-teardown.js, infra/cdk/vitest.config.ts]

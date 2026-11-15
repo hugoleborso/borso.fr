@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#12'
-fix-pr: '#12'
 fix-commits: [5c61a2bd1d]
 eradication-level: 1
 eradication-paths: [apps/last-loop-lepin/site/src/components/organisms/SetupPanel.tsx]

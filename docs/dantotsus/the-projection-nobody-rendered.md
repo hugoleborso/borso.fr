@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: none (introduced by commit 9a945946, pushed without a pull request)
-fix-pr: '#154'
 fix-commits: [67bab828, 21a850ab]
 eradication-level: 4
 time-to-detect: days

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#249'
-fix-pr: '#249'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/check-adr-criteria.sh, .husky/pre-commit, .claude/skills/adr/template.md]

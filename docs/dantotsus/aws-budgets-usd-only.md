@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#2'
-fix-pr: '#2'
 fix-commits: [5c47cc223c]
 eradication-level: 5
 eradication-paths: []
