@@ -396,6 +396,12 @@ idempotent. If you can't apply the label for any reason, surface
 the failure to the user — don't merge a kaizen PR without the
 label.
 
+**Merge it yourself when it is tooling only.** Once CI is green, merge the
+kaizen pull request without asking when `pnpm exec tsx scripts/pr/deploy-fanout.ts
+origin/main HEAD` prints no application and the body holds no question for the
+operator. The operator granted this on 2026-11-14. A kaizen that changes an app's
+code, which a root cause often calls for, waits for his merge like any other.
+
 ### 6. Even if there are zero lessons
 
 Still open the PR with a CLAUDE.md-aligned commit:
