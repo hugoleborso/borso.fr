@@ -2,7 +2,7 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { ButtonLink } from '../../components/atoms/ButtonLink';
@@ -25,6 +25,7 @@ import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useCopySetlistOrder } from './copy-setlist-order.hook';
 import { selectMissingSetlistMessageKey } from './missing-setlist.core';
+import { ORDER_BACK_PARAM, selectOrderExitPath } from './setlist-order.core';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -40,6 +41,7 @@ export function SetlistOrderPage(): JSX.Element {
 
 function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const setlistQuery = useSetlist(setlistId);
   const entriesQuery = useSetlistEntriesToReorder(setlistId);
   const breaksQuery = useSetlistBreaks(setlistId);
@@ -83,7 +85,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   }
 
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
-  const setlistPath = `/setlists/${setlistId}`;
+  const exitPath = selectOrderExitPath(setlistId, searchParams.get(ORDER_BACK_PARAM));
   const rows = toOrderRows(
     interleaveBreaks(setlistEntries, breaksQuery.data?.breaks ?? NO_ROWS),
     songsById,
@@ -93,7 +95,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   return (
     <section className="flex max-w-[960px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
       <PageHeader
-        back={{ to: setlistPath, label: displayedName }}
+        back={{ to: exitPath, label: displayedName }}
         title={t('setlist.orderTitle')}
         className="mb-2 sm:mb-4 lg:mb-4"
       />
@@ -148,7 +150,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
         <Button variant="secondary" icon="copy" size="lg" onClick={copyOrder.copy}>
           {t('setlist.copyOrder')}
         </Button>
-        <ButtonLink to={setlistPath} variant="primary" icon="check" size="lg">
+        <ButtonLink to={exitPath} variant="primary" icon="check" size="lg">
           {t('setlist.orderDone')}
         </ButtonLink>
       </BottomActions>

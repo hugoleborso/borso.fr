@@ -63,10 +63,10 @@ describe('SetlistOrderPage', () => {
     order.updateEntry.mockReset();
   });
 
-  function renderPage(): void {
+  function renderPage(address = '/setlists/set-1/order'): void {
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/setlists/set-1/order']}>
+        <MemoryRouter initialEntries={[address]}>
           <Routes>
             <Route path="/setlists/:setlistId/order" element={<SetlistOrderPage />} />
           </Routes>
@@ -91,6 +91,21 @@ describe('SetlistOrderPage', () => {
     renderPage();
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     expect(container.querySelectorAll('li')).toHaveLength(0);
+  });
+
+  function readExitPaths(): readonly (string | null)[] {
+    const links = [...container.querySelectorAll('a')];
+    return links.map((link) => link.getAttribute('href'));
+  }
+
+  it('leaves to the setlist, or to the session that opened the screen', () => {
+    order.entries.isFetchedAfterMount = true;
+    renderPage();
+    expect(new Set(readExitPaths())).toEqual(new Set(['/setlists/set-1']));
+    act(() => root.unmount());
+    root = createRoot(container);
+    renderPage('/setlists/set-1/order?back=%2Fsessions%2Fsession-1');
+    expect(new Set(readExitPaths())).toEqual(new Set(['/sessions/session-1']));
   });
 
   it('saves the energy changed on a row, and says so when the save fails', () => {
