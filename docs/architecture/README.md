@@ -1,13 +1,11 @@
 # Architecture diagrams
 
 `index.html` lists one generated map per application, each at five levels, from
-the same generator and the same rules: `pragma-architecture.html`,
-`last-loop-lepin-architecture.html`, `banana-rush-architecture.html`,
-`borsouvertures-architecture.html`, `borso-fr-architecture.html` and
-`talos-architecture.html`.
+the same generator and the same rules. Each map is named
+`<app>-architecture.html`, and an application gets one when it has a manifest in
+`scripts/architecture/manifests/`.
 
-**None of them is in this repository**, which is why they are named above and
-not linked. Build them with:
+**None of them is in this repository**, which is why they are not linked. Build them with:
 
 ```bash
 pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
@@ -228,10 +226,13 @@ half alone.
 **`@Feature <id>`** groups front-end files that belong to one feature. Atomic
 design is a granularity axis and carries no feature axis, so the catalogue was
 spread across `routes/catalog/`, `lib/queries/songs.queries.ts` and several
-organisms with no structural tie between them. 111 files now carry the tag, and
-each id is the name of the API context that owns the data — `songs`,
-`setlists`, `sessions`, `members`, `instruments`, `mastery`, `bars`,
-`transitions`, `uploads`, `auth`, plus `shell` for the frame around them.
+organisms with no structural tie between them. Each id is the name of the API
+context that owns the data, or `shell` for the frame around them. List the ids
+in use with:
+
+```bash
+grep -rhoE '@Feature [a-z-]+' apps/*/site/src | sort | uniq -c
+```
 
 Two things follow. Level 3 shows `site::songs` beside `api::songs` rather than
 `catalog` beside `songs`, so a reader can see the two halves of one feature.
