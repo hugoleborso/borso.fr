@@ -125,3 +125,11 @@ Scores are the critic's (`spec/design/comparison.md`), 1 to 5, with its evidence
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/site/src/styles/tokens.css`, `apps/pragma/site/src/components/atoms/button.variants.ts`, `apps/pragma/site/src/components/atoms/Icon.tsx`, `apps/pragma/site/src/components/molecules/Sheet.tsx` (new), `apps/pragma/site/src/components/molecules/BottomActions.tsx` (new), `eslint-rules/` (new rules for arbitrary values and raw `<button>` and `<dialog>`), `apps/pragma/site/src/components/atoms/Avatar.tsx`, `apps/pragma/site/src/components/atoms/MemberMark.tsx` (new) and `apps/pragma/site/src/lib/member-color.utils.ts` (the ink on a member colour chosen by contrast ratio)
 - Related ADRs: [ADR-2026-10-27T1116](./2026-10-27T1116-newsreader-replaces-instrument-serif.md) (the font), [ADR-2026-10-12T0032](./2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md) (`composeClassName`, which the new button variants go through)
+
+## Revisions
+
+### Revision 2026-11-15 — the lineup grid marks a change by fill strength
+
+What changed: [ADR-2026-11-15T0627](./2026-11-15T0627-pragma-lineup-grid-marks-a-change-by-fill-intensity.md) replaces three grid rules. The column no longer carries a tint behind sit-out cells, a changed cell is marked by the member colour at full strength over a pale lane, and the title moves to a left column.
+Why: the operator found the highlighter bar and ink tick hard to see, and chose that variant on 2026-11-15.
+Implication for the original decision: still valid. Colour still means the member only, and the rest of the design system stands.
