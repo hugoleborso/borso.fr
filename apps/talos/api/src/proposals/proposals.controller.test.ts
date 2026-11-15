@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { MAXIMUM_DECISION_COMMENT_LENGTH } from '@domain/proposal.core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn, useTestSecrets } from '../../../test/app-utils';
 import { truncateAllTables } from '../../../test/database-utils';
@@ -162,7 +163,7 @@ describe('the proposal routes', () => {
       vi.fn(async () => await answerSession(SESSION_URL)),
     );
     const { app } = buildTestContext();
-    const comment = 'x'.repeat(2000);
+    const comment = 'x'.repeat(MAXIMUM_DECISION_COMMENT_LENGTH);
     const response = await requestJson(app, `/api/proposals/${PROPOSAL_WITH_OPTIONS}/decision`, {
       method: 'POST',
       body: { decision: 'acceptee', option: 'pas cette semaine', comment },

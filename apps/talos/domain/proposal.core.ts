@@ -8,6 +8,12 @@ const REVOCABLE_STATUSES: readonly string[] = PROPOSAL_DECISIONS;
 
 export type ProposalDecision = (typeof PROPOSAL_DECISIONS)[number];
 
+export const MAXIMUM_DECISION_OPTION_LENGTH = 200;
+export const MAXIMUM_DECISION_COMMENT_LENGTH = 2000;
+const DECISION_LINE_FRAME_ALLOWANCE = 300;
+export const MAXIMUM_DECISION_LINE_LENGTH =
+  MAXIMUM_DECISION_OPTION_LENGTH + MAXIMUM_DECISION_COMMENT_LENGTH + DECISION_LINE_FRAME_ALLOWANCE;
+
 export const proposalSchema = z.object({
   slug: z.string(),
   category: z.string(),
