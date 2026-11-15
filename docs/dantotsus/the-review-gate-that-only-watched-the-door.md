@@ -4,9 +4,9 @@ introduced-at: code-review
 detected-at: review
 severity: medium
 related-pr: '#354'
-fix-commits: none (proposal under review)
-eradication-level: 5
-eradication-paths: []
+fix-commits: [self]
+eradication-level: 4
+eradication-paths: [.husky/pre-push]
 time-to-detect: hours
 tags: [hooks, validation, pragma, gates]
 zone: .claude/hooks/pretool-api-change-needs-validation.sh
@@ -15,8 +15,6 @@ recurs: [the-sweep-that-decided-how-the-operator-works]
 ---
 
 # The review gate that only watched the door
-
-Status: a proposal. The operator picks one option below, and only that one is built.
 
 ## User impact
 
@@ -66,23 +64,38 @@ fires on `mcp__github__create_pull_request` and `gh pr create` only.
 
 ## Countermeasure
 
-None shipped. The kaizen sweep built a merge-time refusal, proved it refuses
-PR #354's head (`[merge-unreviewed] refused: pull request 354 lacks a
-technical-validation report, for 68 file(s) under apps/*/api/`), then removed
-it unshipped, because it is the mechanism refused on PR #310.
-
-## Eradication
-
-The options, as the operator would live with them:
+The kaizen sweep built a merge-time refusal, proved it refuses PR #354's head
+(`[merge-unreviewed] refused: pull request 354 lacks a technical-validation
+report, for 68 file(s) under apps/*/api/`), then removed it unshipped, because
+it is the mechanism refused on PR #310. It then asked the operator to choose:
 
 | Option | What changes day to day | Cost |
 | --- | --- | --- |
-| A. Keep the check at opening only | Nothing. A batch that gains an API after opening merges unreviewed, as PR #354 did | No new CI run |
-| B. A pre-push notice | A push that brings API files to a branch with no technical report prints one line saying the review is owed before merge. Nothing is refused, so the session can run the review before its last push and the report rides with it | No extra CI run when the session follows it. A session can still ignore it |
-| C. A refusal at the merge | A merge an agent runs is refused until the report is on the branch | One more CI run per pull request whose report comes last, the cost refused on PR #310 |
+| A. Keep the check at opening only | Nothing. A batch that gains an API after opening merges unreviewed | No new CI run |
+| B. A pre-push notice | A push that brings API files to a branch with no technical report prints that the review is owed. Nothing is refused | No extra CI run when the report rides with the last push |
+| C. A refusal at the merge | A merge an agent runs is refused until the report is on the branch | One more CI run per pull request whose report comes last |
 
-Recommendation: B. It costs no CI run and needs nothing from the operator.
+The operator picked B on 2026-11-15 (« B of course »).
+
+## Eradication
+
+**Type:** detection (level 4). A notice, not a refusal, by the operator's choice.
+
+**Reference:** the commit adding this file.
+
+```diff
++    branch_changes=$(git diff --name-only origin/main...HEAD 2>/dev/null || true)
++    api_changes=$(printf '%s\n' "$branch_changes" | grep -cE '^apps/[^/]+/api/' || true)
++    if [ "$api_changes" -gt 0 ] && ! printf '%s\n' "$branch_changes" | grep -qE '^docs/features/[^/]+/[^/]+/validation/technical-validation-[^/]+\.md$'; then
++      printf '⚠️  [pre-push] this branch changes %s file(s) under apps/*/api/ and carries no technical-validation report.\n' "$api_changes" >&2
+```
+
+**Proof it can fail:** on a `claude/` branch at PR #354's head, the block
+printed `this branch changes 68 file(s) under apps/*/api/ and carries no
+technical-validation report`. On the kaizen branch, which touches no API, it
+printed nothing.
 
 **Similar instances:** `grep -n 'create_pull_request\|gh pr create' .claude/hooks/*.sh`
 lists the checks that read only the opening. The visual-validation half of the
-same hook has the same gap.
+same hook has the same gap, and was left as it is, since the operator chose
+for API changes.
