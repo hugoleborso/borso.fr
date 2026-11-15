@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   describeSetlistsOfSong,
   selectMemberLineupRow,
-  selectPractisedState,
   selectSetlistsOfSong,
 } from './song-page.core';
 
@@ -37,57 +36,6 @@ describe('describeSetlistsOfSong', () => {
     expect(describeSetlistsOfSong([], 'song-1')).toEqual({
       messageKey: 'catalog.inNoSetlist',
       names: '',
-    });
-  });
-});
-
-describe('selectPractisedState', () => {
-  const lineup = { 'member-1': ['bass'], 'member-2': ['drums'] };
-
-  it('offers the instruments the member holds, from the lineup and the study queue, once each', () => {
-    const queue = [
-      { songId: 'song-1', instrumentId: 'bass', isStudiedToday: false },
-      { songId: 'song-1', instrumentId: 'voice', isStudiedToday: false },
-      { songId: 'song-2', instrumentId: 'guitar', isStudiedToday: true },
-    ];
-    expect(selectPractisedState(lineup, queue, 'song-1', 'member-1')).toEqual({
-      instrumentIds: ['bass', 'voice'],
-      isPractisedToday: false,
-    });
-  });
-
-  it('offers nothing to practise to an account with no member row', () => {
-    const queue = [{ songId: 'song-1', instrumentId: 'bass', isStudiedToday: true }];
-    expect(selectPractisedState(lineup, queue, 'song-1', null)).toEqual({
-      instrumentIds: [],
-      isPractisedToday: false,
-    });
-  });
-
-  it('reads the song as not practised today while one of its queue rows waits', () => {
-    const queue = [
-      { songId: 'song-1', instrumentId: 'bass', isStudiedToday: true },
-      { songId: 'song-1', instrumentId: 'voice', isStudiedToday: false },
-    ];
-    expect(selectPractisedState(lineup, queue, 'song-1', 'member-1').isPractisedToday).toBe(false);
-  });
-
-  it('reads the song as practised today once every one of its queue rows was studied', () => {
-    const queue = [{ songId: 'song-1', instrumentId: 'bass', isStudiedToday: true }];
-    expect(selectPractisedState(lineup, queue, 'song-1', 'member-1').isPractisedToday).toBe(true);
-  });
-
-  it('does not read a song outside the queue as practised', () => {
-    expect(selectPractisedState(lineup, [], 'song-1', 'member-1')).toEqual({
-      instrumentIds: ['bass'],
-      isPractisedToday: false,
-    });
-  });
-
-  it('offers nothing before the signed-in member is known', () => {
-    expect(selectPractisedState(lineup, [], 'song-1', null)).toEqual({
-      instrumentIds: [],
-      isPractisedToday: false,
     });
   });
 });

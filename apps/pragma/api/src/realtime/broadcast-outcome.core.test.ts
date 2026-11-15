@@ -29,9 +29,9 @@ describe('selectBroadcastFailure', () => {
   });
 
   it('reports a broadcast that ran out of budget, with the roots it carried', () => {
-    expect(selectBroadcastFailure({ kind: 'late' }, ['setlists', 'studies'])).toStrictEqual({
+    expect(selectBroadcastFailure({ kind: 'late' }, ['setlists', 'songs'])).toStrictEqual({
       name: 'RealtimeBroadcastLate',
-      tags: { 'realtime.written': 'setlists,studies' },
+      tags: { 'realtime.written': 'setlists,songs' },
     });
   });
 

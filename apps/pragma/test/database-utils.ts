@@ -40,6 +40,7 @@ const ALL_TABLES: readonly string[] = [
   'setlist_sheet',
   'setlist',
   'session',
+  'presence',
   'study',
   'mastery_score_change',
   'mastery_override',

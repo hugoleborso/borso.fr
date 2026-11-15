@@ -57,6 +57,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'oauth',
     'setlists',
     'songs',
+    'streaks',
     'studies',
     'tasks',
   ],

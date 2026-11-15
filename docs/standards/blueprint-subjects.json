@@ -3517,12 +3517,6 @@
     "useStudiesOverview": "query-module",
     "useUndoStudy": "query-optimistic-mutation"
   },
-  "apps/pragma/site/src/lib/queries/studies.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/lib/queries/studies.utils.ts": {
-    "markStudied": "utils-pure-module"
-  },
   "apps/pragma/site/src/lib/queries/takes.queries.test.tsx": {
     "describe": "test-query-hook"
   },

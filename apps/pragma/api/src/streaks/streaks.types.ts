@@ -15,3 +15,8 @@ export interface StreaksView {
   readonly band: BandFlame;
   readonly members: readonly MemberFlame[];
 }
+
+export interface PresenceRow {
+  readonly memberId: string;
+  readonly presentOn: CalendarDay;
+}

@@ -18,21 +18,13 @@ export const ME_TOOLS = [
   }),
   defineTool({
     name: 'update_me',
-    description:
-      'Change your own `phone` or `email` (null clears it), and/or log with `study` that you worked a song today on one of your instruments in its lineup (titles, names or ids; `undo` removes that record).',
-    routes: [
-      'PUT /api/me/contact',
-      'POST /api/studies',
-      'DELETE /api/studies/:songId/:instrumentId',
-    ],
+    description: 'Change your own `phone` or `email` (null clears it).',
+    routes: ['PUT /api/me/contact'],
     inputSchema: meUpdateToolInputSchema,
-    run: async ({ study, ...contact }, actor) => {
-      const outcome = await updateMeForTool(actor, contact, study);
+    run: async (contact, actor) => {
+      const outcome = await updateMeForTool(actor, contact);
       if (outcome.kind === 'refused') return { kind: 'refused', body: { error: outcome.error } };
-      return {
-        kind: 'answered',
-        body: { id: outcome.id, updated: outcome.updated, study: outcome.study },
-      };
+      return { kind: 'answered', body: { id: outcome.id, updated: outcome.updated } };
     },
   }),
 ];

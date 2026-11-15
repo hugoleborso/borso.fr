@@ -3,10 +3,10 @@ import { listCalendarFeeds } from '../calendar-feeds/calendar-feeds.service';
 import type { CalendarFeedSummary } from '../calendar-feeds/calendar-feeds.types';
 import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 import { confirmUpdate, type ToolActor } from '../mcp/mcp.service';
-import type { PersonalFlame } from '@domain/practice-flame.core';
 import { projectStreaksForTool } from '../streaks/streaks.core';
-import { readPersonalFlame, readStreaks } from '../streaks/streaks.service';
-import { readStudiesOverviewForTool, writeStudyForTool } from '../studies/studies.service';
+import { recordPresence } from '../streaks/presences.service';
+import { readStreaks } from '../streaks/streaks.service';
+import { readStudiesOverviewForTool } from '../studies/studies.service';
 
 export { changePassword } from '../auth/credentials.service';
 export { removeCalendarFeed, saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
@@ -50,6 +50,15 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
   };
 }
 
+export async function readSignedInMemberOnOpening(
+  memberId: string,
+  now: Date,
+): Promise<SignedInMember | null> {
+  const member = await readSignedInMember(memberId);
+  if (member !== null) await recordPresence(memberId, now);
+  return member;
+}
+
 export async function saveOwnContactDetails(
   memberId: string,
   contact: { phone?: string | null; email?: string | null },
@@ -68,22 +77,11 @@ interface ContactChanges {
   readonly email?: string | null;
 }
 
-interface StudyToolEntry {
-  readonly song: string;
-  readonly instrument: string;
-  readonly undo?: boolean;
-}
-
-export interface OwnStudyLine {
-  readonly flame: PersonalFlame;
-}
-
 export type MeToolUpdateOutcome =
   | {
       readonly kind: 'ok';
       readonly id: string;
       readonly updated: readonly string[];
-      readonly study?: OwnStudyLine;
     }
   | { readonly kind: 'refused'; readonly error: string };
 
@@ -97,35 +95,14 @@ export async function readMeForTool(memberId: string, now: Date) {
   return { ...member, studies, flames: projectStreaksForTool(streaks) };
 }
 
-async function logOwnStudy(
-  actor: ToolActor,
-  study: StudyToolEntry,
-): Promise<OwnStudyLine | { readonly error: string }> {
-  const outcome = await writeStudyForTool({
-    songReference: study.song,
-    instrumentReference: study.instrument,
-    isUndoing: study.undo === true,
-    memberId: actor.memberId,
-    now: actor.now,
-  });
-  if (outcome.kind !== 'ok') return { error: outcome.kind };
-  return { flame: await readPersonalFlame(actor.memberId, actor.now) };
-}
-
 // @FollowsBlueprint service-orchestration
 export async function updateMeForTool(
   actor: ToolActor,
   contact: ContactChanges,
-  study: StudyToolEntry | undefined,
 ): Promise<MeToolUpdateOutcome> {
   const { updated } = confirmUpdate(actor.memberId, contact);
-  if (updated.length === 0 && study === undefined)
-    return { kind: 'refused', error: 'empty-update' };
-  const line = study === undefined ? undefined : await logOwnStudy(actor, study);
-  if (line !== undefined && 'error' in line) return { kind: 'refused', error: line.error };
-  if (updated.length > 0) {
-    const saved = await saveOwnContactDetails(actor.memberId, contact);
-    if (saved.kind !== 'ok') return { kind: 'refused', error: 'unknown-member' };
-  }
-  return { kind: 'ok', id: actor.memberId, updated, study: line };
+  if (updated.length === 0) return { kind: 'refused', error: 'empty-update' };
+  const saved = await saveOwnContactDetails(actor.memberId, contact);
+  if (saved.kind !== 'ok') return { kind: 'refused', error: 'unknown-member' };
+  return { kind: 'ok', id: actor.memberId, updated };
 }

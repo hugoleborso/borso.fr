@@ -305,9 +305,16 @@ uploaded through `api/src/uploads/`
   `site/src/routes/catalog/chords-above-lyrics.core.ts`), and text already
   in ChordPro is kept as is. A photo and a PDF with no text layer stay
   `image` and `pdf` files, which cannot be transposed.
+- A tablature lives inside a ChordPro chart as a **tab block**, the lines
+  between `{start_of_tab}` (or `{sot}`) and `{end_of_tab}` (or `{eot}`).
+  Each line in it is a `tab-line`, kept verbatim: no chord is read from
+  it, transposed in it, or derived from it as tonality. On save, a run of
+  ASCII staff lines (`e|--0--|`) and the chord line right above it are
+  fenced into a tab block, in pasted text and in ChordPro alike.
 
 Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants
 Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above
+Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › fences the staves with the chord line above them, and never splices a chord into a string
 
 ## Composition
 
@@ -998,7 +1005,14 @@ Lives in: `site/src/routes/setlists/`
 - While a row is lifted, its bar is drawn in the action blue and the curve
   follows the order the drop would give (`projectOrder`).
 - The order is written on each drop, through the setlist's reorder route.
+- A practice reaches it from **Order songs** on its Songs tab, carrying
+  `back=/sessions/:id`, and its back link and **Done** return there
+  (`selectOrderExitPath`). The practice's songs are first written into a
+  setlist only that practice carries, as **Choose songs** does
+  (`planPracticeSongsSave`), so ordering a practice never reorders a
+  concert's setlist.
 
+Held by: `site/src/routes/sessions/SessionDetailPage.test.tsx` › copies the songs of a concert setlist into its own before ordering, keeping the concert setlist untouched
 Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › reads the entry energy first, then the song energy, then the default level unstored
 Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › moves the lifted row to the place of the row it is over, downwards and upwards
 
@@ -1155,9 +1169,13 @@ Lives in: `site/src/routes/catalog/`
 - The transpose offset is clamped to -11 to +11 semitones, which is the
   whole range with distinct output, and the font size runs from 16 px to
   48 px in steps of 2 px, starting at 24 px (`scene-view.core.ts`).
+- A tab block never wraps. It shrinks to fit its widest line, never above
+  the chosen size nor below the 16 px floor, and scrolls sideways past
+  that (`buildTabFontSize`).
 
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps below the floor
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps above the ceiling
+Held by: `site/src/routes/catalog/scene-view.core.test.ts` › fits the widest tab line to the width, never above the chosen size nor below the floor
 
 ## Session
 
@@ -1500,38 +1518,47 @@ Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes 
 
 ## Study
 
-One member saying they worked one song on one instrument on one day.
+One member having said they worked one song on one instrument on one day.
+Nothing writes a study any more: a **presence** replaced it as what lights
+a member's flame.
 
 Lives in: `api/src/studies/`
 
-- Keyed on member, song, instrument and `studied_on`, so a second tap on the
-  same day changes nothing.
-- `studied_on` is the calendar day in `Europe/Paris` of the server clock
-  (`parisCalendarDay`). The request carries no date, so a study cannot be
-  back-dated, and only a study of today can be undone.
-- Accepted only for an instrument the member holds in the song's default
-  lineup or in a lineup override of one of its setlist entries.
-- A study never changes a score; the two are separate writes.
-- Logged from the song page's **Practised**, once per instrument the member
-  holds on the song. The songs a member has to learn are the **To learn**
-  filter of the Songs tab: their study queue, one row per song, ready songs
-  left out (`selectSongsToLearn`). The Studies page this replaced is gone.
-- A study names only a song and an instrument that still exist: the write
-  claims both rows, reads the lineups and inserts in one retried
-  transaction, and is refused with `song-not-found` or
-  `instrument-not-found` when a claim finds no row.
+- Keyed on member, song, instrument and `studied_on`. The rows logged before
+  the song page's **Practised** toggle was removed stay as history and keep
+  counting in the **flame**, so no member lost a flame to the change.
+- The songs a member has to learn are the **To learn** filter of the Songs
+  tab: their study queue, one row per song, ready songs left out
+  (`selectSongsToLearn`). The Studies page this replaced is gone.
+- Deleted with its song or its member.
 
-Held by: `api/src/studies/studies.controller.test.ts` › logs a study once per day
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a body carrying a date, so a study cannot be back-dated
-Held by: `api/src/studies/studies.controller.test.ts` › refuses to undo a study of yesterday
-Held by: `api/src/studies/studies.controller.test.ts` › accepts an instrument held only through a setlist lineup override
-Held by: `api/src/studies/studies.controller.test.ts` › refuses an instrument the member does not hold in the song lineup
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a study of a song deleted while the study was being written
-Held by: `api/src/studies/studies.controller.test.ts` › refuses a study on an instrument deleted while the study was being written
-Held by: `api/src/studies/studies.controller.test.ts` › logs the study once when its first commit loses a conflict on the claimed song
+Held by: `api/src/streaks/streaks.controller.test.ts` › keeps counting a study logged before presences replaced it
+Held by: `api/src/studies/studies.controller.test.ts` › removes studies and score history with the member
 
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
+
+## Presence
+
+One member opening the app on one calendar day in `Europe/Paris`.
+
+Lives in: `api/src/streaks/` (`presence`, `presences.service.ts`)
+
+- Keyed on member and `present_on`, so every later opening of the same day
+  adds no row (`INSERT … ON CONFLICT DO NOTHING`).
+- Written by the two reads every opening of the app makes, `GET /api/me`
+  (the app shell) and `GET /api/streaks` (Home), before they answer, so the
+  flame Home shows already counts today. An assistant's `get_me` writes
+  none: a tool call is not the member opening the app.
+- Deleted with its member.
+
+Held by: `api/src/streaks/streaks.controller.test.ts` › counts today once the member opens the app, with one presence for the day
+Held by: `api/src/streaks/streaks.controller.test.ts` › records the opening of the app from the signed-in member read
+Held by: `api/src/streaks/streaks.controller.test.ts` › removes the presences of a deleted member
+Held by: `api/src/me/me-tools.controller.test.ts` › reads the flames in get_me, and an assistant read does not light the member’s day
+
+Not to be confused with: a **study**, the older record a member logged by
+hand, which no longer lights a flame but still counts as history.
 
 ## Flame
 
@@ -1541,8 +1568,10 @@ today.
 Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 
 - A day is the `Europe/Paris` calendar day. It is active for a member when
-  that member logged a **study** that day, or when a **session** of either
-  kind is dated that day. Takes do not count.
+  that member has a **presence** that day (opened the app), when a
+  **session** of either kind is dated that day, or when that member logged a
+  **study** that day before studies stopped being written. Takes do not
+  count.
 - The personal flame walks back from today. Today never breaks it: while
   today is not active, the walk starts from yesterday. An active day adds 1.
 - A missed day spends one joker of its Monday-to-Sunday week, and each week
@@ -1551,9 +1580,10 @@ Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
   stands as the newer side. A day bridged by a joker adds nothing.
 - Jokers left this week is 3 minus the jokers the walk spent since Monday.
 - The band flame counts a day when any current member is active, and has no
-  joker: its first missed day ends it. A deleted member's studies drop out.
-- Not stored: it is computed on every read from the last 400 days of studies
-  and sessions (`STREAK_LOOKBACK_DAYS`).
+  joker: its first missed day ends it. A deleted member's presences and
+  studies drop out.
+- Not stored: it is computed on every read from the last 400 days of
+  presences, studies and sessions (`STREAK_LOOKBACK_DAYS`).
 - Shown on Home as two chips that open the streak sheet: the member's own
   flame and the band's. Both are drawn marks, not `Icon` glyphs. The
   personal flame is the `BlazeMark`, one flame in three layers with sparks.
@@ -1562,11 +1592,9 @@ Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
   `flame-core` under a `flame-glow` drop shadow, and the bonfire flickers
   unless motion is reduced. `open` (today not yet) is `accent-soft` with an
   `accent` outline and a faint core. `out` (0 days) is an `ink-faint`
-  outline with no spark. Logging or undoing a study settles it from the
-  flames the write answers, read in the write's own transaction.
+  outline with no spark.
 
 Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
-Held by: `site/src/lib/queries/streaks.queries.test.tsx` › settles the flames from the answer once a study is logged
 Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers
@@ -1575,6 +1603,8 @@ Held by: `domain/practice-flame.core.test.ts` › spends no joker on a gap it ca
 Held by: `domain/practice-flame.core.test.ts` › counts jokers left this week from the jokers spent since Monday
 Held by: `domain/practice-flame.core.test.ts` › ends the band flame on its first missed day, with no joker
 Held by: `api/src/streaks/streaks.core.test.ts` › ignores the study of a member who was deleted
+Held by: `api/src/streaks/streaks.core.test.ts` › lights a member’s day and the band’s from the member opening the app
+Held by: `api/src/streaks/streaks.core.test.ts` › ignores the presence of a member who was deleted
 Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’s day when a session is dated today
 
 ## Streak
@@ -1589,7 +1619,7 @@ Lives in: `api/src/streaks/`
   A member whose day has not counted gets at most one push that day, claimed
   on the group key `streak:<memberId>:<day>`.
 
-Held by: `api/src/streaks/streaks.controller.test.ts` › counts today after a study and drops it after the undo
+Held by: `api/src/streaks/streaks.controller.test.ts` › counts today once the member opens the app, with one presence for the day
 Held by: `api/src/streaks/streak-reminder.service.test.ts` › sends one push per open member and claims each group once when run twice
 
 ## Concert readiness
@@ -1836,7 +1866,7 @@ Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route 
 Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
 Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
 Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement as the granting member, and lists whether that member voted for it
-Held by: `api/src/me/me-tools.controller.test.ts` › logs a study of today as the granting member, shows it in get_me, then undoes it
+Held by: `api/src/me/me-tools.controller.test.ts` › refuses an empty update, and a study, which no longer lights a flame
 Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details
 
 Not to be confused with: a route, which a browser calls with a cookie; a

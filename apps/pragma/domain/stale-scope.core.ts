@@ -17,7 +17,6 @@ export const WRITTEN_API_ROOTS = [
   'setlists',
   'sketches',
   'songs',
-  'studies',
   'takes',
   'tasks',
   'transition-comments',
@@ -29,6 +28,7 @@ export const UNANNOUNCED_API_ROOTS = [
   'notifications',
   'oauth',
   'streaks',
+  'studies',
 ] as const;
 
 export type WrittenApiRoot = (typeof WRITTEN_API_ROOTS)[number];
@@ -80,8 +80,8 @@ export const DERIVED_READ_ROOTS: Readonly<Partial<Record<ApiRoot, readonly ApiRo
   setlists: ['instruments', 'members', 'sessions', 'songs'],
   sketches: ['compositions', 'inspirations'],
   songs: ['compositions', 'instruments', 'members'],
-  streaks: ['sessions', 'studies'],
-  studies: ['instruments', 'mastery', 'members', 'sessions', 'setlists', 'songs', 'streaks'],
+  streaks: ['members', 'sessions', 'studies'],
+  studies: ['instruments', 'mastery', 'members', 'sessions', 'setlists', 'songs'],
   takes: ['members', 'sessions', 'songs'],
   tasks: ['instruments', 'members', 'sessions', 'songs'],
   'transition-comments': ['songs'],

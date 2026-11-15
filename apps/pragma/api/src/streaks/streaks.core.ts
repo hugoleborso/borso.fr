@@ -19,6 +19,11 @@ interface StudyDay {
   readonly studiedOn: CalendarDay;
 }
 
+interface PresenceDay {
+  readonly memberId: string;
+  readonly presentOn: CalendarDay;
+}
+
 interface DatedSession {
   readonly date: Date;
 }
@@ -27,6 +32,7 @@ interface OwnFlameInput {
   readonly today: CalendarDay;
   readonly memberId: string;
   readonly studies: readonly StudyDay[];
+  readonly presences: readonly PresenceDay[];
   readonly sessionDays: ReadonlySet<CalendarDay>;
 }
 
@@ -34,6 +40,7 @@ interface MemberFlamesInput {
   readonly today: CalendarDay;
   readonly members: readonly StreaksMember[];
   readonly studies: readonly StudyDay[];
+  readonly presences: readonly PresenceDay[];
   readonly sessionDays: ReadonlySet<CalendarDay>;
 }
 
@@ -41,15 +48,23 @@ interface StreaksInput extends MemberFlamesInput {
   readonly memberId: string;
 }
 
-function activeDaysOf(
-  memberId: string,
-  studies: readonly StudyDay[],
-  sessionDays: ReadonlySet<CalendarDay>,
-): Set<CalendarDay> {
-  const ownStudyDays = studies
-    .filter((study) => study.memberId === memberId)
-    .map((study) => study.studiedOn);
-  return new Set([...sessionDays, ...ownStudyDays]);
+type MemberDaysInput = Pick<OwnFlameInput, 'studies' | 'presences'>;
+
+function memberDaysOf(
+  input: MemberDaysInput,
+  isCounted: (memberId: string) => boolean,
+): CalendarDay[] {
+  return [
+    ...input.studies.filter((study) => isCounted(study.memberId)).map((study) => study.studiedOn),
+    ...input.presences
+      .filter((presence) => isCounted(presence.memberId))
+      .map((presence) => presence.presentOn),
+  ];
+}
+
+function activeDaysOf(input: OwnFlameInput): Set<CalendarDay> {
+  const ownDays = memberDaysOf(input, (memberId) => memberId === input.memberId);
+  return new Set([...input.sessionDays, ...ownDays]);
 }
 
 export function firstLookbackDay(today: CalendarDay): CalendarDay {
@@ -66,10 +81,7 @@ export function collectSessionDays(
 }
 
 export function buildOwnFlame(input: OwnFlameInput): PersonalFlame {
-  return computePersonalFlame(
-    activeDaysOf(input.memberId, input.studies, input.sessionDays),
-    input.today,
-  );
+  return computePersonalFlame(activeDaysOf(input), input.today);
 }
 
 export function buildMemberFlames(input: MemberFlamesInput): MemberFlame[] {
@@ -85,14 +97,12 @@ export function buildMemberFlames(input: MemberFlamesInput): MemberFlame[] {
 export function buildStreaksView(input: StreaksInput): StreaksView {
   const members = buildMemberFlames(input);
   const currentMemberIds = new Set(input.members.map((member) => member.id));
-  const bandStudyDays = input.studies
-    .filter((study) => currentMemberIds.has(study.memberId))
-    .map((study) => study.studiedOn);
+  const bandMemberDays = memberDaysOf(input, (memberId) => currentMemberIds.has(memberId));
   const mine = members.find((member) => member.memberId === input.memberId)?.flame;
   return {
     today: input.today,
     mine: mine ?? computePersonalFlame(new Set(), input.today),
-    band: computeBandFlame(new Set([...input.sessionDays, ...bandStudyDays]), input.today),
+    band: computeBandFlame(new Set([...input.sessionDays, ...bandMemberDays]), input.today),
     members,
   };
 }

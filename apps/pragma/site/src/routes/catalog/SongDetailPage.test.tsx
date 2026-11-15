@@ -89,9 +89,6 @@ function answerSongApi(
   if (pathname === '/api/setlists') return jsonResponse({ setlists: SETLISTS });
   if (pathname === '/api/me') return jsonResponse({ memberId: 'member-1', firstName: 'Hugo' });
   if (pathname === '/api/studies/overview') return jsonResponse(OVERVIEW);
-  if (pathname === '/api/studies' && request.method === 'POST') {
-    return jsonResponse({ study: {} }, 201);
-  }
   if (pathname === '/api/members') {
     return jsonResponse({ members: [{ id: 'member-1', firstName: 'Hugo', color: '#d4806a' }] });
   }
@@ -174,21 +171,10 @@ describe('song page', () => {
     expect(await screen.findByText('In Concert')).toBeTruthy();
   });
 
-  it('logs a study for each instrument the member holds when Practised is tapped', async () => {
+  it('offers no Practised toggle, because opening the app is what lights the flame', async () => {
     renderSongPage();
-    const practised = await screen.findByRole('button', { name: 'Practised' });
-    await waitFor(() => {
-      expect(practised).toHaveProperty('disabled', false);
-    });
-
-    fireEvent.click(practised);
-
-    await waitFor(() => {
-      expect(practised.getAttribute('aria-pressed')).toBe('true');
-    });
-    const studyWrites = stub?.calls.filter((request) => request.method === 'POST') ?? [];
-    expect(studyWrites).toHaveLength(1);
-    expect(await studyWrites[0]?.json()).toEqual({ songId: SONG.id, instrumentId: 'bass' });
+    await screen.findByRole('button', { name: 'Comments' });
+    expect(screen.queryByRole('button', { name: 'Practised' })).toBeNull();
   });
 
   it('opens the song comments in a sheet when Comments is tapped', async () => {

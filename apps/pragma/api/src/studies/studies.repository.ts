@@ -12,55 +12,11 @@ const STUDY_PROJECTION = {
   studiedOn: studyTable.studiedOn,
 } as const;
 
-// @FollowsBlueprint repository-owned-transaction
-export async function runInOneStudyTransaction<Result>(
-  work: (executor: DatabaseExecutor) => Promise<Result>,
-): Promise<Result> {
-  return await getDatabase().transaction(work);
-}
-
-// @FollowsBlueprint repository-idempotent-upsert
-export async function insertStudyIfAbsentWithin(
-  executor: DatabaseExecutor,
-  study: StudyRow,
-  createdAt: Date,
-): Promise<void> {
-  await executor
-    .insert(studyTable)
-    .values({ ...study, createdAt })
-    .onConflictDoNothing();
-}
-
-export async function deleteStudyWithin(
-  executor: DatabaseExecutor,
-  study: StudyRow,
-): Promise<number> {
-  const deleted = await executor
-    .delete(studyTable)
-    .where(
-      and(
-        eq(studyTable.memberId, study.memberId),
-        eq(studyTable.songId, study.songId),
-        eq(studyTable.instrumentId, study.instrumentId),
-        eq(studyTable.studiedOn, study.studiedOn),
-      ),
-    )
-    .returning({ memberId: studyTable.memberId });
-  return deleted.length;
-}
-
-export async function listStudiesSinceWithin(
-  executor: DatabaseExecutor,
-  firstDay: CalendarDay,
-): Promise<StudyRow[]> {
-  return await executor
+export async function listStudiesSince(firstDay: CalendarDay): Promise<StudyRow[]> {
+  return await getDatabase()
     .select(STUDY_PROJECTION)
     .from(studyTable)
     .where(gte(studyTable.studiedOn, firstDay));
-}
-
-export async function listStudiesSince(firstDay: CalendarDay): Promise<StudyRow[]> {
-  return await listStudiesSinceWithin(getDatabase(), firstDay);
 }
 
 export async function listStudiesOfMemberSince(

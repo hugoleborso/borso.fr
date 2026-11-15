@@ -138,11 +138,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                     {t('compos.openSketch')}
                   </Link>
                 )}
-                <SongRoundActions
-                  songId={song.id}
-                  defaultLineup={song.defaultLineup}
-                  notes={song}
-                />
+                <SongRoundActions songId={song.id} notes={song} />
                 <SongYourPart row={memberRow} />
                 <Card variant="flat" className="flex flex-col gap-1 bg-sunk border-0">
                   <div className="text-label tracking-wider uppercase text-ink-soft font-medium">

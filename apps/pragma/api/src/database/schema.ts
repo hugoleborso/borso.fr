@@ -45,6 +45,7 @@ export {
 } from '../setlists/setlists.schema';
 export { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 export { songTable } from '../songs/songs.schema';
+export { presenceTable } from '../streaks/streaks.schema';
 export { studyTable } from '../studies/studies.schema';
 export { takeCommentTable, takeTable } from '../takes/takes.schema';
 export { taskTable } from '../tasks/tasks.schema';
