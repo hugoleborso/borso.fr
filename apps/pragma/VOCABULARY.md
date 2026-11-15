@@ -277,9 +277,10 @@ from.
 
 ## Lineup grid
 
-The setlist's **Lineup** view: one column per member who plays in the
-setlist and one row per entry, so a member's instruments read down the
-setlist as one lane in their stored colour.
+The setlist's **Lineup** view: one row per entry and one column per member
+who plays in the setlist, so a member's instruments read down the setlist as
+one lane in their stored colour, and the transitions between songs show where
+the lane changes.
 
 Lives in: `site/src/components/organisms/`
 

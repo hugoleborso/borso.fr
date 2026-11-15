@@ -15,6 +15,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   `domain/member-palette.core.ts`, which the API and the member form both
   read. A stored colour is never rewritten: it is the member's identity on
   every lineup.
+- On every screen, a member colour means that member and nothing else, and
+  no other hue stands for an instrument or a member. An instrument is shown
+  by its glyph. A change is shown by intensity, text or the highlighter,
+  which is the one hue reserved for changes.
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of

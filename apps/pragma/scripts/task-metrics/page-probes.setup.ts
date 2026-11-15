@@ -443,15 +443,15 @@ export const READ_LINEUP_GRID = `() => {
     memberId: cell.getAttribute('data-lineup-cell') ?? '',
     isPlaying: cell.getAttribute('data-lineup-playing') === 'true',
     isChanged: cell.getAttribute('data-lineup-changed') === 'true',
+    joinsPrevious: cell.getAttribute('data-lineup-joins-previous') === 'true',
     fill: cell.firstElementChild ? getComputedStyle(cell.firstElementChild).backgroundColor : '',
+    style: ((cell.firstElementChild && cell.firstElementChild.getAttribute('style')) ?? '').toLowerCase(),
     height: Math.round(cell.getBoundingClientRect().height),
   }));
-  const lanes = [...document.querySelectorAll('[data-lineup-lane]')].map((lane) => ({ memberId: lane.getAttribute('data-lineup-lane') ?? '', style: (lane.getAttribute('style') ?? '').toLowerCase() }));
   return {
     rowCount: rows.length,
     rowsFullyVisible: rows.filter((row) => { const box = row.getBoundingClientRect(); return box.top >= 0 && box.bottom <= visibleBottom; }).length,
     cells,
-    lanes,
     pageWidth: document.documentElement.scrollWidth,
     viewportWidth: innerWidth,
   };
