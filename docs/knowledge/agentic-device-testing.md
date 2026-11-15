@@ -96,6 +96,12 @@ root, #337), and a sheet declares a footer that may hide
 (`isFooterHiddenWhileTyping`, #333). Keep both. A rule that guesses intent
 from markup is the next guess to fail on a screen nobody here can render.
 
+pragma also checks itself on the phone. `watchScreenPlacement`
+(`apps/pragma/site/src/lib/screen-placement.adapter.ts`) reports to Sentry a
+tab bar off the bottom of the visible screen, or a focused field the keyboard
+hides, as `ScreenPlacementBreach`. Search Sentry for it before closing an iOS
+screen fix, and add a measurement there rather than a step for the operator.
+
 ## A real tap in the sandbox
 
 ```bash

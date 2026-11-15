@@ -6,8 +6,8 @@ severity: medium
 related-pr: '#331'
 fix-pr: '#337'
 fix-commits: [9aaf0398a, 1251ccca5, self]
-eradication-level: 5
-eradication-paths: [docs/knowledge/agentic-device-testing.md]
+eradication-level: 4
+eradication-paths: [apps/pragma/site/src/lib/screen-placement.adapter.ts, apps/pragma/site/src/lib/screen-placement.core.ts, docs/knowledge/agentic-device-testing.md]
 time-to-detect: hours
 tags: [pragma, frontend, css, mobile, preview, visual-validation]
 zone: apps/pragma/site/src/lib/visual-viewport.adapter.ts
@@ -82,33 +82,60 @@ iPhone states a change to the visible screen must be walked through, and gives
 it triggers on the files these four PRs edited
 (`apps/*/site/src/lib/*viewport*`, `*keyboard*`, `molecules/Sheet.tsx`).
 
-What is left is how a change that only an iPhone can check gets checked. That
-changes what the operator is asked for, so it is his call:
+What was left is how a change only an iPhone can show gets caught without
+anyone being asked to look. The sweep first offered the operator a checklist
+to run on every such pull request, then a WebKit run of a browser suite pragma
+does not have. He refused both: a task handed to him per pull request is a
+task he will not do.
 
-| Option | What he sees day to day | Cost |
-| --- | --- | --- |
-| A. Preview checklist | On a pull request whose diff touches `visualViewport`, `overscroll`, `position: fixed` or `sticky`, the preview comment lists the iPhone states from the table to try before merging | One more list on those pull requests, none on the others |
-| B. WebKit in CI | A Playwright WebKit run of pragma's e2e on every pull request touching it | Linux WebKit has no iOS keyboard or bounce (inferred), so it would have caught none of these four, only layout bugs like the collapsed dialog. Added CI time unknown |
-| C. Keep as is | The pull request names the gap in one line, as #331 did | Nothing new |
+So pragma checks itself on the device that matters. `watchScreenPlacement`
+runs on every page load. Once the visible screen has settled after a resize,
+a scroll or a focus change, it measures two things:
 
-Recommendation: A. The operator's iPhone is the only detector, and A tells it
-where to look.
+- the tab bar's bottom edge against the bottom of the visible screen, with a
+  2 px tolerance, unless the bar is hidden;
+- the focused input or text area against the visible screen, which must show
+  at least 16 px of it.
+
+A breach goes to Sentry as `ScreenPlacementBreach`, tagged
+`screen.breach`, with both measured spans, once per kind per page load. It
+lands on the Stability column of the 3S board like any other error, so the
+next session that reads Sentry fixes it. The operator does nothing but use the
+app.
+
+It would have caught three of the four bugs: the drifting bars (#331), the
+note under the keyboard (#332) and the tab bar lifted by the bounce (#333).
+It cannot see the vanished chips (#337). The compositor dropped a layer the
+DOM still measured, which no measurement in the page detects.
+
+On a real layout in Chromium with the iPhone 13 profile, the tab bar's bottom
+and the visible bottom both measured 664 px, so the check stays quiet. With
+the gap forced to 100 px, the bar measured 564 px against 664 px, which the
+core flags (measured, a Playwright probe on `pnpm dev`). That
+`getBoundingClientRect` and `visualViewport.offsetTop` share the layout
+viewport's frame on iOS Safari too is inferred, not measured. A false report
+would carry both spans, which shows it at a glance.
 
 ## Eradication
 
-**Type:** knowledge (level 5), with two level-1 removals already on `main`
-(#333 `9aaf0398a`, #337 `1251ccca5`)
+**Type:** detection (level 4), beside two structural removals already on
+`main` (#333 `9aaf0398a`, #337 `1251ccca5`)
 
 **Reference:** this kaizen pull request · commit [self]
 
 ```diff
- triggers:
-+  paths:
-+    - 'apps/*/site/src/lib/*viewport*'
-+    - 'apps/*/site/src/lib/*keyboard*'
-+    - 'apps/*/site/src/components/molecules/Sheet.tsx'
-   commands:
+ keepFocusedFieldAboveKeyboard();
++watchScreenPlacement();
 ```
 
-The entry's path triggers match the two adapters these PRs created and the
-sheet two of them edited, so the next edit of any of them prints the table.
+```ts
+export function isTabBarOffVisibleBottom(bar: VerticalSpan, visible: VerticalSpan): boolean {
+  return isRendered(bar) && Math.abs(bar.bottom - visible.bottom) > PINNED_EDGE_TOLERANCE_PX;
+}
+```
+
+Reintroducing #331's defect in the adapter test, a tab bar left at 744 to
+800 px while the keyboard shrinks the visible screen to 500 px, makes it
+report `tab-bar-off-visible-bottom` once the screen settles. The core and the
+adapter hold 100% coverage and a mutation score of 100 (measured,
+`scripts/mutate-changed.sh`).
