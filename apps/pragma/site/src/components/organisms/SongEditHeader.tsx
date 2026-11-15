@@ -42,7 +42,7 @@ export function SongEditHeader(props: SongEditHeaderProps): JSX.Element {
       back={props.back}
       crumb={props.crumb}
       title={props.title}
-      className="mb-0 sm:mb-0"
+      className="mb-0 sm:mb-0 lg:mb-0"
       actions={
         <Button
           icon="check"

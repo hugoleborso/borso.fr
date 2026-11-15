@@ -148,7 +148,21 @@ describe('decideReadOnlyQuery', () => {
     expect(acceptedStatement('SELECT 1;')).toBe('SELECT 1');
     expect(acceptedStatement('SELECT 1 ;  \n')).toBe('SELECT 1');
     expect(acceptedStatement('SELECT 1; -- done')).toBe('SELECT 1');
-    expect(acceptedStatement('SELECT 1 -- done')).toBe('SELECT 1');
+  });
+
+  it('keeps a comment that closes the statement, which the capped wrapper ends with a newline', () => {
+    expect(acceptedStatement('SELECT 1 -- done\n')).toBe('SELECT 1 -- done');
+  });
+
+  it('keeps a string, a quoted name or a dollar body that ends the statement', () => {
+    expect(acceptedStatement("SELECT name FROM song WHERE name ILIKE '%love%'")).toBe(
+      "SELECT name FROM song WHERE name ILIKE '%love%'",
+    );
+    expect(acceptedStatement("SELECT name FROM song WHERE name ILIKE '%love%';")).toBe(
+      "SELECT name FROM song WHERE name ILIKE '%love%'",
+    );
+    expect(acceptedStatement('SELECT 1 AS "n"  ')).toBe('SELECT 1 AS "n"');
+    expect(acceptedStatement('SELECT $$x$$')).toBe('SELECT $$x$$');
   });
 
   it('keeps a keyword written inside a value, a quoted name or a comment', () => {
@@ -156,7 +170,7 @@ describe('decideReadOnlyQuery', () => {
       acceptedStatement(
         `SELECT "update", 'DELETE FROM x; DROP TABLE y', $$insert$$ FROM t /* grant */ -- set`,
       ),
-    ).toBe(`SELECT "update", 'DELETE FROM x; DROP TABLE y', $$insert$$ FROM t`);
+    ).toBe(`SELECT "update", 'DELETE FROM x; DROP TABLE y', $$insert$$ FROM t /* grant */ -- set`);
   });
 
   it('keeps a word that only contains a forbidden keyword', () => {

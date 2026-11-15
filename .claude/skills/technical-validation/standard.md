@@ -73,7 +73,7 @@ For each touched workspace, run the test script and capture exit code + tail of 
 
 Every run is scoped to what the branch changed, and the core run passes `--coverage`, which measures only the changed files. Mutation is CI's (the `mutation` job), and so are the whole suites. Round 2 replaces `<base>` with `<reviewed-sha>`.
 
-- Full-stack app workspaces (with `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base>`, which boots the local Postgres and runs only the back-e2e files that changed or import a changed file.
+- Full-stack app workspaces (with `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base> --reporter=verbose`, which boots the local Postgres and runs only the back-e2e files that changed or import a changed file.
 - Front-end-only app workspaces, `infra/cdk` and `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base>`. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
 - A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note — not a free PASS.
 

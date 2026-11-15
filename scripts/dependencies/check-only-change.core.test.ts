@@ -3,6 +3,8 @@ import {
   hasOnlyCheckScriptChanges,
   isCheckOnlyChange,
   isCheckOnlyScript,
+  isToolingFile,
+  isToolingOnlyChange,
   manifestPathOf,
 } from './check-only-change.core';
 
@@ -114,5 +116,73 @@ describe('isCheckOnlyChange', () => {
 
   it('is false when nothing is known to have changed', () => {
     expect(isCheckOnlyChange(directory, [], lintOnly)).toBe(false);
+  });
+});
+
+describe('isToolingFile', () => {
+  it('names the files a deploy never reads', () => {
+    expect(isToolingFile('apps/pragma/site/src/a.core.test.ts')).toBe(true);
+    expect(isToolingFile('apps/pragma/site/src/A.test.tsx')).toBe(true);
+    expect(isToolingFile('apps/pragma/VOCABULARY.md')).toBe(true);
+    expect(isToolingFile('apps/pragma/stryker.config.js')).toBe(true);
+    expect(isToolingFile('apps/pragma/vitest.config.ts')).toBe(true);
+    expect(isToolingFile('apps/pragma/vitest.mutation.config.ts')).toBe(true);
+  });
+
+  it('keeps every file a build or a deploy may read', () => {
+    expect(isToolingFile('apps/pragma/site/src/a.core.ts')).toBe(false);
+    expect(isToolingFile('apps/pragma/vite.config.ts')).toBe(false);
+    expect(isToolingFile('apps/borsouvertures/scripts/build-decks.setup.ts')).toBe(false);
+    expect(isToolingFile('apps/pragma/site/src/test-helpers.ts')).toBe(false);
+    expect(isToolingFile('apps/pragma/site/public/notes.mdx')).toBe(false);
+  });
+});
+
+describe('isToolingOnlyChange', () => {
+  const directory = 'apps/pragma';
+  const unchanged = { before: MANIFEST, after: MANIFEST };
+  const lintOnly = {
+    before: MANIFEST,
+    after: { ...MANIFEST, scripts: { ...MANIFEST.scripts, lint: '../../lint.sh' } },
+  };
+  const build = {
+    before: MANIFEST,
+    after: { ...MANIFEST, scripts: { ...MANIFEST.scripts, build: 'tsc' } },
+  };
+
+  it('is true when only tests and docs moved', () => {
+    expect(
+      isToolingOnlyChange(
+        directory,
+        ['apps/pragma/a.core.test.ts', 'apps/pragma/README.md'],
+        unchanged,
+      ),
+    ).toBe(true);
+  });
+
+  it('is true when a test moved beside a check-only manifest change', () => {
+    expect(
+      isToolingOnlyChange(
+        directory,
+        ['apps/pragma/package.json', 'apps/pragma/a.test.ts'],
+        lintOnly,
+      ),
+    ).toBe(true);
+  });
+
+  it('is false when the manifest change reaches a deployed field', () => {
+    expect(
+      isToolingOnlyChange(directory, ['apps/pragma/package.json', 'apps/pragma/a.test.ts'], build),
+    ).toBe(false);
+  });
+
+  it('is false when a source file moved', () => {
+    expect(
+      isToolingOnlyChange(directory, ['apps/pragma/a.test.ts', 'apps/pragma/site/a.ts'], unchanged),
+    ).toBe(false);
+  });
+
+  it('is false when nothing is known to have changed', () => {
+    expect(isToolingOnlyChange(directory, [], unchanged)).toBe(false);
   });
 });

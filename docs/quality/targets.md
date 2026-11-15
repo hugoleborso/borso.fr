@@ -40,6 +40,12 @@ row is neither, and does not count in its section's score.
 | `sentry-errors-prod` | borso-fr | 0 |
 | `sentry-errors-prod` | borsouvertures | 0 |
 | `user-bug-reports-open` | pragma | 0 |
+| `sentry-issues-open` | pragma | 0 |
+| `sentry-issues-open` | last-loop-lepin | 0 |
+| `sentry-issues-open` | banana-rush | 0 |
+| `sentry-issues-open` | talos | 0 |
+| `sentry-issues-open` | borso-fr | 0 |
+| `sentry-issues-open` | borsouvertures | 0 |
 | `latency-p50` | pragma | 150 |
 | `latency-p50` | last-loop-lepin | 150 |
 | `latency-p50` | banana-rush | 150 |
@@ -59,9 +65,9 @@ row is neither, and does not count in its section's score.
 - The app is an application slug, or `repository` for the security rows.
 - The ceiling is a number: a count, or milliseconds for latency. Lower is
   always better.
-- `sentry-issues-open` has no row on purpose. The board scores the Sentry error
-  count, which is the rate; the open Sentry issues sit beside it unscored, to
-  say how many distinct problems are behind those errors.
+- `sentry-issues-open` counts the distinct unresolved Sentry issues seen in the
+  last 7 days. Its ceiling is 0 since 2026-11-14, on the operator's call, so
+  every open issue is a problem to fix or resolve.
 - The ceilings above were set on 2026-11-06 against the figures measured that
   day. `sentry-errors-preview` is the one row that measures nothing: previews
   run with Sentry off, because the DSN is a production environment variable, so

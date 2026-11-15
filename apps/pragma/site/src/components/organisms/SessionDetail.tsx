@@ -255,7 +255,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         crumb={t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
         title={titleText}
         subtitle={[formattedDate, ...sessionFacts].join(' · ')}
-        className="mb-0 sm:mb-0"
+        className="mb-0 sm:mb-0 lg:mb-0"
         actions={
           isConcert && !editingConcert ? (
             <>
