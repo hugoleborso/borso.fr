@@ -69,7 +69,7 @@ They cover replies, documents, commits and PR bodies.
 - Lead with impact. Say who the work is for and what changes for them, then what the next maintainer inherits. Name each change by what it does, never by a number or label from your own working list.
 - Every claim carries its evidence or its label in the same sentence, as measured, inferred or guess. Never hand the reader a check you could run.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
-- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push.
+- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push. He reads no file in the repository: a session, often "Borso Admin", reads them for him, so no option asks him to.
 - Do not narrate what is done. Report the result and what is left.
 - Never document what goes stale or makes writers collide, such as a list of files, entries, apps or a count of them. Say how to find them instead, with `ls` or `grep`.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.
