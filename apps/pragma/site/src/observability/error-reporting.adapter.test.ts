@@ -7,6 +7,7 @@ import {
   reportSetlistBatchAddFailed,
   reportStreaksReadFailed,
   reportTakeQueueWriteFailed,
+  reportScreenPlacementBreach,
   reportTakeUploadFailed,
   startErrorReporting,
 } from './error-reporting.adapter';
@@ -197,6 +198,22 @@ describe('reportReadBatchFailed', () => {
     expect(sentry.captureMessage).toHaveBeenCalledWith('read-batch-failed', {
       level: 'error',
       tags: { 'read_batch.status': 'none', 'read_batch.size': '2' },
+    });
+  });
+});
+
+describe('screen placement', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports a breach tagged with its kind and the measured spans', () => {
+    const measurement = { element: { top: 744, bottom: 800 }, visible: { top: 0, bottom: 500 } };
+    reportScreenPlacementBreach('tab-bar-off-visible-bottom', measurement);
+    expect(sentry.captureMessage).toHaveBeenCalledWith('ScreenPlacementBreach', {
+      level: 'error',
+      tags: { 'screen.breach': 'tab-bar-off-visible-bottom' },
+      extra: measurement,
     });
   });
 });

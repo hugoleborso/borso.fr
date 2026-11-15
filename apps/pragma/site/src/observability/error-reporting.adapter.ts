@@ -12,6 +12,10 @@ import {
 } from 'react-router-dom';
 import { ApiError } from '../lib/api.client';
 import type { ReadBatchFailure } from '../lib/read-batch.adapter';
+import type {
+  ScreenPlacementBreach,
+  ScreenPlacementMeasurement,
+} from '../lib/screen-placement.core';
 import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
@@ -114,6 +118,19 @@ export function reportReadBatchFailed(failure: ReadBatchFailure): void {
       'read_batch.status': String(failure.status ?? NO_STATUS),
       'read_batch.size': String(failure.size),
     },
+  });
+}
+
+const SCREEN_PLACEMENT_BREACH = 'ScreenPlacementBreach';
+
+export function reportScreenPlacementBreach(
+  breach: ScreenPlacementBreach,
+  measurement: ScreenPlacementMeasurement,
+): void {
+  Sentry.captureMessage(SCREEN_PLACEMENT_BREACH, {
+    level: 'error',
+    tags: { 'screen.breach': breach },
+    extra: { element: measurement.element, visible: measurement.visible },
   });
 }
 
