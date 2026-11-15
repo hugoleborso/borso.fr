@@ -19,7 +19,7 @@ import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.cor
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
-import type { SongRevisions } from './song-revision.hook';
+import type { SongBrushUps } from './brush-up.hook';
 
 const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
 const NO_CHANGE: readonly SetlistEntryLineupChange[] = [];
@@ -60,7 +60,7 @@ export interface SetlistEntriesListProps {
   readonly onAddBreakAfter?: (entryId: string) => void;
   readonly onRenameBreak?: (breakId: string, label: string) => void;
   readonly onRemoveBreak?: (breakId: string) => void;
-  readonly revisions: SongRevisions;
+  readonly brushUps: SongBrushUps;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -131,10 +131,10 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             onOpen={() => props.onOpen(entry.id)}
             onRemove={props.onRemove}
             onAddBreakAfter={props.inFilteredMode ? undefined : props.onAddBreakAfter}
-            revisionLines={props.revisions.linesOf(entry.songId)}
-            revisionSessionLabel={props.revisions.sessionLabel}
-            onToggleRevision={props.revisions.toggle}
-            onAskRevision={props.revisions.askActionOf(entry.songId, songTitle)}
+            brushUpLines={props.brushUps.linesOf(entry.songId)}
+            brushUpSessionLabel={props.brushUps.sessionLabel}
+            onToggleBrushUp={props.brushUps.toggle}
+            onAskBrushUp={props.brushUps.askActionOf(entry.songId, songTitle)}
           />,
         ];
       })}

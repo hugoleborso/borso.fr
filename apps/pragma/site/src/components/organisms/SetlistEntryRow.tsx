@@ -8,8 +8,8 @@ import { ListRow } from '../molecules/ListRow';
 import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 import { Menu, type MenuItem } from '../molecules/Menu';
-import { RevisionCheck } from '../molecules/RevisionCheck';
-import type { RevisionLine } from './song-revision.hook';
+import { BrushUpCheck } from '../molecules/BrushUpCheck';
+import type { BrushUpLine } from './brush-up.hook';
 
 const POSITION_DIGITS = 2;
 const TITLE_CLASS = 'block truncate font-display text-title text-ink';
@@ -39,10 +39,10 @@ export interface SetlistEntryRowProps {
   readonly onOpen: () => void;
   readonly onRemove: (entryId: string) => void;
   readonly onAddBreakAfter?: (entryId: string) => void;
-  readonly revisionLines: readonly RevisionLine[];
-  readonly revisionSessionLabel: string | null;
-  readonly onToggleRevision: (taskId: string) => void;
-  readonly onAskRevision?: () => void;
+  readonly brushUpLines: readonly BrushUpLine[];
+  readonly brushUpSessionLabel: string | null;
+  readonly onToggleBrushUp: (taskId: string) => void;
+  readonly onAskBrushUp?: () => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -71,16 +71,16 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             onSelect: () => onAddBreakAfter(props.entryId),
           },
         ];
-  const { onAskRevision } = props;
-  const reviseItems: MenuItem[] =
-    onAskRevision === undefined
+  const { onAskBrushUp } = props;
+  const brushUpItems: MenuItem[] =
+    onAskBrushUp === undefined
       ? []
       : [
           {
             label: t('setlist.revise.menu'),
             icon: 'tasks',
             tone: 'default',
-            onSelect: onAskRevision,
+            onSelect: onAskBrushUp,
           },
         ];
   return (
@@ -139,7 +139,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           <Menu
             label={t('setlist.entryActions', { title: props.title })}
             items={[
-              ...reviseItems,
+              ...brushUpItems,
               ...addBreakItems,
               {
                 label: t('setlist.removeFromSetlist'),
@@ -150,19 +150,19 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             ]}
           />
         </div>
-        {props.revisionLines.length === 0 ? null : (
+        {props.brushUpLines.length === 0 ? null : (
           <ul
             className="m-0 flex list-none flex-col p-0 pl-7"
             aria-label={t('setlist.revise.listLabel')}
           >
-            {props.revisionLines.map((line) => (
-              <RevisionCheck
+            {props.brushUpLines.map((line) => (
+              <BrushUpCheck
                 key={line.taskId}
                 songTitle={props.title}
                 assignee={line.assignee}
-                sessionLabel={props.revisionSessionLabel ?? ''}
+                sessionLabel={props.brushUpSessionLabel ?? ''}
                 isDone={line.isDone}
-                onToggle={() => props.onToggleRevision(line.taskId)}
+                onToggle={() => props.onToggleBrushUp(line.taskId)}
               />
             ))}
           </ul>

@@ -4,17 +4,18 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
 import { MemberMark } from '../atoms/MemberMark';
+import type { TaskAssignee } from './TaskRow';
 
-export interface RevisionCheckProps {
+export interface BrushUpCheckProps {
   readonly songTitle: string;
-  readonly assignee: { readonly name: string; readonly color: string } | null;
+  readonly assignee: TaskAssignee | null;
   readonly sessionLabel: string;
   readonly isDone: boolean;
   readonly onToggle: () => void;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function RevisionCheck(props: RevisionCheckProps): JSX.Element {
+export function BrushUpCheck(props: BrushUpCheckProps): JSX.Element {
   const { t } = useTranslation();
   const name = props.assignee?.name ?? t('tasks.unassigned');
   return (

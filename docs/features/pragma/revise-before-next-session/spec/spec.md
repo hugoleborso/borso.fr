@@ -11,6 +11,11 @@ The data already holds it. A task has a `songId`, a `sessionId` and a
 `dueDate` (`api/src/tasks/tasks.schema.ts`), and a session's screen lists its
 tasks with a checkbox (`SessionTasks`). Nothing changes on the API.
 
+## Name
+
+In code the task is a **brush-up** (`brush-up.core.ts`). `apps/pragma/VOCABULARY.md`
+refuses *revision*, which reads as a version. The screen says *To revise*.
+
 ## Who
 
 Any signed-in member, on the setlist screen (`/setlists/:id`), on a phone.
@@ -31,10 +36,11 @@ Any signed-in member, on the setlist screen (`/setlists/:id`), on a phone.
      "I need to revise it" is about the person tapping);
    - `songId` the song, `sessionId` the next session, `dueDate` the session's
      date, status `todo`.
-   With no next session, the item is not shown.
+   With no next session, or while the task list has not loaded, the item is
+   not shown.
 3. **The checkbox.** Under a song row, each task of that song on the next
    session is drawn as one line: a checkbox, the assignee's first name and
-   the session label (kind and date). Ticking it marks the task done;
+   the session label (kind, date, and venue when set, as everywhere else in the app). Ticking it marks the task done;
    unticking reopens it. A done task stays on the row, ticked and struck
    through, until the session's day is past.
 4. **Elsewhere.** The task is an ordinary task. It shows on the session's

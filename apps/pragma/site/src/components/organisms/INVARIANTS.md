@@ -56,3 +56,18 @@ Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › badges a
 Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a read paused offline as failed, so an offline cold open never waits forever
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
+
+## Brush-up
+
+- A song row offers **To revise** only when a next session exists, the
+  task list has loaded and the signed-in member holds no task on that song
+  for that session, ticked or not (`selectSessionToBrushUp`).
+- The row draws every task of its song on the next session, done ones
+  included, and nothing tied to another session (`indexBrushUpTasksBySong`).
+- The task is assigned to the member who asked, and due on the session's
+  date (`buildBrushUpTask`).
+
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › offers nothing once the member has one, even ticked and beside another member’s
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › offers nothing while the task list has not arrived
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › groups the tasks of the next session by song, done ones included
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › assigns the member and dates the task on the session

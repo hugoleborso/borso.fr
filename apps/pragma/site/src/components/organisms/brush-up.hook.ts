@@ -12,21 +12,21 @@ import { useCreateTask, useTasksList, useUpdateTask } from '../../lib/queries/ta
 import { useSessionLabel } from '../../lib/session-label.hook';
 import { findAssignee } from '../../routes/band/band-tasks.core';
 import {
-  buildRevisionTask,
-  indexRevisionTasksBySong,
-  selectSessionToRevise,
-  type RevisionTask,
-} from './song-revision.core';
+  buildBrushUpTask,
+  indexBrushUpTasksBySong,
+  selectSessionToBrushUp,
+  type BrushUpTask,
+} from './brush-up.core';
 
-export interface RevisionLine {
+export interface BrushUpLine {
   readonly taskId: string;
   readonly isDone: boolean;
-  readonly assignee: { readonly name: string; readonly color: string } | null;
+  readonly assignee: ReturnType<typeof findAssignee>;
 }
 
-export interface SongRevisions {
+export interface SongBrushUps {
   readonly sessionLabel: string | null;
-  readonly linesOf: (songId: string) => readonly RevisionLine[];
+  readonly linesOf: (songId: string) => readonly BrushUpLine[];
   readonly askActionOf: (songId: string, songTitle: string) => (() => void) | undefined;
   readonly toggle: (taskId: string) => void;
 }
@@ -34,7 +34,7 @@ export interface SongRevisions {
 const NO_ROWS: readonly never[] = [];
 
 // @FollowsBlueprint hook-stateful-helper
-export function useSongRevisions(): SongRevisions {
+export function useSongBrushUps(): SongBrushUps {
   const { t } = useTranslation();
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const sessionsQuery = useSessionsList();
@@ -49,32 +49,32 @@ export function useSongRevisions(): SongRevisions {
     () => selectNextSession(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
     [sessionsQuery.data, nowEpochMs],
   );
-  const tasks = tasksQuery.data?.tasks ?? NO_ROWS;
+  const tasks = tasksQuery.data?.tasks;
   const tasksBySong = useMemo(
-    () => indexRevisionTasksBySong(tasks, nextSession?.id ?? null),
+    () => (tasks === undefined ? null : indexBrushUpTasksBySong(tasks, nextSession?.id ?? null)),
     [tasks, nextSession],
   );
   const members = membersQuery.data?.members ?? NO_ROWS;
   const memberId = signedInMember.data?.memberId ?? null;
-  const songTasksOf = (songId: string): readonly RevisionTask[] =>
-    tasksBySong.get(songId) ?? NO_ROWS;
+  const songTasksOf = (songId: string): readonly BrushUpTask[] | null =>
+    tasksBySong === null ? null : (tasksBySong.get(songId) ?? NO_ROWS);
   const statusOf = (taskId: string): TaskStatus | null =>
-    tasks.find((task) => task.id === taskId)?.status ?? null;
+    tasks?.find((task) => task.id === taskId)?.status ?? null;
 
   return {
     sessionLabel: nextSession === null ? null : labelOf(nextSession),
     linesOf: (songId) =>
-      songTasksOf(songId).map((task) => ({
+      (songTasksOf(songId) ?? NO_ROWS).map((task) => ({
         taskId: task.id,
         isDone: task.status === 'done',
         assignee: findAssignee(members, task.assigneeId),
       })),
     askActionOf: (songId, songTitle) => {
-      const session = selectSessionToRevise(songTasksOf(songId), memberId, nextSession);
+      const session = selectSessionToBrushUp(songTasksOf(songId), memberId, nextSession);
       if (session === null || memberId === null) return undefined;
       return () =>
         createTask.mutate(
-          buildRevisionTask({
+          buildBrushUpTask({
             title: t('setlist.revise.taskTitle', { title: songTitle }),
             memberId,
             songId,

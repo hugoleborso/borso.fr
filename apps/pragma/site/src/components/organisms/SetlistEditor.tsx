@@ -29,7 +29,7 @@ import { type EntrySheetFocus, SetlistEntrySheet } from './SetlistEntrySheet';
 import { SetlistViewContent, type SetlistViewName } from './SetlistViewContent';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { useSetlistBreakActions } from './setlist-breaks.hook';
-import { useSongRevisions } from './song-revision.hook';
+import { useSongBrushUps } from './brush-up.hook';
 import { indexById } from './setlist-editor.utils';
 import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
@@ -96,7 +96,7 @@ export function SetlistEditor({
   const removal = useTimedOffer<RemovedEntry>(UNDO_WINDOW_MS);
   const updateSong = useUpdateSong();
   const recording = useRecordingSheet();
-  const revisions = useSongRevisions();
+  const brushUps = useSongBrushUps();
 
   const [transitionEditing, setTransitionEditing] = useState<TransitionPair | null>(null);
   const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
@@ -211,7 +211,7 @@ export function SetlistEditor({
       onRemove={removeSetlistEntry}
       onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
       {...breakActions.listProps}
-      revisions={revisions}
+      brushUps={brushUps}
     />
   );
 

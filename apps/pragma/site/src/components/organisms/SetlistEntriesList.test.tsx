@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { SetlistEntriesList, type SetlistEntriesListProps } from './SetlistEntriesList';
-import type { SongRevisions } from './song-revision.hook';
+import type { SongBrushUps } from './brush-up.hook';
 import type { TransitionView } from './transition-view.core';
 
 class StillResizeObserver implements ResizeObserver {
@@ -28,7 +28,7 @@ const SONGS_BY_ID = Object.fromEntries(
 const HELD: TransitionView = { kind: 'covered', carriers: [] };
 const INTERMISSION = { id: 'p1', label: 'Intermission', position: 1, songsBefore: 1 };
 
-const NO_REVISION: SongRevisions = {
+const NO_BRUSH_UP: SongBrushUps = {
   sessionLabel: null,
   linesOf: () => [],
   askActionOf: () => undefined,
@@ -55,7 +55,7 @@ function buildProps(overrides: Partial<SetlistEntriesListProps> = {}): SetlistEn
     onAddBreakAfter: () => undefined,
     onRenameBreak: () => undefined,
     onRemoveBreak: () => undefined,
-    revisions: NO_REVISION,
+    brushUps: NO_BRUSH_UP,
     ...overrides,
   };
 }
@@ -98,10 +98,10 @@ describe('the setlist entries list', () => {
     expect(screen.queryByRole('menuitem', { name: 'Add a break after' })).toBeNull();
   });
 
-  it('asks for a revision of the tapped song with its title', () => {
+  it('asks for a brush-up of the tapped song with its title', () => {
     const ask = vi.fn();
     const askActionOf = vi.fn(() => ask);
-    render(<SetlistEntriesList {...buildProps({ revisions: { ...NO_REVISION, askActionOf } })} />);
+    render(<SetlistEntriesList {...buildProps({ brushUps: { ...NO_BRUSH_UP, askActionOf } })} />);
     fireEvent.click(screen.getByRole('button', { name: 'More for a' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'To revise' }));
     expect(askActionOf).toHaveBeenCalledWith('song-a', 'a');

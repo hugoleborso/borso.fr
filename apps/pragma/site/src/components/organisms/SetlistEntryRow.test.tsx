@@ -45,9 +45,9 @@ function buildProps(overrides: Partial<SetlistEntryRowProps> = {}): SetlistEntry
     transitionBefore: null,
     onOpen: () => undefined,
     onRemove: () => undefined,
-    revisionLines: [],
-    revisionSessionLabel: 'Practice · Wed 18 Nov',
-    onToggleRevision: () => undefined,
+    brushUpLines: [],
+    brushUpSessionLabel: 'Practice · Wed 18 Nov',
+    onToggleBrushUp: () => undefined,
     ...overrides,
   };
 }
@@ -148,23 +148,23 @@ describe('a setlist row', () => {
   });
 
   it('offers To revise in its more menu only when the member can still ask', () => {
-    const onAskRevision = vi.fn();
-    renderRow(buildProps({ onAskRevision }));
+    const onAskBrushUp = vi.fn();
+    renderRow(buildProps({ onAskBrushUp }));
     fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'To revise' }));
-    expect(onAskRevision).toHaveBeenCalledOnce();
+    expect(onAskBrushUp).toHaveBeenCalledOnce();
     cleanup();
     renderRow(buildProps());
     fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
     expect(screen.queryByRole('menuitem', { name: 'To revise' })).toBeNull();
   });
 
-  it('draws each revision of the next session as a box to tick', () => {
-    const onToggleRevision = vi.fn();
+  it('draws each brush-up of the next session as a box to tick', () => {
+    const onToggleBrushUp = vi.fn();
     renderRow(
       buildProps({
-        onToggleRevision,
-        revisionLines: [
+        onToggleBrushUp,
+        brushUpLines: [
           { taskId: 'task-1', isDone: false, assignee: { name: 'Léa', color: '#000' } },
           { taskId: 'task-2', isDone: true, assignee: { name: 'Tom', color: '#fff' } },
         ],
@@ -176,6 +176,6 @@ describe('a setlist row', () => {
     expect(leaBox).toHaveProperty('checked', false);
     expect(tomBox).toHaveProperty('checked', true);
     fireEvent.click(leaBox);
-    expect(onToggleRevision).toHaveBeenCalledExactlyOnceWith('task-1');
+    expect(onToggleBrushUp).toHaveBeenCalledExactlyOnceWith('task-1');
   });
 });

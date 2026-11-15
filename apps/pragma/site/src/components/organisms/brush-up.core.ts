@@ -2,12 +2,12 @@
 
 import type { TaskStatus } from '@domain/task-status.core';
 
-export interface RevisionSession {
+export interface BrushUpSession {
   readonly id: string;
   readonly date: string;
 }
 
-export interface RevisionTask {
+export interface BrushUpTask {
   readonly id: string;
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
@@ -15,7 +15,7 @@ export interface RevisionTask {
   readonly sessionId: string | null;
 }
 
-export interface RevisionTaskWrite {
+export interface BrushUpTaskWrite {
   readonly title: string;
   readonly assigneeId: string;
   readonly songId: string;
@@ -24,7 +24,7 @@ export interface RevisionTaskWrite {
 }
 
 // @FollowsBlueprint core-view-projection
-export function indexRevisionTasksBySong<TTask extends RevisionTask>(
+export function indexBrushUpTasksBySong<TTask extends BrushUpTask>(
   tasks: readonly TTask[],
   sessionId: string | null,
 ): ReadonlyMap<string, readonly TTask[]> {
@@ -36,22 +36,22 @@ export function indexRevisionTasksBySong<TTask extends RevisionTask>(
   return bySong;
 }
 
-export function selectSessionToRevise<TSession extends RevisionSession>(
-  songTasks: readonly RevisionTask[],
+export function selectSessionToBrushUp<TSession extends BrushUpSession>(
+  songTasks: readonly BrushUpTask[] | null,
   memberId: string | null,
   nextSession: TSession | null,
 ): TSession | null {
-  if (memberId === null || nextSession === null) return null;
-  const hasOwnRevision = songTasks.some((task) => task.assigneeId === memberId);
-  return hasOwnRevision ? null : nextSession;
+  if (songTasks === null || memberId === null) return null;
+  const hasOwnBrushUp = songTasks.some((task) => task.assigneeId === memberId);
+  return hasOwnBrushUp ? null : nextSession;
 }
 
-export function buildRevisionTask(input: {
+export function buildBrushUpTask(input: {
   readonly title: string;
   readonly memberId: string;
   readonly songId: string;
-  readonly session: RevisionSession;
-}): RevisionTaskWrite {
+  readonly session: BrushUpSession;
+}): BrushUpTaskWrite {
   return {
     title: input.title,
     assigneeId: input.memberId,

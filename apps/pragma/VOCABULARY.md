@@ -165,6 +165,20 @@ Not to be confused with: the **song**, which is the catalogue record a
 composition may become. A song with `origin = original` is not a
 composition.
 
+## Brush-up
+
+A **task** one member takes on a song before the next **session**: its
+`songId` is the song, its `sessionId` the next practice or concert, its
+assignee the member, and the setlist row draws it as a box to tick. The
+screen calls it *To revise*.
+
+Lives in: `site/src/components/organisms/` (`brush-up.core.ts`), stored as a `task` row
+
+Invariants: `site/src/components/organisms/INVARIANTS.md`
+
+Not to be confused with: the **study queue**, which pragma computes from
+**mastery**; a brush-up is one a member asks for by hand.
+
 ## Concert
 
 A date the band plays in front of an audience.
