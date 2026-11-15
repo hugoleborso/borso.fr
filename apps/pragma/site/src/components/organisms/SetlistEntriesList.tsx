@@ -19,6 +19,7 @@ import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.cor
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
+import type { SongRevisions } from './song-revision.hook';
 
 const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
 const NO_CHANGE: readonly SetlistEntryLineupChange[] = [];
@@ -59,6 +60,7 @@ export interface SetlistEntriesListProps {
   readonly onAddBreakAfter?: (entryId: string) => void;
   readonly onRenameBreak?: (breakId: string, label: string) => void;
   readonly onRemoveBreak?: (breakId: string) => void;
+  readonly revisions: SongRevisions;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -103,6 +105,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
         const lineupRaw = lineupOf(entry, props.songsById);
         warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
         const fullIndex = props.entries.indexOf(entry);
+        const songTitle = song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH);
         const lineupColumn = buildLineupColumn({
           instruments: props.slotInstruments,
           lineup: compactLineup(lineupRaw),
@@ -116,7 +119,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             memberPart={props.memberPartByEntryId[entry.id] ?? NO_MEMBER_PART}
             isMemberView={props.inFilteredMode}
             entryId={entry.id}
-            title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
+            title={songTitle}
             deezerAlbumId={song?.deezerAlbumId ?? null}
             artist={song?.artist ?? ''}
             keyLabel={entry.keyOverride ?? tonalityLabelFor(song)}
@@ -128,6 +131,10 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             onOpen={() => props.onOpen(entry.id)}
             onRemove={props.onRemove}
             onAddBreakAfter={props.inFilteredMode ? undefined : props.onAddBreakAfter}
+            revisionLines={props.revisions.linesOf(entry.songId)}
+            revisionSessionLabel={props.revisions.sessionLabel}
+            onToggleRevision={props.revisions.toggle}
+            onAskRevision={props.revisions.askActionOf(entry.songId, songTitle)}
           />,
         ];
       })}

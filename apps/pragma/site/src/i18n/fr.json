@@ -657,6 +657,13 @@
     "tonightChange": "Ce soir : {{change}}",
     "entryActions": "Plus pour {{title}}",
     "removeFromSetlist": "Retirer de la setlist",
+    "revise": {
+      "listLabel": "À réviser",
+      "menu": "À réviser",
+      "taskTitle": "Réviser {{title}}",
+      "line": "{{name}} la révise pour {{session}}",
+      "toggle": "{{name}} a révisé {{title}}"
+    },
     "editTransitionNote": "Modifier la note de transition",
     "noteTransition": "Noter cette transition",
     "lineupCellPlays": "{{title}} : {{name}} joue {{instrumentNames}}.",

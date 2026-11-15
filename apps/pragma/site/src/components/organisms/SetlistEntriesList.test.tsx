@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { SetlistEntriesList, type SetlistEntriesListProps } from './SetlistEntriesList';
+import type { SongRevisions } from './song-revision.hook';
 import type { TransitionView } from './transition-view.core';
 
 class StillResizeObserver implements ResizeObserver {
@@ -27,6 +28,13 @@ const SONGS_BY_ID = Object.fromEntries(
 const HELD: TransitionView = { kind: 'covered', carriers: [] };
 const INTERMISSION = { id: 'p1', label: 'Intermission', position: 1, songsBefore: 1 };
 
+const NO_REVISION: SongRevisions = {
+  sessionLabel: null,
+  linesOf: () => [],
+  askActionOf: () => undefined,
+  toggle: () => undefined,
+};
+
 function buildProps(overrides: Partial<SetlistEntriesListProps> = {}): SetlistEntriesListProps {
   return {
     entries: ENTRIES,
@@ -47,6 +55,7 @@ function buildProps(overrides: Partial<SetlistEntriesListProps> = {}): SetlistEn
     onAddBreakAfter: () => undefined,
     onRenameBreak: () => undefined,
     onRemoveBreak: () => undefined,
+    revisions: NO_REVISION,
     ...overrides,
   };
 }
@@ -87,5 +96,15 @@ describe('the setlist entries list', () => {
     fireEvent.click(screen.getByRole('button', { name: 'More for a' }));
     expect(screen.getByRole('menuitem', { name: 'Remove from the setlist' })).toBeTruthy();
     expect(screen.queryByRole('menuitem', { name: 'Add a break after' })).toBeNull();
+  });
+
+  it('asks for a revision of the tapped song with its title', () => {
+    const ask = vi.fn();
+    const askActionOf = vi.fn(() => ask);
+    render(<SetlistEntriesList {...buildProps({ revisions: { ...NO_REVISION, askActionOf } })} />);
+    fireEvent.click(screen.getByRole('button', { name: 'More for a' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'To revise' }));
+    expect(askActionOf).toHaveBeenCalledWith('song-a', 'a');
+    expect(ask).toHaveBeenCalledOnce();
   });
 });

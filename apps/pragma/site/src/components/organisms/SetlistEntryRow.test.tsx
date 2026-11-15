@@ -45,6 +45,9 @@ function buildProps(overrides: Partial<SetlistEntryRowProps> = {}): SetlistEntry
     transitionBefore: null,
     onOpen: () => undefined,
     onRemove: () => undefined,
+    revisionLines: [],
+    revisionSessionLabel: 'Practice · Wed 18 Nov',
+    onToggleRevision: () => undefined,
     ...overrides,
   };
 }
@@ -142,5 +145,37 @@ describe('a setlist row', () => {
     expect(screen.getByRole('img', { name: 'Bass' })).toBeTruthy();
     expect(screen.getByText('Lead vocals')).toBeTruthy();
     expect(screen.queryAllByTitle('Drums')).toHaveLength(0);
+  });
+
+  it('offers To revise in its more menu only when the member can still ask', () => {
+    const onAskRevision = vi.fn();
+    renderRow(buildProps({ onAskRevision }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'To revise' }));
+    expect(onAskRevision).toHaveBeenCalledOnce();
+    cleanup();
+    renderRow(buildProps());
+    fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
+    expect(screen.queryByRole('menuitem', { name: 'To revise' })).toBeNull();
+  });
+
+  it('draws each revision of the next session as a box to tick', () => {
+    const onToggleRevision = vi.fn();
+    renderRow(
+      buildProps({
+        onToggleRevision,
+        revisionLines: [
+          { taskId: 'task-1', isDone: false, assignee: { name: 'Léa', color: '#000' } },
+          { taskId: 'task-2', isDone: true, assignee: { name: 'Tom', color: '#fff' } },
+        ],
+      }),
+    );
+    expect(screen.getByText('Léa revises it for Practice · Wed 18 Nov')).toBeTruthy();
+    const leaBox = screen.getByRole('checkbox', { name: 'Léa has revised Superstition' });
+    const tomBox = screen.getByRole('checkbox', { name: 'Tom has revised Superstition' });
+    expect(leaBox).toHaveProperty('checked', false);
+    expect(tomBox).toHaveProperty('checked', true);
+    fireEvent.click(leaBox);
+    expect(onToggleRevision).toHaveBeenCalledExactlyOnceWith('task-1');
   });
 });
