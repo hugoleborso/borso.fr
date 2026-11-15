@@ -387,6 +387,12 @@ for check in "$results"/*.check; do
   read -r status <"$slot.result"
   if [ "$status" -ne 0 ]; then
     failed="${failed} $(sed -n 1p "$check")"
+    # A refusal with no reason is the gate crashing, not judging: PR #354 lost
+    # a round to check-spec-records.sh, where grep found no CREATE TABLE under
+    # pipefail and every table-free spec was refused in silence.
+    if [ ! -s "$slot.out" ]; then
+      echo "[pre-commit] $(sed -n 1p "$check") exited $status and printed nothing. That is the check failing, not your change: read the script it runs. A grep that finds nothing under set -o pipefail is the usual cause." >&2
+    fi
   fi
 done
 
