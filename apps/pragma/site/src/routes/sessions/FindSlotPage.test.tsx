@@ -77,7 +77,7 @@ describe('finding a slot', () => {
     renderAt(<FindSlotPage />, '/sessions/slots');
     const header = screen.getByRole('heading', { level: 1, name: 'Find a slot' }).closest('header');
     if (header === null) throw new Error('no page header');
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(within(header).getByRole('link', { name: 'Sessions' }).getAttribute('href')).toBe(
       '/sessions',
     );

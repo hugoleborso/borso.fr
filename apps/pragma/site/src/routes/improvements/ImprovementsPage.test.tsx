@@ -72,7 +72,7 @@ describe('the improvements page', () => {
     const header = screen
       .getByRole('heading', { level: 1, name: 'Improvements' })
       .closest('header');
-    expect(header?.classList.contains('sticky')).toBe(true);
+    expect(header?.classList.contains('fixed')).toBe(true);
     expect(header?.querySelector('a')?.getAttribute('href')).toBe('/band');
   });
 

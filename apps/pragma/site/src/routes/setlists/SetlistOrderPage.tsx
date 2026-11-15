@@ -95,7 +95,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
       <PageHeader
         back={{ to: setlistPath, label: displayedName }}
         title={t('setlist.orderTitle')}
-        className="mb-2 sm:mb-4"
+        className="mb-2 sm:mb-4 lg:mb-4"
       />
       {hasReorderFailed ? (
         <p
