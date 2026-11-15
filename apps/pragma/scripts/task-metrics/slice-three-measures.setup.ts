@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { INSTRUMENT_ICONS } from '../../domain/instrument.core';
+import { INSTRUMENT_FAMILIES, INSTRUMENT_ICONS } from '../../domain/instrument.core';
 import { normalizeLineup } from '../../domain/lineup.core';
 import { buildLineupGrid } from '../../site/src/components/organisms/lineup-grid.core';
 import { parseHex } from '../../site/src/lib/member-color.utils';
@@ -47,6 +47,7 @@ const instrumentSchema = z.object({
   name: z.string(),
   icon: z.enum(INSTRUMENT_ICONS),
   position: z.number(),
+  family: z.enum(INSTRUMENT_FAMILIES),
 });
 const gridSchema = z.object({
   rowCount: z.number(),
@@ -57,11 +58,12 @@ const gridSchema = z.object({
       memberId: z.string(),
       isPlaying: z.boolean(),
       isChanged: z.boolean(),
+      joinsPrevious: z.boolean(),
       fill: z.string(),
+      style: z.string(),
       height: z.number(),
     }),
   ),
-  lanes: z.array(z.object({ memberId: z.string(), style: z.string() })),
   pageWidth: z.number(),
   viewportWidth: z.number(),
 });
@@ -169,15 +171,16 @@ async function measureLineupGrid(driver: BandSessionDriver): Promise<Record<stri
       await waitMilliseconds(SCHEME_SETTLE_MS);
       const grid = gridSchema.parse(await driver.session.evaluate(READ_LINEUP_GRID));
       firstScreen ??= grid;
-      const played = grid.cells.filter((cell) => cell.isPlaying);
+      const runStarts = grid.cells.filter((cell) => cell.isPlaying && !cell.joinsPrevious);
+      const joined = grid.cells.filter((cell) => cell.joinsPrevious);
       bySchemes[scheme] = {
-        playedCells: played.length,
-        playedCellsInMemberColour: played.filter(
+        runStartCells: runStarts.length,
+        runStartCellsInMemberColour: runStarts.filter(
           (cell) => cell.fill === toRgb(expected.colours.get(cell.memberId) ?? ''),
         ).length,
-        columns: grid.lanes.length,
-        columnsTintedWithMemberColour: grid.lanes.filter((lane) =>
-          lane.style.includes((expected.colours.get(lane.memberId) ?? '#none').toLowerCase()),
+        joinedCells: joined.length,
+        joinedCellsTintedWithMemberColour: joined.filter((cell) =>
+          cell.style.includes((expected.colours.get(cell.memberId) ?? '#none').toLowerCase()),
         ).length,
       };
     }

@@ -8,7 +8,13 @@ import { Icon } from '../atoms/Icon';
 import { MemberMark } from '../atoms/MemberMark';
 import { memberInitial } from '../atoms/member-palette.utils';
 import { ListRow } from '../molecules/ListRow';
-import type { LineupGrid, LineupGridCell, LineupGridRow } from './lineup-grid.core';
+import {
+  hasLineupChanges,
+  type LineupGrid,
+  type LineupGridCell,
+  type LineupGridGlyph,
+  type LineupGridRow,
+} from './lineup-grid.core';
 
 export interface SetlistLineupGridProps {
   readonly grid: LineupGrid;
@@ -17,22 +23,52 @@ export interface SetlistLineupGridProps {
 }
 
 const COLUMNS_CLASS_BY_COUNT = [
-  'grid-cols-1',
-  'grid-cols-2',
-  'grid-cols-3',
-  'grid-cols-4',
-  'grid-cols-5',
-  'grid-cols-6',
+  'grid-cols-[7rem_repeat(1,minmax(0,1fr))]',
+  'grid-cols-[7rem_repeat(2,minmax(0,1fr))]',
+  'grid-cols-[7rem_repeat(3,minmax(0,1fr))]',
+  'grid-cols-[7rem_repeat(4,minmax(0,1fr))]',
+  'grid-cols-[7rem_repeat(5,minmax(0,1fr))]',
+  'grid-cols-[7rem_repeat(6,minmax(0,1fr))]',
 ] as const;
-const WIDEST_COLUMNS_CLASS = 'grid-cols-6';
+const WIDEST_COLUMNS_CLASS = 'grid-cols-[7rem_repeat(6,minmax(0,1fr))]';
 const POSITION_DIGITS = 2;
 const NAME_SEPARATOR = ', ';
 const CELL_BUTTON_CLASS =
-  'relative min-h-9 justify-center gap-0 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[""]';
+  'relative items-stretch justify-center gap-0 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[""]';
+const COMPACT_CELL_CLASS = 'min-h-7';
+const FULL_CELL_CLASS = 'min-h-11';
+const JOINED_CELL_CLASS = '-mt-1';
+const MARK_CLASS = 'min-h-0 w-full min-w-0 flex-col gap-0 rounded-none px-0.5';
+const RUN_START_CORNERS_CLASS = 'rounded-t-sm';
+const RUN_END_CORNERS_CLASS = 'rounded-b-sm';
+const JOINED_MARK_CLASS = 'text-ink';
+const JOINED_GLYPHS_CLASS = 'opacity-40';
+const PREVIOUS_GLYPHS_CLASS = 'opacity-60';
+const PREVIOUS_ICON_CLASS = 'size-3';
 const HEADER_BUTTON_CLASS = 'min-w-0 flex-col justify-center gap-0 py-0.5';
 
 function columnsClassFor(count: number): string {
   return COLUMNS_CLASS_BY_COUNT[count - 1] ?? WIDEST_COLUMNS_CLASS;
+}
+
+function namesOf(glyphs: readonly LineupGridGlyph[]): string {
+  return glyphs.map((glyph) => glyph.name).join(NAME_SEPARATOR);
+}
+
+interface GlyphLineProps {
+  readonly glyphs: readonly LineupGridGlyph[];
+  readonly className?: string;
+  readonly iconClassName?: string;
+}
+
+function GlyphLine({ glyphs, className, iconClassName }: GlyphLineProps): JSX.Element {
+  return (
+    <span className={composeClassName('flex items-center justify-center gap-0.5', className)}>
+      {glyphs.map((glyph) => (
+        <Icon key={glyph.instrumentId} name={glyph.glyph} className={iconClassName} />
+      ))}
+    </span>
+  );
 }
 
 interface LineupCellProps {
@@ -41,44 +77,99 @@ interface LineupCellProps {
   readonly onOpen: () => void;
 }
 
-function LineupCell({ row, cell, onOpen }: LineupCellProps): JSX.Element {
+function useCellLabel(row: LineupGridRow, cell: LineupGridCell): string {
   const { t } = useTranslation();
-  const instrumentNames = cell.glyphs.map((glyph) => glyph.name).join(NAME_SEPARATOR);
   const label = cell.isPlaying
-    ? t('setlist.lineupCellPlays', { title: row.title, name: cell.firstName, instrumentNames })
+    ? t('setlist.lineupCellPlays', {
+        title: row.title,
+        name: cell.firstName,
+        instrumentNames: namesOf(cell.glyphs),
+      })
     : t('setlist.lineupCellSitsOut', { title: row.title, name: cell.firstName });
+  if (!cell.isChanged) return label;
+  const change =
+    cell.previousGlyphs.length > 0
+      ? t('setlist.lineupCellPlayedBefore', { instrumentNames: namesOf(cell.previousGlyphs) })
+      : t('setlist.lineupCellChanged');
+  return `${label} ${change}`;
+}
+
+function PlayingMark({ cell }: { readonly cell: LineupGridCell }): JSX.Element {
+  const corners = composeClassName(
+    !cell.joinsPrevious && RUN_START_CORNERS_CLASS,
+    !cell.joinsNext && RUN_END_CORNERS_CLASS,
+  );
+  if (cell.joinsPrevious) {
+    return (
+      <MemberMark
+        shape="lane"
+        color={cell.color}
+        className={composeClassName(MARK_CLASS, JOINED_MARK_CLASS, corners)}
+      >
+        <GlyphLine glyphs={cell.glyphs} className={JOINED_GLYPHS_CLASS} />
+      </MemberMark>
+    );
+  }
+  return (
+    <MemberMark shape="cell" color={cell.color} className={composeClassName(MARK_CLASS, corners)}>
+      <GlyphLine glyphs={cell.glyphs} />
+      {cell.previousGlyphs.length > 0 ? (
+        <GlyphLine
+          glyphs={cell.previousGlyphs}
+          className={PREVIOUS_GLYPHS_CLASS}
+          iconClassName={PREVIOUS_ICON_CLASS}
+        />
+      ) : null}
+    </MemberMark>
+  );
+}
+
+function LineupCell({ row, cell, onOpen }: LineupCellProps): JSX.Element {
+  const label = useCellLabel(row, cell);
   return (
     <ListRow
       isChevronShown={false}
-      aria-label={cell.isChanged ? `${label} ${t('setlist.lineupCellChanged')}` : label}
+      aria-label={label}
       data-lineup-cell={cell.memberId}
       data-lineup-playing={cell.isPlaying}
       data-lineup-changed={cell.isChanged}
+      data-lineup-joins-previous={cell.joinsPrevious}
       onClick={onOpen}
-      className={CELL_BUTTON_CLASS}
-    >
-      {cell.isPlaying ? (
-        <MemberMark shape="cell" color={cell.color} className="relative min-h-9 w-full">
-          {cell.glyphs.map((glyph) => (
-            <Icon key={glyph.instrumentId} name={glyph.glyph} />
-          ))}
-          {cell.isChanged ? (
-            <>
-              <span
-                aria-hidden="true"
-                className="absolute inset-x-2 bottom-1 h-1 rounded-pill bg-highlight"
-              />
-              <span
-                aria-hidden="true"
-                className="absolute top-1 right-1 size-2 border-t-2 border-r-2 border-ink"
-              />
-            </>
-          ) : null}
-        </MemberMark>
-      ) : (
-        <MemberMark shape="dot" color={cell.color} />
+      className={composeClassName(
+        CELL_BUTTON_CLASS,
+        row.isCompact ? COMPACT_CELL_CLASS : FULL_CELL_CLASS,
+        cell.joinsPrevious && JOINED_CELL_CLASS,
       )}
+    >
+      {cell.isPlaying ? <PlayingMark cell={cell} /> : null}
     </ListRow>
+  );
+}
+
+function RowTitle({ row }: { readonly row: LineupGridRow }): JSX.Element {
+  const { t } = useTranslation();
+  const isBadgeShown = hasLineupChanges(row);
+  return (
+    <div className="flex min-w-0 flex-col justify-center gap-0.5 px-1">
+      <p className="m-0 flex min-w-0 items-baseline gap-1.5 text-label leading-4 text-ink">
+        <span className="shrink-0 font-mono text-ink-faint">
+          {String(row.position).padStart(POSITION_DIGITS, '0')}
+        </span>
+        <span className="truncate font-medium">{row.title}</span>
+      </p>
+      {isBadgeShown ? (
+        <span
+          data-lineup-change-badge
+          className="inline-flex w-fit items-center gap-0.5 rounded-pill bg-highlight px-1.5 text-label leading-4 text-on-highlight"
+        >
+          <Icon name="swap" className="size-3" />
+          <span aria-hidden="true">{row.changeCount}</span>
+          <span className="sr-only">
+            {t('setlist.lineupRowChanges', { count: row.changeCount })}
+          </span>
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -91,22 +182,9 @@ export function SetlistLineupGrid({
   const { t } = useTranslation();
   const columnsClass = columnsClassFor(grid.columns.length);
   return (
-    <div className="relative" data-lineup-grid>
-      <div
-        aria-hidden="true"
-        className={composeClassName('absolute inset-0 grid gap-x-1', columnsClass)}
-      >
-        {grid.columns.map((column) => (
-          <MemberMark
-            key={column.memberId}
-            shape="lane"
-            color={column.color}
-            className="rounded-md"
-            data-lineup-lane={column.memberId}
-          />
-        ))}
-      </div>
-      <div className={composeClassName('relative grid gap-x-1 pt-1', columnsClass)}>
+    <div data-lineup-grid>
+      <div className={composeClassName('grid gap-x-1 pt-1', columnsClass)}>
+        <span aria-hidden="true" />
         {grid.columns.map((column) => (
           <ListRow
             key={column.memberId}
@@ -122,29 +200,22 @@ export function SetlistLineupGrid({
           </ListRow>
         ))}
       </div>
-      <ol className="relative m-0 flex list-none flex-col p-0">
+      <ol className="m-0 flex list-none flex-col p-0">
         {grid.rows.map((row) => (
           <li
             key={row.entryId}
             data-lineup-row={row.entryId}
-            className="flex flex-col gap-0.5 pt-1"
+            className={composeClassName('grid gap-x-1 pt-1', columnsClass)}
           >
-            <p className="m-0 flex min-w-0 items-baseline gap-1.5 px-1 text-label leading-4 text-ink">
-              <span className="shrink-0 font-mono text-ink-faint">
-                {String(row.position).padStart(POSITION_DIGITS, '0')}
-              </span>
-              <span className="truncate font-medium">{row.title}</span>
-            </p>
-            <div className={composeClassName('grid gap-x-1', columnsClass)}>
-              {row.cells.map((cell) => (
-                <LineupCell
-                  key={cell.memberId}
-                  row={row}
-                  cell={cell}
-                  onOpen={() => onOpenCell(row.entryId)}
-                />
-              ))}
-            </div>
+            <RowTitle row={row} />
+            {row.cells.map((cell) => (
+              <LineupCell
+                key={cell.memberId}
+                row={row}
+                cell={cell}
+                onOpen={() => onOpenCell(row.entryId)}
+              />
+            ))}
           </li>
         ))}
       </ol>
