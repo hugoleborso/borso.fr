@@ -18,7 +18,7 @@ apps/<slug>/
 ├── cdk/             The stack, composing the constructs from @borso/infra.
 ├── domain/          Optional. Only rules BOTH site/ and api/ read. See ADR-2026-08-13T0026.
 ├── test/            Back-end end-to-end, against a real Postgres.
-├── VOCABULARY.md    The application's nouns. See docs/standards/01-naming.md.
+├── VOCABULARY.md    The application's nouns; their rules sit in INVARIANTS.md beside the code. See docs/standards/01-naming.md.
 ├── vitest.config.ts Two projects, `core` and `back-e2e`. See below.
 └── package.json
 ```
@@ -87,7 +87,8 @@ Copying the folder gets none of these, and the first four are gated.
 | `.github/path-filters.yml` | `<slug>: 'apps/<slug>/**'` | `scripts/check-app-registration.sh` |
 | `commitlint.config.js` | `<slug>` in `scope-enum` | `scripts/check-app-registration.sh` |
 | `knip.json` | a `workspaces` entry naming the entry points | `pnpm exec knip` |
-| `apps/<slug>/VOCABULARY.md` | the application's nouns | `scripts/check-vocabulary-paths.sh` |
+| `apps/<slug>/VOCABULARY.md` | the application's nouns, linked from `docs/VOCABULARY.md` | `scripts/check-vocabulary-paths.sh` |
+| `apps/<slug>/**/INVARIANTS.md` | the rules a term holds and the tests that hold them, in the folder the term lives in | `scripts/check-vocabulary-paths.sh` |
 | `scripts/check-pure-modules-have-callers.sh` | an allowlist line, only for a pure module whose one caller really is its test | that script |
 | `docs/features/<slug>/` | where the feature conversations go | nothing |
 
