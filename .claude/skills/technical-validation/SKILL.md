@@ -69,8 +69,8 @@ Do **not** invoke when:
 The implementer takes each finding, blocking or not, and does one of three things:
 
 - **fix** it;
-- **dismiss** it with a concrete reason, written in a commit message, where round 2 reads it, because the pull request opens after validation (`B07 dismissed: the name is the one VOCABULARY.md uses`);
-- **ask the operator**, only when it is a product call.
+- **dismiss** it with a concrete reason, written in a commit message, where round 2 reads it, because the pull request opens after validation (`B07 dismissed: the name is the one VOCABULARY.md uses`). The reason names the file that holds it. A reason only another repository or a running agent could confirm is a question, not a dismissal;
+- **ask the operator**, when it is a product call or rests on what this repository cannot show.
 
 Be skeptical: a reviewer that read the diff cold is often wrong about intent. Non-blocking findings never start a round; list them in the pull request.
 
