@@ -75,6 +75,45 @@ describe('decideDeployFanout', () => {
     expect(fanout.reason).toBe('no application path changed.');
   });
 
+  it('drops an application whose every change deploy.yml calls tooling', () => {
+    const asked: string[] = [];
+    const fanout = decideDeployFanout(
+      ['apps/pragma/README.md', 'apps/talos/site/src/main.tsx', 'docs/x.md'],
+      SLUGS,
+      (directory, changedFiles) => {
+        asked.push(`${directory}:${changedFiles.join(',')}`);
+        return directory === 'apps/pragma';
+      },
+    );
+
+    expect(fanout.applications).toEqual(['talos']);
+    expect(asked).toEqual([
+      'infra/cdk:',
+      'apps/banana-rush:',
+      'apps/borso-fr:',
+      'apps/pragma:apps/pragma/README.md',
+      'apps/talos:apps/talos/site/src/main.tsx',
+    ]);
+  });
+
+  it('does not fan out for a construct change deploy.yml calls tooling', () => {
+    const fanout = decideDeployFanout(
+      ['infra/cdk/README.md'],
+      SLUGS,
+      (directory) => directory === 'infra/cdk',
+    );
+
+    expect(fanout.everyApplication).toBe(false);
+    expect(fanout.applications).toEqual([]);
+  });
+
+  it('still reports a dependency manifest whose application it dropped', () => {
+    const fanout = decideDeployFanout(['apps/pragma/package.json'], SLUGS, () => true);
+
+    expect(fanout.applications).toEqual([]);
+    expect(fanout.dependencyManifestMoved).toBe(true);
+  });
+
   it('leaves the caller list untouched', () => {
     const slugs = ['pragma', 'banana-rush'];
     decideDeployFanout(['infra/cdk/src/index.ts'], slugs);

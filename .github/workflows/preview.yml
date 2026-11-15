@@ -103,10 +103,12 @@ jobs:
           # production for a lint script. Such keys are dropped here; any
           # error keeps the changes as they were.
           # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
-          # `--tooling` also drops a key whose every change is a test, a
-          # markdown file or a test config: a preview of those would serve the
-          # same build. The operator asked on 2026-11-14 for no preview on a
-          # kaizen that touches only tooling. Production keeps the narrower rule.
+          # `--tooling` also drops a key whose every change is a test, an
+          # upper-case document such as README.md, or a test config: a preview
+          # of those would serve the same build. Lower-case markdown is kept,
+          # because borsouvertures builds its decks from ideas.en.md. The
+          # operator asked on 2026-11-14 for no preview on a kaizen that
+          # touches only tooling. deploy.yml applies the same rule.
           if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
             "$BASE" "$CHANGES" --tooling); then
             CHANGES="$kept"

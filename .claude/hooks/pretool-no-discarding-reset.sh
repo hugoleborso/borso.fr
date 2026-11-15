@@ -132,7 +132,7 @@ while IFS= read -r segment; do
   echo "[no-discarding-reset]   git add <those paths> && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
   echo "[no-discarding-reset] Or park them where the command cannot reach:" >&2
   echo "[no-discarding-reset]   git stash push -u -m 'before the probe'" >&2
-  "$(dirname "$0")/kaizen-refusal.sh" no-discarding-reset "ran a git command that would discard uncommitted work"
+  "$(dirname "$0")/kaizen-refusal.sh" no-discarding-reset "ran \`${segment:0:120}\`, which would discard uncommitted work"
   exit 2
 done < <(tr ';&|' '\n\n\n' <<<"$COMMAND_TO_RUN")
 

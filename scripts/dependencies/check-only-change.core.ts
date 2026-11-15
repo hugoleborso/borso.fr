@@ -3,7 +3,7 @@ const CHECK_ONLY_SCRIPT_PREFIXES = ['test:', 'dev:', 'db:local:'] as const;
 const SCRIPTS_FIELD = 'scripts';
 const MANIFEST_FILE = 'package.json';
 const TOOLING_FILE_PATTERN =
-  /(\.test\.tsx?|\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
+  /(\.test\.tsx?|\/[A-Z][A-Z0-9_-]*\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
 
 type JsonRecord = Readonly<Record<string, unknown>>;
 

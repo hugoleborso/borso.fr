@@ -11,7 +11,7 @@ const USAGE = `usage:
   drop-check-only-changes.ts <base-revision> <changes-json> [--tooling]
       prints <changes-json> without the app and infra keys whose only change since
       <base-revision> is a check-only script in their package.json; with --tooling,
-      also without those whose every change is a test, a markdown file or a test config`;
+      also without those whose every change is a test, an upper-case document or a test config`;
 const TOOLING_FLAG = '--tooling';
 
 function directoryOf(key: string): string | null {

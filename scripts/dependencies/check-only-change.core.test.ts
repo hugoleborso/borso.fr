@@ -124,6 +124,9 @@ describe('isToolingFile', () => {
     expect(isToolingFile('apps/pragma/site/src/a.core.test.ts')).toBe(true);
     expect(isToolingFile('apps/pragma/site/src/A.test.tsx')).toBe(true);
     expect(isToolingFile('apps/pragma/VOCABULARY.md')).toBe(true);
+    expect(isToolingFile('apps/talos/MEMORY-CONTRACT.md')).toBe(true);
+    expect(isToolingFile('apps/borsouvertures/THIRD_PARTY_NOTICES.md')).toBe(true);
+    expect(isToolingFile('apps/pragma/scripts/task-metrics/README.md')).toBe(true);
     expect(isToolingFile('apps/pragma/stryker.config.js')).toBe(true);
     expect(isToolingFile('apps/pragma/vitest.config.ts')).toBe(true);
     expect(isToolingFile('apps/pragma/vitest.mutation.config.ts')).toBe(true);
@@ -135,6 +138,9 @@ describe('isToolingFile', () => {
     expect(isToolingFile('apps/borsouvertures/scripts/build-decks.setup.ts')).toBe(false);
     expect(isToolingFile('apps/pragma/site/src/test-helpers.ts')).toBe(false);
     expect(isToolingFile('apps/pragma/site/public/notes.mdx')).toBe(false);
+    expect(isToolingFile('apps/borsouvertures/content/decks/vienna-game/ideas.en.md')).toBe(false);
+    expect(isToolingFile('apps/pragma/site/README.mdx')).toBe(false);
+    expect(isToolingFile('apps/pragma/aREADME.md')).toBe(false);
   });
 });
 
