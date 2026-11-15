@@ -14,6 +14,11 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 workspace="${PWD#"$root"/}"
 
+# The type-aware rules resolve imports through node_modules, so a lockfile this
+# checkout never installed fails them with `type error`. #197 dropped the old
+# refusal along with the cache; see
+# docs/dantotsus/the-merge-that-linted-against-dependencies-it-never-installed.md.
+"$root/scripts/ensure-installed.sh" lint
 "$root/scripts/ensure-infra-built.sh"
 
 cd "$root"

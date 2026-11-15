@@ -28,14 +28,22 @@ export function runGit(argumentsList: readonly string[]): string {
   });
 }
 
-export function readTrackedPaths(): ReadonlySet<string> {
+function readListedPaths(listArguments: readonly string[]): ReadonlySet<string> {
   const paths = new Set<string>();
-  for (const file of runGit(['ls-files']).split('\n')) {
+  for (const file of runGit(['ls-files', ...listArguments]).split('\n')) {
     if (file.length === 0) continue;
     paths.add(file);
     for (let folder = dirname(file); folder !== '.'; folder = dirname(folder)) paths.add(folder);
   }
   return paths;
+}
+
+export function readTrackedPaths(): ReadonlySet<string> {
+  return readListedPaths([]);
+}
+
+export function readUntrackedPaths(): ReadonlySet<string> {
+  return readListedPaths(['--others', '--exclude-standard']);
 }
 
 export function readPathsEverTracked(): ReadonlySet<string> {
