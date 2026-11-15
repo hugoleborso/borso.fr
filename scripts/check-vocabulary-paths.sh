@@ -200,9 +200,10 @@ fi
 # The repository glossary is the map of every application glossary, so an
 # application whose glossary it does not link is one nobody finds from there.
 if [ -f docs/VOCABULARY.md ]; then
+  glossary_map=$(awk '/^## / { listing = ($0 == "## Glossaries"); next } listing' docs/VOCABULARY.md)
   for vocabulary in apps/*/VOCABULARY.md; do
     [ -f "$vocabulary" ] || continue
-    grep -qF "(../$vocabulary)" docs/VOCABULARY.md ||
+    [[ $glossary_map == *"(../$vocabulary)"* ]] ||
       fail "docs/VOCABULARY.md does not list $vocabulary under ## Glossaries"
   done
 fi

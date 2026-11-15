@@ -93,6 +93,18 @@ function runGate(tree: Readonly<Record<string, string>>): number {
   }
 }
 
+function secondTermPointingAt(invariantsPath: string): string {
+  return [
+    '## Widget',
+    '',
+    'A box of things.',
+    '',
+    'Lives in: `api/src/things/`',
+    '',
+    `Invariants: \`${invariantsPath}\``,
+  ].join('\n');
+}
+
 function withFile(path: string, content: string): Readonly<Record<string, string>> {
   return { ...VALID_TREE, [path]: content };
 }
@@ -120,17 +132,29 @@ describe('check-vocabulary-paths.sh', () => {
     expect(runGate(withFile(GLOSSARY_PATH, glossary))).toBe(1);
   });
 
-  it('refuses a term whose invariants file has no section for it', () => {
-    const invariants = INVARIANTS.replace('## Thing', '## Things');
+  it('refuses a term whose invariants file holds only another term', () => {
+    const glossary = `${secondTermPointingAt('api/src/things/INVARIANTS.md')}\n\n${GLOSSARY}`;
 
-    expect(runGate(withFile(INVARIANTS_PATH, invariants))).toBe(1);
+    expect(runGate(withFile(GLOSSARY_PATH, glossary))).toBe(1);
   });
 
   it('refuses a term whose invariants file is not there', () => {
-    const glossary = GLOSSARY.replace(
-      'Invariants: `api/src/things/INVARIANTS.md`',
-      'Invariants: `api/src/widgets/INVARIANTS.md`',
+    const glossary = `${secondTermPointingAt('api/src/widgets/INVARIANTS.md')}\n\n${GLOSSARY}`;
+
+    expect(runGate(withFile(GLOSSARY_PATH, glossary))).toBe(1);
+  });
+
+  it('passes a second term whose own section sits in the same invariants file', () => {
+    const glossary = `${secondTermPointingAt('api/src/things/INVARIANTS.md')}\n\n${GLOSSARY}`;
+    const invariants = `${INVARIANTS}\n\n## Widget\n\n- A widget holds things.`;
+
+    expect(runGate({ ...withFile(GLOSSARY_PATH, glossary), [INVARIANTS_PATH]: invariants })).toBe(
+      0,
     );
+  });
+
+  it('refuses a glossary definition sourced from the comment above', () => {
+    const glossary = GLOSSARY.replace('One thing', 'As the comment above says, one thing');
 
     expect(runGate(withFile(GLOSSARY_PATH, glossary))).toBe(1);
   });
@@ -191,6 +215,15 @@ describe('check-vocabulary-paths.sh', () => {
 
   it('refuses a repository glossary that does not list an application glossary', () => {
     const glossary = REPOSITORY_GLOSSARY.replace('- [demo](../apps/demo/VOCABULARY.md)\n', '');
+
+    expect(runGate(withFile(REPOSITORY_GLOSSARY_PATH, glossary))).toBe(1);
+  });
+
+  it('refuses a glossary linked from a definition and not listed under Glossaries', () => {
+    const glossary = REPOSITORY_GLOSSARY.replace(
+      '- [demo](../apps/demo/VOCABULARY.md)\n',
+      '',
+    ).replace('A check that stops a change.', 'A check, as in [demo](../apps/demo/VOCABULARY.md).');
 
     expect(runGate(withFile(REPOSITORY_GLOSSARY_PATH, glossary))).toBe(1);
   });
