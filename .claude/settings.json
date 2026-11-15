@@ -150,6 +150,16 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-relayed-merge-clearance.sh"
           }
         ]
+      },
+      {
+        "matcher": "Artifact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-mockup-reads-visual-rules.sh",
+            "statusMessage": "Naming the visual rules a mockup follows"
+          }
+        ]
       }
     ],
     "PostToolUse": [

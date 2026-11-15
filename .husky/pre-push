@@ -65,14 +65,24 @@ git fetch --quiet origin main 2>/dev/null || true
 # push, and CI stayed silent until origin/main was merged in. So it refuses
 # here, before the gates, on the main this hook has just fetched.
 #
-# The marker is matched as `^+<<<<<<<`: merge-tree prints its conflict hunks as
-# a diff, so every marker carries a `+` prefix. Best-effort: a missing
-# origin/main (shallow clone, fresh worktree) skips it rather than blocking a
-# push over a diagnostic.
+# It asks the merge GitHub makes, not the one this checkout would make. Local
+# merges read `.gitattributes` from the worktree, and GitHub's merge ref honours
+# no merge driver. On PR #351 the branch still declared `merge=union` for
+# docs/adr/README.md, which main had dropped: the local merge came out clean, the
+# guard let 4c0193b through, and GitHub ran no CI on it for 80 minutes. The same
+# union merge, on PR #353, put back on main the ADR index PR #352 had deleted.
+# Attributes are read from the empty tree here, so no driver applies. Git before
+# 2.40 ignores GIT_ATTR_SOURCE and falls back to the worktree's.
+#
+# `merge-tree --write-tree` exits 1 on a conflict and above 1 on an error.
+# Best-effort: a missing origin/main (shallow clone, fresh worktree) or an error
+# skips it rather than blocking a push over a diagnostic.
 if git rev-parse --verify --quiet origin/main >/dev/null; then
-  merge_base=$(git merge-base HEAD origin/main 2>/dev/null || true)
-  if [ -n "$merge_base" ] &&
-    git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
+  empty_tree=$(git hash-object -t tree /dev/null)
+  conflict_status=0
+  GIT_ATTR_SOURCE="$empty_tree" git merge-tree --write-tree --name-only HEAD origin/main \
+    >/dev/null 2>&1 || conflict_status=$?
+  if [ "$conflict_status" -eq 1 ]; then
     echo "[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it." >&2
     echo "  Merge main in, resolve, then push again:" >&2
     echo "    git merge origin/main" >&2

@@ -6,7 +6,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 - **Restate the goal first.** Your first message, every subagent brief and every PR's Why state the goal and the smallest change that meets it. If the evidence rules out the requested change, show the evidence and stop.
 - **Never block on the human.** Do reversible work, then present it. Settle a question whose answer can be observed with a prototype or a command. Ask only for product calls and irreversible actions (merge, delete, force-push, an external message). Removing or narrowing anything a user sees is a product call, even when it follows from the change asked. List each removal in the question.
-- **Log what you lack the rights for.** A task that needs AWS write, IAM, repository settings, a secret, an operator dispatch or a third-party console goes in a row of `docs/operator-backlog.md`, in the pull request that found it.
+- **Log what you lack the rights for.** A task that needs AWS write, IAM, repository settings, a secret, an operator dispatch or a third-party console goes in its own file under `docs/operator-backlog/`, in the pull request that found it.
 - **Attack the premise.** When two fixes that rest on one premise fail the same gate, write the premise down and test it before a third fix.
 - **Encode lessons in structure, subtract first.** A lesson a hook, a type or a gate can hold ships as that alone. The written instruction is the symptom. A kaizen removes something before it adds anything.
 - **Verify before asserting.** Read the file, run the command or call `aws ... get-...` this session before you describe it. Your branch may be behind `main`, so fetch.
@@ -69,7 +69,7 @@ They cover replies, documents, commits and PR bodies.
 - Lead with impact. Say who the work is for and what changes for them, then what the next maintainer inherits. Name each change by what it does, never by a number or label from your own working list.
 - Every claim carries its evidence or its label in the same sentence, as measured, inferred or guess. Never hand the reader a check you could run.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
-- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push.
+- Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push. He reads no file in the repository: a session, often "Borso Admin", reads them for him, so no option asks him to.
 - Do not narrate what is done. Report the result and what is left.
 - Never document what goes stale or makes writers collide, such as a list of files, entries, apps or a count of them. Say how to find them instead, with `ls` or `grep`.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.

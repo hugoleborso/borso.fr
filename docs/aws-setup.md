@@ -563,7 +563,7 @@ since ADR-2026-10-28T2126 landed.
 
 ### 12.8 The admin user for operator tasks
 
-`Borso-Admin` is a second IAM user, created on 2026-11-11. It exists so that a cloud session can do the rows of [`operator-backlog.md`](./operator-backlog.md) that need AWS write.
+`Borso-Admin` is a second IAM user, created on 2026-11-11. It exists so that a cloud session can do the tasks of [`operator-backlog/`](./operator-backlog/README.md) that need AWS write.
 
 | | |
 | --- | --- |

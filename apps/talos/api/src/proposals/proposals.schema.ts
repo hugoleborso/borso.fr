@@ -7,6 +7,7 @@ const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 const MAXIMUM_SLUG_LENGTH = 120;
 const MAXIMUM_STATUS_LENGTH = 30;
 const MAXIMUM_COMMENT_LENGTH = 2000;
+const MAXIMUM_OPTION_LENGTH = 200;
 
 // @FollowsBlueprint schema-input-only
 export const proposalStatusQuerySchema = z.object({
@@ -19,6 +20,7 @@ export const proposalSlugSchema = z.object({
 
 export const proposalDecisionSchema = z.object({
   decision: z.enum(PROPOSAL_DECISIONS),
+  option: z.string().max(MAXIMUM_OPTION_LENGTH).optional(),
   comment: z.string().max(MAXIMUM_COMMENT_LENGTH).optional(),
 });
 

@@ -21,6 +21,7 @@ export const TALOS_ERRORS = {
   },
   'page-not-found': { status: 404, message: 'Page introuvable.' },
   'todo-not-found': { status: 404, message: 'Tâche introuvable.' },
+  'proposal-option-not-offered': { status: 400, message: "Ce choix n'est pas proposé." },
   'proposal-not-found': { status: 404, message: 'Proposition introuvable.' },
   'passkey-not-found': { status: 404, message: 'Passkey introuvable.' },
   'draft-not-found': { status: 404, message: 'Brouillon introuvable.' },

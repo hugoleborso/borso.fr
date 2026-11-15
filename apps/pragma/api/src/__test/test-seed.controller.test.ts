@@ -72,7 +72,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     expect(response.status).toBe(200);
     const summary = summarySchema.parse(await response.json());
     expect(summary).toEqual({
-      instruments: 5,
+      instruments: 6,
       members: 4,
       songs: 6,
       tasks: 6,
@@ -81,7 +81,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
       adminCredentials: 'created',
     });
 
-    expect((await listInstruments()).length).toBe(5);
+    expect((await listInstruments()).length).toBe(6);
     expect((await listMembers()).length).toBe(4);
 
     const tasks = await listTasks();

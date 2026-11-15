@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   applyDecisionCancellation,
   applyProposalDecision,
+  checkDecisionOption,
+  formatDecisionLine,
+  isDecisionActionable,
   isDecisionRevocable,
   isProposalExpired,
   isProposalPending,
@@ -40,6 +43,7 @@ function buildProposal(overrides: Partial<Proposal>): Proposal {
     createdOn: '2026-10-04',
     why: '',
     draft: '',
+    options: [],
     decisions: [],
     ...overrides,
   };
@@ -57,6 +61,7 @@ describe('parseProposal', () => {
       expiresOn: '2026-10-05',
       why: 'Bruno attend.',
       draft: '> Hi Bruno',
+      options: [],
       decisions: [],
     });
   });
@@ -80,12 +85,67 @@ describe('parseProposal', () => {
       createdOn: '',
       why: '',
       draft: '',
+      options: [],
       decisions: [],
     });
   });
 
+  it('lists the options in order, trimmed, without the blank items', () => {
+    const withOptions = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi \n-  \nune note\n- jeudi\n- pas cette semaine\n\n## Décision',
+    );
+    expect(parseProposal('x', withOptions)?.options).toEqual([
+      'mardi',
+      'jeudi',
+      'pas cette semaine',
+    ]);
+  });
+
+  it('keeps two options, the fewest that make a choice', () => {
+    const withTwo = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n- jeudi\n\n## Décision',
+    );
+    expect(parseProposal('x', withTwo)?.options).toEqual(['mardi', 'jeudi']);
+  });
+
+  it('keeps one button per distinct option', () => {
+    const withDuplicate = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n- mardi\n- jeudi\n\n## Décision',
+    );
+    expect(parseProposal('x', withDuplicate)?.options).toEqual(['mardi', 'jeudi']);
+  });
+
+  it('gives no option when the only items repeat one choice', () => {
+    const withRepeat = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n- mardi\n\n## Décision',
+    );
+    expect(parseProposal('x', withRepeat)?.options).toEqual([]);
+  });
+
+  it('gives no option for a section with a single item', () => {
+    const withOne = PROPOSAL_FILE.replace(
+      '## Décision',
+      '## Options\n- mardi\n-   \n\n## Décision',
+    );
+    expect(parseProposal('x', withOne)?.options).toEqual([]);
+  });
+
   it('ignores a file that is not a proposal', () => {
     expect(parseProposal('2026-10-05', '---\ntype: journal\n---\n# Notes')).toBeNull();
+  });
+});
+
+describe('isDecisionActionable', () => {
+  it('acts on an acceptance, with or without a choice', () => {
+    expect(isDecisionActionable('acceptee')).toBe(true);
+  });
+
+  it('leaves a refusal to the memory alone', () => {
+    expect(isDecisionActionable('refusee')).toBe(false);
   });
 });
 
@@ -139,6 +199,52 @@ describe('sortProposalsNewestFirst', () => {
       '2026-10-04-a',
       '2026-10-03-a',
     ]);
+  });
+});
+
+describe('checkDecisionOption', () => {
+  const options = ['mardi', 'jeudi'];
+
+  it('accepts one of the offered options', () => {
+    expect(checkDecisionOption(options, 'acceptee', 'jeudi')).toBe('offered');
+  });
+
+  it('rejects an option the proposal does not offer', () => {
+    expect(checkDecisionOption(options, 'acceptee', 'vendredi')).toBe('not-offered');
+    expect(checkDecisionOption([], 'acceptee', 'mardi')).toBe('not-offered');
+  });
+
+  it('rejects an option sent with a refusal', () => {
+    expect(checkDecisionOption(options, 'refusee', 'mardi')).toBe('not-offered');
+  });
+
+  it('rejects a plain acceptance when the proposal offers options', () => {
+    expect(checkDecisionOption(options, 'acceptee', undefined)).toBe('not-offered');
+  });
+
+  it('lets a refusal through on any proposal, and a plain acceptance without options', () => {
+    expect(checkDecisionOption(options, 'refusee', undefined)).toBe('offered');
+    expect(checkDecisionOption([], 'refusee', undefined)).toBe('offered');
+    expect(checkDecisionOption([], 'acceptee', undefined)).toBe('offered');
+  });
+});
+
+describe('formatDecisionLine', () => {
+  it('names the chosen option in brackets, before the comment', () => {
+    expect(
+      formatDecisionLine({
+        decision: 'acceptee',
+        option: 'jeudi',
+        comment: 'le matin',
+        decidedAt: '2026-11-15 10:12',
+      }),
+    ).toBe('- 2026-11-15 10:12 : acceptée (jeudi) — le matin');
+  });
+
+  it('writes the option alone when no comment comes with it', () => {
+    expect(
+      formatDecisionLine({ decision: 'acceptee', option: 'mardi', decidedAt: '2026-11-15 10:12' }),
+    ).toBe('- 2026-11-15 10:12 : acceptée (mardi)');
   });
 });
 

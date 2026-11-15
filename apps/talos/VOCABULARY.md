@@ -36,7 +36,7 @@ Something Talos suggests doing, waiting for the owner's decision, one file under
 
 Lives in: `api/src/proposals/`
 
-- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `decisions`).
+- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `options` for « Options », each one an `option` a decision may name, `decisions`).
 
 Invariants: `api/src/proposals/INVARIANTS.md`
 

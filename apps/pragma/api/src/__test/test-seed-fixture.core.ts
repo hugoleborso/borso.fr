@@ -15,6 +15,7 @@ export const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
   { name: 'Basse', family: 'harmonic', icon: 'bass' },
   { name: 'Batterie', family: 'percussive', icon: 'drum' },
   { name: 'Chant', family: 'vocal', icon: 'mic-vocal' },
+  { name: 'Chœurs', family: 'vocal', icon: 'choir' },
 ];
 
 export interface SeedMember {
@@ -26,13 +27,18 @@ export interface SeedMember {
 
 export const SEED_MEMBERS: readonly SeedMember[] = [
   { firstName: 'Hugo', username: 'hugo', color: '#e0533a', instrumentNames: ['Batterie', 'Chant'] },
-  { firstName: 'Léa', username: 'lea', color: '#2f8f6b', instrumentNames: ['Guitare', 'Chant'] },
-  { firstName: 'Marc', username: 'marc', color: '#3a6ee0', instrumentNames: ['Basse'] },
+  {
+    firstName: 'Léa',
+    username: 'lea',
+    color: '#2f8f6b',
+    instrumentNames: ['Guitare', 'Chant', 'Chœurs'],
+  },
+  { firstName: 'Marc', username: 'marc', color: '#3a6ee0', instrumentNames: ['Basse', 'Clavier'] },
   {
     firstName: 'Sarah',
     username: 'sarah',
     color: '#b8841a',
-    instrumentNames: ['Clavier', 'Chant'],
+    instrumentNames: ['Clavier', 'Chant', 'Basse'],
   },
 ];
 
@@ -118,8 +124,8 @@ export const SEED_SONGS: readonly SeedSong[] = [
     lineup: {
       Hugo: ['Batterie'],
       Léa: ['Guitare', 'Chant'],
-      Marc: ['Basse'],
-      Sarah: ['Clavier'],
+      Marc: ['Clavier'],
+      Sarah: ['Basse'],
     },
     structureNotes: 'intro clavier 8 mesures · couplet · refrain · solo · refrain',
     gimmickNotes: 'Le solo part sur un signe de Léa, pas sur un compte.',
@@ -202,7 +208,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     baseEnergy: 5,
     lineup: {
       Hugo: ['Batterie', 'Chant'],
-      Léa: ['Guitare'],
+      Léa: ['Guitare', 'Chœurs'],
       Marc: ['Basse'],
       Sarah: ['Clavier', 'Chant'],
     },
