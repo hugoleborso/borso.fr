@@ -7,7 +7,7 @@ related-pr: '#351'
 fix-pr: '#352'
 fix-commits: [8230bcebe]
 eradication-level: 1
-eradication-paths: [scripts/check-coupled-lists.sh]
+eradication-paths: [scripts/check-coupled-lists.sh, .husky/pre-push]
 time-to-detect: hours
 tags: [git, gates, ci, github-actions]
 zone: .husky/pre-push
@@ -95,14 +95,25 @@ same lines and no checkout merges differently from GitHub.
 -docs/adr/README.md merge=union
 ```
 
-This sweep first made the pre-push guard read no attributes, so it would agree
-with GitHub even under a driver. That was a bucket over a rock already gone,
-and it was withdrawn. The guard is right on main as it is, because main
-declares no merge driver.
+The guard that verifies it ships beside the removal. The pre-push conflict
+check now merges with attributes read from the empty tree, as GitHub does, so a
+merge driver a branch still carries cannot make it report a clean merge:
 
-**Proof it can fail:** on a clone at `4c0193b` with the branch's
-`.gitattributes`, the guard exits 0 on a conflicted branch. With that file gone,
-as on main, the same merge reports the conflict and the guard exits 1.
+```diff
+-  merge_base=$(git merge-base HEAD origin/main 2>/dev/null || true)
+-  if [ -n "$merge_base" ] &&
+-    git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
++  empty_tree=$(git hash-object -t tree /dev/null)
++  conflict_status=0
++  GIT_ATTR_SOURCE="$empty_tree" git merge-tree --write-tree --name-only HEAD origin/main \
++    >/dev/null 2>&1 || conflict_status=$?
++  if [ "$conflict_status" -eq 1 ]; then
+```
+
+**Proof it can fail:** on a clone at `4c0193b` with `origin/main` at
+`fd4332550` and the branch's `.gitattributes` in the worktree, the old guard
+exits 0 and the new one prints the refusal and exits 1. With `origin/main` at
+the branch's parent, the new guard exits 0.
 
 **Similar instances:** `git log origin/main -60 --format= --name-only | sort |
 uniq -c | sort -rn` ranks the files most pull requests touch. After the lists
