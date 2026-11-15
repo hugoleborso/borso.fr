@@ -8,6 +8,9 @@ import {
   isDecisionRevocable,
   isProposalExpired,
   isProposalPending,
+  MAXIMUM_DECISION_COMMENT_LENGTH,
+  MAXIMUM_DECISION_LINE_LENGTH,
+  MAXIMUM_DECISION_OPTION_LENGTH,
   parseProposal,
   type Proposal,
   sortProposalsNewestFirst,
@@ -245,6 +248,16 @@ describe('formatDecisionLine', () => {
     expect(
       formatDecisionLine({ decision: 'acceptee', option: 'mardi', decidedAt: '2026-11-15 10:12' }),
     ).toBe('- 2026-11-15 10:12 : acceptée (mardi)');
+  });
+
+  it('fits the longest choice and comment the API accepts within the memory line limit', () => {
+    const longestLine = formatDecisionLine({
+      decision: 'acceptee',
+      option: 'x'.repeat(MAXIMUM_DECISION_OPTION_LENGTH),
+      comment: 'x'.repeat(MAXIMUM_DECISION_COMMENT_LENGTH),
+      decidedAt: '2026-11-15 10:12',
+    });
+    expect(longestLine.length).toBeLessThanOrEqual(MAXIMUM_DECISION_LINE_LENGTH);
   });
 });
 
