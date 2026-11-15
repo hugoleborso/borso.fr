@@ -5,6 +5,7 @@ import {
   pause,
   PROBE_SIGNAL,
   READ_PAGE_SCRIPT,
+  REMEMBER_SCROLL_SCRIPT,
   RESET_PROBE_SCRIPT,
 } from './cdp-session';
 import {
@@ -89,6 +90,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
     );
     return verdict.isRealTouch;
   } finally {
+    await send('Runtime.evaluate', { expression: REMEMBER_SCROLL_SCRIPT }).catch(() => undefined);
     socket.close();
   }
 }

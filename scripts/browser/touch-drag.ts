@@ -5,6 +5,7 @@ import {
   pause,
   PROBE_SIGNAL,
   READ_PAGE_SCRIPT,
+  REMEMBER_SCROLL_SCRIPT,
   RESET_PROBE_SCRIPT,
 } from './cdp-session';
 import {
@@ -165,6 +166,7 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
     );
     return verdict.isRealDrag;
   } finally {
+    await send('Runtime.evaluate', { expression: REMEMBER_SCROLL_SCRIPT }).catch(() => undefined);
     socket.close();
   }
 }

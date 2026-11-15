@@ -86,3 +86,10 @@ export const READ_PAGE_SCRIPT = `({
   maxTouchPoints: navigator.maxTouchPoints,
   isCoarsePointer: matchMedia('(pointer: coarse)').matches,
 })`;
+
+const SCROLL_MEMO_GLOBAL = '__phoneScrollMemo';
+
+export const REMEMBER_SCROLL_SCRIPT = `window.${SCROLL_MEMO_GLOBAL} = [document.scrollingElement, ...document.querySelectorAll('*')]
+    .filter((element) => element !== null && (element.scrollLeft !== 0 || element.scrollTop !== 0))
+    .map((element) => [element, element.scrollLeft, element.scrollTop]);
+  window.${SCROLL_MEMO_GLOBAL}.length;`;

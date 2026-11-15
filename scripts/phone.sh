@@ -34,9 +34,19 @@ cdp_port() {
   agent-browser --session "$SESSION" get cdp-url 2>/dev/null | sed -n 's#^ws://[^:]*:\([0-9]*\)/.*#\1#p'
 }
 
+# Puts back the scroll offsets the driver recorded before it disconnected
+# (REMEMBER_SCROLL_SCRIPT in scripts/browser/cdp-session.ts), now that the page
+# is at phone width again and its scrollers scroll.
+RESTORE_SCROLL_SCRIPT='(window.__phoneScrollMemo ?? []).forEach(([element, left, top]) => element.scrollTo(left, top))'
+
+set_phone_viewport() {
+  agent-browser --session "$SESSION" set viewport "$PHONE_WIDTH" "$PHONE_HEIGHT" >/dev/null
+  agent-browser --session "$SESSION" eval "$RESTORE_SCROLL_SCRIPT" >/dev/null
+}
+
 restore_viewport() {
   local status=$? width
-  agent-browser --session "$SESSION" set viewport "$PHONE_WIDTH" "$PHONE_HEIGHT" >/dev/null
+  set_phone_viewport
   width="$(agent-browser --session "$SESSION" eval 'window.innerWidth' 2>/dev/null | tr -dc '0-9')"
   if [ "$width" != "$PHONE_WIDTH" ]; then
     printf '[phone] after the tap the page is %s px wide, not %s; measurements would be wrong\n' \
@@ -72,7 +82,7 @@ case "${1:-}" in
     status=0
     pnpm exec tsx scripts/browser/touch-drag.ts --from "$2" --to "$3" --port "$port" \
       --width "$PHONE_WIDTH" --height "$PHONE_HEIGHT" || status=$?
-    agent-browser --session "$SESSION" set viewport "$PHONE_WIDTH" "$PHONE_HEIGHT" >/dev/null
+    set_phone_viewport
     exit "$status"
     ;;
   stop)
