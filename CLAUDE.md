@@ -71,6 +71,7 @@ They cover replies, documents, commits and PR bodies.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
 - Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push.
 - Do not narrate what is done. Report the result and what is left.
+- Never document what goes stale or makes writers collide, such as a list of files, entries, apps or a count of them. Say how to find them instead, with `ls` or `grep`.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.
 
 ## Parallel agents
