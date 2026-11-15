@@ -26,7 +26,8 @@ MINIMUM_PERMILLE=40
 HELD_PATHS='^docs/(adr/[^/]+|features/[^/]+/[^/]+/(spec|plan)/.+)\.md$'
 
 if [ "$#" -eq 0 ]; then
-  set -- $(git ls-files -- 'docs/adr/*.md' 'docs/features/*.md')
+  mapfile -d '' tracked < <(git ls-files -z -- 'docs/adr/*.md' 'docs/features/*.md')
+  set -- "${tracked[@]}"
 fi
 
 read_file() {

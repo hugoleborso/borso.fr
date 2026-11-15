@@ -7,8 +7,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 const GATE = 'check-docs-are-english.sh';
 const FRENCH_SENTENCE =
   'La décision est de garder la PWA pour les propositions, et nous ne prenons pas de licence dans cette version.';
-const ENGLISH_SENTENCE =
-  'The decision keeps the PWA for proposals, and the card shows the « Décider » tab with « la carte » quoted.';
+const QUOTED_FRENCH =
+  'la carte est pour les propositions et nous ne les prenons pas dans cette version';
+const ENGLISH_SENTENCE = `The card shows « ${QUOTED_FRENCH} », \`${QUOTED_FRENCH}\` and "${QUOTED_FRENCH}".\n> ${QUOTED_FRENCH}`;
 const FRENCH_PROSE = `# ADR\n\n${Array.from({ length: 6 }, () => FRENCH_SENTENCE).join('\n')}\n`;
 const ENGLISH_PROSE = `# ADR\n\n${Array.from({ length: 6 }, () => ENGLISH_SENTENCE).join('\n')}\n`;
 const FRENCH_ADR = 'docs/adr/2099-01-01T0000-a-record.md';
