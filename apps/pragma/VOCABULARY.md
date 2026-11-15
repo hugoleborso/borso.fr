@@ -677,10 +677,11 @@ Lives in: `site/src/components/organisms/`
   instruments, or only sings. A cell that starts a run is filled with the
   member's stored colour; a cell that joins the run above is a pale tint of
   it, drawn over the row gap so the run reads as one bar, with faint glyphs.
-- A changed cell always starts a run, so it is filled in full. The
-  instruments the member put down are drawn small and faded under the new
-  ones. A change is shown by intensity and by that text, never by another
-  hue: the colour means the member and nothing else.
+- A changed cell always starts a run, so it is filled in full with only
+  the new glyphs. The instruments put down are read in the cell above, and
+  the cell's label names them for a screen reader. A change is shown by
+  intensity, never by another hue: the colour means the member and nothing
+  else.
 - A cell where the member sits out is empty and breaks the run.
 - A row with no change is compact, except the first row, which has nothing
   before it and so no change and no badge.
@@ -692,7 +693,7 @@ Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › joins a me
 Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › counts putting a hand instrument down to only sing as a change
 Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › breaks a run where the member sits out, and a voice-only return is no change
 Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › starts the first row with full cells and no change, no badge and no compaction
-Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › fills a changed cell in full and shows what the member held before under it
+Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › fills a changed cell in full with only its new glyphs, and names what came before in its label
 Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › tints a cell that joins the run above, pulled up over the row gap, with faint glyphs
 Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › badges a row with its change count and keeps a row with none compact and bare
 

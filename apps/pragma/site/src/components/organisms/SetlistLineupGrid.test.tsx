@@ -123,7 +123,7 @@ describe('the Lineup grid', () => {
     expect(mark?.querySelector('span')?.className).toContain('opacity-40');
   });
 
-  it('fills a changed cell in full and shows what the member held before under it', () => {
+  it('fills a changed cell in full with only its new glyphs, and names what came before in its label', () => {
     renderGrid();
     const cell = screen.getByRole('button', {
       name: 'Crazy: Anna plays Bass. Was Guitar on the song before.',
@@ -131,10 +131,8 @@ describe('the Lineup grid', () => {
     const mark = cell.querySelector('span');
     expect(cell.getAttribute('data-lineup-changed')).toBe('true');
     expect(mark?.style.backgroundColor).toBe(CORAL_RGB);
-    const [current, previous] = mark?.querySelectorAll(':scope > span') ?? [];
-    expect(current?.querySelectorAll('svg')).toHaveLength(1);
-    expect(previous?.className).toContain('opacity-60');
-    expect(previous?.querySelector('svg')?.getAttribute('class')).toContain('size-3');
+    expect(mark?.querySelectorAll(':scope > span')).toHaveLength(1);
+    expect(mark?.querySelectorAll('svg')).toHaveLength(1);
   });
 
   it('falls back to a plain change sentence when the member sat out the song before', () => {

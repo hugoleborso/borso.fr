@@ -93,3 +93,11 @@ The Lineup grid marked every member whose instrument set differed from the song 
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/site/src/components/organisms/lineup-grid.core.ts` (runs and the hand-instrument comparison), `apps/pragma/site/src/components/organisms/SetlistLineupGrid.tsx` (the lane rendering)
 - Related ADRs: [ADR-2026-10-27T1115](./2026-10-27T1115-pragma-design-system-is-notebook-with-grafts.md). This ADR amends its column tint, its "never by another fill" rule for the grid cell, and its title-on-its-own-line grid layout.
+
+## Revisions
+
+### Revision 2026-11-15 — the instruments put down are no longer drawn
+
+What changed: a changed cell holds only the new glyphs. The instruments put down are no longer drawn small under them; the cell's label still names them for a screen reader.
+Why: on the preview, the operator found the second line blurred the message, since the cell above already shows what the member played.
+Implication for the original decision: still valid.

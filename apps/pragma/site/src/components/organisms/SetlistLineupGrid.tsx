@@ -43,8 +43,6 @@ const RUN_START_CORNERS_CLASS = 'rounded-t-sm';
 const RUN_END_CORNERS_CLASS = 'rounded-b-sm';
 const JOINED_MARK_CLASS = 'text-ink';
 const JOINED_GLYPHS_CLASS = 'opacity-40';
-const PREVIOUS_GLYPHS_CLASS = 'opacity-60';
-const PREVIOUS_ICON_CLASS = 'size-3';
 const HEADER_BUTTON_CLASS = 'min-w-0 flex-col justify-center gap-0 py-0.5';
 
 function columnsClassFor(count: number): string {
@@ -58,14 +56,13 @@ function namesOf(glyphs: readonly LineupGridGlyph[]): string {
 interface GlyphLineProps {
   readonly glyphs: readonly LineupGridGlyph[];
   readonly className?: string;
-  readonly iconClassName?: string;
 }
 
-function GlyphLine({ glyphs, className, iconClassName }: GlyphLineProps): JSX.Element {
+function GlyphLine({ glyphs, className }: GlyphLineProps): JSX.Element {
   return (
     <span className={composeClassName('flex items-center justify-center gap-0.5', className)}>
       {glyphs.map((glyph) => (
-        <Icon key={glyph.instrumentId} name={glyph.glyph} className={iconClassName} />
+        <Icon key={glyph.instrumentId} name={glyph.glyph} />
       ))}
     </span>
   );
@@ -113,13 +110,6 @@ function PlayingMark({ cell }: { readonly cell: LineupGridCell }): JSX.Element {
   return (
     <MemberMark shape="cell" color={cell.color} className={composeClassName(MARK_CLASS, corners)}>
       <GlyphLine glyphs={cell.glyphs} />
-      {cell.previousGlyphs.length > 0 ? (
-        <GlyphLine
-          glyphs={cell.previousGlyphs}
-          className={PREVIOUS_GLYPHS_CLASS}
-          iconClassName={PREVIOUS_ICON_CLASS}
-        />
-      ) : null}
     </MemberMark>
   );
 }

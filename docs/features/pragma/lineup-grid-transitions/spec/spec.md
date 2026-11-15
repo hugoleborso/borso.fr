@@ -15,7 +15,7 @@ Variant I of the mockup canvas, with the app's instrument icons instead of instr
 
 - Each row puts the song in a left column: position, title on one truncated line, and under it a change badge when the row has changes ("⇄ 2").
 - Each member column is a continuous lane. While a member keeps the same instruments in their hands, their cells join into one bar tinted with their colour, with the glyphs faint.
-- A cell where the instruments in the member's hands change from the song before is filled with the member's full colour and holds the new glyphs. Under them, the previous hand glyphs are shown small and faded.
+- A cell where the instruments in the member's hands change from the song before is filled with the member's full colour and holds only the new glyphs. The instruments put down are read in the cell above, and the cell's label names them for a screen reader (operator, 2026-11-15, after seeing the preview).
 - A row with no change at all is compact.
 - A cell where the member sits out is empty, and it breaks the lane.
 
@@ -31,7 +31,7 @@ Edge cases:
 - A member who only sings on two songs in a row keeps a joined lane, even if they go from Chœurs to Chant.
 - The first row has nothing before it. Its cells are full colour, with no change mark and no badge.
 - A member who sits out, then plays: the playing cell starts a new run in full colour. It counts as a change only if it holds a hand instrument.
-- A member who plays, then holds only a vocal instrument: counts as a change (they put their instrument down). The previous glyphs show what they put down.
+- A member who plays, then holds only a vocal instrument: counts as a change (they put their instrument down). The cell's label names what they put down.
 
 ## Questions, Options and Decisions
 
@@ -69,5 +69,5 @@ No API, schema or domain change. `family` already reaches the site with each ins
 ## Test strategy
 
 - Unit (`lineup-grid.core.test.ts`). A Chœurs added or dropped is no change. Chœurs → Chant on a voice-only member is no change and joins. A swap of Basse and Piano marks both cells with their previous glyphs. Runs set `joinsPrevious` and `joinsNext`. A sit-out breaks a run. `changeCount` and `isCompact` are set per row. The first row has no change.
-- Component (`SetlistLineupGrid.test.tsx`). A changed cell has full fill, previous glyphs and `data-lineup-changed`. A joined cell is tinted. The badge shows the count, and a compact row has none.
+- Component (`SetlistLineupGrid.test.tsx`). A changed cell has full fill, only its new glyphs, a label naming the previous ones, and `data-lineup-changed`. A joined cell is tinted. The badge shows the count, and a compact row has none.
 - Visual validation, at 375 px on the dev seed: a setlist with a swap shows the badge and two full cells, the stable lanes are pale and continuous, and the page has no horizontal scroll.
