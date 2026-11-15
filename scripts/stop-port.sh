@@ -31,5 +31,17 @@ if [ "$group" = "$own_group" ] || [ "$group" = "$(ps -o pgid= -p "$PPID" | tr -d
   exit 0
 fi
 
+# A process group that holds one of this shell's ancestors holds the agent
+# itself: here Claude Code and the environment manager share one group and
+# listen on ports of their own. A mistyped port must not stop them.
+ancestor="$$"
+while [ -n "$ancestor" ] && [ "$ancestor" -gt 1 ]; do
+  if [ "$(ps -o pgid= -p "$ancestor" | tr -d ' ')" = "$group" ]; then
+    echo "[stop-port] $port is served from a process group that runs this agent; refusing to stop it" >&2
+    exit 1
+  fi
+  ancestor="$(ps -o ppid= -p "$ancestor" | tr -d ' ')"
+done
+
 kill -- "-$group"
 echo "[stop-port] stopped process group $group, which listened on $port" >&2

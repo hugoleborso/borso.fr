@@ -10,22 +10,15 @@
 # mistake is made is the canvas, so this speaks there.
 #
 # Advisory: it always exits 0 and answers with additionalContext. It speaks on
-# a quickstart or a publish whose intent is a design, once per session.
+# a quickstart whose intent is a design, once per session. A publish names its
+# type only by URL, so it says nothing there.
 command -v jq >/dev/null 2>&1 || exit 0
 
 INPUT="$(cat)"
 
 ACTION="$(jq -r '.tool_input.action // "publish"' <<<"$INPUT")"
 INTENT="$(jq -r '.tool_input.intent // ""' <<<"$INPUT")"
-TYPE_URL="$(jq -r '.tool_input.type_url // ""' <<<"$INPUT")"
-
-case "$ACTION:$INTENT" in
-  quickstart:design) ;;
-  publish:*)
-    [ -n "$TYPE_URL" ] || exit 0
-    ;;
-  *) exit 0 ;;
-esac
+[ "$ACTION:$INTENT" = quickstart:design ] || exit 0
 
 SESSION="$(jq -r '.session_id // "unknown"' <<<"$INPUT")"
 MARKER="${TMPDIR:-/tmp}/mockup-reads-visual-rules-$SESSION"
