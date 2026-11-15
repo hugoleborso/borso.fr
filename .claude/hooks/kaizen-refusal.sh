@@ -20,7 +20,18 @@
 # `KAIZEN_LOG_REFUSALS=0` turns it off, for a run that feeds a hook the
 # commands it must refuse to prove the refusal: those refusals are the check
 # working, not friction anyone hit.
+#
+# A PreToolUse refusal also says that nothing in the call ran. The hook refuses
+# the whole Bash command, so an edit chained before the refused step never
+# happened either. On PR #351 an implementer chained an edit script and
+# Prettier, read only the Prettier advice, and ran the tests on the old file.
 set -euo pipefail
+
+case "$(ps -o args= -p "$PPID" 2>/dev/null || true)" in
+  *.claude/hooks/pretool-*)
+    echo "[refused] Nothing in this call ran, the steps chained before the refused one included. Run them again without it." >&2
+    ;;
+esac
 
 [ "${KAIZEN_LOG_REFUSALS:-1}" = "0" ] && exit 0
 
