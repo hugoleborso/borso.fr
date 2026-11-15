@@ -1,6 +1,6 @@
 # ADR-2026-11-15T0627: pragma's lineup grid marks a change by the member colour at full strength over a pale lane
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-15
 - **Ratified:** by the operator in chat on 2026-11-15, on variant I of a mockup canvas, with icons rather than instrument names
 - **Deciders:** Hugo Borsoni
