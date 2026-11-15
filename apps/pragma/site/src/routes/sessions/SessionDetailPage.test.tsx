@@ -121,7 +121,7 @@ describe('the concert page', () => {
       await screen.findByRole('heading', { level: 1, name: 'Le Petit Bain' })
     ).closest('header');
     if (header === null) throw new Error('no page header');
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(within(header).getByRole('link', { name: 'Sessions' }).getAttribute('href')).toBe(
       '/sessions',
     );

@@ -96,6 +96,14 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 -- Migrations, new columns, indexes.
 ```
 
+### Records
+
+One row per table the spec creates, answered by the operator before the plan starts. `scripts/check-spec-records.sh` refuses a `CREATE TABLE` with no row, or a row with no dated answer.
+
+| Record | Its own record, or part of what | Created from | Operator's answer |
+| --- | --- | --- | --- |
+| <table> | <own record · part of <other record>> | <the screens a member creates it from> | <answer, YYYY-MM-DD> |
+
 ### Files to change
 ```
 src/.../New.ts                       // NEW

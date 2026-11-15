@@ -14,6 +14,10 @@
 # which is markup rather than prose.
 set -euo pipefail
 
+# Paths are read from the repository root, so a run from apps/<app> checks the
+# same tree instead of passing on an empty one.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 failed=0
 
 while IFS= read -r path; do

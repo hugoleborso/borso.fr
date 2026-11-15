@@ -204,7 +204,7 @@ for a push that changes a pure file. Cost is the product, not either factor.
 | Doc links | staged documents, and every document naming a removed path | `ci.yml` |
 | Named paths exist | staged files, and every file naming a removed path | `ci.yml` |
 | NUL bytes, package scripts, negative claims, racy pipelines, migration SQL, manifests, instruction tools | staged files only | `ci.yml` |
-| Vocabulary paths | when a vocabulary changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
+| Vocabulary paths | when a glossary or an `INVARIANTS.md` changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
 | Application test suites | not run | pre-push runs the tests a push affects; `ci.yml` runs every suite of each changed app in `app-tests (<app>)`, except pragma's database suites, which run in `app-tests (pragma-e2e)` and `app-tests (pragma-assistants)`, each with a Postgres of its own; `full-suite.yml` runs them all on `main` |
 | Every other check in the hook | whole tree, when the commit touches its scope | `ci.yml` |
 

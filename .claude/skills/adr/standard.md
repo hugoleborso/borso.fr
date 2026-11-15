@@ -6,7 +6,7 @@ The canonical shape of an Architecture Decision Record in this repo.
 
 ```
 docs/adr/
-├── README.md                 ← index, grouped by area
+├── README.md                 ← how to write and find a record; no list of records
 ├── 2026-05-13T1510-tech-lead-orchestrator-replaces-auto-chain.md
 ├── ...
 ├── 2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md

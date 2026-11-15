@@ -16,6 +16,11 @@ path_lines="
 $touched_paths
 "
 
+# A merge of main can bring a lockfile this checkout never installed, and the
+# type-aware oxlint rules then fail on modules they cannot resolve. See
+# scripts/ensure-installed.sh.
+scripts/ensure-installed.sh pre-commit
+
 results=$(mktemp -d)
 trap 'rm -rf "$results"' EXIT
 
@@ -244,6 +249,10 @@ run_check stylesheet-contents '\.css$' scripts/check-stylesheet-contents.sh
 run_check no-comments-in-styles-and-markup '\.(css|html)$' \
   scripts/check-no-comments-in-styles-and-markup.sh
 
+# Every app page lets the on-screen keyboard shrink its layout viewport. See
+# docs/dantotsus/the-keyboard-shrank-a-screen-css-could-not-see.md.
+run_check viewport-follows-keyboard '^. apps/.*\.html$' scripts/check-viewport-follows-keyboard.sh
+
 # No Tailwind arbitrary variant opens on a bare word, which Tailwind reads as an
 # attribute selector and compiles to nothing at all.
 run_check tailwind-arbitrary-variants '^. apps/[^/]+/site/' \
@@ -256,19 +265,23 @@ run_check app-registration \
   '^. (apps/[^/]+/(package\.json|bin/|cdk/|api/src/database/migrations/)|\.github/path-filters\.yml$|commitlint\.config\.js$)' \
   scripts/check-app-registration.sh
 
-# Each term in an application's vocabulary names the folder that owns it and
-# the test that holds it, and those get renamed or removed by changes with no
-# reason to open the vocabulary. An edited test matters only when a `Held by`
-# line names it, since the check reads its titles; any other test edit left
-# the check reading files it could not have changed.
+# Each term in a glossary names the folder that owns it, and each invariant
+# beside the code names the test that holds it, and those get renamed or
+# removed by changes with no reason to open either file. An edited test matters
+# only when a `Held by` line names it, since the check reads its titles; any
+# other test edit left the check reading files it could not have changed. A
+# `Held by` path is relative to the application folder, the first two parts of
+# the invariants file's path. A removal anywhere a term of docs/VOCABULARY.md
+# lives can break its `Lives in:` line, so those removals are in scope too.
 held_tests=$(
-  awk 'FNR == 1 { folder = FILENAME; sub(/VOCABULARY\.md$/, "", folder) }
+  git ls-files -- 'apps/*/INVARIANTS.md' | xargs -r awk '
+    FNR == 1 { split(FILENAME, part, "/"); folder = part[1] "/" part[2] "/" }
     /^Held by: `/ { cited = $0; sub(/^Held by: `/, "", cited); sub(/`.*/, "", cited)
-      gsub(/\./, "\\.", cited); print folder cited }' apps/*/VOCABULARY.md 2>/dev/null |
+      gsub(/\./, "\\.", cited); print folder cited }' 2>/dev/null |
     sort -u | paste -sd '|' -
 )
 run_check vocabulary-paths \
-  "^. apps/[^/]+/VOCABULARY\\.md\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
+  "^. (apps/[^/]+/VOCABULARY\\.md|apps/.+/INVARIANTS\\.md|docs/VOCABULARY\\.md)\$|^D (apps|docs|scripts|\\.claude|\\.husky|\\.github)/|^D CLAUDE\\.md\$${held_tests:+|^M (${held_tests})\$}" \
   scripts/check-vocabulary-paths.sh
 
 # A dated record of a past review is not editable: it is true as of the day in
@@ -305,6 +318,11 @@ run_check_on_files pwa-assets '^apps/[^/]+/site/' scripts/check-pwa-assets.sh
 run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
   scripts/check-negative-claims-are-dated.sh
 run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
+
+# Each table a spec creates carries the operator's dated answer on what the
+# record is and where it is created from. See
+# docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md.
+run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh
 
 # A pure module whose only consumer is its own test scores 100% on coverage and
 # mutation while running nowhere. Rung-2 eradication of

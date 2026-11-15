@@ -6,6 +6,7 @@ import {
   DANTOTSUS_DIRECTORY,
   readDantotsuCorpus,
   readPathsEverTracked,
+  readUntrackedPaths,
   runGit,
 } from './dantotsu-corpus';
 import { readSectionHeadings, selectSchemaProblems } from './dantotsu-schema.core';
@@ -48,12 +49,18 @@ function readStagedSlugs(): ReadonlySet<string> {
   return slugs;
 }
 
+function readPathsTheCheckAccepts(isStaged: boolean): ReadonlySet<string> {
+  const everTracked = readPathsEverTracked();
+  return isStaged ? everTracked : new Set([...everTracked, ...readUntrackedPaths()]);
+}
+
 function main(): void {
+  const isStaged = process.argv.includes('--staged');
   const corpus = readDantotsuCorpus();
   const problems = selectSchemaProblems(corpus, {
     mainCommits: readMainCommits(),
-    trackedPaths: readPathsEverTracked(),
-    verifiedSlugs: process.argv.includes('--staged') ? readStagedSlugs() : null,
+    trackedPaths: readPathsTheCheckAccepts(isStaged),
+    verifiedSlugs: isStaged ? readStagedSlugs() : null,
     templateSections: readSectionHeadings(readFileSync(TEMPLATE_PATH, 'utf8')),
   });
   if (problems.length === 0) {

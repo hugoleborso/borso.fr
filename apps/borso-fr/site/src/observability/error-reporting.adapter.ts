@@ -10,7 +10,7 @@ type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   userInfo: false,
   cookies: false,
-  httpHeaders: false,
+  httpHeaders: { allow: ['User-Agent'] },
   httpBodies: [],
   urlQueryParams: false,
 };

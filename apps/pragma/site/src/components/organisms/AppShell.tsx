@@ -36,7 +36,7 @@ export function AppShell(): JSX.Element {
   const activeTab = selectActiveTab(location.pathname);
 
   return (
-    <div className="min-h-dvh flex bg-paper text-ink pt-[env(safe-area-inset-top)]">
+    <div className="min-h-dvh flex bg-paper text-ink pt-[var(--page-header-height,env(safe-area-inset-top))] lg:pt-[env(safe-area-inset-top)]">
       <div className="sticky top-0 hidden h-dvh self-start lg:block">
         <nav className="flex h-full w-[232px] min-w-[232px] flex-col gap-3.5 border-r border-rule bg-sunk px-3.5 py-4">
           <div className="px-2 pt-1.5 pb-1">

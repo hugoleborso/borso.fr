@@ -83,7 +83,7 @@ export function AccountSettings(): JSX.Element {
       <PageHeader
         back={{ to: '/band', label: t('band.title') }}
         title={t('account.title')}
-        className="mb-0 sm:mb-0"
+        className="mb-0 sm:mb-0 lg:mb-0"
       >
         <SectionTabs
           label={t('account.sections.label')}

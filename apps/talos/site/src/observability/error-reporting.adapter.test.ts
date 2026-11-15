@@ -1,5 +1,5 @@
 import { withoutPrivateContent } from '@domain/error-reporting.core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startErrorReporting } from './error-reporting.adapter';
 
 const ROUTER_TRACING = { name: 'reactRouterBrowserTracing' };
@@ -15,7 +15,33 @@ vi.mock('@sentry/react', () => sentry);
 const DSN = 'https://public-key@o1.ingest.de.sentry.io/2';
 const API_ONLY = /^https:\/\/talos\.borso\.fr\/api\//;
 
+function displayStandalone(isStandalone: boolean): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: isStandalone && query === '(display-mode: standalone)',
+  }));
+}
+
 describe('startErrorReporting', () => {
+  beforeEach(() => {
+    displayStandalone(false);
+  });
+
+  it('tags an app opened from the home screen as standalone', () => {
+    displayStandalone(true);
+    startErrorReporting({
+      dsn: DSN,
+      environment: 'prod',
+      tracesSampleRate: 1,
+      tracePropagationTargets: [],
+    });
+
+    expect(sentry.init).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialScope: { tags: { app: 'talos', 'display.mode': 'standalone' } },
+      }),
+    );
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -37,11 +63,11 @@ describe('startErrorReporting', () => {
     expect(sentry.init).toHaveBeenCalledWith({
       dsn: DSN,
       environment: 'prod',
-      initialScope: { tags: { app: 'talos' } },
+      initialScope: { tags: { app: 'talos', 'display.mode': 'browser' } },
       dataCollection: {
         userInfo: false,
         cookies: false,
-        httpHeaders: false,
+        httpHeaders: { allow: ['User-Agent'] },
         httpBodies: [],
         urlQueryParams: false,
       },

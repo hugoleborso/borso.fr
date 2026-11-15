@@ -151,7 +151,7 @@ describe('song page', () => {
     const title = await screen.findByRole('heading', { level: 1, name: 'Get Lucky' });
     const header = title.closest('header');
     if (header === null) throw new Error('no page header');
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(within(header).getByRole('link', { name: 'Songs' }).getAttribute('href')).toBe(
       '/catalog',
     );

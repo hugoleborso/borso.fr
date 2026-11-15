@@ -1,5 +1,6 @@
 import { MOST_READS_IN_FLIGHT, READ_BATCH_PATH } from '@domain/read-batch.core';
 import {
+  hasRetriedCaller,
   isRefusedBatch,
   isRetryableStatus,
   keepCallers,
@@ -119,13 +120,31 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
     }
   }
 
-  async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
-    const size = batch.length;
+  function failBatch(batch: readonly MergedRead<Caller>[], error: unknown): void {
+    retryOnce(
+      batch.flatMap((entry) => answerOrRetry(entry, true, (caller) => caller.reject(error))),
+    );
+  }
+
+  async function fetchBatch(batch: readonly MergedRead<Caller>[]): Promise<Response | null> {
     try {
-      const response = await fetchResponse(
+      return await fetchResponse(
         `${apiBase}${READ_BATCH_PATH}`,
         toReadBatchInit(batch.map((entry) => entry.read)),
       );
+    } catch (error) {
+      const isGivenUp = hasRetriedCaller(batch);
+      if (isGivenUp) reportBatchFailure({ status: null, size: batch.length });
+      failBatch(batch, error);
+      return null;
+    }
+  }
+
+  async function sendBatch(batch: readonly MergedRead<Caller>[]): Promise<void> {
+    const size = batch.length;
+    const response = await fetchBatch(batch);
+    if (response === null) return;
+    try {
       const isRefused = isRefusedBatch(response.status);
       if (isRefused) {
         reportBatchFailure({ status: response.status, size });
@@ -155,9 +174,7 @@ export function createReadTransport(options: ReadTransportOptions): ReadTranspor
       );
     } catch (error) {
       reportBatchFailure({ status: null, size });
-      retryOnce(
-        batch.flatMap((entry) => answerOrRetry(entry, true, (caller) => caller.reject(error))),
-      );
+      failBatch(batch, error);
     }
   }
 

@@ -1,5 +1,5 @@
 ---
-summary: 'Auto mode refuses a Bash command whose text reads as a production read or a destructive write, including a probe written to prove a guard refuses that very thing, and including a heredoc writing this entry; split the probe, prove it without the payload, or ask the operator for a permission rule — rewording is not the answer.'
+summary: 'Auto mode refuses a Bash command whose text reads as a production read, a destructive write or a privileged grant, guard probes included. Split it into one action per call, prove the guard without the payload, and before an IAM write have the operator name the exact change; rewording is not the answer.'
 triggers:
   output:
     - 'denied by the Claude Code auto mode classifier'
@@ -8,6 +8,7 @@ triggers:
   commands:
     - 'db-read\.sh'
     - 'db:read'
+    - 'aws\s+iam\s+(put|create|attach|detach|delete|update)-'
 ---
 
 # The auto mode classifier refuses guard probes
@@ -60,6 +61,27 @@ privileged action per call**. A chain is read as a whole, and the classifier
 judges the text it is given, not the actions it would take in order. A refusal
 on a chain says nothing about which link caused it, so splitting is both the
 workaround and the diagnosis.
+
+## A broad go-ahead does not cover an IAM write
+
+On 2026-11-14, during PR #338, a session in the "Borso Admin" environment ran as
+`Borso-Admin`, with `AdministratorAccess`. The operator had asked it to do the
+operator-backlog tasks. The classifier refused its IAM writes for the
+borsouvertures reader grant. The operator then said to do everything in this
+session, and the classifier refused them a second time. They went through only
+once the operator named the IAM change itself (measured, in the friction log of
+`docs/features/meta/operator-backlog-2026-11-14/`).
+
+Two lessons follow. Holding the AWS right is not the same as holding the
+operator's consent for one privileged change. And a broad go-ahead, however
+emphatic, is not read as consent for a change it does not name.
+
+So before the first IAM call, ask the operator one closed question that names
+the policy, the principal and the actions, for example *"Create the managed
+policy `AI-Dev-ReadOnly-prod-agent-readers` allowing `lambda:InvokeFunction`
+on the four readers, attach it to `AI-Dev-ReadOnly`, and delete the inline
+`Prod-db-read`?"*. `docs/operator-backlog.md` asks for that question in its
+rules.
 
 ## What does not work
 

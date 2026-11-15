@@ -34,6 +34,18 @@ cdp_port() {
   agent-browser --session "$SESSION" get cdp-url 2>/dev/null | sed -n 's#^ws://[^:]*:\([0-9]*\)/.*#\1#p'
 }
 
+restore_viewport() {
+  local status=$? width
+  agent-browser --session "$SESSION" set viewport "$PHONE_WIDTH" "$PHONE_HEIGHT" >/dev/null
+  width="$(agent-browser --session "$SESSION" eval 'window.innerWidth' 2>/dev/null | tr -dc '0-9')"
+  if [ "$width" != "$PHONE_WIDTH" ]; then
+    printf '[phone] after the tap the page is %s px wide, not %s; measurements would be wrong\n' \
+      "${width:-unknown}" "$PHONE_WIDTH" >&2
+    exit 1
+  fi
+  exit "$status"
+}
+
 case "${1:-}" in
   start)
     [ $# -eq 2 ] || fail "usage: scripts/phone.sh start <url>"
@@ -44,6 +56,10 @@ case "${1:-}" in
     [ $# -eq 2 ] || fail "usage: scripts/phone.sh touch '<css selector>'"
     port="$(cdp_port)"
     [ -n "$port" ] || fail "no '$SESSION' session — scripts/phone.sh start <url>"
+    # touch-tap.ts emulates the phone on its own CDP connection, and Chromium
+    # drops that override when the connection closes, which leaves the page at
+    # the 1280 px window while screenshots still crop to 375. Re-apply it.
+    trap restore_viewport EXIT
     pnpm exec tsx scripts/browser/touch-tap.ts --selector "$2" --port "$port" \
       --width "$PHONE_WIDTH" --height "$PHONE_HEIGHT"
     ;;

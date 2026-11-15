@@ -48,12 +48,11 @@ No:
 - Reasoning already captured verbatim in `CLAUDE.md` or a
   `docs/knowledge/` entry. Cross-link instead.
 
-## Index
+## Finding a record
 
-<!-- New entries go under the right heading. If no heading fits, add
-     one. Manually curated. `/adr` never reorders existing entries.
-     scripts/check-adr-numbers-resolve.sh refuses a record with no row and
-     a row with no record; it had drifted by nine of twenty before it ran. -->
+This folder keeps no list of its records. A list kept by hand went stale,
+and every pull request that added or accepted a record edited the same table.
+Each record carries its own title and status in its first lines:
 
 | # | Title | Status | Date |
 |---|---|---|---|
@@ -127,6 +126,7 @@ No:
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
 | [2026-11-15T0627](./2026-11-15T0627-pragma-lineup-grid-marks-a-change-by-fill-intensity.md) | pragma's lineup grid marks a change by the member colour at full strength over a pale lane | proposed | 2026-11-15 |
+| [2026-11-15T0628](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) | The glossary stays in VOCABULARY.md and each term's rules move to an INVARIANTS.md in its folder | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -212,6 +212,10 @@ No:
 - 2026-08-20T1031. generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
 - 2026-09-21T0819. a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
 - 2026-10-10T0141. weak point management reads the dantotsu front matter, made checkable by a schema gate; `zone:` is chosen by hand, and the weekly count comes from the entries' dates, so no new writer and no cron.
+- [`2026-11-15T0628-glossary-and-invariants-are-two-files.md`](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) — each application's `VOCABULARY.md` keeps only the glossary, each term's rules and `Held by` tests move to an `INVARIANTS.md` in the folder it lives in, and `docs/VOCABULARY.md` holds the repository's words, because every agent read pragma's 2,028 lines before naming anything.
+- `grep -l <word> docs/adr/*.md` finds the records about a subject.
+- `grep -H '^# ADR-' docs/adr/2*.md` prints every record's id and title, oldest first.
+- `grep -l 'Status:\*\* proposed' docs/adr/*.md` lists the records not yet accepted.
 
 ## How `/open-pr` uses ADRs
 

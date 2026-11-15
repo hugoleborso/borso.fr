@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Overline } from '../atoms/Overline';
+import { reserveRoomForPageHeader } from '../../lib/page-header-room.adapter';
 import { BackLink } from './BackLink';
 
 export interface PageHeaderBack {
@@ -21,8 +22,9 @@ export interface PageHeaderProps {
 }
 
 export const PINNED_HEADER_CLASS =
-  'sticky top-0 z-20 -mx-4 -mt-[calc(0.5rem+env(safe-area-inset-top))] mb-3 border-b border-rule ' +
-  'bg-paper px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3 sm:-mx-9 sm:mb-5 sm:px-9 ' +
+  'fixed inset-x-0 top-0 z-20 border-b border-rule bg-paper px-4 ' +
+  'pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3 sm:px-9 ' +
+  'lg:sticky lg:inset-x-auto lg:-mx-9 lg:-mt-[calc(0.5rem+env(safe-area-inset-top))] lg:mb-5 ' +
   'has-[[data-page-header-children]_[role=tablist]]:border-b-0';
 
 const TITLE_CLASS = 'm-0 font-display text-display text-ink wrap-anywhere line-clamp-3 sm:mb-1';
@@ -40,7 +42,11 @@ export function PageHeader({
   className,
 }: PageHeaderProps): JSX.Element {
   return (
-    <header data-page-header className={composeClassName(PINNED_HEADER_CLASS, className)}>
+    <header
+      ref={reserveRoomForPageHeader}
+      data-page-header
+      className={composeClassName(PINNED_HEADER_CLASS, className)}
+    >
       {back === undefined ? null : <BackLink to={back.to} label={back.label} />}
       {crumb !== undefined && crumb !== null && (
         <Overline className="mb-2 hidden sm:block">{crumb}</Overline>

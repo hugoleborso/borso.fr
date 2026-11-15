@@ -16,6 +16,7 @@ triggers:
     - 'ERR_LOAD_URL'
     - 'No TestRunner plugin'
     - '\.stryker-tmp/sandbox'
+    - "Cannot find package 'vitest' imported from .*sandbox-"
 ---
 
 # Stryker under pnpm: the sandbox must leave the workspace, and the plugin must be named
@@ -64,6 +65,28 @@ first spelling, Vitest resolves its own module graph under the second, and
 run is empty, and the run dies with *"No tests were executed"*. Linux has no
 such symlink, which is why CI never saw it.
 
+### A symlinked `node_modules` gives the sandbox none
+
+_Added 2026-11-14, from the sweep of PR #334._ A subagent proving an
+eradication on PR #327's sweep ran Stryker in a scratch `git worktree` whose
+`node_modules` was a symlink to the main checkout's. Every run died in the dry
+run:
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vitest' imported from
+/tmp/…/borso-stryker-tmp-…/sandbox-381wZr/vitest.config.ts.timestamp-….mjs
+```
+
+Reproduced on 2026-11-14 with `check-only-change.core.ts`. Stryker links the
+workspace's `node_modules` into its sandbox, and with a symlink in its place
+the sandbox ends up with none (inferred from the error; the source was not
+read). The probe moved to the shared checkout, where it collides with every
+other agent.
+
+Install the worktree instead of linking it. pnpm hard-links from its store, so
+`pnpm install --frozen-lockfile --offline --ignore-scripts` in the worktree took
+6.9 s, and the same run then scored 100 (measured).
+
 ## Recognising each one
 
 - *"No test runner"* / plugin not found, on a machine where the package is
@@ -73,6 +96,8 @@ such symlink, which is why CI never saw it.
 - *"Vitest failed to find test files related to mutated files"* then *"No tests
   were executed"*, on macOS only, for a file whose test plainly imports it →
   the real path, §2.
+- *"Cannot find package 'vitest'"* from a `sandbox-` path, in a worktree whose
+  `node_modules` is a symlink → install the worktree, §2.
 
 ## Stryker's sandbox breaks a Vitest `globalSetup` that lives outside the workspace
 

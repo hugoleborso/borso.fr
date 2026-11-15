@@ -16,7 +16,7 @@ export function AddSongPage(): JSX.Element {
       <PageHeader
         back={{ to: '/catalog', label: t('catalog.title') }}
         title={t('catalog.addSongTitle')}
-        className="mb-1 sm:mb-2"
+        className="mb-1 sm:mb-2 lg:mb-2"
       />
       <AddSongForm initialTitle={searchParams.get(ADD_SONG_TITLE_PARAMETER) ?? ''} />
     </section>

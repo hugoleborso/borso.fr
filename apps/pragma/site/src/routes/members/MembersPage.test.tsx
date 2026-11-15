@@ -56,7 +56,7 @@ describe('the members page', () => {
     expect(await screen.findByRole('button', { name: 'Ada' })).toBeTruthy();
     const header = screen.getByRole('heading', { level: 1, name: 'Members' }).closest('header');
     if (header === null) throw new Error('no page header');
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(within(header).getByRole('link', { name: 'Band' }).getAttribute('href')).toBe('/band');
     expect(
       within(header)

@@ -44,7 +44,7 @@ describe('the account page', () => {
     renderAccountPage();
     const header = screen.getByRole('heading', { level: 1, name: 'Account' }).closest('header');
     if (header === null) throw new Error('no page header');
-    expect(header.classList.contains('sticky')).toBe(true);
+    expect(header.classList.contains('fixed')).toBe(true);
     expect(within(header).getByRole('link', { name: 'Band' }).getAttribute('href')).toBe('/band');
     expect(
       within(header)

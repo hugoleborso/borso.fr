@@ -39,14 +39,14 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 - `/code-standards` routes you into `docs/standards/`, which wins over any summary here.
 - Before a new file in `apps/`, run `scripts/reports.sh blueprints`, copy the blueprint for that layer from `.claude/skills/blueprint/blueprint-index.md`, and mark the code `// @FollowsBlueprint <id>`.
-- Read `apps/<app>/VOCABULARY.md` before naming a type, column, function or file.
+- Read `apps/<app>/VOCABULARY.md` before naming a type, column, function or file, and the `INVARIANTS.md` of each folder you change before changing its rules. Repository terms are in `docs/VOCABULARY.md`.
 - A file name ends in its layer's suffix (`.service.ts`, `.core.ts`, `.queries.ts`, the rest in `docs/standards/01-naming.md`).
 - Reuse first. Look in this repo, then installed packages, then a maintained library. A new dependency is an ADR decision, so surface it.
 
 ## Hard rules
 
 - borso.fr is the operator's personal project, on personal time. The Notion, Slack, Gmail, Google Drive and Calendar connectors belong to their employer. Never write to them from this repo. Read one only when the operator names it, and keep what this repo produces inside this repo.
-- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel.
+- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel. One standing exception: merge a `kaizen` pull request yourself once CI is green, when `scripts/pr/deploy-fanout.ts` prints no application and it holds no question for the operator.
 - Never run a deploy locally. Call reserved names through `run` (`pnpm --filter <pkg> run deploy`, same for `destroy`).
 - A full-stack app's `destroy` targets `<app>-pr-<N>` only. `--all` also deletes the shared `<app>-cluster` stack.
 - English in identifiers, schemas, comments, commits and specs. Visible text goes through i18n (`en.json`, `fr.json`). Translate the operator's French or slang before it reaches code.
@@ -71,6 +71,7 @@ They cover replies, documents, commits and PR bodies.
 - Never fabricate a link, citation or transcript reference. Link only what you produced or read this session.
 - Ask one closed question at a time, in the words the operator sees on the screen, with one concrete example, its options and your recommendation. Each option says what he would see happen day to day once it ships, such as CI running again at every push.
 - Do not narrate what is done. Report the result and what is left.
+- Never document what goes stale or makes writers collide, such as a list of files, entries, apps or a count of them. Say how to find them instead, with `ls` or `grep`.
 - Long prose also follows `/plain-writing`, and documents for agents `/writing-for-agents`. These rules live here because `/plain-writing` was invoked in none of six sampled sessions (measured). Markdown is formatted by hand.
 
 ## Parallel agents
@@ -83,7 +84,8 @@ They cover replies, documents, commits and PR bodies.
 
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
-- Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos`.
+- Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, markdown or test configs.
+- On a watched pull request, act on CI results and the merge state. Skip every review thread and comment except those written by the operator's login, `hugoleborso`.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.
 - `infra/shared` deploys only when the operator dispatches `shared-deploy`. Do not propose a confirmation step.
@@ -105,7 +107,7 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 ## AWS and production data
 
-- Sessions get read-only AWS. If SessionStart printed `AWS unavailable`, the credentials are placeholders, so do not debug the account. `iam:*` is denied, so probe the one call you need.
+- Sessions get read-only AWS, except in the "Borso Admin" environment, which runs as `Borso-Admin` (`docs/aws-setup.md` §12.8). If SessionStart printed `AWS unavailable`, the credentials are placeholders, so do not debug the account. `iam:*` is denied, so probe the one call you need.
 - Read production with `APP=<app> scripts/db-read.sh "<one SELECT>"` for the apps its header lists. `talos` is read through its own `POST /api/agent/sql`.
 
 ## Deeper references
