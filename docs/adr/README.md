@@ -126,6 +126,7 @@ No:
 | [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | accepted | 2026-11-13 |
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
+| [2026-11-15T0636](./2026-11-15T0636-talos-gets-a-minimal-swiftui-app-for-one-gesture-decisions.md) | Talos takes an Apple Developer licence for a small SwiftUI app that decides from the notification | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -170,6 +171,7 @@ No:
 - 2026-11-13T0001. `ts-fsrs` 6.0.0 schedules the borsouvertures cards with fuzz off and every option pinned, about 17 kB gzipped with its one dependency; a golden replay test holds its output across upgrades.
 - 2026-11-13T0002. the borsouvertures operator signs in with pragma's credential and cookie slice, copied; no route enrols anyone, a script the operator runs writes the one row on prod, and the fixture seed writes it on a preview, which clones nothing from prod, so a stranger cannot take the account and an agent signs in with no secret.
 - 2026-11-13T0003. the lite single-threaded Stockfish 19.0.1 is committed as two unmodified GPL-3.0 files, 1,874,201 bytes, and started as a Web Worker on demand; it needs no cross-origin isolation, and vendoring avoids a 161 MB npm tarball on every install.
+- 2026-11-15T0636 (proposed, in French). Talos takes the Apple Developer Program, 99 USD a year and borso.fr's first paid service, for a small SwiftUI app distributed through TestFlight whose notifications carry 2 to 4 buttons that decide a proposal without opening an app, because Safari iOS ignores web push `actions`; the PWA stays the main app.
 
 ### CDK / infra
 
