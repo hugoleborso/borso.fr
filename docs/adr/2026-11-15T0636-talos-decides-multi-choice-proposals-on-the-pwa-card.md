@@ -1,6 +1,6 @@
 # ADR-2026-11-15T0636: Talos decides multi-choice proposals on the PWA card, not in the notification
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-15
 - **Deciders:** the operator
 - **Tags:** talos, ios, notifications, cost
