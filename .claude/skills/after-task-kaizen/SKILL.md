@@ -326,6 +326,12 @@ For each surviving subject:
    closed question, and build only the option he picks. The sweep of
    PR #310 built four such mechanisms unasked and removed all four once
    he read them.
+   **No option hands the operator a task per pull request.** A manual
+   check, a checklist or a device walk-through for each change is not an
+   option to offer. Find the detection that needs nobody, such as a check
+   the app runs on itself and reports to Sentry, and ship that. The sweep
+   of PRs #331 to #337 offered a per-PR iPhone checklist, and the operator
+   refused it for that detection.
 
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
