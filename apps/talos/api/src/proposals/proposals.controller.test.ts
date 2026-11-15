@@ -15,6 +15,8 @@ afterEach(() => {
 });
 
 const STORED_PROPOSAL = '2026-10-04-atelier';
+const PROPOSAL_WITH_OPTIONS = '2026-10-03-seance-course';
+const OPTION_NOT_OFFERED = { error: "Ce choix n'est pas proposé." };
 const FIRE_URL = 'https://api.anthropic.com/v1/routines/r1/fire';
 const SESSION_URL = 'https://claude.ai/code/session_01ExempleInvente';
 const DECIDED_PROPOSAL = {
@@ -34,13 +36,11 @@ async function answerSession(sessionUrl: string): Promise<Response> {
   return await Promise.resolve(Response.json({ claude_code_session_url: sessionUrl }));
 }
 
-async function readStoredProposalPage(): Promise<string> {
+async function readStoredProposalPage(slug = STORED_PROPOSAL): Promise<string> {
   const { app } = buildTestContext();
-  const response = await requestJson(
-    app,
-    `/api/agent/page?slug=etat/propositions/${STORED_PROPOSAL}`,
-    { headers: { authorization: 'Bearer jeton-agent-mac' } },
-  );
+  const response = await requestJson(app, `/api/agent/page?slug=etat/propositions/${slug}`, {
+    headers: { authorization: 'Bearer jeton-agent-mac' },
+  });
   const page: { markdown: string } = await response.json();
   return page.markdown;
 }
@@ -99,9 +99,118 @@ describe('the proposal routes', () => {
         expiresOn: '2026-10-09',
         why: "L'atelier Acme approche.",
         draft: "Décaler la réunion d'équipe.",
+        options: [],
+        decisions: [],
+      },
+      {
+        slug: PROPOSAL_WITH_OPTIONS,
+        category: 'logistique',
+        status: 'proposee',
+        title: 'Caler la séance de course de la semaine',
+        priority: 'normale',
+        createdOn: '2026-10-03',
+        expiresOn: '2026-10-09',
+        why: "Aucune séance de course n'est posée cette semaine.",
+        draft: 'Bloquer une heure de course à pied en fin de journée.',
+        options: ['mardi', 'jeudi', 'pas cette semaine'],
         decisions: [],
       },
     ]);
+  });
+
+  it('records the chosen option in the decision line and fires the routine', async () => {
+    const fetcher = vi.fn(async () => await answerSession(SESSION_URL));
+    vi.stubGlobal('fetch', fetcher);
+    const { app } = buildTestContext();
+    configureRoutine();
+    const response = await requestJson(app, `/api/proposals/${PROPOSAL_WITH_OPTIONS}/decision`, {
+      method: 'POST',
+      body: { decision: 'acceptee', option: 'jeudi', comment: 'le soir' },
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      status: 'acceptee',
+      decisions: ['2026-10-05 10:12 : acceptée (jeudi) — le soir'],
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      FIRE_URL,
+      expect.objectContaining({
+        body: JSON.stringify({
+          text: `phrase\nproposition: etat/propositions/${PROPOSAL_WITH_OPTIONS}\nchoix: jeudi`,
+        }),
+      }),
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(await getDatabase().select().from(routineRunTable)).toEqual([
+      {
+        id: expect.any(String),
+        firedAt: new Date('2026-10-05T08:12:00Z'),
+        trigger: 'proposition',
+        subject: `etat/propositions/${PROPOSAL_WITH_OPTIONS}`,
+        sessionUrl: SESSION_URL,
+      },
+    ]);
+    const page = await readStoredProposalPage(PROPOSAL_WITH_OPTIONS);
+    expect(page).toContain('statut: acceptee');
+    expect(page).toContain('## Décision\n- 2026-10-05 10:12 : acceptée (jeudi) — le soir');
+  });
+
+  it.each([
+    [
+      'an option the proposal does not offer',
+      PROPOSAL_WITH_OPTIONS,
+      { decision: 'acceptee', option: 'vendredi' },
+    ],
+    [
+      'an option sent with a refusal',
+      PROPOSAL_WITH_OPTIONS,
+      { decision: 'refusee', option: 'mardi' },
+    ],
+    [
+      'a plain acceptance of a proposal with options',
+      PROPOSAL_WITH_OPTIONS,
+      { decision: 'acceptee' },
+    ],
+    [
+      'an option on a proposal without options',
+      STORED_PROPOSAL,
+      { decision: 'acceptee', option: 'mardi' },
+    ],
+  ])('answers 400 and records nothing for %s', async (_case, slug, body) => {
+    const fetcher = vi.fn(async () => await answerSession(SESSION_URL));
+    vi.stubGlobal('fetch', fetcher);
+    const { app } = buildTestContext();
+    configureRoutine();
+    const response = await requestJson(app, `/api/proposals/${slug}/decision`, {
+      method: 'POST',
+      body,
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(OPTION_NOT_OFFERED);
+    expect(await readStoredProposalPage(slug)).toContain('statut: proposee');
+    expect(await countPwaStatusChanges()).toBe(0);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('refuses a proposal with options without a choice, and offers the choices again after a cancellation', async () => {
+    const { app } = buildTestContext();
+    const cookie = await signIn();
+    const refused = await requestJson(app, `/api/proposals/${PROPOSAL_WITH_OPTIONS}/decision`, {
+      method: 'POST',
+      body: { decision: 'refusee' },
+      cookie,
+    });
+    expect(refused.status).toBe(200);
+    const reopened = await requestJson(app, `/api/proposals/${PROPOSAL_WITH_OPTIONS}/decision`, {
+      method: 'DELETE',
+      cookie,
+    });
+    expect(await reopened.json()).toMatchObject({
+      status: 'proposee',
+      options: ['mardi', 'jeudi', 'pas cette semaine'],
+    });
   });
 
   it('records the decision in the memory and fires the routine with the slug', async () => {

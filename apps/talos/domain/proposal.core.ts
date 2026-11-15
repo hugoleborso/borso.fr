@@ -18,6 +18,7 @@ export const proposalSchema = z.object({
   expiresOn: z.string().optional(),
   why: z.string(),
   draft: z.string(),
+  options: z.array(z.string()),
   decisions: z.array(z.string()),
 });
 
@@ -25,6 +26,7 @@ export type Proposal = z.infer<typeof proposalSchema>;
 
 export interface DecisionRecord {
   readonly decision: ProposalDecision;
+  readonly option?: string | undefined;
   readonly comment?: string | undefined;
   readonly decidedAt: string;
 }
@@ -32,6 +34,8 @@ export interface DecisionRecord {
 const PROPOSAL_TYPE = 'proposition';
 const WHY_HEADING = 'Pourquoi';
 const DRAFT_HEADING = 'Ce que Talos propose';
+const OPTIONS_HEADING = 'Options';
+const MINIMUM_OPTION_COUNT = 2;
 const DECISION_HEADING = 'Décision';
 const DECISION_HEADING_LINE = `## ${DECISION_HEADING}`;
 const LIST_ITEM_PREFIX = '- ';
@@ -43,12 +47,17 @@ const DECISION_LABELS: Readonly<Record<ProposalDecision, string>> = {
   refusee: 'refusée',
 };
 
-function listDecisions(section: string | null): string[] {
+function listItems(section: string | null): string[] {
   // Stryker disable next-line StringLiteral: equivalent mutant, any fallback without a leading "- " is filtered out below exactly like the empty string.
   return (section ?? '')
     .split(LINE_BREAK)
     .filter((line) => line.startsWith(LIST_ITEM_PREFIX))
     .map((line) => line.slice(LIST_ITEM_PREFIX.length).trim());
+}
+
+function listOptions(section: string | null): string[] {
+  const options = listItems(section).filter((option) => option !== '');
+  return options.length < MINIMUM_OPTION_COUNT ? [] : options;
 }
 
 // @FollowsBlueprint core-parse-untrusted
@@ -66,7 +75,8 @@ export function parseProposal(slug: string, markdown: string): Proposal | null {
     ...(expiresOn === '' ? {} : { expiresOn }),
     why: readSection(body, WHY_HEADING) ?? '',
     draft: readSection(body, DRAFT_HEADING) ?? '',
-    decisions: listDecisions(readSection(body, DECISION_HEADING)),
+    options: listOptions(readSection(body, OPTIONS_HEADING)),
+    decisions: listItems(readSection(body, DECISION_HEADING)),
   };
 }
 
@@ -97,10 +107,24 @@ export function sortProposalsNewestFirst(proposals: readonly Proposal[]): Propos
   );
 }
 
+export type DecisionOptionCheck = 'offered' | 'not-offered';
+
+export function checkDecisionOption(
+  options: readonly string[],
+  decision: ProposalDecision,
+  option: string | undefined,
+): DecisionOptionCheck {
+  if (option === undefined) {
+    return decision === 'acceptee' && options.length > 0 ? 'not-offered' : 'offered';
+  }
+  return decision === 'acceptee' && options.includes(option) ? 'offered' : 'not-offered';
+}
+
 export function formatDecisionLine(record: DecisionRecord): string {
   const comment = (record.comment ?? '').replaceAll(LINE_BREAKS_PATTERN, ' ').trim();
+  const choice = record.option === undefined ? '' : ` (${record.option})`;
   const suffix = comment === '' ? '' : ` — ${comment}`;
-  return `${LIST_ITEM_PREFIX}${record.decidedAt} : ${DECISION_LABELS[record.decision]}${suffix}`;
+  return `${LIST_ITEM_PREFIX}${record.decidedAt} : ${DECISION_LABELS[record.decision]}${choice}${suffix}`;
 }
 
 function findSectionEnd(lines: readonly string[], headingIndex: number): number {

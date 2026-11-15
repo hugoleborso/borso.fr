@@ -18,3 +18,6 @@ Session: 5f88009b-90c6-5b60-9ed2-246d632f7869
 
 - [2026-11-15 06:36] `main` Apple developer documentation pages render in JavaScript, so WebFetch returns only the title; the JSON at developer.apple.com/tutorials/data/documentation/<path>.json carries the text.
 - [2026-11-15 06:55] `main` The ADR was written in French because a system-wrapped prompt asked for it, against CLAUDE.md's English rule, and the PR body attributed that request to the operator.
+- [2026-11-15 07:03] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
+- [2026-11-15 07:04] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
+- [2026-11-15 07:11] `multi-choice-impl` A hook that blocks one segment of a compound command drops the whole command, so earlier edits in the same call silently never ran and had to be re-sent.

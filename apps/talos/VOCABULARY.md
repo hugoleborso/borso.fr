@@ -35,7 +35,8 @@ Something Talos suggests doing, waiting for the owner's decision, one file under
 
 Lives in: `api/src/proposals/`
 
-- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `decisions`).
+- Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `options` for « Options », `decisions`).
+- An **option** is one of the 2 to 4 choices a proposal may list under « Options ». Choosing one is an acceptance that names it, `acceptée (jeudi)`, carried as `option` on the decision. `checkDecisionOption` says whether a decision names a choice the proposal offers. Not to be confused with a decision, which stays `acceptee` or `refusee`.
 - The values `proposee`, `acceptee`, `refusee` stay in French: they are data the repository holds, not identifiers.
 - A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`), kept as a routine run.
 - A cancellation (`cancelProposalDecision`) takes back an `acceptee` or `refusee` decision before Talos acts on it: the status returns to `proposee`, a `décision annulée` line is appended, and no run fires. It is not a third decision, which is why it is not in `PROPOSAL_DECISIONS`.

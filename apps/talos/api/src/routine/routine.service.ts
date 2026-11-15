@@ -13,8 +13,12 @@ async function storeRoutineRun(firedRun: FiredRun): Promise<RoutineRunRow> {
   return run;
 }
 
-async function fireAndStoreProposalRun(memorySlug: string, now: Date): Promise<void> {
-  const outcome = await fireRoutine('proposition', memorySlug);
+async function fireAndStoreProposalRun(
+  memorySlug: string,
+  now: Date,
+  choice: string | undefined,
+): Promise<void> {
+  const outcome = await fireRoutine('proposition', memorySlug, { choice });
   if (outcome.kind !== 'fired') return;
   await storeRoutineRun({
     trigger: 'proposition',
@@ -25,8 +29,12 @@ async function fireAndStoreProposalRun(memorySlug: string, now: Date): Promise<v
 }
 
 // @FollowsBlueprint service-orchestration
-export async function launchProposalRun(memorySlug: string, now: Date): Promise<void> {
-  await fireAndStoreProposalRun(memorySlug, now).catch(reportUnhandledError);
+export async function launchProposalRun(
+  memorySlug: string,
+  now: Date,
+  choice?: string,
+): Promise<void> {
+  await fireAndStoreProposalRun(memorySlug, now, choice).catch(reportUnhandledError);
 }
 
 export async function listRoutineRuns(): Promise<RoutineRunRow[]> {

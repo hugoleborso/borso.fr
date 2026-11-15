@@ -21,8 +21,9 @@ const LEARNED_DRAFT = '```diff\n- Relancer le vendredi\n+ Relancer le lundi mati
 
 const DECIDED_SLUG = '2026-11-09-salle';
 const EXPIRED_SLUG = '2026-11-01-vieille';
+const CHOICE_SLUG = '2026-11-11-course';
 
-function buildProposal(slug: string, title: string, draft: string) {
+function buildProposal(slug: string, title: string, draft: string, options: string[] = []) {
   return {
     slug,
     category: 'action',
@@ -32,6 +33,7 @@ function buildProposal(slug: string, title: string, draft: string) {
     createdOn: '2026-11-11',
     why: 'Trois engagements semblent tenus :\n\n- le devis est parti\n- le plombier a rappelé',
     draft,
+    options,
     decisions: [],
   };
 }
@@ -49,6 +51,13 @@ function serveApp(): FetchStub {
       decisions: ['2026-11-10 09:30 : refusée — pas cette semaine'],
     },
     { ...buildProposal(EXPIRED_SLUG, 'Vieille idée', 'Un message.'), expiresOn: '2026-11-02' },
+    {
+      ...buildProposal(CHOICE_SLUG, 'Caler la course', 'Une heure de course.', [
+        'mardi',
+        'jeudi',
+        'pas cette semaine',
+      ]),
+    },
   ];
   return stubFetch(async (request) => {
     const path = new URL(request.url).pathname;
@@ -102,6 +111,17 @@ describe('the direct link to a proposal card', () => {
     expect(
       fetchStub.calls.map((request) => `${request.method} ${new URL(request.url).pathname}`),
     ).toContain(`POST /api/proposals/${DONE_SLUG}/decision`);
+    tree.unmount();
+  });
+
+  it('opens a card that offers choices with one button per option, and no Accept', async () => {
+    fetchStub = serveApp();
+    const tree = openLink(`/proposals/${CHOICE_SLUG}`);
+    await flushUntil(() => findButton(tree, 'mardi') !== undefined);
+    expect(findButton(tree, 'jeudi')).toBeDefined();
+    expect(findButton(tree, 'pas cette semaine')).toBeDefined();
+    expect(findButton(tree, 'Refuser')).toBeDefined();
+    expect(findButton(tree, 'Accepter')).toBeUndefined();
     tree.unmount();
   });
 

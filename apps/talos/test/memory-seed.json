@@ -113,6 +113,26 @@
     "body": "## Pourquoi\nL'atelier Acme approche.\n\n## Ce que Talos propose\nDécaler la réunion d'équipe.\n\n## Décision\n"
   },
   {
+    "op": "proposal.upsert",
+    "slug": "etat/propositions/2026-10-03-seance-course",
+    "category": "logistique",
+    "status": "proposee",
+    "title": "Caler la séance de course de la semaine",
+    "priority": "normale",
+    "createdOn": "2026-10-03",
+    "expiresOn": "2026-10-09",
+    "attributes": {
+      "type": "proposition",
+      "categorie": "logistique",
+      "statut": "proposee",
+      "titre": "Caler la séance de course de la semaine",
+      "priorite": "normale",
+      "cree": "2026-10-03",
+      "expire": "2026-10-09"
+    },
+    "body": "## Pourquoi\nAucune séance de course n'est posée cette semaine.\n\n## Ce que Talos propose\nBloquer une heure de course à pied en fin de journée.\n\n## Options\n- mardi\n- jeudi\n- pas cette semaine\n\n## Décision\n"
+  },
+  {
     "op": "draft.upsert",
     "slug": "etat/brouillons/2026-10-04-cafe",
     "channel": "gmail",
