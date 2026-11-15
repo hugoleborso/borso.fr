@@ -27,6 +27,11 @@ export const notificationPreferenceTable = pgTable(
   ],
 );
 
+export const notificationDispatchTable = pgTable('notification_dispatch', {
+  groupKey: text('group_key').primaryKey(),
+  lastSentAt: timestamp('last_sent_at', { withTimezone: true, mode: 'date' }).notNull(),
+});
+
 export const vapidKeyPairTable = pgTable('vapid_key_pair', {
   id: integer('id').primaryKey(),
   publicKey: text('public_key').notNull(),

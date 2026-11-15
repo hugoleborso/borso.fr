@@ -648,10 +648,20 @@ Invariants: `api/src/studies/INVARIANTS.md`
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
 
+## Presence
+
+One member opening the app on one calendar day in `Europe/Paris`.
+
+Lives in: `api/src/streaks/` (`presence`, `presences.service.ts`)
+
+Invariants: `api/src/streaks/INVARIANTS.md`
+
+Not to be confused with: a **session**, which the band plays together.
+
 ## Flame
 
-How many days the band has kept playing together, counted back from today
-over the days with a **session**.
+How many days a member, or the band, has kept practising, counted back from
+today.
 
 Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 
@@ -660,7 +670,8 @@ Invariants: `domain/INVARIANTS.md`
 ## Streak
 
 The feature that shows **flames**. The word names its surface, never the
-count: `GET /api/streaks`, the `streaks/` slice and the streak sheet.
+count: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the
+`streak` push category and the `streak-reminder` job.
 
 Lives in: `api/src/streaks/`
 

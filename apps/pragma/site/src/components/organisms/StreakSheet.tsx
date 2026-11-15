@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { StreaksView } from '../../lib/queries/streaks.queries';
 import { BlazeMark } from '../atoms/BlazeMark';
 import { BonfireMark } from '../atoms/BonfireMark';
+import { MemberMark } from '../atoms/MemberMark';
 import { Overline } from '../atoms/Overline';
 import { selectFlameStatusKey, selectFlameTone } from '../molecules/flame-tone.core';
 import { Sheet } from '../molecules/Sheet';
@@ -46,6 +47,24 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
           </div>
           <span className="text-heading text-ink tabular-nums">{view.band.days}</span>
         </section>
+
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {view.members.map((member) => (
+            <li key={member.memberId} className="flex items-center gap-3">
+              <MemberMark shape="dot" color={member.color} />
+              <span className="min-w-0 flex-auto truncate text-body text-ink">
+                {member.firstName}
+              </span>
+              <span className="flex shrink-0 items-center gap-1 text-meta font-semibold text-ink tabular-nums">
+                <BlazeMark tone={selectFlameTone(member.flame)} size="sm" />
+                {member.flame.days}
+              </span>
+              <span className="shrink-0 text-meta text-ink-soft first-letter:uppercase">
+                {t(selectFlameStatusKey(member.flame))}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </Sheet>
   );

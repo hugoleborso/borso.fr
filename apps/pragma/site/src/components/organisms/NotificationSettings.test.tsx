@@ -42,6 +42,7 @@ const PREFERENCES = {
     { category: 'songs', enabled: true },
     { category: 'sessions', enabled: false },
     { category: 'setlists', enabled: true },
+    { category: 'streak', enabled: true },
   ],
 };
 
@@ -114,7 +115,7 @@ describe('NotificationSettings', () => {
     device.readInstallContext.mockReturnValue({ isIos: false, isStandalone: false });
   });
 
-  it('lists the five categories with the state the member saved', async () => {
+  it('lists the six categories with the state the member saved', async () => {
     api = answerApi();
     renderSettings();
     expect(isChecked(await screen.findByRole('checkbox', { name: 'New takes' }))).toBe(true);
@@ -126,6 +127,9 @@ describe('NotificationSettings', () => {
     expect(
       isChecked(screen.getByRole('checkbox', { name: 'Setlists, lineups and transitions' })),
     ).toBe(true);
+    expect(isChecked(screen.getByRole('checkbox', { name: 'Daily flame reminder at 20:00' }))).toBe(
+      true,
+    );
   });
 
   it('enables push on this device and then says it is on', async () => {

@@ -97,10 +97,10 @@ Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed re
 
 ## Flame
 
-- A day is the `Europe/Paris` calendar day. It is active when a
+- A day is the `Europe/Paris` calendar day. It is active for a member when
+  that member has a **presence** that day (opened the app), or when a
   **session** of either kind, a practice or a concert, is dated that day.
-  Nothing a member does alone counts: opening the app, a take or a mastery
-  score does not.
+  Takes and mastery scores do not count.
 - The personal flame walks back from today. Today never breaks it: while
   today is not active, the walk starts from yesterday. An active day adds 1.
 - A missed day spends one joker of its Monday-to-Sunday week, and each week
@@ -108,10 +108,11 @@ Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed re
   gap with an active day on its older side; while today is open, today
   stands as the newer side. A day bridged by a joker adds nothing.
 - Jokers left this week is 3 minus the jokers the walk spent since Monday.
-- My flame and the band flame walk the same session days. The band flame has
-  no joker: its first missed day ends it.
-- Not stored: it is computed on every read from the sessions of the last
-  400 days (`STREAK_LOOKBACK_DAYS`).
+- The band flame counts a day when any current member is active, and has no
+  joker: its first missed day ends it. A deleted member's presences drop
+  out.
+- Not stored: it is computed on every read from the last 400 days of
+  presences and sessions (`STREAK_LOOKBACK_DAYS`).
 - Shown on Home as two chips that open the streak sheet: the member's own
   flame and the band's. Both are drawn marks, not `Icon` glyphs. The
   personal flame is the `BlazeMark`, one flame in three layers with sparks.
@@ -130,9 +131,9 @@ Held by: `domain/practice-flame.core.test.ts` › ends the flame on a fourth mis
 Held by: `domain/practice-flame.core.test.ts` › spends no joker on a gap it cannot bridge whole
 Held by: `domain/practice-flame.core.test.ts` › counts jokers left this week from the jokers spent since Monday
 Held by: `domain/practice-flame.core.test.ts` › ends the band flame on its first missed day, with no joker
-Held by: `api/src/streaks/streaks.core.test.ts` › bridges a gap between sessions with jokers for my flame, never for the band’s
-Held by: `api/src/streaks/streaks.controller.test.ts` › leaves today open when the member opens the app on a day with no session
-Held by: `api/src/streaks/streaks.controller.test.ts` › counts today for me and the band when a %s is dated today
+Held by: `api/src/streaks/streaks.core.test.ts` › lights a member’s day and the band’s from the member opening the app
+Held by: `api/src/streaks/streaks.core.test.ts` › ignores the presence of a member who was deleted
+Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’s day when a session is dated today
 
 ## Tonality
 

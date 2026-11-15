@@ -1,5 +1,6 @@
 import { addWideEventFields } from '../helpers/observability/wide-event.adapter';
 import { describeThrownValue } from '../helpers/observability/wide-event.core';
+import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import type { DatabaseExecutor } from '../database/client';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
@@ -12,6 +13,7 @@ import {
   type NotificationCategory,
   type NotificationEvent,
   type NotificationPayload,
+  type PersonalPushOutcome,
   type PushDeliveryOutcome,
   type PushFailureReport,
   selectCategory,
@@ -25,6 +27,7 @@ import {
   deleteSubscriptions,
   findMemberFirstName,
   findVapidKeyPair,
+  hasClaimedFirstDispatch,
   insertVapidKeyPairUnlessPresent,
   listPreferencesOfCategory,
   listPreferencesOfMember,
@@ -36,13 +39,21 @@ import {
 import type { PreferencesUpdateInput, PushSubscriptionInput } from './notifications.schema';
 import { deliverWebPush, generateVapidKeyPair, type VapidKeys } from './web-push.adapter';
 
-export type { NotificationEvent, WriteActor } from './notifications.core';
+export type { NotificationEvent, PersonalPushOutcome, WriteActor } from './notifications.core';
 
 export type NotifyOutcome = 'no-recipients' | 'sent' | 'timed-out' | 'failed';
 
-interface PushAudience {
+export interface PushAudience {
   readonly subscriptions: readonly PushSubscriptionRow[];
   readonly preferences: readonly CategoryPreference[];
+}
+
+export interface PersonalPush {
+  readonly groupKey: string;
+  readonly recipients: readonly PushSubscriptionRow[];
+  readonly payload: NotificationPayload;
+  readonly now: Date;
+  readonly failureName: string;
 }
 
 const PUSH_SEND_DEADLINE_MILLISECONDS = 5_000;
@@ -103,6 +114,15 @@ export async function deletePushStateOfDeletedMember(
   await deletePushStateOfMemberWithin(executor, memberId);
 }
 
+async function hasClaimedOnlyDispatch(groupKey: string, now: Date): Promise<boolean> {
+  try {
+    return await hasClaimedFirstDispatch(groupKey, now);
+  } catch (error) {
+    if (isConflictAbort(error)) return false;
+    throw error;
+  }
+}
+
 async function sendWithinDeadline(
   sends: Promise<PushDeliveryOutcome[]>,
 ): Promise<PushDeliveryOutcome[] | null> {
@@ -139,7 +159,7 @@ async function deliverPayload(
   recipients: readonly PushSubscriptionRow[],
   payload: NotificationPayload,
   delivery: { readonly vapidKeys: VapidKeys; readonly failureName: string },
-): Promise<Exclude<NotifyOutcome, 'no-recipients' | 'failed'>> {
+): Promise<Exclude<PersonalPushOutcome, 'already-sent'>> {
   const encodedNotification = JSON.stringify(payload);
   const outcomes = await sendWithinDeadline(
     Promise.all(
@@ -205,10 +225,19 @@ export async function notifyBand(event: NotificationEvent): Promise<NotifyOutcom
   }
 }
 
-async function readPushAudience(category: NotificationCategory): Promise<PushAudience> {
+export async function readPushAudience(category: NotificationCategory): Promise<PushAudience> {
   const [subscriptions, preferences] = await Promise.all([
     listSubscriptions(),
     listPreferencesOfCategory(category),
   ]);
   return { subscriptions, preferences };
+}
+
+export async function sendPersonalPush(push: PersonalPush): Promise<PersonalPushOutcome> {
+  const vapidKeys = await readVapidKeys();
+  if (!(await hasClaimedOnlyDispatch(push.groupKey, push.now))) return 'already-sent';
+  return await deliverPayload(push.recipients, push.payload, {
+    vapidKeys,
+    failureName: push.failureName,
+  });
 }

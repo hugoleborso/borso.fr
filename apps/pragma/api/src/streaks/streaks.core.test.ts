@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildMemberFlames,
+  buildOwnFlame,
   buildStreaksView,
   collectSessionDays,
   firstLookbackDay,
@@ -8,34 +10,129 @@ import {
 
 const TODAY = '2026-10-29';
 const YESTERDAY = '2026-10-28';
-const TWO_DAYS_AGO = '2026-10-27';
-const FOUR_DAYS_AGO = '2026-10-25';
+const LEA = { id: 'member-lea', firstName: 'Léa', color: '#e0533a' };
+const TOM = { id: 'member-tom', firstName: 'Tom', color: '#3a7be0' };
+const NO_SESSION = new Set<string>();
+const LEA_ROW = { memberId: LEA.id, firstName: LEA.firstName, color: LEA.color };
+const TOM_ROW = { memberId: TOM.id, firstName: TOM.firstName, color: TOM.color };
 
 // @FollowsBlueprint test-pure-unit
 describe('buildStreaksView', () => {
-  it('counts the session days for my flame and the band’s', () => {
-    expect(buildStreaksView({ today: TODAY, sessionDays: new Set([TODAY, YESTERDAY]) })).toEqual({
+  it('forms each member’s days from their presences and every session', () => {
+    const view = buildStreaksView({
+      today: TODAY,
+      memberId: LEA.id,
+      members: [LEA, TOM],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
+      sessionDays: new Set([YESTERDAY]),
+    });
+    expect(view).toEqual({
       today: TODAY,
       mine: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
       band: { days: 2, isTodayCounted: true },
+      members: [
+        {
+          memberId: LEA.id,
+          firstName: 'Léa',
+          color: '#e0533a',
+          flame: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
+        },
+        {
+          memberId: TOM.id,
+          firstName: 'Tom',
+          color: '#3a7be0',
+          flame: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 },
+        },
+      ],
     });
   });
 
-  it('bridges a gap between sessions with jokers for my flame, never for the band’s', () => {
+  it('counts a band day when any one member opened the app', () => {
     const view = buildStreaksView({
       today: TODAY,
-      sessionDays: new Set([YESTERDAY, FOUR_DAYS_AGO]),
+      memberId: TOM.id,
+      members: [LEA, TOM],
+      presences: [
+        { memberId: LEA.id, presentOn: TODAY },
+        { memberId: TOM.id, presentOn: YESTERDAY },
+      ],
+      sessionDays: NO_SESSION,
     });
-    expect(view.mine).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 1 });
-    expect(view.band).toEqual({ days: 1, isTodayCounted: false });
+    expect(view.band).toEqual({ days: 2, isTodayCounted: true });
+    expect(view.mine).toEqual({ days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 });
   });
 
-  it('answers no flame without a session', () => {
-    expect(buildStreaksView({ today: TODAY, sessionDays: new Set() })).toEqual({
+  it('lights a member’s day and the band’s from the member opening the app', () => {
+    const view = buildStreaksView({
       today: TODAY,
-      mine: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 },
-      band: { days: 0, isTodayCounted: false },
+      memberId: LEA.id,
+      members: [LEA, TOM],
+      presences: [
+        { memberId: LEA.id, presentOn: TODAY },
+        { memberId: TOM.id, presentOn: YESTERDAY },
+      ],
+      sessionDays: NO_SESSION,
     });
+    expect(view.mine).toEqual({ days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 });
+    expect(view.band).toEqual({ days: 2, isTodayCounted: true });
+    expect(view.members[1]?.flame).toEqual({
+      days: 1,
+      isTodayCounted: false,
+      jokersLeftThisWeek: 3,
+    });
+  });
+
+  it('ignores the presence of a member who was deleted', () => {
+    const view = buildStreaksView({
+      today: TODAY,
+      memberId: LEA.id,
+      members: [LEA],
+      presences: [{ memberId: 'member-gone', presentOn: TODAY }],
+      sessionDays: NO_SESSION,
+    });
+    expect(view.band).toEqual({ days: 0, isTodayCounted: false });
+  });
+
+  it('answers the empty flame for a signed-in member who is not in the band', () => {
+    const view = buildStreaksView({
+      today: TODAY,
+      memberId: 'member-unknown',
+      members: [LEA],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
+      sessionDays: new Set([TODAY]),
+    });
+    expect(view.mine).toEqual({ days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 });
+  });
+});
+
+describe('buildMemberFlames', () => {
+  it('answers every member’s flame without a signed-in member', () => {
+    const flames = buildMemberFlames({
+      today: TODAY,
+      members: [LEA, TOM],
+      presences: [{ memberId: TOM.id, presentOn: TODAY }],
+      sessionDays: NO_SESSION,
+    });
+    expect(flames).toEqual([
+      { ...LEA_ROW, flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 } },
+      { ...TOM_ROW, flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 } },
+    ]);
+  });
+});
+
+describe('buildOwnFlame', () => {
+  it('reads only the member’s own presences, with every session', () => {
+    expect(
+      buildOwnFlame({
+        today: TODAY,
+        memberId: TOM.id,
+        presences: [
+          { memberId: LEA.id, presentOn: TODAY },
+          { memberId: TOM.id, presentOn: YESTERDAY },
+        ],
+        sessionDays: new Set(['2026-10-27']),
+      }),
+    ).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 3 });
   });
 });
 
@@ -63,11 +160,18 @@ describe('collectSessionDays', () => {
 });
 
 describe('projectStreaksForTool', () => {
-  it('keeps both flames and drops the day', () => {
-    const view = buildStreaksView({ today: TODAY, sessionDays: new Set([TWO_DAYS_AGO]) });
+  it('keeps both flames and each member’s count, without ids or colours', () => {
+    const view = buildStreaksView({
+      today: TODAY,
+      memberId: LEA.id,
+      members: [LEA],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
+      sessionDays: NO_SESSION,
+    });
     expect(projectStreaksForTool(view)).toEqual({
-      mine: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 2 },
-      band: { days: 0, isTodayCounted: false },
+      mine: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 },
+      band: { days: 1, isTodayCounted: true },
+      members: [{ firstName: 'Léa', days: 1, isTodayCounted: true }],
     });
   });
 });

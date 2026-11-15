@@ -92,6 +92,14 @@ const STREAKS = {
   today: '2026-10-29',
   mine: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
   band: { days: 4, isTodayCounted: true },
+  members: [
+    {
+      memberId: MEMBER.id,
+      firstName: MEMBER.firstName,
+      color: MEMBER.color,
+      flame: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
+    },
+  ],
 };
 
 function answerHomeApi(sessions: readonly unknown[], streaksStatus = 200) {
@@ -236,7 +244,7 @@ describe('the home page', () => {
     );
     fireEvent.click(mine);
     const sheet = screen.getByRole('dialog', { name: 'Flames' });
-    expect(within(sheet).getByText('2 jokers left this week')).toBeTruthy();
+    expect(within(sheet).getByText(MEMBER.firstName)).toBeTruthy();
     expect(recordProductEvent).toHaveBeenCalledWith('streak_sheet_opened');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Flames' })).toBe(null);

@@ -1,12 +1,15 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { jsonRequest, readJson } from '../../../test/auth-utils';
+import { testDatabase } from '../../../test/database-utils';
 import {
   callTool,
   prepareAssistantBand,
   refusal,
   useAssistantToolSuite,
 } from '../../../test/mcp-utils';
+import { presenceTable } from '../streaks/streaks.schema';
 
 const PHONE = '+33 6 12 34 56 78';
 
@@ -41,7 +44,7 @@ describe('me tools (back-e2e)', () => {
     expect(lea.phone).toBeNull();
   });
 
-  it('reads the flames in get_me from the band’s session days', async () => {
+  it('reads the flames in get_me, and an assistant read does not light the member’s day', async () => {
     const band = await prepareAssistantBand();
 
     const profile = await callTool(band.assistant, 'get_me');
@@ -49,11 +52,14 @@ describe('me tools (back-e2e)', () => {
     expect(profile.body).toMatchObject({
       memberId: band.hugo.memberId,
       studies: { queue: [] },
-      flames: {
-        mine: { days: 0, isTodayCounted: false },
-        band: { days: 0, isTodayCounted: false },
-      },
+      flames: { mine: { days: 0, isTodayCounted: false } },
     });
+    expect(
+      await testDatabase()
+        .select()
+        .from(presenceTable)
+        .where(eq(presenceTable.memberId, band.hugo.memberId)),
+    ).toEqual([]);
   });
 
   it('refuses an empty update, and a key it does not know', async () => {

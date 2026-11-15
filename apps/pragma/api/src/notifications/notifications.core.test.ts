@@ -172,6 +172,7 @@ describe('buildCategoryToggles', () => {
       { category: 'songs', enabled: true },
       { category: 'sessions', enabled: false },
       { category: 'setlists', enabled: true },
+      { category: 'streak', enabled: true },
     ]);
     expect(NOTIFICATION_CATEGORIES).toEqual([
       'takes',
@@ -179,6 +180,7 @@ describe('buildCategoryToggles', () => {
       'songs',
       'sessions',
       'setlists',
+      'streak',
     ]);
   });
 });

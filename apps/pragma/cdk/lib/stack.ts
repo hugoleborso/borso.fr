@@ -9,7 +9,9 @@ import {
   type Stage,
   WebSocketChannel,
 } from '@borso/infra';
-import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, TimeZone } from 'aws-cdk-lib';
+import { Schedule, ScheduleExpression, ScheduleTargetInput } from 'aws-cdk-lib/aws-scheduler';
+import { LambdaInvoke } from 'aws-cdk-lib/aws-scheduler-targets';
 import {
   BlockPublicAccess,
   Bucket,
@@ -18,8 +20,10 @@ import {
   ObjectOwnership,
 } from 'aws-cdk-lib/aws-s3';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import type { IFunction } from 'aws-cdk-lib/aws-lambda';
 import type { Construct } from 'constructs';
 import { PRAGMA_REQUEST_HEADER_NAMES } from '../../domain/request-headers.core.js';
+import { STREAK_REMINDER_JOB } from '../../domain/scheduled-job.core.js';
 
 const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
@@ -57,6 +61,11 @@ const ASSISTANT_PATH_PATTERNS = [
 
 const PRODUCTION_STAGE: Stage = 'prod';
 const TAKE_OBJECT_KEYS = 'take/*';
+
+const STREAK_REMINDER_HOUR = '20';
+const STREAK_REMINDER_MINUTE = '0';
+const STREAK_REMINDER_MAX_EVENT_AGE = Duration.hours(1);
+const STREAK_REMINDER_RETRY_ATTEMPTS = 2;
 
 const REALTIME_CONSTRUCT_ID = 'Realtime';
 const WEBSOCKET_CALLBACK_URL_VARIABLE = 'WEBSOCKET_CALLBACK_URL';
@@ -146,6 +155,22 @@ function addRealtimeChannel(props: BuildPragmaAppStackProps, previewableApp: Pre
   previewableApp.api.handler.addEnvironment(WEBSOCKET_CALLBACK_URL_VARIABLE, channel.callbackUrl);
   previewableApp.api.handler.addEnvironment(WEBSOCKET_CLIENT_URL_VARIABLE, channel.clientUrl);
   channel.grantManageConnections(previewableApp.api.handler);
+}
+
+function scheduleStreakReminder(scope: Construct, apiHandler: IFunction): void {
+  new Schedule(scope, 'StreakReminderSchedule', {
+    description: 'Pushes the 20:00 Europe/Paris streak reminder (ADR-2026-10-29T1139)',
+    schedule: ScheduleExpression.cron({
+      minute: STREAK_REMINDER_MINUTE,
+      hour: STREAK_REMINDER_HOUR,
+      timeZone: TimeZone.EUROPE_PARIS,
+    }),
+    target: new LambdaInvoke(apiHandler, {
+      input: ScheduleTargetInput.fromObject({ job: STREAK_REMINDER_JOB }),
+      maxEventAge: STREAK_REMINDER_MAX_EVENT_AGE,
+      retryAttempts: STREAK_REMINDER_RETRY_ATTEMPTS,
+    }),
+  });
 }
 
 /**
@@ -244,6 +269,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         }),
       );
     }
+    if (isProduction) scheduleStreakReminder(props.scope, previewableApp.api.handler);
     previewableApp.api.handler.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
