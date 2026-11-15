@@ -49,7 +49,9 @@ async function resolveOwnSetlistId(variables: SavePracticeSongsVariables): Promi
   return await createPracticeSetlist(variables.practiceId, variables.setlistName);
 }
 
-async function applyPracticeSongsPlan(variables: SavePracticeSongsVariables): Promise<void> {
+async function applyPracticeSongsPlan(
+  variables: SavePracticeSongsVariables,
+): Promise<string | null> {
   const { plan, practiceId } = variables;
   const ownSetlistId = await resolveOwnSetlistId(variables);
   if (ownSetlistId !== null) await appendSongs(ownSetlistId, plan.addSongIds);
@@ -59,6 +61,7 @@ async function applyPracticeSongsPlan(variables: SavePracticeSongsVariables): Pr
   for (const setlistId of plan.unlinkedSetlistIds) {
     await unlinkSetlist(setlistId, practiceId);
   }
+  return ownSetlistId;
 }
 
 // @FollowsBlueprint query-pessimistic-mutation

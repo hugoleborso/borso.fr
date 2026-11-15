@@ -10,6 +10,7 @@ export {
   memberPasskeyTable,
   webauthnChallengeTable,
 } from '../auth/credentials.schema';
+export { bandLinkTable } from '../band-links/band-links.schema';
 export { barTable } from '../bars/bars.schema';
 export { compositionTable } from '../compositions/compositions.schema';
 export { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
@@ -45,7 +46,7 @@ export {
 } from '../setlists/setlists.schema';
 export { sketchClipTable, sketchLaneTable } from '../sketches/sketches.schema';
 export { songTable } from '../songs/songs.schema';
-export { studyTable } from '../studies/studies.schema';
+export { presenceTable } from '../streaks/streaks.schema';
 export { takeCommentTable, takeTable } from '../takes/takes.schema';
 export { taskTable } from '../tasks/tasks.schema';
 export { transitionCommentTable } from '../transitions/transitions.schema';

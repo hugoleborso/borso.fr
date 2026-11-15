@@ -34,7 +34,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.listenDeezer', readsTheSameBecause: 'Deezer, a proper noun' },
   { key: 'catalog.listenSpotify', readsTheSameBecause: 'Spotify, a proper noun' },
   { key: 'catalog.listenYoutube', readsTheSameBecause: 'YouTube, a proper noun' },
-  { key: 'catalog.noMastery', readsTheSameBecause: 'an em dash, not a word' },
   {
     key: 'catalog.notesGimmicks',
     readsTheSameBecause: '"gimmick" is the word French musicians use here',

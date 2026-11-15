@@ -26,6 +26,7 @@ export const songKeys = {
   list: () => [...songKeys.all, 'list'] as const,
   byId: (id: string) => [...songKeys.all, 'byId', id] as const,
   search: (query: string) => [...songKeys.all, 'search', query] as const,
+  preview: (id: string) => [...songKeys.all, 'preview', id] as const,
 };
 
 type SongsListResponse = InferResponseType<typeof api.api.songs.$get>;
@@ -85,6 +86,25 @@ export function useSongSearch(query: string) {
       return response.json();
     },
     enabled: query.trim().length > 0,
+  });
+}
+
+const MILLISECONDS_PER_MINUTE = 60_000;
+const PREVIEW_STALE_MINUTES = 10;
+const PREVIEW_GC_MINUTES = 1;
+
+// @FollowsBlueprint query-module
+export function useSongPreview(id: string, isEnabled: boolean) {
+  return useQuery({
+    queryKey: songKeys.preview(id),
+    queryFn: async () => {
+      const response = await api.api.songs[':id'].preview.$get({ param: { id } });
+      if (!response.ok) throw new ApiError(response.status, `preview ${response.status}`, null);
+      return response.json();
+    },
+    enabled: isEnabled,
+    staleTime: PREVIEW_STALE_MINUTES * MILLISECONDS_PER_MINUTE,
+    gcTime: PREVIEW_GC_MINUTES * MILLISECONDS_PER_MINUTE,
   });
 }
 

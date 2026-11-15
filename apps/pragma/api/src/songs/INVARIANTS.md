@@ -15,9 +15,17 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   `site/src/routes/catalog/chords-above-lyrics.core.ts`), and text already
   in ChordPro is kept as is. A photo and a PDF with no text layer stay
   `image` and `pdf` files, which cannot be transposed.
+- A tablature lives inside a ChordPro chart as a **tab block**, the lines
+  between `{start_of_tab}` (or `{sot}`) and `{end_of_tab}` (or `{eot}`).
+  Each line in it is a `tab-line`, stored verbatim: no chord is read from
+  it or derived from it as tonality. The scene view transposes it on
+  screen only (see the catalog's Scene view invariants). On save, a run of
+  ASCII staff lines (`e|--0--|`) and the chord line right above it are
+  fenced into a tab block, in pasted text and in ChordPro alike.
 
 Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants
 Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above
+Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › fences the staves with the chord line above them, and never splices a chord into a string
 
 ## Energy
 
@@ -50,9 +58,16 @@ Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › m
 - One track belongs to at most one song: `song_deezer_track_id_unique`
   refuses a second. A create or an update naming a track another song
   holds answers 409 `deezer-track-taken` with that song's id and title.
+- The 30-second excerpt the song page plays is never stored. Deezer signs
+  its address with an expiry, so `GET /api/songs/:id/preview` reads the
+  track again at each call. A song naming no track, or a track Deezer
+  holds no excerpt of, answers `previewUrl: null` and the page draws no
+  play button.
 
 Held by: `api/src/songs/songs.controller.test.ts` › refuses a second song naming a Deezer track another song holds, and names the holder
 Held by: `api/src/songs/songs.controller.test.ts` › refuses moving a song onto a Deezer track another song holds, and lets a song keep its own
+Held by: `api/src/songs/songs.deezer.controller.test.ts` › resolves a fresh preview of the song track from Deezer at every read
+Held by: `api/src/songs/songs.deezer.controller.test.ts` › answers no preview without asking Deezer for a song that names no track
 
 ## Spotify track
 
@@ -110,7 +125,7 @@ Held by: `site/src/lib/cover-art.utils.test.ts` › has no address for a song th
   string when the column is null.
 - The catalogue is listed newest first by `createdAt`.
 - Deleting a song removes its row, its mastery overrides, its score
-  history, its studies, every setlist entry and vote naming it, and its
+  history, every setlist entry and vote naming it, and its
   takes with their comments, and clears it from the tasks naming it, all in
   one transaction (`deleteSongWithCascade`); the takes' audio objects are
   deleted once the transaction commits.

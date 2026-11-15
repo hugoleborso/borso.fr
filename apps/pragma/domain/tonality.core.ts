@@ -2,6 +2,8 @@ const CHORD_ROOT_REGEX = /^[A-G][#b]?/;
 const CHORD_QUALITY_REGEX = /^(?:maj7|min7|m7|maj|min|m|sus2|sus4|sus|dim|aug|7|6|9|11|13)/;
 const BRACKETED_CHORD_REGEX = /\[[^\]]*\]/g;
 const BRACKET_DELIMITER_LENGTH = 1;
+const TAB_BLOCK_START_PATTERN = /^\s*\{(?:start_of_tab|sot)(?::[^}]*)?\}\s*$/;
+const TAB_BLOCK_END_PATTERN = /^\s*\{(?:end_of_tab|eot)\}\s*$/;
 
 export interface ChordTonality {
   root: string;
@@ -47,7 +49,11 @@ export function deriveTonality(chordProSource: string): {
   const lines = chordProSource.split('\n');
   let start: ChordTonality | null = null;
   let end: ChordTonality | null = null;
+  let isInsideTab = false;
   for (const line of lines) {
+    if (TAB_BLOCK_START_PATTERN.test(line)) isInsideTab = true;
+    if (TAB_BLOCK_END_PATTERN.test(line)) isInsideTab = false;
+    if (isInsideTab) continue;
     for (const chord of chordsOnLine(line)) {
       start ??= chord;
       end = chord;

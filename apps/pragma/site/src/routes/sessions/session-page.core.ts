@@ -124,6 +124,7 @@ export interface SessionPills {
   readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlist';
   readonly isAddSetlistShown: boolean;
   readonly chooseSongsVariant: 'primary' | 'secondary' | null;
+  readonly isOrderSongsShown: boolean;
 }
 
 const NO_PILLS: SessionPills = {
@@ -133,7 +134,10 @@ const NO_PILLS: SessionPills = {
   setlistLabelKey: 'home.openSetlist',
   isAddSetlistShown: false,
   chooseSongsVariant: null,
+  isOrderSongsShown: false,
 };
+
+const FEWEST_SONGS_TO_ORDER = 2;
 
 export interface SessionPrimaryActionsInput {
   readonly isLoading: boolean;
@@ -141,6 +145,7 @@ export interface SessionPrimaryActionsInput {
   readonly sessionId: string;
   readonly firstSetlistId: string | null;
   readonly isPracticeModeOffered: boolean;
+  readonly practiceSongCount: number;
   readonly view: SessionView;
 }
 
@@ -150,13 +155,15 @@ export function buildPracticePath(sessionId: string): string {
 
 function selectPracticePills(input: SessionPrimaryActionsInput): SessionPills {
   const isSongsView = input.view === 'songs';
+  const isOrderSongsShown = isSongsView && input.practiceSongCount >= FEWEST_SONGS_TO_ORDER;
   if (!input.isPracticeModeOffered) {
-    return { ...NO_PILLS, chooseSongsVariant: isSongsView ? 'primary' : null };
+    return { ...NO_PILLS, chooseSongsVariant: isSongsView ? 'primary' : null, isOrderSongsShown };
   }
   return {
     ...NO_PILLS,
     practicePath: buildPracticePath(input.sessionId),
     chooseSongsVariant: isSongsView ? 'secondary' : null,
+    isOrderSongsShown,
   };
 }
 

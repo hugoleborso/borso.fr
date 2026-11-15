@@ -29,6 +29,7 @@ import {
 import { selectVoteIntent } from '../../lib/queries/improvements.utils';
 import {
   DEFAULT_IMPROVEMENT_KIND,
+  DEFAULT_STATUS_FILTER,
   IMPROVEMENT_STATUSES,
   type ImprovementStatus,
   type StatusFilter,
@@ -47,6 +48,7 @@ interface EditedImprovement {
 
 const DEFAULT_STATUS: ImprovementStatus = 'idea';
 const ALL_STATUSES: StatusFilter = 'all';
+const OPEN_STATUSES: StatusFilter = 'open';
 const NEW_IMPROVEMENT: EditedImprovement = {
   improvementId: null,
   values: { title: '', details: '', status: DEFAULT_STATUS, kind: DEFAULT_IMPROVEMENT_KIND },
@@ -67,7 +69,7 @@ export function ImprovementsPage(): JSX.Element {
   const remove = useDeleteImprovement();
   const vote = useVoteOnImprovement();
   const [edited, setEdited] = useState<EditedImprovement | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(ALL_STATUSES);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_STATUS_FILTER);
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
 
   const saveImprovement = async (values: ImprovementFormValues): Promise<void> => {
@@ -111,6 +113,12 @@ export function ImprovementsPage(): JSX.Element {
   const failureStatus: WriteFailureStatus = lastError instanceof ApiError ? lastError.status : null;
 
   const filterOptions = [
+    {
+      value: OPEN_STATUSES,
+      label: t('improvements.filterOpen'),
+      icon: 'tasks' as const,
+      count: filterByStatus(improvements, OPEN_STATUSES).length,
+    },
     {
       value: ALL_STATUSES,
       label: t('common.all'),

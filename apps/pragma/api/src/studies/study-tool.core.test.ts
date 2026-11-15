@@ -11,7 +11,6 @@ const OVERVIEW: StudiesOverview = {
       instrumentId: 'instrument-drums',
       score: 4,
       isReady: false,
-      isStudiedToday: true,
     },
   ],
   readiness: {
@@ -39,7 +38,6 @@ describe('projectOverviewForTool', () => {
           instrument: 'Batterie',
           score: 4,
           isReady: false,
-          isStudiedToday: true,
         },
       ],
       readiness: {

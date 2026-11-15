@@ -2060,17 +2060,6 @@
   "apps/pragma/api/src/studies/studies.controller.ts": {
     "buildStudiesRouter": "controller-dispatch"
   },
-  "apps/pragma/api/src/studies/studies.repository.ts": {
-    "STUDY_PROJECTION": "repository-projection",
-    "insertStudyIfAbsentWithin": "repository-idempotent-upsert",
-    "runInOneStudyTransaction": "repository-owned-transaction"
-  },
-  "apps/pragma/api/src/studies/studies.schema.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/studies/studies.schema.ts": {
-    "studyTable": "schema-dsql-constraints"
-  },
   "apps/pragma/api/src/studies/studies.service.ts": {
     "logStudy": "service-clock-injected"
   },
@@ -2445,9 +2434,6 @@
   "apps/pragma/site/src/components/molecules/EnergyCurve.tsx": {
     "EnergyCurve": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/EnergySparkline.tsx": {
-    "EnergySparkline": "molecule-presentational"
-  },
   "apps/pragma/site/src/components/molecules/EnumSelectField.tsx": {
     "EnumSelectField": "molecule-presentational"
   },
@@ -2637,12 +2623,6 @@
   "apps/pragma/site/src/components/molecules/energy-curve.utils.ts": {
     "buildEnergyBars": "utils-pure-module"
   },
-  "apps/pragma/site/src/components/molecules/energy-sparkline.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts": {
-    "buildSparklinePath": "utils-pure-module"
-  },
   "apps/pragma/site/src/components/molecules/file-drop.utils.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -2820,9 +2800,6 @@
   "apps/pragma/site/src/components/organisms/MasteryMatrix.test.tsx": {
     "describe": "test-component-render"
   },
-  "apps/pragma/site/src/components/organisms/MasteryProgressChart.tsx": {
-    "MasteryProgressChart": "organism-query-owning"
-  },
   "apps/pragma/site/src/components/organisms/MemberEditForm.test.tsx": {
     "describe": "test-component-render"
   },
@@ -2984,9 +2961,6 @@
   "apps/pragma/site/src/components/organisms/SongDetailHeader.tsx": {
     "SongDetailHeader": "organism-presentational"
   },
-  "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx": {
-    "SongDetailSidebar": "organism-presentational"
-  },
   "apps/pragma/site/src/components/organisms/SongEditForm.test.tsx": {
     "describe": "test-component-render"
   },
@@ -3005,23 +2979,11 @@
   "apps/pragma/site/src/components/organisms/SongNotesCard.tsx": {
     "SongNotesCard": "organism-presentational"
   },
-  "apps/pragma/site/src/components/organisms/SongNotesSheet.test.tsx": {
-    "describe": "test-component-render"
-  },
-  "apps/pragma/site/src/components/organisms/SongNotesSheet.tsx": {
-    "SongNotesSheet": "organism-presentational"
-  },
-  "apps/pragma/site/src/components/organisms/SongRoundActions.tsx": {
-    "SongRoundActions": "organism-query-owning"
-  },
   "apps/pragma/site/src/components/organisms/SongSearch.tsx": {
     "SongSearch": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SongTakes.tsx": {
     "SongTakes": "organism-query-owning"
-  },
-  "apps/pragma/site/src/components/organisms/SongYourPart.tsx": {
-    "SongYourPart": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SuggestSongField.test.tsx": {
     "describe": "test-component-render"
@@ -3115,12 +3077,6 @@
   },
   "apps/pragma/site/src/components/organisms/lineup-grid.core.ts": {
     "buildLineupGrid": "core-projection"
-  },
-  "apps/pragma/site/src/components/organisms/mastery-progress.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/components/organisms/mastery-progress.core.ts": {
-    "groupScoreChangesIntoSeries": "core-view-projection"
   },
   "apps/pragma/site/src/components/organisms/navigation-active.core.test.ts": {
     "describe": "test-pure-unit"
@@ -3516,12 +3472,6 @@
     "useLogStudy": "query-optimistic-mutation",
     "useStudiesOverview": "query-module",
     "useUndoStudy": "query-optimistic-mutation"
-  },
-  "apps/pragma/site/src/lib/queries/studies.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/lib/queries/studies.utils.ts": {
-    "markStudied": "utils-pure-module"
   },
   "apps/pragma/site/src/lib/queries/takes.queries.test.tsx": {
     "describe": "test-query-hook"

@@ -15,7 +15,6 @@ import {
   insertEntryWithin,
   listEntries,
   listEntriesOfSetlists,
-  listEntriesOfSongWithin,
   listEntryOwners,
   type SetlistEntryRow,
 } from './setlist-entry.repository';
@@ -213,13 +212,6 @@ export async function unlinkSetlistFromSession(
 
 export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> {
   return await listEntries(setlistId);
-}
-
-export async function getEntriesOfSongWithin(
-  executor: DatabaseExecutor,
-  songId: string,
-): Promise<SetlistEntryRow[]> {
-  return await listEntriesOfSongWithin(executor, songId);
 }
 
 export async function getEntriesOfSetlists(

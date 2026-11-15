@@ -24,7 +24,7 @@ import {
 import { countSavedFeeds, listFixtureFeedAttachments } from './calendar-feed-fixtures.core';
 
 export { answerFixtureFeedRequest } from './calendar-feed-fixtures.core';
-import { seedStudies } from './test-seed-studies.service';
+import { seedPresences } from './test-seed-presences.service';
 import { SEED_TASKS } from './test-seed-task-board.core';
 import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
@@ -280,7 +280,7 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
     SEED_SONGS.map((seed, index) => [seed.title, songIds[index] ?? '']),
   );
   await seedTasks(memberIdByName, songIdByTitle, now);
-  await seedStudies(memberIdByName, songIdByTitle, instrumentIdByName, now);
+  await seedPresences(memberIdByName, now);
   const seedActor = selectSeedActor(memberIdByName, now);
   await seedConcertSetlist(songIds, seedActor);
   await seedTransitionComment(songIds, seedActor);

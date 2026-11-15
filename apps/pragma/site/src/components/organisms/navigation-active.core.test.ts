@@ -46,4 +46,9 @@ describe('selectActiveTab', () => {
       '/band',
     ]);
   });
+
+  it('marks the section a page was opened from when it carries a return path', () => {
+    expect(selectActiveTab('/setlists/s1/order', '/sessions/p1')).toBe('sessions');
+    expect(selectActiveTab('/setlists/s1/order', null)).toBe('setlists');
+  });
 });

@@ -598,33 +598,11 @@ const learnNewSong: TaskWalkRunner = async (driver) => {
   );
   const listenLinks = Number(await driver.session.evaluate(COUNT_LISTEN_LINKS));
   walk.note(`${String(listenLinks)} listen link(s) on the song page.`);
-  await walk.tap('Practised', { exact: 'Practised', css: 'main button' }, { primary: true });
-  await waitMilliseconds(SAVE_SETTLE_MS);
-  const overview = studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview'));
-  const streaks = streaksSchema.parse(await driver.fetchJson('/api/streaks'));
+  const location = await walk.readLocation();
   return walk.summarise({
-    success: {
-      todayCounted: streaks.mine?.isTodayCounted ?? null,
-      studiedToday: (overview.queue ?? [])
-        .filter((item) => item.isStudiedToday === true)
-        .map((item) => item.title),
-    },
+    success: { firstSongToLearn: firstRow.name, landedOn: location.path, listenLinks },
   });
 };
-
-const studiesOverviewSchema = z
-  .object({
-    queue: z
-      .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
-      .optional(),
-  })
-  .loose();
-
-const streaksSchema = z
-  .object({
-    mine: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
-  })
-  .loose();
 
 const discussWhichSongs: TaskWalkRunner = async (driver) => {
   const known = await driver.startFresh((records) => `/setlists/${records.rehearsal.id}`);

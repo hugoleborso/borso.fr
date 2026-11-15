@@ -10,6 +10,7 @@ import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.querie
 import { isSignInUpdate } from './queries/offline-reading.utils';
 import { forgetSessionMarker } from './session-marker.adapter';
 import { writeKeepingStaleness } from './queries/cache-write.queries';
+import { isQueryPersisted } from './queries/persisted-query.core';
 
 const DEFAULT_STALE_TIME_MS = 300_000;
 const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -47,7 +48,10 @@ export const queryCachePersistOptions = {
   persister: queryCachePersister,
   maxAge: PERSISTED_CACHE_MAX_AGE_MS,
   buster: PERSISTED_CACHE_SHAPE_VERSION,
-  dehydrateOptions: { shouldDehydrateMutation: isMutationPersisted },
+  dehydrateOptions: {
+    shouldDehydrateMutation: isMutationPersisted,
+    shouldDehydrateQuery: isQueryPersisted,
+  },
 } satisfies PersistQueryClientProviderProps['persistOptions'];
 
 export function startOfflineReading(): void {

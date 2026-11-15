@@ -55,5 +55,5 @@ Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route 
 Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
 Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
 Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement as the granting member, and lists whether that member voted for it
-Held by: `api/src/me/me-tools.controller.test.ts` › logs a study of today as the granting member, shows it in get_me, then undoes it
+Held by: `api/src/me/me-tools.controller.test.ts` › refuses an empty update, and a key it does not know
 Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details

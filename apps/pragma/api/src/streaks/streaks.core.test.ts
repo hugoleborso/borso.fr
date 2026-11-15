@@ -18,12 +18,12 @@ const TOM_ROW = { memberId: TOM.id, firstName: TOM.firstName, color: TOM.color }
 
 // @FollowsBlueprint test-pure-unit
 describe('buildStreaksView', () => {
-  it('forms each member’s days from their studies and every session', () => {
+  it('forms each member’s days from their presences and every session', () => {
     const view = buildStreaksView({
       today: TODAY,
       memberId: LEA.id,
       members: [LEA, TOM],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
       sessionDays: new Set([YESTERDAY]),
     });
     expect(view).toEqual({
@@ -47,14 +47,14 @@ describe('buildStreaksView', () => {
     });
   });
 
-  it('counts a band day when any one member studied it', () => {
+  it('counts a band day when any one member opened the app', () => {
     const view = buildStreaksView({
       today: TODAY,
       memberId: TOM.id,
       members: [LEA, TOM],
-      studies: [
-        { memberId: LEA.id, studiedOn: TODAY },
-        { memberId: TOM.id, studiedOn: YESTERDAY },
+      presences: [
+        { memberId: LEA.id, presentOn: TODAY },
+        { memberId: TOM.id, presentOn: YESTERDAY },
       ],
       sessionDays: NO_SESSION,
     });
@@ -62,16 +62,35 @@ describe('buildStreaksView', () => {
     expect(view.mine).toEqual({ days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 });
   });
 
-  it('ignores the study of a member who was deleted', () => {
+  it('lights a member’s day and the band’s from the member opening the app', () => {
+    const view = buildStreaksView({
+      today: TODAY,
+      memberId: LEA.id,
+      members: [LEA, TOM],
+      presences: [
+        { memberId: LEA.id, presentOn: TODAY },
+        { memberId: TOM.id, presentOn: YESTERDAY },
+      ],
+      sessionDays: NO_SESSION,
+    });
+    expect(view.mine).toEqual({ days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 });
+    expect(view.band).toEqual({ days: 2, isTodayCounted: true });
+    expect(view.members[1]?.flame).toEqual({
+      days: 1,
+      isTodayCounted: false,
+      jokersLeftThisWeek: 3,
+    });
+  });
+
+  it('ignores the presence of a member who was deleted', () => {
     const view = buildStreaksView({
       today: TODAY,
       memberId: LEA.id,
       members: [LEA],
-      studies: [{ memberId: 'member-gone', studiedOn: TODAY }],
+      presences: [{ memberId: 'member-gone', presentOn: TODAY }],
       sessionDays: NO_SESSION,
     });
     expect(view.band).toEqual({ days: 0, isTodayCounted: false });
-    expect(view.members.map((member) => member.memberId)).toEqual([LEA.id]);
   });
 
   it('answers the empty flame for a signed-in member who is not in the band', () => {
@@ -79,7 +98,7 @@ describe('buildStreaksView', () => {
       today: TODAY,
       memberId: 'member-unknown',
       members: [LEA],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
       sessionDays: new Set([TODAY]),
     });
     expect(view.mine).toEqual({ days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 });
@@ -91,7 +110,7 @@ describe('buildMemberFlames', () => {
     const flames = buildMemberFlames({
       today: TODAY,
       members: [LEA, TOM],
-      studies: [{ memberId: TOM.id, studiedOn: TODAY }],
+      presences: [{ memberId: TOM.id, presentOn: TODAY }],
       sessionDays: NO_SESSION,
     });
     expect(flames).toEqual([
@@ -102,14 +121,14 @@ describe('buildMemberFlames', () => {
 });
 
 describe('buildOwnFlame', () => {
-  it('reads only the member’s own studies, with every session', () => {
+  it('reads only the member’s own presences, with every session', () => {
     expect(
       buildOwnFlame({
         today: TODAY,
         memberId: TOM.id,
-        studies: [
-          { memberId: LEA.id, studiedOn: TODAY },
-          { memberId: TOM.id, studiedOn: YESTERDAY },
+        presences: [
+          { memberId: LEA.id, presentOn: TODAY },
+          { memberId: TOM.id, presentOn: YESTERDAY },
         ],
         sessionDays: new Set(['2026-10-27']),
       }),
@@ -146,7 +165,7 @@ describe('projectStreaksForTool', () => {
       today: TODAY,
       memberId: LEA.id,
       members: [LEA],
-      studies: [{ memberId: LEA.id, studiedOn: TODAY }],
+      presences: [{ memberId: LEA.id, presentOn: TODAY }],
       sessionDays: NO_SESSION,
     });
     expect(projectStreaksForTool(view)).toEqual({
