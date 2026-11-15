@@ -96,8 +96,9 @@ never occur in the sandbox:
 | Bounce past the top or the bottom of the page | `offsetTop` leaves the range 0 to keyboard height, with no keyboard open | The tab bar rose at the top (#333) |
 | Bounce while a sticky header holds a horizontal strip | The compositor can drop the strip's layer | The filter chips vanished after a bounce (#337) |
 
-pragma's document no longer bounces (`overscroll-behavior-y: none` on the
-root, #337). pragma also reports to Sentry, as `ScreenPlacementBreach`, a tab
+#337 turned pragma's document bounce off, and #343 turned it back on. Below
+`lg` the page header and the tab bar are fixed, so the bounce moves only the
+content. pragma also reports to Sentry, as `ScreenPlacementBreach`, a tab
 bar off the bottom of the visible screen or a focused field the keyboard
 hides (`screen-placement.adapter.ts`). Search Sentry for it before closing an
 iOS screen fix.
