@@ -261,19 +261,22 @@ run_check app-registration \
   '^. (apps/[^/]+/(package\.json|bin/|cdk/|api/src/database/migrations/)|\.github/path-filters\.yml$|commitlint\.config\.js$)' \
   scripts/check-app-registration.sh
 
-# Each term in an application's vocabulary names the folder that owns it and
-# the test that holds it, and those get renamed or removed by changes with no
-# reason to open the vocabulary. An edited test matters only when a `Held by`
-# line names it, since the check reads its titles; any other test edit left
-# the check reading files it could not have changed.
+# Each term in a glossary names the folder that owns it, and each invariant
+# beside the code names the test that holds it, and those get renamed or
+# removed by changes with no reason to open either file. An edited test matters
+# only when a `Held by` line names it, since the check reads its titles; any
+# other test edit left the check reading files it could not have changed. A
+# `Held by` path is relative to the application folder, the first two parts of
+# the invariants file's path.
 held_tests=$(
-  awk 'FNR == 1 { folder = FILENAME; sub(/VOCABULARY\.md$/, "", folder) }
+  git ls-files -- 'apps/*/INVARIANTS.md' | xargs -r awk '
+    FNR == 1 { split(FILENAME, part, "/"); folder = part[1] "/" part[2] "/" }
     /^Held by: `/ { cited = $0; sub(/^Held by: `/, "", cited); sub(/`.*/, "", cited)
-      gsub(/\./, "\\.", cited); print folder cited }' apps/*/VOCABULARY.md 2>/dev/null |
+      gsub(/\./, "\\.", cited); print folder cited }' 2>/dev/null |
     sort -u | paste -sd '|' -
 )
 run_check vocabulary-paths \
-  "^. apps/[^/]+/VOCABULARY\\.md\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
+  "^. (apps/[^/]+/VOCABULARY\\.md|apps/.+/INVARIANTS\\.md|docs/VOCABULARY\\.md)\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
   scripts/check-vocabulary-paths.sh
 
 # A dated record of a past review is not editable: it is true as of the day in

@@ -126,6 +126,7 @@ No:
 | [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | accepted | 2026-11-13 |
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
+| [2026-11-15T0628](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) | The glossary stays in VOCABULARY.md and each term's rules move to an INVARIANTS.md in its folder | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -210,6 +211,7 @@ No:
 - 2026-08-20T1031. generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
 - 2026-09-21T0819. a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
 - 2026-10-10T0141. weak point management reads the dantotsu front matter, made checkable by a schema gate; `zone:` is chosen by hand, and the weekly count comes from the entries' dates, so no new writer and no cron.
+- [`2026-11-15T0628-glossary-and-invariants-are-two-files.md`](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) — each application's `VOCABULARY.md` keeps only the glossary, each term's rules and `Held by` tests move to an `INVARIANTS.md` in the folder it lives in, and `docs/VOCABULARY.md` holds the repository's words, because every agent read pragma's 2,028 lines before naming anything.
 
 ## How `/open-pr` uses ADRs
 

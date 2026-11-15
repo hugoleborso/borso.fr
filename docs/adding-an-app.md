@@ -43,7 +43,7 @@ fails the commit rather than the deploy:
 2. **`commitlint.config.js`** — add `<slug>` to the `scope-enum` array. Lets `git commit -m "feat(<slug>): …"` pass.
 3. **`pnpm-workspace.yaml`** — *no change needed for the workspace glob.* A dependency a second workspace already declares does have to move into the catalog there, and `scripts/dependencies/check-dependency-catalog.ts` fails the commit otherwise. See [`docs/standards/13-dependencies.md`](./standards/13-dependencies.md).
 4. **`knip.json`** — add a `workspaces` entry naming the app's entry points, or `pnpm exec knip` reports its whole tree as unused.
-5. **`apps/<slug>/VOCABULARY.md`** — the application's nouns, if it has a domain of its own. `scripts/check-vocabulary-paths.sh` gates the folder each term names. See [`docs/standards/01-naming.md`](./standards/01-naming.md).
+5. **`apps/<slug>/VOCABULARY.md`** — the application's nouns, if it has a domain of its own, with each term's rules in an `INVARIANTS.md` in the folder it lives in, and a link added to [`docs/VOCABULARY.md`](./VOCABULARY.md). `scripts/check-vocabulary-paths.sh` gates the folder each term names and the test each rule names. See [`docs/standards/01-naming.md`](./standards/01-naming.md).
 
 The workflows themselves auto-discover the app list from the workspace via `pnpm ls --filter "./apps/*" --json`, so you don't update the `apps=[…]` literal. (See `flows.md` for what the workflows actually do.)
 
