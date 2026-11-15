@@ -3,10 +3,9 @@
 PR #224 cut review rounds, per-call context and harness to bring a feature
 under $150 of tokens. Its Kaizen, step 6, set the targets below for the next
 three feature pull requests. The `/after-task-kaizen` sweep of each merged
-feature pull request owns the measurement: it adds one row to the table below,
-in its own kaizen pull request. The sweep that writes the third feature row
-compares the three rows with the targets and says in its pull request which
-targets failed and what that decides.
+pull request owns the measurement. It writes one row, under the header of the
+table below, to `docs/features/meta/lessons-from-pr-<N>/cost.md` in its own
+kaizen pull request.
 
 ## Targets
 
@@ -29,7 +28,13 @@ before reaching for `list_events`.
 
 ## Measurements
 
-One row per merged pull request. Only `feature` rows count toward the three.
+One row per merged pull request. The table below stops at the rows merged on 2026-11-15. Later rows
+live in each sweep's folder, because a table every sweep appended to made
+parallel sweeps collide on every merge. Read them all with:
+
+```
+grep -h '^| #' docs/quality/feature-cost.md docs/features/meta/*/cost.md
+```
 
 | PR | Kind | Sessions | Cost | Final context | Cache-write ceiling | Review rounds | Swept by |
 | --- | --- | --- | --- | --- | --- | --- | --- |

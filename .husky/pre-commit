@@ -249,6 +249,10 @@ run_check stylesheet-contents '\.css$' scripts/check-stylesheet-contents.sh
 run_check no-comments-in-styles-and-markup '\.(css|html)$' \
   scripts/check-no-comments-in-styles-and-markup.sh
 
+# Every app page lets the on-screen keyboard shrink its layout viewport. See
+# docs/dantotsus/the-keyboard-shrank-a-screen-css-could-not-see.md.
+run_check viewport-follows-keyboard '^. apps/.*\.html$' scripts/check-viewport-follows-keyboard.sh
+
 # No Tailwind arbitrary variant opens on a bare word, which Tailwind reads as an
 # attribute selector and compiles to nothing at all.
 run_check tailwind-arbitrary-variants '^. apps/[^/]+/site/' \

@@ -17,9 +17,6 @@ pnpm --filter @borso-app/last-loop-lepin run test:e2e --changed <base>
 
 CI runs `test:core` with coverage and the whole `test:e2e` suite. Locally, run only what the change affects.
 
-## Layers
+## Layout
 
-- `site/` — Vite + React frontend.
-- `api/` — Hono on Lambda, Drizzle ORM over Aurora DSQL.
-- `cdk/` — CDK app composing `PreviewableApp` + `DsqlClusterStack`.
-- `test/` — shared setup (the Postgres `DATABASE_URL` names) + race-scenario suites.
+Run `ls apps/last-loop-lepin` to see what the app holds. The root `CLAUDE.md` describes the layout every full-stack app shares.

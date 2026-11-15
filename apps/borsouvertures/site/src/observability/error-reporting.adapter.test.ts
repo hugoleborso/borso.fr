@@ -33,7 +33,7 @@ describe('startErrorReporting', () => {
       dataCollection: {
         userInfo: false,
         cookies: false,
-        httpHeaders: false,
+        httpHeaders: { allow: ['User-Agent'] },
         httpBodies: [],
         urlQueryParams: false,
       },

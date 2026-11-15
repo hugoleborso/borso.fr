@@ -12,6 +12,10 @@ import {
 } from 'react-router-dom';
 import { ApiError } from '../lib/api.client';
 import type { ReadBatchFailure } from '../lib/read-batch.adapter';
+import type {
+  ScreenPlacementBreach,
+  ScreenPlacementMeasurement,
+} from '../lib/screen-placement.core';
 import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
@@ -20,12 +24,19 @@ type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
 const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   userInfo: false,
   cookies: false,
-  httpHeaders: false,
+  httpHeaders: { allow: ['User-Agent'] },
   httpBodies: [],
   urlQueryParams: false,
 };
 
 const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
+
+const STANDALONE_DISPLAY_QUERY = '(display-mode: standalone)';
+
+function readDisplayMode(): 'standalone' | 'browser' {
+  const isStandalone = window.matchMedia(STANDALONE_DISPLAY_QUERY).matches;
+  return isStandalone ? 'standalone' : 'browser';
+}
 
 // @FollowsBlueprint adapter-external-service
 export function startErrorReporting(settings: ErrorReportingSettings | undefined): void {
@@ -33,7 +44,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
   Sentry.init({
     dsn: settings.dsn,
     environment: settings.environment,
-    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
+    initialScope: { tags: { ...SHARED_PROJECT_APP_TAGS, 'display.mode': readDisplayMode() } },
     dataCollection: PRIVATE_DATA_COLLECTION,
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: [...settings.tracePropagationTargets],
@@ -114,6 +125,19 @@ export function reportReadBatchFailed(failure: ReadBatchFailure): void {
       'read_batch.status': String(failure.status ?? NO_STATUS),
       'read_batch.size': String(failure.size),
     },
+  });
+}
+
+const SCREEN_PLACEMENT_BREACH = 'ScreenPlacementBreach';
+
+export function reportScreenPlacementBreach(
+  breach: ScreenPlacementBreach,
+  measurement: ScreenPlacementMeasurement,
+): void {
+  Sentry.captureMessage(SCREEN_PLACEMENT_BREACH, {
+    level: 'error',
+    tags: { 'screen.breach': breach },
+    extra: { element: measurement.element, visible: measurement.visible },
   });
 }
 
