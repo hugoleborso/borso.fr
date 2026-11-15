@@ -287,6 +287,7 @@
     "errorRefused": "That change was refused. Check the title and the status, then try again.",
     "errorSignedOut": "You are signed out. Sign in again to keep going.",
     "errorUnknown": "Something went wrong. Try again in a moment.",
+    "filterOpen": "Open",
     "kindBug": "Bug",
     "kindField": "Kind",
     "kindIdea": "Idea",

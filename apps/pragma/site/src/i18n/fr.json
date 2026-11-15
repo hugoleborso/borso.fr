@@ -287,6 +287,7 @@
     "errorRefused": "Ce changement a été refusé. Vérifiez le titre et le statut, puis réessayez.",
     "errorSignedOut": "Vous êtes déconnecté. Reconnectez-vous pour continuer.",
     "errorUnknown": "Quelque chose s'est mal passé. Réessayez dans un instant.",
+    "filterOpen": "Ouvertes",
     "kindBug": "Bug",
     "kindField": "Type",
     "kindIdea": "Idée",
