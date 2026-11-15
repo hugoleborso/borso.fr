@@ -25,6 +25,11 @@ Last verified: 2026-10-12 — probed from a worktree-isolated agent.
 - A script run through `dash`, `sh` or `bash` inside a compound command, since
   the guard cannot read the file.
 
+- Text that holds `git` inside another word. On PR #354 a `sed` edit whose
+  replacement text said "digit" was refused as a git command.
+- A redirect (`>`), a shell function or `eval`, in some agents of PR #354
+  even with no `git` in sight. Three of that task's agents logged this.
+
 A plain heredoc to `cat` that only mentions the word, and a single
 `/usr/bin/git` command with `&&` chains, pass.
 

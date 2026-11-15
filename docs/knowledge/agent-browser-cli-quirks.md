@@ -204,6 +204,10 @@ _Measured on PR #193 (2026-10-24) and re-checked on 2026-10-25._
 - **`addinitscript` is listed in `--help` and refused** as `Unknown command`.
   Inject an init script over CDP (`Page.addScriptToEvaluateOnNewDocument`) or
   with `eval` after load.
+- **`fill @ref ""` keeps the old value** and prints `Done`. On PR #354 an
+  empty-name case ran with the previous name still in the field. Clear a
+  field with `eval` (set `value` to `''`, dispatch `input`) or select it and
+  press `Backspace`, then read it back with `get value`.
 - **`fill` on an `input[type=datetime-local]` leaves it empty**, with no error.
   Click each spin-button segment and type its digits, or set the value through
   `eval` and dispatch `input` and `change`.
