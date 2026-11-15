@@ -5,12 +5,12 @@ description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.m
 
 # ADR skill
 
-One skill, two entry modes — both end with `docs/adr/<id>-<slug>.md` written, the index updated, and (when piloted) a verdict YAML emitted for the orchestrator.
+One skill, two entry modes — both end with `docs/adr/<id>-<slug>.md` written and (when piloted) a verdict YAML emitted for the orchestrator.
 
 - **Interactive (default).** Human types `/adr` or asks for help on a trade-off. The skill walks the 5 rounds — *frame → criteria → options → score → choose* — and refuses to write the file if any round is shortcut. The 30-minute conversation the operator wishes they'd had before silently picking Option A.
 - **Piloted (called by `/tech-lead-orchestrator`).** The orchestrator has already mined the spec's Q.O.D. + Changes / Types sections, surfaced candidates to Hugo via `AskUserQuestion`, and is invoking `/adr` for each ratified candidate. The walk is **skipped** — the orchestrator hands over `{ slug, decision-summary, triggers, alternatives, supersedes? }` and expects the file written + a verdict YAML emitted per the [sub-agent contract](../tech-lead-orchestrator/sub-agent-contract.md).
 
-Whichever mode runs, the skill calls the same **mechanical procedure** (id, conflict check, write, index update, supersedes handling) — described in *Procedure* below.
+Whichever mode runs, the skill calls the same **mechanical procedure** (id, conflict check, write, supersedes handling) — described in *Procedure* below.
 
 The canonical standard lives at [`standard.md`](./standard.md). The markdown template the skill emits is at [`template.md`](./template.md).
 
@@ -122,18 +122,14 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
    - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the ids to `supersedes` and continue. If no, bail out with a message.
 5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Criteria, Decision, Consequences, Alternatives considered (chosen first), Scores, Implementation pointers.
 6. **Write the file** at `docs/adr/<id>-<slug>.md` with the rendered markdown. Header reads `# ADR-<id>: <title>`, with the same id as the filename; `check-adr-numbers-resolve.sh` refuses the two disagreeing.
-7. **Update the index** `docs/adr/README.md`:
-   - Append a row to the main `| # | Title | Status | Date |` table.
-   - Append a one-line entry under the right area heading (CDK, App architecture, Data, Observability, Tooling / DevX). Create the heading if it doesn't exist. **Never reorder existing entries** — the README is manually curated.
-8. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-<id>`, leave the rest of the file untouched.
-9. **Piloted mode only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
+7. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-<id>`, leave the rest of the file untouched.
+8. **Piloted mode only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
    ```yaml
    ---
    status: done
    summary: ADR-<id> written at docs/adr/<id>-<slug>.md.
    artifacts:
      - docs/adr/<id>-<slug>.md
-     - docs/adr/README.md
    ---
    ```
    Append `# Detail` + a short human-readable body below. The orchestrator reads only the front-matter.
