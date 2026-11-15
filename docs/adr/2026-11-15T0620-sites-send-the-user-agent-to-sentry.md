@@ -1,6 +1,6 @@
 # ADR-2026-11-15T0620: every site sends its User-Agent to Sentry, and installed apps tag their display mode
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-15
 - **Deciders:** operator
 - **Tags:** observability, sentry, mobile
