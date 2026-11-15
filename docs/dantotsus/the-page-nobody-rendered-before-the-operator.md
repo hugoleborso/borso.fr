@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#263'
-fix-pr: none (the kaizen pull request for PR #281 carries it)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/quality/check-dashboard-page.ts, scripts/quality/dashboard-page.core.ts, scripts/quality/dashboard/fixture.json, .husky/pre-push, .github/workflows/ci.yml]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#24'
-fix-pr: '#62'
 fix-commits: [866e0cbb11]
 eradication-level: 2
 eradication-paths: [scripts/check-branch-context.sh]

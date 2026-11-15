@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: '#128'
-fix-pr: '#138'
 fix-commits: [bdca2bf859]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/naming.utils.ts, scripts/check-app-registration.sh]

@@ -40,8 +40,8 @@ describe('readDantotsuDocument', () => {
   });
 
   it('keeps a hash that is not a comment, such as a pull-request number', () => {
-    const document = readDantotsuDocument('a-slug', "---\nfix-pr: '#62'\nrelated-pr: #6\n---\n");
-    expect(document.fields?.get('fix-pr')).toBe("'#62'");
+    const document = readDantotsuDocument('a-slug', "---\nquoted: '#62'\nrelated-pr: #6\n---\n");
+    expect(document.fields?.get('quoted')).toBe("'#62'");
     expect(document.fields?.get('related-pr')).toBe('#6');
   });
 

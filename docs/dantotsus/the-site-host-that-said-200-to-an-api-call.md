@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#298'
-fix-pr: none (the kaizen pull request for PRs #293 and #298 that adds this file)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/cf-host-routing-function.test.ts, .claude/hooks/strip-quoted-strings.py]

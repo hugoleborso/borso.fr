@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#246'
-fix-pr: none (the kaizen pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-raw-interactive-element.js, eslint-rules/no-raw-interactive-element.test.js]

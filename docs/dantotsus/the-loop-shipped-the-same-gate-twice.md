@@ -4,7 +4,6 @@ introduced-at: self-validation
 detected-at: review
 severity: medium
 related-pr: '#105'
-fix-pr: '#106'
 fix-commits: [4154b33a23]
 eradication-level: 2
 eradication-paths: [scripts/check-gate-names-are-distinct.sh]

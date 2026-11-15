@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#83'
-fix-pr: '#86'
 fix-commits: [ba27e49627]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-flex-one-in-auto-height-dialog.js]

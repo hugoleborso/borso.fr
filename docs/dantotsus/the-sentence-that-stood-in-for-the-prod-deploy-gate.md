@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#95'
-fix-pr: '#97'
 fix-commits: [5d140956dd]
 eradication-level: 4
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh]

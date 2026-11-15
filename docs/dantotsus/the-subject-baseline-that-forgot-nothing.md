@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#324'
-fix-pr: none (the kaizen pull request of PR #324 carries the fix and has no number when this is written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/blueprints/subjects.core.ts, .claude/skills/blueprint/blueprint-indexing.ts]

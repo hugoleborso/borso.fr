@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#292'
-fix-pr: none (the kaizen pull request of PR #292, not numbered when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/talos/test/dev-database.setup.ts, apps/talos/test/dev-live-seed.json]

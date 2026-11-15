@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#131'
-fix-pr: '#131'
 fix-commits: [a0cf303c8d, bf93d2d593]
 eradication-level: 2
 eradication-paths: [scripts/check-coupled-lists.sh]

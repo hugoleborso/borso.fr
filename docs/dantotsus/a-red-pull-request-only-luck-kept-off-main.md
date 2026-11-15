@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#316'
-fix-pr: none (the kaizen pull request of PR #316, not yet numbered)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh]

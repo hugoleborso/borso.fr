@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#107'
-fix-pr: '#119'
 fix-commits: [a28ffcfdb9, 75d966d8c8, 40af66de99]
 eradication-level: 2
 eradication-paths: [scripts/check-app-registration.sh, apps/pragma/test/dev-database.setup.ts]

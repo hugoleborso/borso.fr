@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#33'
-fix-pr: '#46'
 fix-commits: [882ab2bf51]
 eradication-level: 2
 eradication-paths: [scripts/check-frontend-env-vars.sh]

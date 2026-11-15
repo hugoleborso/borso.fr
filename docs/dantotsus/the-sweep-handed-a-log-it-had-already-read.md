@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#281'
-fix-pr: none (this kaizen pull request carries it)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh, .claude/skills/after-task-kaizen/SKILL.md]

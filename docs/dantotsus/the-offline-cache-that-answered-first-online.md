@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: none (the service worker came in commit fec7d61e, before pull requests carried numbers here)
-fix-pr: none (the pull request is opened after this entry is committed)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/public/sw.js, apps/pragma/site/src/sw/service-worker.test.ts, apps/pragma/site/src/lib/query-client.setup.ts, eslint-rules/optimistic-mutation-declares-scope.js]

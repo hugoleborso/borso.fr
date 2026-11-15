@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-pr: '#40'
 fix-commits: [11d9c490d1]
 eradication-level: 1
 eradication-paths: [apps/pragma/vitest.mutation.config.ts, apps/last-loop-lepin/vitest.mutation.config.ts]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: '#324'
-fix-pr: none (this kaizen pull request, number unknown when written)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [scripts/architecture/architecture-graph.ts, .github/workflows/ci.yml]

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: none (preview deploys created environments from their first version)
-fix-pr: '#236'
 fix-commits: [71455f29]
 eradication-level: 1
 eradication-paths: [.github/workflows/preview.yml]

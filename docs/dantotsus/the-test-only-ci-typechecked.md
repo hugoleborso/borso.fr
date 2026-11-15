@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: '#154'
-fix-pr: '#167'
 fix-commits: [1145b2b4]
 eradication-level: 2
 time-to-detect: minutes

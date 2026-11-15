@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: production
 severity: medium
 related-pr: '#131'
-fix-pr: none (this kaizen pull request, number unknown when written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/check-viewport-follows-keyboard.sh, apps/pragma/site/index.html, apps/talos/site/index.html, apps/borsouvertures/site/index.html, apps/banana-rush/site/index.html, apps/last-loop-lepin/site/index.html, apps/borso-fr/site/index.html]

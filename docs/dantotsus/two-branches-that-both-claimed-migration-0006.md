@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#104'
-fix-pr: '#105'
 fix-commits: [60fcd964e8, 4154b33a23]
 eradication-level: 2
 eradication-paths: [scripts/check-numbered-sequences.sh]

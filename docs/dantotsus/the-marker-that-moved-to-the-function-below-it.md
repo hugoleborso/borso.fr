@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#84'
-fix-pr: '#85'
 fix-commits: [3583040f97, ff9e8e97b3]
 eradication-level: 2
 eradication-paths: [scripts/blueprints/subjects.core.ts]

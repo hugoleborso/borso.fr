@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#334'
-fix-pr: none (lands with the kaizen pull request for PR #334)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/quality/check-dantotsu-front-matter.ts, scripts/quality/dantotsu-corpus.ts, .claude/hooks/pretool-subagent-no-staging.sh]

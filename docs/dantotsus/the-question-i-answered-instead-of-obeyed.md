@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#218'
-fix-pr: '#220'
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/adr/SKILL.md, .claude/skills/adr/template.md]

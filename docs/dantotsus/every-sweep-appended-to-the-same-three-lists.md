@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#347'
-fix-pr: none (the kaizen pull request of PR #347, not numbered when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/check-coupled-lists.sh, scripts/check-adr-numbers-resolve.sh, .claude/skills/after-task-kaizen/SKILL.md, .claude/skills/adr/SKILL.md]

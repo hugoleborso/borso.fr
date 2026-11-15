@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#27'
-fix-pr: '#27'
 fix-commits: [e138811ba9]
 eradication-level: 1
 eradication-paths: [.oxfmtrc.json]

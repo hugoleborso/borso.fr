@@ -4,7 +4,6 @@ introduced-at: code-review
 detected-at: operator-deploy
 severity: medium
 related-pr: '#206'
-fix-pr: none (the kaizen pull request for PR #206 that adds this file)
 fix-commits: [self]
 eradication-level: 4
 eradication-paths: [.claude/hooks/posttool-empty-checks-means-conflict.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#95'
-fix-pr: '#339'
 fix-commits: [a5893533d]
 eradication-level: 2
 eradication-paths: [scripts/check-hook-commands-are-anchored.sh, .husky/pre-commit, .github/workflows/ci.yml, .claude/settings.json]

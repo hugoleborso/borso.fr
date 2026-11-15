@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: '#238'
-fix-pr: '#238'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-inline-ref-callback.js, .oxlintrc.json]

@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [a5bdfb5356]
 eradication-level: 1
 eradication-paths: [scripts/architecture/architecture-model.ts]

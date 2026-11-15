@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#263'
-fix-pr: none (shipped by the lessons-from-pr-263 kaizen pull request, numbered once it opens)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh]

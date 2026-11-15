@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: none (the per-song preload predates pull requests, from d7be0d9ac on 2026-05-25, and moved into the query cache in #247)
-fix-pr: none (the pull request of branch claude/wizardly-mendel-0nq8qs, not opened when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/lib/read-batch.adapter.ts, apps/pragma/site/src/lib/read-batch.core.ts, apps/pragma/api/src/read-batch/read-batch.controller.ts, eslint-rules/no-request-fan-out-in-site.js]

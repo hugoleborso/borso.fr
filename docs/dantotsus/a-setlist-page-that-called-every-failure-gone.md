@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: none (the setlist pages came in 9f4b443eb on 2026-08-19, and offline reading made the lie reachable in #247)
-fix-pr: none (the kaizen pull request for #278, not opened when this was written)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/routes/setlists/missing-setlist.core.ts, apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx, apps/pragma/site/src/routes/setlists/SetlistScenePage.tsx, apps/pragma/site/src/routes/setlists/SetlistOrderPage.tsx, apps/pragma/site/src/routes/sessions/PracticeModePage.tsx]

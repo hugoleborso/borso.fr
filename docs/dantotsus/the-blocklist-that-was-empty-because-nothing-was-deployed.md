@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#199'
-fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [infra/cdk/src/internal/agent-reader/index.ts, scripts/database/read-target.utils.ts, scripts/database/db-read.ts]

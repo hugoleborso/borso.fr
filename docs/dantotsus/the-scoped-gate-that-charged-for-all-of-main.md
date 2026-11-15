@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#63'
-fix-pr: '#71'
 fix-commits: [cb69f25248]
 eradication-level: 2
 eradication-paths: [.husky/pre-push]

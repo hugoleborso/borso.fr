@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#46'
-fix-pr: '#46'
 fix-commits: [f4e1247bf1]
 eradication-level: 1
 eradication-paths: [eslint-rules/module-source.js]

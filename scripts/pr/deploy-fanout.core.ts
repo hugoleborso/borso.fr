@@ -10,6 +10,10 @@ const NAMED_REASON = 'only these applications have changed paths.';
 const DEPENDENCY_SUFFIX =
   ' A dependency manifest also moved, so deploy.yml asks apps-with-changed-dependencies.ts which applications resolve something different and adds them; it falls back to every application when it cannot answer.';
 
+export type IsToolingOnly = (directory: string, changedFiles: readonly string[]) => boolean;
+
+const isNeverToolingOnly: IsToolingOnly = () => false;
+
 export interface DeployFanout {
   readonly applications: readonly string[];
   readonly everyApplication: boolean;
@@ -25,12 +29,34 @@ function isADependencyManifest(changedPath: string): boolean {
   return WORKSPACE_MANIFEST_PATHS.has(changedPath) || PACKAGE_MANIFEST_PATTERN.test(changedPath);
 }
 
-export function decideDeployFanout(
+function withoutToolingOnlyDirectories(
   changedPaths: readonly string[],
+  directories: readonly string[],
+  isToolingOnly: IsToolingOnly,
+): readonly string[] {
+  const dropped = directories.filter((directory) =>
+    isToolingOnly(
+      directory,
+      changedPaths.filter((changedPath) => changedPath.startsWith(`${directory}/`)),
+    ),
+  );
+  return changedPaths.filter(
+    (changedPath) => !dropped.some((directory) => changedPath.startsWith(`${directory}/`)),
+  );
+}
+
+export function decideDeployFanout(
+  allChangedPaths: readonly string[],
   applicationSlugs: readonly string[],
+  isToolingOnly: IsToolingOnly = isNeverToolingOnly,
 ): DeployFanout {
   const sortedSlugs = [...applicationSlugs].sort();
-  const dependencyManifestMoved = changedPaths.some(isADependencyManifest);
+  const dependencyManifestMoved = allChangedPaths.some(isADependencyManifest);
+  const changedPaths = withoutToolingOnlyDirectories(
+    allChangedPaths,
+    [CONSTRUCTS_PREFIX.slice(0, -1), ...sortedSlugs.map((slug) => `${APPLICATION_PREFIX}${slug}`)],
+    isToolingOnly,
+  );
 
   if (changedPaths.some((changedPath) => changedPath.startsWith(CONSTRUCTS_PREFIX))) {
     return {

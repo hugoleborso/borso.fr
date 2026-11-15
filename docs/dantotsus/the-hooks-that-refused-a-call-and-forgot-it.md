@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#100'
-fix-pr: '#103'
 fix-commits: [948204d50a]
 eradication-level: 2
 eradication-paths: [.claude/hooks/kaizen-refusal.sh]

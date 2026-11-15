@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#310'
-fix-pr: none (the kaizen pull request of PR #310, number unknown when this was written)
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [.claude/skills/after-task-kaizen/SKILL.md]

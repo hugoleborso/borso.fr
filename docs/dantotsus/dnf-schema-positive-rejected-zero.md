@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#12'
-fix-pr: '#12'
 fix-commits: [d347ab1477]
 eradication-level: 4
 eradication-paths: [apps/last-loop-lepin/api/src/punch/punch.schema.ts]

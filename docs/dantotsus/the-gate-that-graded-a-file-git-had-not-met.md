@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: none (mutate-changed.sh has read the commits only since it was written; no one pull request introduced it)
-fix-pr: none (the kaizen pull request for PR #281 carries it)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/mutate-changed.sh]

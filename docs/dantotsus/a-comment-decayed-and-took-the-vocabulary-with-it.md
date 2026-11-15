@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#81'
-fix-pr: '#82'
 fix-commits: [03e16d4d6d]
 eradication-level: 2
 eradication-paths: [scripts/check-vocabulary-paths.sh, eslint-rules/no-comments.js]

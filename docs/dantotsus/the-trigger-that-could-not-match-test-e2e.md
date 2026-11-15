@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#290'
-fix-pr: none (the kaizen pull request for PR #290 carries it)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-no-test-double-dash.sh, .claude/settings.json]

@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: none (present since the StaticSite construct was first written)
-fix-pr: '#17'
 fix-commits: [3df59de902]
 eradication-level: 4
 eradication-paths: [infra/cdk/test/unit/static-site.test.ts]

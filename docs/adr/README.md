@@ -125,8 +125,9 @@ Each record carries its own title and status in its first lines:
 | [2026-11-13T0003](./2026-11-13T0003-stockfish-runs-as-two-vendored-unmodified-gpl-worker-files.md) | Stockfish runs as two vendored, unmodified GPL-3.0 worker files | accepted | 2026-11-13 |
 | [2026-11-13T0004](./2026-11-13T0004-decks-and-ideas-are-content-files-and-lichess-data-is-pinned.md) | Decks and ideas are content files, and Lichess-derived data is a pinned snapshot | accepted | 2026-11-13 |
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
-| [2026-11-15T0636](./2026-11-15T0636-talos-decides-multi-choice-proposals-on-the-pwa-card.md) | Talos decides multi-choice proposals on the PWA card, not in the notification | proposed | 2026-11-15 |
+| [2026-11-15T0627](./2026-11-15T0627-pragma-lineup-grid-marks-a-change-by-fill-intensity.md) | pragma's lineup grid marks a change by the member colour at full strength over a pale lane | proposed | 2026-11-15 |
 | [2026-11-15T0628](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) | The glossary stays in VOCABULARY.md and each term's rules move to an INVARIANTS.md in its folder | proposed | 2026-11-15 |
+| [2026-11-15T0636](./2026-11-15T0636-talos-decides-multi-choice-proposals-on-the-pwa-card.md) | Talos decides multi-choice proposals on the PWA card, not in the notification | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -161,6 +162,7 @@ Each record carries its own title and status in its first lines:
 - 2026-10-23T0932. pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
 - 2026-10-23T0227. pragma serves MCP at `/mcp` on its API Lambda, stateless, with `@modelcontextprotocol/sdk` behind `@hono/mcp`; every tool is a schema plus one service call.
 - 2026-10-23T0228. pragma is its own OAuth 2.1 authorization server for assistants (discovery, dynamic registration, PKCE S256, rotating refresh tokens), signing members in through their existing session rather than a hosted provider.
+- 2026-11-15T0627. pragma's lineup grid shows a member's change of hand instruments as their colour at full strength over a pale lane; voice never counts; amends three grid rules of 2026-10-27T1115.
 - 2026-10-27T1115. pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
 - 2026-10-27T1116. Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 2026-10-27T1118. chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.

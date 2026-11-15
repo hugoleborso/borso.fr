@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: '#81'
-fix-pr: '#82'
 fix-commits: [03e16d4d6d]
 eradication-level: 1
 eradication-paths: [eslint-rules/no-comments.js]

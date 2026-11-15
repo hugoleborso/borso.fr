@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#55'
-fix-pr: '#73'
 fix-commits: [24a70649df]
 eradication-level: 1
 eradication-paths: [tsconfig.json, .husky/pre-commit]

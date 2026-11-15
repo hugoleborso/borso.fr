@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#219'
-fix-pr: '#220'
 fix-commits: [self]
 eradication-level: 5
 eradication-paths: [docs/standards/14-tool-runtime-budgets.md]

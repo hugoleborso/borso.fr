@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#31'
-fix-pr: '#31'
 fix-commits: [12bf7d9a91]
 eradication-level: 5
 eradication-paths: []

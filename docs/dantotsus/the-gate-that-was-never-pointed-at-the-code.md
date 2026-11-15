@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [01e8a281d5]
 eradication-level: 2
 eradication-paths: [scripts/check-mutation-covers-gated-files.sh]

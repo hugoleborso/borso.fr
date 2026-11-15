@@ -43,16 +43,32 @@ STAGING_PATTERN='(^|[;&|(]|\bthen\b|\bdo\b)[[:space:]]*git[[:space:]]+(-C[[:spac
 STAGING="$(grep -oE "$STAGING_PATTERN" <<<"$COMMAND_TO_RUN" | head -1 || true)"
 if [[ -z "$STAGING" ]]; then exit 0; fi
 
+# The directory the git command runs in is the last `cd` before it, resolved
+# from the hook's cwd, unless `git -C` names one. A directory the same command
+# creates does not exist yet, so its nearest existing ancestor stands in.
 TARGET="$(jq -r '.cwd // empty' <<<"$INPUT")"
 TARGET="${TARGET:-$PWD}"
-LEADING_CD="$(sed -nE 's/^[[:space:]]*cd[[:space:]]+([^[:space:];&|]+).*/\1/p' <<<"$COMMAND_TO_RUN")"
-[ -n "$LEADING_CD" ] && TARGET="$LEADING_CD"
+BEFORE_STAGING="${COMMAND_TO_RUN%%"$STAGING"*}${STAGING}"
+while read -r DIRECTORY; do
+  [ -n "$DIRECTORY" ] || continue
+  case "$DIRECTORY" in
+    /*) TARGET="$DIRECTORY" ;;
+    *) TARGET="$TARGET/$DIRECTORY" ;;
+  esac
+done < <(grep -oE '(^|[;&|(]|\bthen\b|\bdo\b)[[:space:]]*cd[[:space:]]+[^[:space:];&|)]+' <<<"$BEFORE_STAGING" |
+  sed -E 's/.*cd[[:space:]]+//')
 EXPLICIT_DIRECTORY="$(sed -nE 's/.*git[[:space:]]+-C[[:space:]]+([^[:space:]]+).*/\1/p' <<<"$STAGING")"
 [ -n "$EXPLICIT_DIRECTORY" ] && TARGET="$EXPLICIT_DIRECTORY"
+while [ ! -d "$TARGET" ] && [ "$TARGET" != / ]; do TARGET="$(dirname "$TARGET")"; done
 
+# Only this checkout's own index is shared. A linked worktree has its own, and
+# so does a scratch repository a validator builds to exercise a gate: on PR #353
+# this hook refused `git add` there, because it asked "is this a linked
+# worktree?" when the question is "is this the index every agent shares?".
+PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
+SHARED_INDEX_DIR="$(git -C "$PROJECT_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
 OWN_GIT_DIR="$(git -C "$TARGET" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)"
-SHARED_GIT_DIR="$(git -C "$TARGET" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
-if [[ -z "$OWN_GIT_DIR" || "$OWN_GIT_DIR" != "$SHARED_GIT_DIR" ]]; then exit 0; fi
+if [[ -z "$OWN_GIT_DIR" || "$OWN_GIT_DIR" != "$SHARED_INDEX_DIR" ]]; then exit 0; fi
 
 echo "[subagent-no-staging] A subagent shares this checkout's index with every other agent, and the main session commits." >&2
 echo "[subagent-no-staging] Change the working tree only, and name the paths in your report:" >&2

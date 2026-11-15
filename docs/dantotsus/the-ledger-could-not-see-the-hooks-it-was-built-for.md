@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#101'
-fix-pr: '#101'
 fix-commits: [ee6308b8ec]
 eradication-level: 1
 eradication-paths: [scripts/standards/enforcement-ledger.ts]

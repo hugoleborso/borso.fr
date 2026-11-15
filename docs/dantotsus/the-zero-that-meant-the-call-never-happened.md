@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#281'
-fix-pr: '#288'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/quality/quality-dashboard.core.ts]

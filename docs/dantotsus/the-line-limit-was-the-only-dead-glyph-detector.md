@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: linter
 severity: low
 related-pr: '#252'
-fix-pr: '#255'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/components/atoms/InterfaceGlyphs.tsx, apps/pragma/site/src/components/atoms/Icon.test.tsx, .oxlintrc.json]

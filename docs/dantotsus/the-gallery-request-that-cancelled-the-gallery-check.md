@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: '#211'
-fix-pr: none (lands with the kaizen pull request for PR #327)
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [.github/workflows/screenshots.yml]

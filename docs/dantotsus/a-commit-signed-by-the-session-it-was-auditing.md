@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#253'
-fix-pr: none (the kaizen pull request for PR #253 carries it)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [commitlint.config.js, .husky/commit-msg]

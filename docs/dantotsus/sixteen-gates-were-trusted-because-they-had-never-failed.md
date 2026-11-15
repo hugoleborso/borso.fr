@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: review
 severity: high
 related-pr: '#40'
-fix-pr: '#164'
 fix-commits: [2e656e8e]
 eradication-level: 2
 time-to-detect: months, sixteen times

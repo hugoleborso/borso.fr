@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#27'
-fix-pr: '#29'
 fix-commits: [e36b217eda]
 eradication-level: 2
 eradication-paths: [eslint-rules/no-api-anchor-in-site.js]

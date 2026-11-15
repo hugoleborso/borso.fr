@@ -4,7 +4,6 @@ introduced-at: code-review
 detected-at: operator-deploy
 severity: low
 related-pr: '#274'
-fix-pr: none (opened by the kaizen pull request for #274)
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh]

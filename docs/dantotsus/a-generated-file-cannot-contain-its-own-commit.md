@@ -4,7 +4,6 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#49'
-fix-pr: '#49'
 fix-commits: [256c89f06e]
 eradication-level: 1
 eradication-paths: [.gitignore, scripts/architecture/architecture-graph.ts]

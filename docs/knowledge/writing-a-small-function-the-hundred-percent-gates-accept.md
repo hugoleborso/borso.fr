@@ -1,10 +1,12 @@
 ---
-summary: 'Shapes the 100% coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard no test reaches, a named no-op that is an equivalent mutant, a `flatMap` that returns `[]` before a filter, a surviving conditional that signals a design problem.'
+summary: 'Shapes the 100% coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard no test reaches, a named no-op that is an equivalent mutant, a `flatMap` that returns `[]` before a filter, a surviving conditional that signals a design problem. And one root test run with `--coverage` fails on every gated file it does not import; add `--coverage.include=<file>` or use `--changed <base>`.'
 triggers:
   paths:
     - '**/*.core.ts'
     - '**/*.utils.ts'
     - '**/*.adapter.ts'
+  output:
+    - 'does not meet global threshold \(100%\) for scripts/'
 ---
 
 # Writing a small function the 100% gates accept
@@ -115,6 +117,28 @@ Splitting each lever into its own function with its own `catch` made the
 difference observable, and the mutants died to a test asserting that a refused
 `caches.keys()` still unregisters the worker. Treat a survivor as a question
 about the design before treating it as a missing assertion.
+
+## One root test run with `--coverage` fails on files it never imports
+
+The root `vitest.config.ts` sets `coverage.include` to every
+`scripts/**/*.{core,utils}.ts` with per-file thresholds. That is how CI catches
+a gated file no test imports. It also means one test run alone fails on every
+other gated file at 0%:
+
+```text
+$ pnpm exec vitest run scripts/strip-heredocs.test.ts --coverage
+ERROR: Coverage for lines (0%) does not meet global threshold (100%) for scripts/wiki/wiki-pages.core.ts
+```
+
+Measure one file by narrowing the include, which reported 100% on all four axes
+(measured on 2026-11-15):
+
+```sh
+pnpm exec vitest run scripts/wiki/wiki-pages.core.test.ts --coverage --coverage.include=scripts/wiki/wiki-pages.core.ts
+```
+
+Or measure a branch with `pnpm exec vitest run --changed <base-sha> --coverage`,
+as `/technical-validation` does. The round-2 validator of PR #353 lost a run to this.
 
 ## See also
 
