@@ -125,17 +125,16 @@ describe('Sheet', () => {
     }
   });
 
-  it('sizes its shadow to the visual viewport, so the keyboard cannot cover the sheet', () => {
+  it('runs to the bottom of the screen and lifts its content above the keyboard', () => {
     renderSheet(
       root,
       <Sheet title={TITLE} label={TITLE} onClose={vi.fn()}>
         <p>Body</p>
       </Sheet>,
     );
-    const scrim = document.querySelector('[data-sheet]')?.parentElement;
-    expect(scrim?.style.getPropertyValue('--visual-viewport-height')).not.toBe('');
-    expect(scrim?.className).toContain('h-(--visual-viewport-height)');
-    expect(scrim?.className).not.toContain('inset-0');
+    const sheet = document.querySelector('[data-sheet]');
+    expect(sheet?.parentElement?.className).toContain('inset-0');
+    expect(sheet?.className).toContain('pb-(--visual-viewport-bottom-gap)');
   });
 
   it('calls onClose from the Close button', () => {

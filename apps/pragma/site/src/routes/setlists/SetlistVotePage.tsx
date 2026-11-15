@@ -158,7 +158,7 @@ export function SetlistVotePage(): JSX.Element {
   return (
     <section className="flex flex-col gap-4 pb-8">
       <PageHeader
-        className="mx-0 mb-0 sm:mx-0 sm:mb-0"
+        className="mx-0 mb-0 sm:mx-0 sm:mb-0 lg:mx-0 lg:mb-0"
         back={{ to: `/setlists/${setlistId}`, label: displayedName }}
         title={t('voting.pageTitle')}
         actions={headerExtraByKind[headerAction]}

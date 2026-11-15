@@ -31,7 +31,7 @@ export function VoteBudgetBar({ total, remaining, isExhausted }: VoteBudgetBarPr
   const shownRemaining = Math.max(remaining, 0);
   const notice = NOTICE_BY_KIND[selectBudgetNotice(remaining, isExhausted)];
   return (
-    <div className="sticky top-0 z-10 bg-paper/95 backdrop-blur px-4 py-3 border-b border-rule">
+    <div className="sticky top-(--page-header-height,0px) z-10 bg-paper/95 backdrop-blur px-4 py-3 border-b border-rule">
       <div className="flex items-baseline justify-between gap-3">
         <Overline>{t('voting.budgetLabel')}</Overline>
         <span className="font-sans font-semibold tabular-nums text-ink">
