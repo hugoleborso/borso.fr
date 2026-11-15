@@ -18,3 +18,4 @@ Session: e857610b-399c-588f-b6b7-c682d1db29c8
 
 - [2026-11-15 06:06] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-15 06:06] `main` The sweep offered the operator a per-PR iPhone checklist and a WebKit e2e run on a suite pragma does not have, instead of a detection that needs nobody.
+- [2026-11-15 06:15] `main` The new viewport check passed on every page after oxfmt wrapped the meta tag, because its grep read one line and then checked nothing.

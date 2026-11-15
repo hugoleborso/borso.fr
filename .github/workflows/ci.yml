@@ -104,6 +104,9 @@ jobs:
       # workflow reports it; without the second the first commit naming the app
       # is rejected by a hook talking about an enum.
       - run: ./scripts/check-app-registration.sh
+      # Every app page declares interactive-widget=resizes-content, so the
+      # keyboard shrinks what fixed, % and dvh measure. Mirrors pre-commit.
+      - run: ./scripts/check-viewport-follows-keyboard.sh
       # One version per dependency, written in pnpm-workspace.yaml. Nothing
       # else here reads a version field, so two workspaces drifting onto
       # different majors passes every other gate.
