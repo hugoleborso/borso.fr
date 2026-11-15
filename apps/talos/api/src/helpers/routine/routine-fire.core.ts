@@ -37,8 +37,10 @@ export function buildFireBody(
   secretPhrase: string | undefined,
   trigger: RoutineTrigger,
   subject: string,
+  choice?: string,
 ): string {
-  return JSON.stringify({ text: `${secretPhrase ?? ''}\n${trigger}: ${subject}` });
+  const choiceLine = choice === undefined ? '' : `\nchoix: ${choice}`;
+  return JSON.stringify({ text: `${secretPhrase ?? ''}\n${trigger}: ${subject}${choiceLine}` });
 }
 
 // @FollowsBlueprint core-parse-untrusted

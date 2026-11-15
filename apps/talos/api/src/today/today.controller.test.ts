@@ -62,7 +62,7 @@ describe('GET /api/today', () => {
       scan: { at: '2026-10-05T03:24:10+02:00', trigger: 'nuit', failedSources: ['Strava'] },
       macCollection: null,
     });
-    expect(today.pendingProposalCount).toBe(1);
+    expect(today.pendingProposalCount).toBe(2);
     expect(today.reconnectCount).toBe(3);
     expect(today.readyDraftCount).toBe(1);
   });

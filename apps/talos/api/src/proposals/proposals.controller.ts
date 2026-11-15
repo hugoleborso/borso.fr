@@ -15,10 +15,11 @@ export function buildProposalsRouter() {
       context.json(await listProposals(context.req.valid('query').status)),
     )
     .post('/:slug/decision', proposalSlugValidator, proposalDecisionValidator, async (context) => {
-      const { decision, comment } = context.req.valid('json');
+      const { decision, option, comment } = context.req.valid('json');
       const proposal = await decideProposal({
         slug: context.req.valid('param').slug,
         decision,
+        option,
         comment,
         now: new Date(),
       });

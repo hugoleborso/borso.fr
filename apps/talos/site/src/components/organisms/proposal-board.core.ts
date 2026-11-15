@@ -1,4 +1,9 @@
-import { isProposalExpired, isProposalPending, type ProposalDecision } from '@domain/proposal.core';
+import {
+  isProposalExpired,
+  isProposalPending,
+  PROPOSAL_DECISIONS,
+  type ProposalDecision,
+} from '@domain/proposal.core';
 import type { ParseKeys } from 'i18next';
 import type { ChipTone } from '../atoms/chip.variants';
 import type { IconName } from '../atoms/Icon';
@@ -117,12 +122,24 @@ export function selectStatusTone(status: string): ChipTone {
   return STATUS_TONE[status] ?? 'bronze';
 }
 
-export function buildDecisionPayload(
-  decision: ProposalDecision,
-  comment: string,
-): { decision: ProposalDecision; comment?: string } {
+export interface DecisionChoice {
+  readonly decision: ProposalDecision;
+  readonly option?: string;
+}
+
+export interface DecisionPayload extends DecisionChoice {
+  readonly comment?: string;
+}
+
+export function buildDecisionPayload(choice: DecisionChoice, comment: string): DecisionPayload {
   const trimmed = comment.trim();
-  return trimmed.length > 0 ? { decision, comment: trimmed } : { decision };
+  return trimmed.length > 0 ? { ...choice, comment: trimmed } : choice;
+}
+
+const REFUSAL_ONLY: readonly ProposalDecision[] = ['refusee'];
+
+export function selectSheetDecisions(options: readonly string[]): readonly ProposalDecision[] {
+  return options.length > 0 ? REFUSAL_ONLY : PROPOSAL_DECISIONS;
 }
 
 export const PROPOSAL_SHEET_ACTION: Readonly<

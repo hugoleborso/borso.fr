@@ -1,16 +1,17 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PROPOSAL_DECISIONS, type ProposalDecision } from '@domain/proposal.core';
 import { ProposalCard } from '../molecules/ProposalCard';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
 import { renderMarkdownToSafeHtml } from '../../lib/markdown.utils';
 import { ProposalDecisionForm } from './ProposalDecisionForm';
 import {
+  type DecisionPayload,
   PROPOSAL_SHEET_ACTION,
   selectCategoryLabelKey,
   selectPriorityLabelKey,
   selectPriorityTone,
+  selectSheetDecisions,
 } from './proposal-board.core';
 
 export interface PendingProposalShape {
@@ -22,13 +23,14 @@ export interface PendingProposalShape {
   readonly expiresOn?: string;
   readonly why: string;
   readonly draft: string;
+  readonly options: readonly string[];
 }
 
 export interface PendingProposalProps {
   readonly proposal: PendingProposalShape;
   readonly isWriting: boolean;
   readonly startsCommenting: boolean;
-  readonly onDecide: (payload: { decision: ProposalDecision; comment?: string }) => void;
+  readonly onDecide: (payload: DecisionPayload) => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -56,7 +58,7 @@ export function PendingProposal({
         openActionSheet({
           title: proposal.title,
           subject: { kind: 'proposal', slug: proposal.slug },
-          actions: PROPOSAL_DECISIONS.map((decision) => ({
+          actions: selectSheetDecisions(proposal.options).map((decision) => ({
             ...PROPOSAL_SHEET_ACTION[decision],
             onSelect: () => {
               onDecide({ decision });
@@ -67,6 +69,7 @@ export function PendingProposal({
     >
       <ProposalDecisionForm
         slug={proposal.slug}
+        options={proposal.options}
         isPending={isWriting}
         startsCommenting={startsCommenting}
         onDecided={onDecide}

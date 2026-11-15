@@ -2,6 +2,7 @@ import { stripMarkdownExtension } from '@domain/markdown-page.core';
 import {
   formatCancellationLine,
   formatDecisionLine,
+  isDecisionActionable,
   PENDING_PROPOSAL_STATUS,
   type Proposal,
   type ProposalDecision,
@@ -30,6 +31,7 @@ const PROPOSALS_DIRECTORY = 'etat/propositions';
 function readDecidedProposal(outcome: DecisionOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
   if (outcome.kind === 'already-decided') throw new TalosError('proposal-already-decided');
+  if (outcome.kind === 'option-not-offered') throw new TalosError('proposal-option-not-offered');
   return outcome.proposal;
 }
 
@@ -83,11 +85,13 @@ export async function listProposals(status: string | undefined): Promise<Proposa
 export async function decideProposal(params: {
   readonly slug: string;
   readonly decision: ProposalDecision;
+  readonly option?: string | undefined;
   readonly comment?: string | undefined;
   readonly now: Date;
 }): Promise<Proposal> {
   const record = {
     decision: params.decision,
+    option: params.option,
     comment: params.comment,
     decidedAt: formatParisMinute(params.now),
   };
@@ -100,7 +104,12 @@ export async function decideProposal(params: {
     now: params.now,
   });
   const proposal = readDecidedProposal(outcome);
-  await launchProposalRun(stripMarkdownExtension(buildProposalPath(params.slug)), params.now);
+  if (!isDecisionActionable(params.decision)) return proposal;
+  await launchProposalRun(
+    stripMarkdownExtension(buildProposalPath(params.slug)),
+    params.now,
+    params.option,
+  );
   return proposal;
 }
 

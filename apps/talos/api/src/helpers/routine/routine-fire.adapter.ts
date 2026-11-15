@@ -18,6 +18,7 @@ type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
 export interface FireRoutineOptions {
   readonly fetcher?: ExternalFetcher;
   readonly readSecret?: SecretReader;
+  readonly choice?: string | undefined;
 }
 
 const NETWORK_FAILURE_STATUS = 0;
@@ -40,7 +41,7 @@ export async function fireRoutine(
     const response = await fetcher(fireUrl, {
       method: 'POST',
       headers: buildFireHeaders(token),
-      body: buildFireBody(secretPhrase, trigger, subject),
+      body: buildFireBody(secretPhrase, trigger, subject, options.choice),
     });
     const answer: unknown = await response.json().catch(() => undefined);
     return readFireOutcome(response.status, answer);

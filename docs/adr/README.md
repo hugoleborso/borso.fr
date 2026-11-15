@@ -127,6 +127,7 @@ Each record carries its own title and status in its first lines:
 | [2026-11-13T1619](./2026-11-13T1619-borsouvertures-personal-deck-is-a-log-of-line-events-merged-by-id.md) | The personal deck is a log of immutable line events, merged by id like the reviews | accepted | 2026-11-13 |
 | [2026-11-15T0627](./2026-11-15T0627-pragma-lineup-grid-marks-a-change-by-fill-intensity.md) | pragma's lineup grid marks a change by the member colour at full strength over a pale lane | proposed | 2026-11-15 |
 | [2026-11-15T0628](./2026-11-15T0628-glossary-and-invariants-are-two-files.md) | The glossary stays in VOCABULARY.md and each term's rules move to an INVARIANTS.md in its folder | proposed | 2026-11-15 |
+| [2026-11-15T0636](./2026-11-15T0636-talos-decides-multi-choice-proposals-on-the-pwa-card.md) | Talos decides multi-choice proposals on the PWA card, not in the notification | proposed | 2026-11-15 |
 
 ### Data layer
 
@@ -172,6 +173,7 @@ Each record carries its own title and status in its first lines:
 - 2026-11-13T0001. `ts-fsrs` 6.0.0 schedules the borsouvertures cards with fuzz off and every option pinned, about 17 kB gzipped with its one dependency; a golden replay test holds its output across upgrades.
 - 2026-11-13T0002. the borsouvertures operator signs in with pragma's credential and cookie slice, copied; no route enrols anyone, a script the operator runs writes the one row on prod, and the fixture seed writes it on a preview, which clones nothing from prod, so a stranger cannot take the account and an agent signs in with no secret.
 - 2026-11-13T0003. the lite single-threaded Stockfish 19.0.1 is committed as two unmodified GPL-3.0 files, 1,874,201 bytes, and started as a Web Worker on demand; it needs no cross-origin isolation, and vendoring avoids a 161 MB npm tarball on every install.
+- 2026-11-15T0636 (proposed). Talos keeps its PWA and web push, and a proposal may list 2 to 4 choices that the card shows as buttons; a decision stays two taps, because Safari iOS ignores web push `actions`, a paid Apple licence costs 99 USD a year, and a free-signed app cannot receive pushes and has an undocumented background schedule.
 
 ### CDK / infra
 
