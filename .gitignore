@@ -92,3 +92,7 @@ docs/features/*/*/validation/.pending-upload/
 **/.impeccable/questions/
 **/.impeccable/review/
 **/.impeccable/mocks/
+
+# Derived by .claude/hooks/posttool-lint-write.sh
+/.oxlintrc.write.json
+/.oxlintrc.write.*
