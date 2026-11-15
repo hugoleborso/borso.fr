@@ -1,4 +1,4 @@
-# ADR-2026-11-15T0636: Talos gets a free-signed iOS app that posts its own actionable notifications
+# ADR-2026-11-15T0636: Talos decides multi-choice proposals on the PWA card, not in the notification
 
 - **Status:** proposed
 - **Date:** 2026-11-15
@@ -7,15 +7,15 @@
 
 ## Summary
 
-**Proposed decision.** A small SwiftUI app, signed with Xcode's free personal team, fetches pending proposals from the Talos API and posts them as local notifications with one button per choice. A button decides without opening any app. No Apple Developer Program, so borso.fr stays free. The PWA stays the main app.
+**Proposed decision.** Keep the PWA and its web push. The notification opens the proposal card, and the card shows one button per choice when the agent lists 2 to 4 of them. A decision takes two taps. No native app and no Apple licence, so borso.fr stays free.
 
 | Option | Gestures per decision | Yearly cost | Build and upkeep | Build chain | What else it unlocks |
 |---|---|---|---|---|---|
-| 1. Status quo, the PWA | 🔴 2 taps, plus the PWA loading | 🟢 0 | 🟢 the multi-choice model only | 🟢 nothing new | 🔴 nothing |
+| 1. Status quo, choice buttons on the card (proposed) | 🟡 2 taps, plus the PWA loading | 🟢 0 | 🟢 the multi-choice model only | 🟢 nothing new | 🔴 nothing |
 | 2a. Paid licence, SwiftUI, APNs | 🟢 long press then tap, no app opens | 🔴 99 USD | 🟡 a small Swift app, APNs in the API | 🟡 macOS: local Mac or GitHub runner | 🟢 widgets, Live Activities, Siri, HealthKit, Contacts |
 | 2b. Paid licence, Capacitor or Expo shell | 🟢 same as 2a | 🔴 99 USD | 🔴 a shell, plus Swift for the background action | 🟡 macOS, plus the JavaScript chain | 🟢 same as 2a |
 | 3. Telegram bot or Slack DM | 🟡 2 taps, no PWA load (inferred) | 🟢 0 | 🟡 a bot, a webhook, an identity link | 🟢 nothing new | 🔴 nothing |
-| 4. Free-signed app, local notifications (proposed) | 🟢 long press then tap, no app opens; 🟡 arrival time set by iOS or by a Shortcuts automation | 🟢 0 | 🟡 a small Swift app, re-signed every 7 days | 🟡 the operator's Mac, weekly | 🟡 widgets, HealthKit, Contacts; no push, no Siri |
+| 4. Free-signed app, local notifications | 🟢 long press then tap; 🔴 arrival time undocumented | 🟢 0 | 🔴 a Swift app, re-signed every 7 days | 🔴 the operator's Mac, outside CI | 🟡 widgets, HealthKit, Contacts; no push |
 
 🟢 good, 🟡 acceptable, 🔴 blocking or bad.
 
@@ -47,22 +47,27 @@ One constraint holds for every option. A proposal is binary today, because `POST
 
 ## Decision
 
-**Option 4, a free-signed app that posts local actionable notifications.** It meets the gesture criterion at zero cost. The free personal team cannot receive pushes, so the app pulls instead, and posts the notifications itself. The operator accepts re-signing every 7 days. The cost is that the server no longer chooses when a proposal reaches the phone. A paid licence (option 2a) stays the fallback if the measured arrival time is too late.
+**Option 1, the status quo with choice buttons on the card.** It is free, it adds no language and no chain, and the notification arrives when the agent writes the proposal. One gesture would need a native app. The paid one costs 99 USD a year, and the free one cannot say when a proposal reaches the phone, because Apple calls its background schedule undocumented.
 
 ## Consequences
 
-- `+` A decision takes a long press and a tap on the notification, with no app opening, at zero cost.
-- `+` The same app can later carry a « À décider » widget and read HealthKit for sport tracking, both open to the free team.
-- `-` No push. A proposal reaches the phone when the app next runs, not when the agent writes it. The two triggers below set that moment, and neither is a server push.
-- `-` The app stops launching 7 days after each signing. The operator rebuilds from the Mac every week, by hand or from a script.
-- `-` iOS shows « at most two actions » when space is limited ([`UNNotificationCategory`](https://developer.apple.com/documentation/usernotifications/unnotificationcategory)). A banner with 3 or 4 choices can hide some, and the expanded notification shows them all.
-- `-` A force-quit stops background runs. An Apple engineer calls force-quit « a drastic choice by the user to say that they do not want the app to run » ([thread 808088](https://developer.apple.com/forums/thread/808088)).
-- `~` The app signs in to the API with a token kept in the Keychain, because the PWA session is an HttpOnly cookie. The PWA can revoke it.
-- `~` A new route lists pending proposals since a cursor. The decision route is the PWA's own.
+- `+` A proposal can offer 2 to 4 choices, such as « mardi », « jeudi » or « pas cette semaine », and the card shows one button per choice.
+- `+` Nothing new to pay, sign, build or re-sign.
+- `-` A decision still takes two taps and the PWA start-up. Safari iOS shows no button in a web push notification.
+- `-` The agent must write the choices into the proposal, under a new « ## Options » section, or the card keeps Accept and Refuse.
+- `~` A chosen option is recorded as an accepted decision whose line names it, `- 2026-11-15 10:12 : acceptée (jeudi)`. The routine reads it from that line.
 
 ## Alternatives considered
 
-### Option 4, Free-signed app, local actionable notifications (chosen)
+### Option 1, Status quo, the PWA opens the card (chosen)
+
+- **Raised by:** operator
+- **Summary:** Keep web push. The notification opens `/proposals/<slug>`, and the card shows one button per choice when the proposal lists 2 to 4 of them, beside Refuse and Comment.
+- **Strengths:** Zero cost, nothing new to build or sign. The deep link exists.
+- **Costs:** Two taps and the PWA start-up at every decision.
+- **Rationale:** It is the only free option whose timing is known, because the notification arrives when the agent writes the proposal. The second tap is the price, and the operator judged it acceptable.
+
+### Option 4, Free-signed app, local actionable notifications (rejected)
 
 - **Raised by:** operator
 - **Summary:** A SwiftUI app signed by the free personal team, installed from the operator's Mac. It registers one `UNNotificationCategory` per number of choices. When it runs, it reads pending proposals from the API and posts each as a local notification of the right category. A button sends the chosen option to the API in the background. Tapping the notification body opens the card in the PWA. Two triggers make it run:
@@ -75,16 +80,8 @@ One constraint holds for every option. A proposal is binary today, because `POST
   - Arrival time of background refresh. Apple documents no interval. [`earliestBeginDate`](https://developer.apple.com/documentation/backgroundtasks/bgtaskrequest/earliestbegindate) says « the system doesn't guarantee launching the task at the specified date, but only that it won't begin sooner ». On the forums, Apple DTS says « the detailed mechanism the system uses to schedule background tasks is undocumented » ([thread 823699](https://developer.apple.com/forums/thread/823699)), and that a task « may delay … based on its current state and if your app exceeds its budget … or isn't even triggered » ([thread 788713](https://developer.apple.com/forums/thread/788713)). Developers report no more than once a day on a real device ([thread 772426](https://developer.apple.com/forums/thread/772426)), and a one-hour request delayed by several hours or never run ([thread 823699](https://developer.apple.com/forums/thread/823699)). These reports are anecdotal, not measured here.
   - Re-signing. Free profiles « expirent sept jours après leur émission » ([Apple, comparatif des adhésions](https://developer.apple.com/fr/support/compare-memberships/)). At most three apps per device.
   - A Swift codebase built on a Mac, outside CI.
-- **Rationale:** The only option that meets both high-weight criteria. It trades push timing for zero cost, and the Shortcuts trigger bounds that trade to known times, if the prototype confirms it.
-
-### Option 1, Status quo, the PWA opens the card (rejected)
-
-- **Raised by:** operator
-- **Summary:** Keep web push. The notification opens `/proposals/<slug>`, and the card shows 2 to 4 buttons once the multi-choice model ships.
-- **Strengths:** Zero cost, nothing new to build or sign. The deep link exists.
-- **Costs:** Two taps and the PWA start-up at every decision.
-- **Rejection rationale:** Loses on the high-weight gesture criterion. It wins if two taps are judged enough.
-- **Operator's answer:** chose option 4 over it in the review of #350.
+- **Rejection rationale:** Meets the gesture criterion at zero cost, but no one can say when a proposal reaches the phone. Apple calls the background schedule undocumented, and the Shortcuts trigger is unproven. A Swift app, a weekly re-sign and a Mac outside CI buy that uncertain gain.
+- **Operator's answer:** chose it first, then the status quo once the forum threads showed the delay is undocumented, in the review of #350.
 
 ### Option 2a, Paid licence, SwiftUI app with APNs (rejected)
 
@@ -92,8 +89,8 @@ One constraint holds for every option. A proposal is binary today, because `POST
 - **Summary:** The same app with the Apple Developer Program. The API sends APNs pushes with a category, and the app ships through TestFlight.
 - **Strengths:** Same gesture as option 4, and the notification arrives when the agent writes the proposal. Unlocks [WidgetKit](https://developer.apple.com/documentation/widgetkit), [ActivityKit](https://developer.apple.com/documentation/activitykit) Live Activities updated by push, [App Intents](https://developer.apple.com/documentation/appintents) with Siri, [HealthKit](https://developer.apple.com/documentation/healthkit) and [Contacts](https://developer.apple.com/documentation/contacts). Standard GitHub runners are free in public repositories ([GitHub](https://docs.github.com/en/billing/concepts/product-billing/github-actions)); that this covers macOS is inferred.
 - **Costs:** 99 USD a year, borso.fr's first paid service. A `.p8` APNs key in SSM, a signing certificate and profile in GitHub secrets. A TestFlight build lasts 90 days ([Apple](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview)).
-- **Rejection rationale:** Loses on yearly cost. It becomes the choice if option 4's measured arrival time is too late.
-- **Operator's answer:** not convinced by it (« pas du tout convaincu »), then chose option 4, in the review of #350.
+- **Rejection rationale:** Loses on yearly cost. It is the way to one gesture if two taps stop being acceptable.
+- **Operator's answer:** not convinced by it (« pas du tout convaincu »), in the review of #350.
 
 ### Option 2b, Paid licence, Capacitor or Expo shell around the PWA (rejected)
 
@@ -102,7 +99,7 @@ One constraint holds for every option. A proposal is binary today, because `POST
 - **Strengths:** The whole app becomes native at once.
 - **Costs:** The [Capacitor push plugin](https://capacitorjs.com/docs/apis/push-notifications) offers no method to declare categories, so Swift is needed anyway. [expo-notifications](https://docs.expo.dev/versions/latest/sdk/notifications/) runs its background task on an action tap with the app closed « only on Android ». Two runtimes, plus the paid licence.
 - **Rejection rationale:** The cost of 2a plus a layer, and Swift regardless.
-- **Operator's answer:** chose option 4 over it in the review of #350.
+- **Operator's answer:** chose the status quo over it in the review of #350.
 
 ### Option 3, Telegram bot or Slack DM with buttons (rejected)
 
@@ -111,24 +108,24 @@ One constraint holds for every option. A proposal is binary today, because `POST
 - **Strengths:** Free, no Apple chain, any number of buttons, and the message arrives when the agent writes it.
 - **Costs:** The buttons live in the message, not in the iOS notification, so a tap opens the chat and a second tap decides (inferred, not measured on a phone). Private proposal content goes through a third party. The Slack connectors of these sessions belong to the operator's employer (`CLAUDE.md`), so Slack would need a personal workspace.
 - **Rejection rationale:** Two gestures, like the status quo.
-- **Operator's answer:** chose option 4 over it in the review of #350.
+- **Operator's answer:** chose the status quo over it in the review of #350.
 
 ## Scores
 
-|   | 4. Free-signed app | 1. Status quo | 2a. Paid SwiftUI | 2b. Paid shell | 3. Telegram or Slack |
+|   | 1. Status quo | 4. Free-signed app | 2a. Paid SwiftUI | 2b. Paid shell | 3. Telegram or Slack |
 |---|---|---|---|---|---|
-| Gestures | ✓ long press and tap, no app opens | ✗ 2 taps and the PWA | ✓ same as 4 | ✓ same as 4, once the Swift is written | ✗ 2 taps (inferred) |
+| Gestures | ✗ 2 taps and the PWA | ✓ long press and tap, no app opens | ✓ same as 4 | ✓ same as 4, once the Swift is written | ✗ 2 taps (inferred) |
 | Yearly cost | ✓ 0 | ✓ 0 | ✗ 99 USD | ✗ 99 USD | ✓ 0 |
-| Effort | ✗ a Swift app and a weekly re-sign | ✓ nothing new | ✓ a Swift app, APNs in the API | ✗ a shell plus Swift | ✓ a bot and a webhook |
-| Build chain | ✗ the operator's Mac, outside CI | ✓ unchanged | ✓ a macOS runner | ✓ a macOS runner | ✓ unchanged |
-| Unlocks besides | ✓ widgets, HealthKit, Contacts | ✗ nothing | ✓ also Live Activities by push, Siri | ✓ same as 2a | ✗ nothing |
+| Effort | ✓ the multi-choice model only | ✗ a Swift app and a weekly re-sign | ✓ a Swift app, APNs in the API | ✗ a shell plus Swift | ✓ a bot and a webhook |
+| Build chain | ✓ unchanged | ✗ the operator's Mac, outside CI | ✓ a macOS runner | ✓ a macOS runner | ✓ unchanged |
+| Unlocks besides | ✗ nothing | ✓ widgets, HealthKit, Contacts | ✓ also Live Activities by push, Siri | ✓ same as 2a | ✗ nothing |
 
 None of the options unlocks call history, iMessage or WhatsApp. [`CXCallObserver`](https://developer.apple.com/documentation/callkit/cxcallobserver) sees only active calls, the [Messages](https://developer.apple.com/documentation/messages) framework builds extensions and stickers rather than reading conversations, and WhatsApp exposes no reading API on iOS (inferred). Talos keeps reading them on the Mac (the `collecte-mac` routine).
 
 ## Implementation pointers
 
-- Spec: none yet. If accepted, a spec under `docs/features/talos/` follows, opened by a prototype that measures the arrival time of both triggers on the operator's phone over a week.
+- Spec: none; the change is the « Options » section and the choice buttons this pull request ships.
 - Plan: none.
 - Commit: stamped by `/after-task-kaizen` on merge.
-- Files: `apps/talos/CONTRAT.md` (`POST /proposals/:slug/decision`, `POST /notify`), `apps/talos/site/public/sw.js` (`notificationclick`).
+- Files: `apps/talos/domain/proposal.core.ts`, `apps/talos/api/src/proposals/`, `apps/talos/site/src/components/organisms/ProposalDecisionForm.tsx`, `apps/talos/CONTRAT.md`.
 - Related ADRs: ADR-2026-10-23T0932 (pragma's web push copies Talos's), ADR-2026-11-11T1306 (each decision fires a stored routine run).
