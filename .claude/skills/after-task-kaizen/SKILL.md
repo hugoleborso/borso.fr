@@ -145,16 +145,17 @@ anyway — the body is an index, and the inventory is the evidence.
 
 | # | When | Friction | Sources / evidence | Rock | Elsewhere | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
-| 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | <where else that rock's design flaw sits, or `none` with the search that shows it> | dantotsu / knowledge / no-op (with one-line reason) |
+| 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | <the problem in another place this friction is a symptom of, or `none` with why the cause is local> | dantotsu / knowledge / no-op (with one-line reason) |
 
-Ask of every row: does that reveal a design flaw elsewhere? The friction is
-where the rock surfaced, not where it lives. A rule held in two places that
-drifted here drifts wherever else the pattern was copied. Search for the same
-shape (`git grep` the construct, the convention, the step done by hand) and
-write each hit in the `Elsewhere` cell with its path. `none` carries the search
-that came back empty. A row whose rock sits in other places is decided at the
-level of the design, so its eradication removes the rock in each of them, or
-names why one stays.
+Ask of every row: is this friction a symptom of a problem elsewhere? Where a
+friction is felt is rarely where it is made. A validator that missed a bug may
+reveal a spec that never named the case. An agent that guessed a path may
+reveal a skill that never says where the file lives. A test that broke on a
+rename may reveal two modules that know each other's internals. Name that
+other problem in the `Elsewhere` cell, with the file, skill, step or design
+choice it lives in. `none` says why the cause is local to where it was felt.
+When the cell names a problem, the decision targets that problem, not the
+friction that revealed it.
 
 Lower the water, do not bail. The `Rock` cell names what makes the friction
 possible at all: a file every pull request appends to, a step done by hand,
@@ -456,8 +457,8 @@ not its volume, is what keeps the system improving.
 - [ ] Every ADR the merge added reads `accepted`.
 - [ ] Inventory built from the archived friction log + commits +
       review comments + CI runs, not just memory.
-- [ ] Every inventory row has an `Elsewhere` cell, with paths or the
-      empty search behind `none`.
+- [ ] Every inventory row has an `Elsewhere` cell naming the problem
+      elsewhere it reveals, or why its cause is local.
 - [ ] Each subject classified using the table; no-ops dropped.
 - [ ] Each surviving real-defect / design-pivot subject has a file
       under `docs/dantotsus/` matching `_template.md`, with
