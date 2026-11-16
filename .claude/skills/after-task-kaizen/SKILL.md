@@ -19,20 +19,23 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## When to invoke
 
-**In a new conversation, never in the session that shipped the PR.**
-That session ends at merge: it archives its friction log, proposes the
-kaizen, and once the operator approves starts it with whatever tool it holds
-for opening a new session, passing a prompt that names the merged PR, the
-archived `kaizen.md` and this skill (`/open-pr`'s *After the merge*). This
-skill then runs there with a context that did not do the work it audits.
+**Where it runs depends on the shipping session's context.** After the merge,
+that session reads its own `get_session` `context_usage.used_tokens`.
+
+- **Under 150,000 tokens**, it runs this sweep itself, in the same reply that
+  reports the merge. The operator chose this threshold after PR #371.
+- **At 150,000 or more**, it archives its friction log, proposes the kaizen,
+  and once the operator approves starts it with whatever tool it holds for
+  opening a new session. The prompt names the merged PR, the archived
+  `kaizen.md` and this skill (`/open-pr`'s *After the merge*).
+
+Write the reading in the inventory's header line, so the sweep shows which
+branch it took.
 
 - A kaizen task started from that card.
 - The user says any of: "/after-task-kaizen", "kaizen pass",
   "post-merge dantotsus", "capture lessons from PR #N", "what
   should we add from that PR".
-
-If you are the session that shipped the PR, do not run the sweep.
-Spawn the task instead.
 
 **First call: `mcp__github__pull_request_read method: get`.** If `merged` is
 not `true`, say so and stop. The prompt for PR #253's sweep said "merged"
