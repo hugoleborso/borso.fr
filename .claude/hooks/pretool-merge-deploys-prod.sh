@@ -200,9 +200,9 @@ automatically. The merge is the gate, and this call is the merge.
 Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
 shared-deploy dispatch when the snapshot moved, and a kaizen for
-/after-task-kaizen in a new conversation, never in this one. Propose the
-kaizen; start it only once the operator approves, with whatever tool this
-session holds for opening a new session.$MOVED_BASE"
+/after-task-kaizen. Read this session's context with get_session: under
+150,000 tokens, run the sweep here; otherwise propose it for a new
+conversation and start it only once the operator approves.$MOVED_BASE"
 
 jq -n --arg context "$NOTICE" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
