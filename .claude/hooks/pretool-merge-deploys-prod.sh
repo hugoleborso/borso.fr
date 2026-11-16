@@ -198,11 +198,9 @@ automatically. The merge is the gate, and this call is the merge.
   Checks on the head:              $CHECKS
 
 Merge only on an explicit instruction from the operator for THIS pull request.
-After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
-shared-deploy dispatch when the snapshot moved, and a kaizen for
-/after-task-kaizen. Read this session's context with get_session: under
-150,000 tokens, run the sweep here; otherwise propose it for a new
-conversation and start it only once the operator approves.$MOVED_BASE"
+After it lands, surface both post-merge follow-ups of CLAUDE.md's
+Self-improvement loop, the shared-deploy dispatch and the kaizen, as it
+words them.$MOVED_BASE"
 
 jq -n --arg context "$NOTICE" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
