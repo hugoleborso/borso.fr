@@ -1,4 +1,5 @@
 import {
+  closeSession,
   createSender,
   emulatePhone,
   openSession,
@@ -89,7 +90,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
     );
     return verdict.isRealTouch;
   } finally {
-    socket.close();
+    await closeSession(socket);
   }
 }
 

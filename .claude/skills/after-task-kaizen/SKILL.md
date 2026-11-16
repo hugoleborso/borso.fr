@@ -19,7 +19,7 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## When to invoke
 
-**In a new conversation, never in the session that shipped the PR.**
+**In a new conversation by default, or in the shipping session when the operator asks for that.**
 That session ends at merge: it archives its friction log, proposes the
 kaizen, and once the operator approves starts it with whatever tool it holds
 for opening a new session, passing a prompt that names the merged PR, the
@@ -31,8 +31,11 @@ skill then runs there with a context that did not do the work it audits.
   "post-merge dantotsus", "capture lessons from PR #N", "what
   should we add from that PR".
 
-If you are the session that shipped the PR, do not run the sweep.
-Spawn the task instead.
+If you are the session that shipped the PR, spawn the task instead,
+unless the operator asked to run it here. Then run it here and do not
+ask him to confirm. He asks agents for it about a quarter of the time,
+by his own count, and the shipping session of PR #372 still made him
+confirm it.
 
 **First call: `mcp__github__pull_request_read method: get`.** If `merged` is
 not `true`, say so and stop. The prompt for PR #253's sweep said "merged"
