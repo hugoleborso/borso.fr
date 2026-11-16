@@ -108,7 +108,8 @@ jobs:
           # of those would serve the same build. Lower-case markdown is kept,
           # because borsouvertures builds its decks from ideas.en.md. The
           # operator asked on 2026-11-14 for no preview on a kaizen that
-          # touches only tooling. deploy.yml applies the same rule.
+          # touches only tooling. deploy.yml applies the same rule, and also
+          # drops the test seed, which a preview mounts and production never does.
           if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
             "$BASE" "$CHANGES" --tooling); then
             CHANGES="$kept"

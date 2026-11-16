@@ -66,3 +66,10 @@ opens the code first, and the validator, who measured the round trip.
   no plan either.
 - [`input-vs-output-metrics.md`](./input-vs-output-metrics.md), the other
   entry printed when a spec is written.
+
+## An assertion that compares with before
+
+An assertion such as "comment directives look as they did before" has no
+before state in the browser. The validator of PR #367 fell back to a git diff of
+the renderer. Name what the reader sees instead, such as "a comment directive
+shows in italics on its own line".

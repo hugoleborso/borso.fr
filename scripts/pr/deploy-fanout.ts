@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 
-import { isToolingOnlyChange, manifestPathOf } from '../dependencies/check-only-change.core';
+import { isProductionInertChange, manifestPathOf } from '../dependencies/check-only-change.core';
 import { decideDeployFanout, describeDeployFanout } from './deploy-fanout.core';
 
 const DEFAULT_BASE = 'origin/main';
@@ -42,13 +42,13 @@ function readManifestAt(revision: string, directory: string): unknown {
 
 const mergeBase = git(['merge-base', base, head]);
 
-function isToolingOnly(directory: string, changedFiles: readonly string[]): boolean {
-  return isToolingOnlyChange(directory, changedFiles, {
+function isProductionInert(directory: string, changedFiles: readonly string[]): boolean {
+  return isProductionInertChange(directory, changedFiles, {
     before: readManifestAt(mergeBase, directory),
     after: readManifestAt(head, directory),
   });
 }
 
 process.stdout.write(
-  `${describeDeployFanout(decideDeployFanout(changedPaths, applicationSlugs, isToolingOnly))}\n`,
+  `${describeDeployFanout(decideDeployFanout(changedPaths, applicationSlugs, isProductionInert))}\n`,
 );

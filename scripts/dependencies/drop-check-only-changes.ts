@@ -2,17 +2,27 @@
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { isCheckOnlyChange, isToolingOnlyChange, manifestPathOf } from './check-only-change.core';
+import {
+  isCheckOnlyChange,
+  isProductionInertChange,
+  isToolingOnlyChange,
+  manifestPathOf,
+} from './check-only-change.core';
 
 const INFRA_KEY = 'infra';
 const INFRA_DIRECTORY = 'infra/cdk';
 const APP_PREFIX = 'apps/';
 const USAGE = `usage:
-  drop-check-only-changes.ts <base-revision> <changes-json> [--tooling]
+  drop-check-only-changes.ts <base-revision> <changes-json> [--tooling|--production]
       prints <changes-json> without the app and infra keys whose only change since
       <base-revision> is a check-only script in their package.json; with --tooling,
-      also without those whose every change is a test, an upper-case document or a test config`;
-const TOOLING_FLAG = '--tooling';
+      also without those whose every change is a test, an upper-case document or a test config;
+      with --production, also without those whose every change is one of those or the
+      preview-only test seed under apps/<app>/api/src/__test/`;
+const RULE_BY_FLAG = new Map([
+  ['--tooling', isToolingOnlyChange],
+  ['--production', isProductionInertChange],
+]);
 
 function directoryOf(key: string): string | null {
   if (key === INFRA_KEY) return INFRA_DIRECTORY;
@@ -39,10 +49,10 @@ function readManifestInWorkingTree(directory: string): unknown {
   return parsed;
 }
 
-function isDroppable(base: string, key: string, isToolingIncluded: boolean): boolean {
+function isDroppable(base: string, key: string, flag: string | undefined): boolean {
   const directory = directoryOf(key);
   if (directory === null) return false;
-  const rule = isToolingIncluded ? isToolingOnlyChange : isCheckOnlyChange;
+  const rule = (flag === undefined ? undefined : RULE_BY_FLAG.get(flag)) ?? isCheckOnlyChange;
   return rule(directory, listChangedFiles(base, directory), {
     before: readManifestAt(base, directory),
     after: readManifestInWorkingTree(directory),
@@ -54,7 +64,7 @@ const [base, changesJson, flag] = process.argv.slice(2);
 if (
   base === undefined ||
   changesJson === undefined ||
-  (flag !== undefined && flag !== TOOLING_FLAG)
+  (flag !== undefined && !RULE_BY_FLAG.has(flag))
 ) {
   console.error(USAGE);
   process.exit(2);
@@ -66,7 +76,5 @@ if (!Array.isArray(changes)) {
   process.exit(2);
 }
 
-const kept = changes.filter(
-  (key) => typeof key !== 'string' || !isDroppable(base, key, flag === TOOLING_FLAG),
-);
+const kept = changes.filter((key) => typeof key !== 'string' || !isDroppable(base, key, flag));
 console.log(JSON.stringify(kept));

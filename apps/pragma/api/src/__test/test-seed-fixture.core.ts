@@ -1,6 +1,7 @@
 import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
 import type { SongOrigin } from '@domain/song-origin.core';
 import type { SongStatus } from '@domain/song-status.core';
+import { SLOW_BURN_CHORD_CHART } from './test-seed-charts.core';
 import type { SeedLineupByMemberName } from './test-seed.core';
 
 export interface SeedInstrument {
@@ -80,38 +81,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     structureNotes: 'intro ×4 · couplet · refrain · couplet · refrain · pont · refrain ×2',
     gimmickNotes: 'Break complet avant le dernier refrain, Hugo compte 1-2-3-4 à voix haute.',
     notes: 'Baisser le gain de la guitare sur le pont.',
-    chordChartText: `{title: Slow Burn}
-{key: Am}
-{start_of_verse}
-[Am]Lights go down, the [F]room turns amber
-[C]Nobody moves, the [G]record spins
-[Am]Half a word be[F]comes an answer
-[C]Slow burn [G]always wins
-{end_of_verse}
-
-{start_of_chorus}
-[F]Hold it [C]low, hold it [G]steady
-[F]Let the [C]embers [G]breathe
-[F]Nothing [C]here is [G]ready
-[Am]Nothing here will [G]leave
-{end_of_chorus}
-
-{start_of_verse}
-[Am]Ash and velvet [F]on the counter
-[C]Someone hums the [G]second line
-[Am]Every chorus [F]sounds a rounder
-[C]Slow burn [G]keeps the time
-{end_of_verse}
-
-{start_of_bridge}
-[Dm]Break — drums count [E7]one two three four
-[Dm]Everybody [E7]in on four
-{end_of_bridge}
-
-{start_of_chorus}
-[F]Hold it [C]low, hold it [G]steady
-[F]Let the [C]embers [G]breathe
-{end_of_chorus}`,
+    chordChartText: SLOW_BURN_CHORD_CHART,
     entry: { keyOverride: null, capo: null, notes: 'Ouverture — attendre que la salle se taise.' },
   },
   {

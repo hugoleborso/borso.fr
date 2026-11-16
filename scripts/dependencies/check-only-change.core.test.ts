@@ -4,6 +4,8 @@ import {
   isCheckOnlyChange,
   isCheckOnlyScript,
   isToolingFile,
+  isPreviewOnlyFile,
+  isProductionInertChange,
   isToolingOnlyChange,
   manifestPathOf,
 } from './check-only-change.core';
@@ -190,5 +192,46 @@ describe('isToolingOnlyChange', () => {
 
   it('is false when nothing is known to have changed', () => {
     expect(isToolingOnlyChange(directory, [], unchanged)).toBe(false);
+  });
+});
+
+describe('isPreviewOnlyFile', () => {
+  it('names the test seed a production API never mounts', () => {
+    expect(isPreviewOnlyFile('apps/pragma/api/src/__test/test-seed-fixture.core.ts')).toBe(true);
+    expect(isPreviewOnlyFile('apps/last-loop-lepin/api/src/__test/test-seed.controller.ts')).toBe(
+      true,
+    );
+  });
+
+  it('keeps every other API or site file', () => {
+    expect(isPreviewOnlyFile('apps/pragma/api/src/app.ts')).toBe(false);
+    expect(isPreviewOnlyFile('apps/pragma/site/src/__test/a.ts')).toBe(false);
+    expect(isPreviewOnlyFile('apps/pragma/api/src/songs/__test-like.ts')).toBe(false);
+  });
+});
+
+describe('isProductionInertChange', () => {
+  const directory = 'apps/pragma';
+  const unchanged = { before: MANIFEST, after: MANIFEST };
+  const seed = 'apps/pragma/api/src/__test/test-seed-charts.core.ts';
+
+  it('is true when only the test seed and its tests moved', () => {
+    expect(
+      isProductionInertChange(
+        directory,
+        [seed, 'apps/pragma/api/src/__test/test-seed-charts.core.test.ts'],
+        unchanged,
+      ),
+    ).toBe(true);
+  });
+
+  it('is false when a production file moved beside the seed', () => {
+    expect(
+      isProductionInertChange(directory, [seed, 'apps/pragma/api/src/app.ts'], unchanged),
+    ).toBe(false);
+  });
+
+  it('keeps a seed change a tooling-only change, so a preview still deploys for it', () => {
+    expect(isToolingOnlyChange(directory, [seed], unchanged)).toBe(false);
   });
 });
