@@ -40,7 +40,7 @@ describe('a chord chart holding a tab', () => {
     render(<ChordChartViewer source={CHART_WITH_A_RIFF} semitones={2} tone="dark" />);
     expect(screen.getByText('   F#m       D', { normalizer: (text) => text })).toBeDefined();
     expect(screen.getByText('e|-----2-----|-----2------|')).toBeDefined();
-    expect(screen.getByText('D')).toBeDefined();
+    expect(document.querySelector('[data-chord="D"]')?.textContent).toBe('Hello ');
   });
 });
 
@@ -49,17 +49,24 @@ describe('a chord chart with lyrics', () => {
     cleanup();
   });
 
-  it('shows each chord without brackets, stacked above the word it lands on', () => {
-    render(<ChordChartViewer source="So if you're [Am]lonely" />);
-    expect(screen.queryByText('[Am]')).toBeNull();
-    const chord = screen.getByText('Am');
-    expect(chord.nextElementSibling?.textContent).toBe('lonely');
-    expect(chord.parentElement?.className).toContain('flex-col');
+  it('shows each chord without brackets, above the word it lands on', () => {
+    const { container } = render(<ChordChartViewer source="So if you're [Am]lonely" />);
+    expect(container.textContent).not.toContain('[');
+    const cell = container.querySelector('[data-chord="Am"]');
+    expect(cell?.textContent).toBe('lonely');
+    expect(cell?.className).toContain('before:content-[attr(data-chord)]');
   });
 
-  it('adds no text over a word that carries no chord, so the line reads as written', () => {
-    const { container } = render(<ChordChartViewer source="[Cm]Take five" />);
-    expect(container.textContent).toBe('CmTake five');
+  it('keeps the page text of a line to its lyrics, word for word', () => {
+    const { container } = render(<ChordChartViewer source="[Cm]Take five, be[F]comes" />);
+    expect(container.textContent).toBe('Take five, becomes');
+  });
+
+  it('widens a chord cell to its chord plus one gap, and leaves a bare word its own width', () => {
+    const { container } = render(<ChordChartViewer source="[Cmaj7]a word" />);
+    const cells = container.querySelectorAll<HTMLElement>('.indent-0');
+    expect(cells[0]?.style.minWidth).toBe('6ch');
+    expect(cells[1]?.style.minWidth).toBe('');
   });
 
   it('keeps a line of chords alone on one row, without an empty lyric row', () => {
@@ -67,6 +74,6 @@ describe('a chord chart with lyrics', () => {
     expect(screen.getByText('G', { normalizer: (text) => text.trim() }).className).toContain(
       'font-semibold',
     );
-    expect(document.querySelector('.flex-col')).toBeNull();
+    expect(document.querySelector('[data-chord]')).toBeNull();
   });
 });
