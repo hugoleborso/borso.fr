@@ -157,7 +157,7 @@ describe('song page', () => {
     renderSongPage('?tab=chords');
     const bassPill = await screen.findByRole('tab', { name: 'Bass' });
     await waitFor(() => expect(bassPill.getAttribute('aria-selected')).toBe('true'));
-    expect(screen.getByText('Groove line')).toBeTruthy();
+    expect(document.body.textContent).toContain('Groove line');
 
     const transpose = screen.getByRole('group', { name: 'Transpose' });
     fireEvent.click(within(transpose).getByRole('button', { name: 'Transpose up' }));
@@ -165,7 +165,7 @@ describe('song page', () => {
     fireEvent.pointerDown(within(chartSwitcher).getByRole('tab', { name: 'Chords' }));
     fireEvent.click(within(chartSwitcher).getByRole('tab', { name: 'Chords' }));
 
-    expect(await screen.findByText('Like the legend')).toBeTruthy();
+    await waitFor(() => expect(document.body.textContent).toContain('Like the legend'));
     expect(within(screen.getByRole('group', { name: 'Transpose' })).getByText('+1')).toBeTruthy();
     expect(recordProductEvent).toHaveBeenCalledWith('chord_chart_switched', {
       surface: 'song',

@@ -1,0 +1,36 @@
+# Visual validation — Chords above the lyrics
+
+- Spec: [`../spec/spec.md`](../spec/spec.md)
+- Dev URL: http://localhost:5174/
+- Run at: 2026-11-16T11:16:30Z
+- Tooling: agent-browser 0.41.2
+
+Signed in as `hugo` (seeded password from the `[dev:db]` line). Song "Slow Burn" is `/catalog/882e680d-b1ce-4d43-a782-db7d3c1a6446`. Setlist "Set principal" is `/setlists/2239047a-3eed-4653-bd00-bb527c1c813e`. Edge cases that the seeded chart does not hold (a chord-only line, a comment, a tab block, a long chord over a short word) were typed into the chart field of the edit form and read from its preview. The form was never saved, and the stored chart was compared byte for byte afterwards and is unchanged.
+
+Geometry was measured with a scratch script run through `agent-browser eval`. For each chart line (a `div.flex.flex-wrap` whose children are chord/lyric cells) it reads the bounding rects of the chord row and the lyric row of each cell, the distinct row tops of the cells, and `documentElement.scrollWidth - clientWidth`.
+
+## Assertions
+
+| # | From | Assertion | Action | Evidence | Verdict |
+|---|---|---|---|---|---|
+| 01 | Assertions | No chord on a chart line shows square brackets. | Chart tab, song scene, setlist scene and edit preview; scan every chord cell text for `[` or `]` | `./visual-validation-2026-11-16-1120/01-chart-tab-1280.png`; `bracketTexts = []` on all four surfaces | PASS |
+| 02 | Assertions | Each chord sits on a row directly above the word that follows it in the source, left aligned with the start of that word. | Compare chord left edge with lyric left edge per cell, at 1280 and 375, on all four surfaces | `misaligned = []` on all surfaces (tolerance 0.5 px); `./visual-validation-2026-11-16-1120/01-chart-tab-1280.png` | PASS |
+| 03 | Assertions | A word with no chord has an empty space above it, and its lyric stays on the same baseline as the words that carry a chord. | Compare lyric bottom of every cell sharing a visual row | `baselineMismatch = []` at 1280 and 375; empty chord span with `min-h-[1lh]` above each chordless word; `./visual-validation-2026-11-16-1120/06-wrap-375.png` | PASS |
+| 04 | Assertions | Read as page text, a lyric line keeps single spaces between its words. Nothing is added between two words that carry no chord. | `innerText` of a chart line, and `Selection.toString()` after selecting the line | Line 1 reads `"Am\nLights \ngo \ndown, \nthe \nF\nroom \nturns \namber"` | FAIL |
+| 05 | Assertions | A line made only of chords shows its chords on one row, with no empty lyric row below them. | Edit preview with source line `[Am] [F] [C] [G]` | Line height 24 px (one row, versus 41 px for a chord-over-lyric line), text `Am  F  C  G`; `./visual-validation-2026-11-16-1120/05-edit-preview-edge-1280.png` | PASS |
+| 06 | Assertions | At 375 px wide, a line too long for the screen wraps between two words, each chord staying above its word, and the wrapped part is indented. The page does not scroll sideways. | Viewport 375 × 812 on chart tab and song scene; read cell positions of wrapped lines | Chart tab: "Break — drums count one two three" / "four", first row left 33 px, wrapped row left 57 px. Song scene: 10 lines wrap, 16 px vs 40 px. `misaligned = []`, `docOverflow = 0`. `./visual-validation-2026-11-16-1120/06-wrap-375.png`, `./visual-validation-2026-11-16-1120/06b-song-scene-wrap-375.png` | PASS |
+| 07 | Assertions | At 1280 px wide, every line of the seeded chart fits on one row of chords over one row of lyrics. | Viewport 1280 × 900 on chart tab, song scene, setlist scene; count distinct cell row tops per line | 16 of 16 lines have 1 row (height 41 px on chart tab) on all three; `./visual-validation-2026-11-16-1120/01-chart-tab-1280.png`, `./visual-validation-2026-11-16-1120/02-song-scene-1280.png` | PASS |
+| 08 | Assertions | Transposing up by one semitone changes every chord shown above the lyrics, and the lyrics stay in place. | Click "Transpose up" on chart tab; diff every cell's chord, lyric text and lyric position before and after. Repeat on setlist scene | Chart tab: 0 chords unchanged (Am→A#m, F→F#, C→C#, G→G#, Dm→D#m, E7→F7), 0 lyric texts changed, 0 lyric positions moved. Setlist scene shows A#m, F#, C#, G#. `./visual-validation-2026-11-16-1120/08-transpose-up-1280.png`, `./visual-validation-2026-11-16-1120/03-setlist-scene-transposed-1280.png` | PASS |
+| 09 | Assertions | Section headings (verse, chorus), the title and comment directives look as they did before. | Screenshot heading pills, title and comment in the preview; `git diff origin/main...HEAD` of `ChordChartViewer.tsx` | The diff touches only the lyric-line branch of `renderLine`; the blank, title, directive, heading and tab branches are untouched. Title in `font-display`, comment italic, heading pills visible in `./visual-validation-2026-11-16-1120/05-edit-preview-edge-1280.png` | PASS |
+| 10 | Assertions | Tab blocks still show their staff lines on one unbroken line that scrolls sideways. | Edit preview with an 87-character `{start_of_tab}` block, at 1280 and 375 | Each staff row is 24 px high (one line). Tab container `scrollWidth` 722 vs `clientWidth` 612 at 1280, 722 vs 259 at 375; page `docOverflow = 0`. `./visual-validation-2026-11-16-1120/10-edit-preview-tab-375.png` | PASS |
+| 11 | Where it shows | Every place that draws a ChordPro chart: song page chart tab, song scene view, setlist scene view, edit preview. | Open each surface and run the row 01 to 03 measurement | All four render chord cells above lyrics with no brackets; `./visual-validation-2026-11-16-1120/01-chart-tab-1280.png`, `./visual-validation-2026-11-16-1120/02-song-scene-1280.png`, `./visual-validation-2026-11-16-1120/03-setlist-scene-transposed-1280.png`, `./visual-validation-2026-11-16-1120/05-edit-preview-edge-1280.png` | PASS |
+| 12 | Goal | The stored chart text does not change. Only how the chart is drawn changes. | Read the chart field in the edit form before the test and after the page was left without saving | `cmp` of the two values: identical; the field still holds `[Am]Lights go down…` with brackets | PASS |
+
+The broken-image scan returned `[]` after each of the 8 screenshots.
+
+## Notes
+
+- **04 FAIL.** Each word is now its own flex item, so the browser's page text puts a line break between every pair of words. That holds for `innerText` and for a mouse selection copied from the page. The first verse line reads as `Am / Lights / go / down, / the / F / room / turns / amber`, one item per line, in place of `Lights go down, the room turns amber`. Breaks are added between words that carry no chord ("go", "down,", "the"), which the spec rules out. A chord placed inside a word also splits that word in the page text: `be[F]comes` reads as `be / F / comes`. A musician who copies a line, and a screen reader that reads by line, get one word per line with chord names in between. The spaces are still single inside each lyric span (each `textContent` ends in one space), so only the page-text reading fails, and that reading is the one the assertion names.
+- Observed, not a verdict. A chord wider than its word widens that word's cell. In the preview, `[Cmaj7]a` leaves a 4-character gap after "a" on screen (see `05-edit-preview-edge-1280.png`). ChordPro renderers do the same, and no assertion covers it.
+
+## Verdict: FAIL
