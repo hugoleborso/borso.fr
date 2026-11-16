@@ -54,7 +54,7 @@ const WRAPPED_LINE_CLASS = 'whitespace-pre-wrap break-words pl-6 -indent-6';
 
 const CHORDS_ABOVE_LYRICS_LINE_CLASS = 'flex flex-wrap pl-6 [&>*:first-child]:-ml-6';
 
-const CHORD_ABOVE_CLASS = 'pr-[1ch] leading-tight';
+const CHORD_ABOVE_CLASS = 'min-h-[1lh] pr-[1ch] leading-tight';
 
 function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.Element {
   if (line.kind === 'blank') return <div key={key} className="h-4" />;
@@ -115,9 +115,7 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
     <div key={key} className={CHORDS_ABOVE_LYRICS_LINE_CLASS}>
       {cells.map((cell, cellIndex) => (
         <span key={`${key}-cell-${cellIndex}`} className="inline-flex flex-col whitespace-pre">
-          <span className={composeClassName(CHORD_ABOVE_CLASS, chordClass)}>
-            {cell.chord ?? ' '}
-          </span>
+          <span className={composeClassName(CHORD_ABOVE_CLASS, chordClass)}>{cell.chord}</span>
           <span className={LYRIC_CLASS_BY_TONE[tone]}>{cell.lyric}</span>
         </span>
       ))}

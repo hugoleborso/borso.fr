@@ -57,6 +57,11 @@ describe('a chord chart with lyrics', () => {
     expect(chord.parentElement?.className).toContain('flex-col');
   });
 
+  it('adds no text over a word that carries no chord, so the line reads as written', () => {
+    const { container } = render(<ChordChartViewer source="[Cm]Take five" />);
+    expect(container.textContent).toBe('CmTake five');
+  });
+
   it('keeps a line of chords alone on one row, without an empty lyric row', () => {
     render(<ChordChartViewer source="[G]   [A]" />);
     expect(screen.getByText('G', { normalizer: (text) => text.trim() }).className).toContain(
