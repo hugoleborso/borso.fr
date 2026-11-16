@@ -19,3 +19,5 @@ Session: d4e075dc-4598-5893-8fae-dcc73a19b2b8
 - [2026-11-16 16:37] `visual-validator` scripts/phone.sh touch on the lineup button reported a real touch on target but exited 1 because the page was left 1280 px wide after the tap, the second touch of the same phone session.
 - [2026-11-16 18:10] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-16 18:11] `main` the shipping session asked the operator to confirm running the kaizen in the same conversation after he had already asked for it, because CLAUDE.md and after-task-kaizen forbid it; he asks agents for this a quarter of the time
+- [2026-11-16 18:22] `hook:merge-on-red` tried to merge a pull request whose checks were not green
+- [2026-11-16 18:22] `main` the kaizen of PR #372 changed the same-session kaizen rule in CLAUDE.md and two skills but missed a third copy in the merge hook, because its grep left out .claude/hooks; the operator saw it only after the merge
