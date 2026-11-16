@@ -2,16 +2,15 @@
 
 import { type JSX, useMemo } from 'react';
 import {
-  buildChordCells,
   type ChordProLine,
   type ChordProSection,
   groupChordProSections,
-  hasLyricText,
   hasSectionHeading,
   isTitleDirective,
   parseChordPro,
   widestTabLineLength,
 } from '../../lib/chordpro.utils';
+import { buildChordCells, groupCellsIntoWords, hasLyricText } from '../../lib/chord-cells.utils';
 import { buildTabFontSize } from '../../routes/catalog/scene-view.core';
 import { transposeChordChart } from '../../routes/catalog/tab-transpose.core';
 import type { ChordChartTone } from '../atoms/chart-tone';
@@ -126,18 +125,22 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
   }
   return (
     <div key={key} className={CHORDS_ABOVE_LYRICS_LINE_CLASS}>
-      {cells.map((cell, cellIndex) => (
-        <span
-          key={`${key}-cell-${cellIndex}`}
-          data-chord={cell.chord ?? undefined}
-          className={composeClassName(
-            CHORD_CELL_CLASS,
-            CHORD_ABOVE_CLASS_BY_TONE[tone],
-            LYRIC_CLASS_BY_TONE[tone],
-          )}
-          style={{ minWidth: chordCellMinimumWidth(cell.chord) }}
-        >
-          {cell.lyric}
+      {groupCellsIntoWords(cells).map((word, wordIndex) => (
+        <span key={`${key}-word-${wordIndex}`} className="whitespace-nowrap">
+          {word.map((cell, cellIndex) => (
+            <span
+              key={`${key}-word-${wordIndex}-cell-${cellIndex}`}
+              data-chord={cell.chord ?? undefined}
+              className={composeClassName(
+                CHORD_CELL_CLASS,
+                CHORD_ABOVE_CLASS_BY_TONE[tone],
+                LYRIC_CLASS_BY_TONE[tone],
+              )}
+              style={{ minWidth: chordCellMinimumWidth(cell.chord) }}
+            >
+              {cell.lyric}
+            </span>
+          ))}
         </span>
       ))}
     </div>

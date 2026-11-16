@@ -62,6 +62,13 @@ describe('a chord chart with lyrics', () => {
     expect(container.textContent).toBe('Take five, becomes');
   });
 
+  it('keeps a word split by a chord in one unbreakable group, so a wrap never cuts it', () => {
+    const { container } = render(<ChordChartViewer source="half be[F]comes" />);
+    const word = container.querySelector('[data-chord="F"]')?.parentElement;
+    expect(word?.className).toBe('whitespace-nowrap');
+    expect(word?.textContent).toBe('becomes');
+  });
+
   it('widens a chord cell to its chord plus one gap, and leaves a bare word its own width', () => {
     const { container } = render(<ChordChartViewer source="[Cmaj7]a word" />);
     const cells = container.querySelectorAll<HTMLElement>('.indent-0');
