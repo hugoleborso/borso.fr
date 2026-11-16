@@ -227,14 +227,14 @@ describe('SetlistScenePage', () => {
     pressKey(container, 'ArrowRight');
     expect(container.textContent).toContain('Walking bass');
     expect(readChartPills(container)).toEqual([
-      ['All instruments', 'false'],
+      ['Chords', 'false'],
       ['Basse', 'true'],
     ]);
   });
 
   it('opens the next entry on its own opening chart after a pill was tapped', () => {
     pressKey(container, 'ArrowRight');
-    tapChartPill(container, 'All instruments');
+    tapChartPill(container, 'Chords');
     expect(container.textContent).not.toContain('Walking bass');
     pressKey(container, 'ArrowRight');
     pressKey(container, 'ArrowLeft');
@@ -243,7 +243,7 @@ describe('SetlistScenePage', () => {
 
   it('opens the song a reorder moves under the scene on its own opening chart', () => {
     pressKey(container, 'ArrowRight');
-    tapChartPill(container, 'All instruments');
+    tapChartPill(container, 'Chords');
     const [first, second, third] = scene.initialEntries;
     if (first === undefined || second === undefined || third === undefined) {
       throw new TypeError('the scene fixture holds three entries');

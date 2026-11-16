@@ -36,7 +36,7 @@ describe('ChordChartSwitcher', () => {
     container.remove();
   });
 
-  it('names one pill per chart by its instruments and label, the shown one selected', () => {
+  it('names one pill per chart in one word, the shown one selected', () => {
     act(() => {
       root.render(
         <ChordChartSwitcher
@@ -50,7 +50,7 @@ describe('ChordChartSwitcher', () => {
     expect(document.querySelector('[role=tablist]')?.getAttribute('aria-label')).toBe(
       'Charts of this song',
     );
-    expect(listTabs().map((tab) => tab.textContent)).toEqual(['All instruments', 'Guitare · Solo']);
+    expect(listTabs().map((tab) => tab.textContent)).toEqual(['Chords', 'Guitare']);
     expect(listTabs().map((tab) => tab.getAttribute('aria-selected'))).toEqual(['false', 'true']);
   });
 

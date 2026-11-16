@@ -24,6 +24,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: 'solo and intro are the words French musicians use',
   },
   { key: 'catalog.chartPdf', readsTheSameBecause: 'the PDF format name' },
+  {
+    key: 'catalog.chartTitleEnsemble',
+    readsTheSameBecause: 'English borrows the French word for the whole band',
+  },
   { key: 'catalog.chordsPdf', readsTheSameBecause: 'the PDF format name' },
   { key: 'catalog.chordsPhoto', readsTheSameBecause: 'same word, same spelling' },
   {
