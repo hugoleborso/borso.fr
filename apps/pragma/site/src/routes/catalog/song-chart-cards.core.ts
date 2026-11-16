@@ -65,7 +65,11 @@ export function cardsFromCharts(charts: readonly SongChart[]): SongChartCardDraf
 }
 
 function chartFromCard(card: SongChartCardDraft): SongChart | null {
-  const assignment = { instrumentIds: [...card.instrumentIds], label: card.label };
+  const trimmedLabel = card.label.trim();
+  const assignment = {
+    instrumentIds: [...card.instrumentIds],
+    label: trimmedLabel.length === 0 ? null : trimmedLabel,
+  };
   if (card.kind === 'chordpro') {
     const text = convertChordsAboveLyrics(card.chordproText).chordPro;
     return text.length === 0 ? null : { kind: 'chordpro', text, ...assignment };
