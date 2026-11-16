@@ -8,7 +8,7 @@ import { Input } from '../atoms/Input';
 import { SongSearch } from './SongSearch';
 import { deriveTonality } from '@domain/tonality.core';
 import { convertChordsAboveLyrics } from '../../routes/catalog/chords-above-lyrics.core';
-import { SongChartFields } from './SongChartFields';
+import { SongChartFields, type SongChartCardsUpdate } from './SongChartFields';
 import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
 import { SongClassificationFields } from '../molecules/SongClassificationFields';
@@ -74,11 +74,12 @@ export function SongEditForm({
   });
   const isExistingSong = !isNew && songId !== undefined;
 
-  const applyChordproText = (index: number, text: string): void => {
-    form.setFieldValue(
-      'charts',
-      withChartCardChanged(form.getFieldValue('charts'), index, { chordproText: text }),
-    );
+  const updateCharts = (update: SongChartCardsUpdate): void => {
+    form.setFieldValue('charts', update(form.getFieldValue('charts')));
+  };
+
+  const applyChordproText = (cardId: string, text: string): void => {
+    updateCharts((current) => withChartCardChanged(current, cardId, { chordproText: text }));
     const derived = deriveTonality(convertChordsAboveLyrics(text).chordPro);
     const currentStart = form.getFieldValue('tonalityStart');
     const currentEnd = form.getFieldValue('tonalityEnd');
@@ -214,7 +215,7 @@ export function SongEditForm({
             cards={charts}
             instruments={instruments}
             {...(isExistingSong ? { songId } : {})}
-            onCardsChange={(cards) => form.setFieldValue('charts', cards)}
+            onCardsChange={updateCharts}
             onChordproChange={applyChordproText}
           />
         )}

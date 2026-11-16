@@ -20,6 +20,7 @@ export const songChartSchema = z.union([
 export type SongChart = z.infer<typeof songChartSchema>;
 
 export interface SongChartCardDraft {
+  readonly cardId: string;
   readonly kind: SongChartKind;
   readonly chordproText: string;
   readonly pdfS3Key: string;
@@ -28,7 +29,14 @@ export interface SongChartCardDraft {
   readonly label: string;
 }
 
+const LOADED_CARD_ID_PREFIX = 'chart-';
+
+function loadedCardId(index: number): string {
+  return `${LOADED_CARD_ID_PREFIX}${String(index)}`;
+}
+
 export const BLANK_CHART_CARD: SongChartCardDraft = {
+  cardId: loadedCardId(0),
   kind: 'none',
   chordproText: '',
   pdfS3Key: '',
@@ -38,8 +46,9 @@ export const BLANK_CHART_CARD: SongChartCardDraft = {
 };
 
 // @FollowsBlueprint core-form-schema
-export function cardFromChart(chart: SongChart): SongChartCardDraft {
+export function cardFromChart(chart: SongChart, index: number): SongChartCardDraft {
   return {
+    cardId: loadedCardId(index),
     kind: chart.kind,
     chordproText: chart.kind === 'chordpro' ? chart.text : '',
     pdfS3Key: chart.kind === 'pdf' ? chart.s3Key : '',
@@ -50,15 +59,13 @@ export function cardFromChart(chart: SongChart): SongChartCardDraft {
 }
 
 export function cardsFromCharts(charts: readonly SongChart[]): SongChartCardDraft[] {
-  return charts.length === 0 ? [BLANK_CHART_CARD] : charts.map(cardFromChart);
+  return charts.length === 0
+    ? [BLANK_CHART_CARD]
+    : charts.map((chart, index) => cardFromChart(chart, index));
 }
 
 function chartFromCard(card: SongChartCardDraft): SongChart | null {
-  const trimmedLabel = card.label.trim();
-  const assignment = {
-    instrumentIds: [...card.instrumentIds],
-    label: trimmedLabel.length === 0 ? null : trimmedLabel,
-  };
+  const assignment = { instrumentIds: [...card.instrumentIds], label: card.label };
   if (card.kind === 'chordpro') {
     const text = convertChordsAboveLyrics(card.chordproText).chordPro;
     return text.length === 0 ? null : { kind: 'chordpro', text, ...assignment };
@@ -85,23 +92,24 @@ export function canAddChartCard(cardCount: number): boolean {
 
 export function withChartCardAdded(
   cards: readonly SongChartCardDraft[],
+  cardId: string,
 ): readonly SongChartCardDraft[] {
-  return canAddChartCard(cards.length) ? [...cards, BLANK_CHART_CARD] : cards;
+  return canAddChartCard(cards.length) ? [...cards, { ...BLANK_CHART_CARD, cardId }] : cards;
 }
 
 export function withoutChartCard(
   cards: readonly SongChartCardDraft[],
-  index: number,
+  cardId: string,
 ): readonly SongChartCardDraft[] {
-  return cards.filter((_, current) => current !== index);
+  return cards.filter((card) => card.cardId !== cardId);
 }
 
 export function withChartCardChanged(
   cards: readonly SongChartCardDraft[],
-  index: number,
-  changes: Partial<SongChartCardDraft>,
+  cardId: string,
+  changes: Partial<Omit<SongChartCardDraft, 'cardId'>>,
 ): readonly SongChartCardDraft[] {
-  return cards.map((card, current) => (current === index ? { ...card, ...changes } : card));
+  return cards.map((card) => (card.cardId === cardId ? { ...card, ...changes } : card));
 }
 
 export function canMoveChartCard(index: number, cardCount: number, offset: number): boolean {
@@ -111,9 +119,10 @@ export function canMoveChartCard(index: number, cardCount: number, offset: numbe
 
 export function moveChartCard(
   cards: readonly SongChartCardDraft[],
-  index: number,
+  cardId: string,
   offset: number,
 ): readonly SongChartCardDraft[] {
+  const index = cards.findIndex((card) => card.cardId === cardId);
   const target = index + offset;
   const moved = cards[index];
   const displaced = cards[target];

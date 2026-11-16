@@ -34,7 +34,7 @@ export interface SongChartCardProps {
   readonly cardCount: number;
   readonly instruments: readonly InstrumentToggleOption[];
   readonly songId?: string;
-  readonly onChange: (changes: Partial<SongChartCardDraft>) => void;
+  readonly onChange: (changes: Partial<Omit<SongChartCardDraft, 'cardId'>>) => void;
   readonly onChordproChange: (text: string) => void;
   readonly onMove: (offset: number) => void;
   readonly onRemove: () => void;

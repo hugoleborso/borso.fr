@@ -144,7 +144,6 @@
     "chartPdf": "PDF",
     "chartSwitcher": "Grilles de ce morceau",
     "chartsMaxReached": "{{max}} grilles au plus par morceau.",
-    "chordChart": "Grille d'accords",
     "chordChartNumbered": "Grille {{number}}",
     "chordCharts": "Grilles d'accords",
     "createSearched": "Créer « {{title}} »",

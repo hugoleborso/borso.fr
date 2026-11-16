@@ -17,12 +17,16 @@ import type { InstrumentToggleOption } from '../molecules/InstrumentToggleGroup'
 import { FIELD_LABEL_CLASS } from '../atoms/LabelledField';
 import { SongChartCard } from './SongChartCard';
 
+export type SongChartCardsUpdate = (
+  current: readonly SongChartCardDraft[],
+) => readonly SongChartCardDraft[];
+
 interface SongChartFieldsProps {
   readonly cards: readonly SongChartCardDraft[];
   readonly instruments: readonly InstrumentToggleOption[];
   readonly songId?: string;
-  readonly onCardsChange: (cards: readonly SongChartCardDraft[]) => void;
-  readonly onChordproChange: (index: number, text: string) => void;
+  readonly onCardsChange: (update: SongChartCardsUpdate) => void;
+  readonly onChordproChange: (cardId: string, text: string) => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -36,18 +40,20 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
       </legend>
       {props.cards.map((card, index) => (
         <SongChartCard
-          key={index}
+          key={card.cardId}
           card={card}
           index={index}
           cardCount={props.cards.length}
           instruments={props.instruments}
           {...(props.songId === undefined ? {} : { songId: props.songId })}
           onChange={(changes) =>
-            props.onCardsChange(withChartCardChanged(props.cards, index, changes))
+            props.onCardsChange((current) => withChartCardChanged(current, card.cardId, changes))
           }
-          onChordproChange={(text) => props.onChordproChange(index, text)}
-          onMove={(offset) => props.onCardsChange(moveChartCard(props.cards, index, offset))}
-          onRemove={() => props.onCardsChange(withoutChartCard(props.cards, index))}
+          onChordproChange={(text) => props.onChordproChange(card.cardId, text)}
+          onMove={(offset) =>
+            props.onCardsChange((current) => moveChartCard(current, card.cardId, offset))
+          }
+          onRemove={() => props.onCardsChange((current) => withoutChartCard(current, card.cardId))}
         />
       ))}
       <Button
@@ -55,7 +61,9 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
         icon="plus"
         className="self-start"
         disabled={!isAddAllowed}
-        onClick={() => props.onCardsChange(withChartCardAdded(props.cards))}
+        onClick={() =>
+          props.onCardsChange((current) => withChartCardAdded(current, crypto.randomUUID()))
+        }
       >
         {t('catalog.chartAdd')}
       </Button>

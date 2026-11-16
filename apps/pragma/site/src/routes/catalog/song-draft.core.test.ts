@@ -115,7 +115,7 @@ describe('songFromApi', () => {
         instrumentIds: [GUITAR_ID],
         label: 'Solo',
       },
-      { ...BLANK_CHART_CARD, kind: 'image', imageS3Key: 'charts/a.png' },
+      { ...BLANK_CHART_CARD, cardId: 'chart-1', kind: 'image', imageS3Key: 'charts/a.png' },
     ]);
   });
 
@@ -153,16 +153,16 @@ describe('chartsFromDraft', () => {
     expect(chartsFromDraft(BLANK_SONG_DRAFT)).toEqual([]);
   });
 
-  it('builds a ChordPro chart with its instruments and trimmed label', () => {
+  it('builds a ChordPro chart with its instruments and the label as typed', () => {
     expect(
       chartsFromDraft(draftWith({ ...CHORDPRO_CARD, instrumentIds: [GUITAR_ID], label: ' Solo ' })),
-    ).toEqual([{ kind: 'chordpro', text: '[C]', instrumentIds: [GUITAR_ID], label: 'Solo' }]);
+    ).toEqual([{ kind: 'chordpro', text: '[C]', instrumentIds: [GUITAR_ID], label: ' Solo ' }]);
   });
 
-  it('saves pasted chords above lyrics as ChordPro, and a blank label as none', () => {
-    expect(
-      chartsFromDraft(draftWith({ ...CHORDPRO_CARD, chordproText: 'C\nHello', label: ' ' })),
-    ).toEqual([{ kind: 'chordpro', text: '[C]Hello', instrumentIds: [], label: null }]);
+  it('saves pasted chords above lyrics as ChordPro', () => {
+    expect(chartsFromDraft(draftWith({ ...CHORDPRO_CARD, chordproText: 'C\nHello' }))).toEqual([
+      { kind: 'chordpro', text: '[C]Hello', instrumentIds: [], label: '' },
+    ]);
   });
 
   it('builds a pdf chart and an image chart', () => {
@@ -174,8 +174,8 @@ describe('chartsFromDraft', () => {
         ),
       ),
     ).toEqual([
-      { kind: 'pdf', s3Key: 'a.pdf', instrumentIds: [], label: null },
-      { kind: 'image', s3Key: 'a.png', instrumentIds: [], label: null },
+      { kind: 'pdf', s3Key: 'a.pdf', instrumentIds: [], label: '' },
+      { kind: 'image', s3Key: 'a.png', instrumentIds: [], label: '' },
     ]);
   });
 

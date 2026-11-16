@@ -14,11 +14,34 @@ import {
 import type { SongEditSection } from '../../routes/catalog/song-edit-page.core';
 import { NO_SAVE_REFUSAL, type SongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
+import type { ChartUploadResult } from './chart-upload.hook';
 import { SongEditForm } from './SongEditForm';
 
 vi.mock('../../observability/product-event.adapter', () => ({
   recordProductEvent: vi.fn(),
 }));
+
+const pendingUploads = vi.hoisted(() => {
+  const resolvers: ((result: ChartUploadResult | null) => void)[] = [];
+  return { resolvers };
+});
+vi.mock('./chart-upload.hook', () => ({
+  useChartUpload: () => ({
+    isBusy: false,
+    error: null,
+    clearError: () => undefined,
+    upload: () =>
+      new Promise<ChartUploadResult | null>((resolve) => {
+        pendingUploads.resolvers.push(resolve);
+      }),
+  }),
+}));
+
+function finishUpload(objectKey: string): void {
+  pendingUploads.resolvers.shift()?.({ kind: 'image', objectKey });
+}
+
+const PHOTO = new File(['photo'], 'chart.png', { type: 'image/png' });
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -88,6 +111,7 @@ function renderForm(
 describe('SongEditForm', () => {
   afterEach(() => {
     cleanup();
+    pendingUploads.resolvers.length = 0;
   });
 
   it('names the song already holding the Deezer track, with a link to it', () => {
@@ -213,6 +237,7 @@ describe('SongEditForm', () => {
     expect(onSubmit.mock.calls[0]?.[0].charts).toEqual([
       {
         ...BLANK_CHART_CARD,
+        cardId: expect.any(String),
         kind: 'chordpro',
         chordproText: '{title: Solo}\n[G]Riff',
         instrumentIds: ['bass', 'voice'],
@@ -220,6 +245,40 @@ describe('SongEditForm', () => {
       },
       { ...BLANK_CHART_CARD, kind: 'chordpro', chordproText: '{title: Grid}\n[C]Hello' },
     ]);
+  });
+
+  it('keeps a label typed while the photo of its card uploads', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn<(value: SongDraftState) => Promise<void>>().mockResolvedValue();
+    renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit });
+
+    const card = screen.getByRole('region', { name: 'Chart 1' });
+    await user.upload(within(card).getByLabelText('Photo'), PHOTO);
+    await user.type(within(card).getByLabelText('Label (optional)'), 'Solo');
+    finishUpload('charts/a.png');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0]?.[0].charts).toEqual([
+      { ...BLANK_CHART_CARD, kind: 'image', imageS3Key: 'charts/a.png', label: 'Solo' },
+    ]);
+  });
+
+  it('keeps a card removed while its photo uploads removed', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn<(value: SongDraftState) => Promise<void>>().mockResolvedValue();
+    const kept = { ...BLANK_CHART_CARD, kind: 'chordpro', chordproText: '[C]Hello' } as const;
+    const removed = { ...BLANK_CHART_CARD, cardId: 'chart-1' };
+    renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit, charts: [kept, removed] });
+
+    const second = screen.getByRole('region', { name: 'Chart 2' });
+    await user.upload(within(second).getByLabelText('Photo'), PHOTO);
+    await user.click(within(second).getByRole('button', { name: 'Remove the chart' }));
+    finishUpload('charts/a.png');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0]?.[0].charts).toEqual([kept]);
   });
 
   it('fills an empty tonality from a chart pasted into the second card', async () => {
@@ -238,7 +297,10 @@ describe('SongEditForm', () => {
   });
 
   it('disables Add a chart at six charts and says the limit', () => {
-    const full = Array.from({ length: SONG_CHARTS_MAX }, () => BLANK_CHART_CARD);
+    const full = Array.from({ length: SONG_CHARTS_MAX }, (_, index) => ({
+      ...BLANK_CHART_CARD,
+      cardId: String(index),
+    }));
     renderForm(NO_SAVE_REFUSAL, { section: 'music', charts: full });
 
     expect(screen.getByRole('button', { name: 'Add a chart' })).toHaveProperty('disabled', true);

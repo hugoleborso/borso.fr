@@ -144,7 +144,6 @@
     "chartPdf": "PDF",
     "chartSwitcher": "Charts of this song",
     "chartsMaxReached": "Up to {{max}} charts per song.",
-    "chordChart": "Chord chart",
     "chordChartNumbered": "Chart {{number}}",
     "chordCharts": "Chord charts",
     "createSearched": "Create “{{title}}”",

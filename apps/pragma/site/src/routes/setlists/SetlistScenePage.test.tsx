@@ -60,6 +60,7 @@ const SONGS = [
   song('song-1', 'Take Five'),
   song('song-2', 'Helpless', [chordProChart('{title: Bass part}\n[Cm]Walking bass', ['bass'])]),
   song('song-3', 'So What'),
+  song('song-4', 'Blue in Green', [chordProChart('{title: Upright}\n[Cm]Upright bass', ['bass'])]),
 ];
 
 vi.mock('../../lib/queries/setlists.queries', () => ({
@@ -153,6 +154,16 @@ function tapChartPill(container: HTMLElement, name: string): void {
   });
 }
 
+function getButton(container: HTMLElement, label: string): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+  if (button === null) throw new TypeError(`no button ${label}`);
+  return button;
+}
+
+function readTranspose(container: HTMLElement): string {
+  return getButton(container, 'Transpose down').nextElementSibling?.textContent ?? '';
+}
+
 function clickButton(button: HTMLButtonElement): void {
   act(() => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -163,11 +174,7 @@ describe('SetlistScenePage', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  beforeEach(() => {
-    stubDialogModalMissingFromJsdom();
-    container = document.createElement('div');
-    document.body.append(container);
-    root = createRoot(container);
+  function renderScene(): void {
     act(() => {
       root.render(
         <MemoryRouter initialEntries={['/setlists/set-1/scene']}>
@@ -178,6 +185,14 @@ describe('SetlistScenePage', () => {
         </MemoryRouter>,
       );
     });
+  }
+
+  beforeEach(() => {
+    stubDialogModalMissingFromJsdom();
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    renderScene();
   });
 
   afterEach(() => {
@@ -224,6 +239,27 @@ describe('SetlistScenePage', () => {
     pressKey(container, 'ArrowRight');
     pressKey(container, 'ArrowLeft');
     expect(container.textContent).toContain('Walking bass');
+  });
+
+  it('opens the song a reorder moves under the scene on its own opening chart', () => {
+    pressKey(container, 'ArrowRight');
+    tapChartPill(container, 'All instruments');
+    const [first, second, third] = scene.initialEntries;
+    if (first === undefined || second === undefined || third === undefined) {
+      throw new TypeError('the scene fixture holds three entries');
+    }
+    const moved = { ...second, id: 'entry-4', songId: 'song-4' };
+    scene.entries = [first, moved, { ...second, position: 2 }, { ...third, position: 3 }];
+    renderScene();
+    expect(readTitle(container)).toBe('Blue in Green');
+    expect(container.textContent).toContain('Upright bass');
+  });
+
+  it('resets the transpose when the scene moves to another song', () => {
+    clickButton(getButton(container, 'Transpose up'));
+    expect(readTranspose(container)).toBe('+1');
+    pressKey(container, 'ArrowRight');
+    expect(readTranspose(container)).toBe('+0');
   });
 
   it('walks back on the left arrow', () => {

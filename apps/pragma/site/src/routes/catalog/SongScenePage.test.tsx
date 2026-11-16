@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 
+const fixture = vi.hoisted(() => ({ hasChordPro: true }));
+
 vi.mock('../../lib/queries/songs.queries', () => ({
   useSong: () => ({
     data: {
@@ -17,12 +19,14 @@ vi.mock('../../lib/queries/songs.queries', () => ({
         defaultLineup: { lea: ['guitar'] },
         charts: [
           { kind: 'pdf', s3Key: 'chart/song-1/tab.pdf', instrumentIds: ['guitar'], label: null },
-          {
-            kind: 'chordpro',
-            text: '{title: Take Five}\n[Cm]Take five',
-            instrumentIds: [],
-            label: null,
-          },
+          fixture.hasChordPro
+            ? {
+                kind: 'chordpro',
+                text: '{title: Take Five}\n[Cm]Take five',
+                instrumentIds: [],
+                label: null,
+              }
+            : { kind: 'image', s3Key: 'chart/song-1/grid.png', instrumentIds: [], label: null },
         ],
         structureNotes: '',
         gimmickNotes: '',
@@ -64,11 +68,7 @@ describe('SongScenePage', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  beforeEach(() => {
-    stubDialogModalMissingFromJsdom();
-    container = document.createElement('div');
-    document.body.append(container);
-    root = createRoot(container);
+  function renderScene(): void {
     act(() => {
       root.render(
         <MemoryRouter initialEntries={['/catalog/song-1/scene']}>
@@ -78,11 +78,20 @@ describe('SongScenePage', () => {
         </MemoryRouter>,
       );
     });
+  }
+
+  beforeEach(() => {
+    stubDialogModalMissingFromJsdom();
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    renderScene();
   });
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    fixture.hasChordPro = true;
   });
 
   it('keeps its header below the status bar of a phone with a notch', () => {
@@ -96,5 +105,11 @@ describe('SongScenePage', () => {
     expect(container.textContent).toContain('Take five');
     expect(container.textContent).not.toContain('No ChordPro chart');
     expect(container.querySelector('[role=tablist]')).toBeNull();
+  });
+
+  it('says the song has no ChordPro chart when every chart is a file', () => {
+    fixture.hasChordPro = false;
+    renderScene();
+    expect(container.textContent).toContain('No ChordPro chart attached to this song.');
   });
 });

@@ -17,16 +17,23 @@ export interface ChartSwitch {
   readonly resetPick: () => void;
 }
 
+interface ScopedPick {
+  readonly scope: string | undefined;
+  readonly index: number;
+}
+
 // @FollowsBlueprint hook-stateful-helper
 export function useChartSwitch(
   charts: readonly AssignedChart[],
   heldInstrumentIds: readonly string[] | null,
   surface: ChartSwitchSurface,
+  pickScope?: string,
 ): ChartSwitch {
-  const [pickedIndex, setPickedIndex] = useState<number | null>(null);
+  const [pick, setPick] = useState<ScopedPick | null>(null);
+  const pickedIndex = pick !== null && pick.scope === pickScope ? pick.index : null;
   const openingIndex = selectOpeningChartIndex(charts, heldInstrumentIds);
   const shownIndex = selectShownChartIndex(pickedIndex, openingIndex, charts.length);
-  const pick = (index: number): void => {
+  const pickChart = (index: number): void => {
     const isSwitch = isSwitchToAnotherChart(index, shownIndex);
     if (isSwitch) {
       recordProductEvent('chord_chart_switched', {
@@ -34,7 +41,7 @@ export function useChartSwitch(
         fromOpening: shownIndex === openingIndex,
       });
     }
-    setPickedIndex(index);
+    setPick({ scope: pickScope, index });
   };
-  return { shownIndex, pick, resetPick: () => setPickedIndex(null) };
+  return { shownIndex, pick: pickChart, resetPick: () => setPick(null) };
 }

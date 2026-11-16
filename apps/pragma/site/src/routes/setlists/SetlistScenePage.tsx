@@ -100,6 +100,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
     chordProCharts,
     selectHeldInstrumentIds(entryLineup, signedInMember.data),
     'setlist-scene',
+    entry?.songId,
   );
   const pills = useMemo(
     () => buildScenePills(setlistEntries, songsById, currentIndex),

@@ -1,4 +1,6 @@
 import type { Lineup } from '@domain/lineup.core';
+import type { z } from 'zod';
+import type { chordChartSchema } from '../songs/songs.schema';
 
 export type SeedLineupByMemberName = Readonly<Record<string, readonly string[]>>;
 
@@ -33,12 +35,7 @@ export interface SeedChartSource {
   readonly chordChartText: string;
 }
 
-export interface SeedChart {
-  readonly kind: 'chordpro';
-  readonly text: string;
-  readonly instrumentIds: string[];
-  readonly label: string | null;
-}
+export type SeedChart = Extract<z.output<typeof chordChartSchema>, { kind: 'chordpro' }>;
 
 interface SeedChartAssignment {
   readonly instrumentNames: readonly string[];
@@ -46,7 +43,7 @@ interface SeedChartAssignment {
   readonly text: string;
 }
 
-const AFTERGLOW_GUITAR_TAB = `{title: Afterglow}
+const AFTERGLOW_GUITAR_CHART = `{title: Afterglow}
 {key: G}
 {start_of_tab}
 e|---------------7-----|
@@ -55,7 +52,7 @@ G|---7-----------------|
 {end_of_tab}`;
 
 const SEED_INSTRUMENT_CHARTS: Readonly<Record<string, readonly SeedChartAssignment[]>> = {
-  Afterglow: [{ instrumentNames: ['Guitare'], label: null, text: AFTERGLOW_GUITAR_TAB }],
+  Afterglow: [{ instrumentNames: ['Guitare'], label: null, text: AFTERGLOW_GUITAR_CHART }],
 };
 
 // @FollowsBlueprint core-projection
