@@ -60,7 +60,8 @@ Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the f
 ## Setlist row
 
 - A song row is one title line and one line under it. It grows only by the
-  entry's note and tonight's lineup change. Nothing else about the song,
+  entry's note and tonight's lineup change. The transition marker drawn
+  above it belongs to the pair of songs, not to the row. Nothing else about the song,
   such as a task, is drawn in it: the screen exists to keep as many songs as
   possible in view.
 
