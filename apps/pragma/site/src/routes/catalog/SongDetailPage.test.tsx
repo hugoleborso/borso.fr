@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -151,6 +151,17 @@ describe('song page', () => {
       .filter((link) => link.getAttribute('href')?.endsWith('/scene'));
     expect(stageLinks.map((link) => link.textContent)).toEqual(['Full screen']);
     expect(document.querySelectorAll('a button')).toHaveLength(0);
+  });
+
+  it('counts two transpose taps that land before a render as two steps', async () => {
+    renderSongPage('?tab=chords');
+    const transpose = await screen.findByRole('group', { name: 'Transpose' });
+    const transposeUp = within(transpose).getByRole('button', { name: 'Transpose up' });
+    act(() => {
+      transposeUp.click();
+      transposeUp.click();
+    });
+    expect(within(screen.getByRole('group', { name: 'Transpose' })).getByText('+2')).toBeTruthy();
   });
 
   it('opens on the chart of the instrument the member holds, and keeps the transpose across pills', async () => {
