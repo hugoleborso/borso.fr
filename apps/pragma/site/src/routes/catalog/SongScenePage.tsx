@@ -142,7 +142,9 @@ export function SongScenePage(): JSX.Element {
               fontSizePx={fontSizePx}
               scrollSpeedPxPerSecond={scrollSpeed}
               isAutoScrolling={isAutoScrolling}
-              onTransposeBy={(delta) => setSemitones(clampSemitoneOffset(semitones + delta))}
+              onTransposeBy={(delta) =>
+                setSemitones((current) => clampSemitoneOffset(current + delta))
+              }
               onZoomBy={(delta) => setFontSizePx(clampSceneFontSize(fontSizePx + delta))}
               onScrollSpeedBy={changeScrollSpeed}
               onToggleAutoScroll={toggleAutoScroll}

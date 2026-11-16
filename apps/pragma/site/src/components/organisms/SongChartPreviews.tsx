@@ -74,7 +74,9 @@ function ChartPreviewCards({ chart }: ChartPreviewCardsProps): JSX.Element {
             <span className="flex-1" />
             <TransposeStepper
               semitones={semitones}
-              onTransposeBy={(delta) => setSemitones(clampSemitoneOffset(semitones + delta))}
+              onTransposeBy={(delta) =>
+                setSemitones((current) => clampSemitoneOffset(current + delta))
+              }
             />
           </div>
           <div className="p-4">

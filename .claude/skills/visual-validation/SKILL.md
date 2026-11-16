@@ -67,7 +67,7 @@ Do **not** invoke when:
 
 1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path itself — it's the segment after `docs/features/`.
 2. **Discover the workspace.** `app_pkg = "@borso-app/<app>"` (the workspace conventions live in CLAUDE.md). Confirm `apps/<app>/package.json` exists.
-3. **Probe the dev server** at `http://localhost:5173/` (or the port from `apps/<app>/vite.config.ts`). If 200, reuse it. If not, spawn `pnpm --filter <app_pkg> dev` in the background with the Bash tool's `timeout: 7200000` and poll until 200. The default background limit is 30 minutes, and on PR #234 it stopped the server in the middle of a validation run.
+3. **Start the dev server** with `scripts/dev-server.sh start <app>`. It prints the site URL once the server answers, the seeded sign-in on stderr, and reuses a server it already started. Pass `--as <label>` when another agent may run the same app.
 4. **Build the run folder paths.**
    ```
    timestamp        = <YYYY-MM-DD-HHmm>
@@ -78,7 +78,7 @@ Do **not** invoke when:
    `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in.
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path. **Leave the served code alone until the report is back.** The dev server reloads on every save, so an edit made while the agent runs changes the app under rows it has already recorded, and the report then describes two builds at once.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
-7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
+7. **Stop the dev server** with `scripts/dev-server.sh stop <app>`, with the same `--as` label as the start.
 8. **Split the evidence by verdict.** Per [ADR-2026-09-21T0819](../../../docs/adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
 
    ```bash
