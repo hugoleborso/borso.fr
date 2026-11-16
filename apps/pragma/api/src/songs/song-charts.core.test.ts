@@ -4,7 +4,6 @@ import {
   dropInstrumentFromCharts,
   isWithinChartsByteBudget,
   listEachInstrumentOnce,
-  nullWhenEmpty,
   resolveSongCharts,
 } from './song-charts.core';
 
@@ -56,14 +55,6 @@ describe('dropInstrumentFromCharts', () => {
 describe('listEachInstrumentOnce', () => {
   it('keeps the first place of an instrument named twice', () => {
     expect(listEachInstrumentOnce([PIANO_ID, GUITAR_ID, PIANO_ID])).toEqual([PIANO_ID, GUITAR_ID]);
-  });
-});
-
-describe('nullWhenEmpty', () => {
-  it('stores an empty label as no label', () => {
-    expect(nullWhenEmpty('')).toBeNull();
-    expect(nullWhenEmpty(null)).toBeNull();
-    expect(nullWhenEmpty('Solo')).toBe('Solo');
   });
 });
 

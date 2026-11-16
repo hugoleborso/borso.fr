@@ -1,5 +1,6 @@
 /** @Feature songs */
 
+import { normalizeChartLabel } from '@domain/chart-label.core';
 import { SONG_CHARTS_MAX } from '@domain/input-limits.core';
 import { z } from 'zod';
 import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
@@ -65,10 +66,9 @@ export function cardsFromCharts(charts: readonly SongChart[]): SongChartCardDraf
 }
 
 function chartFromCard(card: SongChartCardDraft): SongChart | null {
-  const trimmedLabel = card.label.trim();
   const assignment = {
     instrumentIds: [...card.instrumentIds],
-    label: trimmedLabel.length === 0 ? null : trimmedLabel,
+    label: normalizeChartLabel(card.label),
   };
   if (card.kind === 'chordpro') {
     const text = convertChordsAboveLyrics(card.chordproText).chordPro;

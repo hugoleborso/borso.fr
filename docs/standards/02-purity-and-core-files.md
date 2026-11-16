@@ -290,7 +290,9 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
   gates while running nowhere.
 - `reviewer` checks that a limit or a rule written in a site does not restate
   one the API enforces under another name, because the lint rule above only
-  compares names.
+  compares names. The finding's fix moves the rule to `domain/`, never deletes
+  the site's copy: an optimistic cache reads the site's payload as a stored
+  record, and PR #363 drew a pill as "Guitare · " after the copy was deleted.
 - `reviewer` checks the choice between `.core.ts` and `.utils.ts`, because the
   question is whether the name is one the band or the race would recognise, and
   no rule can ask that.
