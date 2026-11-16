@@ -13,7 +13,6 @@ import {
 } from './song-draft.core';
 import { SONG_STATUSES } from '@domain/song-status.core';
 import { BLANK_CHART_CARD, type SongChartCardDraft } from './song-chart-cards.core';
-import { describeChordChartTitle } from './chart-title.utils';
 
 const GUITAR_ID = 'instrument-guitar';
 
@@ -158,15 +157,6 @@ describe('chartsFromDraft', () => {
     expect(
       chartsFromDraft(draftWith({ ...CHORDPRO_CARD, instrumentIds: [GUITAR_ID], label: ' Solo ' })),
     ).toEqual([{ kind: 'chordpro', text: '[C]', instrumentIds: [GUITAR_ID], label: 'Solo' }]);
-  });
-
-  it('titles the pill of a chart saved with a blank label by its instruments alone', () => {
-    const titles = chartsFromDraft(
-      draftWith({ ...CHORDPRO_CARD, instrumentIds: [GUITAR_ID], label: '  ' }),
-    ).map((saved) =>
-      describeChordChartTitle(saved, [{ id: GUITAR_ID, name: 'Guitare' }], 'All instruments'),
-    );
-    expect(titles).toEqual(['Guitare']);
   });
 
   it('saves pasted chords above lyrics as ChordPro', () => {

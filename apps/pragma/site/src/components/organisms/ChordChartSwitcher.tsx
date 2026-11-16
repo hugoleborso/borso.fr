@@ -3,10 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CHART_KIND_ICON } from '../../routes/catalog/chart-kind.utils';
-import {
-  describeChordChartTitle,
-  type NamedInstrument,
-} from '../../routes/catalog/chart-title.utils';
+import { titleChordCharts, type NamedInstrument } from '../../routes/catalog/chart-title.utils';
 import { isChartSwitcherShown } from '../../routes/catalog/opening-chart.core';
 import { SectionTabs, type SectionTabsTone } from '../molecules/SectionTabs';
 
@@ -37,10 +34,13 @@ export function ChordChartSwitcher({
   const { t } = useTranslation();
   const isShown = isChartSwitcherShown(charts.length);
   if (!isShown) return null;
-  const everyInstrumentText = t('catalog.chartForEveryInstrument');
-  const tabs = charts.map((chart, index) => ({
+  const titledCharts = titleChordCharts(charts, instruments, {
+    chords: t('catalog.chartTitleChords'),
+    ensemble: t('catalog.chartTitleEnsemble'),
+  });
+  const tabs = titledCharts.map(({ chart, title }, index) => ({
     value: String(index),
-    label: describeChordChartTitle(chart, instruments, everyInstrumentText),
+    label: title,
     icon: CHART_KIND_ICON[chart.kind],
   }));
   return (
