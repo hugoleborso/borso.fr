@@ -7,6 +7,11 @@ they have to leave the setlist, open the band tab, write a task, pick the song
 and the session by hand. They want one tap on the song that says "I need to
 revise this", and a box to tick once it is done.
 
+The setlist screen exists to show as many songs as possible on a phone
+(`docs/features/pragma/setlist-density/spec/spec.md`, six songs at 375 px).
+So the action lives in the row's menu, which takes no height, and the box to
+tick lives with the other tasks.
+
 The data already holds it. A task has a `songId`, a `sessionId` and a
 `dueDate` (`api/src/tasks/tasks.schema.ts`), and a session's screen lists its
 tasks with a checkbox (`SessionTasks`). Nothing changes on the API.
@@ -38,18 +43,17 @@ Any signed-in member, on the setlist screen (`/setlists/:id`), on a phone.
      date, status `todo`.
    With no next session, or while the task list has not loaded, the item is
    not shown.
-3. **The checkbox.** Under a song row, each task of that song on the next
-   session is drawn as one line: a checkbox, the assignee's first name and
-   the session label (kind, date, and venue when set, as everywhere else in the app). Ticking it marks the task done;
-   unticking reopens it. A done task stays on the row, ticked and struck
-   through, until the session's day is past.
-4. **Elsewhere.** The task is an ordinary task. It shows on the session's
-   tasks, on the band tab and through the assistants' task tools, where it
-   can be edited or deleted.
-5. The line and the menu item fit at 375 px wide.
+3. **The row stays as it was.** Asking adds no line, badge or checkbox to
+   the setlist row (operator, 2026-11-16, after seeing a line under the song).
+   Once asked, the menu item disappears for that member and song.
+4. **Ticking it.** The task is an ordinary task, ticked like any other: on the
+   session's tasks (Who does what), on the band tab and through the
+   assistants' task tools, where it can also be edited or deleted.
+5. The menu item fits at 375 px wide.
 
 ## Out of scope
 
 - Revising for a session other than the next one. The task can be moved to
   another session from its task sheet.
-- Showing revision lines on the scene view, the order screen or practice mode.
+- Showing brush-ups on any setlist view. The operator allowed "My part" at
+  most; it is left out until asked.

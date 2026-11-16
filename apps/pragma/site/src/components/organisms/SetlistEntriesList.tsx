@@ -131,9 +131,6 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             onOpen={() => props.onOpen(entry.id)}
             onRemove={props.onRemove}
             onAddBreakAfter={props.inFilteredMode ? undefined : props.onAddBreakAfter}
-            brushUpLines={props.brushUps.linesOf(entry.songId)}
-            brushUpSessionLabel={props.brushUps.sessionLabel}
-            onToggleBrushUp={props.brushUps.toggle}
             onAskBrushUp={props.brushUps.askActionOf(entry.songId, songTitle)}
           />,
         ];

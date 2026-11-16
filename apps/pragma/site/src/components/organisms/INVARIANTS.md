@@ -57,13 +57,21 @@ Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a 
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
 
+## Setlist row
+
+- A song row is one title line and one line under it. It grows only by the
+  entry's note and tonight's lineup change. Nothing else about the song,
+  such as a task, is drawn in it: the screen exists to keep as many songs as
+  possible in view.
+
+Held by: `site/src/components/organisms/SetlistEntryRow.test.tsx` › grows by the note and tonight’s change only, so the list keeps its songs on screen
+
 ## Brush-up
 
-- A song row offers **To revise** only when a next session exists, the
-  task list has loaded and the signed-in member holds no task on that song
-  for that session, ticked or not (`selectSessionToBrushUp`).
-- The row draws every task of its song on the next session, done ones
-  included, and nothing tied to another session (`indexBrushUpTasksBySong`).
+- A song row's menu offers **To revise** only when a next session exists,
+  the task list has loaded and the signed-in member holds no task on that
+  song for that session, ticked or not (`selectSessionToBrushUp`, reading
+  `indexBrushUpTasksBySong`).
 - The task is assigned to the member who asked, and due on the session's
   date (`buildBrushUpTask`).
 

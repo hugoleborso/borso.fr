@@ -658,11 +658,8 @@
     "entryActions": "Plus pour {{title}}",
     "removeFromSetlist": "Retirer de la setlist",
     "revise": {
-      "listLabel": "À réviser",
       "menu": "À réviser",
-      "taskTitle": "Réviser {{title}}",
-      "line": "{{name}} la révise pour {{session}}",
-      "toggle": "{{name}} a révisé {{title}}"
+      "taskTitle": "Réviser {{title}}"
     },
     "editTransitionNote": "Modifier la note de transition",
     "noteTransition": "Noter cette transition",

@@ -28,12 +28,7 @@ const SONGS_BY_ID = Object.fromEntries(
 const HELD: TransitionView = { kind: 'covered', carriers: [] };
 const INTERMISSION = { id: 'p1', label: 'Intermission', position: 1, songsBefore: 1 };
 
-const NO_BRUSH_UP: SongBrushUps = {
-  sessionLabel: null,
-  linesOf: () => [],
-  askActionOf: () => undefined,
-  toggle: () => undefined,
-};
+const NO_BRUSH_UP: SongBrushUps = { askActionOf: () => undefined };
 
 function buildProps(overrides: Partial<SetlistEntriesListProps> = {}): SetlistEntriesListProps {
   return {

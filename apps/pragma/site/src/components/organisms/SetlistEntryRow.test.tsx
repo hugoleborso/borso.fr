@@ -45,9 +45,6 @@ function buildProps(overrides: Partial<SetlistEntryRowProps> = {}): SetlistEntry
     transitionBefore: null,
     onOpen: () => undefined,
     onRemove: () => undefined,
-    brushUpLines: [],
-    brushUpSessionLabel: 'Practice · Wed 18 Nov',
-    onToggleBrushUp: () => undefined,
     ...overrides,
   };
 }
@@ -159,23 +156,16 @@ describe('a setlist row', () => {
     expect(screen.queryByRole('menuitem', { name: 'To revise' })).toBeNull();
   });
 
-  it('draws each brush-up of the next session as a box to tick', () => {
-    const onToggleBrushUp = vi.fn();
+  it('grows by the note and tonight’s change only, so the list keeps its songs on screen', () => {
     renderRow(
       buildProps({
-        onToggleBrushUp,
-        brushUpLines: [
-          { taskId: 'task-1', isDone: false, assignee: { name: 'Léa', color: '#000' } },
-          { taskId: 'task-2', isDone: true, assignee: { name: 'Tom', color: '#fff' } },
-        ],
+        notes: 'Finir sur le refrain',
+        lineupChanges: [{ memberId: 'tom', firstName: 'Tom', heldInstrumentNames: ['Guitar'] }],
+        onAskBrushUp: () => undefined,
       }),
     );
-    expect(screen.getByText('Léa revises it for Practice · Wed 18 Nov')).toBeTruthy();
-    const leaBox = screen.getByRole('checkbox', { name: 'Léa has revised Superstition' });
-    const tomBox = screen.getByRole('checkbox', { name: 'Tom has revised Superstition' });
-    expect(leaBox).toHaveProperty('checked', false);
-    expect(tomBox).toHaveProperty('checked', true);
-    fireEvent.click(leaBox);
-    expect(onToggleBrushUp).toHaveBeenCalledExactlyOnceWith('task-1');
+    const row = screen.getByText('Superstition').closest('li');
+    expect(row?.querySelectorAll('input, ul').length).toBe(0);
+    expect(row?.textContent).not.toContain('revise');
   });
 });

@@ -169,8 +169,8 @@ composition.
 
 A **task** one member takes on a song before the next **session**: its
 `songId` is the song, its `sessionId` the next practice or concert, its
-assignee the member, and the setlist row draws it as a box to tick. The
-screen calls it *To revise*.
+assignee the member. A member asks for one from a song's menu in a
+setlist, and ticks it with the other tasks. The screen calls it *To revise*.
 
 Lives in: `site/src/components/organisms/` (`brush-up.core.ts`), stored as a `task` row
 
@@ -580,6 +580,18 @@ Which sessions carry which setlist, and in what order within a session.
 Lives in: `api/src/setlists/`
 
 Invariants: `api/src/setlists/INVARIANTS.md`
+
+## Setlist row
+
+One **setlist entry** drawn in the setlist's **Songs** view: position, album
+cover, title, its **lineup slots** or the member's part, artist and key, and
+the entry's note and tonight's lineup change when set.
+
+Lives in: `site/src/components/organisms/` (`SetlistEntryRow.tsx`)
+
+Invariants: `site/src/components/organisms/INVARIANTS.md`
+
+Not to be confused with: a row of the **lineup grid**, the Lineup view.
 
 ## Setlist status
 

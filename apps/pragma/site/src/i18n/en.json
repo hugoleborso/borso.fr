@@ -658,11 +658,8 @@
     "entryActions": "More for {{title}}",
     "removeFromSetlist": "Remove from the setlist",
     "revise": {
-      "listLabel": "To revise",
       "menu": "To revise",
-      "taskTitle": "Revise {{title}}",
-      "line": "{{name}} revises it for {{session}}",
-      "toggle": "{{name}} has revised {{title}}"
+      "taskTitle": "Revise {{title}}"
     },
     "editTransitionNote": "Edit the transition note",
     "noteTransition": "Note this transition",
