@@ -30,7 +30,9 @@
 set -euo pipefail
 
 # Paths are read from the repository root, so a run from apps/<app> checks the
-# same tree instead of passing on an empty one.
+# same tree instead of passing on an empty one. A path given as an argument is
+# read from the caller's directory, which pre-commit runs at the root.
+caller_dir=$PWD
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 violations=()
@@ -47,6 +49,10 @@ list_migrations() {
     return
   fi
   for candidate in "$@"; do
+    case "$candidate" in
+      /*) ;;
+      *) candidate="$caller_dir/$candidate" ;;
+    esac
     [ -f "$candidate" ] && printf '%s\0' "$candidate"
   done
   return 0

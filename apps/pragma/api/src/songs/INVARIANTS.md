@@ -13,7 +13,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   under 1 000 000 bytes (`isWithinChartsByteBudget`).
 - Each chart names zero or more instrument ids, none twice. None means
   every instrument. Its label is optional, trimmed, up to 64 characters,
-  and an empty one is stored as null (`chordChartSchema`).
+  and an empty one is stored as null (`normalizeChartLabel` in
+  `domain/chart-label.core.ts`, which the site's save payload applies too).
 - A row whose `charts` is null reads its older `chart` column as a one-item
   list for every instrument (`resolveSongCharts`). An empty list never
   falls back. A create always sets `charts`, an update sets it when it
@@ -35,6 +36,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants with its instruments and label
 Held by: `api/src/songs/songs.controller.test.ts` › reads a row holding only the old chart as one chart for every instrument
 Held by: `api/src/songs/songs.controller.test.ts` › refuses a seventh chart and a list over the byte budget
+Held by: `domain/chart-label.core.test.ts` › stores a blank label as no label
 Held by: `api/src/songs/song-charts.core.test.ts` › lifts the old chart when the list was never written
 Held by: `api/src/songs/song-charts.core.test.ts` › keeps an empty list rather than falling back
 Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above

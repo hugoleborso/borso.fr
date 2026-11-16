@@ -147,7 +147,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
 
 ## Procedure
 
-1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first. The branch may move while you review. Keep reviewing the SHA you recorded, from `git show <sha>:<path>`, and say so in the preamble. Run tests and probes in the working tree, which holds that SHA while you work: a `git archive` export cannot run them, because its setup files resolve to `scripts/` outside it (PR #363). Delete a probe file before you report.
+1. **Record the SHA and read the spec and the plan.** `git rev-parse HEAD` first. The branch may move while you review. Keep reviewing the SHA you recorded, from `git show <sha>:<path>`, and say so in the preamble. Run tests and probes in the working tree, and check `git rev-parse HEAD` still prints the recorded SHA before you trust a run: a `git archive` export cannot run them, because its setup files resolve to `scripts/` outside it (PR #363). Delete a probe file before you report.
 2. **Resolve the diff.** Round 1: `git diff --name-status <base_ref>...HEAD`. Round 2: `git diff --name-status <reviewed-sha>..HEAD`, and walk the categories over that diff only, plus one row per round-1 blocking finding. When a merge of `main` sits above the base, the file list is the one the test bullet of category C gives.
 3. **Walk category A** — correctness vs spec. One row per Q.O.D. user-visible decision + one row per Files-to-change entry. Quote 2–4 lines of evidence per row.
 4. **Walk category B** — code cleanliness. Run lint, search for forbidden patterns, sample 3–5 representative names from the changed code, then read each changed source file in full against the standards checklist.
