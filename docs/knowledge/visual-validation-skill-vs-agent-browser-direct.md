@@ -1,5 +1,5 @@
 ---
-summary: '`/visual-validation` is the feature gate; to check one fix, drive agent-browser directly in the main session.'
+summary: 'Drive agent-browser directly while iterating on a fix; a pull request that changes apps/*/site/ still needs one `/visual-validation` report, run once at the end.'
 triggers:
   paths:
     - 'docs/features/*/*/validation/visual-validation-*'
@@ -25,6 +25,14 @@ triggers:
 Use it at the gate-5 milestone of `/technical-conception` when the
 whole feature is supposed to be done. Don't use it to confirm a
 single CSS tweak landed.
+
+A pull request is different. Since 2026-11-14 the operator requires one
+`/visual-validation` report on every pull request that changes source under
+`apps/*/site/`, a one-line bug fix included, and
+`pretool-api-change-needs-validation.sh` refuses to open one without it. So
+drive `agent-browser` directly while iterating, and run the skill once on
+the finished fix before `/open-pr`. A fix with no spec gets a short one
+under `docs/features/<app>/<slug>/spec/spec.md`, as PR #368 did.
 
 ## When to use `agent-browser` directly instead
 
