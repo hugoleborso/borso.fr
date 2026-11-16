@@ -10,6 +10,7 @@ describe('the seeded Slow Burn chart', () => {
     expect(chartLines).toContain('{start_of_verse}');
     expect(chartLines).toContain('{start_of_chorus}');
     expect(chartLines).toContain('{start_of_tab}');
+    expect(chartLines).toContain('{end_of_tab}');
     expect(chartLines.some((line) => line.startsWith('{comment:'))).toBe(true);
     expect(chartLines.some((line) => CHORD_ONLY_LINE.test(line))).toBe(true);
   });
