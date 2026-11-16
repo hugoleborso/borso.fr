@@ -1,6 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
 import { SongDetailHeader, type SongDetailHeaderProps } from './SongDetailHeader';
 
@@ -11,13 +11,13 @@ function renderHeader(overrides: Partial<SongDetailHeaderProps> = {}): void {
     <MemoryRouter>
       <SongDetailHeader
         song={{
+          id: 'song-1',
           title: 'Get Lucky',
           artist: 'Daft Punk',
           status: 'wip',
           deezerAlbumId: null,
         }}
         previewUrl={PREVIEW_URL}
-        menuItems={[{ label: 'Edit', icon: 'edit', tone: 'default', onSelect: vi.fn() }]}
         {...overrides}
       />
     </MemoryRouter>,
@@ -30,13 +30,11 @@ describe('SongDetailHeader', () => {
     cleanup();
   });
 
-  it('names the song, its artist and its status, with no key and no edit button beside the menu', () => {
+  it('names the song, its artist and its status', () => {
     renderHeader();
     expect(screen.getByRole('heading', { level: 1, name: 'Get Lucky' })).toBeTruthy();
     expect(screen.getByText('Daft Punk')).toBeTruthy();
     expect(screen.getByText('In progress')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Edit' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'More actions on this song' })).toBeTruthy();
   });
 
   it('offers the excerpt over the cover when the song has one', () => {
@@ -51,13 +49,11 @@ describe('SongDetailHeader', () => {
     expect(document.querySelector('audio')).toBeNull();
   });
 
-  it('keeps the edit action in the menu', () => {
-    const onSelect = vi.fn();
-    renderHeader({
-      menuItems: [{ label: 'Edit', icon: 'edit', tone: 'default', onSelect }],
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'More actions on this song' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
-    expect(onSelect).toHaveBeenCalledTimes(1);
+  it('opens the song edit page in one tap, with no menu to open first', () => {
+    renderHeader();
+    expect(screen.getByRole('link', { name: 'Edit' }).getAttribute('href')).toBe(
+      '/catalog/song-1/edit',
+    );
+    expect(screen.queryByRole('button', { name: 'More actions on this song' })).toBeNull();
   });
 });
