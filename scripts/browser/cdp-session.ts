@@ -42,6 +42,15 @@ export async function openSession(target: CdpTarget): Promise<WebSocket> {
   });
 }
 
+export function closeSession(socket: WebSocket): Promise<void> {
+  return new Promise((resolve) => {
+    socket.addEventListener('close', () => {
+      resolve();
+    });
+    socket.close();
+  });
+}
+
 export function createSender(socket: WebSocket): CdpSend {
   let nextId = 0;
   const waiting = new Map<number, (reply: CdpReply) => void>();

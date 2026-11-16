@@ -95,7 +95,7 @@ Once the pull request is open and green: say once that it waits on its reviewers
 
 ## After the merge
 
-The session that shipped the feature ends at merge. It does not run the kaizen sweep itself, because the sweep is a fresh look at the work and this session's context is the thing it audits. The merge reply carries two follow-ups, and says so when either is not needed.
+The session that shipped the feature ends at merge. It does not run the kaizen sweep itself by default, because the sweep is a fresh look at the work and this session's context is the thing it audits. When the operator asks to run it here, it does, without asking again. The merge reply carries two follow-ups, and says so when either is not needed.
 
 1. **`shared-deploy`.** If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch it.
 2. **The kaizen task.** Propose it in the merge reply, and start it only after the operator approves. Started before, it timed out after 60 s on PR #228. Use whatever tool this session holds for opening a new session or queueing a task: the set changes between sessions, so read your own tools rather than reaching for a name you remember. Whichever it is, it starts a new conversation. Its prompt stands alone and names:

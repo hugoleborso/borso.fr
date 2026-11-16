@@ -1,4 +1,5 @@
 import {
+  closeSession,
   createSender,
   emulatePhone,
   openSession,
@@ -165,7 +166,7 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
     );
     return verdict.isRealDrag;
   } finally {
-    socket.close();
+    await closeSession(socket);
   }
 }
 
