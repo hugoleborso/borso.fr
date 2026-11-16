@@ -1,20 +1,21 @@
 ---
-summary: 'The shell gates have no tests and only ever run on a tree where they pass; plant the defect and watch the gate fail before trusting it.'
+summary: 'Most shell gates have no tests and only ever run on a tree where they pass; plant the defect and watch the gate fail, and give a changed gate a vitest suite beside it.'
 triggers:
   paths:
     - 'scripts/check-*.sh'
     - '.husky/*'
 ---
 
-# The shell gates have no tests, and CI only ever runs them on a green tree
+# Most shell gates have no tests, and CI only ever runs them on a green tree
 
 Every custom ESLint rule in this repository ships a `RuleTester` suite — that is
 a stated rule, and `gate:eslint-rule-suites` enforces it. The reasoning is in
 `docs/standards/12-linting-and-gates.md`: a rule that misfires costs more than
 the rule saves.
 
-The same reasoning applies to the shell gates, and none of them has a test.
-Twenty-six scripts under `scripts/`, checking everything from stylesheet
+The same reasoning applies to the shell gates, and most of them have no test.
+`ls scripts/check-*.test.ts` lists the few that do, each a vitest suite that
+runs the gate on a fixture. Twenty-six scripts under `scripts/`, checking everything from stylesheet
 contents to dependency catalogs to whether a directory walk races its own pipe,
 and the only thing that ever runs them is pre-commit and CI — both on a tree
 where they are expected to pass.
