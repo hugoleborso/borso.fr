@@ -143,7 +143,7 @@ size cannot fit, and the two requirements contradicted each other from
 the moment the budget landed. A committed file is the better home
 anyway — the body is an index, and the inventory is the evidence.
 
-| # | When | Friction | Sources / evidence | Rock | Elsewhere | Decision |
+| # | When | Friction | Sources / evidence | Cause | Elsewhere | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
 | 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | <the problem in another place this friction is a symptom of, or `none` with why the cause is local> | dantotsu / knowledge / no-op (with one-line reason) |
 
@@ -157,17 +157,17 @@ choice it lives in. `none` says why the cause is local to where it was felt.
 When the cell names a problem, the decision targets that problem, not the
 friction that revealed it.
 
-Lower the water, do not bail. The `Rock` cell names what makes the friction
-possible at all: a file every pull request appends to, a step done by hand,
-two places that hold one rule. A `fixed:` or `dantotsu:` decision removes that
-rock. A message or a script that works around the friction leaves the rock
-and adds inventory, so it is not an eradication. A guard that verifies a
-property still ships beside the removal, and a guard that measures the wrong
-thing gets fixed: verifying is not bailing, standing in for the removal is. If
-no removal is possible here, say so in the cell and ask the operator. The sweep of
-PR #351 first shipped a stop script, a refusal message and a corrected guard,
-over rocks it had not named, and the operator sent it back. He kept the
-guard, because it verifies.
+Remove the cause, do not work around the friction. The `Cause` cell names
+what makes the friction possible at all: a file every pull request appends to,
+a step done by hand, two places that hold one rule. A `fixed:` or `dantotsu:`
+decision removes that cause. A message or a script that works around the
+friction leaves the cause in place and adds one more thing to maintain, so it
+is not an eradication. A guard that verifies a property still ships beside the
+removal, and a guard that measures the wrong thing gets fixed. A guard may
+verify, but it never replaces the removal. If no removal is possible here, say
+so in the cell and ask the operator. The sweep of PR #351 first shipped a stop
+script, a refusal message and a corrected guard, without naming the causes,
+and the operator sent it back. He kept the guard, because it verifies.
 
 Conventions:
 
