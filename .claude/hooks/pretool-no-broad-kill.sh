@@ -44,14 +44,9 @@ block() {
   echo "[no-broad-kill] $1" >&2
   echo "[no-broad-kill] This machine is shared with other agents and with long-running measurements." >&2
   echo "[no-broad-kill] Main session, started it with run_in_background? Stop it with TaskStop and its task id." >&2
-  echo "[no-broad-kill] Otherwise start the server as 'setsid pnpm dev > log 2>&1 &', so it owns a process group," >&2
-  echo "[no-broad-kill] and stop the group that holds YOUR port, not a name pattern:" >&2
-  echo "[no-broad-kill]   pgid=\$(ps -o pgid= -p \"\$(lsof -ti tcp:5173 -sTCP:LISTEN | head -1)\" | tr -d ' ')" >&2
-  echo "[no-broad-kill]   [ -n \"\$pgid\" ] && [ \"\$pgid\" != \"\$(ps -o pgid= -p \$BASHPID | tr -d ' ')\" ] && kill -- \"-\$pgid\"" >&2
-  echo "[no-broad-kill] It stops pnpm, concurrently and every server they started. The guard skips a group that" >&2
-  echo "[no-broad-kill] holds your own shell, as a server started without setsid inside a pipeline does." >&2
-  echo "[no-broad-kill] kill \"\$pid\" alone stops pnpm and leaves its servers listening, and under setsid" >&2
-  echo "[no-broad-kill] \$! is a wrapper that has already exited." >&2
+  echo "[no-broad-kill] A dev server: scripts/dev-server.sh start <app>, then scripts/dev-server.sh stop <app>." >&2
+  echo "[no-broad-kill] It owns its process group, so stop takes pnpm, concurrently and every server they started, and nothing else." >&2
+  echo "[no-broad-kill] Any other process: kill the pid you started, never a name." >&2
   "$(dirname "$0")/kaizen-refusal.sh" no-broad-kill "reached for pkill or killall on a machine other agents share"
   exit 2
 }
