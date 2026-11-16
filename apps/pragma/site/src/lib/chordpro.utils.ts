@@ -264,12 +264,13 @@ const NOTES_FLAT: readonly string[] = [
 const NOTES_IN_OCTAVE = 12;
 const ROOT_PATTERN = /^[A-G][#b]?/;
 const FLAT_SIGN = 'b';
+const BASS_SEPARATOR = '/';
 
 function chromaticIndexOfRoot(root: string): number {
   return root.endsWith(FLAT_SIGN) ? NOTES_FLAT.indexOf(root) : NOTES_SHARP.indexOf(root);
 }
 
-export function transposeChord(chord: string, semitones: number): string {
+function transposeChordPart(chord: string, semitones: number): string {
   const rootMatch = ROOT_PATTERN.exec(chord);
   if (rootMatch === null) return chord;
   const root = rootMatch[0];
@@ -278,6 +279,13 @@ export function transposeChord(chord: string, semitones: number): string {
   if (rootIndex === -1) return chord;
   const next = (((rootIndex + semitones) % NOTES_IN_OCTAVE) + NOTES_IN_OCTAVE) % NOTES_IN_OCTAVE;
   return `${NOTES_SHARP[next]}${suffix}`;
+}
+
+export function transposeChord(chord: string, semitones: number): string {
+  return chord
+    .split(BASS_SEPARATOR)
+    .map((part) => transposeChordPart(part, semitones))
+    .join(BASS_SEPARATOR);
 }
 
 function transposeDirective(line: DirectiveLine, semitones: number): DirectiveLine {

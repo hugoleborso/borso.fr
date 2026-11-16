@@ -171,6 +171,16 @@ describe('transposeChord', () => {
     expect(transposeChord('Bbm', 2)).toBe('Cm');
   });
 
+  it('transposes the bass note of a slash chord', () => {
+    expect(transposeChord('Am/E', 2)).toBe('Bm/F#');
+    expect(transposeChord('D/F#', -2)).toBe('C/E');
+    expect(transposeChord('Gm7/Bb', 1)).toBe('G#m7/B');
+  });
+
+  it('keeps a non-note part after a slash, as in a six-nine chord', () => {
+    expect(transposeChord('C6/9', 2)).toBe('D6/9');
+  });
+
   it('leaves an unparseable token alone', () => {
     expect(transposeChord('NotAChord', 2)).toBe('NotAChord');
   });
