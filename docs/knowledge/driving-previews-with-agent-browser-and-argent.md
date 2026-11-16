@@ -113,3 +113,8 @@ once, before signing in. Five failed sign-ins trip a fifteen-minute rate limit;
 **`screenshot --full` captures the window, not a scrolled container.** Where a
 page scrolls an inner element, scroll it into view or screenshot the element,
 and check the image shows what the row claims.
+
+**`screenshot --full` repeats sticky bars.** On a page with a sticky header or
+a fixed bottom bar, such as every Pragma screen, the full-page image draws them
+again in the middle of the content, so the evidence looks broken. Scroll and
+take viewport screenshots instead. A validator on PR #367 hit it.
