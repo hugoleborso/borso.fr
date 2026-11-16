@@ -16,9 +16,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   chart among them (`selectChordProCharts`).
 - A tapped pill holds for the visit only. Moving to another setlist entry
   in the scene opens that entry on its own opening chart.
-- A pill reads the chart's instrument names in instrument order, joined by
-  " + ", or "All instruments" when no name is left, then " · " and the
-  label (`describeChordChartTitle`).
+- A pill reads one word. A chart for one instrument reads that instrument's
+  name. A chart for several instruments or for all reads "Chords" when it
+  is ChordPro, else "Ensemble". A title already on an earlier pill gets
+  its rank, as in "Basse 2" (`titleChordCharts`).
 
 Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on a chart naming an instrument the member holds
 Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › ranks a chart naming the instrument above a chart for every instrument
@@ -28,7 +29,9 @@ Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the f
 Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first chart when none matches and none is for every instrument
 Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › answers no chart for an empty list
 Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first chart while the member is not known yet
-Held by: `site/src/routes/catalog/chart-title.utils.test.ts` › reads All instruments when no name is left
+Held by: `site/src/routes/catalog/chart-title.utils.test.ts` › names a chart for one instrument after that instrument
+Held by: `site/src/routes/catalog/chart-title.utils.test.ts` › reads Ensemble for a file chart shared by several instruments or all
+Held by: `site/src/routes/catalog/chart-title.utils.test.ts` › numbers a repeated title from its second chart on
 Held by: `site/src/routes/setlists/SetlistScenePage.test.tsx` › opens the next entry on its own opening chart after a pill was tapped
 
 ## Scene view

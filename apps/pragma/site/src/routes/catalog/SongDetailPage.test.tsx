@@ -155,14 +155,15 @@ describe('song page', () => {
 
   it('opens on the chart of the instrument the member holds, and keeps the transpose across pills', async () => {
     renderSongPage('?tab=chords');
-    const bassPill = await screen.findByRole('tab', { name: 'Bass · Groove' });
+    const bassPill = await screen.findByRole('tab', { name: 'Bass' });
     await waitFor(() => expect(bassPill.getAttribute('aria-selected')).toBe('true'));
     expect(document.body.textContent).toContain('Groove line');
 
     const transpose = screen.getByRole('group', { name: 'Transpose' });
     fireEvent.click(within(transpose).getByRole('button', { name: 'Transpose up' }));
-    fireEvent.pointerDown(screen.getByRole('tab', { name: 'All instruments' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'All instruments' }));
+    const chartSwitcher = screen.getByRole('tablist', { name: 'Charts of this song' });
+    fireEvent.pointerDown(within(chartSwitcher).getByRole('tab', { name: 'Chords' }));
+    fireEvent.click(within(chartSwitcher).getByRole('tab', { name: 'Chords' }));
 
     await waitFor(() => expect(document.body.textContent).toContain('Like the legend'));
     expect(within(screen.getByRole('group', { name: 'Transpose' })).getByText('+1')).toBeTruthy();

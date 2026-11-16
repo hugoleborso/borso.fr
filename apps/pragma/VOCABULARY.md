@@ -155,7 +155,7 @@ uploaded through `api/src/uploads/`
 Invariants: `api/src/songs/INVARIANTS.md`
 
 Not to be confused with: the **chart switcher**, the row of pills above a
-chart that names each chart of the song by its instruments and label.
+chart that names each chart of the song in one word.
 
 ## Opening chart
 
