@@ -13,6 +13,7 @@ export default defineConfig({
     include: ['site/src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
+      reporter: [['text', { skipFull: false }]],
       reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: ['site/**/*.{core,utils,adapter,schema}.ts'],
       thresholds: {
