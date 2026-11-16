@@ -30,12 +30,17 @@ that session reads its own `get_session` `context_usage.used_tokens`.
   `kaizen.md` and this skill (`/open-pr`'s *After the merge*).
 
 Write the reading in the inventory's header line, so the sweep shows which
-branch it took.
+branch it took. The sweep also starts from:
 
 - A kaizen task started from that card.
 - The user says any of: "/after-task-kaizen", "kaizen pass",
   "post-merge dantotsus", "capture lessons from PR #N", "what
   should we add from that PR".
+
+When the operator says where to run it, that wins over the threshold. Run it
+there and do not ask him to confirm. He asks agents for it about a quarter of
+the time, by his own count, and the shipping session of PR #372 still made
+him confirm it.
 
 **First call: `mcp__github__pull_request_read method: get`.** If `merged` is
 not `true`, say so and stop. The prompt for PR #253's sweep said "merged"
