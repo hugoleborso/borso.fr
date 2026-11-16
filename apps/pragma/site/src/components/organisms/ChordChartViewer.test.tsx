@@ -40,6 +40,28 @@ describe('a chord chart holding a tab', () => {
     render(<ChordChartViewer source={CHART_WITH_A_RIFF} semitones={2} tone="dark" />);
     expect(screen.getByText('   F#m       D', { normalizer: (text) => text })).toBeDefined();
     expect(screen.getByText('e|-----2-----|-----2------|')).toBeDefined();
-    expect(screen.getByText('[D]')).toBeDefined();
+    expect(screen.getByText('D')).toBeDefined();
+  });
+});
+
+describe('a chord chart with lyrics', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('shows each chord without brackets, stacked above the word it lands on', () => {
+    render(<ChordChartViewer source="So if you're [Am]lonely" />);
+    expect(screen.queryByText('[Am]')).toBeNull();
+    const chord = screen.getByText('Am');
+    expect(chord.nextElementSibling?.textContent).toBe('lonely');
+    expect(chord.parentElement?.className).toContain('flex-col');
+  });
+
+  it('keeps a line of chords alone on one row, without an empty lyric row', () => {
+    render(<ChordChartViewer source="[G]   [A]" />);
+    expect(screen.getByText('G', { normalizer: (text) => text.trim() }).className).toContain(
+      'font-semibold',
+    );
+    expect(document.querySelector('.flex-col')).toBeNull();
   });
 });

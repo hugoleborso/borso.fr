@@ -2,9 +2,11 @@
 
 import { type JSX, useMemo } from 'react';
 import {
+  buildChordCells,
   type ChordProLine,
   type ChordProSection,
   groupChordProSections,
+  hasLyricText,
   hasSectionHeading,
   isTitleDirective,
   parseChordPro,
@@ -50,6 +52,10 @@ const SIZE_CLASS_BY_DENSITY = {
 
 const WRAPPED_LINE_CLASS = 'whitespace-pre-wrap break-words pl-6 -indent-6';
 
+const CHORDS_ABOVE_LYRICS_LINE_CLASS = 'flex flex-wrap pl-6 [&>*:first-child]:-ml-6';
+
+const CHORD_ABOVE_CLASS = 'pr-[1ch] leading-tight';
+
 function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.Element {
   if (line.kind === 'blank') return <div key={key} className="h-4" />;
   if (line.kind === 'directive' && isTitleDirective(line.name)) {
@@ -92,26 +98,29 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
       </p>
     );
   }
-  return (
-    <div key={key} className={WRAPPED_LINE_CLASS}>
-      {line.tokens.map((token, tokenIndex) => {
-        const tokenKey = `${key}-token-${tokenIndex}`;
-        if (token.kind === 'chord') {
-          return (
-            <span
-              key={tokenKey}
-              className={composeClassName('font-semibold', CHORD_CLASS_BY_TONE[tone])}
-            >
-              [{token.chord}]
-            </span>
-          );
-        }
-        return (
-          <span key={tokenKey} className={LYRIC_CLASS_BY_TONE[tone]}>
-            {token.text}
+  const cells = buildChordCells(line.tokens);
+  const chordClass = composeClassName('font-semibold', CHORD_CLASS_BY_TONE[tone]);
+  if (!hasLyricText(line.tokens)) {
+    return (
+      <div key={key} className={WRAPPED_LINE_CLASS}>
+        {cells.map((cell, cellIndex) => (
+          <span key={`${key}-cell-${cellIndex}`} className={chordClass}>
+            {`${cell.chord ?? ''} ${cell.lyric}`}
           </span>
-        );
-      })}
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div key={key} className={CHORDS_ABOVE_LYRICS_LINE_CLASS}>
+      {cells.map((cell, cellIndex) => (
+        <span key={`${key}-cell-${cellIndex}`} className="inline-flex flex-col whitespace-pre">
+          <span className={composeClassName(CHORD_ABOVE_CLASS, chordClass)}>
+            {cell.chord ?? ' '}
+          </span>
+          <span className={LYRIC_CLASS_BY_TONE[tone]}>{cell.lyric}</span>
+        </span>
+      ))}
     </div>
   );
 }
