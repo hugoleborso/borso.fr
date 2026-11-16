@@ -20,11 +20,8 @@ import {
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
 import { SONG_STATUSES } from '@domain/song-status.core';
-import {
-  isWithinChartsByteBudget,
-  listEachInstrumentOnce,
-  nullWhenEmpty,
-} from './song-charts.core';
+import { normalizeChartLabel } from '@domain/chart-label.core';
+import { isWithinChartsByteBudget, listEachInstrumentOnce } from './song-charts.core';
 
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
@@ -83,7 +80,12 @@ export const legacyChordChartSchema = z.union([
 
 const chordChartAssignmentShape = {
   instrumentIds: z.array(z.guid()).transform(listEachInstrumentOnce),
-  label: z.string().trim().max(SONG_CHART_LABEL_MAX_LENGTH).nullable().transform(nullWhenEmpty),
+  label: z
+    .string()
+    .trim()
+    .max(SONG_CHART_LABEL_MAX_LENGTH)
+    .nullable()
+    .transform(normalizeChartLabel),
 };
 
 export const chordChartSchema = z.union([

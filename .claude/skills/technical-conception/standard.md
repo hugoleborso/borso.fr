@@ -38,7 +38,7 @@ A two-column table is not enough. The required columns are:
 
 - **Spec ref** is the Q.O.D. number (`Q5`, `Q12`) or the Changes entry (`Files to change → main.tsx`). Without a back-pointer to the spec, the plan starts to drift.
 - **Where it lands** is a concrete file path or — if the change is structural — a 1-line description of the structure. Vague is forbidden.
-- **Self-check** is "how would I confirm this landed". Either a command, a manual sweep step, or a deterministic outcome ("`grep -r foo src/` returns nothing"). If you can't write the self-check, the row is half-thought.
+- **Self-check** is "how would I confirm this landed". Either a command, a manual sweep step, or a deterministic outcome ("`grep -r foo src/` returns nothing"). Run a grep self-check on the base before you write it, and name every line it will still print after the change, such as a parameter that shares the name or a frozen column read. PR #363's plan said a grep would print nothing while it matched every parameter named `chart`. If you can't write the self-check, the row is half-thought.
 
 Decisions in the spec that don't land in code (out-of-scope, deferred) get a row with `Where it lands = (out of scope)` so they're not forgotten.
 

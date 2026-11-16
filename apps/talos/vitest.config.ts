@@ -20,6 +20,7 @@ export default defineConfig({
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
     coverage: {
       provider: 'v8',
+      reporter: [['text', { skipFull: false }]],
       reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: [
         'domain/**/*.core.ts',

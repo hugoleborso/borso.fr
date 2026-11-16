@@ -9,10 +9,6 @@ export function listEachInstrumentOnce(instrumentIds: readonly string[]): string
   return [...new Set(instrumentIds)];
 }
 
-export function nullWhenEmpty(label: string | null): string | null {
-  return label === null || label.length === 0 ? null : label;
-}
-
 export function isWithinChartsByteBudget(charts: readonly unknown[]): boolean {
   return new TextEncoder().encode(JSON.stringify(charts)).length <= SONG_CHARTS_MAX_ENCODED_BYTES;
 }

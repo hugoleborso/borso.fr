@@ -30,23 +30,30 @@
 set -euo pipefail
 
 # Paths are read from the repository root, so a run from apps/<app> checks the
-# same tree instead of passing on an empty one.
+# same tree instead of passing on an empty one. A path given as an argument is
+# read from the caller's directory, which pre-commit runs at the root.
+caller_dir=$PWD
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 violations=()
 glob_pattern='apps/*/api/src/database/migrations/*.sql'
 
-# With paths as arguments, the migrations among them; pre-commit passes the
-# staged files. With none, every migration, which is how CI calls it. Each file
-# costs about forty milliseconds of greps, so the whole tree is about a second.
+# With paths as arguments, every one of them that exists; pre-commit passes the
+# staged migrations, deleted ones included, and a planner may pass a stub
+# migration from a scratch folder. With none, every migration, which is how CI
+# calls it. Each file costs about forty milliseconds of greps, so the whole tree
+# is about a second.
 list_migrations() {
   if [ "$#" -eq 0 ]; then
     find apps -maxdepth 6 -path "$glob_pattern" -print0 2>/dev/null
     return
   fi
   for candidate in "$@"; do
-    # shellcheck disable=SC2053
-    [[ "$candidate" == $glob_pattern ]] && [ -f "$candidate" ] && printf '%s\0' "$candidate"
+    case "$candidate" in
+      /*) ;;
+      *) candidate="$caller_dir/$candidate" ;;
+    esac
+    [ -f "$candidate" ] && printf '%s\0' "$candidate"
   done
   return 0
 }
