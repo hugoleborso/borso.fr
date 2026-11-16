@@ -46,7 +46,7 @@ list_set_pairs() {
   # check once did, let last-loop-lepin read VITE_SENTRY_DSN for weeks while
   # the workflow set it for pragma only (PR 263).
   grep -rhoE "^ *VITE_[A-Z0-9_]+: .*" .github/workflows/ 2>/dev/null |
-    sed -E "s/^ *(VITE_[A-Z0-9_]+): .*matrix\.app == '([a-z0-9-]+)'.*/\2 \1/; t; s/^ *(VITE_[A-Z0-9_]+): .*/* \1/" |
+    sed -E -e "s/^ *(VITE_[A-Z0-9_]+): .*matrix\.app == '([a-z0-9-]+)'.*/\2 \1/" -e t -e "s/^ *(VITE_[A-Z0-9_]+): .*/* \1/" |
     sort -u
 }
 
