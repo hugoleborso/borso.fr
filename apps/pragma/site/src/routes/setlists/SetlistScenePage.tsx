@@ -8,6 +8,7 @@ import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
+import { ChordChartSwitcher } from '../../components/organisms/ChordChartSwitcher';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { SceneControls } from '../../components/organisms/SceneControls';
 import { SceneTransport } from '../../components/organisms/SceneTransport';
@@ -19,11 +20,16 @@ import {
   stopSceneAutoScroll,
 } from '../../lib/scene-scroll.adapter';
 import { useNavigateTo } from '../../lib/navigation.hook';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
 import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
-import { selectChordProText } from '../catalog/chart-kind.utils';
+import { resolveLineup } from '@domain/lineup.core';
+import { selectChordProCharts, selectChordProText } from '../catalog/chart-kind.utils';
+import { useChartSwitch } from '../catalog/chart-switch.hook';
+import { selectHeldInstrumentIds } from '../catalog/opening-chart.core';
 import {
   clampSceneFontSize,
   clampSceneScrollSpeed,
@@ -43,6 +49,7 @@ import {
 import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 
 const NO_ROWS: readonly never[] = [];
+const NO_LINEUP = {};
 const CAPTION_CLASS = 'text-label tracking-[0.18em] uppercase text-stage-ink-dim m-0';
 
 export function SetlistScenePage(): JSX.Element {
@@ -61,6 +68,8 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const setlistQuery = useSetlist(setlistId);
   const entriesQuery = useSetlistEntries(setlistId);
   const songsQuery = useSongsList();
+  const signedInMember = useSignedInMember();
+  const instrumentsQuery = useInstrumentsList();
 
   const [index, setIndex] = useState(0);
   const [semitones, setSemitones] = useState(0);
@@ -79,6 +88,20 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   }, [songs]);
 
   const currentIndex = clampSceneIndex(index, setlistEntries.length);
+  const entry = setlistEntries[currentIndex];
+  const song = entry === undefined ? undefined : songsById[entry.songId];
+  const instruments = instrumentsQuery.data?.instruments ?? NO_ROWS;
+  const chordProCharts = selectChordProCharts(song?.charts ?? NO_ROWS);
+  const entryLineup = resolveLineup(
+    song?.defaultLineup ?? NO_LINEUP,
+    entry?.lineupOverride ?? null,
+  );
+  const chartSwitch = useChartSwitch(
+    chordProCharts,
+    selectHeldInstrumentIds(entryLineup, signedInMember.data),
+    'setlist-scene',
+    entry?.songId,
+  );
   const pills = useMemo(
     () => buildScenePills(setlistEntries, songsById, currentIndex),
     [setlistEntries, songsById, currentIndex],
@@ -92,6 +115,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const goToIndex = (nextIndex: number): void => {
     setIndex(clampSceneIndex(nextIndex, setlistEntries.length));
     setSemitones(0);
+    chartSwitch.resetPick();
     scrollSceneBodyToTop();
   };
 
@@ -132,10 +156,8 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
     );
   }
 
-  const entry = setlistEntries[currentIndex];
-  const song = entry === undefined ? undefined : songsById[entry.songId];
   const headline = buildSceneHeadline(entry, song);
-  const chordproText = selectChordProText(song?.chart);
+  const chordproText = selectChordProText(chordProCharts[chartSwitch.shownIndex]);
   const setlistName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
@@ -182,6 +204,14 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
                 </span>
               )}
             </p>
+            <ChordChartSwitcher
+              charts={chordProCharts}
+              instruments={instruments}
+              shownIndex={chartSwitch.shownIndex}
+              onPick={chartSwitch.pick}
+              tone="stage"
+              className="mt-2"
+            />
           </div>
         </div>
         <SceneControls

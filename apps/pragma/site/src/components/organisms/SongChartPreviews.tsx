@@ -6,29 +6,54 @@ import { ApiError } from '../../lib/api.client';
 import type { SongRecord } from '../../lib/queries/songs.queries';
 import { useSignedChartUrl } from '../../lib/queries/uploads.queries';
 import { selectChordProText } from '../../routes/catalog/chart-kind.utils';
+import { type ChartSwitchSurface, useChartSwitch } from '../../routes/catalog/chart-switch.hook';
+import type { NamedInstrument } from '../../routes/catalog/chart-title.utils';
 import { clampSemitoneOffset } from '../../routes/catalog/scene-view.core';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { EmptyState } from '../molecules/EmptyState';
 import { TransposeStepper } from '../molecules/TransposeStepper';
 import { UploadedChartPreview } from '../molecules/UploadedChartPreview';
+import { ChordChartSwitcher } from './ChordChartSwitcher';
 import { ChordChartViewer } from './ChordChartViewer';
 
+type SongChart = SongRecord['charts'][number];
+
 export interface SongChartPreviewsProps {
-  readonly chart: SongRecord['chart'];
+  readonly charts: readonly SongChart[];
+  readonly instruments: readonly NamedInstrument[];
+  readonly heldInstrumentIds: readonly string[] | null;
+  readonly surface: ChartSwitchSurface;
 }
 
-// @FollowsBlueprint organism-presentational
-export function SongChartPreviews({ chart }: SongChartPreviewsProps): JSX.Element {
+// @FollowsBlueprint organism-query-owning
+export function SongChartPreviews({
+  charts,
+  instruments,
+  heldInstrumentIds,
+  surface,
+}: SongChartPreviewsProps): JSX.Element {
   const { t } = useTranslation();
-  if (chart === null) {
+  const chartSwitch = useChartSwitch(charts, heldInstrumentIds, surface);
+  const shownChart = charts[chartSwitch.shownIndex];
+  if (shownChart === undefined) {
     return <EmptyState icon="text">{t('catalog.noChordChart')}</EmptyState>;
   }
-  return <ChartPreviewCards chart={chart} />;
+  return (
+    <>
+      <ChordChartSwitcher
+        charts={charts}
+        instruments={instruments}
+        shownIndex={chartSwitch.shownIndex}
+        onPick={chartSwitch.pick}
+      />
+      <ChartPreviewCards chart={shownChart} />
+    </>
+  );
 }
 
 interface ChartPreviewCardsProps {
-  readonly chart: NonNullable<SongRecord['chart']>;
+  readonly chart: SongChart;
 }
 
 // @FollowsBlueprint organism-query-owning

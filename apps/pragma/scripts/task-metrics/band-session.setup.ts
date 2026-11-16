@@ -19,7 +19,7 @@ const songSchema = z
   .object({
     id: z.string(),
     title: z.string(),
-    chart: z.unknown().optional(),
+    charts: z.array(z.unknown()).optional(),
     defaultLineup: z.unknown().optional(),
   })
   .loose();

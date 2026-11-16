@@ -514,7 +514,10 @@ async function main(): Promise<void> {
       status: song.status,
       origin: song.origin,
       links: [],
-      chart: song.chords === undefined ? null : { kind: 'chordpro', text: song.chords },
+      charts:
+        song.chords === undefined
+          ? []
+          : [{ kind: 'chordpro', text: song.chords, instrumentIds: [], label: null }],
       tonalityStart: song.key,
       tonalityEnd: null,
       defaultLineup: toLineup(song.lineup),

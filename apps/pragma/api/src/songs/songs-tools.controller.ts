@@ -75,7 +75,7 @@ export const SONG_TOOLS = [
   defineTool({
     name: 'get_song',
     description:
-      'Read one song by title or id, with its lineup by name, its notes and the mastery scores set for it; `detail` adds the chart, links and mastery history.',
+      'Read one song by title or id, with its lineup by name, its notes and the mastery scores set for it; `charts` gives each chart kind and instruments (none means every instrument); `detail` adds chart text, links and mastery history.',
     routes: [
       'GET /api/songs/:id',
       'GET /api/mastery/overrides/:songId',
@@ -104,16 +104,16 @@ export const SONG_TOOLS = [
   defineTool({
     name: 'save_song',
     description:
-      'Add a song (`title` and `status` required; the band is notified), or, with `song` (title or id), change only the fields given. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out.',
+      'Add a song (`title` and `status` required; the band is notified), or, with `song` (title or id), change only the fields given. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out. `charts` replaces the ordered chart list (up to 6), each with `instruments` by name or id.',
     routes: ['POST /api/songs', 'PUT /api/songs/:id'],
     inputSchema: songSaveToolInputSchema,
-    run: async ({ song, defaultLineup, ...fields }, actor) => {
+    run: async ({ song, defaultLineup, charts, ...fields }, actor) => {
       if (song === undefined) {
         const input = parseToolFields(songCreateFieldsSchema, fields);
-        return await runSongCreate(await buildSongCreate(input, defaultLineup), actor);
+        return await runSongCreate(await buildSongCreate(input, defaultLineup, charts), actor);
       }
       const id = await resolveSongId(song);
-      return await runSongUpdate(id, await buildSongUpdate(fields, defaultLineup), actor);
+      return await runSongUpdate(id, await buildSongUpdate(fields, defaultLineup, charts), actor);
     },
   }),
   defineTool({

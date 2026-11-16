@@ -8,7 +8,7 @@ import { Input } from '../atoms/Input';
 import { SongSearch } from './SongSearch';
 import { deriveTonality } from '@domain/tonality.core';
 import { convertChordsAboveLyrics } from '../../routes/catalog/chords-above-lyrics.core';
-import { SongChartFields } from './SongChartFields';
+import { SongChartFields, type SongChartCardsUpdate } from './SongChartFields';
 import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
 import { SongClassificationFields } from '../molecules/SongClassificationFields';
@@ -26,6 +26,7 @@ import {
   detectProvider,
   type SongDraftState,
 } from '../../routes/catalog/song-draft.core';
+import { withChartCardChanged } from '../../routes/catalog/song-chart-cards.core';
 import {
   type SongEditSection,
   toggleLineupInstrument,
@@ -73,8 +74,12 @@ export function SongEditForm({
   });
   const isExistingSong = !isNew && songId !== undefined;
 
-  const applyChordproText = (text: string): void => {
-    form.setFieldValue('chordproText', text);
+  const updateCharts = (update: SongChartCardsUpdate): void => {
+    form.setFieldValue('charts', update(form.getFieldValue('charts')));
+  };
+
+  const applyChordproText = (cardId: string, text: string): void => {
+    updateCharts((current) => withChartCardChanged(current, cardId, { chordproText: text }));
     const derived = deriveTonality(convertChordsAboveLyrics(text).chordPro);
     const currentStart = form.getFieldValue('tonalityStart');
     const currentEnd = form.getFieldValue('tonalityEnd');
@@ -204,27 +209,14 @@ export function SongEditForm({
           />
         )}
       </form.Subscribe>
-      <form.Subscribe
-        selector={(state) =>
-          [
-            state.values.chartKind,
-            state.values.chordproText,
-            state.values.pdfS3Key,
-            state.values.imageS3Key,
-          ] as const
-        }
-      >
-        {([chartKind, chordproText, pdfS3Key, imageS3Key]) => (
+      <form.Subscribe selector={(state) => state.values.charts}>
+        {(charts) => (
           <SongChartFields
-            chartKind={chartKind}
-            chordproText={chordproText}
-            pdfS3Key={pdfS3Key}
-            imageS3Key={imageS3Key}
+            cards={charts}
+            instruments={instruments}
             {...(isExistingSong ? { songId } : {})}
-            onChartKindChange={(kind) => form.setFieldValue('chartKind', kind)}
+            onCardsChange={updateCharts}
             onChordproChange={applyChordproText}
-            onPdfKeyChange={(value) => form.setFieldValue('pdfS3Key', value)}
-            onImageKeyChange={(value) => form.setFieldValue('imageS3Key', value)}
           />
         )}
       </form.Subscribe>

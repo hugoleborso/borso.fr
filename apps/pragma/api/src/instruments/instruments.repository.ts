@@ -13,7 +13,8 @@ import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { memberInstrumentTable, memberTable } from '../members/members.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
-import { defaultLineupSchema, songTable } from '../songs/songs.schema';
+import { dropInstrumentFromCharts } from '../songs/song-charts.core';
+import { defaultLineupSchema, songChordChartsRowSchema, songTable } from '../songs/songs.schema';
 import type { NamedEntity } from './lineup-names.core';
 import type { InstrumentPlayer, InstrumentPlayerLink } from './instrument-players.core';
 import {
@@ -192,6 +193,24 @@ async function dropInstrumentFromSongLineupsWithin(
   }
 }
 
+async function dropInstrumentFromSongChartsWithin(
+  executor: DatabaseExecutor,
+  instrumentId: InstrumentId,
+): Promise<void> {
+  const songsNamingInstrument = await executor
+    .select({ id: songTable.id, charts: songTable.charts })
+    .from(songTable)
+    .where(like(songTable.charts, `%${instrumentId}%`));
+  for (const song of songsNamingInstrument) {
+    if (song.charts === null) continue;
+    const storedCharts: unknown = JSON.parse(song.charts);
+    const charts = JSON.stringify(
+      dropInstrumentFromCharts(songChordChartsRowSchema.parse(storedCharts), instrumentId),
+    );
+    await executor.update(songTable).set({ charts }).where(eq(songTable.id, song.id));
+  }
+}
+
 async function dropInstrumentFromEntryLineupsWithin(
   executor: DatabaseExecutor,
   instrumentId: InstrumentId,
@@ -216,6 +235,7 @@ async function dropInstrumentFromEntryLineupsWithin(
 
 export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOutcome> {
   return await runInOneInstrumentTransaction(async (transaction) => {
+    await dropInstrumentFromSongChartsWithin(transaction, id);
     await dropInstrumentFromSongLineupsWithin(transaction, id);
     await dropInstrumentFromEntryLineupsWithin(transaction, id);
     const deleted = await transaction

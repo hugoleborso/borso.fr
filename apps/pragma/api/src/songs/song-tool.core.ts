@@ -1,6 +1,6 @@
 import { foldReferenceText, type ReferenceCandidate } from '../helpers/reference/reference.core';
-import { type LineupNames, nameLineup } from '../instruments/lineup-names.core';
-import type { SongRow, SongStatus } from './songs.repository';
+import { type LineupNames, type NamedEntity, nameLineup } from '../instruments/lineup-names.core';
+import type { SongChart, SongRow, SongStatus } from './songs.repository';
 
 export interface SongFilter {
   readonly query?: string | undefined;
@@ -51,6 +51,29 @@ function keepFilledList<Item>(values: readonly Item[]): readonly Item[] | undefi
   return values.length > 0 ? values : undefined;
 }
 
+function nameChartInstruments(
+  instrumentIds: readonly string[],
+  instruments: readonly NamedEntity[],
+): string[] {
+  return instrumentIds.flatMap((id) => {
+    const instrument = instruments.find((candidate) => candidate.id === id);
+    return instrument === undefined ? [] : [instrument.name];
+  });
+}
+
+function summarizeChart(chart: SongChart, instruments: readonly NamedEntity[]) {
+  return {
+    kind: chart.kind,
+    instruments: keepFilledList(nameChartInstruments(chart.instrumentIds, instruments)),
+    label: chart.label ?? undefined,
+  };
+}
+
+function detailChart(chart: SongChart, instruments: readonly NamedEntity[]) {
+  const { instrumentIds, ...content } = chart;
+  return { ...content, instruments: nameChartInstruments(instrumentIds, instruments) };
+}
+
 // @FollowsBlueprint core-projection
 export function projectSongForTool(song: SongRow, names: LineupNames, isDetailed: boolean) {
   const view = {
@@ -67,12 +90,12 @@ export function projectSongForTool(song: SongRow, names: LineupNames, isDetailed
     structureNotes: song.structureNotes,
     gimmickNotes: song.gimmickNotes,
     notes: song.notes,
-    chart: song.chart?.kind ?? null,
+    charts: song.charts.map((chart) => summarizeChart(chart, names.instruments)),
   };
   if (!isDetailed) return view;
   return {
     ...view,
-    chart: song.chart,
+    charts: song.charts.map((chart) => detailChart(chart, names.instruments)),
     links: keepFilledList(song.links),
     album: song.album,
     deezerTrackId: song.deezerTrackId,

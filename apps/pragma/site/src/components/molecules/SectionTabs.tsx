@@ -18,15 +18,29 @@ export interface SectionTabsProps<Value extends string> {
   readonly value: Value;
   readonly onChange: (value: Value) => void;
   readonly layout?: SectionTabsLayout;
+  readonly tone?: SectionTabsTone;
   readonly className?: string;
 }
 
 export type SectionTabsLayout = 'inline' | 'stacked';
+export type SectionTabsTone = 'paper' | 'stage';
 
 const TAB_CLASS =
   'inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 border-0 border-b-2 border-transparent ' +
-  'bg-transparent px-3 text-center text-meta font-medium text-ink-soft hover:text-ink ' +
-  'aria-selected:border-ink aria-selected:text-ink focus-visible:outline-3 focus-visible:outline-focus';
+  'bg-transparent px-3 text-center text-meta font-medium focus-visible:outline-3 focus-visible:outline-focus';
+const TAB_TONE_CLASS = {
+  paper: 'text-ink-soft hover:text-ink aria-selected:border-ink aria-selected:text-ink',
+  stage:
+    'text-stage-ink-dim hover:text-stage-ink aria-selected:border-stage-ink aria-selected:text-stage-ink',
+} as const satisfies Readonly<Record<SectionTabsTone, string>>;
+const ROW_TONE_CLASS = {
+  paper: 'border-rule',
+  stage: 'border-stage-line',
+} as const satisfies Readonly<Record<SectionTabsTone, string>>;
+const CUE_TONE_CLASS = {
+  paper: 'text-ink-soft from-paper',
+  stage: 'text-stage-ink-dim from-stage-bg',
+} as const satisfies Readonly<Record<SectionTabsTone, string>>;
 const TAB_CLASS_BY_LAYOUT = {
   inline: TAB_CLASS,
   stacked: composeClassName(
@@ -34,19 +48,23 @@ const TAB_CLASS_BY_LAYOUT = {
     'flex-1 flex-col justify-center gap-0.5 px-0.5 text-label whitespace-nowrap lg:px-3',
   ),
 } as const satisfies Readonly<Record<SectionTabsLayout, string>>;
-const CUE_CLASS =
-  'pointer-events-none absolute top-0 bottom-px flex w-10 items-center text-ink-soft from-paper';
+const CUE_CLASS = 'pointer-events-none absolute top-0 bottom-px flex w-10 items-center';
 const CUE_CLASS_BY_EDGE = {
   start: 'left-0 justify-start bg-linear-to-r',
   end: 'right-0 justify-end bg-linear-to-l',
 } as const;
 
-function OverflowCue({ edge }: { readonly edge: 'start' | 'end' }): JSX.Element {
+interface OverflowCueProps {
+  readonly edge: 'start' | 'end';
+  readonly tone: SectionTabsTone;
+}
+
+function OverflowCue({ edge, tone }: OverflowCueProps): JSX.Element {
   return (
     <span
       data-tab-overflow-cue={edge}
       aria-hidden="true"
-      className={composeClassName(CUE_CLASS, CUE_CLASS_BY_EDGE[edge])}
+      className={composeClassName(CUE_CLASS, CUE_TONE_CLASS[tone], CUE_CLASS_BY_EDGE[edge])}
     >
       <Icon name={edge === 'start' ? 'chevL' : 'chevR'} />
     </span>
@@ -60,6 +78,7 @@ export function SectionTabs<Value extends string>({
   value,
   onChange,
   layout = 'inline',
+  tone = 'paper',
   className,
 }: SectionTabsProps<Value>): JSX.Element {
   const [row, setRow] = useState<HTMLDivElement | null>(null);
@@ -80,22 +99,25 @@ export function SectionTabs<Value extends string>({
       <TabList
         ref={setRow}
         aria-label={label}
-        className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto overflow-y-hidden transform-gpu border-b border-rule [scrollbar-width:none]"
+        className={composeClassName(
+          'relative flex min-w-0 flex-auto gap-1 overflow-x-auto overflow-y-hidden transform-gpu border-b [scrollbar-width:none]',
+          ROW_TONE_CLASS[tone],
+        )}
       >
         {tabs.map((tab) => (
           <Tab
             key={tab.value}
             id={tab.value}
             ref={tab.value === value ? revealTabInItsRow : undefined}
-            className={TAB_CLASS_BY_LAYOUT[layout]}
+            className={composeClassName(TAB_CLASS_BY_LAYOUT[layout], TAB_TONE_CLASS[tone])}
           >
             <Icon name={tab.icon} />
             {tab.label}
           </Tab>
         ))}
       </TabList>
-      {isStartCueShown ? <OverflowCue edge="start" /> : null}
-      {isEndCueShown ? <OverflowCue edge="end" /> : null}
+      {isStartCueShown ? <OverflowCue edge="start" tone={tone} /> : null}
+      {isEndCueShown ? <OverflowCue edge="end" tone={tone} /> : null}
     </Tabs>
   );
 }

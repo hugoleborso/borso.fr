@@ -175,6 +175,7 @@ const PRACTICE_SONGS = ['s1', 's2', 's3'].map((id) => ({
   status: 'rehearsed',
   deezerAlbumId: null,
   defaultLineup: {},
+  charts: [],
 }));
 const CONCERT_SETLISTS = [
   {

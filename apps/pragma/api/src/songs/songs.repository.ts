@@ -10,9 +10,12 @@ import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
 import { deleteTakesOfDeletedSong } from '../takes/takes.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
+import { resolveSongCharts } from './song-charts.core';
 import {
-  chordChartSchema,
+  type chordChartSchema,
   defaultLineupSchema,
+  legacyChordChartSchema,
+  songChordChartsRowSchema,
   type songExternalLinkSchema,
   songIsrcsRowSchema,
   songLinksRowSchema,
@@ -33,7 +36,7 @@ interface SongDecodedColumns {
   status: SongStatus;
   origin: SongOrigin;
   links: SongLink[];
-  chart: SongChart | null;
+  charts: SongChart[];
   defaultLineup: SongDefaultLineup;
   isrcs: string[];
   tags: string[];
@@ -42,7 +45,7 @@ interface SongDecodedColumns {
   notes: string;
 }
 
-export type SongRow = Omit<SongTableRow, keyof SongDecodedColumns> & SongDecodedColumns;
+export type SongRow = Omit<SongTableRow, keyof SongDecodedColumns | 'chart'> & SongDecodedColumns;
 
 export type SongInsertShape = Omit<SongRow, 'id' | 'createdAt'>;
 
@@ -57,6 +60,7 @@ const PROJECTION = {
   origin: songTable.origin,
   links: songTable.links,
   chart: songTable.chart,
+  charts: songTable.charts,
   tonalityStart: songTable.tonalityStart,
   tonalityEnd: songTable.tonalityEnd,
   defaultLineup: songTable.defaultLineup,
@@ -88,7 +92,8 @@ function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodType<T[]>): T[
  */
 function rowToSong(row: SongTableRow): SongRow {
   const linksRaw: unknown = JSON.parse(row.links);
-  const chartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
+  const legacyChartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
+  const chartsRaw: unknown = row.charts === null ? null : JSON.parse(row.charts);
   const defaultLineupRaw: unknown = JSON.parse(row.defaultLineup);
   return {
     id: row.id,
@@ -97,7 +102,10 @@ function rowToSong(row: SongTableRow): SongRow {
     status: songStatusSchema.parse(row.status),
     origin: resolveSongOrigin(row.origin),
     links: songLinksRowSchema.parse(linksRaw),
-    chart: chartRaw === null ? null : chordChartSchema.parse(chartRaw),
+    charts: resolveSongCharts(
+      chartsRaw === null ? null : songChordChartsRowSchema.parse(chartsRaw),
+      legacyChartRaw === null ? null : legacyChordChartSchema.parse(legacyChartRaw),
+    ),
     tonalityStart: row.tonalityStart,
     tonalityEnd: row.tonalityEnd,
     defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
@@ -126,7 +134,7 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     status: values.status,
     origin: values.origin,
     links: JSON.stringify(values.links),
-    chart: values.chart === null ? null : JSON.stringify(values.chart),
+    charts: JSON.stringify(values.charts),
     tonalityStart: values.tonalityStart,
     tonalityEnd: values.tonalityEnd,
     defaultLineup: JSON.stringify(values.defaultLineup),
@@ -151,10 +159,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('status' in updates && updates.status !== undefined) encoded.status = updates.status;
   if ('origin' in updates && updates.origin !== undefined) encoded.origin = updates.origin;
   if ('links' in updates) encoded.links = JSON.stringify(updates.links ?? []);
-  if ('chart' in updates) {
-    encoded.chart =
-      updates.chart === null || updates.chart === undefined ? null : JSON.stringify(updates.chart);
-  }
+  if ('charts' in updates) encoded.charts = JSON.stringify(updates.charts ?? []);
   if ('tonalityStart' in updates) encoded.tonalityStart = updates.tonalityStart;
   if ('tonalityEnd' in updates) encoded.tonalityEnd = updates.tonalityEnd;
   if ('defaultLineup' in updates)

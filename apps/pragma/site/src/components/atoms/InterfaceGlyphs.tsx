@@ -70,6 +70,7 @@ export const INTERFACE_GLYPHS = {
   chevR: <path d="M9 6l6 6-6 6" />,
   chevL: <path d="M15 6l-9 6 9 6" />,
   chevD: <path d="M6 9l6 6 6-6" />,
+  chevU: <path d="M6 15l6-6 6 6" />,
   search: (
     <>
       <circle cx="11" cy="11" r="7" />

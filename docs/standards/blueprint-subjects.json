@@ -2943,11 +2943,11 @@
     "SignedInMemberCard": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SongChartFields.tsx": {
-    "SongChartFields": "organism-query-owning"
+    "SongChartFields": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SongChartPreviews.tsx": {
     "ChartPreviewCards": "organism-query-owning",
-    "SongChartPreviews": "organism-presentational"
+    "SongChartPreviews": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SongChordPreview.tsx": {
     "SongChordPreview": "organism-presentational"

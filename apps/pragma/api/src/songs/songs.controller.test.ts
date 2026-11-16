@@ -15,20 +15,27 @@ import {
   readSketch,
   sendJson,
 } from '../../../test/sketch-utils';
+import { CHORDPRO_TEXT_MAX_LENGTH, SONG_CHARTS_MAX } from '@domain/input-limits.core';
 import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
+import { songTable } from './songs.schema';
 
+const chartAssignmentShape = {
+  instrumentIds: z.array(z.guid()),
+  label: z.string().nullable(),
+};
 const songSchema = z.object({
   id: z.guid(),
   title: z.string(),
   artist: z.string(),
   status: z.string(),
   links: z.unknown(),
-  chart: z.union([
-    z.object({ kind: z.literal('chordpro'), text: z.string() }),
-    z.object({ kind: z.literal('pdf'), s3Key: z.string() }),
-    z.object({ kind: z.literal('image'), s3Key: z.string() }),
-    z.null(),
-  ]),
+  charts: z.array(
+    z.union([
+      z.object({ kind: z.literal('chordpro'), text: z.string() }).extend(chartAssignmentShape),
+      z.object({ kind: z.literal('pdf'), s3Key: z.string() }).extend(chartAssignmentShape),
+      z.object({ kind: z.literal('image'), s3Key: z.string() }).extend(chartAssignmentShape),
+    ]),
+  ),
   tonalityStart: z.string().nullable(),
   tonalityEnd: z.string().nullable(),
   defaultLineup: z.unknown(),
@@ -55,6 +62,10 @@ const deezerTrackTakenEnvelope = z.object({
   songId: z.guid(),
   songTitle: z.string(),
 });
+
+function chordProChartForEveryInstrument(text: string): unknown {
+  return { kind: 'chordpro', text, instrumentIds: [], label: null };
+}
 
 const HELD_DEEZER_TRACK_ID = '67238735';
 const OTHER_DEEZER_TRACK_ID = '3135556';
@@ -118,43 +129,100 @@ describe('songs controller (back-e2e)', () => {
     expect(remaining.songs).toHaveLength(0);
   });
 
-  it('persists each of the three chord-chart variants', async () => {
+  it('persists each of the three chord-chart variants with its instruments and label', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const chordpro = await jsonRequest(app, '/api/songs', {
-      method: 'POST',
-      body: {
-        title: 'A',
-        status: 'idea',
-        chart: { kind: 'chordpro', text: '[C]Hello' },
+    const guitarId = crypto.randomUUID();
+    const pianoId = crypto.randomUUID();
+    const charts = [
+      { kind: 'chordpro', text: '[C]Hello', instrumentIds: [], label: null },
+      { kind: 'pdf', s3Key: 'chord-charts/abc.pdf', instrumentIds: [guitarId], label: 'Solo' },
+      {
+        kind: 'image',
+        s3Key: 'chord-charts/def.png',
+        instrumentIds: [guitarId, pianoId],
+        label: null,
       },
+    ];
+    const create = await jsonRequest(app, '/api/songs', {
+      method: 'POST',
+      body: { title: 'A', status: 'idea', charts },
       cookieHeader,
     });
-    const chordproSong = await readJson(chordpro, singleEnvelope);
-    expect(chordproSong.song.chart).toEqual({ kind: 'chordpro', text: '[C]Hello' });
+    expect(create.status).toBe(201);
+    const created = await readJson(create, singleEnvelope);
+    expect(created.song.charts).toEqual(charts);
 
-    const pdf = await jsonRequest(app, '/api/songs', {
-      method: 'POST',
-      body: {
-        title: 'B',
-        status: 'idea',
-        chart: { kind: 'pdf', s3Key: 'chord-charts/abc.pdf' },
-      },
-      cookieHeader,
-    });
-    const pdfSong = await readJson(pdf, singleEnvelope);
-    expect(pdfSong.song.chart).toEqual({ kind: 'pdf', s3Key: 'chord-charts/abc.pdf' });
+    const reread = await jsonRequest(app, `/api/songs/${created.song.id}`, { cookieHeader });
+    expect((await readJson(reread, singleEnvelope)).song.charts).toEqual(charts);
 
-    const image = await jsonRequest(app, '/api/songs', {
+    const reordered = await jsonRequest(app, `/api/songs/${created.song.id}`, {
+      method: 'PUT',
+      body: { charts: charts.toReversed() },
+      cookieHeader,
+    });
+    expect((await readJson(reordered, singleEnvelope)).song.charts).toEqual(charts.toReversed());
+  });
+
+  it('reads a row holding only the old chart as one chart for every instrument', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const [legacyRow] = await testDatabase()
+      .insert(songTable)
+      .values({
+        title: 'Legacy',
+        status: 'idea',
+        chart: JSON.stringify({ kind: 'chordpro', text: '[G]Old' }),
+      })
+      .returning({ id: songTable.id });
+    const songId = legacyRow?.id ?? '';
+    const lifted = [{ kind: 'chordpro', text: '[G]Old', instrumentIds: [], label: null }];
+
+    const read = await jsonRequest(app, `/api/songs/${songId}`, { cookieHeader });
+    expect((await readJson(read, singleEnvelope)).song.charts).toEqual(lifted);
+
+    const lineupSaved = await jsonRequest(app, `/api/songs/${songId}`, {
+      method: 'PUT',
+      body: { defaultLineup: {} },
+      cookieHeader,
+    });
+    expect(lineupSaved.status).toBe(200);
+    expect((await readJson(lineupSaved, singleEnvelope)).song.charts).toEqual(lifted);
+
+    const emptied = await jsonRequest(app, `/api/songs/${songId}`, {
+      method: 'PUT',
+      body: { charts: [] },
+      cookieHeader,
+    });
+    expect((await readJson(emptied, singleEnvelope)).song.charts).toEqual([]);
+  });
+
+  it('refuses a seventh chart and a list over the byte budget', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const seven = await jsonRequest(app, '/api/songs', {
       method: 'POST',
       body: {
-        title: 'C',
+        title: 'Seven',
         status: 'idea',
-        chart: { kind: 'image', s3Key: 'chord-charts/def.png' },
+        charts: Array.from({ length: SONG_CHARTS_MAX + 1 }, () =>
+          chordProChartForEveryInstrument('[C]'),
+        ),
       },
       cookieHeader,
     });
-    const imageSong = await readJson(image, singleEnvelope);
-    expect(imageSong.song.chart).toEqual({ kind: 'image', s3Key: 'chord-charts/def.png' });
+    expect(seven.status).toBe(400);
+
+    const threeByteText = '€'.repeat(CHORDPRO_TEXT_MAX_LENGTH);
+    const overBudget = await jsonRequest(app, '/api/songs', {
+      method: 'POST',
+      body: {
+        title: 'Heavy',
+        status: 'idea',
+        charts: Array.from({ length: SONG_CHARTS_MAX }, () =>
+          chordProChartForEveryInstrument(threeByteText),
+        ),
+      },
+      cookieHeader,
+    });
+    expect(overBudget.status).toBe(400);
   });
 
   it('cascades the mastery overrides on song delete', async () => {

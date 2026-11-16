@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import {
   type SetlistEntryPatch,
@@ -30,7 +31,7 @@ import { type EntrySheetFocus, SetlistEntrySheet } from './SetlistEntrySheet';
 import { SetlistViewContent, type SetlistViewName } from './SetlistViewContent';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { useSetlistBreakActions } from './setlist-breaks.hook';
-import { indexById } from './setlist-editor.utils';
+import { indexById, toEntrySheetSong } from './setlist-editor.utils';
 import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { buildTransitionViews, indexTransitionComments } from './transition-view.core';
@@ -96,6 +97,7 @@ export function SetlistEditor({
   const removal = useTimedOffer<RemovedEntry>(UNDO_WINDOW_MS);
   const updateSong = useUpdateSong();
   const recording = useRecordingSheet();
+  const signedInMember = useSignedInMember();
 
   const [transitionEditing, setTransitionEditing] = useState<TransitionPair | null>(null);
   const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
@@ -278,20 +280,13 @@ export function SetlistEditor({
           key={openedEntry.id}
           setlistId={setlistId}
           entry={openedEntry}
-          song={{
-            title: openedSong.title,
-            artist: openedSong.artist,
-            deezerAlbumId: openedSong.deezerAlbumId ?? null,
-            durationSeconds: openedSong.durationSeconds ?? null,
-            baseEnergy: openedSong.baseEnergy ?? null,
-            defaultLineup: openedSong.defaultLineup,
-            chart: openedSong.chart,
-          }}
+          song={toEntrySheetSong(openedSong)}
           position={openedIndex + 1}
           songCount={setlistEntries.length}
           members={members}
           instruments={instruments}
           focus={openEntry.focus}
+          signedInMember={signedInMember.data}
           onSave={saveSetlistEntry}
           onUpdate={updateSetlistEntry}
           onSaveSongLineup={(lineup) =>

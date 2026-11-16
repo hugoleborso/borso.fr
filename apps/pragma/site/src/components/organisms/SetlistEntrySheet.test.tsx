@@ -1,7 +1,9 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
+import { createIsolatedQueryClient } from '../../lib/queries/queries.test-utils';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 import { SetlistEntrySheet, type SetlistEntrySheetProps } from './SetlistEntrySheet';
@@ -15,6 +17,10 @@ vi.mock('../../observability/product-event.adapter', () => ({
 }));
 
 const SAVE_PAUSE_MS = 600;
+
+function chordProChart(text: string, instrumentIds: string[]) {
+  return { kind: 'chordpro' as const, text, instrumentIds, label: null };
+}
 
 function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEntrySheetProps {
   return {
@@ -35,7 +41,7 @@ function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEnt
       durationSeconds: 245,
       baseEnergy: 3,
       defaultLineup: { tom: ['bass'] },
-      chart: null,
+      charts: [],
     },
     position: 2,
     songCount: 20,
@@ -48,6 +54,7 @@ function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEnt
       { id: 'guitar', name: 'Guitar', icon: 'guitar', position: 2 },
     ],
     focus: 'info',
+    signedInMember: { memberId: 'tom' },
     onSave: async () => ({}),
     onUpdate: () => undefined,
     onSaveSongLineup: () => undefined,
@@ -59,9 +66,11 @@ function buildProps(overrides: Partial<SetlistEntrySheetProps> = {}): SetlistEnt
 
 function renderSheet(props: SetlistEntrySheetProps): void {
   render(
-    <MemoryRouter>
-      <SetlistEntrySheet {...props} />
-    </MemoryRouter>,
+    <QueryClientProvider client={createIsolatedQueryClient()}>
+      <MemoryRouter>
+        <SetlistEntrySheet {...props} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -99,6 +108,24 @@ describe('the entry sheet', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Chords' }));
     expect(screen.getByText('No chord chart for this song yet.')).toBeTruthy();
     expect(screen.queryByRole('textbox', { name: 'Notes' })).toBeNull();
+  });
+
+  it('opens the Chords tab on the chart for the instrument the entry lineup gives the member', () => {
+    const props = buildProps();
+    renderSheet({
+      ...props,
+      entry: { ...props.entry, lineupOverride: { tom: ['guitar'] } },
+      song: {
+        ...props.song,
+        charts: [
+          chordProChart('{title: Bass line}', ['bass']),
+          chordProChart('{title: Guitar riff}', ['guitar']),
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole('tab', { name: 'Chords' }));
+    expect(screen.getByRole('tab', { name: 'Guitar' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByText('Guitar riff')).toBeTruthy();
   });
 
   it('opens on the Lineup tab, focused on the lineup, when opened from the Lineup grid', () => {

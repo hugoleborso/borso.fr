@@ -14,6 +14,7 @@ export type ProductEventName =
   | 'practice_mode_started'
   | 'practice_mode_ended'
   | 'chord_chart_added'
+  | 'chord_chart_switched'
   | 'streak_sheet_opened';
 
 export type ProductEventAttributes = Readonly<Record<string, string | number | boolean>>;

@@ -10,6 +10,7 @@ import {
   restrictToVerticalAxis,
   selectUnwarnedMemberIds,
   tonalityLabelFor,
+  toEntrySheetSong,
 } from './setlist-editor.utils';
 
 describe('tonalityLabelFor', () => {
@@ -260,5 +261,22 @@ describe('indexById', () => {
     const first = { id: 'a', name: 'A' };
     const second = { id: 'b', name: 'B' };
     expect(indexById([first, second])).toEqual({ a: first, b: second });
+  });
+});
+
+describe('toEntrySheetSong', () => {
+  it('hands the entry sheet the song with every missing value read as none', () => {
+    const charts = [{ kind: 'pdf' as const, s3Key: 'a.pdf', instrumentIds: [], label: null }];
+    expect(
+      toEntrySheetSong({ title: 'Creep', artist: 'Radiohead', defaultLineup: {}, charts }),
+    ).toEqual({
+      title: 'Creep',
+      artist: 'Radiohead',
+      deezerAlbumId: null,
+      durationSeconds: null,
+      baseEnergy: null,
+      defaultLineup: {},
+      charts,
+    });
   });
 });

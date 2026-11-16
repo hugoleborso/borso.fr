@@ -13,6 +13,7 @@ import {
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
 import { songTable } from './songs.schema';
 import { SONG_STATUSES } from '@domain/song-status.core';
+import { SONG_CHARTS_MAX } from '@domain/input-limits.core';
 
 const OVERRIDE_SCORE = 9;
 
@@ -70,6 +71,7 @@ describe('songs tools (back-e2e)', () => {
       status: 'idea',
       origin: 'cover',
       lineup: {},
+      charts: [],
       mastery: [],
     });
     expect(found.body).toEqual({
@@ -220,6 +222,58 @@ describe('songs tools (back-e2e)', () => {
       isError: true,
       body: { error: 'member-not-found', reference: 'Marc' },
     });
+  });
+
+  it('stores the instruments of each chart from their names, and refuses an unknown name or a seventh chart', async () => {
+    const band = await prepareAssistantBand();
+    const { assistant } = band;
+    const guitarId = await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
+    const created = createdSchema.parse(
+      (
+        await callTool(assistant, 'save_song', {
+          title: 'Creep',
+          status: 'idea',
+          charts: [
+            { kind: 'chordpro', text: '[G]Grid' },
+            { kind: 'chordpro', text: '[G]Tab', instruments: ['guitare'], label: 'Solo' },
+          ],
+        })
+      ).body,
+    );
+
+    const summary = songBodySchema.parse(
+      (await callTool(assistant, 'get_song', { song: 'Creep' })).body,
+    );
+    const stored = await readSongRow(created.id);
+    const unknownInstrument = await callTool(assistant, 'save_song', {
+      song: 'Creep',
+      charts: [{ kind: 'chordpro', text: '[G]Tab', instruments: ['Ukulélé'] }],
+    });
+    const seventh = await callTool(assistant, 'save_song', {
+      song: 'Creep',
+      charts: Array.from({ length: SONG_CHARTS_MAX + 1 }, () => ({
+        kind: 'chordpro',
+        text: '[G]',
+      })),
+    });
+    const { tools } = await assistant.listTools();
+    const saveSongInput = JSON.stringify(tools.find((tool) => tool.name === 'save_song'));
+
+    expect(summary.song).toMatchObject({
+      charts: [{ kind: 'chordpro' }, { kind: 'chordpro', instruments: ['Guitare'], label: 'Solo' }],
+    });
+    expect(JSON.parse(stored?.charts ?? 'null')).toEqual([
+      { kind: 'chordpro', text: '[G]Grid', instrumentIds: [], label: null },
+      { kind: 'chordpro', text: '[G]Tab', instrumentIds: [guitarId], label: 'Solo' },
+    ]);
+    expect(stored?.chart).toBeNull();
+    expect(unknownInstrument).toEqual({
+      isError: true,
+      body: { error: 'instrument-not-found', reference: 'Ukulélé' },
+    });
+    expect(seventh.isError).toBe(true);
+    expect(saveSongInput).toContain('"charts"');
+    expect(saveSongInput).not.toContain('"chart"');
   });
 
   it('sets a score for one song, reads it with the song and in the history, then removes it', async () => {

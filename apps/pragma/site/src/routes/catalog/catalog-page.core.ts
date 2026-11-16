@@ -110,7 +110,7 @@ export interface SongCardSource<Status extends string> {
   readonly title: string;
   readonly status: Status;
   readonly deezerAlbumId: string | null;
-  readonly chart: { readonly kind?: unknown } | null;
+  readonly charts: readonly { readonly kind?: unknown }[];
 }
 
 export interface SongCardView<Status extends string> {
@@ -133,7 +133,7 @@ export function toSongCard<Status extends string>(
     detail,
     deezerAlbumId: song.deezerAlbumId,
     status: song.status,
-    chartKind: extractChartKind(song.chart),
+    chartKind: extractChartKind(song.charts[0]),
   };
 }
 

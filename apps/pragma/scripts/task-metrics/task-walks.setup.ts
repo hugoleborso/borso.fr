@@ -514,7 +514,7 @@ const addSongFromPicker: TaskWalkRunner = async (driver) => {
 const CHORDS_ABOVE_LYRICS =
   "Am               Em   G\nAin't no sunshine when she's gone\nAm               Em   G\nIt's not warm when she's away";
 const WRITE_CLIPBOARD = `async (text) => { try { await navigator.clipboard.writeText(text); return true; } catch { return false; } }`;
-const READ_CHORD_TEXT = `() => document.querySelector('#song-chord-text')?.value ?? ''`;
+const READ_CHORD_TEXT = `() => document.querySelector('#song-chord-text-0')?.value ?? ''`;
 
 async function didPutOnClipboard(driver: BandSessionDriver, text: string): Promise<boolean> {
   await driver.session
@@ -557,7 +557,7 @@ const addChords: TaskWalkRunner = async (driver) => {
   const pasted = String(await driver.session.evaluate(READ_CHORD_TEXT));
   if (!pasted.includes('sunshine')) {
     walk.note('The browser refused the clipboard read, so the chords were typed into the box.');
-    await walk.tap('Chord text box', { css: '#song-chord-text', scope: 'page' });
+    await walk.tap('Chord text box', { css: '#song-chord-text-0', scope: 'page' });
     await walk.type('Paste chart', CHORDS_ABOVE_LYRICS);
   }
   await walk.tap(
@@ -571,7 +571,9 @@ const addChords: TaskWalkRunner = async (driver) => {
   const location = await walk.readLocation();
   const isShown = await isTextInMain(driver, 'sunshine');
   const saved = z
-    .object({ song: z.object({ chart: z.object({ text: z.string() }).loose().nullable() }) })
+    .object({
+      song: z.object({ charts: z.array(z.object({ text: z.string().optional() }).loose()) }),
+    })
     .loose()
     .safeParse(await driver.fetchJson(`/api/songs/${location.path.split('/').at(-1) ?? ''}`));
   return walk.summarise({
@@ -579,7 +581,9 @@ const addChords: TaskWalkRunner = async (driver) => {
       landedOn: location.path,
       chartShownOnSongPage: isShown,
       clipboardUsed: isOnClipboard && pasted.includes('sunshine'),
-      savedAsChordPro: saved.success && (saved.data.song.chart?.text.includes('[Am]') ?? false),
+      savedAsChordPro:
+        saved.success &&
+        saved.data.song.charts.some((chart) => chart.text?.includes('[Am]') ?? false),
     },
   });
 };

@@ -1,4 +1,6 @@
 import type { Lineup } from '@domain/lineup.core';
+import type { z } from 'zod';
+import type { chordChartSchema } from '../songs/songs.schema';
 
 export type SeedLineupByMemberName = Readonly<Record<string, readonly string[]>>;
 
@@ -26,6 +28,48 @@ export function selectInstrumentIds(
     const instrumentId = instrumentIdByName.get(name);
     return instrumentId === undefined ? [] : [instrumentId];
   });
+}
+
+export interface SeedChartSource {
+  readonly title: string;
+  readonly chordChartText: string;
+}
+
+export type SeedChart = Extract<z.output<typeof chordChartSchema>, { kind: 'chordpro' }>;
+
+interface SeedChartAssignment {
+  readonly instrumentNames: readonly string[];
+  readonly label: string | null;
+  readonly text: string;
+}
+
+const AFTERGLOW_GUITAR_CHART = `{title: Afterglow}
+{key: G}
+{start_of_tab}
+e|---------------7-----|
+B|-------8---8---------|
+G|---7-----------------|
+{end_of_tab}`;
+
+const SEED_INSTRUMENT_CHARTS: Readonly<Record<string, readonly SeedChartAssignment[]>> = {
+  Afterglow: [{ instrumentNames: ['Guitare'], label: null, text: AFTERGLOW_GUITAR_CHART }],
+};
+
+// @FollowsBlueprint core-projection
+export function buildSeedCharts(
+  song: SeedChartSource,
+  instrumentIdByName: ReadonlyMap<string, string>,
+): SeedChart[] {
+  const instrumentCharts = (SEED_INSTRUMENT_CHARTS[song.title] ?? []).map((chart) => ({
+    kind: 'chordpro' as const,
+    text: chart.text,
+    instrumentIds: selectInstrumentIds(chart.instrumentNames, instrumentIdByName),
+    label: chart.label,
+  }));
+  return [
+    { kind: 'chordpro', text: song.chordChartText, instrumentIds: [], label: null },
+    ...instrumentCharts,
+  ];
 }
 
 export type AdminCredentialsState = 'created' | 'already-set';

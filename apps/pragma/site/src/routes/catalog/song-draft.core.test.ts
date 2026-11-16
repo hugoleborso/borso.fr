@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyExternalPickToDraft,
   BLANK_SONG_DRAFT,
-  chartFromDraft,
+  chartsFromDraft,
   detectProvider,
   payloadFromDraft,
   type Song,
@@ -12,6 +12,10 @@ import {
   songSchema,
 } from './song-draft.core';
 import { SONG_STATUSES } from '@domain/song-status.core';
+import { BLANK_CHART_CARD, type SongChartCardDraft } from './song-chart-cards.core';
+import { describeChordChartTitle } from './chart-title.utils';
+
+const GUITAR_ID = 'instrument-guitar';
 
 const API_SONG: Song = {
   id: '00000000-0000-4000-8000-000000000000',
@@ -25,7 +29,7 @@ const API_SONG: Song = {
   tonalityEnd: 'C',
   baseEnergy: 6,
   links: [{ url: 'https://open.spotify.com/x', provider: 'spotify', comment: '' }],
-  chart: { kind: 'chordpro', text: '[C]Hello' },
+  charts: [{ kind: 'chordpro', text: '[C]Hello', instrumentIds: [], label: null }],
   deezerTrackId: 'deezerTrackId-1',
   album: 'Embers',
   durationSeconds: 210,
@@ -52,7 +56,7 @@ describe('songSchema', () => {
       tonalityStart: null,
       tonalityEnd: null,
       baseEnergy: null,
-      chart: null,
+      charts: [],
     });
     expect(song).toMatchObject({
       links: [],
@@ -82,10 +86,7 @@ describe('songFromApi', () => {
       tonalityStart: 'Am',
       tonalityEnd: 'C',
       baseEnergy: 6,
-      chartKind: 'chordpro',
-      chordproText: '[C]Hello',
-      pdfS3Key: '',
-      imageS3Key: '',
+      charts: [{ ...BLANK_CHART_CARD, kind: 'chordpro', chordproText: '[C]Hello' }],
       links: API_SONG.links,
       deezerTrackId: 'deezerTrackId-1',
       album: 'Embers',
@@ -99,14 +100,24 @@ describe('songFromApi', () => {
     });
   });
 
-  it('maps a pdf chart into the pdf key', () => {
-    const draft = songFromApi({ ...API_SONG, chart: { kind: 'pdf', s3Key: 'charts/a.pdf' } });
-    expect(draft).toMatchObject({ chartKind: 'pdf', pdfS3Key: 'charts/a.pdf', chordproText: '' });
-  });
-
-  it('maps an image chart into the image key', () => {
-    const draft = songFromApi({ ...API_SONG, chart: { kind: 'image', s3Key: 'charts/a.png' } });
-    expect(draft).toMatchObject({ chartKind: 'image', imageS3Key: 'charts/a.png' });
+  it('maps each chart into its own card, keeping its instruments and label', () => {
+    const draft = songFromApi({
+      ...API_SONG,
+      charts: [
+        { kind: 'pdf', s3Key: 'charts/a.pdf', instrumentIds: [GUITAR_ID], label: 'Solo' },
+        { kind: 'image', s3Key: 'charts/a.png', instrumentIds: [], label: null },
+      ],
+    });
+    expect(draft.charts).toEqual([
+      {
+        ...BLANK_CHART_CARD,
+        kind: 'pdf',
+        pdfS3Key: 'charts/a.pdf',
+        instrumentIds: [GUITAR_ID],
+        label: 'Solo',
+      },
+      { ...BLANK_CHART_CARD, cardId: 'chart-1', kind: 'image', imageS3Key: 'charts/a.png' },
+    ]);
   });
 
   it('turns every absent value into its blank form value', () => {
@@ -115,47 +126,79 @@ describe('songFromApi', () => {
       tonalityStart: null,
       tonalityEnd: null,
       baseEnergy: null,
-      chart: null,
+      charts: [],
       album: null,
     });
     expect(draft).toMatchObject({
       tonalityStart: '',
       tonalityEnd: '',
       baseEnergy: null,
-      chartKind: 'none',
+      charts: [BLANK_CHART_CARD],
       album: '',
     });
   });
 });
 
-describe('chartFromDraft', () => {
-  it('is null when the draft carries no chart', () => {
-    expect(chartFromDraft(BLANK_SONG_DRAFT)).toBeNull();
+function draftWith(...cards: SongChartCardDraft[]): SongDraftState {
+  return { ...BLANK_SONG_DRAFT, charts: cards };
+}
+
+const CHORDPRO_CARD: SongChartCardDraft = {
+  ...BLANK_CHART_CARD,
+  kind: 'chordpro',
+  chordproText: '[C]',
+};
+
+describe('chartsFromDraft', () => {
+  it('drops a card with no kind chosen', () => {
+    expect(chartsFromDraft(BLANK_SONG_DRAFT)).toEqual([]);
   });
 
-  it('builds a ChordPro chart', () => {
+  it('builds a ChordPro chart with its instruments and its label trimmed, as the optimistic caches show it before the API answers', () => {
     expect(
-      chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'chordpro', chordproText: '[C]' }),
-    ).toEqual({ kind: 'chordpro', text: '[C]' });
+      chartsFromDraft(draftWith({ ...CHORDPRO_CARD, instrumentIds: [GUITAR_ID], label: ' Solo ' })),
+    ).toEqual([{ kind: 'chordpro', text: '[C]', instrumentIds: [GUITAR_ID], label: 'Solo' }]);
+  });
+
+  it('titles the pill of a chart saved with a blank label by its instruments alone', () => {
+    const titles = chartsFromDraft(
+      draftWith({ ...CHORDPRO_CARD, instrumentIds: [GUITAR_ID], label: '  ' }),
+    ).map((saved) =>
+      describeChordChartTitle(saved, [{ id: GUITAR_ID, name: 'Guitare' }], 'All instruments'),
+    );
+    expect(titles).toEqual(['Guitare']);
   });
 
   it('saves pasted chords above lyrics as ChordPro', () => {
-    expect(
-      chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'chordpro', chordproText: 'C\nHello' }),
-    ).toEqual({ kind: 'chordpro', text: '[C]Hello' });
+    expect(chartsFromDraft(draftWith({ ...CHORDPRO_CARD, chordproText: 'C\nHello' }))).toEqual([
+      { kind: 'chordpro', text: '[C]Hello', instrumentIds: [], label: null },
+    ]);
   });
 
-  it('builds a pdf chart', () => {
-    expect(chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'pdf', pdfS3Key: 'a.pdf' })).toEqual({
-      kind: 'pdf',
-      s3Key: 'a.pdf',
-    });
+  it('builds a pdf chart and an image chart', () => {
+    expect(
+      chartsFromDraft(
+        draftWith(
+          { ...BLANK_CHART_CARD, kind: 'pdf', pdfS3Key: 'a.pdf' },
+          { ...BLANK_CHART_CARD, kind: 'image', imageS3Key: 'a.png' },
+        ),
+      ),
+    ).toEqual([
+      { kind: 'pdf', s3Key: 'a.pdf', instrumentIds: [], label: null },
+      { kind: 'image', s3Key: 'a.png', instrumentIds: [], label: null },
+    ]);
   });
 
-  it('builds an image chart', () => {
+  it('drops a card whose text or file was emptied', () => {
     expect(
-      chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'image', imageS3Key: 'a.png' }),
-    ).toEqual({ kind: 'image', s3Key: 'a.png' });
+      chartsFromDraft(
+        draftWith(
+          { ...CHORDPRO_CARD, chordproText: '' },
+          { ...BLANK_CHART_CARD, kind: 'pdf' },
+          { ...BLANK_CHART_CARD, kind: 'image' },
+        ),
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -184,7 +227,7 @@ describe('payloadFromDraft', () => {
       tonalityStart: 'Am',
       tonalityEnd: 'C',
       baseEnergy: 7,
-      chart: null,
+      charts: [],
       links: [],
       deezerTrackId: null,
       deezerAlbumId: null,

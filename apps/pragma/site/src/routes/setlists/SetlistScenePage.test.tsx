@@ -16,16 +16,31 @@ const setlistReads = vi.hoisted(() => {
   return reads;
 });
 
-const scene = vi.hoisted(() => ({
-  setlist: { id: 'set-1', name: 'Les Disquaires' },
-  entries: [
+const scene = vi.hoisted(() => {
+  const initialEntries = [
     { id: 'entry-1', setlistId: 'set-1', songId: 'song-1', position: 0, energy: 7 },
-    { id: 'entry-2', setlistId: 'set-1', songId: 'song-2', position: 1, energy: null },
+    {
+      id: 'entry-2',
+      setlistId: 'set-1',
+      songId: 'song-2',
+      position: 1,
+      energy: null,
+      lineupOverride: { tom: ['bass'] },
+    },
     { id: 'entry-3', setlistId: 'set-1', songId: 'song-3', position: 2, energy: null },
-  ],
-}));
+  ];
+  return {
+    setlist: { id: 'set-1', name: 'Les Disquaires' },
+    entries: initialEntries,
+    initialEntries,
+  };
+});
 
-function song(id: string, title: string) {
+function chordProChart(text: string, instrumentIds: string[]) {
+  return { kind: 'chordpro', text, instrumentIds, label: null };
+}
+
+function song(id: string, title: string, extraCharts: readonly unknown[] = []) {
   return {
     id,
     title,
@@ -33,14 +48,20 @@ function song(id: string, title: string) {
     tonalityStart: 'Ebm',
     tonalityEnd: null,
     baseEnergy: 5,
-    chart: { kind: 'chordpro', text: `{title: ${title}}\n[Cm]Take five` },
+    defaultLineup: { tom: ['guitar'] },
+    charts: [chordProChart(`{title: ${title}}\n[Cm]Take five`, []), ...extraCharts],
     structureNotes: '',
     gimmickNotes: '',
     notes: '',
   };
 }
 
-const SONGS = [song('song-1', 'Take Five'), song('song-2', 'Helpless'), song('song-3', 'So What')];
+const SONGS = [
+  song('song-1', 'Take Five'),
+  song('song-2', 'Helpless', [chordProChart('{title: Bass part}\n[Cm]Walking bass', ['bass'])]),
+  song('song-3', 'So What'),
+  song('song-4', 'Blue in Green', [chordProChart('{title: Upright}\n[Cm]Upright bass', ['bass'])]),
+];
 
 vi.mock('../../lib/queries/setlists.queries', () => ({
   useSetlist: () =>
@@ -49,6 +70,21 @@ vi.mock('../../lib/queries/setlists.queries', () => ({
 
 vi.mock('../../lib/queries/setlist-entries.queries', () => ({
   useSetlistEntries: () => ({ data: { entries: scene.entries }, isLoading: false, error: null }),
+}));
+
+vi.mock('../../lib/queries/me.queries', () => ({
+  useSignedInMember: () => ({ data: { memberId: 'tom' } }),
+}));
+
+vi.mock('../../lib/queries/instruments.queries', () => ({
+  useInstrumentsList: () => ({
+    data: {
+      instruments: [
+        { id: 'guitar', name: 'Guitare' },
+        { id: 'bass', name: 'Basse' },
+      ],
+    },
+  }),
 }));
 
 vi.mock('../../lib/queries/songs.queries', () => ({
@@ -100,6 +136,34 @@ function listPills(container: HTMLElement): HTMLButtonElement[] {
   return rail === null ? [] : Array.from(rail.querySelectorAll('button'));
 }
 
+function readChartPills(container: HTMLElement): (string | null)[][] {
+  return Array.from(container.querySelectorAll('[role=tab]')).map((tab) => [
+    tab.textContent,
+    tab.getAttribute('aria-selected'),
+  ]);
+}
+
+function tapChartPill(container: HTMLElement, name: string): void {
+  const pill = Array.from(container.querySelectorAll<HTMLElement>('[role=tab]')).find(
+    (tab) => tab.textContent === name,
+  );
+  if (pill === undefined) throw new TypeError(`no chart pill ${name}`);
+  act(() => {
+    pill.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    pill.click();
+  });
+}
+
+function getButton(container: HTMLElement, label: string): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+  if (button === null) throw new TypeError(`no button ${label}`);
+  return button;
+}
+
+function readTranspose(container: HTMLElement): string {
+  return getButton(container, 'Transpose down').nextElementSibling?.textContent ?? '';
+}
+
 function clickButton(button: HTMLButtonElement): void {
   act(() => {
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -110,11 +174,7 @@ describe('SetlistScenePage', () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  beforeEach(() => {
-    stubDialogModalMissingFromJsdom();
-    container = document.createElement('div');
-    document.body.append(container);
-    root = createRoot(container);
+  function renderScene(): void {
     act(() => {
       root.render(
         <MemoryRouter initialEntries={['/setlists/set-1/scene']}>
@@ -125,16 +185,20 @@ describe('SetlistScenePage', () => {
         </MemoryRouter>,
       );
     });
+  }
+
+  beforeEach(() => {
+    stubDialogModalMissingFromJsdom();
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    renderScene();
   });
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-    scene.entries = [
-      { id: 'entry-1', setlistId: 'set-1', songId: 'song-1', position: 0, energy: 7 },
-      { id: 'entry-2', setlistId: 'set-1', songId: 'song-2', position: 1, energy: null },
-      { id: 'entry-3', setlistId: 'set-1', songId: 'song-3', position: 2, energy: null },
-    ];
+    scene.entries = scene.initialEntries;
   });
 
   it('opens on the first song of the set', () => {
@@ -157,6 +221,45 @@ describe('SetlistScenePage', () => {
     pressKey(container, 'ArrowRight');
     expect(readTitle(container)).toBe('Helpless');
     expect(readPosition(container)).toContain('02 / 03');
+  });
+
+  it('opens an entry whose lineup moves the member to Basse on the Basse chart', () => {
+    pressKey(container, 'ArrowRight');
+    expect(container.textContent).toContain('Walking bass');
+    expect(readChartPills(container)).toEqual([
+      ['All instruments', 'false'],
+      ['Basse', 'true'],
+    ]);
+  });
+
+  it('opens the next entry on its own opening chart after a pill was tapped', () => {
+    pressKey(container, 'ArrowRight');
+    tapChartPill(container, 'All instruments');
+    expect(container.textContent).not.toContain('Walking bass');
+    pressKey(container, 'ArrowRight');
+    pressKey(container, 'ArrowLeft');
+    expect(container.textContent).toContain('Walking bass');
+  });
+
+  it('opens the song a reorder moves under the scene on its own opening chart', () => {
+    pressKey(container, 'ArrowRight');
+    tapChartPill(container, 'All instruments');
+    const [first, second, third] = scene.initialEntries;
+    if (first === undefined || second === undefined || third === undefined) {
+      throw new TypeError('the scene fixture holds three entries');
+    }
+    const moved = { ...second, id: 'entry-4', songId: 'song-4' };
+    scene.entries = [first, moved, { ...second, position: 2 }, { ...third, position: 3 }];
+    renderScene();
+    expect(readTitle(container)).toBe('Blue in Green');
+    expect(container.textContent).toContain('Upright bass');
+  });
+
+  it('resets the transpose when the scene moves to another song', () => {
+    clickButton(getButton(container, 'Transpose up'));
+    expect(readTranspose(container)).toBe('+1');
+    pressKey(container, 'ArrowRight');
+    expect(readTranspose(container)).toBe('+0');
   });
 
   it('walks back on the left arrow', () => {

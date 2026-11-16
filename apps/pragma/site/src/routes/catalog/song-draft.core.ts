@@ -2,9 +2,15 @@
 
 import { z } from 'zod';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS, type SongOrigin } from '@domain/song-origin.core';
-import type { SongChartKind } from '../../components/organisms/SongChartFields';
+import {
+  cardsFromCharts,
+  chartsFromCards,
+  type SongChart,
+  type SongChartCardDraft,
+  songChartSchema,
+  BLANK_CHART_CARD,
+} from './song-chart-cards.core';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
-import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
 import { SONG_STATUSES, type SongStatus } from '@domain/song-status.core';
 
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
@@ -38,13 +44,7 @@ export const songSchema = z.object({
   tonalityEnd: z.string().nullable(),
   baseEnergy: z.number().nullable(),
   links: z.array(linkSchema).default([]),
-  chart: z
-    .union([
-      z.object({ kind: z.literal('chordpro'), text: z.string() }),
-      z.object({ kind: z.literal('pdf'), s3Key: z.string() }),
-      z.object({ kind: z.literal('image'), s3Key: z.string() }),
-    ])
-    .nullable(),
+  charts: z.array(songChartSchema),
   deezerTrackId: z.string().nullable().default(null),
   deezerAlbumId: z.string().nullable().default(null),
   spotifyTrackId: z.string().nullable().default(null),
@@ -69,10 +69,7 @@ export interface SongDraftState {
   tonalityStart: string;
   tonalityEnd: string;
   baseEnergy: number | null;
-  chartKind: SongChartKind;
-  chordproText: string;
-  pdfS3Key: string;
-  imageS3Key: string;
+  charts: readonly SongChartCardDraft[];
   links: SongExternalLinkValue[];
   deezerTrackId: string | null;
   deezerAlbumId: string | null;
@@ -95,10 +92,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   tonalityStart: '',
   tonalityEnd: '',
   baseEnergy: null,
-  chartKind: 'none',
-  chordproText: '',
-  pdfS3Key: '',
-  imageS3Key: '',
+  charts: [BLANK_CHART_CARD],
   links: [],
   deezerTrackId: null,
   deezerAlbumId: null,
@@ -122,10 +116,7 @@ export function songFromApi(song: Song): SongDraftState {
     tonalityStart: song.tonalityStart ?? '',
     tonalityEnd: song.tonalityEnd ?? '',
     baseEnergy: song.baseEnergy,
-    chartKind: song.chart === null ? 'none' : song.chart.kind,
-    chordproText: song.chart?.kind === 'chordpro' ? song.chart.text : '',
-    pdfS3Key: song.chart?.kind === 'pdf' ? song.chart.s3Key : '',
-    imageS3Key: song.chart?.kind === 'image' ? song.chart.s3Key : '',
+    charts: cardsFromCharts(song.charts),
     links: song.links,
     deezerTrackId: song.deezerTrackId,
     deezerAlbumId: song.deezerAlbumId,
@@ -141,13 +132,8 @@ export function songFromApi(song: Song): SongDraftState {
   };
 }
 
-export function chartFromDraft(draft: SongDraftState): Song['chart'] {
-  if (draft.chartKind === 'none') return null;
-  if (draft.chartKind === 'chordpro') {
-    return { kind: 'chordpro', text: convertChordsAboveLyrics(draft.chordproText).chordPro };
-  }
-  if (draft.chartKind === 'pdf') return { kind: 'pdf', s3Key: draft.pdfS3Key };
-  return { kind: 'image', s3Key: draft.imageS3Key };
+export function chartsFromDraft(draft: SongDraftState): SongChart[] {
+  return chartsFromCards(draft.charts);
 }
 
 export interface SongSavePayload {
@@ -158,7 +144,7 @@ export interface SongSavePayload {
   readonly tonalityStart: string | null;
   readonly tonalityEnd: string | null;
   readonly baseEnergy: number | null;
-  readonly chart: Song['chart'];
+  readonly charts: SongChart[];
   readonly links: SongExternalLinkValue[];
   readonly deezerTrackId: string | null;
   readonly deezerAlbumId: string | null;
@@ -186,7 +172,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     tonalityStart: draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
     tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
     baseEnergy: draft.baseEnergy,
-    chart: chartFromDraft(draft),
+    charts: chartsFromDraft(draft),
     links: draft.links,
     deezerTrackId: draft.deezerTrackId,
     deezerAlbumId: draft.deezerAlbumId,

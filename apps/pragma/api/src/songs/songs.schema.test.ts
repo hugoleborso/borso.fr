@@ -1,9 +1,17 @@
+import {
+  CHORDPRO_TEXT_MAX_LENGTH,
+  SONG_CHART_LABEL_MAX_LENGTH,
+  SONG_CHARTS_MAX,
+  SONG_CHARTS_MAX_ENCODED_BYTES,
+} from '@domain/input-limits.core';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {
   chordChartSchema,
   defaultLineupSchema,
   externalSearchQuerySchema,
+  legacyChordChartSchema,
+  songChordChartsSchema,
   songCreateInputSchema,
   songExternalLinkSchema,
   songIdParamSchema,
@@ -41,25 +49,88 @@ describe('songExternalLinkSchema', () => {
   });
 });
 
-describe('chordChartSchema', () => {
+function chart(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return { kind: 'chordpro', text: '[C]Like the', instrumentIds: [], label: null, ...overrides };
+}
+
+describe('legacyChordChartSchema', () => {
   it('accepts each of the three kinds in its own shape', () => {
-    expect(chordChartSchema.safeParse({ kind: 'chordpro', text: '[C]Like the' }).success).toBe(
+    expect(
+      legacyChordChartSchema.safeParse({ kind: 'chordpro', text: '[C]Like the' }).success,
+    ).toBe(true);
+    expect(legacyChordChartSchema.safeParse({ kind: 'pdf', s3Key: 'charts/a.pdf' }).success).toBe(
       true,
     );
-    expect(chordChartSchema.safeParse({ kind: 'pdf', s3Key: 'charts/a.pdf' }).success).toBe(true);
-    expect(chordChartSchema.safeParse({ kind: 'image', s3Key: 'charts/a.png' }).success).toBe(true);
+    expect(legacyChordChartSchema.safeParse({ kind: 'image', s3Key: 'charts/a.png' }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe('chordChartSchema', () => {
+  it('accepts each of the three kinds in its own shape', () => {
+    expect(chordChartSchema.safeParse(chart()).success).toBe(true);
+    expect(
+      chordChartSchema.safeParse(chart({ kind: 'pdf', text: undefined, s3Key: 'charts/a.pdf' }))
+        .success,
+    ).toBe(true);
+    expect(
+      chordChartSchema.safeParse(chart({ kind: 'image', text: undefined, s3Key: 'charts/a.png' }))
+        .success,
+    ).toBe(true);
   });
 
   it('refuses a kind carrying the other kind field', () => {
-    expect(chordChartSchema.safeParse({ kind: 'pdf', text: '[C]Like the' }).success).toBe(false);
-    expect(chordChartSchema.safeParse({ kind: 'chordpro', s3Key: 'charts/a.pdf' }).success).toBe(
-      false,
-    );
+    expect(chordChartSchema.safeParse(chart({ kind: 'pdf' })).success).toBe(false);
+    expect(
+      chordChartSchema.safeParse(chart({ text: undefined, s3Key: 'charts/a.pdf' })).success,
+    ).toBe(false);
   });
 
   it('refuses an empty chart of any kind', () => {
-    expect(chordChartSchema.safeParse({ kind: 'chordpro', text: '' }).success).toBe(false);
-    expect(chordChartSchema.safeParse({ kind: 'pdf', s3Key: '' }).success).toBe(false);
+    expect(chordChartSchema.safeParse(chart({ text: '' })).success).toBe(false);
+    expect(
+      chordChartSchema.safeParse(chart({ kind: 'pdf', text: undefined, s3Key: '' })).success,
+    ).toBe(false);
+  });
+
+  it('names each instrument once, and refuses an id that is not a UUID', () => {
+    const chartNamingOneInstrument = chordChartSchema.parse(
+      chart({ instrumentIds: [instrumentId, instrumentId] }),
+    );
+    expect(chartNamingOneInstrument.instrumentIds).toEqual([instrumentId]);
+    expect(chordChartSchema.safeParse(chart({ instrumentIds: ['guitar'] })).success).toBe(false);
+  });
+
+  it('trims the label, stores a blank one as null and refuses one too long', () => {
+    expect(chordChartSchema.parse(chart({ label: '  Solo  ' })).label).toBe('Solo');
+    expect(chordChartSchema.parse(chart({ label: '  ' })).label).toBeNull();
+    expect(
+      chordChartSchema.safeParse(chart({ label: 'x'.repeat(SONG_CHART_LABEL_MAX_LENGTH + 1) }))
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe('songChordChartsSchema', () => {
+  it('holds up to six charts and refuses a seventh', () => {
+    expect(
+      songChordChartsSchema.safeParse(Array.from({ length: SONG_CHARTS_MAX }, () => chart()))
+        .success,
+    ).toBe(true);
+    expect(
+      songChordChartsSchema.safeParse(Array.from({ length: SONG_CHARTS_MAX + 1 }, () => chart()))
+        .success,
+    ).toBe(false);
+  });
+
+  it('refuses a list whose encoded JSON is over the byte budget', () => {
+    const threeByteText = '€'.repeat(CHORDPRO_TEXT_MAX_LENGTH);
+    const fullCharts = Array.from({ length: SONG_CHARTS_MAX }, () =>
+      chart({ text: threeByteText }),
+    );
+    expect(JSON.stringify(fullCharts).length).toBeLessThan(SONG_CHARTS_MAX_ENCODED_BYTES);
+    expect(songChordChartsSchema.safeParse(fullCharts).success).toBe(false);
   });
 });
 
@@ -79,6 +150,7 @@ describe('songCreateInputSchema', () => {
       links: [],
       isrcs: [],
       tags: [],
+      charts: [],
       baseEnergy: null,
       deezerTrackId: null,
       album: null,
@@ -128,6 +200,10 @@ describe('songCreateInputSchema', () => {
 describe('songUpdateInputSchema', () => {
   it('leaves out every field the patch does not name, defaults included', () => {
     expect(songUpdateInputSchema.parse({ title: 'Creep' })).toEqual({ title: 'Creep' });
+  });
+
+  it('leaves the charts out of a patch that carries only the lineup', () => {
+    expect(songUpdateInputSchema.parse({ defaultLineup: {} })).not.toHaveProperty('charts');
   });
 
   it('accepts a patch with nothing in it, and still checks what is there', () => {

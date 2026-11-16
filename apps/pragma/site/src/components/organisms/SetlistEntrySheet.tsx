@@ -1,11 +1,15 @@
 /** @Feature setlists */
 
-import type { Lineup } from '@domain/lineup.core';
+import { type Lineup, resolveLineup } from '@domain/lineup.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SONG_VIEW_TABS, type SongViewTab } from '../../routes/catalog/song-view-tab.core';
 import type { SongRecord } from '../../lib/queries/songs.queries';
+import {
+  selectHeldInstrumentIds,
+  type SignedInMemberLike,
+} from '../../routes/catalog/opening-chart.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
 import { recordProductEvent } from '../../observability/product-event.adapter';
@@ -56,7 +60,7 @@ export interface EntrySheetSong {
   readonly durationSeconds: number | null;
   readonly baseEnergy: number | null;
   readonly defaultLineup: Lineup;
-  readonly chart: SongRecord['chart'];
+  readonly charts: SongRecord['charts'];
 }
 
 export interface EntrySheetInstrument extends InlineLineupInstrument {
@@ -72,6 +76,7 @@ export interface SetlistEntrySheetProps {
   readonly members: readonly EntryLineupMember[];
   readonly instruments: readonly EntrySheetInstrument[];
   readonly focus: EntrySheetFocus;
+  readonly signedInMember: SignedInMemberLike | null | undefined;
   readonly onSave: (entryId: string, patch: SetlistEntryPatch) => Promise<unknown>;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onSaveSongLineup: (lineup: Record<string, string[]>) => void;
@@ -230,7 +235,17 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
                 onUseSongLineup={() => props.onUpdate(entry.id, { lineupOverride: null })}
               />
             ),
-            chords: <SongChartPreviews chart={song.chart} />,
+            chords: (
+              <SongChartPreviews
+                charts={song.charts}
+                instruments={props.instruments}
+                heldInstrumentIds={selectHeldInstrumentIds(
+                  resolveLineup(song.defaultLineup, entry.lineupOverride),
+                  props.signedInMember,
+                )}
+                surface="setlist-sheet"
+              />
+            ),
             takes: (
               <SongTakes
                 songId={entry.songId}
