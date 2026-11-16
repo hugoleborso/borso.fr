@@ -657,6 +657,10 @@
     "tonightChange": "Tonight: {{change}}",
     "entryActions": "More for {{title}}",
     "removeFromSetlist": "Remove from the setlist",
+    "revise": {
+      "menu": "To revise",
+      "taskTitle": "Revise {{title}}"
+    },
     "editTransitionNote": "Edit the transition note",
     "noteTransition": "Note this transition",
     "lineupCellPlays": "{{title}}: {{name}} plays {{instrumentNames}}.",

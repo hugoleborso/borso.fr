@@ -143,4 +143,29 @@ describe('a setlist row', () => {
     expect(screen.getByText('Lead vocals')).toBeTruthy();
     expect(screen.queryAllByTitle('Drums')).toHaveLength(0);
   });
+
+  it('offers To revise in its more menu only when the member can still ask', () => {
+    const onAskBrushUp = vi.fn();
+    renderRow(buildProps({ onAskBrushUp }));
+    fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'To revise' }));
+    expect(onAskBrushUp).toHaveBeenCalledOnce();
+    cleanup();
+    renderRow(buildProps());
+    fireEvent.click(screen.getByRole('button', { name: 'More for Superstition' }));
+    expect(screen.queryByRole('menuitem', { name: 'To revise' })).toBeNull();
+  });
+
+  it('grows by the note and tonight’s change only, so the list keeps its songs on screen', () => {
+    renderRow(
+      buildProps({
+        notes: 'Finir sur le refrain',
+        lineupChanges: [{ memberId: 'tom', firstName: 'Tom', heldInstrumentNames: ['Guitar'] }],
+        onAskBrushUp: () => undefined,
+      }),
+    );
+    const row = screen.getByText('Superstition').closest('li');
+    expect(row?.querySelectorAll('input, ul').length).toBe(0);
+    expect(row?.textContent).not.toContain('revise');
+  });
 });

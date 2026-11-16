@@ -20,7 +20,7 @@ import { indexById } from '../../components/organisms/setlist-editor.utils';
 import { selectPracticeTakes } from '../../components/organisms/take-list.core';
 import { TakeList } from '../../components/organisms/TakeList';
 import { TakePlayer } from '../../components/organisms/TakePlayer';
-import { indexTransitionComments } from '../../components/organisms/transition-view.core';
+import { useTransitionNotesByPair } from '../../components/organisms/transition-notes.hook';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useStoredPracticePosition } from '../../lib/practice-position.store';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
@@ -33,7 +33,6 @@ import {
 import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTakesOfSession } from '../../lib/queries/takes.queries';
-import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { useSessionLabel } from '../../lib/session-label.hook';
 import { takeQueue } from '../../lib/take-queue.setup';
 import { buildSceneAddressFromPractice } from '../catalog/scene-view.core';
@@ -84,7 +83,6 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
   const songsQuery = useSongsList();
   const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
-  const commentsQuery = useTransitionCommentsList();
   const takesQuery = useTakesOfSession(sessionId);
   const queued = useSyncExternalStore(takeQueue.subscribe, takeQueue.read, takeQueue.readOnServer);
   const position = useStoredPracticePosition(sessionId);
@@ -105,10 +103,7 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
     () => indexById(Object.values(setlistEntries.entriesBySetlistId).flat()),
     [setlistEntries.entriesBySetlistId],
   );
-  const transitionNotesByPair = useMemo(
-    () => indexTransitionComments(commentsQuery.data?.comments ?? NO_ROWS),
-    [commentsQuery.data],
-  );
+  const transitionNotesByPair = useTransitionNotesByPair();
   const anchor = selectPracticeAnchor(
     parseStoredPracticePosition(position.storedText),
     arrival,

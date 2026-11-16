@@ -56,3 +56,27 @@ Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › badges a
 Held by: `site/src/components/organisms/session-gate.core.test.ts` › counts a read paused offline as failed, so an offline cold open never waits forever
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › mounts the route inert beneath the opening screen, so the probe and its read leave in one batch
 Held by: `site/src/components/organisms/RequireSession.test.tsx` › shows the failure when the first batch fails, and retries every read in one batch
+
+## Setlist row
+
+- A song row is one title line and one line under it. It grows only by the
+  entry's note and tonight's lineup change. The transition marker drawn
+  above it belongs to the pair of songs, not to the row. Nothing else about the song,
+  such as a task, is drawn in it: the screen exists to keep as many songs as
+  possible in view.
+
+Held by: `site/src/components/organisms/SetlistEntryRow.test.tsx` › grows by the note and tonight’s change only, so the list keeps its songs on screen
+
+## Brush-up
+
+- A song row's menu offers **To revise** only when a next session exists,
+  the task list has loaded and the signed-in member holds no task on that
+  song for that session, ticked or not (`selectSessionToBrushUp`, reading
+  `indexBrushUpTasksBySong`).
+- The task is assigned to the member who asked, and due on the session's
+  date (`buildBrushUpTask`).
+
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › offers nothing once the member has one, even ticked and beside another member’s
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › offers nothing while the task list has not arrived
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › groups the tasks of the next session by song, done ones included
+Held by: `site/src/components/organisms/brush-up.core.test.ts` › assigns the member and dates the task on the session

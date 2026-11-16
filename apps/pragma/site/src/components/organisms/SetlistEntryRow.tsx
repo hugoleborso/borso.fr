@@ -37,6 +37,7 @@ export interface SetlistEntryRowProps {
   readonly onOpen: () => void;
   readonly onRemove: (entryId: string) => void;
   readonly onAddBreakAfter?: (entryId: string) => void;
+  readonly onAskBrushUp?: () => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -63,6 +64,18 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             icon: 'pause',
             tone: 'default',
             onSelect: () => onAddBreakAfter(props.entryId),
+          },
+        ];
+  const { onAskBrushUp } = props;
+  const brushUpItems: MenuItem[] =
+    onAskBrushUp === undefined
+      ? []
+      : [
+          {
+            label: t('setlist.revise.menu'),
+            icon: 'tasks',
+            tone: 'default',
+            onSelect: onAskBrushUp,
           },
         ];
   return (
@@ -120,6 +133,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         <Menu
           label={t('setlist.entryActions', { title: props.title })}
           items={[
+            ...brushUpItems,
             ...addBreakItems,
             {
               label: t('setlist.removeFromSetlist'),
