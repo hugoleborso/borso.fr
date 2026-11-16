@@ -4,6 +4,7 @@ const SCRIPTS_FIELD = 'scripts';
 const MANIFEST_FILE = 'package.json';
 const TOOLING_FILE_PATTERN =
   /(\.test\.tsx?|\/[A-Z][A-Z0-9_-]*\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
+const PREVIEW_ONLY_FILE_PATTERN = /^apps\/[^/]+\/api\/src\/__test\//;
 
 type JsonRecord = Readonly<Record<string, unknown>>;
 
@@ -64,13 +65,38 @@ export function isToolingFile(path: string): boolean {
   return TOOLING_FILE_PATTERN.test(path);
 }
 
-export function isToolingOnlyChange(
+export function isPreviewOnlyFile(path: string): boolean {
+  return PREVIEW_ONLY_FILE_PATTERN.test(path);
+}
+
+function isProductionInertFile(path: string): boolean {
+  return isToolingFile(path) || isPreviewOnlyFile(path);
+}
+
+function isEveryChangeOf(
+  isInertFile: (path: string) => boolean,
   directory: string,
   changedFiles: readonly string[],
   manifests: { readonly before: unknown; readonly after: unknown },
 ): boolean {
   const manifestPath = manifestPathOf(directory);
   if (changedFiles.length === 0) return false;
-  if (!changedFiles.every((file) => file === manifestPath || isToolingFile(file))) return false;
+  if (!changedFiles.every((file) => file === manifestPath || isInertFile(file))) return false;
   return hasOnlyCheckScriptChanges(manifests.before, manifests.after);
+}
+
+export function isToolingOnlyChange(
+  directory: string,
+  changedFiles: readonly string[],
+  manifests: { readonly before: unknown; readonly after: unknown },
+): boolean {
+  return isEveryChangeOf(isToolingFile, directory, changedFiles, manifests);
+}
+
+export function isProductionInertChange(
+  directory: string,
+  changedFiles: readonly string[],
+  manifests: { readonly before: unknown; readonly after: unknown },
+): boolean {
+  return isEveryChangeOf(isProductionInertFile, directory, changedFiles, manifests);
 }

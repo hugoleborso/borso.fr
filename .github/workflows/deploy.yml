@@ -75,8 +75,12 @@ jobs:
           # changes as they were.
           # See docs/dantotsus/a-lint-script-redeployed-every-app.md and
           # docs/dantotsus/the-deck-text-the-preview-called-documentation.md.
+          # `--production` also drops the test seed under api/src/__test/,
+          # which production mounts only when ALLOW_TEST_SEED is "1", and it
+          # never is there. A preview still deploys for it. The operator asked
+          # on 2026-11-16 for a seed change not to redeploy production.
           if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-            "$BASE" "$CHANGES" --tooling); then
+            "$BASE" "$CHANGES" --production); then
             CHANGES="$kept"
           fi
           # `infra` fans out: constructs are the contract every app builds on.
