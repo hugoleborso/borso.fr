@@ -145,12 +145,27 @@ commitment, not one member's.
 
 ## Chord chart
 
-The written music for a song, in one of three forms.
+The written music for a song, in one of three forms, with the instruments
+it is for. A song holds an ordered list of them. A chart naming no
+instrument is for every instrument.
 
-Lives in: `api/src/songs/` (the `chart` column), with the file itself
+Lives in: `api/src/songs/` (the `charts` column), with the file itself
 uploaded through `api/src/uploads/`
 
 Invariants: `api/src/songs/INVARIANTS.md`
+
+Not to be confused with: the **chart switcher**, the row of pills above a
+chart that names each chart of the song by its instruments and label.
+
+## Opening chart
+
+The chord chart a member sees first on a song: the first chart naming an
+instrument they hold in the lineup read there, else the first chart for
+every instrument, else the first chart.
+
+Lives in: `site/src/routes/catalog/opening-chart.core.ts`
+
+Invariants: `site/src/routes/catalog/INVARIANTS.md`
 
 ## Composition
 

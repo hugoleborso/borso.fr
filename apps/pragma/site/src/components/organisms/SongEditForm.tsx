@@ -26,6 +26,7 @@ import {
   detectProvider,
   type SongDraftState,
 } from '../../routes/catalog/song-draft.core';
+import { withChartCardChanged } from '../../routes/catalog/song-chart-cards.core';
 import {
   type SongEditSection,
   toggleLineupInstrument,
@@ -73,8 +74,11 @@ export function SongEditForm({
   });
   const isExistingSong = !isNew && songId !== undefined;
 
-  const applyChordproText = (text: string): void => {
-    form.setFieldValue('chordproText', text);
+  const applyChordproText = (index: number, text: string): void => {
+    form.setFieldValue(
+      'charts',
+      withChartCardChanged(form.getFieldValue('charts'), index, { chordproText: text }),
+    );
     const derived = deriveTonality(convertChordsAboveLyrics(text).chordPro);
     const currentStart = form.getFieldValue('tonalityStart');
     const currentEnd = form.getFieldValue('tonalityEnd');
@@ -204,27 +208,14 @@ export function SongEditForm({
           />
         )}
       </form.Subscribe>
-      <form.Subscribe
-        selector={(state) =>
-          [
-            state.values.chartKind,
-            state.values.chordproText,
-            state.values.pdfS3Key,
-            state.values.imageS3Key,
-          ] as const
-        }
-      >
-        {([chartKind, chordproText, pdfS3Key, imageS3Key]) => (
+      <form.Subscribe selector={(state) => state.values.charts}>
+        {(charts) => (
           <SongChartFields
-            chartKind={chartKind}
-            chordproText={chordproText}
-            pdfS3Key={pdfS3Key}
-            imageS3Key={imageS3Key}
+            cards={charts}
+            instruments={instruments}
             {...(isExistingSong ? { songId } : {})}
-            onChartKindChange={(kind) => form.setFieldValue('chartKind', kind)}
+            onCardsChange={(cards) => form.setFieldValue('charts', cards)}
             onChordproChange={applyChordproText}
-            onPdfKeyChange={(value) => form.setFieldValue('pdfS3Key', value)}
-            onImageKeyChange={(value) => form.setFieldValue('imageS3Key', value)}
           />
         )}
       </form.Subscribe>

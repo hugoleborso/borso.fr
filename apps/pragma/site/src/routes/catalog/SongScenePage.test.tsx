@@ -14,7 +14,16 @@ vi.mock('../../lib/queries/songs.queries', () => ({
         tonalityStart: 'Ebm',
         tonalityEnd: null,
         baseEnergy: 5,
-        chart: { kind: 'chordpro', text: '{title: Take Five}\n[Cm]Take five' },
+        defaultLineup: { lea: ['guitar'] },
+        charts: [
+          { kind: 'pdf', s3Key: 'chart/song-1/tab.pdf', instrumentIds: ['guitar'], label: null },
+          {
+            kind: 'chordpro',
+            text: '{title: Take Five}\n[Cm]Take five',
+            instrumentIds: [],
+            label: null,
+          },
+        ],
         structureNotes: '',
         gimmickNotes: '',
         notes: '',
@@ -23,6 +32,14 @@ vi.mock('../../lib/queries/songs.queries', () => ({
     isLoading: false,
     error: null,
   }),
+}));
+
+vi.mock('../../lib/queries/me.queries', () => ({
+  useSignedInMember: () => ({ data: { memberId: 'lea' } }),
+}));
+
+vi.mock('../../lib/queries/instruments.queries', () => ({
+  useInstrumentsList: () => ({ data: { instruments: [{ id: 'guitar', name: 'Guitare' }] } }),
 }));
 
 const { SongScenePage } = await import('./SongScenePage');
@@ -73,5 +90,11 @@ describe('SongScenePage', () => {
     expect(container.querySelector('dialog header')?.className).toContain(
       'pt-[calc(1rem+env(safe-area-inset-top))]',
     );
+  });
+
+  it('shows the ChordPro chart when the Guitare chart of a guitarist is a PDF, with no switcher', () => {
+    expect(container.textContent).toContain('Take five');
+    expect(container.textContent).not.toContain('No ChordPro chart');
+    expect(container.querySelector('[role=tablist]')).toBeNull();
   });
 });

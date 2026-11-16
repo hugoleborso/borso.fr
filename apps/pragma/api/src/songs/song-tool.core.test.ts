@@ -9,7 +9,22 @@ import type { SongRow } from './songs.repository';
 
 const NAMES = {
   members: [{ id: 'member-hugo', name: 'Hugo' }],
-  instruments: [{ id: 'instrument-drums', name: 'Batterie' }],
+  instruments: [
+    { id: 'instrument-drums', name: 'Batterie' },
+    { id: 'instrument-guitar', name: 'Guitare' },
+  ],
+};
+const EVERY_INSTRUMENT_CHART = {
+  kind: 'chordpro' as const,
+  text: '{title: Slow Burn}',
+  instrumentIds: [],
+  label: null,
+};
+const GUITAR_SOLO_CHART = {
+  kind: 'pdf' as const,
+  s3Key: 'chart/song-1/solo.pdf',
+  instrumentIds: ['instrument-guitar', 'instrument-gone'],
+  label: 'Solo',
 };
 
 function buildSong(overrides: Partial<SongRow>): SongRow {
@@ -20,7 +35,7 @@ function buildSong(overrides: Partial<SongRow>): SongRow {
     status: 'concert_ready',
     origin: 'cover',
     links: [],
-    chart: null,
+    charts: [],
     tonalityStart: 'Am',
     tonalityEnd: null,
     defaultLineup: { 'member-hugo': ['instrument-drums'] },
@@ -99,8 +114,8 @@ describe('summarizeSongs', () => {
 });
 
 describe('projectSongForTool', () => {
-  it('names the lineup and gives the chart kind only, leaving out empty lists', () => {
-    const song = buildSong({ chart: { kind: 'chordpro', text: '{title: Slow Burn}' } });
+  it('names the lineup and gives each chart kind only, leaving out empty lists', () => {
+    const song = buildSong({ charts: [EVERY_INSTRUMENT_CHART] });
     expect(projectSongForTool(song, NAMES, false)).toEqual({
       id: 'song-1',
       title: 'Slow Burn',
@@ -115,18 +130,25 @@ describe('projectSongForTool', () => {
       structureNotes: '',
       gimmickNotes: '',
       notes: '',
-      chart: 'chordpro',
+      charts: [{ kind: 'chordpro', instruments: undefined, label: undefined }],
     });
   });
 
-  it('answers no chart kind for a song without a chart', () => {
-    expect(projectSongForTool(SLOW_BURN, NAMES, false).chart).toBeNull();
+  it('names the instruments and the label of a chart, skipping an instrument that is gone', () => {
+    const song = buildSong({ charts: [GUITAR_SOLO_CHART] });
+    expect(projectSongForTool(song, NAMES, false).charts).toEqual([
+      { kind: 'pdf', instruments: ['Guitare'], label: 'Solo' },
+    ]);
   });
 
-  it('adds the chart itself, the links and the streaming identifiers in detail', () => {
+  it('answers no chart for a song without one', () => {
+    expect(projectSongForTool(SLOW_BURN, NAMES, false).charts).toEqual([]);
+  });
+
+  it('adds each chart itself, the links and the streaming identifiers in detail', () => {
     const link = { url: 'https://example.com/a', provider: 'other' as const, comment: '' };
     const song = buildSong({
-      chart: { kind: 'chordpro', text: '{title: Slow Burn}' },
+      charts: [EVERY_INSTRUMENT_CHART, GUITAR_SOLO_CHART],
       links: [link],
       tags: ['ballad'],
       isrcs: ['FRX000000001'],
@@ -134,7 +156,10 @@ describe('projectSongForTool', () => {
     });
     expect(projectSongForTool(song, NAMES, true)).toMatchObject({
       tags: ['ballad'],
-      chart: { kind: 'chordpro', text: '{title: Slow Burn}' },
+      charts: [
+        { kind: 'chordpro', text: '{title: Slow Burn}', instruments: [], label: null },
+        { kind: 'pdf', s3Key: 'chart/song-1/solo.pdf', instruments: ['Guitare'], label: 'Solo' },
+      ],
       links: [link],
       deezerTrackId: 'deezer-1',
       isrcs: ['FRX000000001'],

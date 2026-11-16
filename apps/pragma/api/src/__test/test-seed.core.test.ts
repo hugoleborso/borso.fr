@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildSeedCharts,
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
@@ -66,5 +67,24 @@ describe('buildSeedLineup', () => {
     expect(buildSeedLineup({ Hugo: ['Théremine'] }, memberIdByName, instrumentIdByName)).toEqual({
       'hugo-id': [],
     });
+  });
+});
+
+describe('buildSeedCharts', () => {
+  const instrumentIdByName = new Map([['Guitare', 'guitar-id']]);
+
+  it('seeds the song chart for every instrument, then a Guitare chart on Afterglow', () => {
+    const charts = buildSeedCharts(
+      { title: 'Afterglow', chordChartText: '{title: Afterglow}' },
+      instrumentIdByName,
+    );
+    expect(charts.map((chart) => chart.instrumentIds)).toEqual([[], ['guitar-id']]);
+    expect(charts[1]?.text).toContain('{start_of_tab}');
+  });
+
+  it('seeds one chart for every instrument on any other song', () => {
+    expect(
+      buildSeedCharts({ title: 'Lightning', chordChartText: '[C]Bolt' }, instrumentIdByName),
+    ).toEqual([{ kind: 'chordpro', text: '[C]Bolt', instrumentIds: [], label: null }]);
   });
 });

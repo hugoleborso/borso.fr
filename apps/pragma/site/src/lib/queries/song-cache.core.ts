@@ -15,7 +15,7 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'artist'
   | 'origin'
   | 'links'
-  | 'chart'
+  | 'charts'
   | 'tonalityStart'
   | 'tonalityEnd'
   | 'defaultLineup'
@@ -34,7 +34,7 @@ const NEW_SONG_DEFAULTS: Pick<
   artist: '',
   origin: DEFAULT_SONG_ORIGIN,
   links: [],
-  chart: null,
+  charts: [],
   tonalityStart: null,
   tonalityEnd: null,
   defaultLineup: {},

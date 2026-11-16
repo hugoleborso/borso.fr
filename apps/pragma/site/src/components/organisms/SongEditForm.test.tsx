@@ -5,7 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import '../../i18n/i18n.setup';
 import { createIsolatedQueryClient } from '../../lib/queries/queries.test-utils';
+import { SONG_CHARTS_MAX } from '@domain/input-limits.core';
 import { BLANK_SONG_DRAFT, type SongDraftState } from '../../routes/catalog/song-draft.core';
+import {
+  BLANK_CHART_CARD,
+  type SongChartCardDraft,
+} from '../../routes/catalog/song-chart-cards.core';
 import type { SongEditSection } from '../../routes/catalog/song-edit-page.core';
 import { NO_SAVE_REFUSAL, type SongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
@@ -34,6 +39,7 @@ const INSTRUMENTS = [
 interface RenderOptions {
   readonly section?: SongEditSection;
   readonly onSubmit?: (value: SongDraftState) => Promise<void>;
+  readonly charts?: readonly SongChartCardDraft[];
 }
 
 function songEditForm(
@@ -41,6 +47,7 @@ function songEditForm(
   refusal: SongSaveRefusal,
   section: SongEditSection,
   onSubmit: (value: SongDraftState) => Promise<void>,
+  charts: readonly SongChartCardDraft[] = BLANK_SONG_DRAFT.charts,
 ): JSX.Element {
   return (
     <QueryClientProvider client={client}>
@@ -48,7 +55,7 @@ function songEditForm(
         <SongEditForm
           isNew
           songId={undefined}
-          defaultValues={{ ...BLANK_SONG_DRAFT, title: 'Slow Burn' }}
+          defaultValues={{ ...BLANK_SONG_DRAFT, title: 'Slow Burn', charts }}
           section={section}
           members={MEMBERS}
           instruments={INSTRUMENTS}
@@ -70,8 +77,11 @@ function renderForm(
 ): (section: SongEditSection) => void {
   const client = createIsolatedQueryClient();
   const onSubmit = options.onSubmit ?? vi.fn();
-  const view = render(songEditForm(client, refusal, options.section ?? 'identity', onSubmit));
-  return (section) => view.rerender(songEditForm(client, refusal, section, onSubmit));
+  const view = render(
+    songEditForm(client, refusal, options.section ?? 'identity', onSubmit, options.charts),
+  );
+  return (section) =>
+    view.rerender(songEditForm(client, refusal, section, onSubmit, options.charts));
 }
 
 // @FollowsBlueprint test-component-render
@@ -174,6 +184,65 @@ describe('SongEditForm', () => {
     expect(screen.getByRole('button', { name: 'Photo' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'PDF' })).toBeDefined();
     expect(screen.queryByLabelText('Deezer track ID')).toBeNull();
+  });
+
+  it('adds a chart, picks two instruments, moves it up and saves the charts in that order', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn<(value: SongDraftState) => Promise<void>>().mockResolvedValue();
+    const readText = vi.spyOn(navigator.clipboard, 'readText');
+    readText.mockResolvedValue('{title: Grid}\n[C]Hello');
+    renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit });
+
+    await user.click(screen.getByRole('button', { name: 'Paste text' }));
+    await user.click(screen.getByRole('button', { name: 'Add a chart' }));
+    const second = screen.getByRole('region', { name: 'Chart 2' });
+    readText.mockResolvedValue('{title: Solo}\n[G]Riff');
+    await user.click(within(second).getByRole('button', { name: 'Paste text' }));
+    await user.click(within(second).getByRole('button', { name: 'Bass' }));
+    await user.click(within(second).getByRole('button', { name: 'Voice' }));
+    await user.type(within(second).getByLabelText('Label (optional)'), 'Solo');
+    await user.click(within(second).getByRole('button', { name: 'Move up' }));
+    expect(
+      within(screen.getByRole('region', { name: 'Chart 1' })).getByRole('button', {
+        name: 'Move up',
+      }),
+    ).toHaveProperty('disabled', true);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0]?.[0].charts).toEqual([
+      {
+        ...BLANK_CHART_CARD,
+        kind: 'chordpro',
+        chordproText: '{title: Solo}\n[G]Riff',
+        instrumentIds: ['bass', 'voice'],
+        label: 'Solo',
+      },
+      { ...BLANK_CHART_CARD, kind: 'chordpro', chordproText: '{title: Grid}\n[C]Hello' },
+    ]);
+  });
+
+  it('fills an empty tonality from a chart pasted into the second card', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn<(value: SongDraftState) => Promise<void>>().mockResolvedValue();
+    vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue('[Am]Hello [G]there');
+    renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit });
+
+    await user.click(screen.getByRole('button', { name: 'Add a chart' }));
+    const second = screen.getByRole('region', { name: 'Chart 2' });
+    await user.click(within(second).getByRole('button', { name: 'Paste text' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0]?.[0].tonalityStart).toBe('Am');
+  });
+
+  it('disables Add a chart at six charts and says the limit', () => {
+    const full = Array.from({ length: SONG_CHARTS_MAX }, () => BLANK_CHART_CARD);
+    renderForm(NO_SAVE_REFUSAL, { section: 'music', charts: full });
+
+    expect(screen.getByRole('button', { name: 'Add a chart' })).toHaveProperty('disabled', true);
+    expect(screen.getByText('Up to 6 charts per song.')).toBeDefined();
   });
 
   it('shows no alert before a save is refused', () => {

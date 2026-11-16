@@ -88,12 +88,16 @@ async function measureRoute(
 
 const LONG_CHART_SONG_TITLE = 'Afterglow';
 
+function hasChart(song: { readonly charts?: readonly unknown[] }): boolean {
+  return (song.charts ?? []).length > 0;
+}
+
 export function findLongChartSong<
-  Song extends { readonly title: string; readonly chart?: unknown },
+  Song extends { readonly title: string; readonly charts?: readonly unknown[] },
 >(songs: readonly Song[]): Song | undefined {
   return (
-    songs.find((song) => song.title === LONG_CHART_SONG_TITLE && Boolean(song.chart)) ??
-    songs.find((song) => Boolean(song.chart))
+    songs.find((song) => song.title === LONG_CHART_SONG_TITLE && hasChart(song)) ??
+    songs.find((song) => hasChart(song))
   );
 }
 

@@ -15,6 +15,9 @@ export const SONG_TEXT_FIELD_MAX_LENGTH = 256;
 export const SONG_TONALITY_MAX_LENGTH = 16;
 export const SONG_NOTE_MAX_LENGTH = 4_096;
 export const CHORDPRO_TEXT_MAX_LENGTH = 64_000;
+export const SONG_CHARTS_MAX = 6;
+export const SONG_CHART_LABEL_MAX_LENGTH = 64;
+export const SONG_CHARTS_MAX_ENCODED_BYTES = 1_000_000;
 
 export const SETLIST_NAME_MAX_LENGTH = 120;
 export const CAPO_MIN = 0;

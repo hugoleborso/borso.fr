@@ -3,6 +3,34 @@
 The rules the terms of [the vocabulary](../../../../VOCABULARY.md) hold in this folder,
 and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
+## Opening chart
+
+- A song with charts opens on the first chart naming an instrument the
+  member holds, else on the first chart for every instrument, else on the
+  first chart (`selectOpeningChartIndex`). Until the member is known, the
+  first chart shows.
+- The song page and the song scene read the song's default lineup. The
+  setlist entry sheet and the setlist scene read the lineup the entry
+  resolves to (`resolveLineup`).
+- The scene views list the ChordPro charts only, and choose the opening
+  chart among them (`selectChordProCharts`).
+- A tapped pill holds for the visit only. Moving to another setlist entry
+  in the scene opens that entry on its own opening chart.
+- A pill reads the chart's instrument names in instrument order, joined by
+  " + ", or "All instruments" when no name is left, then " · " and the
+  label (`describeChordChartTitle`).
+
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on a chart naming an instrument the member holds
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › ranks a chart naming the instrument above a chart for every instrument
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first matching chart in order
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › matches either instrument of a member holding two
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first chart for every instrument when no chart names the member
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first chart when none matches and none is for every instrument
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › answers no chart for an empty list
+Held by: `site/src/routes/catalog/opening-chart.core.test.ts` › opens on the first chart while the member is not known yet
+Held by: `site/src/routes/catalog/chart-title.utils.test.ts` › reads All instruments when no name is left
+Held by: `site/src/routes/setlists/SetlistScenePage.test.tsx` › opens the next entry on its own opening chart after a pill was tapped
+
 ## Scene view
 
 - The transpose offset is clamped to -11 to +11 semitones, which is the

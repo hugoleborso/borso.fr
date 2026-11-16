@@ -3,6 +3,7 @@
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { type Lineup, resolveLineup } from '@domain/lineup.core';
 import type { SongStatus } from '@domain/song-status.core';
+import type { EntrySheetSong } from './SetlistEntrySheet';
 
 export interface DragTransform {
   readonly x: number;
@@ -128,6 +129,28 @@ export function instrumentNamesFor(
     const instrument = instrumentsById[instrumentId];
     return instrument === undefined ? [] : [instrument.name];
   });
+}
+
+export interface EntrySheetSongSource {
+  readonly title: string;
+  readonly artist: string;
+  readonly deezerAlbumId?: string | null;
+  readonly durationSeconds?: number | null;
+  readonly baseEnergy?: number | null;
+  readonly defaultLineup: Lineup;
+  readonly charts: EntrySheetSong['charts'];
+}
+
+export function toEntrySheetSong(song: EntrySheetSongSource): EntrySheetSong {
+  return {
+    title: song.title,
+    artist: song.artist,
+    deezerAlbumId: song.deezerAlbumId ?? null,
+    durationSeconds: song.durationSeconds ?? null,
+    baseEnergy: song.baseEnergy ?? null,
+    defaultLineup: song.defaultLineup,
+    charts: song.charts,
+  };
 }
 
 export function restrictToVerticalAxis({ transform }: DragModifierArgument): DragTransform {

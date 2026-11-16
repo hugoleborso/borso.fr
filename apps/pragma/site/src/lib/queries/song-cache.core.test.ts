@@ -13,7 +13,7 @@ const EXISTING_SONG = {
   status: 'rehearsed',
   links: [{ url: 'https://example.test/a', provider: 'other', comment: 'live take' }],
   origin: 'cover',
-  chart: null,
+  charts: [],
   tonalityStart: 'F',
   tonalityEnd: null,
   defaultLineup: { 'member-1': ['instrument-1'] },
@@ -47,7 +47,7 @@ describe('buildOptimisticSong', () => {
       links: [],
       defaultLineup: {},
       baseEnergy: null,
-      chart: null,
+      charts: [],
     });
   });
 

@@ -2,6 +2,8 @@ import {
   CHORDPRO_TEXT_MAX_LENGTH,
   ENERGY_MAX,
   ENERGY_MIN,
+  SONG_CHART_LABEL_MAX_LENGTH,
+  SONG_CHARTS_MAX,
   SONG_NOTE_MAX_LENGTH,
   SONG_TEXT_FIELD_MAX_LENGTH,
   SONG_TONALITY_MAX_LENGTH,
@@ -18,6 +20,11 @@ import {
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
 import { SONG_STATUSES } from '@domain/song-status.core';
+import {
+  isWithinChartsByteBudget,
+  listEachInstrumentOnce,
+  nullWhenEmpty,
+} from './song-charts.core';
 
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
@@ -32,6 +39,7 @@ export const songTable = pgTable(
     origin: text('origin'),
     links: text('links').notNull().default('[]'),
     chart: text('chart'),
+    charts: text('charts'),
     tonalityStart: text('tonality_start'),
     tonalityEnd: text('tonality_end'),
     defaultLineup: text('default_lineup').notNull().default('{}'),
@@ -60,11 +68,34 @@ export const songExternalLinkSchema = z.object({
   comment: z.string().max(LINK_COMMENT_MAX).default(''),
 });
 
-export const chordChartSchema = z.union([
-  z.object({ kind: z.literal('chordpro'), text: z.string().min(1).max(CHORDPRO_TEXT_MAX_LENGTH) }),
-  z.object({ kind: z.literal('pdf'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
-  z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
+const chordProChartShape = {
+  kind: z.literal('chordpro'),
+  text: z.string().min(1).max(CHORDPRO_TEXT_MAX_LENGTH),
+};
+const pdfChartShape = { kind: z.literal('pdf'), s3Key: z.string().min(1).max(S3_KEY_MAX) };
+const imageChartShape = { kind: z.literal('image'), s3Key: z.string().min(1).max(S3_KEY_MAX) };
+
+export const legacyChordChartSchema = z.union([
+  z.object(chordProChartShape),
+  z.object(pdfChartShape),
+  z.object(imageChartShape),
 ]);
+
+const chordChartAssignmentShape = {
+  instrumentIds: z.array(z.guid()).transform(listEachInstrumentOnce),
+  label: z.string().trim().max(SONG_CHART_LABEL_MAX_LENGTH).nullable().transform(nullWhenEmpty),
+};
+
+export const chordChartSchema = z.union([
+  z.object({ ...chordProChartShape, ...chordChartAssignmentShape }),
+  z.object({ ...pdfChartShape, ...chordChartAssignmentShape }),
+  z.object({ ...imageChartShape, ...chordChartAssignmentShape }),
+]);
+
+export const songChordChartsRowSchema = z.array(chordChartSchema);
+export const songChordChartsSchema = songChordChartsRowSchema
+  .max(SONG_CHARTS_MAX)
+  .refine(isWithinChartsByteBudget);
 
 const storedLineupValueSchema = z.union([z.array(z.guid()), z.guid(), z.null()]);
 
@@ -88,7 +119,7 @@ const songFieldShape = {
   status: z.enum(SONG_STATUSES),
   origin: z.enum(SONG_ORIGINS),
   links: z.array(songExternalLinkSchema).max(SONG_LINKS_MAX),
-  chart: chordChartSchema.nullable(),
+  charts: songChordChartsSchema,
   tonalityStart: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable(),
   tonalityEnd: z.string().max(SONG_TONALITY_MAX_LENGTH).nullable(),
   defaultLineup: defaultLineupSchema,
@@ -110,7 +141,7 @@ const songBaseSchema = z.object({
   artist: songFieldShape.artist.default(''),
   origin: songFieldShape.origin.default(DEFAULT_SONG_ORIGIN),
   links: songFieldShape.links.default([]),
-  chart: songFieldShape.chart.default(null),
+  charts: songFieldShape.charts.default([]),
   tonalityStart: songFieldShape.tonalityStart.default(null),
   tonalityEnd: songFieldShape.tonalityEnd.default(null),
   defaultLineup: songFieldShape.defaultLineup.default({}),
@@ -137,16 +168,31 @@ export const songFindToolInputSchema = z.object({
   status: z.enum(SONG_STATUSES).optional(),
   ...pageInputShape,
 });
-export const songCreateFieldsSchema = songCreateInputSchema.omit({ defaultLineup: true });
+export const songCreateFieldsSchema = songCreateInputSchema.omit({
+  defaultLineup: true,
+  charts: true,
+});
 export const songMasteryToolInputSchema = songReferenceToolInputSchema.extend({
   member: referenceSchema,
   instrument: referenceSchema,
   score: masteryScoreSchema.nullable(),
 });
+const chartToolAssignmentShape = {
+  instruments: z.array(referenceSchema).optional(),
+  label: z.string().max(SONG_CHART_LABEL_MAX_LENGTH).nullable().optional(),
+};
+export const songChartToolInputSchema = z.union([
+  z.object({ ...chordProChartShape, ...chartToolAssignmentShape }),
+  z.object({ ...pdfChartShape, ...chartToolAssignmentShape }),
+  z.object({ ...imageChartShape, ...chartToolAssignmentShape }),
+]);
 export const songSaveToolInputSchema = z
   .object({ song: referenceSchema.optional() })
-  .extend(songUpdateInputSchema.omit({ defaultLineup: true }).shape)
-  .extend({ defaultLineup: namedLineupSchema.optional() });
+  .extend(songUpdateInputSchema.omit({ defaultLineup: true, charts: true }).shape)
+  .extend({
+    defaultLineup: namedLineupSchema.optional(),
+    charts: z.array(songChartToolInputSchema).max(SONG_CHARTS_MAX).optional(),
+  });
 export const externalSearchQuerySchema = z.object({
   q: z.string().min(1).max(SONG_TEXT_FIELD_MAX_LENGTH),
 });

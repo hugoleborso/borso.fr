@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { isDeviceIos } from '../../lib/display-mode.adapter';
 import { selectSongListenLinks } from '../../lib/listen-links.utils';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistsList } from '../../lib/queries/setlists.queries';
 import {
   type SongRecord,
@@ -13,6 +14,7 @@ import {
   useUpdateSong,
 } from '../../lib/queries/songs.queries';
 import { useTakesOfSong } from '../../lib/queries/takes.queries';
+import { selectHeldInstrumentIds } from '../../routes/catalog/opening-chart.core';
 import { describeSetlistsOfSong } from '../../routes/catalog/song-page.core';
 import type {
   LineupInstrument,
@@ -68,6 +70,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
   const previewQuery = useSongPreview(song.id, song.deezerTrackId !== null);
   const takesQuery = useTakesOfSong(song.id);
   const recording = useRecordingSheet();
+  const signedInMember = useSignedInMember();
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const lineupEditorMembers = useMemo(
@@ -180,7 +183,15 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
                 >
                   {t('catalog.fullScreen')}
                 </ButtonLink>
-                <SongChartPreviews chart={song.chart} />
+                <SongChartPreviews
+                  charts={song.charts}
+                  instruments={instruments}
+                  heldInstrumentIds={selectHeldInstrumentIds(
+                    song.defaultLineup,
+                    signedInMember.data,
+                  )}
+                  surface="song"
+                />
               </>
             ),
             takes: (

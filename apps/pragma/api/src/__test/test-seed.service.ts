@@ -28,6 +28,7 @@ import { seedPresences } from './test-seed-presences.service';
 import { SEED_TASKS } from './test-seed-task-board.core';
 import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
+  buildSeedCharts,
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
@@ -56,14 +57,18 @@ const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
 type SongCreateInput = Parameters<typeof insertSongWithoutNotice>[0];
 
-function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput {
+function buildSongInput(
+  song: SeedSong,
+  defaultLineup: Lineup,
+  instrumentIdByName: ReadonlyMap<string, string>,
+): SongCreateInput {
   return {
     title: song.title,
     artist: song.artist,
     status: song.status,
     origin: song.origin,
     links: [],
-    chart: { kind: 'chordpro', text: song.chordChartText },
+    charts: buildSeedCharts(song, instrumentIdByName),
     tonalityStart: song.tonalityStart,
     tonalityEnd: null,
     defaultLineup,
@@ -153,7 +158,7 @@ async function seedSongs(
   const songIds: string[] = [];
   for (const seed of SEED_SONGS) {
     const lineup = buildSeedLineup(seed.lineup, memberIdByName, instrumentIdByName);
-    const created = await insertSongWithoutNotice(buildSongInput(seed, lineup));
+    const created = await insertSongWithoutNotice(buildSongInput(seed, lineup, instrumentIdByName));
     if (created.kind !== 'ok') throw new Error(`seed song ${seed.title} names a taken track`);
     songIds.push(created.song.id);
   }

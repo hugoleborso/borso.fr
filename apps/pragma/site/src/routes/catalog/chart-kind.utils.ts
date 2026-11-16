@@ -33,6 +33,27 @@ export function extractChartKind(chart: ChartLike | null | undefined): ChartKind
   return null;
 }
 
+export const CHART_KIND_ICON = {
+  chordpro: 'text',
+  pdf: 'pdf',
+  image: 'image',
+} as const;
+
+type ChordProOf<Chart> = Extract<Chart, { readonly kind: 'chordpro' }>;
+
+function isChordProKind<Chart extends { readonly kind: string }>(
+  chart: Chart,
+): chart is ChordProOf<Chart> {
+  return chart.kind === 'chordpro';
+}
+
+// @FollowsBlueprint core-lookup-table
+export function selectChordProCharts<Chart extends { readonly kind: string }>(
+  charts: readonly Chart[],
+): ChordProOf<Chart>[] {
+  return charts.filter(isChordProKind);
+}
+
 const NO_CHART = 'none';
 
 export function hasChosenChart(chartKind: string): boolean {

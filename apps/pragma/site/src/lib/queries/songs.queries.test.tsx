@@ -45,7 +45,7 @@ const SEED_LIST = {
       artist: 'Pre-existing',
       status: 'idea',
       links: [],
-      chart: null,
+      charts: [],
       tonalityStart: null,
       tonalityEnd: null,
       defaultLineup: {},

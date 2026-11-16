@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { extractChartKind, hasChosenChart, selectChordProText } from './chart-kind.utils';
+import {
+  extractChartKind,
+  hasChosenChart,
+  selectChordProCharts,
+  selectChordProText,
+} from './chart-kind.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('extractChartKind', () => {
@@ -58,5 +63,14 @@ describe('hasChosenChart', () => {
 
   it('answers yes for any chosen kind', () => {
     expect(hasChosenChart('image')).toBe(true);
+  });
+});
+
+describe('selectChordProCharts', () => {
+  it('keeps the ChordPro charts in order and leaves the files out', () => {
+    const grid = { kind: 'chordpro', text: '[C]' } as const;
+    const solo = { kind: 'chordpro', text: '[G]' } as const;
+    const scan = { kind: 'pdf', s3Key: 'a.pdf' } as const;
+    expect(selectChordProCharts([scan, grid, solo])).toEqual([grid, solo]);
   });
 });

@@ -19,6 +19,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'bars.viewKanban', readsTheSameBecause: 'Kanban, a proper noun' },
   { key: 'catalog.album', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.chartImage', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'catalog.chartLabelPlaceholder',
+    readsTheSameBecause: 'solo and intro are the words French musicians use',
+  },
   { key: 'catalog.chartPdf', readsTheSameBecause: 'the PDF format name' },
   { key: 'catalog.chordsPdf', readsTheSameBecause: 'the PDF format name' },
   { key: 'catalog.chordsPhoto', readsTheSameBecause: 'same word, same spelling' },

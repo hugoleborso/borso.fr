@@ -1,217 +1,69 @@
 /** @Feature songs */
 
-import { CHART_IMAGE_CONTENT_TYPES, CHART_PDF_CONTENT_TYPE } from '@domain/chart-upload.core';
-import { CHORDPRO_TEXT_MAX_LENGTH } from '@domain/input-limits.core';
-import { type ChangeEvent, type JSX, useRef, useState } from 'react';
+import { SONG_CHARTS_MAX } from '@domain/input-limits.core';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { readTextFromClipboard } from '../../lib/clipboard.adapter';
-import { readPdfTextItems } from '../../lib/pdf-text.adapter';
-import { hasChosenChart } from '../../routes/catalog/chart-kind.utils';
-import { layOutPdfText } from '../../routes/catalog/pdf-text-layout.core';
-import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
+import {
+  canAddChartCard,
+  moveChartCard,
+  type SongChartCardDraft,
+  withChartCardAdded,
+  withChartCardChanged,
+  withoutChartCard,
+} from '../../routes/catalog/song-chart-cards.core';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
-import { useChartUpload } from './chart-upload.hook';
-import { FileDrop } from './FileDrop';
-import { SongChordPreview } from './SongChordPreview';
-import { recordProductEvent } from '../../observability/product-event.adapter';
-import { describeChordChartAdded } from '../../routes/catalog/chords-above-lyrics.core';
-
-export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
+import type { InstrumentToggleOption } from '../molecules/InstrumentToggleGroup';
+import { FIELD_LABEL_CLASS } from '../atoms/LabelledField';
+import { SongChartCard } from './SongChartCard';
 
 interface SongChartFieldsProps {
-  readonly chartKind: SongChartKind;
-  readonly chordproText: string;
-  readonly pdfS3Key: string;
-  readonly imageS3Key: string;
+  readonly cards: readonly SongChartCardDraft[];
+  readonly instruments: readonly InstrumentToggleOption[];
   readonly songId?: string;
-  readonly onChartKindChange: (kind: SongChartKind) => void;
-  readonly onChordproChange: (text: string) => void;
-  readonly onPdfKeyChange: (key: string) => void;
-  readonly onImageKeyChange: (key: string) => void;
+  readonly onCardsChange: (cards: readonly SongChartCardDraft[]) => void;
+  readonly onChordproChange: (index: number, text: string) => void;
 }
 
-const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
-const CHORD_TEXT_ID = 'song-chord-text';
-const CHORD_TEXT_ROWS = 6;
-const IMAGE_ACCEPT = CHART_IMAGE_CONTENT_TYPES.join(',');
-
-function readChosenFile(event: ChangeEvent<HTMLInputElement>): File | null {
-  return event.target.files?.[0] ?? null;
-}
-
-// @FollowsBlueprint organism-query-owning
+// @FollowsBlueprint organism-presentational
 export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
   const { t } = useTranslation();
-  const chartUpload = useChartUpload(props.songId);
-  const photoInput = useRef<HTMLInputElement>(null);
-  const pdfInput = useRef<HTMLInputElement>(null);
-  const [isReadingPdf, setIsReadingPdf] = useState(false);
-  const isBusy = isReadingPdf || chartUpload.isBusy;
-  const isChartChosen = hasChosenChart(props.chartKind);
-
-  const showText = (text: string): void => {
-    chartUpload.clearError();
-    props.onChartKindChange('chordpro');
-    props.onChordproChange(text);
-  };
-
-  const pasteText = async (): Promise<void> => {
-    const clipboardText = await readTextFromClipboard();
-    if (clipboardText !== null) {
-      recordProductEvent('chord_chart_added', {
-        ...describeChordChartAdded('paste', clipboardText),
-      });
-    }
-    showText(clipboardText ?? props.chordproText);
-  };
-
-  const storePhoto = async (file: File): Promise<void> => {
-    const uploaded = await chartUpload.upload(file);
-    if (uploaded === null) return;
-    recordProductEvent('chord_chart_added', { ...describeChordChartAdded('photo', null) });
-    props.onImageKeyChange(uploaded.objectKey);
-    props.onChartKindChange('image');
-  };
-
-  const storePdf = async (file: File): Promise<void> => {
-    setIsReadingPdf(true);
-    const text = await readPdfTextItems(file)
-      .then(layOutPdfText)
-      .catch(() => '');
-    setIsReadingPdf(false);
-    if (text.length > 0) {
-      recordProductEvent('chord_chart_added', { ...describeChordChartAdded('pdf', text) });
-      showText(text);
-      return;
-    }
-    const uploaded = await chartUpload.upload(file);
-    if (uploaded === null) return;
-    recordProductEvent('chord_chart_added', { ...describeChordChartAdded('pdf', null) });
-    props.onPdfKeyChange(uploaded.objectKey);
-    props.onChartKindChange('pdf');
-  };
-
+  const isAddAllowed = canAddChartCard(props.cards.length);
   return (
-    <>
-      <fieldset className="flex flex-col gap-3 rounded-md border border-rule p-3">
-        <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="secondary"
-            icon="clipboard"
-            disabled={isBusy}
-            onClick={() => void pasteText()}
-          >
-            {t('catalog.chordsPaste')}
-          </Button>
-          <Button
-            variant="secondary"
-            icon="camera"
-            disabled={isBusy}
-            onClick={() => photoInput.current?.click()}
-          >
-            {t('catalog.chordsPhoto')}
-          </Button>
-          <Button
-            variant="secondary"
-            icon="upload"
-            disabled={isBusy}
-            onClick={() => pdfInput.current?.click()}
-          >
-            {t('catalog.chordsPdf')}
-          </Button>
-          <input
-            ref={photoInput}
-            type="file"
-            accept={IMAGE_ACCEPT}
-            className="hidden"
-            aria-label={t('catalog.chordsPhoto')}
-            onChange={(event) => {
-              const chosen = readChosenFile(event);
-              if (chosen !== null) void storePhoto(chosen);
-            }}
-          />
-          <input
-            ref={pdfInput}
-            type="file"
-            accept={CHART_PDF_CONTENT_TYPE}
-            className="hidden"
-            aria-label={t('catalog.chordsPdf')}
-            onChange={(event) => {
-              const chosen = readChosenFile(event);
-              if (chosen !== null) void storePdf(chosen);
-            }}
-          />
-        </div>
-        {isReadingPdf ? (
-          <p className="m-0 text-meta text-ink-soft">{t('catalog.chordsReadingPdf')}</p>
-        ) : null}
-        {chartUpload.isBusy ? (
-          <p className="m-0 text-meta text-ink-soft">{t('catalog.uploadInProgress')}</p>
-        ) : null}
-        {chartUpload.error === null ? null : (
-          <p className="m-0 text-meta text-danger" role="alert">
-            {chartUpload.error}
-          </p>
-        )}
-        <SongChartEditor {...props} />
-        {isChartChosen ? (
-          <Button
-            variant="quiet"
-            size="sm"
-            icon="trash"
-            className="self-start"
-            onClick={() => props.onChartKindChange('none')}
-          >
-            {t('catalog.chordsRemove')}
-          </Button>
-        ) : null}
-      </fieldset>
-    </>
-  );
-}
-
-function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
-  const { t } = useTranslation();
-  if (props.chartKind === 'chordpro') {
-    return (
-      <div className="flex flex-col gap-2">
-        <label className={LABEL_CLASS} htmlFor={CHORD_TEXT_ID}>
-          {t('catalog.chordsTextLabel')}
-        </label>
-        <AutoGrowTextarea
-          id={CHORD_TEXT_ID}
-          value={props.chordproText}
-          onChange={(event) => props.onChordproChange(event.target.value)}
-          placeholder={t('catalog.chordsTextPlaceholder')}
-          className="font-mono"
-          rows={CHORD_TEXT_ROWS}
-          maxLength={CHORDPRO_TEXT_MAX_LENGTH}
+    <fieldset className="flex flex-col gap-3 rounded-md border border-rule p-3">
+      <legend className={composeClassName(FIELD_LABEL_CLASS, 'px-2')}>
+        {t('catalog.chordCharts')}
+      </legend>
+      {props.cards.map((card, index) => (
+        <SongChartCard
+          key={index}
+          card={card}
+          index={index}
+          cardCount={props.cards.length}
+          instruments={props.instruments}
+          {...(props.songId === undefined ? {} : { songId: props.songId })}
+          onChange={(changes) =>
+            props.onCardsChange(withChartCardChanged(props.cards, index, changes))
+          }
+          onChordproChange={(text) => props.onChordproChange(index, text)}
+          onMove={(offset) => props.onCardsChange(moveChartCard(props.cards, index, offset))}
+          onRemove={() => props.onCardsChange(withoutChartCard(props.cards, index))}
         />
-        <SongChordPreview chordText={props.chordproText} />
-      </div>
-    );
-  }
-  if (props.chartKind === 'pdf') {
-    return (
-      <FileDrop
-        songId={props.songId}
-        currentObjectKey={props.pdfS3Key}
-        onUploaded={(result) => props.onPdfKeyChange(result.objectKey)}
-        onRemoved={() => props.onPdfKeyChange('')}
-      />
-    );
-  }
-  if (props.chartKind === 'image') {
-    return (
-      <FileDrop
-        songId={props.songId}
-        currentObjectKey={props.imageS3Key}
-        onUploaded={(result) => props.onImageKeyChange(result.objectKey)}
-        onRemoved={() => props.onImageKeyChange('')}
-      />
-    );
-  }
-  return null;
+      ))}
+      <Button
+        variant="secondary"
+        icon="plus"
+        className="self-start"
+        disabled={!isAddAllowed}
+        onClick={() => props.onCardsChange(withChartCardAdded(props.cards))}
+      >
+        {t('catalog.chartAdd')}
+      </Button>
+      {isAddAllowed ? null : (
+        <p className="m-0 text-meta text-ink-soft">
+          {t('catalog.chartsMaxReached', { max: SONG_CHARTS_MAX })}
+        </p>
+      )}
+    </fieldset>
+  );
 }

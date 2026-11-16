@@ -11,7 +11,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   5 minutes.
 - The object key is `chart/<songId>/<randomId>.<extension>`
   (`buildChartObjectKey`). The slice stores no row of its own: a chart's
-  key is kept in `song.chart`.
+  key is kept in a chart in `song.charts`.
 - The same slice signs a take's audio upload (`mintObjectUpload`, called
   by the takes slice with the take's own limits) and deletes stored
   objects (`deleteStoredObjects`); a take's key is kept in

@@ -9,7 +9,12 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { SongDetailPage } from './SongDetailPage';
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
+}));
 
 class StillResizeObserver implements ResizeObserver {
   readonly observe = vi.fn();
@@ -33,7 +38,10 @@ const SONG = {
   baseEnergy: null,
   tags: [],
   isrcs: [],
-  chart: { kind: 'chordpro', text: '[F#m]Like the legend' },
+  charts: [
+    { kind: 'chordpro', text: '[F#m]Like the legend', instrumentIds: [], label: null },
+    { kind: 'chordpro', text: '[A]Groove line', instrumentIds: ['bass'], label: 'Groove' },
+  ],
   links: [{ url: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I', provider: 'youtube', comment: '' }],
   defaultLineup: { 'member-1': ['bass'] },
   structureNotes: '',
@@ -143,6 +151,25 @@ describe('song page', () => {
       .filter((link) => link.getAttribute('href')?.endsWith('/scene'));
     expect(stageLinks.map((link) => link.textContent)).toEqual(['Full screen']);
     expect(document.querySelectorAll('a button')).toHaveLength(0);
+  });
+
+  it('opens on the chart of the instrument the member holds, and keeps the transpose across pills', async () => {
+    renderSongPage('?tab=chords');
+    const bassPill = await screen.findByRole('tab', { name: 'Bass · Groove' });
+    await waitFor(() => expect(bassPill.getAttribute('aria-selected')).toBe('true'));
+    expect(screen.getByText('Groove line')).toBeTruthy();
+
+    const transpose = screen.getByRole('group', { name: 'Transpose' });
+    fireEvent.click(within(transpose).getByRole('button', { name: 'Transpose up' }));
+    fireEvent.pointerDown(screen.getByRole('tab', { name: 'All instruments' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'All instruments' }));
+
+    expect(await screen.findByText('Like the legend')).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Transpose' })).getByText('+1')).toBeTruthy();
+    expect(recordProductEvent).toHaveBeenCalledWith('chord_chart_switched', {
+      surface: 'song',
+      fromOpening: true,
+    });
   });
 
   it('keeps the title in a fixed header with a back link, and Edit in its menu', async () => {

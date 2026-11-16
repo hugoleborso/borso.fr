@@ -24,11 +24,7 @@ export {
   type ToolAnswer,
 } from '../mcp/mcp.service';
 import { pickReference, resolveReference } from '../mcp/mcp.service';
-import {
-  type NamedLineupInput,
-  readLineupNames,
-  resolveNamedLineupOrRefuse,
-} from '../instruments/instruments.service';
+import { readLineupNames } from '../instruments/instruments.service';
 import {
   listSongCandidates,
   projectSongForTool,
@@ -48,6 +44,7 @@ import {
   updateSong,
 } from './songs.repository';
 import { songCreateInputSchema, type songUpdateInputSchema } from './songs.schema';
+export { buildSongCreate, buildSongUpdate } from './song-tool-input.service';
 
 type SongMasteryToolView = Awaited<ReturnType<typeof readSongMasteryForTool>>;
 
@@ -71,7 +68,7 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     status: input.status,
     origin: input.origin,
     links: input.links,
-    chart: input.chart,
+    charts: input.charts,
     tonalityStart: input.tonalityStart,
     tonalityEnd: input.tonalityEnd,
     defaultLineup: input.defaultLineup,
@@ -230,22 +227,6 @@ export async function readSongForTool(
   };
 }
 
-export async function buildSongUpdate(
-  changes: Omit<SongUpdateInput, 'defaultLineup'>,
-  lineup: NamedLineupInput | undefined,
-): Promise<SongUpdateInput> {
-  if (lineup === undefined) return changes;
-  return { ...changes, defaultLineup: await resolveNamedLineupOrRefuse(lineup) };
-}
-
-export async function buildSongCreate(
-  input: Omit<SongCreateInput, 'defaultLineup'>,
-  lineup: NamedLineupInput | undefined,
-): Promise<SongCreateInput> {
-  if (lineup === undefined) return { ...input, defaultLineup: {} };
-  return { ...input, defaultLineup: await resolveNamedLineupOrRefuse(lineup) };
-}
-
 export async function removeSong(id: string): Promise<DeletionOutcome> {
   const deletion = await deleteSongWithCascade(id);
   await deleteAudioOfDeletedSong(deletion.takeObjectKeys);
@@ -284,7 +265,7 @@ async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOu
     status: SUGGESTED_SONG_STATUS,
     origin: DEFAULT_SONG_ORIGIN,
     links: [],
-    chart: null,
+    charts: [],
     tonalityStart: null,
     tonalityEnd: null,
     defaultLineup: {},

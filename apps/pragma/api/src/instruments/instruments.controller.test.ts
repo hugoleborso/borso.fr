@@ -31,6 +31,19 @@ const entryLineupEnvelope = z.object({
 });
 const entryLineupListEnvelope = z.object({ entries: z.array(entryLineupEnvelope.shape.entry) });
 const setlistIdEnvelope = z.object({ setlist: z.object({ id: z.guid() }) });
+const songChartsEnvelope = z.object({
+  song: z.object({
+    id: z.guid(),
+    charts: z.array(
+      z.object({
+        kind: z.string(),
+        text: z.string(),
+        instrumentIds: z.array(z.guid()),
+        label: z.string().nullable(),
+      }),
+    ),
+  }),
+});
 
 async function createInstrument(
   app: Parameters<typeof jsonRequest>[0],
@@ -184,6 +197,44 @@ describe('instruments controller (back-e2e)', () => {
     );
     expect(songAfter.song.defaultLineup).toEqual({ [memberId]: [voiceId] });
     expect(entriesAfter.entries.map((entry) => entry.lineupOverride)).toEqual([{ [memberId]: [] }]);
+  });
+
+  it('drops a deleted instrument from every song chart, and keeps the chart', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const guitarId = await createInstrument(app, cookieHeader, {
+      name: 'Guitar',
+      family: 'harmonic',
+    });
+    const pianoId = await createInstrument(app, cookieHeader, {
+      name: 'Piano',
+      family: 'harmonic',
+    });
+    const song = await readJson(
+      await jsonRequest(app, '/api/songs', {
+        method: 'POST',
+        body: {
+          title: 'Creep',
+          status: 'idea',
+          charts: [
+            { kind: 'chordpro', text: '[G]Tab', instrumentIds: [guitarId], label: null },
+            { kind: 'chordpro', text: '[G]Grid', instrumentIds: [guitarId, pianoId], label: null },
+          ],
+        },
+        cookieHeader,
+      }),
+      songChartsEnvelope,
+    );
+
+    await jsonRequest(app, `/api/instruments/${guitarId}`, { method: 'DELETE', cookieHeader });
+
+    const songAfter = await readJson(
+      await jsonRequest(app, `/api/songs/${song.song.id}`, { cookieHeader }),
+      songChartsEnvelope,
+    );
+    expect(songAfter.song.charts).toEqual([
+      { kind: 'chordpro', text: '[G]Tab', instrumentIds: [], label: null },
+      { kind: 'chordpro', text: '[G]Grid', instrumentIds: [pianoId], label: null },
+    ]);
   });
 
   it('orders the list by family rather than by name, which is what the column reads', async () => {

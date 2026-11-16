@@ -188,7 +188,7 @@ describe('describeSongToLearn', () => {
 });
 
 describe('toSongCard', () => {
-  it('draws a song as its card, with the line under the title and the kind of its chart', () => {
+  it('draws a song as its card, with the line under the title and the kind of its first chart', () => {
     expect(
       toSongCard(
         {
@@ -196,7 +196,7 @@ describe('toSongCard', () => {
           title: 'Lightning',
           status: 'rehearsed',
           deezerAlbumId: 'album-9',
-          chart: { kind: 'pdf' },
+          charts: [{ kind: 'pdf' }, { kind: 'chordpro' }],
         },
         'Volt',
       ),
@@ -208,5 +208,14 @@ describe('toSongCard', () => {
       status: 'rehearsed',
       chartKind: 'pdf',
     });
+  });
+
+  it('draws no chart kind for a song with no chart', () => {
+    expect(
+      toSongCard(
+        { id: 'song-1', title: 'Lightning', status: 'rehearsed', deezerAlbumId: null, charts: [] },
+        'Volt',
+      ).chartKind,
+    ).toBeNull();
   });
 });
