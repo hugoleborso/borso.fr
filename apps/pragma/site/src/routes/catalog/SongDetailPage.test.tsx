@@ -184,7 +184,7 @@ describe('song page', () => {
     });
   });
 
-  it('keeps the title in a fixed header with a back link, and Edit in its menu', async () => {
+  it('keeps the title in a fixed header with a back link, and Edit one tap away', async () => {
     renderSongPage();
     const title = await screen.findByRole('heading', { level: 1, name: 'Get Lucky' });
     const header = title.closest('header');
@@ -193,13 +193,11 @@ describe('song page', () => {
     expect(within(header).getByRole('link', { name: 'Songs' }).getAttribute('href')).toBe(
       '/catalog',
     );
-    expect(within(header).queryByRole('link', { name: 'Edit' })).toBeNull();
     expect(within(header).queryByText('F#m')).toBeNull();
     expect(title.classList.contains('wrap-anywhere')).toBe(true);
     expect(title.classList.contains('line-clamp-3')).toBe(true);
 
-    fireEvent.click(within(header).getByRole('button', { name: 'More actions on this song' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+    fireEvent.click(within(header).getByRole('link', { name: 'Edit' }));
     expect(await screen.findByText('Song edit form')).toBeTruthy();
   });
 

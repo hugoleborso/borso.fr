@@ -4,23 +4,18 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SongRecord } from '../../lib/queries/songs.queries';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { Menu, type MenuItem } from '../molecules/Menu';
+import { ButtonLink } from '../atoms/ButtonLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongPreviewButton } from '../molecules/SongPreviewButton';
 import { StatusChip } from '../molecules/StatusChip';
 
 export interface SongDetailHeaderProps {
-  readonly song: Pick<SongRecord, 'title' | 'artist' | 'status' | 'deezerAlbumId'>;
+  readonly song: Pick<SongRecord, 'id' | 'title' | 'artist' | 'status' | 'deezerAlbumId'>;
   readonly previewUrl: string | null;
-  readonly menuItems: readonly MenuItem[];
 }
 
 // @FollowsBlueprint organism-presentational
-export function SongDetailHeader({
-  song,
-  previewUrl,
-  menuItems,
-}: SongDetailHeaderProps): JSX.Element {
+export function SongDetailHeader({ song, previewUrl }: SongDetailHeaderProps): JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -45,7 +40,11 @@ export function SongDetailHeader({
           <StatusChip status={song.status} />
         </span>
       }
-      actions={<Menu label={t('catalog.songActions')} items={menuItems} />}
+      actions={
+        <ButtonLink to={`/catalog/${song.id}/edit`} variant="secondary" size="sm" icon="edit">
+          {t('common.edit')}
+        </ButtonLink>
+      }
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { isDeviceIos } from '../../lib/display-mode.adapter';
 import { selectSongListenLinks } from '../../lib/listen-links.utils';
 import { useSignedInMember } from '../../lib/queries/me.queries';
@@ -63,7 +63,6 @@ const ENERGY_LABEL_CLASS =
 export function SongDetail(props: SongDetailProps): JSX.Element {
   const { song, members, instruments } = props;
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const updateSong = useUpdateSong();
   const lastWriteFailure = useLastSongWriteFailure(song.id);
   const setlistsQuery = useSetlistsList();
@@ -90,24 +89,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
 
   return (
     <section className="flex max-w-3xl flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
-      <SongDetailHeader
-        song={song}
-        previewUrl={previewQuery.data?.previewUrl ?? null}
-        menuItems={[
-          {
-            label: t('common.edit'),
-            icon: 'edit',
-            tone: 'default',
-            onSelect: () => void navigate(`/catalog/${song.id}/edit`),
-          },
-          {
-            label: t('catalog.editLineup'),
-            icon: 'members',
-            tone: 'default',
-            onSelect: () => setLineupEditorOpen(true),
-          },
-        ]}
-      />
+      <SongDetailHeader song={song} previewUrl={previewQuery.data?.previewUrl ?? null} />
 
       <ListenRow links={listenLinks} />
 
