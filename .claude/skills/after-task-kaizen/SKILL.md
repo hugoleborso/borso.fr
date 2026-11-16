@@ -143,9 +143,18 @@ size cannot fit, and the two requirements contradicted each other from
 the moment the budget landed. A committed file is the better home
 anyway — the body is an index, and the inventory is the evidence.
 
-| # | When | Friction | Sources / evidence | Rock | Decision |
-| --- | --- | --- | --- | --- | --- |
-| 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | dantotsu / knowledge / no-op (with one-line reason) |
+| # | When | Friction | Sources / evidence | Rock | Elsewhere | Decision |
+| --- | --- | --- | --- | --- | --- | --- |
+| 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | <where else that rock's design flaw sits, or `none` with the search that shows it> | dantotsu / knowledge / no-op (with one-line reason) |
+
+Ask of every row: does that reveal a design flaw elsewhere? The friction is
+where the rock surfaced, not where it lives. A rule held in two places that
+drifted here drifts wherever else the pattern was copied. Search for the same
+shape (`git grep` the construct, the convention, the step done by hand) and
+write each hit in the `Elsewhere` cell with its path. `none` carries the search
+that came back empty. A row whose rock sits in other places is decided at the
+level of the design, so its eradication removes the rock in each of them, or
+names why one stays.
 
 Lower the water, do not bail. The `Rock` cell names what makes the friction
 possible at all: a file every pull request appends to, a step done by hand,
@@ -447,6 +456,8 @@ not its volume, is what keeps the system improving.
 - [ ] Every ADR the merge added reads `accepted`.
 - [ ] Inventory built from the archived friction log + commits +
       review comments + CI runs, not just memory.
+- [ ] Every inventory row has an `Elsewhere` cell, with paths or the
+      empty search behind `none`.
 - [ ] Each subject classified using the table; no-ops dropped.
 - [ ] Each surviving real-defect / design-pivot subject has a file
       under `docs/dantotsus/` matching `_template.md`, with
