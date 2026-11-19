@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildChordCells, groupCellsIntoWords, hasLyricText } from './chord-cells.utils';
+import {
+  buildChordCells,
+  groupCellsIntoWords,
+  hasLyricText,
+  splitChordNames,
+} from './chord-cells.utils';
 import { parseChordProLine } from './chordpro.utils';
+
+function tokensOf(line: string): Parameters<typeof hasLyricText>[0] {
+  const chordLine = parseChordProLine(line);
+  if (chordLine.kind !== 'chord-line') throw new Error(`not a chord line: ${line}`);
+  return chordLine.tokens;
+}
 
 function cellsOf(line: string): ReturnType<typeof buildChordCells> {
   const chordLine = parseChordProLine(line);
@@ -41,6 +52,14 @@ describe('buildChordCells', () => {
 });
 
 describe('hasLyricText', () => {
+  it('is false when only bar lines and a repeat mark sit between the chords', () => {
+    expect(hasLyricText(tokensOf('| [Dm] | [G] | x2'))).toBe(false);
+  });
+
+  it('is true when a word sits beside a repeat mark', () => {
+    expect(hasLyricText(tokensOf('[Dm] x2 again'))).toBe(true);
+  });
+
   it('is true when a word sits between the chords', () => {
     expect(
       hasLyricText([
@@ -74,5 +93,24 @@ describe('groupCellsIntoWords', () => {
 
   it('returns no word for a line with no cell', () => {
     expect(groupCellsIntoWords([])).toEqual([]);
+  });
+});
+
+describe('splitChordNames', () => {
+  it('cuts a line into chord names and the text between them', () => {
+    expect(splitChordNames('Am F#m | x3')).toEqual([
+      { text: 'Am', isChord: true },
+      { text: ' ', isChord: false },
+      { text: 'F#m', isChord: true },
+      { text: ' | x3', isChord: false },
+    ]);
+  });
+
+  it('keeps text that holds no chord name as one plain segment', () => {
+    expect(splitChordNames('(guitar)')).toEqual([{ text: '(guitar)', isChord: false }]);
+  });
+
+  it('answers no segment for an empty text', () => {
+    expect(splitChordNames('')).toEqual([]);
   });
 });

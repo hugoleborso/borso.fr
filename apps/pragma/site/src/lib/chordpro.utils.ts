@@ -1,5 +1,7 @@
 /** @Feature songs */
 
+import { SECTION_END_DIRECTIVES, SECTION_START_DIRECTIVES } from './chordpro-sections.utils';
+
 export interface ChordToken {
   readonly kind: 'chord';
   readonly chord: string;
@@ -105,51 +107,6 @@ export function readTitle(lines: readonly ChordProLine[]): string | null {
   return null;
 }
 
-export type ChordProSectionKind = 'verse' | 'chorus' | 'bridge' | 'tab' | 'body';
-
-export type LabelledSectionKind = Exclude<ChordProSectionKind, 'body'>;
-
-export interface BodySection {
-  readonly kind: 'body';
-  readonly label: null;
-  readonly ordinalAmongKind: null;
-  readonly lines: readonly ChordProLine[];
-}
-
-export interface LabelledSection {
-  readonly kind: LabelledSectionKind;
-  readonly label: string | null;
-  readonly ordinalAmongKind: number;
-  readonly lines: readonly ChordProLine[];
-}
-
-export type ChordProSection = BodySection | LabelledSection;
-
-const BODY_SECTION_KIND = 'body';
-const FIRST_ORDINAL = 1;
-
-const SECTION_START_DIRECTIVES = new Map<string, ChordProSectionKind>([
-  ['start_of_verse', 'verse'],
-  ['sov', 'verse'],
-  ['start_of_chorus', 'chorus'],
-  ['soc', 'chorus'],
-  ['start_of_bridge', 'bridge'],
-  ['sob', 'bridge'],
-  ['start_of_tab', 'tab'],
-  ['sot', 'tab'],
-]);
-
-const SECTION_END_DIRECTIVES = new Set([
-  'end_of_verse',
-  'eov',
-  'end_of_chorus',
-  'eoc',
-  'end_of_bridge',
-  'eob',
-  'end_of_tab',
-  'eot',
-]);
-
 const TAB_SECTION_KIND = 'tab';
 
 export function parseChordPro(source: string): readonly ChordProLine[] {
@@ -175,62 +132,6 @@ export function widestTabLineLength(lines: readonly ChordProLine[]): number {
     if (line.kind === 'tab-line') widest = Math.max(widest, line.text.trimEnd().length);
   }
   return widest;
-}
-
-interface AccumulatingSection {
-  readonly kind: ChordProSectionKind;
-  readonly label: string | null;
-  readonly lines: ChordProLine[];
-}
-
-function openSection(kind: ChordProSectionKind, label: string | null): AccumulatingSection {
-  return { kind, label, lines: [] };
-}
-
-function hasRenderableLine(lines: readonly ChordProLine[]): boolean {
-  return lines.some((line) => line.kind !== 'blank');
-}
-
-const NO_SECTION_SEEN_YET = 0;
-
-function rankByKind(sections: readonly AccumulatingSection[]): readonly ChordProSection[] {
-  const seenPerKind = new Map<LabelledSectionKind, number>();
-  return sections.map((section) => {
-    const { kind, label, lines } = section;
-    if (kind === BODY_SECTION_KIND) return { kind, label: null, ordinalAmongKind: null, lines };
-    const ordinalAmongKind = (seenPerKind.get(kind) ?? NO_SECTION_SEEN_YET) + FIRST_ORDINAL;
-    seenPerKind.set(kind, ordinalAmongKind);
-    return { kind, label, ordinalAmongKind, lines };
-  });
-}
-
-export function groupChordProSections(lines: readonly ChordProLine[]): readonly ChordProSection[] {
-  const closed: AccumulatingSection[] = [];
-  let current = openSection(BODY_SECTION_KIND, null);
-  const closeCurrent = (): void => {
-    if (current.kind !== BODY_SECTION_KIND || hasRenderableLine(current.lines)) {
-      closed.push(current);
-    }
-    current = openSection(BODY_SECTION_KIND, null);
-  };
-  for (const line of lines) {
-    // Stryker disable next-line ConditionalExpression: equivalent mutant
-    if (line.kind === 'directive') {
-      const startedKind = SECTION_START_DIRECTIVES.get(line.name);
-      if (startedKind !== undefined) {
-        closeCurrent();
-        current = openSection(startedKind, line.value.length > 0 ? line.value : null);
-        continue;
-      }
-      if (SECTION_END_DIRECTIVES.has(line.name)) {
-        closeCurrent();
-        continue;
-      }
-    }
-    current.lines.push(line);
-  }
-  closeCurrent();
-  return rankByKind(closed);
 }
 
 const NOTES_SHARP: readonly string[] = [
@@ -310,13 +211,4 @@ export function transposeLines(
       ),
     };
   });
-}
-
-export function hasSectionHeading(section: ChordProSection): section is LabelledSection {
-  return section.kind !== BODY_SECTION_KIND;
-}
-
-export function buildSectionHeading(displayName: string, ordinalAmongKind: number): string {
-  if (ordinalAmongKind <= FIRST_ORDINAL) return displayName;
-  return `${displayName} ${ordinalAmongKind}`;
 }

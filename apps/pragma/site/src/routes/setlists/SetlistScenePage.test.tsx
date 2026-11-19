@@ -26,8 +26,16 @@ const scene = vi.hoisted(() => {
       position: 1,
       energy: null,
       lineupOverride: { tom: ['bass'] },
+      keyOverride: null,
     },
-    { id: 'entry-3', setlistId: 'set-1', songId: 'song-3', position: 2, energy: null },
+    {
+      id: 'entry-3',
+      setlistId: 'set-1',
+      songId: 'song-3',
+      position: 2,
+      energy: null,
+      keyOverride: null,
+    },
   ];
   return {
     setlist: { id: 'set-1', name: 'Les Disquaires' },
@@ -49,7 +57,10 @@ function song(id: string, title: string, extraCharts: readonly unknown[] = []) {
     tonalityEnd: null,
     baseEnergy: 5,
     defaultLineup: { tom: ['guitar'] },
-    charts: [chordProChart(`{title: ${title}}\n[Cm]Take five`, []), ...extraCharts],
+    charts: [
+      chordProChart(`{title: ${title}}\n[Cm]Take five\n{sot}\ne|--0--|\n{eot}`, []),
+      ...extraCharts,
+    ],
     structureNotes: '',
     gimmickNotes: '',
     notes: '',
@@ -80,12 +91,51 @@ vi.mock('../../lib/queries/instruments.queries', () => ({
   useInstrumentsList: () => ({
     data: {
       instruments: [
-        { id: 'guitar', name: 'Guitare' },
-        { id: 'bass', name: 'Basse' },
+        { id: 'guitar', name: 'Guitare', icon: 'guitar', family: 'harmonic' },
+        { id: 'bass', name: 'Basse', icon: 'bass', family: 'harmonic' },
       ],
     },
   }),
 }));
+
+const memberReads = vi.hoisted(() => ({ isLoaded: true }));
+
+vi.mock('../../lib/queries/members.queries', () => ({
+  useMembersList: () => ({
+    data: memberReads.isLoaded
+      ? { members: [{ id: 'tom', firstName: 'Tom', color: '#3a9b9b' }] }
+      : undefined,
+  }),
+}));
+
+vi.mock('../../lib/queries/transitions.queries', () => ({
+  useTransitionComment: (songAId: string, songBId: string) => ({
+    data:
+      songAId === 'song-1' && songBId === 'song-2'
+        ? { comment: { songAId, songBId, comment: 'Tom swaps to the bass while the drums vamp' } }
+        : null,
+  }),
+}));
+
+const cardObservers = vi.hoisted(() => {
+  const callbacks: ((entries: { isIntersecting: boolean }[]) => void)[] = [];
+  return callbacks;
+});
+
+vi.stubGlobal(
+  'IntersectionObserver',
+  class {
+    constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+      cardObservers.push(callback);
+    }
+    observe(): void {
+      return undefined;
+    }
+    disconnect(): void {
+      return undefined;
+    }
+  },
+);
 
 vi.mock('../../lib/queries/songs.queries', () => ({
   useSongsList: () => ({ data: { songs: SONGS }, isLoading: false, error: null }),
@@ -152,6 +202,39 @@ function tapChartPill(container: HTMLElement, name: string): void {
     pill.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     pill.click();
   });
+}
+
+function touchAt(type: string, clientX: number, clientY: number): Event {
+  const event = new Event(type, { bubbles: true });
+  const touches = type === 'touchend' ? [] : [{ clientX, clientY }];
+  Object.defineProperty(event, 'touches', { value: touches });
+  Object.defineProperty(event, 'changedTouches', { value: [{ clientX, clientY }] });
+  return event;
+}
+
+function swipeChart(
+  container: HTMLElement,
+  fromX: number,
+  toX: number,
+  startTarget?: Element,
+): void {
+  const body = container.querySelector('dialog > div.overflow-y-auto');
+  if (body === null) throw new TypeError('no scene body');
+  act(() => {
+    (startTarget ?? body).dispatchEvent(touchAt('touchstart', fromX, 300));
+    body.dispatchEvent(touchAt('touchend', toX, 310));
+  });
+}
+
+function openTransitionPopup(container: HTMLElement, title: string): HTMLElement {
+  const strip = container.querySelector<HTMLButtonElement>(
+    `button[aria-label="Show the transition to ${title}"]`,
+  );
+  if (strip === null) throw new TypeError(`no transition strip to ${title}`);
+  act(() => strip.click());
+  const popup = container.querySelector<HTMLElement>('dialog dialog');
+  if (popup === null) throw new TypeError('the strip opened no popup');
+  return popup;
 }
 
 function getButton(container: HTMLElement, label: string): HTMLButtonElement {
@@ -260,6 +343,98 @@ describe('SetlistScenePage', () => {
     expect(readTranspose(container)).toBe('+1');
     pressKey(container, 'ArrowRight');
     expect(readTranspose(container)).toBe('+0');
+  });
+
+  it('walks to the next song on a swipe to the left, and back on a swipe to the right', () => {
+    swipeChart(container, 300, 100);
+    expect(readTitle(container)).toBe('Helpless');
+    swipeChart(container, 100, 300);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('stays on the song when the swipe is too short', () => {
+    swipeChart(container, 300, 260);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('stays on the song when the swipe starts in a block that scrolls sideways', () => {
+    const tab = container.querySelector('[data-scrolls-sideways]');
+    if (tab === null) throw new TypeError('the first song carries no tab block');
+    swipeChart(container, 300, 100, tab);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('forgets a swipe the browser cancelled', () => {
+    const body = container.querySelector('dialog > div.overflow-y-auto');
+    act(() => {
+      body?.dispatchEvent(touchAt('touchstart', 300, 300));
+      body?.dispatchEvent(touchAt('touchcancel', 300, 300));
+      body?.dispatchEvent(touchAt('touchend', 100, 300));
+    });
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('shows the next song, its key and the risky flag in a one-line strip', () => {
+    const strip = container.querySelector('button[aria-label="Show the transition to Helpless"]');
+    expect(strip?.textContent).toContain('Helpless');
+    expect(strip?.textContent).toContain('Ebm');
+    expect(strip?.querySelector('[data-transition-risky]')).not.toBeNull();
+    expect(strip?.querySelector('[data-transition-move]')).toBeNull();
+    expect(strip?.textContent).not.toContain('Tom swaps');
+  });
+
+  it('opens the lineup as icons and the full note in a popup when the strip is tapped', () => {
+    const popup = openTransitionPopup(container, 'Helpless');
+    expect(
+      popup.querySelector('[data-transition-move] [role=img]')?.getAttribute('aria-label'),
+    ).toBe('Tom: Guitare → Basse');
+    expect(popup.querySelector('[data-transition-move]')?.textContent).not.toContain('Guitare');
+    expect(popup.querySelector('[data-transition-move]')?.textContent).not.toContain('Basse');
+    expect(popup.textContent).toContain('Tom swaps to the bass while the drums vamp');
+  });
+
+  it('closes the popup when the scene moves to the next song', () => {
+    openTransitionPopup(container, 'Helpless');
+    pressKey(container, 'ArrowRight');
+    expect(container.querySelectorAll('dialog dialog')).toHaveLength(0);
+  });
+
+  it('opens the same transition as a card below the chart and hides the strip once it is in view', () => {
+    const card = container.querySelector('section[aria-label="Transition to Helpless"]');
+    expect(card?.textContent).toContain('Tom swaps to the bass while the drums vamp');
+    act(() => {
+      for (const callback of cardObservers) callback([{ isIntersecting: true }]);
+    });
+    expect(
+      container.querySelector('button[aria-label="Show the transition to Helpless"]'),
+    ).toBeNull();
+    act(() => {
+      for (const callback of cardObservers) callback([{ isIntersecting: false }]);
+    });
+    expect(
+      container.querySelector('button[aria-label="Show the transition to Helpless"]'),
+    ).not.toBeNull();
+  });
+
+  it('names the next song before the members have loaded, with no lineup yet', () => {
+    memberReads.isLoaded = false;
+    renderScene();
+    const popup = openTransitionPopup(container, 'Helpless');
+    expect(popup.querySelector('[data-transition-move]')).toBeNull();
+    memberReads.isLoaded = true;
+  });
+
+  it('shows no note when the band wrote none for the pair', () => {
+    pressKey(container, 'ArrowRight');
+    const popup = openTransitionPopup(container, 'So What');
+    expect(popup.textContent).not.toContain('Tom swaps');
+  });
+
+  it('shows no transition on the last song', () => {
+    pressKey(container, 'ArrowRight');
+    pressKey(container, 'ArrowRight');
+    expect(container.querySelector('[aria-label^="Show the transition"]')).toBeNull();
+    expect(container.querySelector('[aria-label^="Transition to"]')).toBeNull();
   });
 
   it('walks back on the left arrow', () => {

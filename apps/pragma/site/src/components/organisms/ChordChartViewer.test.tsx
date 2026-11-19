@@ -84,3 +84,84 @@ describe('a chord chart with lyrics', () => {
     expect(document.querySelector('[data-chord]')).toBeNull();
   });
 });
+
+const CHART_WITH_A_SOLO = [
+  '[C]Hello [G]there',
+  '{comment: Solo}',
+  '{comment: Hugo takes two rounds}',
+  '[Am] [E] [Dm] [Am]',
+  '{comment: Bridge}',
+].join('\n');
+
+describe('a chord chart holding a solo', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('heads the solo with an outlined badge and keeps the rows inside its section', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} tone="dark" />);
+    const frame = closestElement('Solo', 'section');
+    expect(screen.getByText('Solo').className).toContain('border-stage-chord');
+    expect(screen.getByText('Solo').className).not.toContain('bg-stage-chord');
+    expect(frame.textContent).toContain('Am');
+    expect(frame.textContent).not.toContain('Hello');
+    expect(frame.textContent).not.toContain('Bridge');
+  });
+
+  it('shows a note on the solo in full-strength text, not as a dim comment', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} />);
+    const note = screen.getByText('Hugo takes two rounds');
+    expect(note.className).toContain('text-ink');
+    expect(note.className).not.toContain('italic');
+    expect(screen.getByText('Solo').className).toContain('border-accent');
+  });
+
+  it('keeps a comment outside the solo dim and italic', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} />);
+    expect(screen.getByText('Bridge').className).toContain('italic');
+  });
+});
+
+describe('a chord chart read section by section', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('shades every other section, starting with the second', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} tone="dark" />);
+    const sections = Array.from(document.querySelectorAll('section'));
+    expect(sections.map((section) => section.className.includes('bg-stage-hover'))).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('shades with the paper tone on a light chart', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} />);
+    expect(closestElement('Solo', 'section').className).toContain('bg-sunk');
+  });
+});
+
+describe('a chord chart with bar lines and bare chord names', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('writes chords between bar lines on the same line, not above them', () => {
+    render(<ChordChartViewer source="| [Dm] | [G] | x2" tone="dark" />);
+    expect(document.querySelector('[data-chord]')).toBeNull();
+    expect(document.body.textContent).toContain('Dm');
+  });
+
+  it('colours chord names written without brackets on a line with no lyric', () => {
+    render(<ChordChartViewer source="Am F#m Cmaj7 | x3 (guitar)" tone="dark" />);
+    expect(screen.getByText('F#m').className).toContain('text-stage-chord');
+    expect(screen.getByText('Cmaj7').className).toContain('text-stage-chord');
+  });
+
+  it('leaves a lyric line that holds a chord-shaped word as plain text', () => {
+    render(<ChordChartViewer source="Am I the only one" tone="dark" />);
+    expect(screen.getByText('Am I the only one').className).not.toContain('text-stage-chord');
+  });
+});

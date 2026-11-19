@@ -2,14 +2,20 @@
 
 import { type JSX, useMemo } from 'react';
 import {
-  type ChordProLine,
   type ChordProSection,
   groupChordProSections,
   hasSectionHeading,
+  isShadedSection,
+  SOLO_SECTION_KIND,
+} from '../../lib/chordpro-sections.utils';
+import {
+  type ChordProLine,
   isTitleDirective,
+  type PlainLine,
   parseChordPro,
   widestTabLineLength,
 } from '../../lib/chordpro.utils';
+import { isCommentDirective, segmentPlainLine } from '../../lib/chordpro-solo.utils';
 import { buildChordCells, groupCellsIntoWords, hasLyricText } from '../../lib/chord-cells.utils';
 import { buildTabFontSize } from '../../routes/catalog/scene-view.core';
 import { transposeChordChart } from '../../routes/catalog/tab-transpose.core';
@@ -39,6 +45,21 @@ const DIRECTIVE_CLASS_BY_TONE = {
   dark: 'text-stage-ink-dim',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
+const SOLO_NOTE_CLASS_BY_TONE = {
+  light: 'text-ink',
+  dark: 'text-stage-ink',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const CHORD_TEXT_CLASS_BY_TONE = {
+  light: 'font-semibold text-accent',
+  dark: 'font-semibold text-stage-chord',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SHADED_SECTION_CLASS_BY_TONE = {
+  light: 'bg-sunk',
+  dark: 'bg-stage-hover',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
 const CHORD_CLASS_BY_TONE = {
   light: 'text-accent',
   dark: 'text-stage-chord',
@@ -66,6 +87,21 @@ const CHORD_GAP_CHARACTERS = 1;
 function chordCellMinimumWidth(chord: string | null): string | undefined {
   if (chord === null) return undefined;
   return `${chord.length + CHORD_GAP_CHARACTERS}ch`;
+}
+
+function renderPlainLine(line: PlainLine, key: string, tone: ChordChartTone): JSX.Element {
+  return (
+    <p key={key} className={composeClassName('m-0', WRAPPED_LINE_CLASS, LYRIC_CLASS_BY_TONE[tone])}>
+      {segmentPlainLine(line).map((segment, segmentIndex) => (
+        <span
+          key={`${key}-segment-${segmentIndex}`}
+          className={segment.isChord ? CHORD_TEXT_CLASS_BY_TONE[tone] : undefined}
+        >
+          {segment.text}
+        </span>
+      ))}
+    </p>
+  );
 }
 
 function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.Element {
@@ -100,16 +136,7 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
       </div>
     );
   }
-  if (line.kind === 'plain-line') {
-    return (
-      <p
-        key={key}
-        className={composeClassName('m-0', WRAPPED_LINE_CLASS, LYRIC_CLASS_BY_TONE[tone])}
-      >
-        {line.text}
-      </p>
-    );
-  }
+  if (line.kind === 'plain-line') return renderPlainLine(line, key, tone);
   const cells = buildChordCells(line.tokens);
   const chordClass = composeClassName('font-semibold', CHORD_CLASS_BY_TONE[tone]);
   if (!hasLyricText(line.tokens)) {
@@ -147,17 +174,47 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
   );
 }
 
+function renderSoloNote(value: string, key: string, tone: ChordChartTone): JSX.Element {
+  return (
+    <p
+      key={key}
+      className={composeClassName(
+        'font-sans text-meta font-medium m-0 mb-1 whitespace-pre-wrap',
+        SOLO_NOTE_CLASS_BY_TONE[tone],
+      )}
+    >
+      {value}
+    </p>
+  );
+}
+
+function renderSectionLine(
+  section: ChordProSection,
+  line: ChordProLine,
+  key: string,
+  tone: ChordChartTone,
+): JSX.Element {
+  if (
+    section.kind === SOLO_SECTION_KIND &&
+    line.kind === 'directive' &&
+    isCommentDirective(line.name)
+  ) {
+    return renderSoloNote(line.value, key, tone);
+  }
+  return renderLine(line, key, tone);
+}
+
 function renderSectionLines(
   section: ChordProSection,
   sectionKey: string,
   tone: ChordChartTone,
 ): JSX.Element | readonly JSX.Element[] {
   const lines = section.lines.map((line, lineIndex) =>
-    renderLine(line, `${sectionKey}-${lineIndex}`, tone),
+    renderSectionLine(section, line, `${sectionKey}-${lineIndex}`, tone),
   );
   if (section.kind !== 'tab') return lines;
   return (
-    <div className="@container overflow-x-auto">
+    <div className="@container overflow-x-auto" data-scrolls-sideways>
       <div style={{ fontSize: buildTabFontSize(widestTabLineLength(section.lines)) }}>{lines}</div>
     </div>
   );
@@ -183,9 +240,16 @@ export function ChordChartViewer({
     >
       {sections.map((section, sectionIndex) => {
         const sectionKey = `chord-section-${sectionIndex}`;
+        const isShaded = isShadedSection(sectionIndex);
         const hasHeading = hasSectionHeading(section);
         return (
-          <section key={sectionKey} className="mb-5 last:mb-0">
+          <section
+            key={sectionKey}
+            className={composeClassName(
+              'mb-3 last:mb-0 rounded-md px-3 py-2',
+              isShaded ? SHADED_SECTION_CLASS_BY_TONE[tone] : undefined,
+            )}
+          >
             {hasHeading && (
               <div className="mb-1.5">
                 <ChordProSectionHeading
