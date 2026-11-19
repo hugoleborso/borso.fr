@@ -94,7 +94,7 @@ export function SceneTransitionPreview(props: SceneTransitionPreviewProps): JSX.
   return (
     <section
       ref={cardRef}
-      aria-label={t('scene.transitionOpen', { title: body.nextTitle })}
+      aria-label={t('scene.transitionCard', { title: body.nextTitle })}
       className="scheme-dark mt-8 flex flex-col gap-3 rounded-md border border-stage-line p-4 font-sans text-stage-ink"
     >
       <PreviewBody layout={layout} {...body} />

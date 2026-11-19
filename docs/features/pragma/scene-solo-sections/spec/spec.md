@@ -46,7 +46,7 @@ The operator asked to swipe between songs in Scene Mode.
 The operator asked to see transitions in Scene Mode, and picked mockup B opening into mockup A at the bottom of the chart.
 
 - A strip above the transport names the next song, its key, its lineup as icons and the start of the band's transition note.
-- Each member who plays the next song shows as their avatar followed by instrument glyphs, never as words. A member who keeps an instrument shows the avatar and that glyph. A member who changes shows the avatar, the glyphs they put down, an arrow, and the glyphs they pick up. A member who joins shows the avatar, an arrow and the glyphs they pick up.
+- Each member who plays the next song shows as their avatar followed by instrument glyphs, never as words. A member who keeps an instrument shows the avatar and that glyph. A member who changes shows the avatar, the glyphs they keep, the glyphs they put down in a dimmer tone, an arrow, and the glyphs they pick up. A glyph held on both songs is never drawn on either side of the arrow. A member who joins shows the avatar, an arrow and the glyphs they pick up.
 - When nobody keeps an instrument across the gap, as the setlist editor's risky flag says, the strip shows the warn icon and its "risky" label.
 - Once the reader scrolls to the end of the chart, the same content shows as a card below the last line, with the full note, and the strip hides. Scrolling back up shows the strip again.
 - The last song of the setlist has no strip and no card.

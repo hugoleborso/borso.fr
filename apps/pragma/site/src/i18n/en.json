@@ -470,6 +470,8 @@
     "sectionTab": "Tab",
     "sectionVerse": "Verse",
     "title": "Scene Mode",
+    "transitionCard": "Transition to {{title}}",
+    "transitionMember": "{{name}}: {{lineup}}",
     "transitionOpen": "Show the transition to {{title}}",
     "transitionThen": "Then",
     "transposeDown": "Transpose down",

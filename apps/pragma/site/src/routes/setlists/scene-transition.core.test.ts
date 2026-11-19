@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSceneTransition,
-  describeSceneTransitionMember,
+  describeSceneTransitionLineup,
   type SceneTransitionInstrumentInput,
 } from './scene-transition.core';
 
@@ -51,8 +51,9 @@ describe('buildSceneTransition', () => {
       color: '#3a9b9b',
       move: 'keeps',
       hasArrow: false,
+      kept: [{ instrumentId: 'drums', name: 'Drums', icon: 'drum' }],
       putDown: [],
-      pickUp: [{ instrumentId: 'drums', name: 'Drums', icon: 'drum' }],
+      pickUp: [],
     });
   });
 
@@ -63,10 +64,19 @@ describe('buildSceneTransition', () => {
     expect(hugo?.pickUp.map((part) => part.icon)).toEqual(['bass']);
   });
 
-  it('shows a member who joins with nothing put down', () => {
+  it('shows a member who joins with an arrow to what they pick up', () => {
     const [emma] = transitionOf({}, { emma: ['piano'] }).members;
     expect(emma?.move).toBe('joins');
+    expect(emma?.hasArrow).toBe(true);
     expect(emma?.putDown).toEqual([]);
+    expect(emma?.pickUp.map((part) => part.icon)).toEqual(['piano']);
+  });
+
+  it('keeps an instrument held on both songs off both sides of the arrow', () => {
+    const [hugo] = transitionOf({ hugo: ['drums', 'piano'] }, { hugo: ['drums'] }).members;
+    expect(hugo?.kept.map((part) => part.icon)).toEqual(['drum']);
+    expect(hugo?.putDown.map((part) => part.icon)).toEqual(['piano']);
+    expect(hugo?.pickUp).toEqual([]);
   });
 
   it('reads a member who swaps one of two instruments as a change, drawn with an arrow', () => {
@@ -78,6 +88,8 @@ describe('buildSceneTransition', () => {
   it('reads a member who adds an instrument as a change', () => {
     const [hugo] = transitionOf({ hugo: ['piano'] }, { hugo: ['piano', 'bass'] }).members;
     expect(hugo?.move).toBe('changes');
+    expect(hugo?.kept.map((part) => part.icon)).toEqual(['piano']);
+    expect(hugo?.pickUp.map((part) => part.icon)).toEqual(['bass']);
   });
 
   it('leaves out a member who sits out the next song, and keeps the members order', () => {
@@ -97,19 +109,33 @@ describe('buildSceneTransition', () => {
   });
 });
 
-describe('describeSceneTransitionMember', () => {
+function lineupOf(
+  current: Record<string, readonly string[]>,
+  next: Record<string, readonly string[]>,
+): string {
+  const [member] = transitionOf(current, next).members;
+  if (member === undefined) throw new TypeError('no member plays the next song');
+  return describeSceneTransitionLineup(member);
+}
+
+describe('describeSceneTransitionLineup', () => {
   it('names what a member keeps', () => {
-    const [gui] = transitionOf({ gui: ['drums'] }, { gui: ['drums'] }).members;
-    expect(gui && describeSceneTransitionMember(gui)).toBe('Gui: Drums');
+    expect(lineupOf({ gui: ['drums'] }, { gui: ['drums'] })).toBe('Drums');
   });
 
   it('names what a member puts down and picks up', () => {
-    const [hugo] = transitionOf({ hugo: ['piano'] }, { hugo: ['bass', 'drums'] }).members;
-    expect(hugo && describeSceneTransitionMember(hugo)).toBe('Hugo: Piano → Drums, Bass');
+    expect(lineupOf({ hugo: ['piano'] }, { hugo: ['bass', 'drums'] })).toBe('Piano → Drums, Bass');
+  });
+
+  it('names what a member keeps before what they change', () => {
+    expect(lineupOf({ hugo: ['drums', 'piano'] }, { hugo: ['drums'] })).toBe('Drums (Piano →)');
   });
 
   it('names what a joining member picks up', () => {
-    const [emma] = transitionOf({}, { emma: ['piano'] }).members;
-    expect(emma && describeSceneTransitionMember(emma)).toBe('Emma: → Piano');
+    expect(lineupOf({}, { emma: ['piano'] })).toBe('→ Piano');
+  });
+
+  it('names what a member keeps before what they pick up', () => {
+    expect(lineupOf({ hugo: ['piano'] }, { hugo: ['piano', 'bass'] })).toBe('Piano (→ Bass)');
   });
 });

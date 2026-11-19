@@ -26,8 +26,16 @@ const scene = vi.hoisted(() => {
       position: 1,
       energy: null,
       lineupOverride: { tom: ['bass'] },
+      keyOverride: null,
     },
-    { id: 'entry-3', setlistId: 'set-1', songId: 'song-3', position: 2, energy: null },
+    {
+      id: 'entry-3',
+      setlistId: 'set-1',
+      songId: 'song-3',
+      position: 2,
+      energy: null,
+      keyOverride: null,
+    },
   ];
   return {
     setlist: { id: 'set-1', name: 'Les Disquaires' },
@@ -359,14 +367,17 @@ describe('SetlistScenePage', () => {
     const strip = container.querySelector('button[aria-label="Show the transition to Helpless"]');
     expect(strip?.textContent).toContain('Helpless');
     expect(strip?.textContent).toContain('Tom swaps to the bass');
-    expect(strip?.querySelector('[data-transition-move]')?.getAttribute('aria-label')).toBe(
-      'Tom: Guitare → Basse',
-    );
+    expect(
+      strip?.querySelector('[data-transition-move] [role=img]')?.getAttribute('aria-label'),
+    ).toBe('Tom: Guitare → Basse');
+    expect(strip?.textContent).toContain('Ebm');
+    expect(strip?.querySelector('[data-transition-move]')?.textContent).not.toContain('Guitare');
+    expect(strip?.querySelector('[data-transition-move]')?.textContent).not.toContain('Basse');
     expect(strip?.querySelector('[data-transition-risky]')).not.toBeNull();
   });
 
   it('opens the same transition as a card below the chart and hides the strip once it is in view', () => {
-    const card = container.querySelector('section[aria-label="Show the transition to Helpless"]');
+    const card = container.querySelector('section[aria-label="Transition to Helpless"]');
     expect(card?.textContent).toContain('Tom swaps to the bass while the drums vamp');
     act(() => {
       for (const callback of cardObservers) callback([{ isIntersecting: true }]);
@@ -389,7 +400,7 @@ describe('SetlistScenePage', () => {
     );
     act(() => strip?.click());
     expect(scrolled.mock.contexts.at(-1)).toBe(
-      container.querySelector('section[aria-label="Show the transition to Helpless"]'),
+      container.querySelector('section[aria-label="Transition to Helpless"]'),
     );
     scrolled.mockRestore();
   });
@@ -412,6 +423,7 @@ describe('SetlistScenePage', () => {
     pressKey(container, 'ArrowRight');
     pressKey(container, 'ArrowRight');
     expect(container.querySelector('[aria-label^="Show the transition"]')).toBeNull();
+    expect(container.querySelector('[aria-label^="Transition to"]')).toBeNull();
   });
 
   it('walks back on the left arrow', () => {

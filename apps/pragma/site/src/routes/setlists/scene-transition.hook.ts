@@ -40,7 +40,7 @@ export interface SceneTransitionPreviewContent {
 
 const NO_MEMBERS: readonly never[] = [];
 
-// @FollowsBlueprint hook-stateful-helper
+// @FollowsBlueprint query-module
 export function useSceneTransitionPreview(
   input: SceneTransitionPreviewInput,
 ): SceneTransitionPreviewContent | null {

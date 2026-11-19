@@ -470,6 +470,8 @@
     "sectionTab": "Tablature",
     "sectionVerse": "Couplet",
     "title": "Mode Scène",
+    "transitionCard": "Transition vers {{title}}",
+    "transitionMember": "{{name}} : {{lineup}}",
     "transitionOpen": "Voir la transition vers {{title}}",
     "transitionThen": "Ensuite",
     "transposeDown": "Transposer plus bas",
