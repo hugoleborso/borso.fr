@@ -81,7 +81,7 @@ fi
 # nothing, which is what moves it from a page into this hook.
 LONG_LINK="$(grep -oE '\]\([^) ]{150,}\)' <<<"$BODY_AS_RENDERED" | head -1 || true)"
 if [[ -n "$LONG_LINK" ]]; then
-  block "the body carries a markdown link whose target is $(( ${#LONG_LINK} - 3 )) characters; past about 150 the URL comes back wrapped in backticks and the anchor is dead. Link through /blob/main/ rather than a branch name, or write the bare URL, which autolinks at any length."
+  block "the body carries a markdown link whose target is $(( ${#LONG_LINK} - 3 )) characters; past about 150 the URL comes back wrapped in backticks and the anchor is dead. Name a file the branch adds by its path in a code span, since a /blob/main/ link to it is a 404 until merge. Link through /blob/main/ only for a file already on main, or write the bare URL, which autolinks at any length."
 fi
 
 # Raw body on purpose: backticks do not protect an angle-bracket placeholder,

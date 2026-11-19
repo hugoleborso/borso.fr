@@ -199,6 +199,10 @@ rather than left to the writer; see
    is 42 characters against `main`'s 4, so linking a merged file through
    `/blob/main/…` rather than `/blob/<branch>/…` takes 38 characters off
    every link in the body and puts all six samples above safely under.
+   A file the branch adds, such as its validation report, is not on
+   `main` until merge, so that link is a 404 for the reviewer. Name its
+   path in a code span instead, which the *Files changed* tab shows.
+   PR #376's body hit this with a 159-character branch link to its report.
 2. **Write the bare URL** with no markdown link. GitHub autolinks it and
    a bare URL has survived every observation, at any length.
 3. **Read the stored body back** after posting anything long and
