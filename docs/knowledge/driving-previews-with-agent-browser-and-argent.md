@@ -71,6 +71,10 @@ next song in Scene Mode. It scrolls the start into view and moves in the same
 CDP connection, and puts the 375 px viewport back before it returns, as `drag`
 and `touch` do. Three validator runs on PR #377 wrote their own CDP swipe
 script instead, and two of them left the page at desktop width.
+A swipe accepts a `pointercancel`: on a scrolling chart the browser offers to
+pan, and the page's touch handlers still receive the gesture. Four runs of
+`drag` on PR #380's Scene Mode reported a failed drag while the song changed.
+Read the page back for the outcome.
 
 The `phone` session is its own browser with its own cookies. Sign in there,
 with `agent-browser --session phone`, because a sign-in on the default session

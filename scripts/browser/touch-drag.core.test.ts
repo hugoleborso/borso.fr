@@ -57,6 +57,14 @@ describe('judgeTouchDrag', () => {
     });
   });
 
+  it('accepts a swipe the browser also offered to pan, since touch events still reached the page', () => {
+    const panned = [
+      ...PIECE_DRAG,
+      { type: 'pointercancel', pointerType: 'touch', isOnTarget: false },
+    ];
+    expect(judgeTouchDrag(panned, true, true)).toStrictEqual({ isRealDrag: true, problems: [] });
+  });
+
   it('refuses a drag that lifted somewhere other than the to element', () => {
     expect(judgeTouchDrag(PIECE_DRAG, false)).toStrictEqual({
       isRealDrag: false,

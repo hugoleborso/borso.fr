@@ -62,12 +62,14 @@ function hasEvent(
 export function judgeTouchDrag(
   events: readonly RecordedInputEvent[],
   isLiftOverDestination: boolean,
+  isSwipe = false,
 ): TouchDragVerdict {
+  const isPanCancelFatal = hasEvent(events, 'pointercancel', false) && !isSwipe;
   const problems = [
     hasEvent(events, 'touchstart', true) ? null : 'no touchstart reached the from element',
     hasEvent(events, 'touchmove', false) ? null : 'no touchmove fired',
     hasEvent(events, 'touchend', false) ? null : 'no touchend fired',
-    hasEvent(events, 'pointercancel', false)
+    isPanCancelFatal
       ? 'the browser cancelled the touch to pan or zoom, so the page did not hold the drag'
       : null,
     isLiftOverDestination ? null : 'the touch did not lift over the to element',

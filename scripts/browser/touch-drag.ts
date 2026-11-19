@@ -33,7 +33,8 @@ const USAGE = [
   'swipe, such as --by -120,0). Prints which events reached the page. Exits 1',
   'unless a touchstart reached --from, a touchmove and a touchend fired, no',
   'pointercancel said the browser took the gesture to pan, and, with --to, the',
-  'touch lifted over --to.',
+  'touch lifted over --to. A --by swipe accepts a pointercancel: touch events',
+  'still reach the page, so read the page back for whether it acted.',
   'Whether the page acted on the drag is yours to read back.',
   '',
 ].join('\n');
@@ -157,7 +158,7 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
       expression: READ_PAGE_SCRIPT,
       returnByValue: true,
     }).catch(() => PAGE_LEFT);
-    const verdict = judgeTouchDrag(reported, isLiftOverDestination);
+    const verdict = judgeTouchDrag(reported, isLiftOverDestination, options.offset !== null);
     process.stdout.write(
       `${JSON.stringify(
         {
