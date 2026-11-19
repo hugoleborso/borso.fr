@@ -183,6 +183,20 @@ export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPi
   };
 }
 
+const FEWEST_ACTIONS_OF_A_CROWDED_ROW = 3;
+
+// @FollowsBlueprint core-decision
+export function isSessionPillRowCrowded(pills: SessionPills): boolean {
+  const shownCount = [
+    pills.practicePath !== null,
+    pills.setlistPath !== null,
+    pills.isAddSetlistShown,
+    pills.chooseSongsVariant !== null,
+    pills.isOrderSongsShown,
+  ].filter((isShown) => isShown).length;
+  return shownCount >= FEWEST_ACTIONS_OF_A_CROWDED_ROW;
+}
+
 export const SESSION_VIEW_PARAM = 'view';
 export const SESSION_VIEWS = ['setlist', 'songs', 'tasks', 'takes', 'details'] as const;
 export type SessionView = (typeof SESSION_VIEWS)[number];

@@ -18,6 +18,16 @@ const BASS_PART: MemberPartGlyph = {
   icon: 'bass',
   isNameNeeded: false,
 };
+const GUITAR_PART: MemberPartGlyph = {
+  instrumentId: 'guitar',
+  name: 'Guitar',
+  icon: 'guitar',
+  isNameNeeded: false,
+};
+const TOM_COLOR = '#3d8b8b';
+const TOM_RENDERED = 'rgb(61, 139, 139)';
+const LEA_COLOR = '#e07a5f';
+const LEA_RENDERED = 'rgb(224, 122, 95)';
 const LEAD_VOCALS_PART: MemberPartGlyph = {
   instrumentId: 'lead-vocals',
   name: 'Lead vocals',
@@ -91,18 +101,48 @@ describe('a setlist row', () => {
     expect(notice.className).toContain('text-warn');
   });
 
-  it('shows the note written for tonight and tonight’s lineup change', () => {
+  it('shows the note written for tonight, and tonight’s lineup change read aloud as its sentence', () => {
     renderRow(
       buildProps({
         notes: 'Finir sur le refrain',
         lineupChanges: [
-          { memberId: 'tom', firstName: 'Tom', heldInstrumentNames: ['Guitar'] },
-          { memberId: 'lea', firstName: 'Léa', heldInstrumentNames: [] },
+          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldParts: [GUITAR_PART] },
+          { memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldParts: [] },
         ],
       }),
     );
     expect(screen.getByText('Finir sur le refrain')).toBeTruthy();
-    expect(screen.getByText('Tonight: Tom: Guitar · Léa sits out')).toBeTruthy();
+    const change = screen.getByRole('img', { name: 'Tonight: Tom: Guitar · Léa sits out' });
+    expect(change.textContent).toBe('');
+    expect(screen.queryByText(/Tonight/)).toBeNull();
+  });
+
+  it('draws a member’s change as their dot then the glyphs they play tonight', () => {
+    renderRow(
+      buildProps({
+        lineupChanges: [
+          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldParts: [GUITAR_PART] },
+        ],
+      }),
+    );
+    const tom = document.querySelector('[data-lineup-change="tom"]');
+    const mark = tom?.firstElementChild;
+    expect(mark instanceof HTMLElement ? mark.style.backgroundColor : null).toBe(TOM_RENDERED);
+    expect(mark?.className).toContain('size-2.5');
+    expect(tom?.querySelector('[aria-label="Guitar"] svg')).not.toBeNull();
+  });
+
+  it('draws a member who sits out as their ring, with no glyph', () => {
+    renderRow(
+      buildProps({
+        lineupChanges: [{ memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldParts: [] }],
+      }),
+    );
+    const lea = document.querySelector('[data-lineup-change="lea"]');
+    const mark = lea?.firstElementChild;
+    expect(mark instanceof HTMLElement ? mark.style.borderColor : null).toBe(LEA_RENDERED);
+    expect(mark?.className).toContain('border-2');
+    expect(lea?.querySelector('svg')).toBeNull();
   });
 
   it('opens the entry when the row is tapped', () => {

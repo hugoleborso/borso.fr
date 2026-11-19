@@ -5,7 +5,12 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import {
+  INSTRUMENT_ICON_GLYPH,
+  selectInstrumentIdsNamedInWords,
+} from '../molecules/lineup-slots.core';
 import { Sheet } from '../molecules/Sheet';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import {
@@ -64,6 +69,7 @@ function InstrumentPanel({
 }: InstrumentPanelProps): JSX.Element {
   const { t } = useTranslation();
   const EmptyNotice = EMPTY_NOTICE_BY_LIST_STATE[selectInstrumentListState(instruments)];
+  const namedInWords = selectInstrumentIdsNamedInWords(instruments);
   return (
     <fieldset className="border border-rule rounded-md p-3 mt-2">
       <legend className="text-label tracking-wider uppercase text-ink-soft px-2">
@@ -72,9 +78,10 @@ function InstrumentPanel({
       <EmptyNotice />
       <div className="flex flex-col">
         {instruments.map((instrument) => (
-          <label key={instrument.id} className={CHECKBOX_ROW_CLASS}>
+          <label key={instrument.id} className={CHECKBOX_ROW_CLASS} title={instrument.name}>
             <input
               type="checkbox"
+              aria-label={instrument.name}
               className={CHECKBOX_CLASS}
               checked={assignedInstrumentIds.includes(instrument.id)}
               onChange={() =>
@@ -83,7 +90,8 @@ function InstrumentPanel({
                 )
               }
             />
-            {instrument.name}
+            <Icon name={INSTRUMENT_ICON_GLYPH[instrument.icon]} size="md" />
+            {namedInWords.has(instrument.id) ? instrument.name : null}
           </label>
         ))}
       </div>

@@ -77,7 +77,12 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
     [members],
   );
   const lineupEditorInstruments = useMemo(
-    () => instruments.map((instrument) => ({ id: instrument.id, name: instrument.name })),
+    () =>
+      instruments.map((instrument) => ({
+        id: instrument.id,
+        name: instrument.name,
+        icon: instrument.icon,
+      })),
     [instruments],
   );
   const listenLinks = useMemo(() => selectSongListenLinks(song, { isIos: isDeviceIos() }), [song]);

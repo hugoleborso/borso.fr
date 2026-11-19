@@ -3,6 +3,7 @@
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlbumCover } from '../atoms/AlbumCover';
+import { MemberMark } from '../atoms/MemberMark';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
 import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
@@ -11,13 +12,15 @@ import { Menu, type MenuItem } from '../molecules/Menu';
 
 const POSITION_DIGITS = 2;
 const TITLE_CLASS = 'block truncate font-display text-title text-ink';
-const CHANGE_CLASS = 'self-start rounded-sm bg-highlight px-1.5 py-0.5 text-meta text-on-highlight';
+const CHANGE_CLASS =
+  'inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm bg-highlight px-1.5 py-0.5';
 const CHANGE_SEPARATOR = ' · ';
 
 export interface SetlistEntryLineupChange {
   readonly memberId: string;
   readonly firstName: string;
-  readonly heldInstrumentNames: readonly string[];
+  readonly color: string;
+  readonly heldParts: readonly MemberPartGlyph[];
 }
 
 export interface SetlistEntryRowProps {
@@ -48,11 +51,12 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   ].filter((part) => part !== null);
   const changeLabel = props.lineupChanges
     .map((change) =>
-      change.heldInstrumentNames.length === 0
+      change.heldParts.length === 0
         ? t('setlist.sitsOutTonight', { name: change.firstName })
-        : `${change.firstName}: ${change.heldInstrumentNames.join(', ')}`,
+        : `${change.firstName}: ${change.heldParts.map((part) => part.name).join(', ')}`,
     )
     .join(CHANGE_SEPARATOR);
+  const changeSentence = t('setlist.tonightChange', { change: changeLabel });
   const { onAddBreakAfter } = props;
   const addBreakItems: MenuItem[] =
     onAddBreakAfter === undefined
@@ -111,8 +115,28 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           )}
           {changeLabel.length === 0 ? null : (
             <span className="flex pl-7">
-              <span className={CHANGE_CLASS}>
-                {t('setlist.tonightChange', { change: changeLabel })}
+              <span
+                role="img"
+                aria-label={changeSentence}
+                title={changeSentence}
+                className={CHANGE_CLASS}
+              >
+                {props.lineupChanges.map((change) => (
+                  <span
+                    key={change.memberId}
+                    data-lineup-change={change.memberId}
+                    aria-hidden="true"
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    <MemberMark
+                      shape={change.heldParts.length === 0 ? 'ring' : 'dot'}
+                      color={change.color}
+                    />
+                    {change.heldParts.length === 0 ? null : (
+                      <MemberPartGlyphs parts={change.heldParts} size="sm" />
+                    )}
+                  </span>
+                ))}
               </span>
             </span>
           )}

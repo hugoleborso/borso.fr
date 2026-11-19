@@ -10,7 +10,8 @@ import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
 import { Icon, type IconName } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { MemberChip } from '../molecules/MemberChip';
+import { Avatar } from '../atoms/Avatar';
+import { memberInitial } from '../atoms/member-palette.utils';
 import { Sheet } from '../molecules/Sheet';
 import { inputVariants } from '../atoms/input.variants';
 import { TASK_STATUS_LABEL_KEY } from '../../routes/band/band-tasks.core';
@@ -133,7 +134,12 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
                   pressed={field.state.value === member.id}
                   onPress={() => field.handleChange(member.id)}
                 >
-                  <MemberChip memberName={member.firstName} memberColor={member.color} />
+                  <Avatar
+                    size="xs"
+                    aria-hidden="true"
+                    initials={memberInitial(member.firstName)}
+                    color={member.color}
+                  />
                   {member.firstName}
                 </Chip>
               ))}

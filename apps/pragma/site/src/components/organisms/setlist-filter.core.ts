@@ -2,6 +2,7 @@
 
 import type { InstrumentIcon } from '@domain/instrument.core';
 import { instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';
+import { selectInstrumentIdsNamedInWords } from '../molecules/lineup-slots.core';
 import type { SetlistEditorEntry, SetlistEditorSong } from './setlist-editor.utils';
 
 export interface FilterableEntry extends SetlistEditorEntry {
@@ -56,22 +57,12 @@ export interface MemberPart {
   readonly isNameNeeded: boolean;
 }
 
-function selectSharedIcons(instruments: readonly PartInstrument[]): ReadonlySet<InstrumentIcon> {
-  const seen = new Set<InstrumentIcon>();
-  const shared = new Set<InstrumentIcon>();
-  for (const instrument of instruments) {
-    if (seen.has(instrument.icon)) shared.add(instrument.icon);
-    seen.add(instrument.icon);
-  }
-  return shared;
-}
-
 export function describeMemberPartsByEntryId(
   instrumentIdsByEntryId: Readonly<Record<string, readonly string[]>>,
   instruments: readonly PartInstrument[],
 ): Readonly<Record<string, readonly MemberPart[]>> {
   const instrumentsById = new Map(instruments.map((instrument) => [instrument.id, instrument]));
-  const sharedIcons = selectSharedIcons(instruments);
+  const namedInWords = selectInstrumentIdsNamedInWords(instruments);
   const partsByEntryId: Record<string, readonly MemberPart[]> = {};
   for (const [entryId, instrumentIds] of Object.entries(instrumentIdsByEntryId)) {
     partsByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
@@ -82,7 +73,7 @@ export function describeMemberPartsByEntryId(
           instrumentId,
           name: instrument.name,
           icon: instrument.icon,
-          isNameNeeded: sharedIcons.has(instrument.icon),
+          isNameNeeded: namedInWords.has(instrumentId),
         },
       ];
     });

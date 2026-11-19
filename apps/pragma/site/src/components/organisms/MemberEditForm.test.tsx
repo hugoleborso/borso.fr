@@ -4,16 +4,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { MEMBER_PALETTE } from '@domain/member-palette.core';
 import { MemberEditForm } from './MemberEditForm';
-import { type MemberFormValues } from '../../routes/members/members-page.core';
+import { type InstrumentRow, type MemberFormValues } from '../../routes/members/members-page.core';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const INSTRUMENTS = [
-  { id: 'bass-id', name: 'Bass' },
-  { id: 'keys-id', name: 'Keys' },
+const INSTRUMENTS: readonly InstrumentRow[] = [
+  { id: 'bass-id', name: 'Bass', icon: 'bass' },
+  { id: 'keys-id', name: 'Keys', icon: 'piano' },
 ];
 
 const BLANK_VALUES: MemberFormValues = { firstName: '', color: MEMBER_PALETTE[0].hex };

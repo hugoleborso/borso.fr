@@ -37,8 +37,8 @@ describe('sortInstrumentsByName', () => {
   it('orders by name', () => {
     expect(
       sortInstrumentsByName([
-        { id: '1', name: 'Keys' },
-        { id: '2', name: 'Bass' },
+        { id: '1', name: 'Keys', icon: 'piano' },
+        { id: '2', name: 'Bass', icon: 'bass' },
       ]).map((instrument) => instrument.name),
     ).toEqual(['Bass', 'Keys']);
   });
@@ -97,7 +97,7 @@ describe('selectInstrumentListState', () => {
   });
 
   it('is filled with at least one instrument', () => {
-    expect(selectInstrumentListState([{ id: '1', name: 'Bass' }])).toBe('filled');
+    expect(selectInstrumentListState([{ id: '1', name: 'Bass', icon: 'bass' }])).toBe('filled');
   });
 });
 

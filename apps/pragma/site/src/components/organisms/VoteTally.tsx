@@ -3,9 +3,9 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
-import { Avatar } from '../atoms/Avatar';
-import { MEMBER_LOADING_COLOR, memberInitial } from '../atoms/member-palette.utils';
+import { MEMBER_LOADING_COLOR } from '../atoms/member-palette.utils';
 import { PointsBadge } from '../atoms/PointsBadge';
+import { MemberChip } from '../molecules/MemberChip';
 
 export interface TallyMember {
   readonly id: string;
@@ -52,9 +52,9 @@ export function VoteTally({ tallies, songsById, membersById }: VoteTallyProps): 
           <div className="flex items-center gap-1">
             {Object.entries(tally.pointsByMember).map(([memberId, points]) => (
               <span key={memberId} className="flex items-center gap-1">
-                <Avatar
-                  initials={memberInitial(membersById.get(memberId)?.firstName ?? '?')}
-                  color={membersById.get(memberId)?.color ?? UNKNOWN_MEMBER_COLOR}
+                <MemberChip
+                  memberName={membersById.get(memberId)?.firstName ?? '?'}
+                  memberColor={membersById.get(memberId)?.color ?? UNKNOWN_MEMBER_COLOR}
                   size="xs"
                 />
                 <span className="text-meta tabular-nums text-ink-soft">{points}</span>

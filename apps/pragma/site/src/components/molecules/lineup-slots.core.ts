@@ -24,6 +24,38 @@ export const INSTRUMENT_ICON_GLYPH = {
   sun: 'sun',
 } satisfies Record<InstrumentIcon, IconName>;
 
+const GENERIC_INSTRUMENT_ICON: InstrumentIcon = 'music';
+
+export interface WordedInstrument {
+  readonly id: string;
+  readonly icon: InstrumentIcon;
+}
+
+function selectSharedIcons(instruments: readonly WordedInstrument[]): ReadonlySet<InstrumentIcon> {
+  const seen = new Set<InstrumentIcon>();
+  const shared = new Set<InstrumentIcon>();
+  for (const instrument of instruments) {
+    if (seen.has(instrument.icon)) shared.add(instrument.icon);
+    seen.add(instrument.icon);
+  }
+  return shared;
+}
+
+// @FollowsBlueprint core-decision
+export function selectInstrumentIdsNamedInWords(
+  instruments: readonly WordedInstrument[],
+): ReadonlySet<string> {
+  const sharedIcons = selectSharedIcons(instruments);
+  return new Set(
+    instruments
+      .filter(
+        (instrument) =>
+          instrument.icon === GENERIC_INSTRUMENT_ICON || sharedIcons.has(instrument.icon),
+      )
+      .map((instrument) => instrument.id),
+  );
+}
+
 export const LINEUP_SLOT_WIDTH_PX = 24;
 export const OVERFLOW_COUNTER_WIDTH_PX = 24;
 const NO_OVERFLOW = 0;

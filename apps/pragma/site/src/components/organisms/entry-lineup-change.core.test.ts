@@ -16,9 +16,9 @@ const INPUT: EntryLineupInput = {
     { id: 'clara', firstName: 'Clara', color: '#7a4a8b' },
   ],
   instruments: [
-    { id: 'voice', name: 'Voice' },
-    { id: 'guitar', name: 'Guitar' },
-    { id: 'bass', name: 'Bass' },
+    { id: 'voice', name: 'Voice', icon: 'mic-vocal' },
+    { id: 'guitar', name: 'Guitar', icon: 'guitar' },
+    { id: 'bass', name: 'Bass', icon: 'bass' },
   ],
 };
 
@@ -30,7 +30,9 @@ describe('describeEntryLineup', () => {
         firstName: 'Anna',
         color: '#e07a5f',
         heldInstrumentIds: ['voice'],
-        heldInstrumentNames: ['Voice'],
+        heldParts: [
+          { instrumentId: 'voice', name: 'Voice', icon: 'mic-vocal', isNameNeeded: false },
+        ],
         isChangedTonight: true,
       },
       {
@@ -38,7 +40,10 @@ describe('describeEntryLineup', () => {
         firstName: 'Bruno',
         color: '#3d8b8b',
         heldInstrumentIds: ['bass', 'voice'],
-        heldInstrumentNames: ['Voice', 'Bass'],
+        heldParts: [
+          { instrumentId: 'voice', name: 'Voice', icon: 'mic-vocal', isNameNeeded: false },
+          { instrumentId: 'bass', name: 'Bass', icon: 'bass', isNameNeeded: false },
+        ],
         isChangedTonight: false,
       },
       {
@@ -46,7 +51,7 @@ describe('describeEntryLineup', () => {
         firstName: 'Clara',
         color: '#7a4a8b',
         heldInstrumentIds: [],
-        heldInstrumentNames: [],
+        heldParts: [],
         isChangedTonight: false,
       },
     ]);
@@ -55,6 +60,24 @@ describe('describeEntryLineup', () => {
   it('treats the same instruments in another order as no change', () => {
     const rows = describeEntryLineup({ ...INPUT, lineupOverride: { bruno: ['voice', 'bass'] } });
     expect(rows.map((row) => row.isChangedTonight)).toEqual([false, false, false]);
+  });
+
+  it('writes the name beside a glyph two held instruments share, and beside the generic glyph', () => {
+    const [anna] = describeEntryLineup({
+      ...INPUT,
+      instruments: [
+        ...INPUT.instruments,
+        { id: 'lead', name: 'Lead', icon: 'guitar' },
+        { id: 'kazoo', name: 'Kazoo', icon: 'music' },
+      ],
+      lineupOverride: { anna: ['guitar', 'lead', 'voice', 'kazoo'] },
+    });
+    expect(anna?.heldParts.map((part) => [part.name, part.isNameNeeded])).toEqual([
+      ['Voice', false],
+      ['Guitar', true],
+      ['Lead', true],
+      ['Kazoo', true],
+    ]);
   });
 
   it('counts a member who sits out tonight as a change', () => {

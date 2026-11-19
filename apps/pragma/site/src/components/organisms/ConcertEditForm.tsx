@@ -9,13 +9,12 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { Avatar } from '../atoms/Avatar';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
-import { memberInitial } from '../atoms/member-palette.utils';
+import { MemberChip } from '../molecules/MemberChip';
 
 export interface ConcertEditFormMember {
   readonly id: string;
@@ -125,12 +124,8 @@ export function ConcertEditForm({
                 <div className="flex flex-col gap-2">
                   {members.map((member) => (
                     <div key={member.id} className="flex items-center gap-2.5">
-                      <Avatar
-                        size="xs"
-                        initials={memberInitial(member.firstName)}
-                        color={member.color}
-                      />
-                      <span className="flex-1 text-meta text-ink">{member.firstName}</span>
+                      <MemberChip memberName={member.firstName} memberColor={member.color} />
+                      <span className="flex-1" />
                       <div className="w-20 shrink-0">
                         <Input
                           type="number"

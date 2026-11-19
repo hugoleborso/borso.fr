@@ -165,8 +165,10 @@ describe('the Lineup grid', () => {
     expect(onOpenMember).toHaveBeenCalledExactlyOnceWith('bruno');
   });
 
-  it('writes the member’s first name in ink under the column head', () => {
+  it('heads each column with the member’s mark alone, named on hover', () => {
     renderGrid();
-    expect(screen.getByText('Anna').className).toContain('text-ink');
+    const head = screen.getByRole('button', { name: 'Show the part of Anna' });
+    expect(head.textContent).toBe('A');
+    expect(head.querySelector('[title="Anna"]')).not.toBeNull();
   });
 });

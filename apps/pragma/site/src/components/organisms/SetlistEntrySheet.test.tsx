@@ -131,7 +131,7 @@ describe('the entry sheet', () => {
   it('opens on the Lineup tab, focused on the lineup, when opened from the Lineup grid', () => {
     renderSheet(buildProps({ focus: 'lineup' }));
     expect(screen.getByRole('tab', { name: 'Lineup' }).getAttribute('aria-selected')).toBe('true');
-    expect(document.activeElement?.textContent).toBe('Bass');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Bass');
   });
 
   it('saves the note after a pause and says so', async () => {
