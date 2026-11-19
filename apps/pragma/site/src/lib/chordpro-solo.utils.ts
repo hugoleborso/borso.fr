@@ -6,6 +6,8 @@ const COMMENT_DIRECTIVE_NAMES = new Set(['comment', 'c', 'comment_italic', 'ci']
 const SOLO_WORD_PATTERN = /\bsolo\b/i;
 const PARENTHESISED_PATTERN = /\([^)]*\)/g;
 const LYRIC_WORD_PATTERN = /\p{L}{2,}/u;
+const CHORD_NAME_PATTERN =
+  /(?<!\p{L})[A-G][#b]?(?:maj|min|dim|aug|sus|add|m)?\d*(?:\/[A-G][#b]?)?(?![\p{L}\d#])/gu;
 const CHORD_GAP = ' ';
 
 // @FollowsBlueprint utils-pure-module
@@ -24,7 +26,10 @@ function lyricTextOf(line: ChordLine | PlainLine): string {
 
 export function isLyricLine(line: ChordProLine): boolean {
   if (line.kind !== 'chord-line' && line.kind !== 'plain-line') return false;
-  return LYRIC_WORD_PATTERN.test(lyricTextOf(line).replace(PARENTHESISED_PATTERN, ''));
+  const words = lyricTextOf(line)
+    .replace(PARENTHESISED_PATTERN, '')
+    .replace(CHORD_NAME_PATTERN, '');
+  return LYRIC_WORD_PATTERN.test(words);
 }
 
 export interface ImplicitSoloProgress {
@@ -34,9 +39,25 @@ export interface ImplicitSoloProgress {
 
 export const IMPLICIT_SOLO_OPENED: ImplicitSoloProgress = { hasRows: false, isAfterBlank: false };
 
-export function shouldEndImplicitSolo(line: ChordProLine, progress: ImplicitSoloProgress): boolean {
+function isParagraphLine(line: ChordProLine): boolean {
+  return line.kind !== 'blank' && line.kind !== 'directive';
+}
+
+export function hasLyricsInParagraph(upcoming: readonly ChordProLine[]): boolean {
+  for (const line of upcoming) {
+    if (!isParagraphLine(line)) return false;
+    if (isLyricLine(line)) return true;
+  }
+  return false;
+}
+
+export function shouldEndImplicitSolo(
+  line: ChordProLine,
+  upcoming: readonly ChordProLine[],
+  progress: ImplicitSoloProgress,
+): boolean {
   if (line.kind === 'directive') return progress.hasRows || !isCommentDirective(line.name);
-  return progress.isAfterBlank && isLyricLine(line);
+  return progress.isAfterBlank && hasLyricsInParagraph(upcoming);
 }
 
 export function advanceImplicitSolo(
@@ -48,8 +69,4 @@ export function advanceImplicitSolo(
     hasRows: progress.hasRows || (!isBlank && line.kind !== 'directive'),
     isAfterBlank: isBlank && progress.hasRows,
   };
-}
-
-export function trimTrailingBlanks(lines: ChordProLine[]): void {
-  while (lines.at(-1)?.kind === 'blank') lines.pop();
 }

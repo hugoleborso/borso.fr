@@ -5,6 +5,7 @@ import {
   type ChordProSection,
   groupChordProSections,
   hasSectionHeading,
+  SOLO_SECTION_KIND,
 } from '../../lib/chordpro-sections.utils';
 import {
   type ChordProLine,
@@ -51,8 +52,6 @@ const SOLO_FRAME_CLASS_BY_TONE = {
   light: 'border-l-4 border-accent bg-accent-soft rounded-md px-3 py-2',
   dark: 'border-l-4 border-stage-chord bg-stage-hover rounded-md px-3 py-2',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
-
-const SOLO_SECTION_KIND = 'solo';
 
 const CHORD_CLASS_BY_TONE = {
   light: 'text-accent',

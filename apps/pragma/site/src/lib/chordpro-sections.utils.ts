@@ -6,7 +6,6 @@ import {
   IMPLICIT_SOLO_OPENED,
   isSoloComment,
   shouldEndImplicitSolo,
-  trimTrailingBlanks,
 } from './chordpro-solo.utils';
 import type { ChordProLine } from './chordpro.utils';
 export type ChordProSectionKind = 'verse' | 'chorus' | 'bridge' | 'tab' | 'solo' | 'body';
@@ -56,7 +55,15 @@ export const SECTION_END_DIRECTIVES = new Set([
   'end_of_solo',
 ]);
 
-const SOLO_SECTION_KIND = 'solo';
+export const SOLO_SECTION_KIND = 'solo';
+
+function hasRenderableLine(lines: readonly ChordProLine[]): boolean {
+  return lines.some((line) => line.kind !== 'blank');
+}
+
+function trimTrailingBlanks(lines: ChordProLine[]): void {
+  while (lines.at(-1)?.kind === 'blank') lines.pop();
+}
 
 interface AccumulatingSection {
   readonly kind: ChordProSectionKind;
@@ -87,15 +94,15 @@ export function groupChordProSections(lines: readonly ChordProLine[]): readonly 
   let current = openSection(BODY_SECTION_KIND, null);
   let implicitSolo: ImplicitSoloProgress | null = null;
   const closeCurrent = (): void => {
-    trimTrailingBlanks(current.lines);
-    if (current.kind !== BODY_SECTION_KIND || current.lines.length > 0) {
+    if (current.kind === SOLO_SECTION_KIND) trimTrailingBlanks(current.lines);
+    if (current.kind !== BODY_SECTION_KIND || hasRenderableLine(current.lines)) {
       closed.push(current);
     }
     current = openSection(BODY_SECTION_KIND, null);
     implicitSolo = null;
   };
-  for (const line of lines) {
-    if (implicitSolo !== null && !shouldEndImplicitSolo(line, implicitSolo)) {
+  for (const [index, line] of lines.entries()) {
+    if (implicitSolo !== null && !shouldEndImplicitSolo(line, lines.slice(index), implicitSolo)) {
       implicitSolo = advanceImplicitSolo(implicitSolo, line);
       current.lines.push(line);
       continue;

@@ -24,9 +24,11 @@ A member writes a solo in the chart text in one of two ways:
 The `{comment: Solo}` form has no end marker, so the block ends at the first of:
 
 - any directive after the first chord row (another comment, a section start or end)
-- a paragraph holding lyrics, after a blank line. A lyric is a run of two letters or more outside chords and parentheses. Bar lines, `x3` and `(guitar)` are not lyrics.
+- a paragraph holding lyrics, after a blank line, even when the paragraph opens on a chords-only row. A lyric is a run of two letters or more outside chords and parentheses. Bar lines, `x3`, `(guitar)` and chord names written without brackets, such as `Am F#m Cmaj7`, are not lyrics.
 
 The first paragraph after the heading always belongs to the solo, even when it is prose such as "Cm7 Fm7 then the bridge chords".
+
+A solo drops its trailing blank lines, and every other section keeps its own as before.
 
 A `{comment: Solo}` inside a chorus, verse, bridge or tab stays a plain comment line of that section.
 

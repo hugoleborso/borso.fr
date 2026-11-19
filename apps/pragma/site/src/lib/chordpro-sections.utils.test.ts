@@ -156,6 +156,24 @@ describe('groupChordProSections, for a solo', () => {
     ]);
   });
 
+  it('ends the solo on a lyric paragraph that opens on a chords-only row', () => {
+    const sections = groupChordProSections(
+      parseChordPro('{comment: Solo}\n[Am] [F]\n\n[C] [G]\n[C]Hello [G]world\n[F]More words'),
+    );
+    expect(sections.map((section) => `${section.kind}:${section.lines.length}`)).toEqual([
+      'solo:1',
+      'body:3',
+    ]);
+  });
+
+  it('keeps a second paragraph of bare chord names inside the solo', () => {
+    expect(kindsOf('{comment: Solo}\n[Am] [F]\n\nAm F C G')).toEqual(['solo']);
+  });
+
+  it('keeps the trailing blank lines of a section that is not a solo', () => {
+    expect(linesOfKind('{soc}\n[C]Words\n\n{eoc}', 'chorus')).toEqual([['chord-line', 'blank']]);
+  });
+
   it('ends the solo on a lyric paragraph after a blank line', () => {
     const sections = groupChordProSections(
       parseChordPro('{comment: Solo}\n[Em] [Bm]\n\nOoh, you better stop\n[G]More words'),

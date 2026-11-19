@@ -1,5 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { buildSectionHeading, type LabelledSectionKind } from '../../lib/chordpro-sections.utils';
+import {
+  buildSectionHeading,
+  type LabelledSectionKind,
+  SOLO_SECTION_KIND,
+} from '../../lib/chordpro-sections.utils';
 import type { ChordChartTone } from '../atoms/chart-tone';
 import { Badge } from '../atoms/Badge';
 
@@ -20,8 +24,6 @@ const SOLO_HEADING_CLASS_BY_TONE = {
   light: 'uppercase tracking-wider bg-accent text-on-accent',
   dark: 'uppercase tracking-wider bg-stage-chord text-stage-bg',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
-
-const SOLO_SECTION_KIND = 'solo';
 
 export interface ChordProSectionHeadingProps {
   readonly kind: LabelledSectionKind;
