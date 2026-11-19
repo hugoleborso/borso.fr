@@ -10,14 +10,14 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const INSTRUMENTS = [
-  { id: 'guitar', name: 'Guitare' },
-  { id: 'piano', name: 'Clavier' },
-  { id: 'bass', name: 'Basse' },
-];
+  { id: 'guitar', name: 'Guitare', icon: 'guitar' },
+  { id: 'piano', name: 'Clavier', icon: 'piano' },
+  { id: 'bass', name: 'Basse', icon: 'bass' },
+] as const;
 
 function getChip(name: string): HTMLButtonElement {
   const chip = [...document.querySelectorAll('button')].find(
-    (button) => button.textContent === name,
+    (button) => button.getAttribute('aria-label') === name,
   );
   if (chip === undefined) throw new Error(`no chip ${name}`);
   return chip;
@@ -71,5 +71,21 @@ describe('InstrumentToggleGroup', () => {
     });
     act(() => getChip('Guitare').click());
     expect(onChange).toHaveBeenCalledExactlyOnceWith(['guitar', 'bass']);
+  });
+
+  it('draws a specific glyph alone and writes the name beside the generic one', () => {
+    act(() => {
+      root.render(
+        <InstrumentToggleGroup
+          label="For"
+          instruments={[...INSTRUMENTS, { id: 'kazoo', name: 'Kazoo', icon: 'music' }]}
+          selectedIds={[]}
+          onChange={vi.fn()}
+        />,
+      );
+    });
+    expect(getChip('Guitare').textContent).toBe('');
+    expect(getChip('Guitare').querySelector('[title="Guitare"] svg')).not.toBeNull();
+    expect(getChip('Kazoo').textContent).toBe('Kazoo');
   });
 });

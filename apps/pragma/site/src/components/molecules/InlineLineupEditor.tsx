@@ -3,12 +3,11 @@
 import type { InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Avatar } from '../atoms/Avatar';
 import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
 import { Icon } from '../atoms/Icon';
-import { memberInitial } from '../atoms/member-palette.utils';
-import { INSTRUMENT_ICON_GLYPH } from './lineup-slots.core';
+import { INSTRUMENT_ICON_GLYPH, selectInstrumentIdsNamedInWords } from './lineup-slots.core';
+import { MemberChip } from './MemberChip';
 
 export interface InlineLineupMemberRow {
   readonly memberId: string;
@@ -45,6 +44,7 @@ export function InlineLineupEditor({
   onUseSongLineup,
 }: InlineLineupEditorProps): JSX.Element {
   const { t } = useTranslation();
+  const namedInWords = selectInstrumentIdsNamedInWords(instruments);
   return (
     <section aria-label={t('lineup.tonight')} className="flex flex-col gap-3">
       <div className="flex min-h-11 items-center justify-between gap-2">
@@ -61,8 +61,7 @@ export function InlineLineupEditor({
         {rows.map((row, rowIndex) => (
           <li key={row.memberId} className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <Avatar initials={memberInitial(row.firstName)} color={row.color} size="md" />
-              <span className="text-meta font-medium text-ink">{row.firstName}</span>
+              <MemberChip memberName={row.firstName} memberColor={row.color} size="md" />
               {row.isChangedTonight ? (
                 <span className={CHANGED_MARK_CLASS}>{t('lineup.changedTonight')}</span>
               ) : null}
@@ -80,9 +79,11 @@ export function InlineLineupEditor({
                   }
                   pressed={row.heldInstrumentIds.includes(instrument.id)}
                   onPress={() => onToggle(row.memberId, instrument.id)}
+                  aria-label={instrument.name}
+                  title={instrument.name}
                 >
                   <Icon name={INSTRUMENT_ICON_GLYPH[instrument.icon]} />
-                  {instrument.name}
+                  {namedInWords.has(instrument.id) ? instrument.name : null}
                 </Chip>
               ))}
             </div>

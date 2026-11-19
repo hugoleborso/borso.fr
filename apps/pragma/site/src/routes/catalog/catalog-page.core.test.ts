@@ -166,24 +166,54 @@ describe('selectSongsToLearn', () => {
 });
 
 describe('describeSongToLearn', () => {
-  const names = new Map([
-    ['bass', 'Bass'],
-    ['voice', 'Voice'],
+  const instrumentsById = new Map([
+    ['bass', { id: 'bass', name: 'Bass', icon: 'bass' as const }],
+    ['voice', { id: 'voice', name: 'Voice', icon: 'mic-vocal' as const }],
+    ['backing', { id: 'backing', name: 'Backing vocals', icon: 'mic-vocal' as const }],
+    ['other', { id: 'other', name: 'Kazoo', icon: 'music' as const }],
   ]);
 
-  it('names the instruments and the lowest score', () => {
+  it('draws each instrument as its glyph, named for a screen reader, then the lowest score', () => {
     expect(
       describeSongToLearn(
         { song: null, instrumentIds: ['bass', 'voice', 'gone'], lowestScore: 4 },
-        names,
+        instrumentsById,
       ),
-    ).toBe('Bass, Voice · 4/10');
+    ).toEqual({
+      instruments: [
+        { instrumentId: 'bass', name: 'Bass', icon: 'bass', isNameNeeded: false },
+        { instrumentId: 'voice', name: 'Voice', icon: 'mic-vocal', isNameNeeded: false },
+      ],
+      detail: '· 4/10',
+    });
   });
 
-  it('names the instruments alone when no score is set', () => {
+  it('keeps the word beside the generic glyph and beside a glyph two instruments share', () => {
+    const { instruments } = describeSongToLearn(
+      { song: null, instrumentIds: ['voice', 'backing', 'other', 'bass'], lowestScore: null },
+      instrumentsById,
+    );
+    expect(instruments.map((instrument) => [instrument.name, instrument.isNameNeeded])).toEqual([
+      ['Voice', true],
+      ['Backing vocals', true],
+      ['Kazoo', true],
+      ['Bass', false],
+    ]);
+  });
+
+  it('draws the glyphs alone when no score is set', () => {
     expect(
-      describeSongToLearn({ song: null, instrumentIds: ['bass'], lowestScore: null }, names),
-    ).toBe('Bass');
+      describeSongToLearn(
+        { song: null, instrumentIds: ['bass'], lowestScore: null },
+        instrumentsById,
+      ).detail,
+    ).toBe('');
+  });
+
+  it('writes the score alone when no instrument is known', () => {
+    expect(
+      describeSongToLearn({ song: null, instrumentIds: ['gone'], lowestScore: 0 }, instrumentsById),
+    ).toEqual({ instruments: [], detail: '0/10' });
   });
 });
 
@@ -204,10 +234,22 @@ describe('toSongCard', () => {
       id: 'song-1',
       title: 'Lightning',
       detail: 'Volt',
+      instruments: [],
       deezerAlbumId: 'album-9',
       status: 'rehearsed',
       chartKind: 'pdf',
     });
+  });
+
+  it('carries the instrument glyphs drawn before the line', () => {
+    const bass = { instrumentId: 'bass', name: 'Bass', icon: 'bass' as const, isNameNeeded: false };
+    expect(
+      toSongCard(
+        { id: 'song-1', title: 'Lightning', status: 'rehearsed', deezerAlbumId: null, charts: [] },
+        '· 4/10',
+        [bass],
+      ).instruments,
+    ).toEqual([bass]);
   });
 
   it('draws no chart kind for a song with no chart', () => {

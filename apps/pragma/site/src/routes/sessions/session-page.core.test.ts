@@ -9,6 +9,7 @@ import {
   type PreviewEntry,
   type PreviewSong,
   readSessionView,
+  isSessionPillRowCrowded,
   selectSessionPills,
   toggleTakeSelection,
 } from './session-page.core';
@@ -351,6 +352,61 @@ describe('selectSessionPills on a practice', () => {
       expect(selectSessionPills({ ...offered, view: 'tasks' }).isOrderSongsShown).toBe(false);
       expect(selectSessionPills({ ...offered, isLoading: true }).isOrderSongsShown).toBe(false);
     }
+  });
+});
+
+describe('isSessionPillRowCrowded', () => {
+  const practice = {
+    isLoading: false,
+    isPractice: true,
+    sessionId: 's',
+    firstSetlistId: 'set-1',
+    practiceSongCount: 2,
+    view: 'songs',
+    isPracticeModeOffered: true,
+  } as const;
+
+  it('crowds the row once Start the practice stands beside Order songs and Choose songs', () => {
+    expect(isSessionPillRowCrowded(selectSessionPills(practice))).toBe(true);
+  });
+
+  it('leaves a row of two actions uncrowded', () => {
+    expect(isSessionPillRowCrowded(selectSessionPills({ ...practice, practiceSongCount: 1 }))).toBe(
+      false,
+    );
+    expect(
+      isSessionPillRowCrowded(selectSessionPills({ ...practice, isPracticeModeOffered: false })),
+    ).toBe(false);
+    expect(
+      isSessionPillRowCrowded(
+        selectSessionPills({ ...practice, isPractice: false, view: 'setlist' }),
+      ),
+    ).toBe(false);
+  });
+
+  it('counts every action the row can show', () => {
+    expect(
+      isSessionPillRowCrowded({
+        practicePath: null,
+        setlistPath: '/setlists/set-1',
+        setlistVariant: 'secondary',
+        setlistLabelKey: 'sessions.setlist',
+        isAddSetlistShown: true,
+        chooseSongsVariant: null,
+        isOrderSongsShown: false,
+      }),
+    ).toBe(false);
+    expect(
+      isSessionPillRowCrowded({
+        practicePath: null,
+        setlistPath: '/setlists/set-1',
+        setlistVariant: 'secondary',
+        setlistLabelKey: 'sessions.setlist',
+        isAddSetlistShown: true,
+        chooseSongsVariant: 'secondary',
+        isOrderSongsShown: false,
+      }),
+    ).toBe(true);
   });
 });
 

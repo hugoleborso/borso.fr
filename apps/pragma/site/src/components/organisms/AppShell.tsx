@@ -66,7 +66,12 @@ export function AppShell(): JSX.Element {
             onClick={scrollPageToTop}
             className="mt-auto flex items-center gap-2.5 rounded-md bg-leaf p-2 text-ink no-underline shadow-leaf"
           >
-            <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
+            <Avatar
+              aria-hidden="true"
+              initials={memberInitial(signedInName)}
+              color={signedInColor}
+              size="md"
+            />
             <div className="min-w-0">
               <div className="truncate text-meta font-medium">{signedInName}</div>
               <div className="truncate text-meta text-ink-soft">{t('shell.meVersion')}</div>

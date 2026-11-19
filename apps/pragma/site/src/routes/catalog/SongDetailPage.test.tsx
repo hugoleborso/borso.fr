@@ -235,7 +235,7 @@ describe('song page', () => {
     expect(await screen.findByText('Count in four.')).toBeTruthy();
     const lineup = await screen.findByRole('region', { name: 'Default lineup' });
     expect(within(lineup).getByRole('img', { name: 'Bass' })).toBeTruthy();
-    expect(within(lineup).getByText('Hugo')).toBeTruthy();
+    expect(within(lineup).getByRole('img', { name: 'Hugo' })).toBeTruthy();
     expect(screen.queryByText('My part')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Comments' })).toBeNull();
 

@@ -22,17 +22,17 @@ describe('SongLineupChips', () => {
     cleanup();
   });
 
-  it('draws one chip per member, with the icon of each instrument they hold and no mastery', () => {
+  it('draws one chip per member, as their mark and the icon of each instrument they hold, with no name and no mastery', () => {
     render(<SongLineupChips rows={ROWS} onEdit={vi.fn()} />);
     const chips = screen.getAllByRole('listitem');
-    expect(chips.map((chip) => chip.textContent)).toEqual(['LLéa', 'TTom']);
+    expect(chips.map((chip) => chip.textContent)).toEqual(['L', 'T']);
     const leaChip = chips[0];
     if (leaChip === undefined) throw new Error('no chip for Léa');
     expect(
       within(leaChip)
         .getAllByRole('img')
         .map((mark) => mark.getAttribute('aria-label')),
-    ).toEqual(['L', 'Lead vocals', 'Guitar']);
+    ).toEqual(['Léa', 'Lead vocals', 'Guitar']);
   });
 
   it('opens the lineup editor from its edit button', () => {

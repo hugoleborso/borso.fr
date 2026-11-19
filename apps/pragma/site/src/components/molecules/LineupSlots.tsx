@@ -31,6 +31,8 @@ function FilledLineupSlots({ column }: LineupSlotsProps): JSX.Element {
           shape="cell"
           color={slot.holderColor}
           className={SLOT_CLASS}
+          role="img"
+          aria-label={slot.instrumentName}
           title={slot.instrumentName}
         >
           <Icon name={slot.glyph} />

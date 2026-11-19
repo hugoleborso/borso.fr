@@ -1,5 +1,6 @@
 /** @Feature members */
 
+import type { InstrumentIcon } from '@domain/instrument.core';
 import { listMemberPaletteHexes, MEMBER_PALETTE } from '@domain/member-palette.core';
 
 export interface MemberRow {
@@ -11,6 +12,7 @@ export interface MemberRow {
 export interface InstrumentRow {
   readonly id: string;
   readonly name: string;
+  readonly icon: InstrumentIcon;
 }
 
 export interface MemberSelection {
