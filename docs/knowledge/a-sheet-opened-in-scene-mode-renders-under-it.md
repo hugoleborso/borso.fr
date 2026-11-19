@@ -4,6 +4,7 @@ triggers:
   paths:
     - 'apps/pragma/site/src/routes/**/*Scene*.tsx'
     - 'apps/pragma/site/src/components/organisms/Scene*.tsx'
+    - 'apps/pragma/site/src/lib/*dialog*.ts'
 ---
 
 # A Sheet opened in Scene Mode renders under it
@@ -28,3 +29,24 @@ Two traps of a hand-made dialog nested in the stage, both met on PR #380:
   `SceneStage` leaves only on its own close.
 - A Close button that unmounts the dialog without closing it drops focus to
   `<body>`. Close it natively, with a `<form method="dialog">` submit button.
+
+## A raw dialog closes itself before React removes it
+
+A modal `<dialog>` hands focus back to its opener only when `close()` runs
+while it is still in the page. Measured in Chromium on 2026-11-19: remove an
+open modal dialog, then call `close()`, and focus stays on `<body>`. PR #377's
+popup unmounted on its Close button, and the stage's arrow keys died with the
+focus. Close natively instead, with a `<form method="dialog">` button or
+Escape, and unmount on the `close` event, as `SceneTransitionStrip` does since
+PR #380.
+
+Closing from the ref callback's cleanup does not work. In development React's
+StrictMode attaches each ref twice, so the cleanup closes the dialog between
+the two attaches and the popup vanishes as it opens. The sweep of PRs #380 and
+#381 tried it and its visual validation caught it.
+
+Last verified: 2026-11-19, `agent-browser eval` on a modal dialog removed then closed answered `afterClose: BODY`, and the dev server's popup logged added, close, removed.
+
+A `close` event from a nested dialog also reaches an outer `<dialog onClose>`
+through React, so the stage leaves only on a close from itself
+(`isEventFromItself`).

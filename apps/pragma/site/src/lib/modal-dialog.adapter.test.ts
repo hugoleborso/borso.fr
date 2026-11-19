@@ -4,16 +4,13 @@ import { focusFirstField, openDialogOnAttach } from './modal-dialog.adapter';
 interface StubbedDialog {
   readonly dialog: HTMLDialogElement;
   readonly showModal: ReturnType<typeof vi.fn>;
-  readonly close: ReturnType<typeof vi.fn>;
 }
 
 function dialogElement(): StubbedDialog {
   const dialog = document.createElement('dialog');
   const showModal = vi.fn();
-  const close = vi.fn();
   dialog.showModal = showModal;
-  dialog.close = close;
-  return { dialog, showModal, close };
+  return { dialog, showModal };
 }
 
 describe('openDialogOnAttach', () => {
@@ -23,17 +20,9 @@ describe('openDialogOnAttach', () => {
     expect(showModal).toHaveBeenCalledTimes(1);
   });
 
-  it('closes the dialog when React detaches it, so a dialog removed by state gives focus back', () => {
-    const { dialog, close } = dialogElement();
-    const detach = openDialogOnAttach(dialog);
-    expect(close).not.toHaveBeenCalled();
-    detach();
-    expect(close).toHaveBeenCalledTimes(1);
-  });
-
-  it('does nothing on the call React makes with null, nor on its cleanup', () => {
+  it('does nothing on the detach call React makes with null', () => {
     expect(() => {
-      openDialogOnAttach(null)();
+      openDialogOnAttach(null);
     }).not.toThrow();
   });
 });

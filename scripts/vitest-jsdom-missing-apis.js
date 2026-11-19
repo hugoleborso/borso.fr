@@ -20,18 +20,3 @@ class StillResizeObserver {
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = StillResizeObserver;
 }
-
-function closeDialog() {
-  this.removeAttribute('open');
-}
-
-if (
-  globalThis.HTMLDialogElement !== undefined &&
-  globalThis.HTMLDialogElement.prototype.close === undefined
-) {
-  Object.defineProperty(globalThis.HTMLDialogElement.prototype, 'close', {
-    configurable: true,
-    writable: true,
-    value: closeDialog,
-  });
-}
