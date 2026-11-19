@@ -25,7 +25,10 @@ function closeDialog() {
   this.removeAttribute('open');
 }
 
-if (typeof globalThis.HTMLDialogElement?.prototype.close === 'undefined') {
+if (
+  globalThis.HTMLDialogElement !== undefined &&
+  globalThis.HTMLDialogElement.prototype.close === undefined
+) {
   Object.defineProperty(globalThis.HTMLDialogElement.prototype, 'close', {
     configurable: true,
     writable: true,
