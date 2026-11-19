@@ -4,11 +4,11 @@ import { type ScheduledSession, selectNextSession } from '@domain/session-schedu
 import { isTaskOpen } from '@domain/task-status.core';
 import type { SetlistEditorSong } from '../../components/organisms/setlist-editor.utils';
 import {
-  describeMemberPartsByEntryId,
+  describeHeldInstrumentsByEntryId,
   type FilterableEntry,
   filterEntriesForMember,
-  type MemberPart,
-  type PartInstrument,
+  type HeldInstrument,
+  type BandInstrument,
 } from '../../components/organisms/setlist-filter.core';
 import { sumKnownDurations } from '../../components/molecules/song-duration.utils';
 import type { TaskShape } from '../band/band-tasks.core';
@@ -28,21 +28,21 @@ export interface HomeViewInput {
   readonly setlist: HomeSetlist | null;
   readonly entries: readonly FilterableEntry[];
   readonly songs: readonly HomeSong[];
-  readonly instruments: readonly PartInstrument[];
+  readonly instruments: readonly BandInstrument[];
   readonly tasks: readonly TaskShape[];
   readonly memberId: string | null;
   readonly nextSessionId: string | null;
 }
 
-export interface MemberPartRow {
+export interface HeldInstrumentEntryRow {
   readonly entryId: string;
   readonly songTitle: string;
-  readonly parts: readonly MemberPart[];
+  readonly instruments: readonly HeldInstrument[];
 }
 
 export interface HomeView {
   readonly totalSeconds: number | null;
-  readonly memberPart: readonly MemberPartRow[];
+  readonly heldInstrumentEntries: readonly HeldInstrumentEntryRow[];
   readonly memberTasks: readonly TaskShape[];
 }
 
@@ -50,21 +50,21 @@ function indexSongsById(songs: readonly HomeSong[]): Readonly<Record<string, Hom
   return Object.fromEntries(songs.map((song) => [song.id, song]));
 }
 
-function selectMemberPart(
+function selectHeldInstrumentEntries(
   input: HomeViewInput,
   songsById: Readonly<Record<string, HomeSong>>,
-): readonly MemberPartRow[] {
+): readonly HeldInstrumentEntryRow[] {
   const filtered = filterEntriesForMember(input.entries, songsById, input.memberId);
-  const partsByEntryId = describeMemberPartsByEntryId(
+  const heldInstrumentsByEntryId = describeHeldInstrumentsByEntryId(
     filtered.instrumentIdsByEntryId,
     input.instruments,
   );
   return input.entries.flatMap((entry) => {
-    const parts = partsByEntryId[entry.id];
+    const heldInstruments = heldInstrumentsByEntryId[entry.id];
     const song = songsById[entry.songId];
-    // Stryker disable next-line ConditionalExpression: equivalent mutant, an entry has parts only when filterEntriesForMember found its song, so the song is always there once the parts are.
-    if (parts === undefined || song === undefined) return [];
-    return [{ entryId: entry.id, songTitle: song.title, parts }];
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, an entry has held instruments only when filterEntriesForMember found its song, so the song is always there once its held instruments are.
+    if (heldInstruments === undefined || song === undefined) return [];
+    return [{ entryId: entry.id, songTitle: song.title, instruments: heldInstruments }];
   });
 }
 
@@ -89,7 +89,7 @@ export function buildHomeView(input: HomeViewInput): HomeView {
       : sumKnownDurations(input.entries.map((entry) => songsById[entry.songId]?.durationSeconds));
   return {
     totalSeconds,
-    memberPart: selectMemberPart(input, songsById),
+    heldInstrumentEntries: selectHeldInstrumentEntries(input, songsById),
     memberTasks: selectOpenTasksOf(input.tasks, input.memberId, input.nextSessionId),
   };
 }
@@ -156,8 +156,11 @@ export type HomeSection = 'part' | 'tasks';
 const TASKS_SECTION: HomeSection = 'tasks';
 
 // @FollowsBlueprint core-decision
-export function readHomeSection(requested: string | null, hasPart: boolean): HomeSection {
-  return hasPart && requested !== TASKS_SECTION ? 'part' : TASKS_SECTION;
+export function readHomeSection(
+  requested: string | null,
+  hasHeldInstruments: boolean,
+): HomeSection {
+  return hasHeldInstruments && requested !== TASKS_SECTION ? 'part' : TASKS_SECTION;
 }
 
 export interface KindedSession extends ScheduledSession {

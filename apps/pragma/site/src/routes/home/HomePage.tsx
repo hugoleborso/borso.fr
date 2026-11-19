@@ -19,7 +19,7 @@ import {
   type TotalDurationLabel,
 } from '../../components/molecules/song-duration.utils';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
-import { MemberPartList } from '../../components/organisms/MemberPartList';
+import { HeldInstrumentList } from '../../components/organisms/HeldInstrumentList';
 import { NextSessionCard } from '../../components/organisms/NextSessionCard';
 import { StreakSheet } from '../../components/organisms/StreakSheet';
 import { TaskList } from '../../components/organisms/TaskList';
@@ -28,7 +28,7 @@ import { useTaskRowLabels, useTaskSheet } from '../../components/organisms/task-
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { formatSessionDate, formatSessionDateTime } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
-import { buildMemberPartPath } from '../../lib/next-concert.core';
+import { buildMemberSetlistPath } from '../../lib/next-concert.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
@@ -135,8 +135,8 @@ export function HomePage(): JSX.Element {
       }),
   });
   const primaryLink = primaryAction.link;
-  const isPartShown = setlist !== null && view.memberPart.length > 0;
-  const section = readHomeSection(searchParams.get(HOME_SECTION_PARAM), isPartShown);
+  const isHeldInstrumentListShown = setlist !== null && view.heldInstrumentEntries.length > 0;
+  const section = readHomeSection(searchParams.get(HOME_SECTION_PARAM), isHeldInstrumentListShown);
   const showSection = (next: HomeSection): void => {
     setSearchParams({ [HOME_SECTION_PARAM]: next }, { replace: true });
   };
@@ -152,17 +152,17 @@ export function HomePage(): JSX.Element {
       setlist === null ? null : (
         <div className="flex flex-col gap-2">
           {memberId === null ? <Overline>{t('home.yourPart')}</Overline> : null}
-          <MemberPartList
+          <HeldInstrumentList
             label={t('home.yourPart')}
-            rows={view.memberPart}
-            path={buildMemberPartPath(setlist.id, memberId ?? '')}
+            rows={view.heldInstrumentEntries}
+            path={buildMemberSetlistPath(setlist.id, memberId ?? '')}
           />
         </div>
       ),
     tasks:
       memberId === null ? null : (
         <div className="flex flex-col gap-2">
-          {isPartShown ? null : <Overline>{t('home.yourTasks')}</Overline>}
+          {isHeldInstrumentListShown ? null : <Overline>{t('home.yourTasks')}</Overline>}
           {view.memberTasks.length === 0 ? (
             <p className="m-0 text-meta text-ink-soft">{t('home.noOpenTask')}</p>
           ) : (
@@ -239,7 +239,7 @@ export function HomePage(): JSX.Element {
         />
       )}
 
-      {isPartShown && memberId !== null ? (
+      {isHeldInstrumentListShown && memberId !== null ? (
         <SectionTabs
           label={t('home.sectionsLabel')}
           tabs={[

@@ -1,7 +1,10 @@
 /** @Feature songs */
 
 import { selectInstrumentIdsNamedInWords } from '../../components/molecules/lineup-slots.core';
-import type { MemberPart, PartInstrument } from '../../components/organisms/setlist-filter.core';
+import type {
+  HeldInstrument,
+  BandInstrument,
+} from '../../components/organisms/setlist-filter.core';
 import { type ChartKindTag, extractChartKind } from './chart-kind.utils';
 
 export const CATALOG_FILTERS = [
@@ -114,7 +117,7 @@ export interface SongCardSource<Status extends string> {
   readonly charts: readonly { readonly kind?: unknown }[];
 }
 
-export type SongCardInstrument = MemberPart;
+export type SongCardInstrument = HeldInstrument;
 
 const NO_CARD_INSTRUMENTS: readonly SongCardInstrument[] = [];
 
@@ -145,7 +148,7 @@ export function toSongCard<Status extends string>(
   };
 }
 
-export type LearnedInstrument = PartInstrument;
+export type LearnedInstrument = BandInstrument;
 
 export interface SongToLearnDetail {
   readonly instruments: readonly SongCardInstrument[];

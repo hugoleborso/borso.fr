@@ -5,12 +5,6 @@ import type { LineupColumnView } from './lineup-slots.core';
 
 const ROOM_FOR_EVERY_SLOT_PX = 480;
 
-class StillResizeObserver implements ResizeObserver {
-  readonly observe = vi.fn();
-  readonly unobserve = vi.fn();
-  readonly disconnect = vi.fn();
-}
-
 const COLUMN: LineupColumnView = {
   isUnassigned: false,
   slots: [
@@ -22,7 +16,6 @@ const COLUMN: LineupColumnView = {
 // @FollowsBlueprint test-component-render
 describe('LineupSlots', () => {
   beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', StillResizeObserver);
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
       DOMRect.fromRect({ width: ROOM_FOR_EVERY_SLOT_PX, height: 24 }),
     );

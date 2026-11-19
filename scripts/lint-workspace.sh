@@ -22,4 +22,7 @@ workspace="${PWD#"$root"/}"
 "$root/scripts/ensure-infra-built.sh"
 
 cd "$root"
-exec node_modules/.bin/oxlint --type-aware "$@" "$workspace"
+# oxlint prints nothing on a clean run, which reads the same as a run that
+# never started, so a clean run says so.
+node_modules/.bin/oxlint --type-aware "$@" "$workspace"
+echo "[lint] clean: $workspace"

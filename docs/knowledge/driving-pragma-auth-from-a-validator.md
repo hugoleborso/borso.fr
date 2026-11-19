@@ -32,6 +32,12 @@ The fixture route, if you need to reseed mid-run, is
 reseeds, so a run that changes passwords leaves nothing behind for the
 next one.
 
+The fixture holds an inspiration whose author was deleted, which shows
+"former member". `POST /api/__test/seed?practice=today` also adds a practice
+dated today with three songs, whose action row is crowded. It is opt-in
+because a practice today counts toward every member's flame and would erase
+Hugo's seeded open-today flame. The validators of PR #381 had neither.
+
 The fixture draws every id with `randomUUID()`, so an id copied from one
 run is a 404 in the next. PR #249's migration brief listed routes such as
 `/setlists/cb929e7b-…` from an earlier run, and the subagent lost a round

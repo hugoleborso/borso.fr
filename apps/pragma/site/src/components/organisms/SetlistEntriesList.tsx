@@ -18,9 +18,9 @@ import { SetlistBreakRow } from './SetlistBreakRow';
 import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.core';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
-import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
+import type { HeldInstrumentGlyph } from '../molecules/HeldInstrumentGlyphs';
 
-const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
+const NO_HELD_INSTRUMENTS: readonly HeldInstrumentGlyph[] = [];
 const NO_CHANGE: readonly SetlistEntryLineupChange[] = [];
 const NO_BREAK: readonly PlacedBreak[] = [];
 const SONG_ID_FALLBACK_LENGTH = 8;
@@ -46,7 +46,7 @@ export interface SetlistEntriesListProps {
   readonly transitionViews: readonly TransitionView[];
   readonly transitionNotesByPair: Readonly<Record<string, string>>;
   readonly inFilteredMode: boolean;
-  readonly memberPartByEntryId: Readonly<Record<string, readonly MemberPartGlyph[]>>;
+  readonly heldInstrumentsByEntryId: Readonly<Record<string, readonly HeldInstrumentGlyph[]>>;
   readonly lineupMembers: readonly LineupMember[];
   readonly slotInstruments: readonly SlotInstrument[];
   readonly knownMemberIds: ReadonlySet<string>;
@@ -113,7 +113,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
           <SetlistEntryRow
             key={entry.id}
             position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
-            memberPart={props.memberPartByEntryId[entry.id] ?? NO_MEMBER_PART}
+            heldInstruments={props.heldInstrumentsByEntryId[entry.id] ?? NO_HELD_INSTRUMENTS}
             isMemberView={props.inFilteredMode}
             entryId={entry.id}
             title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}

@@ -30,7 +30,7 @@ describe('describeEntryLineup', () => {
         firstName: 'Anna',
         color: '#e07a5f',
         heldInstrumentIds: ['voice'],
-        heldParts: [
+        heldInstruments: [
           { instrumentId: 'voice', name: 'Voice', icon: 'mic-vocal', isNameNeeded: false },
         ],
         isChangedTonight: true,
@@ -40,7 +40,7 @@ describe('describeEntryLineup', () => {
         firstName: 'Bruno',
         color: '#3d8b8b',
         heldInstrumentIds: ['bass', 'voice'],
-        heldParts: [
+        heldInstruments: [
           { instrumentId: 'voice', name: 'Voice', icon: 'mic-vocal', isNameNeeded: false },
           { instrumentId: 'bass', name: 'Bass', icon: 'bass', isNameNeeded: false },
         ],
@@ -51,7 +51,7 @@ describe('describeEntryLineup', () => {
         firstName: 'Clara',
         color: '#7a4a8b',
         heldInstrumentIds: [],
-        heldParts: [],
+        heldInstruments: [],
         isChangedTonight: false,
       },
     ]);
@@ -72,7 +72,9 @@ describe('describeEntryLineup', () => {
       ],
       lineupOverride: { anna: ['guitar', 'lead', 'voice', 'kazoo'] },
     });
-    expect(anna?.heldParts.map((part) => [part.name, part.isNameNeeded])).toEqual([
+    expect(
+      anna?.heldInstruments.map((instrument) => [instrument.name, instrument.isNameNeeded]),
+    ).toEqual([
       ['Voice', false],
       ['Guitar', true],
       ['Lead', true],

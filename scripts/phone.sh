@@ -14,9 +14,13 @@
 # `swipe` is the same drag, lifted a given number of CSS pixels away from where
 # it started, for a gesture judged by distance and angle rather than by target.
 #
+# A target is a CSS selector, or `text=<name>` for the innermost visible element
+# whose aria-label or text is exactly <name>, such as a lyric line or a button
+# named only by its label.
+#
 # Usage:
 #   scripts/phone.sh start <url>                   open url in the "phone" session at 375 x 812
-#   scripts/phone.sh touch '<selector>'            real touch tap on the first visible match
+#   scripts/phone.sh touch '<target>'              real touch tap on the first visible match
 #   scripts/phone.sh drag '<from>' '<to>'          real touch drag between two first visible matches
 #   scripts/phone.sh swipe '<from>' <dx> <dy>      real touch swipe from the first visible match, by dx, dy px
 #   scripts/phone.sh stop                          close the session
@@ -57,7 +61,7 @@ case "${1:-}" in
     agent-browser --session "$SESSION" set viewport "$PHONE_WIDTH" "$PHONE_HEIGHT"
     ;;
   touch)
-    [ $# -eq 2 ] || fail "usage: scripts/phone.sh touch '<css selector>'"
+    [ $# -eq 2 ] || fail "usage: scripts/phone.sh touch '<target>'"
     port="$(cdp_port)"
     [ -n "$port" ] || fail "no '$SESSION' session — scripts/phone.sh start <url>"
     # touch-tap.ts emulates the phone on its own CDP connection, and Chromium
@@ -69,10 +73,10 @@ case "${1:-}" in
     ;;
   drag | swipe)
     if [ "$1" = drag ]; then
-      [ $# -eq 3 ] || fail "usage: scripts/phone.sh drag '<from css selector>' '<to css selector>'" 2
+      [ $# -eq 3 ] || fail "usage: scripts/phone.sh drag '<from target>' '<to target>'" 2
       destination=(--to "$3")
     else
-      [ $# -eq 4 ] || fail "usage: scripts/phone.sh swipe '<from css selector>' <dx px> <dy px>" 2
+      [ $# -eq 4 ] || fail "usage: scripts/phone.sh swipe '<from target>' <dx px> <dy px>" 2
       destination=(--by "$3,$4")
     fi
     port="$(cdp_port)"
@@ -87,6 +91,6 @@ case "${1:-}" in
     agent-browser --session "$SESSION" close
     ;;
   *)
-    fail "usage: scripts/phone.sh start <url> | touch '<css selector>' | drag '<from>' '<to>' | swipe '<from>' <dx> <dy> | stop"
+    fail "usage: scripts/phone.sh start <url> | touch '<target>' | drag '<from>' '<to>' | swipe '<from>' <dx> <dy> | stop"
     ;;
 esac

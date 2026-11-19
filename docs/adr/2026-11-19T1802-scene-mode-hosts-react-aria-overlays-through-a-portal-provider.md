@@ -1,6 +1,6 @@
 # ADR-2026-11-19T1802: Scene Mode hosts React Aria overlays through a portal provider
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-19
 - **Deciders:** Hugo
 - **Tags:** pragma, scene-mode, frontend

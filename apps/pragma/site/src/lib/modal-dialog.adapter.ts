@@ -2,7 +2,7 @@
  * @Blueprint ref-callback-browser-api
  * @BlueprintName Ref Callback Driving A Browser API
  * @BlueprintUsage Use for calling an imperative DOM method when React attaches a node, in place of a mount effect.
- * @BlueprintDescription Declares the callback at module level so React sees one identity and attaches the node once, and reaches the method through optional chaining so the detach call, which passes null, is a no-op needing no branch. Its test makes that null call, or the mutation gate keeps the optional chain alive. A dialog is opened where it is rendered, with nothing watching an open prop.
+ * @BlueprintDescription Declares the callback at module level so React sees one identity and attaches the node once, and reaches the method through optional chaining so the call React makes with null is a no-op needing no branch. Its test makes that null call, or the mutation gate keeps the optional chain alive. A dialog is opened where it is rendered, with nothing watching an open prop, and the cleanup it returns closes it on detach, so a dialog removed by state still gives focus back to its opener.
  * @DependsOnExternal browser-dialog
  */
 
@@ -20,8 +20,8 @@ export function focusFirstField(dialog: HTMLElement | null): void {
   target?.focus(FOCUS_WITHOUT_SCROLLING);
 }
 
-export function openDialogOnAttach(dialog: HTMLDialogElement | null): void {
-  if (dialog === null) return;
-  dialog.showModal();
+export function openDialogOnAttach(dialog: HTMLDialogElement | null): () => void {
+  dialog?.showModal();
   focusFirstField(dialog);
+  return () => dialog?.close();
 }

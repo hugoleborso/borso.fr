@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildMemberPartPath, selectNextConcert, splitConcertHeading } from './next-concert.core';
+import {
+  buildMemberSetlistPath,
+  selectNextConcert,
+  splitConcertHeading,
+} from './next-concert.core';
 
 const NOW = Date.parse('2026-05-01T12:00:00.000Z');
 
@@ -31,13 +35,13 @@ describe('selectNextConcert', () => {
   });
 });
 
-describe('buildMemberPartPath', () => {
+describe('buildMemberSetlistPath', () => {
   it('filters the setlist to the member', () => {
-    expect(buildMemberPartPath('set-1', 'member-1')).toBe('/setlists/set-1?member=member-1');
+    expect(buildMemberSetlistPath('set-1', 'member-1')).toBe('/setlists/set-1?member=member-1');
   });
 
   it('opens the whole setlist when nobody is signed in yet', () => {
-    expect(buildMemberPartPath('set-1', '')).toBe('/setlists/set-1');
+    expect(buildMemberSetlistPath('set-1', '')).toBe('/setlists/set-1');
   });
 });
 

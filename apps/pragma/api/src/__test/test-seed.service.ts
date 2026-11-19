@@ -24,7 +24,10 @@ import {
 import { countSavedFeeds, listFixtureFeedAttachments } from './calendar-feed-fixtures.core';
 
 export { answerFixtureFeedRequest } from './calendar-feed-fixtures.core';
+export { seedTodayPractice } from './test-seed-edge-cases.service';
+export { isPracticeTodayRequested } from './test-seed.core';
 import { seedPresences } from './test-seed-presences.service';
+import { seedFormerMemberInspiration } from './test-seed-edge-cases.service';
 import { SEED_TASKS } from './test-seed-task-board.core';
 import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
@@ -289,6 +292,7 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
   const seedActor = selectSeedActor(memberIdByName, now);
   await seedConcertSetlist(songIds, seedActor);
   await seedTransitionComment(songIds, seedActor);
+  await seedFormerMemberInspiration(now);
   const calendarFeeds = await seedCalendarFeeds(memberIdByName, feedOrigin, now);
   const assistantClientId = await seedAssistantGrant(memberIdByName, now);
 

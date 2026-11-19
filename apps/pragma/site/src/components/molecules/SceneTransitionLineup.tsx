@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   describeSceneTransitionLineup,
   type SceneTransitionMember,
-  type SceneTransitionPart,
+  type SceneTransitionInstrument,
 } from '../../routes/setlists/scene-transition.core';
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -18,18 +18,18 @@ export interface SceneTransitionLineupProps {
 }
 
 function Glyphs({
-  parts,
+  instruments,
   className,
 }: {
-  readonly parts: readonly SceneTransitionPart[];
+  readonly instruments: readonly SceneTransitionInstrument[];
   readonly className?: string;
 }): JSX.Element {
   return (
     <>
-      {parts.map((part) => (
+      {instruments.map((instrument) => (
         <Icon
-          key={part.instrumentId}
-          name={INSTRUMENT_ICON_GLYPH[part.icon]}
+          key={instrument.instrumentId}
+          name={INSTRUMENT_ICON_GLYPH[instrument.icon]}
           size="md"
           className={composeClassName('shrink-0', className)}
         />
@@ -54,12 +54,12 @@ export function SceneTransitionLineup({ members }: SceneTransitionLineupProps): 
             className="inline-flex items-center gap-1 text-stage-ink"
           >
             <Avatar initials={memberInitial(member.firstName)} color={member.color} aria-hidden />
-            <Glyphs parts={member.kept} />
+            <Glyphs instruments={member.kept} />
             {member.hasArrow ? (
               <>
-                <Glyphs parts={member.putDown} className="text-stage-ink-dim" />
+                <Glyphs instruments={member.putDown} className="text-stage-ink-dim" />
                 <Icon name="arrowR" size="sm" className="shrink-0 text-stage-ink-dim" />
-                <Glyphs parts={member.pickUp} />
+                <Glyphs instruments={member.pickUp} />
               </>
             ) : null}
           </span>

@@ -25,7 +25,7 @@ export interface SceneTransitionInput {
   readonly instruments: readonly SceneTransitionInstrumentInput[];
 }
 
-export interface SceneTransitionPart {
+export interface SceneTransitionInstrument {
   readonly instrumentId: string;
   readonly name: string;
   readonly icon: InstrumentIcon;
@@ -39,9 +39,9 @@ export interface SceneTransitionMember {
   readonly color: string;
   readonly move: SceneTransitionMove;
   readonly hasArrow: boolean;
-  readonly kept: readonly SceneTransitionPart[];
-  readonly putDown: readonly SceneTransitionPart[];
-  readonly pickUp: readonly SceneTransitionPart[];
+  readonly kept: readonly SceneTransitionInstrument[];
+  readonly putDown: readonly SceneTransitionInstrument[];
+  readonly pickUp: readonly SceneTransitionInstrument[];
 }
 
 export interface SceneTransition {
@@ -49,10 +49,10 @@ export interface SceneTransition {
   readonly members: readonly SceneTransitionMember[];
 }
 
-function partsOf(
+function heldInstrumentsOf(
   instrumentIds: readonly string[],
   instruments: readonly SceneTransitionInstrumentInput[],
-): readonly SceneTransitionPart[] {
+): readonly SceneTransitionInstrument[] {
   return instruments
     .filter((instrument) => instrumentIds.includes(instrument.id))
     .map((instrument) => ({
@@ -96,9 +96,9 @@ export function buildSceneTransition(input: SceneTransitionInput): SceneTransiti
         color: member.color,
         move,
         hasArrow: move !== 'keeps',
-        kept: partsOf(within(heldNext, heldNow), input.instruments),
-        putDown: partsOf(without(heldNow, heldNext), input.instruments),
-        pickUp: partsOf(without(heldNext, heldNow), input.instruments),
+        kept: heldInstrumentsOf(within(heldNext, heldNow), input.instruments),
+        putDown: heldInstrumentsOf(without(heldNow, heldNext), input.instruments),
+        pickUp: heldInstrumentsOf(without(heldNext, heldNow), input.instruments),
       },
     ];
   });
@@ -107,8 +107,8 @@ export function buildSceneTransition(input: SceneTransitionInput): SceneTransiti
 
 const ARROW = '→';
 
-function namesOf(parts: readonly SceneTransitionPart[]): string {
-  return parts.map((part) => part.name).join(', ');
+function namesOf(instruments: readonly SceneTransitionInstrument[]): string {
+  return instruments.map((instrument) => instrument.name).join(', ');
 }
 
 export function describeSceneTransitionLineup(member: SceneTransitionMember): string {

@@ -4,6 +4,7 @@ import {
   emulatePhone,
   openSession,
   pause,
+  FIRST_VISIBLE_SCRIPT,
   PROBE_SIGNAL,
   READ_PAGE_SCRIPT,
   RESET_PROBE_SCRIPT,
@@ -19,12 +20,14 @@ import {
 } from './touch-tap.core';
 
 const USAGE = [
-  'usage: pnpm exec tsx scripts/browser/touch-tap.ts --selector <css> [--page <url part>]',
+  'usage: pnpm exec tsx scripts/browser/touch-tap.ts --selector <css | text=name> [--page <url part>]',
   '         [--port 9222] [--width 375] [--height 812]',
   '',
-  'Taps the element with a real touch through CDP Input.dispatchTouchEvent, on the',
-  'Chromium listening on --port (scripts/phone.sh passes its agent-browser session),',
-  'at a phone viewport with touch emulation on, and prints which events reached it.',
+  'Taps the first visible element matching the CSS selector, or, given text=<name>,',
+  'the innermost one whose aria-label or text is exactly <name>, with a real touch',
+  'through CDP Input.dispatchTouchEvent, on the Chromium listening on --port',
+  '(scripts/phone.sh passes its agent-browser session), at a phone viewport with',
+  'touch emulation on, and prints which events reached it.',
   'Exits 1 when the tap did not arrive as touch on the element.',
   '',
 ].join('\n');
@@ -36,9 +39,8 @@ const TOUCH_RADIUS = 12;
 
 function buildPreparationScript(selector: string): string {
   return `(() => {
-    const target = [...document.querySelectorAll(${JSON.stringify(selector)})].find((element) =>
-      element.checkVisibility(),
-    );
+    ${FIRST_VISIBLE_SCRIPT}
+    const target = firstVisible(${JSON.stringify(selector)});
     if (target === undefined) return null;
     target.scrollIntoView({ block: 'center' });
     ${RESET_PROBE_SCRIPT}

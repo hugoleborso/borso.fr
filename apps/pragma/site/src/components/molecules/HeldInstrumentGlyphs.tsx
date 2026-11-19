@@ -5,34 +5,37 @@ import type { InstrumentIcon } from '@domain/instrument.core';
 import { Icon, type IconSize } from '../atoms/Icon';
 import { INSTRUMENT_ICON_GLYPH } from './lineup-slots.core';
 
-export interface MemberPartGlyph {
+export interface HeldInstrumentGlyph {
   readonly instrumentId: string;
   readonly name: string;
   readonly icon: InstrumentIcon;
   readonly isNameNeeded: boolean;
 }
 
-export interface MemberPartGlyphsProps {
-  readonly parts: readonly MemberPartGlyph[];
+export interface HeldInstrumentGlyphsProps {
+  readonly instruments: readonly HeldInstrumentGlyph[];
   readonly size: IconSize;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function MemberPartGlyphs({ parts, size }: MemberPartGlyphsProps): JSX.Element {
+export function HeldInstrumentGlyphs({
+  instruments,
+  size,
+}: HeldInstrumentGlyphsProps): JSX.Element {
   return (
     <span className="flex min-w-0 items-center gap-2 text-accent">
-      {parts.map((part) => (
+      {instruments.map((instrument) => (
         <span
-          key={part.instrumentId}
+          key={instrument.instrumentId}
           role="img"
-          aria-label={part.name}
-          title={part.name}
+          aria-label={instrument.name}
+          title={instrument.name}
           className="inline-flex shrink-0 items-center gap-1"
         >
-          <Icon name={INSTRUMENT_ICON_GLYPH[part.icon]} size={size} />
-          {part.isNameNeeded ? (
+          <Icon name={INSTRUMENT_ICON_GLYPH[instrument.icon]} size={size} />
+          {instrument.isNameNeeded ? (
             <span aria-hidden="true" className="text-label tracking-wider uppercase">
-              {part.name}
+              {instrument.name}
             </span>
           ) : null}
         </span>

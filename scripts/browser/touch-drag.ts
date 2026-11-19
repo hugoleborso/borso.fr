@@ -3,6 +3,7 @@ import {
   createSender,
   emulatePhone,
   openSession,
+  FIRST_VISIBLE_SCRIPT,
   pause,
   PROBE_SIGNAL,
   READ_PAGE_SCRIPT,
@@ -21,7 +22,7 @@ import {
 import { readReportedEvent, type RecordedInputEvent, type TapPoint } from './touch-tap.core';
 
 const USAGE = [
-  'usage: pnpm exec tsx scripts/browser/touch-drag.ts --from <css> (--to <css> | --by <dx>,<dy>)',
+  'usage: pnpm exec tsx scripts/browser/touch-drag.ts --from <target> (--to <target> | --by <dx>,<dy>)',
   '         [--steps 8]',
   '         [--page <url part>] [--port 9222] [--width 375] [--height 812]',
   '',
@@ -30,7 +31,8 @@ const USAGE = [
   'phone viewport with touch emulation on: touchStart at the centre of the first',
   'visible --from match, --steps touchMove events, touchEnd at the centre of the',
   'first visible --to match, or --by CSS pixels away from where it started (a',
-  'swipe, such as --by -120,0). Prints which events reached the page. Exits 1',
+  'swipe, such as --by -120,0). A target is a CSS selector, or text=<name> for',
+  'the innermost element whose aria-label or text is exactly <name>. Prints which events reached the page. Exits 1',
   'unless a touchstart reached --from, a touchmove and a touchend fired, no',
   'pointercancel said the browser took the gesture to pan, and, with --to, the',
   'touch lifted over --to. A --by swipe accepts a pointercancel: touch events',
@@ -57,8 +59,7 @@ const EVENTS_THAT_FOLLOW_A_REMOVED_TARGET = ['touchmove', 'touchend', 'touchcanc
 
 function buildPreparationScript(options: TouchDragOptions): string {
   return `(() => {
-    const firstVisible = (selector) =>
-      [...document.querySelectorAll(selector)].find((element) => element.checkVisibility());
+    ${FIRST_VISIBLE_SCRIPT}
     const origin = firstVisible(${JSON.stringify(options.fromSelector)});
     const destination = ${
       options.offset === null ? `firstVisible(${JSON.stringify(options.toSelector)})` : 'null'
