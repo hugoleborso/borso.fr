@@ -6,6 +6,7 @@ import {
   type LineupColumnView,
   naturalColumnWidth,
   OVERFLOW_COUNTER_WIDTH_PX,
+  selectInstrumentIdsNamedInWords,
   selectLineupColumnKind,
   sliceColumnToWidth,
   type SlotInstrument,
@@ -206,5 +207,30 @@ describe('naturalColumnWidth', () => {
 
   it('lets an empty column size itself to its no-lineup label', () => {
     expect(naturalColumnWidth({ slots: [], isUnassigned: true })).toBe('auto');
+  });
+});
+
+describe('selectInstrumentIdsNamedInWords', () => {
+  it('draws a specific glyph alone and writes the name beside the generic one', () => {
+    expect(
+      selectInstrumentIdsNamedInWords([
+        { id: 'guitar', icon: 'guitar' },
+        { id: 'kazoo', icon: 'music' },
+      ]),
+    ).toEqual(new Set(['kazoo']));
+  });
+
+  it('writes the name of every instrument whose glyph another one on the row shares', () => {
+    expect(
+      selectInstrumentIdsNamedInWords([
+        { id: 'rhythm', icon: 'guitar' },
+        { id: 'lead', icon: 'guitar' },
+        { id: 'bass', icon: 'bass' },
+      ]),
+    ).toEqual(new Set(['rhythm', 'lead']));
+  });
+
+  it('writes no name on an empty row', () => {
+    expect(selectInstrumentIdsNamedInWords([])).toEqual(new Set());
   });
 });

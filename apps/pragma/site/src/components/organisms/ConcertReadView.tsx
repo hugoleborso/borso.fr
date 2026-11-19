@@ -52,7 +52,6 @@ export function ConcertReadView({
               return (
                 <div key={member.id} className="flex items-center gap-2.5">
                   <MemberChip memberName={member.firstName} memberColor={member.color} />
-                  <span className="text-meta text-ink w-20 flex-shrink-0">{member.firstName}</span>
                   <div className="flex-1 h-1.5 bg-sunk rounded-sm overflow-hidden">
                     <MemberMark
                       color={member.color}

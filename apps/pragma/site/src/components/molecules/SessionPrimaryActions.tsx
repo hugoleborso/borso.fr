@@ -3,10 +3,15 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { recordProductEvent } from '../../observability/product-event.adapter';
-import type { SessionPills } from '../../routes/sessions/session-page.core';
+import {
+  isSessionPillRowCrowded,
+  type SessionPills,
+} from '../../routes/sessions/session-page.core';
 import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
 import { ButtonLink } from '../atoms/ButtonLink';
+import type { IconName } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 
 export interface SessionPrimaryActionsProps {
   readonly pills: SessionPills;
@@ -14,6 +19,47 @@ export interface SessionPrimaryActionsProps {
   readonly onAddSetlist: () => void;
   readonly onChooseSongs: () => void;
   readonly orderSongs: { readonly order: () => void; readonly isPending: boolean };
+}
+
+interface PillActionProps {
+  readonly icon: IconName;
+  readonly variant: 'primary' | 'secondary';
+  readonly label: string;
+  readonly isRowCrowded: boolean;
+  readonly disabled: boolean;
+  readonly onClick: () => void;
+}
+
+function PillAction({
+  icon,
+  variant,
+  label,
+  isRowCrowded,
+  disabled,
+  onClick,
+}: PillActionProps): JSX.Element {
+  if (isRowCrowded && variant === 'secondary') {
+    return (
+      <IconButton
+        icon={icon}
+        variant="secondary"
+        label={label}
+        disabled={disabled}
+        onClick={onClick}
+      />
+    );
+  }
+  return (
+    <Button
+      icon={icon}
+      variant={variant}
+      labelDisplay={variant === 'secondary' ? 'wide-only' : 'always'}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  );
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -25,6 +71,7 @@ export function SessionPrimaryActions({
   orderSongs,
 }: SessionPrimaryActionsProps): JSX.Element {
   const { t } = useTranslation();
+  const isCrowded = isSessionPillRowCrowded(pills);
   return (
     <BottomActions>
       {pills.setlistPath === null ? null : (
@@ -43,25 +90,24 @@ export function SessionPrimaryActions({
         </ButtonLink>
       )}
       {pills.isOrderSongsShown ? (
-        <Button
+        <PillAction
           icon="reorder"
           variant="secondary"
-          labelDisplay="wide-only"
+          label={t('sessions.practiceSongs.order')}
+          isRowCrowded={isCrowded}
           disabled={orderSongs.isPending}
           onClick={orderSongs.order}
-        >
-          {t('sessions.practiceSongs.order')}
-        </Button>
+        />
       ) : null}
       {pills.chooseSongsVariant === null ? null : (
-        <Button
+        <PillAction
           icon="song"
           variant={pills.chooseSongsVariant}
-          labelDisplay={pills.chooseSongsVariant === 'secondary' ? 'wide-only' : 'always'}
+          label={t('sessions.practiceSongs.choose')}
+          isRowCrowded={isCrowded}
+          disabled={false}
           onClick={onChooseSongs}
-        >
-          {t('sessions.practiceSongs.choose')}
-        </Button>
+        />
       )}
       {pills.isAddSetlistShown ? (
         <Button icon="plus" variant="primary" disabled={isAddingSetlist} onClick={onAddSetlist}>

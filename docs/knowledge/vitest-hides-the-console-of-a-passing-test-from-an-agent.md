@@ -6,9 +6,13 @@ triggers:
     - 'infra/cdk/test/**/*.test.ts'
   commands:
     - '\bvitest\b[^|;&]*\bcdk/test\b'
+    - '\bvitest\b[^|;&]*--project[ =]core\b'
 ---
 
 # Vitest hides the console of a passing test from an agent
+
+On PR #377 a technical validator met it again with a probe test in pragma's
+core project, and made the probe fail an assertion to see its values.
 
 On PR #234 an implementer added a `console.log` to a CDK test in pragma to read
 a synthesized resource. The test passed and printed nothing, so the value went

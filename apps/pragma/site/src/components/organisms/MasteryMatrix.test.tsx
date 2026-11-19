@@ -8,15 +8,16 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { MasteryMatrix } from './MasteryMatrix';
+import { MasteryMatrix, type MasteryMatrixInstrument } from './MasteryMatrix';
 
 const MEMBERS = [
   { id: 'member-ada', firstName: 'Ada', color: '#c0392b' },
   { id: 'member-bo', firstName: 'Bo', color: '#2d5fa0' },
 ];
-const INSTRUMENTS = [
-  { id: 'instrument-bass', name: 'Bass' },
-  { id: 'instrument-drums', name: 'Drums' },
+const INSTRUMENTS: readonly MasteryMatrixInstrument[] = [
+  { id: 'instrument-bass', name: 'Bass', icon: 'bass' },
+  { id: 'instrument-drums', name: 'Drums', icon: 'drum' },
+  { id: 'instrument-kazoo', name: 'Kazoo', icon: 'music' },
 ];
 const DEFAULTS = [
   { memberId: 'member-ada', instrumentId: 'instrument-bass', score: 4 },
@@ -50,11 +51,11 @@ describe('MasteryMatrix', () => {
     stub?.restore();
   });
 
-  it('puts one member per column, headed by their avatar in their stored colour', () => {
+  it('puts one member per column, headed by their avatar alone in their stored colour', () => {
     renderMatrix();
     const headers = screen.getAllByRole('columnheader');
-    expect(headers.map((header) => header.textContent)).toEqual(['', 'AAda', 'BBo']);
-    const adaAvatar = within(present(headers[1])).getByRole('img', { name: 'A' });
+    expect(headers.map((header) => header.textContent)).toEqual(['', 'A', 'B']);
+    const adaAvatar = within(present(headers[1])).getByRole('img', { name: 'Ada' });
     expect(adaAvatar.style.backgroundColor).toBe('rgb(192, 57, 43)');
   });
 
@@ -64,6 +65,14 @@ describe('MasteryMatrix', () => {
     const bassRow = screen.getByRole('rowheader', { name: /Bass/ }).closest('tr');
     expect(bassRow?.textContent).toContain('2.5');
     expect(within(present(bassRow)).getAllByRole('textbox')).toHaveLength(MEMBERS.length);
+  });
+
+  it('heads each row with the instrument glyph, and writes the name only beside the generic one', () => {
+    renderMatrix();
+    const bass = screen.getByRole('img', { name: 'Bass' });
+    expect(bass.textContent).toBe('');
+    expect(bass.getAttribute('title')).toBe('Bass');
+    expect(screen.getByRole('img', { name: 'Kazoo' }).textContent).toBe('Kazoo');
   });
 
   it('closes on each member average in the footer', async () => {

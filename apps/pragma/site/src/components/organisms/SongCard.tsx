@@ -5,6 +5,7 @@ import { AlbumCover } from '../atoms/AlbumCover';
 import { Icon } from '../atoms/Icon';
 import type { ChartKindTag } from '../../routes/catalog/chart-kind.utils';
 import { ChartKindIcon } from '../molecules/ChartKindIcon';
+import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 import type { SongStatus } from '@domain/song-status.core';
 import { StatusChip } from '../molecules/StatusChip';
 
@@ -12,6 +13,7 @@ export interface SongCardProps {
   readonly id: string;
   readonly title: string;
   readonly detail: string;
+  readonly instruments: readonly MemberPartGlyph[];
   readonly deezerAlbumId: string | null;
   readonly status: SongStatus;
   readonly chartKind: ChartKindTag;
@@ -27,6 +29,7 @@ export function SongCard({
   id,
   title,
   detail,
+  instruments,
   deezerAlbumId,
   status,
   chartKind,
@@ -39,7 +42,10 @@ export function SongCard({
       <AlbumCover title={title} deezerAlbumId={deezerAlbumId} />
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-display text-title leading-tight">{title}</span>
-        <span className="truncate text-meta text-ink-soft">{detail}</span>
+        <span className="flex min-w-0 items-center gap-2 text-meta text-ink-soft">
+          {instruments.length > 0 ? <MemberPartGlyphs parts={instruments} size="sm" /> : null}
+          <span className="truncate">{detail}</span>
+        </span>
       </span>
       {chartKind === null ? null : <ChartKindIcon kind={chartKind} />}
       <StatusChip status={status} />

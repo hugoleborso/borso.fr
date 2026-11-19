@@ -1,7 +1,10 @@
 /** @Feature setlists */
 
+import type { InstrumentIcon } from '@domain/instrument.core';
 import { type Lineup, instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';
 import { type LineupFormValues, toggleInstrumentHeld } from '../molecules/lineup-editor.core';
+import { selectInstrumentIdsNamedInWords } from '../molecules/lineup-slots.core';
+import type { MemberPart } from './setlist-filter.core';
 
 export interface EntryLineupMember {
   readonly id: string;
@@ -12,6 +15,7 @@ export interface EntryLineupMember {
 export interface EntryLineupInstrument {
   readonly id: string;
   readonly name: string;
+  readonly icon: InstrumentIcon;
 }
 
 export interface EntryLineupInput {
@@ -26,13 +30,27 @@ export interface EntryLineupRow {
   readonly firstName: string;
   readonly color: string;
   readonly heldInstrumentIds: readonly string[];
-  readonly heldInstrumentNames: readonly string[];
+  readonly heldParts: readonly MemberPart[];
   readonly isChangedTonight: boolean;
 }
 
 function isSameInstrumentSet(left: readonly string[], right: readonly string[]): boolean {
   if (left.length !== right.length) return false;
   return left.every((instrumentId) => right.includes(instrumentId));
+}
+
+function describeHeldParts(
+  instruments: readonly EntryLineupInstrument[],
+  heldInstrumentIds: readonly string[],
+): readonly MemberPart[] {
+  const held = instruments.filter((instrument) => heldInstrumentIds.includes(instrument.id));
+  const namedInWords = selectInstrumentIdsNamedInWords(held);
+  return held.map((instrument) => ({
+    instrumentId: instrument.id,
+    name: instrument.name,
+    icon: instrument.icon,
+    isNameNeeded: namedInWords.has(instrument.id),
+  }));
 }
 
 // @FollowsBlueprint core-projection
@@ -45,9 +63,7 @@ export function describeEntryLineup(input: EntryLineupInput): readonly EntryLine
       firstName: member.firstName,
       color: member.color,
       heldInstrumentIds: held,
-      heldInstrumentNames: input.instruments
-        .filter((instrument) => held.includes(instrument.id))
-        .map((instrument) => instrument.name),
+      heldParts: describeHeldParts(input.instruments, held),
       isChangedTonight: !isSameInstrumentSet(
         held,
         instrumentsHeldBy(input.songDefaultLineup, member.id),

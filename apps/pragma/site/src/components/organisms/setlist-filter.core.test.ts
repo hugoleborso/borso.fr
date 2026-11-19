@@ -128,6 +128,7 @@ describe('describeMemberPartsByEntryId', () => {
     { id: DRUMS, name: 'Batterie', icon: 'drum' },
     { id: GUITAR, name: 'Guitare', icon: 'guitar' },
     { id: 'lead-guitar-id', name: 'Guitare lead', icon: 'guitar' },
+    { id: 'kazoo-id', name: 'Kazoo', icon: 'music' },
   ];
 
   it('names an instrument only when its icon stands for another one too', () => {
@@ -136,6 +137,12 @@ describe('describeMemberPartsByEntryId', () => {
         { instrumentId: DRUMS, name: 'Batterie', icon: 'drum', isNameNeeded: false },
         { instrumentId: GUITAR, name: 'Guitare', icon: 'guitar', isNameNeeded: true },
       ],
+    });
+  });
+
+  it('names an instrument drawn with the generic glyph', () => {
+    expect(describeMemberPartsByEntryId({ e3: ['kazoo-id'] }, instruments)).toEqual({
+      e3: [{ instrumentId: 'kazoo-id', name: 'Kazoo', icon: 'music', isNameNeeded: true }],
     });
   });
 

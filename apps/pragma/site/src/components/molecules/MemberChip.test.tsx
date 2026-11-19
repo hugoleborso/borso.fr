@@ -33,8 +33,20 @@ describe('MemberChip', () => {
         <MemberChip memberName="Gui" memberColor={GREEN_FAR_FROM_EVERY_PALETTE_SWATCH} />,
       );
     });
-    const avatar = container.querySelector<HTMLElement>('span > span');
+    const avatar = container.querySelector<HTMLElement>('[role=img]');
     expect(avatar?.style.backgroundColor).toBe(RENDERED_GREEN);
     expect(avatar?.textContent).toBe('G');
+  });
+
+  it('draws the initial alone and names the member to a screen reader and on hover', () => {
+    act(() => {
+      root.render(
+        <MemberChip memberName="Gui" memberColor={GREEN_FAR_FROM_EVERY_PALETTE_SWATCH} />,
+      );
+    });
+    const avatar = container.querySelector<HTMLElement>('[role=img]');
+    expect(container.textContent).toBe('G');
+    expect(avatar?.getAttribute('aria-label')).toBe('Gui');
+    expect(avatar?.getAttribute('title')).toBe('Gui');
   });
 });

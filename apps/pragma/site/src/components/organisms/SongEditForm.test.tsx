@@ -55,9 +55,9 @@ const MEMBERS = [
   { id: 'member-hugo', name: 'Hugo', color: '#3355aa' },
 ];
 const INSTRUMENTS = [
-  { id: 'bass', name: 'Bass' },
-  { id: 'voice', name: 'Voice' },
-];
+  { id: 'bass', name: 'Bass', icon: 'bass' },
+  { id: 'voice', name: 'Voice', icon: 'mic-vocal' },
+] as const;
 
 interface RenderOptions {
   readonly section?: SongEditSection;
@@ -202,11 +202,15 @@ describe('SongEditForm', () => {
     expect(screen.queryByRole('radio')).toBeNull();
   });
 
-  it('offers paste, photo and PDF, and no Deezer track field', () => {
+  it('offers paste in words, photo and PDF as named icons, and no Deezer track field', () => {
     renderForm(NO_SAVE_REFUSAL, { section: 'music' });
 
-    expect(screen.getByRole('button', { name: 'Photo' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'PDF' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Paste text' }).textContent).toBe('Paste text');
+    for (const name of ['Photo', 'PDF']) {
+      const action = screen.getByRole('button', { name });
+      expect(action.textContent).toBe('');
+      expect(action.getAttribute('title')).toBe(name);
+    }
     expect(screen.queryByLabelText('Deezer track ID')).toBeNull();
   });
 
@@ -253,7 +257,7 @@ describe('SongEditForm', () => {
     renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit });
 
     const card = screen.getByRole('region', { name: 'Chart 1' });
-    await user.upload(within(card).getByLabelText('Photo'), PHOTO);
+    await user.upload(within(card).getByLabelText('Photo', { selector: 'input' }), PHOTO);
     await user.type(within(card).getByLabelText('Label (optional)'), 'Solo');
     finishUpload('charts/a.png');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -272,7 +276,7 @@ describe('SongEditForm', () => {
     renderForm(NO_SAVE_REFUSAL, { section: 'music', onSubmit, charts: [kept, removed] });
 
     const second = screen.getByRole('region', { name: 'Chart 2' });
-    await user.upload(within(second).getByLabelText('Photo'), PHOTO);
+    await user.upload(within(second).getByLabelText('Photo', { selector: 'input' }), PHOTO);
     await user.click(within(second).getByRole('button', { name: 'Remove the chart' }));
     finishUpload('charts/a.png');
     await user.click(screen.getByRole('button', { name: 'Save' }));

@@ -161,22 +161,20 @@ export function SongChartCard(props: SongChartCardProps): JSX.Element {
         >
           {t('catalog.chordsPaste')}
         </Button>
-        <Button
+        <IconButton
           variant="secondary"
           icon="camera"
+          label={t('catalog.chordsPhoto')}
           disabled={isBusy}
           onClick={() => photoInput.current?.click()}
-        >
-          {t('catalog.chordsPhoto')}
-        </Button>
-        <Button
+        />
+        <IconButton
           variant="secondary"
           icon="upload"
+          label={t('catalog.chordsPdf')}
           disabled={isBusy}
           onClick={() => pdfInput.current?.click()}
-        >
-          {t('catalog.chordsPdf')}
-        </Button>
+        />
         <input
           ref={photoInput}
           type="file"

@@ -24,10 +24,15 @@ import {
   useMasteryDefaults,
   useSaveMasteryDefault,
 } from '../../lib/queries/mastery.queries';
-import { Avatar } from '../atoms/Avatar';
+import type { InstrumentIcon } from '@domain/instrument.core';
 import { composeClassName } from '../atoms/class-name.utils';
-import { memberInitial } from '../atoms/member-palette.utils';
+import { Icon } from '../atoms/Icon';
 import { ScoreInput } from '../atoms/ScoreInput';
+import {
+  INSTRUMENT_ICON_GLYPH,
+  selectInstrumentIdsNamedInWords,
+} from '../molecules/lineup-slots.core';
+import { MemberChip } from '../molecules/MemberChip';
 
 export interface MasteryMatrixMember {
   readonly id: string;
@@ -38,6 +43,7 @@ export interface MasteryMatrixMember {
 export interface MasteryMatrixInstrument {
   readonly id: string;
   readonly name: string;
+  readonly icon: InstrumentIcon;
 }
 
 interface MasteryMatrixProps {
@@ -122,14 +128,24 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
     [instruments],
   );
 
+  const namedInWords = useMemo(() => selectInstrumentIdsNamedInWords(instruments), [instruments]);
+
   const columns = useMemo<ColumnDef<MatrixRow>[]>(() => {
     const instrumentColumn: ColumnDef<MatrixRow> = {
       id: 'instrument',
       header: () => null,
       cell: ({ row }) => (
         <span className="flex min-w-0 flex-col">
-          <span className="truncate text-meta text-ink" title={row.original.instrument.name}>
-            {row.original.instrument.name}
+          <span
+            role="img"
+            aria-label={row.original.instrument.name}
+            title={row.original.instrument.name}
+            className="flex min-w-0 items-center gap-1 text-meta text-ink"
+          >
+            <Icon name={INSTRUMENT_ICON_GLYPH[row.original.instrument.icon]} size="md" />
+            <span className="truncate">
+              {namedInWords.has(row.original.instrument.id) ? row.original.instrument.name : null}
+            </span>
           </span>
           <span className="font-mono text-label text-ink-soft">
             {t('members.columnAverage')}{' '}
@@ -142,10 +158,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       id: `member:${member.id}`,
       header: () => (
         <span className="flex min-w-0 flex-col items-center gap-1">
-          <Avatar size="md" initials={memberInitial(member.firstName)} color={member.color} />
-          <span className="w-full truncate text-label text-ink" title={member.firstName}>
-            {member.firstName}
-          </span>
+          <MemberChip memberName={member.firstName} memberColor={member.color} size="md" />
         </span>
       ),
       cell: ({ row }: { row: Row<MatrixRow> }) => {
@@ -173,7 +186,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       },
     }));
     return [instrumentColumn, ...memberColumns];
-  }, [members, memberIds, scores, writeScore, clearScore, t]);
+  }, [members, memberIds, scores, writeScore, clearScore, namedInWords, t]);
 
   // eslint-disable-next-line react-hooks/incompatible-library -- @tanstack/react-table's useReactTable returns functions the React Compiler cannot memoize, so it skips compiling this component; the table object is read only by this component's own JSX below and never handed to a memoized child, so the skip changes nothing observable
   const table = useReactTable({

@@ -5,7 +5,9 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import { INSTRUMENT_ICON_GLYPH } from '../molecules/lineup-slots.core';
 import { Sheet } from '../molecules/Sheet';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import {
@@ -72,9 +74,10 @@ function InstrumentPanel({
       <EmptyNotice />
       <div className="flex flex-col">
         {instruments.map((instrument) => (
-          <label key={instrument.id} className={CHECKBOX_ROW_CLASS}>
+          <label key={instrument.id} className={CHECKBOX_ROW_CLASS} title={instrument.name}>
             <input
               type="checkbox"
+              aria-label={instrument.name}
               className={CHECKBOX_CLASS}
               checked={assignedInstrumentIds.includes(instrument.id)}
               onChange={() =>
@@ -83,6 +86,7 @@ function InstrumentPanel({
                 )
               }
             />
+            <Icon name={INSTRUMENT_ICON_GLYPH[instrument.icon]} size="md" />
             {instrument.name}
           </label>
         ))}

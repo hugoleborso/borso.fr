@@ -1,34 +1,23 @@
 /** @Feature members */
 
 import { Avatar } from '../atoms/Avatar';
-import { composeClassName } from '../atoms/class-name.utils';
 import { memberInitial } from '../atoms/member-palette.utils';
 
 export interface MemberChipProps {
   memberName: string;
   memberColor: string;
   size?: 'xs' | 'md' | 'lg';
-  withName?: boolean;
-  title?: string;
-  className?: string;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function MemberChip({
-  memberName,
-  memberColor,
-  size = 'xs',
-  withName = false,
-  title,
-  className,
-}: MemberChipProps): JSX.Element {
+export function MemberChip({ memberName, memberColor, size = 'xs' }: MemberChipProps): JSX.Element {
   return (
-    <span
-      className={composeClassName('inline-flex items-center gap-1.5', className)}
-      title={title ?? memberName}
-    >
-      <Avatar initials={memberInitial(memberName)} color={memberColor} size={size} />
-      {withName && <span className="text-meta font-medium text-ink">{memberName}</span>}
-    </span>
+    <Avatar
+      initials={memberInitial(memberName)}
+      color={memberColor}
+      size={size}
+      aria-label={memberName}
+      title={memberName}
+    />
   );
 }

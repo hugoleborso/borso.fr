@@ -244,7 +244,7 @@ describe('the home page', () => {
     );
     fireEvent.click(mine);
     const sheet = screen.getByRole('dialog', { name: 'Flames' });
-    expect(within(sheet).getByText(MEMBER.firstName)).toBeTruthy();
+    expect(within(sheet).getByRole('img', { name: MEMBER.firstName })).toBeTruthy();
     expect(recordProductEvent).toHaveBeenCalledWith('streak_sheet_opened');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Flames' })).toBe(null);

@@ -27,4 +27,22 @@ describe('the task row', () => {
     const openingButton = screen.getByRole('button', { name: TASK_TITLE });
     expect(openingButton.querySelector('svg')).not.toBeNull();
   });
+
+  it('draws the assignee as their colour mark, named on hover and to a screen reader', () => {
+    render(
+      <TaskRow
+        title={TASK_TITLE}
+        status="todo"
+        dueLabel={null}
+        songTitle={null}
+        isOverdue={false}
+        assignee={{ name: 'Gui', color: '#22c55e' }}
+        onToggleDone={vi.fn()}
+        onOpen={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Gui' }).getAttribute('title')).toBe('Gui');
+    expect(screen.queryByText('Gui')).toBeNull();
+  });
 });

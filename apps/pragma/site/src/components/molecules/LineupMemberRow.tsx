@@ -1,14 +1,18 @@
 /** @Feature members */
 
+import type { InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chip } from '../atoms/Chip';
+import { Icon } from '../atoms/Icon';
 import type { LineupEditorMember } from './lineup-editor.core';
+import { INSTRUMENT_ICON_GLYPH, selectInstrumentIdsNamedInWords } from './lineup-slots.core';
 import { MemberChip } from './MemberChip';
 
 export interface LineupMemberRowInstrument {
   readonly id: string;
   readonly name: string;
+  readonly icon: InstrumentIcon;
 }
 
 export interface LineupMemberRowProps {
@@ -27,11 +31,11 @@ export function LineupMemberRow({
 }: LineupMemberRowProps): JSX.Element {
   const { t } = useTranslation();
   const isSittingOut = heldInstrumentIds.length === 0;
+  const namedInWords = selectInstrumentIdsNamedInWords(instruments);
   return (
     <li className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
         <MemberChip memberName={member.name} memberColor={member.color} size="xs" />
-        <span className="text-meta font-medium text-ink">{member.name}</span>
       </div>
       <div
         className="flex flex-wrap gap-1.5"
@@ -43,8 +47,11 @@ export function LineupMemberRow({
             key={instrument.id}
             pressed={heldInstrumentIds.includes(instrument.id)}
             onPress={() => onToggle(instrument.id)}
+            aria-label={instrument.name}
+            title={instrument.name}
           >
-            {instrument.name}
+            <Icon name={INSTRUMENT_ICON_GLYPH[instrument.icon]} />
+            {namedInWords.has(instrument.id) ? instrument.name : null}
           </Chip>
         ))}
         {isSittingOut ? (

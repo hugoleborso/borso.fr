@@ -67,6 +67,7 @@ export function SongEditPage(): JSX.Element {
       (instrumentsQuery.data?.instruments ?? NO_ROWS).map((instrument) => ({
         id: instrument.id,
         name: instrument.name,
+        icon: instrument.icon,
       })),
     [instrumentsQuery.data],
   );

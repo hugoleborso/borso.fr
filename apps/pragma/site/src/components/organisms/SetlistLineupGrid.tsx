@@ -2,12 +2,11 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { MemberMark } from '../atoms/MemberMark';
-import { memberInitial } from '../atoms/member-palette.utils';
 import { ListRow } from '../molecules/ListRow';
+import { MemberChip } from '../molecules/MemberChip';
 import {
   hasLineupChanges,
   type LineupGrid,
@@ -183,10 +182,7 @@ export function SetlistLineupGrid({
             onClick={() => onOpenMember(column.memberId)}
             className={HEADER_BUTTON_CLASS}
           >
-            <Avatar initials={memberInitial(column.firstName)} color={column.color} size="xs" />
-            <span className="max-w-full truncate text-label font-medium text-ink">
-              {column.firstName}
-            </span>
+            <MemberChip memberName={column.firstName} memberColor={column.color} size="xs" />
           </ListRow>
         ))}
       </div>

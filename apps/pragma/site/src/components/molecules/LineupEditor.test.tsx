@@ -16,9 +16,9 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const HUGO: LineupEditorMember = { id: 'hugo-id', name: 'Hugo', color: '#d96f5a' };
 const PAULINE: LineupEditorMember = { id: 'pauline-id', name: 'Pauline', color: '#7a8f5a' };
-const GUITAR: LineupEditorInstrument = { id: 'guitar-id', name: 'Guitar' };
-const BASS: LineupEditorInstrument = { id: 'bass-id', name: 'Bass' };
-const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
+const GUITAR: LineupEditorInstrument = { id: 'guitar-id', name: 'Guitar', icon: 'guitar' };
+const BASS: LineupEditorInstrument = { id: 'bass-id', name: 'Bass', icon: 'bass' };
+const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums', icon: 'drum' };
 
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
 const OVERRIDE_BADGE_TEXT_EN = 'Override';
@@ -50,7 +50,7 @@ function listInstrumentToggles(memberName: string): HTMLButtonElement[] {
 
 function getInstrumentToggle(memberName: string, instrumentName: string): HTMLButtonElement {
   const toggle = listInstrumentToggles(memberName).find(
-    (button) => button.textContent.trim() === instrumentName,
+    (button) => button.getAttribute('aria-label') === instrumentName,
   );
   if (toggle === undefined) {
     throw new TypeError(`no ${instrumentName} toggle found for ${memberName}`);
@@ -61,7 +61,7 @@ function getInstrumentToggle(memberName: string, instrumentName: string): HTMLBu
 function heldInstrumentNames(memberName: string): string[] {
   return listInstrumentToggles(memberName)
     .filter((button) => button.getAttribute('aria-pressed') === 'true')
-    .map((button) => button.textContent.trim());
+    .map((button) => button.getAttribute('aria-label') ?? '');
 }
 
 // @FollowsBlueprint test-component-render
@@ -159,8 +159,14 @@ describe('LineupEditor', () => {
         onClose={vi.fn()}
       />,
     );
-    const toggleNames = listInstrumentToggles(HUGO.name).map((button) => button.textContent.trim());
-    expect(toggleNames).toEqual([GUITAR.name, BASS.name, DRUMS.name]);
+    const toggles = listInstrumentToggles(HUGO.name);
+    expect(toggles.map((button) => button.getAttribute('aria-label'))).toEqual([
+      GUITAR.name,
+      BASS.name,
+      DRUMS.name,
+    ]);
+    expect(toggles.map((button) => button.textContent.trim())).toEqual(['', '', '']);
+    expect(document.querySelector('[role=img][aria-label="Hugo"]')?.textContent).toBe('H');
     expect(heldInstrumentNames(HUGO.name)).toEqual([]);
   });
 
