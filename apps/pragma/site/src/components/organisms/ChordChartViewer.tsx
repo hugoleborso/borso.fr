@@ -2,14 +2,17 @@
 
 import { type JSX, useMemo } from 'react';
 import {
-  type ChordProLine,
   type ChordProSection,
   groupChordProSections,
   hasSectionHeading,
+} from '../../lib/chordpro-sections.utils';
+import {
+  type ChordProLine,
   isTitleDirective,
   parseChordPro,
   widestTabLineLength,
 } from '../../lib/chordpro.utils';
+import { isCommentDirective } from '../../lib/chordpro-solo.utils';
 import { buildChordCells, groupCellsIntoWords, hasLyricText } from '../../lib/chord-cells.utils';
 import { buildTabFontSize } from '../../routes/catalog/scene-view.core';
 import { transposeChordChart } from '../../routes/catalog/tab-transpose.core';
@@ -38,6 +41,18 @@ const DIRECTIVE_CLASS_BY_TONE = {
   light: 'text-ink-soft',
   dark: 'text-stage-ink-dim',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SOLO_NOTE_CLASS_BY_TONE = {
+  light: 'text-ink',
+  dark: 'text-stage-ink',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SOLO_FRAME_CLASS_BY_TONE = {
+  light: 'border-l-4 border-accent bg-accent-soft rounded-md px-3 py-2',
+  dark: 'border-l-4 border-stage-chord bg-stage-hover rounded-md px-3 py-2',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SOLO_SECTION_KIND = 'solo';
 
 const CHORD_CLASS_BY_TONE = {
   light: 'text-accent',
@@ -147,13 +162,43 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
   );
 }
 
+function renderSoloNote(value: string, key: string, tone: ChordChartTone): JSX.Element {
+  return (
+    <p
+      key={key}
+      className={composeClassName(
+        'font-sans text-meta font-medium m-0 mb-1 whitespace-pre-wrap',
+        SOLO_NOTE_CLASS_BY_TONE[tone],
+      )}
+    >
+      {value}
+    </p>
+  );
+}
+
+function renderSectionLine(
+  section: ChordProSection,
+  line: ChordProLine,
+  key: string,
+  tone: ChordChartTone,
+): JSX.Element {
+  if (
+    section.kind === SOLO_SECTION_KIND &&
+    line.kind === 'directive' &&
+    isCommentDirective(line.name)
+  ) {
+    return renderSoloNote(line.value, key, tone);
+  }
+  return renderLine(line, key, tone);
+}
+
 function renderSectionLines(
   section: ChordProSection,
   sectionKey: string,
   tone: ChordChartTone,
 ): JSX.Element | readonly JSX.Element[] {
   const lines = section.lines.map((line, lineIndex) =>
-    renderLine(line, `${sectionKey}-${lineIndex}`, tone),
+    renderSectionLine(section, line, `${sectionKey}-${lineIndex}`, tone),
   );
   if (section.kind !== 'tab') return lines;
   return (
@@ -185,7 +230,13 @@ export function ChordChartViewer({
         const sectionKey = `chord-section-${sectionIndex}`;
         const hasHeading = hasSectionHeading(section);
         return (
-          <section key={sectionKey} className="mb-5 last:mb-0">
+          <section
+            key={sectionKey}
+            className={composeClassName(
+              'mb-5 last:mb-0',
+              section.kind === SOLO_SECTION_KIND ? SOLO_FRAME_CLASS_BY_TONE[tone] : undefined,
+            )}
+          >
             {hasHeading && (
               <div className="mb-1.5">
                 <ChordProSectionHeading

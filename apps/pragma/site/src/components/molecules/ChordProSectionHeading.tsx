@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { buildSectionHeading, type LabelledSectionKind } from '../../lib/chordpro.utils';
+import { buildSectionHeading, type LabelledSectionKind } from '../../lib/chordpro-sections.utils';
 import type { ChordChartTone } from '../atoms/chart-tone';
 import { Badge } from '../atoms/Badge';
 
@@ -8,12 +8,20 @@ const SECTION_LABEL_KEY = {
   chorus: 'scene.sectionChorus',
   bridge: 'scene.sectionBridge',
   tab: 'scene.sectionTab',
+  solo: 'scene.sectionSolo',
 } as const;
 
 const HEADING_CLASS_BY_TONE = {
   light: 'uppercase tracking-wider',
   dark: 'uppercase tracking-wider bg-transparent text-stage-ink-dim border border-stage-ink-dim',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SOLO_HEADING_CLASS_BY_TONE = {
+  light: 'uppercase tracking-wider bg-accent text-on-accent',
+  dark: 'uppercase tracking-wider bg-stage-chord text-stage-bg',
+} as const satisfies Readonly<Record<ChordChartTone, string>>;
+
+const SOLO_SECTION_KIND = 'solo';
 
 export interface ChordProSectionHeadingProps {
   readonly kind: LabelledSectionKind;
@@ -31,7 +39,13 @@ export function ChordProSectionHeading({
 }: ChordProSectionHeadingProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <Badge tone="mono" size="md" className={HEADING_CLASS_BY_TONE[tone]}>
+    <Badge
+      tone="mono"
+      size="md"
+      className={
+        kind === SOLO_SECTION_KIND ? SOLO_HEADING_CLASS_BY_TONE[tone] : HEADING_CLASS_BY_TONE[tone]
+      }
+    >
       {buildSectionHeading(label ?? t(SECTION_LABEL_KEY[kind]), ordinalAmongKind)}
     </Badge>
   );

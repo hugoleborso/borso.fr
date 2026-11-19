@@ -79,6 +79,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'practice.noteTitle', readsTheSameBecause: 'same word, then the song title' },
   { key: 'scene.autoScrollStop', readsTheSameBecause: '"Stop" is the word on French pedals too' },
   { key: 'scene.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
+  { key: 'scene.sectionSolo', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },

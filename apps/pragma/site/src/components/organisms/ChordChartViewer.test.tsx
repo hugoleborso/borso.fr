@@ -84,3 +84,39 @@ describe('a chord chart with lyrics', () => {
     expect(document.querySelector('[data-chord]')).toBeNull();
   });
 });
+
+const CHART_WITH_A_SOLO = [
+  '[C]Hello [G]there',
+  '{comment: Solo}',
+  '{comment: Hugo takes two rounds}',
+  '[Am] [E] [Dm] [Am]',
+  '{comment: Bridge}',
+].join('\n');
+
+describe('a chord chart holding a solo', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('frames the solo under its own badge and keeps the rows inside the frame', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} tone="dark" />);
+    const frame = closestElement('Solo', 'section');
+    expect(frame.className).toContain('border-stage-chord');
+    expect(frame.textContent).toContain('Am');
+    expect(frame.textContent).not.toContain('Hello');
+    expect(frame.textContent).not.toContain('Bridge');
+  });
+
+  it('shows a note on the solo in full-strength text, not as a dim comment', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} />);
+    const note = screen.getByText('Hugo takes two rounds');
+    expect(note.className).toContain('text-ink');
+    expect(note.className).not.toContain('italic');
+    expect(closestElement('Solo', 'section').className).toContain('border-accent');
+  });
+
+  it('keeps a comment outside the solo dim and italic', () => {
+    render(<ChordChartViewer source={CHART_WITH_A_SOLO} />);
+    expect(screen.getByText('Bridge').className).toContain('italic');
+  });
+});
