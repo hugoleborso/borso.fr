@@ -9,6 +9,12 @@
 # carries ("read the app's VOCABULARY.md first") was never read. The moment the
 # mistake is made is the canvas, so this speaks there.
 #
+# On PR #377 the hook fired, the session ran its grep and read "an instrument
+# is shown by its glyph", then wrote "Gui garde la batterie" from the words the
+# MCP returned. Reading a rule did not stop it, so for pragma it now names the
+# kit that hands over the real glyphs, which makes the right drawing the
+# shortest one.
+#
 # Advisory: it always exits 0 and answers with additionalContext. It speaks on
 # a quickstart whose intent is a design, once per session. A publish names its
 # type only by URL, so it says nothing there.
@@ -32,6 +38,8 @@ NOTE=$(
   grep -rn -i -E 'colou?r|hue|icon|font|token' apps/<app>/VOCABULARY.md apps/<app>/DESIGN.md $(find apps/<app> -name INVARIANTS.md -not -path '*/node_modules/*')
 
 A variant that breaks one of them is not an option the operator can pick.
+
+pragma: draw members and instruments with the app's own marks, never as words. `pnpm --filter @borso-app/pragma run mockup-kit` prints each instrument glyph as SVG and a member-mark example to paste.
 NOTE
 )
 

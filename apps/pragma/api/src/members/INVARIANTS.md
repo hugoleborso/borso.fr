@@ -19,6 +19,9 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   no other hue stands for an instrument or a member. An instrument is shown
   by its glyph. A change is shown by intensity, text or the highlighter,
   which is the one hue reserved for changes.
+- A lineup, on a screen or in a mockup, is drawn as each member's mark followed
+  by the icon glyph of each instrument they hold, never as a sentence that
+  names them ("Gui keeps the drums"). `pnpm run mockup-kit` prints the glyphs.
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of
