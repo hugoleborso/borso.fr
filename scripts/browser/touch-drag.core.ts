@@ -29,6 +29,19 @@ export function interpolateDragPath(from: TapPoint, to: TapPoint, steps: number)
   });
 }
 
+export function resolveDragEnd(ends: DragEnds, offset: TapPoint | null): TapPoint | null {
+  if (offset === null || ends.from === null) return ends.to;
+  return { x: ends.from.x + offset.x, y: ends.from.y + offset.y };
+}
+
+const OFFSET_PATTERN = /^(-?\d+),(-?\d+)$/;
+
+export function parseDragOffset(text: string | undefined): TapPoint | null {
+  const match = OFFSET_PATTERN.exec(String(text));
+  if (match === null) return null;
+  return { x: Number(match[1]), y: Number(match[2]) };
+}
+
 export function isOverDestination(value: unknown): boolean {
   return z.boolean().parse(value);
 }
@@ -49,12 +62,14 @@ function hasEvent(
 export function judgeTouchDrag(
   events: readonly RecordedInputEvent[],
   isLiftOverDestination: boolean,
+  isSwipe = false,
 ): TouchDragVerdict {
+  const isPanCancelFatal = hasEvent(events, 'pointercancel', false) && !isSwipe;
   const problems = [
     hasEvent(events, 'touchstart', true) ? null : 'no touchstart reached the from element',
     hasEvent(events, 'touchmove', false) ? null : 'no touchmove fired',
     hasEvent(events, 'touchend', false) ? null : 'no touchend fired',
-    hasEvent(events, 'pointercancel', false)
+    isPanCancelFatal
       ? 'the browser cancelled the touch to pan or zoom, so the page did not hold the drag'
       : null,
     isLiftOverDestination ? null : 'the touch did not lift over the to element',
@@ -65,6 +80,7 @@ export function judgeTouchDrag(
 export interface TouchDragOptions {
   readonly fromSelector: string;
   readonly toSelector: string;
+  readonly offset: TapPoint | null;
   readonly steps: number;
   readonly port: number;
   readonly pageUrlPart: string;
@@ -72,7 +88,7 @@ export interface TouchDragOptions {
   readonly height: number;
 }
 
-const DEFAULT_OPTIONS: Omit<TouchDragOptions, 'fromSelector' | 'toSelector'> = {
+const DEFAULT_OPTIONS: Omit<TouchDragOptions, 'fromSelector' | 'toSelector' | 'offset'> = {
   steps: 8,
   port: 9222,
   pageUrlPart: '',
@@ -85,10 +101,13 @@ export function parseTouchDragArguments(
 ): TouchDragOptions | null {
   const fromSelector = readFlag(argumentsGiven, 'from') ?? '';
   const toSelector = readFlag(argumentsGiven, 'to') ?? '';
-  if (fromSelector.length === 0 || toSelector.length === 0) return null;
+  const offset = parseDragOffset(readFlag(argumentsGiven, 'by'));
+  const hasOneDestination = toSelector.length > 0 !== (offset !== null);
+  if (fromSelector.length === 0 || !hasOneDestination) return null;
   return {
     fromSelector,
     toSelector,
+    offset,
     steps: readNumberFlag(argumentsGiven, 'steps', DEFAULT_OPTIONS.steps),
     port: readNumberFlag(argumentsGiven, 'port', DEFAULT_OPTIONS.port),
     pageUrlPart: readFlag(argumentsGiven, 'page') ?? DEFAULT_OPTIONS.pageUrlPart,

@@ -4,7 +4,9 @@ import {
   judgeTouchDrag,
   parseDragEnds,
   isOverDestination,
+  parseDragOffset,
   parseTouchDragArguments,
+  resolveDragEnd,
   TOUCH_DRAG_BINDING,
 } from './touch-drag.core';
 import { readReportedEvent } from './touch-tap.core';
@@ -55,6 +57,14 @@ describe('judgeTouchDrag', () => {
     });
   });
 
+  it('accepts a swipe the browser also offered to pan, since touch events still reached the page', () => {
+    const panned = [
+      ...PIECE_DRAG,
+      { type: 'pointercancel', pointerType: 'touch', isOnTarget: false },
+    ];
+    expect(judgeTouchDrag(panned, true, true)).toStrictEqual({ isRealDrag: true, problems: [] });
+  });
+
   it('refuses a drag that lifted somewhere other than the to element', () => {
     expect(judgeTouchDrag(PIECE_DRAG, false)).toStrictEqual({
       isRealDrag: false,
@@ -77,6 +87,39 @@ describe('interpolateDragPath', () => {
     expect(interpolateDragPath({ x: 0, y: 0 }, { x: 10, y: -10 }, 1)).toStrictEqual([
       { x: 10, y: -10 },
     ]);
+  });
+});
+
+describe('resolveDragEnd', () => {
+  const ends = { from: { x: 200, y: 400 }, to: { x: 10, y: 20 } };
+
+  it('keeps the measured end of a drag to an element', () => {
+    expect(resolveDragEnd(ends, null)).toStrictEqual({ x: 10, y: 20 });
+  });
+
+  it('ends a swipe the offset away from where it started', () => {
+    expect(resolveDragEnd(ends, { x: -120, y: 8 })).toStrictEqual({ x: 80, y: 408 });
+  });
+
+  it('has no end for a swipe whose start matched nothing', () => {
+    expect(resolveDragEnd({ from: null, to: null }, { x: -120, y: 0 })).toBeNull();
+  });
+});
+
+describe('parseDragOffset', () => {
+  it('reads a signed horizontal and vertical offset', () => {
+    expect(parseDragOffset('-120,0')).toStrictEqual({ x: -120, y: 0 });
+    expect(parseDragOffset('90,-60')).toStrictEqual({ x: 90, y: -60 });
+  });
+
+  it('refuses anything that is not two whole numbers joined by a comma', () => {
+    expect(parseDragOffset(undefined)).toBeNull();
+    expect(parseDragOffset('')).toBeNull();
+    expect(parseDragOffset('-120')).toBeNull();
+    expect(parseDragOffset('-120, 0')).toBeNull();
+    expect(parseDragOffset('x-120,0')).toBeNull();
+    expect(parseDragOffset('-120,0x')).toBeNull();
+    expect(parseDragOffset('1.5,0')).toBeNull();
   });
 });
 
@@ -113,18 +156,35 @@ describe('isOverDestination', () => {
 });
 
 describe('parseTouchDragArguments', () => {
-  it('needs a from and a to selector', () => {
+  it('needs a from selector and exactly one of a to selector or an offset', () => {
     expect(parseTouchDragArguments([])).toBeNull();
     expect(parseTouchDragArguments(['--from', '#a'])).toBeNull();
     expect(parseTouchDragArguments(['--to', '#b'])).toBeNull();
+    expect(parseTouchDragArguments(['--by', '-120,0'])).toBeNull();
     expect(parseTouchDragArguments(['--from', '', '--to', '#b'])).toBeNull();
     expect(parseTouchDragArguments(['--from', '#a', '--to', ''])).toBeNull();
+    expect(parseTouchDragArguments(['--from', '#a', '--by', 'left'])).toBeNull();
+    expect(parseTouchDragArguments(['--from', '#a', '--to', '#b', '--by', '-120,0'])).toBeNull();
+  });
+
+  it('reads a swipe given as an offset from the start, with no to selector', () => {
+    expect(parseTouchDragArguments(['--from', '#chart', '--by', '-120,8'])).toStrictEqual({
+      fromSelector: '#chart',
+      toSelector: '',
+      offset: { x: -120, y: 8 },
+      steps: 8,
+      port: 9222,
+      pageUrlPart: '',
+      width: 375,
+      height: 812,
+    });
   });
 
   it('defaults to eight steps on a 375 by 812 phone on CDP 9222, on whichever page comes first', () => {
     expect(parseTouchDragArguments(['--from', '#a', '--to', '#b'])).toStrictEqual({
       fromSelector: '#a',
       toSelector: '#b',
+      offset: null,
       steps: 8,
       port: 9222,
       pageUrlPart: '',
@@ -154,6 +214,7 @@ describe('parseTouchDragArguments', () => {
     ).toStrictEqual({
       fromSelector: '[data-square="e2"] [data-piece]',
       toSelector: '[data-square="e4"]',
+      offset: null,
       steps: 12,
       port: 9333,
       pageUrlPart: 'localhost:5173',
