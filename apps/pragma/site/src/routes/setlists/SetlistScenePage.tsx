@@ -47,6 +47,8 @@ import { useSceneSwipe } from './scene-swipe.hook';
 import { useSceneTransitionCard } from './scene-transition-card.hook';
 import { useSceneTransitionPreview } from './scene-transition.hook';
 
+const FOCUS_WITHOUT_SCROLLING: FocusOptions = { preventScroll: true };
+
 const NO_ROWS: readonly never[] = [];
 const NO_LINEUP = {};
 const CAPTION_CLASS = 'text-label tracking-[0.18em] uppercase text-stage-ink-dim m-0';
@@ -131,6 +133,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
     const command = selectSceneKeyCommand(event.key);
     if (command === null) return;
     event.preventDefault();
+    event.currentTarget.focus(FOCUS_WITHOUT_SCROLLING);
     goToIndex(resolveSceneIndex(command, currentIndex, setlistEntries.length));
   };
 

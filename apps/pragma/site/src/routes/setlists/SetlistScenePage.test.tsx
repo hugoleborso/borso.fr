@@ -306,6 +306,13 @@ describe('SetlistScenePage', () => {
     expect(readPosition(container)).toContain('02 / 03');
   });
 
+  it('keeps focus on the stage after the right arrow, so the next press still changes song', () => {
+    pressKey(container, 'ArrowRight');
+    expect(document.activeElement).toBe(container.querySelector('dialog'));
+    pressKey(container, 'ArrowRight');
+    expect(readTitle(container)).not.toBe('Helpless');
+  });
+
   it('opens an entry whose lineup moves the member to Basse on the Basse chart', () => {
     pressKey(container, 'ArrowRight');
     expect(container.textContent).toContain('Walking bass');

@@ -42,6 +42,7 @@ export function SceneStage({ label, onClose, onKeyDown, children }: SceneStagePr
       onClose={leaveOnOwnClose}
       onKeyDown={onKeyDown}
       aria-label={label}
+      tabIndex={-1}
       className={STAGE_CLASS}
     >
       <UNSAFE_PortalProvider getContainer={getOverlayContainer}>{children}</UNSAFE_PortalProvider>
