@@ -16,7 +16,7 @@ const INVENTORY = 'docs/features/meta/lessons-from-pr-1/inventory.md';
 const repositories: string[] = [];
 
 function kaizenAfter(
-  commits: Record<string, string>[],
+  commits: Record<string, string | null>[],
   ...command: string[]
 ): { status: number | null; stdout: string } {
   const directory = mkdtempSync(join(tmpdir(), 'kaizen-'));
@@ -40,7 +40,8 @@ function kaizenAfter(
   for (const files of commits) {
     for (const [path, content] of Object.entries(files)) {
       mkdirSync(join(directory, dirname(path)), { recursive: true });
-      writeFileSync(join(directory, path), content);
+      if (content === null) rmSync(join(directory, path));
+      else writeFileSync(join(directory, path), content);
     }
     runGit('add', '-A');
     runGit('commit', '-q', '-m', 'step');
@@ -84,9 +85,10 @@ describe('kaizen.sh sweep-input', () => {
 });
 
 describe('kaizen.sh balance', () => {
-  it('refuses a sweep that adds more than it removes', () => {
-    const sweep = { 'docs/dantotsus/a-new-entry.md': lines(5), [ENTRY]: lines(8) };
-    const { status, stdout } = kaizenAfter([{ [ENTRY]: lines(10) }, sweep], 'balance', 'HEAD^');
+  it('refuses a sweep that adds more than it removes, a knowledge entry moved into a counted folder included', () => {
+    const before = { [ENTRY]: lines(2), 'docs/knowledge/moved.md': lines(5) };
+    const sweep = { 'docs/dantotsus/moved.md': lines(5), 'docs/knowledge/moved.md': null };
+    const { status, stdout } = kaizenAfter([before, { ...sweep, [ENTRY]: '' }], 'balance', 'HEAD^');
 
     expect(stdout).toContain('Balance: added 5, removed 2 outside');
     expect(status).toBe(1);

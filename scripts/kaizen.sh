@@ -228,7 +228,7 @@ case "${1:-}" in
     not_counted='docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md'
     not_counted+='|docs/(knowledge|adr|operator-backlog)/.*|pnpm-lock[.]yaml|.*/__snapshots__/.*'
     base="${2:-origin/main}"
-    numstat="$(git -C "$REPO_ROOT" diff --numstat "$base...HEAD")" ||
+    numstat="$(git -C "$REPO_ROOT" diff --numstat --no-renames "$base...HEAD")" ||
       { printf 'scripts/kaizen.sh: cannot compare with %s; fetch origin first\n' "$base" >&2; exit 2; }
     read -r added removed < <(printf '%s\n' "$numstat" |
       grep -vE "	($not_counted)\$" |

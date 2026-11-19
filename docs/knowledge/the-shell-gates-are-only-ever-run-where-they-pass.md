@@ -63,3 +63,13 @@ has been executed at least once, by someone who read what it printed.
 And commit before probing: undoing the probe is what
 [`a-warning-that-had-to-become-a-gate`](../dantotsus/a-warning-that-had-to-become-a-gate.md)
 is about.
+
+A gate that counts lines from `git diff --numstat` needs `--no-renames`. With
+rename detection a moved file prints as `docs/{knowledge => dantotsus}/moved.md`,
+which no path pattern matches, and its lines count as the edit and not the move.
+`scripts/kaizen.sh balance` shipped in PR #382 that way: a 40-line knowledge
+entry moved into `docs/dantotsus/` read "added 0, removed 0" and passed
+(measured on a scratch repository, 2026-11-19). The same detection changed
+PR #382's own printed count from 118 and 125 to 176 and 183 between two reads,
+when its renamed test file fell under the similarity threshold. Its test in
+`scripts/kaizen.test.ts` now moves a file across the boundary.
