@@ -16,6 +16,8 @@ the element's accessible name, so a screen reader still reads it.
 2. **Instrument.** Where an instrument is shown and its glyph is specific (not
    the generic `music` glyph, and not shared by two parts on the same row), the
    glyph replaces the name, with the name as accessible name and tooltip.
+   The instrument toggles of the lineup editors and of the chart's "For" group
+   draw a lineup, so they are drawn as glyphs.
 3. **Lineup sentence.** A lineup change is drawn as the member's mark, then the
    glyphs, never as a sentence. "Tonight: Gui: Batterie" becomes Gui's mark plus
    the drum glyph. "Gui sits out" becomes Gui's mark in its `ring` shape, the
@@ -27,8 +29,9 @@ the element's accessible name, so a screen reader still reads it.
    of one or two actions is unchanged.
 5. **Words that stay.** Free text the band typed (titles, notes, comments),
    name fields and pickers, the Instruments page, the home greeting, the signed-in
-   card, "former member", status words with no icon, and any instrument whose
-   glyph is generic.
+   card, "former member", status words with no icon, any instrument whose
+   glyph is generic, the Members page roster, the task assignee picker, and the
+   member form's instrument checklist.
 
 ## What the musician sees
 

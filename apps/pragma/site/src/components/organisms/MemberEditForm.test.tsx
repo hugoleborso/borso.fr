@@ -76,6 +76,12 @@ describe('MemberEditForm', () => {
     expect(readInputByLabel('Bass').checked).toBe(true);
   });
 
+  it('writes each instrument name beside its glyph in the edit checklist', () => {
+    renderForm({ mode: 'edit', initialValues: { firstName: 'Ada', color: '#112233' } });
+    expect(screen.getByText('Bass')).toBeTruthy();
+    expect(screen.getByText('Keys')).toBeTruthy();
+  });
+
   it('hands the typed values to onSave', async () => {
     const user = userEvent.setup();
     const { onSave } = renderForm();
