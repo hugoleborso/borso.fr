@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  parseSceneSetting,
   buildSceneAddressFromPractice,
   buildTabFontSize,
   selectSceneExitPath,
@@ -185,5 +186,21 @@ describe('buildTabFontSize', () => {
 
   it('leaves the size inherited when the tab has no column', () => {
     expect(buildTabFontSize(0)).toBeUndefined();
+  });
+});
+
+describe('parseSceneSetting', () => {
+  it('falls back when nothing is stored', () => {
+    expect(parseSceneSetting(null, 24)).toBe(24);
+  });
+
+  it('reads a stored whole number, negative included', () => {
+    expect(parseSceneSetting('30', 24)).toBe(30);
+    expect(parseSceneSetting('-3', 0)).toBe(-3);
+  });
+
+  it('falls back on text that is not a whole number', () => {
+    expect(parseSceneSetting('big', 24)).toBe(24);
+    expect(parseSceneSetting('2.5', 24)).toBe(24);
   });
 });

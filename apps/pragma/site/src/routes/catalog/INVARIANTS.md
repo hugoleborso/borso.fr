@@ -39,6 +39,13 @@ Held by: `site/src/routes/setlists/SetlistScenePage.test.tsx` › opens the next
 - The transpose offset is clamped to -11 to +11 semitones, which is the
   whole range with distinct output, and the font size runs from 16 px to
   48 px in steps of 2 px, starting at 24 px (`scene-view.core.ts`).
+- The device remembers the zoom and the scroll speed for every scene, and
+  the transposition per song, in local storage
+  (`scene-preferences.store.ts`). A stored value outside the range is
+  clamped, and text that is not a whole number falls back to the default.
+- While a scene is open, the status bar takes the stage background, and
+  gets its paper colour back when the scene closes
+  (`scene-status-bar.adapter.ts`).
 - A tab block never wraps. It shrinks to fit its widest line, never above
   the chosen size nor below the 16 px floor, and scrolls sideways past
   that (`buildTabFontSize`).
@@ -64,3 +71,6 @@ Held by: `site/src/routes/catalog/tab-transpose.core.test.ts` › transposes a t
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps below the floor
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › clamps above the ceiling
 Held by: `site/src/routes/catalog/scene-view.core.test.ts` › fits the widest tab line to the width, never above the chosen size nor below the floor
+Held by: `site/src/routes/catalog/SongScenePage.test.tsx` › opens again with the transposition, the zoom and the scroll speed the musician left
+Held by: `site/src/routes/catalog/scene-view.core.test.ts` › falls back on text that is not a whole number
+Held by: `site/src/routes/catalog/SongScenePage.test.tsx` › paints the status bar like the stage while open and gives it back on leaving

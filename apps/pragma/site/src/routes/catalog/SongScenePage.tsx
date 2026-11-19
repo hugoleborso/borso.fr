@@ -24,15 +24,8 @@ import { selectChordProCharts, selectChordProText } from './chart-kind.utils';
 import { useChartSwitch } from './chart-switch.hook';
 import { selectHeldInstrumentIds } from './opening-chart.core';
 import { selectMissingSongMessageKey } from './missing-song.core';
-import {
-  clampSceneFontSize,
-  clampSceneScrollSpeed,
-  clampSemitoneOffset,
-  SCENE_FONT_SIZE_DEFAULT_PX,
-  SCENE_BACK_PARAM,
-  SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND,
-  selectSceneExitPath,
-} from './scene-view.core';
+import { useScenePreferences } from '../../lib/scene-preferences.store';
+import { SCENE_BACK_PARAM, selectSceneExitPath } from './scene-view.core';
 
 const NO_CHARTS: readonly never[] = [];
 const NO_INSTRUMENTS: readonly never[] = [];
@@ -45,9 +38,7 @@ export function SongScenePage(): JSX.Element {
   const { songId } = useParams<{ songId: string }>();
   const [searchParams] = useSearchParams();
   const songQuery = useSong(songId ?? '', songId !== undefined);
-  const [semitones, setSemitones] = useState(0);
-  const [fontSizePx, setFontSizePx] = useState(SCENE_FONT_SIZE_DEFAULT_PX);
-  const [scrollSpeed, setScrollSpeed] = useState(SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND);
+  const preferences = useScenePreferences(songId);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
   const song = songQuery.data?.song ?? null;
@@ -86,13 +77,12 @@ export function SongScenePage(): JSX.Element {
       setIsAutoScrolling(false);
       return;
     }
-    startSceneAutoScroll(scrollSpeed);
+    startSceneAutoScroll(preferences.scrollSpeedPxPerSecond);
     setIsAutoScrolling(true);
   };
 
   const changeScrollSpeed = (delta: number): void => {
-    const speed = clampSceneScrollSpeed(scrollSpeed + delta);
-    setScrollSpeed(speed);
+    const speed = preferences.saveScrollSpeed(preferences.scrollSpeedPxPerSecond + delta);
     if (isAutoScrolling) startSceneAutoScroll(speed);
   };
 
@@ -120,7 +110,7 @@ export function SongScenePage(): JSX.Element {
       <div
         ref={attachSceneScrollBody}
         className="flex-1 overflow-y-auto px-4 sm:px-10 py-5"
-        style={{ fontSize: `${fontSizePx}px` }}
+        style={{ fontSize: `${preferences.fontSizePx}px` }}
       >
         <SongNotes song={song} tone="dark" className="mb-5" />
         {chordproText === null ? (
@@ -128,7 +118,7 @@ export function SongScenePage(): JSX.Element {
             {t('scene.noChordpro')}
           </p>
         ) : (
-          <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
+          <ChordChartViewer source={chordproText} semitones={preferences.semitones} tone="dark" />
         )}
       </div>
       <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 sm:px-10 py-3 border-t border-stage-line bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
@@ -138,14 +128,12 @@ export function SongScenePage(): JSX.Element {
         {chordproText === null ? null : (
           <div className="ml-auto">
             <SceneControls
-              semitones={semitones}
-              fontSizePx={fontSizePx}
-              scrollSpeedPxPerSecond={scrollSpeed}
+              semitones={preferences.semitones}
+              fontSizePx={preferences.fontSizePx}
+              scrollSpeedPxPerSecond={preferences.scrollSpeedPxPerSecond}
               isAutoScrolling={isAutoScrolling}
-              onTransposeBy={(delta) =>
-                setSemitones((current) => clampSemitoneOffset(current + delta))
-              }
-              onZoomBy={(delta) => setFontSizePx(clampSceneFontSize(fontSizePx + delta))}
+              onTransposeBy={preferences.transposeBy}
+              onZoomBy={preferences.zoomBy}
               onScrollSpeedBy={changeScrollSpeed}
               onToggleAutoScroll={toggleAutoScroll}
             />
