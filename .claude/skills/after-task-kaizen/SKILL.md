@@ -135,10 +135,7 @@ Sources to walk in order, capturing each friction event as one row:
 Output: a markdown table with these columns, committed to
 `docs/features/meta/lessons-from-pr-<N>/inventory.md`, which the kaizen
 PR body links from its *Inventory* section. The table does not go in the
-body: `scripts/pr/check-pr-body.ts` holds a budget an inventory of this
-size cannot fit, and the two requirements contradicted each other from
-the moment the budget landed. A committed file is the better home
-anyway — the body is an index, and the inventory is the evidence.
+body, whose budget in `scripts/pr/check-pr-body.ts` it cannot fit.
 
 | # | When | Friction | Sources / evidence | Cause | Elsewhere | Decision |
 | --- | --- | --- | --- | --- | --- | --- |
