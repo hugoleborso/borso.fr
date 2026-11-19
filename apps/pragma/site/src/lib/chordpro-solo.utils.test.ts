@@ -37,6 +37,9 @@ describe('isLyricLine', () => {
 
   it('does not read chord names written without brackets as lyrics', () => {
     expect(isLyricLine(parseChordProLine('Am F#m Cmaj7 Ebm7/Bb Gsus4'))).toBe(false);
+    expect(isLyricLine(parseChordProLine('Am7b5 D7 Gm C7sus4 Cmaj7#11 Dm9 G7-9 Caug+5'))).toBe(
+      false,
+    );
   });
 
   it('still reads a word that starts like a chord as a lyric', () => {

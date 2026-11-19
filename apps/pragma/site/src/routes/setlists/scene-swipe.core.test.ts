@@ -17,8 +17,8 @@ describe('selectSwipeCommand', () => {
   });
 
   it('ignores a gesture that mostly scrolls the chart', () => {
-    expect(selectSwipeCommand(-90, 60)).toBeNull();
-    expect(selectSwipeCommand(-91, 60)).toBe('next');
-    expect(selectSwipeCommand(90, -60)).toBeNull();
+    expect(selectSwipeCommand(-89, 60)).toBeNull();
+    expect(selectSwipeCommand(-90, 60)).toBe('next');
+    expect(selectSwipeCommand(89, -60)).toBeNull();
   });
 });

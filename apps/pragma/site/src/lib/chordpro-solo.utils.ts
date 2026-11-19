@@ -7,7 +7,7 @@ const SOLO_WORD_PATTERN = /\bsolo\b/i;
 const PARENTHESISED_PATTERN = /\([^)]*\)/g;
 const LYRIC_WORD_PATTERN = /\p{L}{2,}/u;
 const CHORD_NAME_PATTERN =
-  /(?<!\p{L})[A-G][#b]?(?:maj|min|dim|aug|sus|add|m)?\d*(?:\/[A-G][#b]?)?(?![\p{L}\d#])/gu;
+  /(?<!\p{L})[A-G][#b]?(?:maj|min|dim|aug|sus|add|m|\d|[#b+-](?=\d))*(?:\/[A-G][#b]?)?(?![\p{L}\d#])/gu;
 const CHORD_GAP = ' ';
 
 // @FollowsBlueprint utils-pure-module
