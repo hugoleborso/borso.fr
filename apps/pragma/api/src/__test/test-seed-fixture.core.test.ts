@@ -2,9 +2,11 @@ import { FALLBACK_INSTRUMENT_ICON } from '@domain/instrument.core';
 import { describe, expect, it } from 'vitest';
 import {
   BLANK_ENTRY_DETAIL,
+  SEED_FORMER_MEMBER,
   SEED_INSTRUMENTS,
   SEED_MEMBERS,
   SEED_SONGS,
+  SEED_TODAY_PRACTICE,
   SEED_TRANSITION_COMMENT,
 } from './test-seed-fixture.core';
 
@@ -83,5 +85,21 @@ describe('the seeded setlist entries', () => {
 describe('the seeded transition comment', () => {
   it('says what the two songs around it need', () => {
     expect(SEED_TRANSITION_COMMENT.length).toBeGreaterThan(0);
+  });
+});
+
+describe('the seeded practice of today', () => {
+  it('names at least two seeded songs, so its songs view offers to order them', () => {
+    const songTitles = new Set(SEED_SONGS.map((song) => song.title));
+    expect(SEED_TODAY_PRACTICE.songTitles.length).toBeGreaterThanOrEqual(2);
+    for (const title of SEED_TODAY_PRACTICE.songTitles) {
+      expect(songTitles).toContain(title);
+    }
+  });
+});
+
+describe('the seeded former member', () => {
+  it('is none of the members who stay, so deleting them leaves the band whole', () => {
+    expect(memberNames).not.toContain(SEED_FORMER_MEMBER.firstName);
   });
 });

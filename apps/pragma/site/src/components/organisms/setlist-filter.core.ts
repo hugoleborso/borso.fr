@@ -44,28 +44,28 @@ function resolveInstrumentsForMember(
   return instrumentsHeldBy(resolveLineup(song.defaultLineup, entry.lineupOverride), memberId);
 }
 
-export interface PartInstrument {
+export interface BandInstrument {
   readonly id: string;
   readonly name: string;
   readonly icon: InstrumentIcon;
 }
 
-export interface MemberPart {
+export interface HeldInstrument {
   readonly instrumentId: string;
   readonly name: string;
   readonly icon: InstrumentIcon;
   readonly isNameNeeded: boolean;
 }
 
-export function describeMemberPartsByEntryId(
+export function describeHeldInstrumentsByEntryId(
   instrumentIdsByEntryId: Readonly<Record<string, readonly string[]>>,
-  instruments: readonly PartInstrument[],
-): Readonly<Record<string, readonly MemberPart[]>> {
+  instruments: readonly BandInstrument[],
+): Readonly<Record<string, readonly HeldInstrument[]>> {
   const instrumentsById = new Map(instruments.map((instrument) => [instrument.id, instrument]));
   const namedInWords = selectInstrumentIdsNamedInWords(instruments);
-  const partsByEntryId: Record<string, readonly MemberPart[]> = {};
+  const heldInstrumentsByEntryId: Record<string, readonly HeldInstrument[]> = {};
   for (const [entryId, instrumentIds] of Object.entries(instrumentIdsByEntryId)) {
-    partsByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
+    heldInstrumentsByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
       const instrument = instrumentsById.get(instrumentId);
       if (instrument === undefined) return [];
       return [
@@ -78,5 +78,5 @@ export function describeMemberPartsByEntryId(
       ];
     });
   }
-  return partsByEntryId;
+  return heldInstrumentsByEntryId;
 }

@@ -3,17 +3,17 @@
 import type { JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '../atoms/Icon';
-import { MemberPartGlyphs } from '../molecules/MemberPartGlyphs';
-import type { MemberPartRow } from '../../routes/home/home.core';
+import { HeldInstrumentGlyphs } from '../molecules/HeldInstrumentGlyphs';
+import type { HeldInstrumentEntryRow } from '../../routes/home/home.core';
 
-export interface MemberPartListProps {
+export interface HeldInstrumentListProps {
   readonly label: string;
-  readonly rows: readonly MemberPartRow[];
+  readonly rows: readonly HeldInstrumentEntryRow[];
   readonly path: string;
 }
 
 // @FollowsBlueprint organism-presentational
-export function MemberPartList({ label, rows, path }: MemberPartListProps): JSX.Element {
+export function HeldInstrumentList({ label, rows, path }: HeldInstrumentListProps): JSX.Element {
   return (
     <ul
       aria-label={label}
@@ -26,7 +26,7 @@ export function MemberPartList({ label, rows, path }: MemberPartListProps): JSX.
             className="flex min-h-11 items-center gap-3 px-4 py-2.5 text-body text-ink no-underline hover:bg-hover"
           >
             <span className="min-w-0 flex-1 truncate">{row.songTitle}</span>
-            <MemberPartGlyphs parts={row.parts} size="sm" />
+            <HeldInstrumentGlyphs instruments={row.instruments} size="sm" />
             <Icon name="chevR" className="shrink-0 text-ink-faint" />
           </Link>
         </li>

@@ -89,7 +89,7 @@ export default defineConfig({
             'scripts/**/*.adapter.test.ts',
           ],
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
-          setupFiles: ['../../scripts/vitest-jsdom-animation-event.js'],
+          setupFiles: ['../../scripts/vitest-jsdom-missing-apis.js'],
           sequence: { groupOrder: 0 },
           testTimeout: 60_000,
         },

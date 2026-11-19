@@ -66,14 +66,14 @@ const INPUT: HomeViewInput = {
 
 // @FollowsBlueprint test-pure-unit
 describe('readHomeSection', () => {
-  it('opens on the member part when there is one, unless the address asks for the tasks', () => {
+  it('opens on the held instruments when the member holds some, unless the address asks for the tasks', () => {
     expect(readHomeSection(null, true)).toBe('part');
     expect(readHomeSection('part', true)).toBe('part');
     expect(readHomeSection('unknown', true)).toBe('part');
     expect(readHomeSection('tasks', true)).toBe('tasks');
   });
 
-  it('shows the tasks when the member has no part', () => {
+  it('shows the tasks when the member holds no instrument', () => {
     expect(readHomeSection(null, false)).toBe('tasks');
     expect(readHomeSection('part', false)).toBe('tasks');
   });
@@ -82,10 +82,14 @@ describe('readHomeSection', () => {
 describe('buildHomeView', () => {
   it('lists the songs where the member plays, an override included, with the instruments', () => {
     const view = buildHomeView(INPUT);
-    expect(view.memberPart.map((row) => row.entryId)).toEqual(['e1', 'e3', 'e4']);
-    expect(view.memberPart[0]).toMatchObject({ songTitle: 'Title a' });
-    expect(view.memberPart[1]?.parts.map((part) => part.name)).toEqual(['Guitar', 'Bass']);
-    expect(view.memberPart[2]?.parts.map((part) => part.name)).toEqual(['Bass']);
+    expect(view.heldInstrumentEntries.map((row) => row.entryId)).toEqual(['e1', 'e3', 'e4']);
+    expect(view.heldInstrumentEntries[0]).toMatchObject({ songTitle: 'Title a' });
+    expect(view.heldInstrumentEntries[1]?.instruments.map((instrument) => instrument.name)).toEqual(
+      ['Guitar', 'Bass'],
+    );
+    expect(view.heldInstrumentEntries[2]?.instruments.map((instrument) => instrument.name)).toEqual(
+      ['Bass'],
+    );
   });
 
   it('adds up the known durations of the setlist songs', () => {
@@ -132,13 +136,13 @@ describe('buildHomeView', () => {
     ).toEqual(['for-later', 'urgent']);
   });
 
-  it('shows no part and no task to an account with no member row', () => {
+  it('shows no held instrument and no task to an account with no member row', () => {
     const view = buildHomeView({
       ...INPUT,
       tasks: [task({}), task({ id: 'unclaimed', assigneeId: null })],
       memberId: null,
     });
-    expect(view.memberPart).toEqual([]);
+    expect(view.heldInstrumentEntries).toEqual([]);
     expect(view.memberTasks).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 ---
-summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <selector>`. A swipe is `scripts/phone.sh swipe <selector> <dx> <dy>`. Plus the traps of a signed-in pragma run, such as the saved query cache hiding an API write.'
+summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <target>`. A swipe is `scripts/phone.sh swipe <target> <dx> <dy>`. A target is a CSS selector or `text=<name>`. Plus the traps of a signed-in pragma run, such as the saved query cache hiding an API write.'
 triggers:
   commands:
     - '\.preview\.borso\.fr'
@@ -81,7 +81,11 @@ with `agent-browser --session phone`, because a sign-in on the default session
 does not carry over; PR #234 met that as `no element matches` on a signed-out
 page. `touch` taps the first visible match of the selector, so pragma's hidden
 desktop sidebar no longer catches a tap meant for the tab bar. A selector that
-matches only hidden elements fails with `no visible element matches`.
+matches only hidden elements fails with `no visible element matches`. A button
+or a lyric line with no selector of its own is aimed at as `text=<name>`, the
+innermost visible element whose `aria-label` or text is exactly that name.
+Two validators of PR #380 tagged elements with data attributes at runtime
+before this existed.
 
 ## Back-button checks need a tab with no earlier history
 

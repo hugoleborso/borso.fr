@@ -17,12 +17,6 @@ vi.mock('../../observability/product-event.adapter', () => ({
 }));
 import { serializePracticePosition } from './practice-mode.core';
 
-class StillResizeObserver implements ResizeObserver {
-  readonly observe = vi.fn();
-  readonly unobserve = vi.fn();
-  readonly disconnect = vi.fn();
-}
-
 const SESSION = {
   id: 'session-today',
   kind: 'practice',
@@ -110,7 +104,6 @@ describe('practice mode', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', StillResizeObserver);
     localStorage.clear();
     answered.setlists = [SETLIST];
     answered.entries = ENTRIES;

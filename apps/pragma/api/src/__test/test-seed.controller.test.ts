@@ -5,6 +5,7 @@ import { lambdaEnvironmentFrom } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { improvementTable } from '../improvements/improvements.schema';
+import { listInspirationViewsNewestFirst } from '../inspirations/inspirations.service';
 import { listInstruments } from '../instruments/instruments.repository';
 import { listMembers } from '../members/members.repository';
 import { listGrantsOfMember } from '../oauth/oauth.repository';
@@ -112,6 +113,46 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const setlistEntries = await listEntries(setlist.id);
     expect(setlistEntries.length).toBe(6);
     expect(setlistEntries.every((entry) => entry.energy === null)).toBe(true);
+  });
+
+  it('adds on request a practice of today with three songs, so its action row is crowded', async () => {
+    const before = Date.now();
+    const response = await createApp().request('/api/__test/seed?practice=today', {
+      method: 'POST',
+    });
+    expect(response.status).toBe(200);
+    const practice = (await listSessions()).find((session) => session.kind === 'practice');
+    if (practice === undefined) throw new Error('the seed wrote no practice');
+    expect(practice.date.getTime()).toBeGreaterThanOrEqual(before);
+    expect(practice.date.getTime()).toBeLessThanOrEqual(Date.now());
+    const [setlist] = await listSetlistsOfSession(practice.id);
+    if (setlist === undefined) throw new Error('the seeded practice has no setlist');
+    const songTitleById = new Map(
+      (await listSongsNewestFirst()).map((song) => [song.id, song.title]),
+    );
+    const practiceEntriesInOrder = (await listEntries(setlist.id)).toSorted(
+      (left, right) => left.position - right.position,
+    );
+    expect(practiceEntriesInOrder.map((entry) => songTitleById.get(entry.songId))).toEqual([
+      'Runaway Sun',
+      'Last Call',
+      'Lightning',
+    ]);
+  });
+
+  it('seeds no practice by default, so a session today does not light every flame', async () => {
+    await postSeed();
+    expect((await listSessions()).map((session) => session.kind)).toEqual(['concert']);
+  });
+
+  it('keeps an inspiration whose author was deleted, so its card reads former member', async () => {
+    await postSeed();
+    const inspirations = await listInspirationViewsNewestFirst();
+    expect(
+      inspirations.map((inspiration) => [inspiration.title, inspiration.authorMemberId]),
+    ).toEqual([['Call Me Maybe', null]]);
+    expect(inspirations[0]?.authorName).toBeNull();
+    expect((await listMembers()).map((member) => member.firstName)).not.toContain('Théo');
   });
 
   it('seeds Hugo his planned flame on a late evening after the 25 October clock change', async () => {

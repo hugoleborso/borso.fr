@@ -4,7 +4,7 @@ import type { InstrumentIcon } from '@domain/instrument.core';
 import { type Lineup, instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';
 import { type LineupFormValues, toggleInstrumentHeld } from '../molecules/lineup-editor.core';
 import { selectInstrumentIdsNamedInWords } from '../molecules/lineup-slots.core';
-import type { MemberPart } from './setlist-filter.core';
+import type { HeldInstrument } from './setlist-filter.core';
 
 export interface EntryLineupMember {
   readonly id: string;
@@ -30,7 +30,7 @@ export interface EntryLineupRow {
   readonly firstName: string;
   readonly color: string;
   readonly heldInstrumentIds: readonly string[];
-  readonly heldParts: readonly MemberPart[];
+  readonly heldInstruments: readonly HeldInstrument[];
   readonly isChangedTonight: boolean;
 }
 
@@ -39,10 +39,10 @@ function isSameInstrumentSet(left: readonly string[], right: readonly string[]):
   return left.every((instrumentId) => right.includes(instrumentId));
 }
 
-function describeHeldParts(
+function describeHeldInstruments(
   instruments: readonly EntryLineupInstrument[],
   heldInstrumentIds: readonly string[],
-): readonly MemberPart[] {
+): readonly HeldInstrument[] {
   const held = instruments.filter((instrument) => heldInstrumentIds.includes(instrument.id));
   const namedInWords = selectInstrumentIdsNamedInWords(held);
   return held.map((instrument) => ({
@@ -63,7 +63,7 @@ export function describeEntryLineup(input: EntryLineupInput): readonly EntryLine
       firstName: member.firstName,
       color: member.color,
       heldInstrumentIds: held,
-      heldParts: describeHeldParts(input.instruments, held),
+      heldInstruments: describeHeldInstruments(input.instruments, held),
       isChangedTonight: !isSameInstrumentSet(
         held,
         instrumentsHeldBy(input.songDefaultLineup, member.id),

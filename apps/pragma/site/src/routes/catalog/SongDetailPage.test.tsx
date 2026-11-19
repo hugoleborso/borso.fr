@@ -16,12 +16,6 @@ vi.mock('../../observability/product-event.adapter', () => ({
   recordProductEvent: vi.fn(),
 }));
 
-class StillResizeObserver implements ResizeObserver {
-  readonly observe = vi.fn();
-  readonly unobserve = vi.fn();
-  readonly disconnect = vi.fn();
-}
-
 const SONG = {
   id: 'song-1',
   title: 'Get Lucky',
@@ -132,7 +126,6 @@ describe('song page', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', StillResizeObserver);
     stub = stubFetch((request) => Promise.resolve(answerSongApi(request)));
   });
 

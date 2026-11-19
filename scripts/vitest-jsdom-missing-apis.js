@@ -10,3 +10,13 @@ class JsdomAnimationEvent extends Event {
 if (typeof globalThis.AnimationEvent === 'undefined') {
   globalThis.AnimationEvent = JsdomAnimationEvent;
 }
+
+class StillResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = StillResizeObserver;
+}

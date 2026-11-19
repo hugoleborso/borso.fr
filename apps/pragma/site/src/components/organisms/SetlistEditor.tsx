@@ -32,7 +32,7 @@ import { SetlistViewContent, type SetlistViewName } from './SetlistViewContent';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { useSetlistBreakActions } from './setlist-breaks.hook';
 import { indexById, toEntrySheetSong } from './setlist-editor.utils';
-import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
+import { describeHeldInstrumentsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { buildTransitionViews, indexTransitionComments } from './transition-view.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
@@ -141,8 +141,8 @@ export function SetlistEditor({
     () => filterEntriesForMember(setlistEntries, songsById, shownMemberId),
     [setlistEntries, songsById, shownMemberId],
   );
-  const memberPartByEntryId = useMemo(
-    () => describeMemberPartsByEntryId(filtered.instrumentIdsByEntryId, instruments),
+  const heldInstrumentsByEntryId = useMemo(
+    () => describeHeldInstrumentsByEntryId(filtered.instrumentIdsByEntryId, instruments),
     [filtered, instruments],
   );
   const lineupChangesByEntryId = useMemo(
@@ -205,7 +205,7 @@ export function SetlistEditor({
       transitionViews={transitionViews}
       transitionNotesByPair={transitionNotesByPair}
       inFilteredMode={view === 'my-part'}
-      memberPartByEntryId={memberPartByEntryId}
+      heldInstrumentsByEntryId={heldInstrumentsByEntryId}
       lineupMembers={lineupMembers}
       slotInstruments={instruments}
       knownMemberIds={knownMemberIds}

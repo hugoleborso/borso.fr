@@ -1,6 +1,7 @@
 import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
 import type { SongOrigin } from '@domain/song-origin.core';
 import type { SongStatus } from '@domain/song-status.core';
+import type { InspirationCreateInput } from '../inspirations/inspirations.schema';
 import { SLOW_BURN_CHORD_CHART } from './test-seed-charts.core';
 import type { SeedLineupByMemberName } from './test-seed.core';
 
@@ -297,3 +298,26 @@ G|---7-----------------|
 export const BLANK_ENTRY_DETAIL: SeedEntryDetail = { keyOverride: null, capo: null, notes: '' };
 
 export const SEED_TRANSITION_COMMENT = 'Léa annonce le titre pendant que Marc change de basse.';
+
+export interface SeedPractice {
+  readonly setlistName: string;
+  readonly songTitles: readonly string[];
+}
+
+export const SEED_TODAY_PRACTICE: SeedPractice = {
+  setlistName: 'Répète du jour',
+  songTitles: ['Runaway Sun', 'Last Call', 'Lightning'],
+};
+
+export const SEED_FORMER_MEMBER = { firstName: 'Théo', color: '#7a4fd0' } as const;
+
+export const SEED_FORMER_MEMBER_INSPIRATION: Omit<InspirationCreateInput, 'id'> = {
+  youtubeVideoId: 'fWNaR-rxAic',
+  title: 'Call Me Maybe',
+  artist: 'Carly Rae Jepsen',
+  deezerTrackId: null,
+  deezerAlbumId: null,
+  startSeconds: 31,
+  endSeconds: 52,
+  note: 'Les cordes du pré-refrain, pour l’intro de Runaway Sun.',
+};

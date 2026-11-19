@@ -21,4 +21,7 @@ cd "$(dirname "$0")/.."
 # and nothing names the missing build.
 scripts/ensure-infra-built.sh
 
-exec node_modules/.bin/oxlint --type-aware "$@" .
+# oxlint prints nothing on a clean run, which reads the same as a run that
+# never started, so a clean run says so.
+node_modules/.bin/oxlint --type-aware "$@" .
+echo "[lint] clean: the repository"

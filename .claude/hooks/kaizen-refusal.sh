@@ -22,6 +22,10 @@
 # working, not friction anyone hit.
 set -euo pipefail
 
+# The harness refuses the whole call, so a chained Bash command loses every
+# step, the ones before the refused word included.
+echo "[hook] Nothing in this call ran. In a chained command, rerun the other steps on their own." >&2
+
 [ "${KAIZEN_LOG_REFUSALS:-1}" = "0" ] && exit 0
 
 rule="${1:-hook}"

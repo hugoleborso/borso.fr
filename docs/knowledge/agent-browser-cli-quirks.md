@@ -208,9 +208,9 @@ _Measured on PR #193 (2026-10-24) and re-checked on 2026-10-25._
   empty-name case ran with the previous name still in the field. Clear a
   field with `eval` (set `value` to `''`, dispatch `input`) or select it and
   press `Backspace`, then read it back with `get value`.
-- **`fill` on an `input[type=datetime-local]` leaves it empty**, with no error.
-  Click each spin-button segment and type its digits, or set the value through
-  `eval` and dispatch `input` and `change`.
+- **`fill` on an `input[type=datetime-local]` leaves it empty**, with no error,
+  and digits typed into its spin-button segments are ignored too (PR #381). Set
+  the value through `eval` and dispatch `input` and `change`.
 - **`display-mode` cannot be emulated.** Chromium ignores it in
   `Emulation.setEmulatedMedia`, and agent-browser has no setting for it, so a
   `display-mode: standalone` assertion needs a `matchMedia` shim and says so in

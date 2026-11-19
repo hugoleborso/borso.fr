@@ -2443,6 +2443,9 @@
   "apps/pragma/site/src/components/molecules/FreeSlotRow.tsx": {
     "FreeSlotRow": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/HeldInstrumentGlyphs.tsx": {
+    "HeldInstrumentGlyphs": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/InlineLineupEditor.tsx": {
     "InlineLineupEditor": "molecule-presentational"
   },
@@ -2481,9 +2484,6 @@
   },
   "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
     "MemberChip": "molecule-presentational"
-  },
-  "apps/pragma/site/src/components/molecules/MemberPartGlyphs.tsx": {
-    "MemberPartGlyphs": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/Menu.tsx": {
     "Menu": "molecule-presentational"
@@ -2779,6 +2779,9 @@
   "apps/pragma/site/src/components/organisms/FreeSlotsPanel.tsx": {
     "FreeSlotsPanel": "organism-query-owning"
   },
+  "apps/pragma/site/src/components/organisms/HeldInstrumentList.tsx": {
+    "HeldInstrumentList": "organism-presentational"
+  },
   "apps/pragma/site/src/components/organisms/ImprovementFormSheet.tsx": {
     "ImprovementFormSheet": "organism-form"
   },
@@ -2805,9 +2808,6 @@
   },
   "apps/pragma/site/src/components/organisms/MemberEditForm.tsx": {
     "MemberEditForm": "route-form"
-  },
-  "apps/pragma/site/src/components/organisms/MemberPartList.tsx": {
-    "MemberPartList": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/MemberTaskColumn.tsx": {
     "MemberTaskColumn": "organism-presentational"

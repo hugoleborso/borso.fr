@@ -213,7 +213,7 @@ books the slot.
 
 ## Home
 
-The start screen, at `/`: the next session, then the signed-in member's part in its setlist or their open tasks, one at a time, chosen from two tabs.
+The start screen, at `/`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
 
 Lives in: `site/src/routes/home/`
 

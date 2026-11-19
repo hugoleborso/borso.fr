@@ -90,6 +90,23 @@ export const RESET_PROBE_SCRIPT = `window.${PROBE_GLOBAL}?.abort();
 
 export const PROBE_SIGNAL = `window.${PROBE_GLOBAL}.signal`;
 
+export const TEXT_TARGET_PREFIX = 'text=';
+
+export const FIRST_VISIBLE_SCRIPT = `const firstVisible = (target) => {
+      if (!target.startsWith(${JSON.stringify(TEXT_TARGET_PREFIX)})) {
+        return [...document.querySelectorAll(target)].find((element) => element.checkVisibility());
+      }
+      const name = target.slice(${TEXT_TARGET_PREFIX.length}).trim();
+      const named = [...document.querySelectorAll('body *')].filter(
+        (element) =>
+          [element.getAttribute('aria-label'), element.textContent].some(
+            (label) => label?.trim() === name,
+          ) &&
+          element.checkVisibility(),
+      );
+      return named.find((element) => !named.some((other) => other !== element && element.contains(other)));
+    };`;
+
 export const READ_PAGE_SCRIPT = `({
   innerWidth: window.innerWidth,
   maxTouchPoints: navigator.maxTouchPoints,

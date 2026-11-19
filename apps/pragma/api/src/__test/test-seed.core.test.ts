@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildSeedCharts,
   buildSeedLineup,
+  isPracticeTodayRequested,
   selectAdminCredentialsState,
   selectInstrumentIds,
 } from './test-seed.core';
@@ -86,5 +87,13 @@ describe('buildSeedCharts', () => {
     expect(
       buildSeedCharts({ title: 'Lightning', chordChartText: '[C]Bolt' }, instrumentIdByName),
     ).toEqual([{ kind: 'chordpro', text: '[C]Bolt', instrumentIds: [], label: null }]);
+  });
+});
+
+describe('isPracticeTodayRequested', () => {
+  it('adds the practice of today only when the seed request asks for it by name', () => {
+    expect(isPracticeTodayRequested('today')).toBe(true);
+    expect(isPracticeTodayRequested(undefined)).toBe(false);
+    expect(isPracticeTodayRequested('tomorrow')).toBe(false);
   });
 });

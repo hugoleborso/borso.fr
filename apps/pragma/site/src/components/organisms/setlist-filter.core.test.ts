@@ -3,8 +3,8 @@ import type { SetlistEditorSong } from './setlist-editor.utils';
 import {
   type FilterableEntry,
   filterEntriesForMember,
-  describeMemberPartsByEntryId,
-  type PartInstrument,
+  describeHeldInstrumentsByEntryId,
+  type BandInstrument,
 } from './setlist-filter.core';
 
 const HUGO = 'hugo-id';
@@ -123,8 +123,8 @@ describe('filterEntriesForMember', () => {
   });
 });
 
-describe('describeMemberPartsByEntryId', () => {
-  const instruments: readonly PartInstrument[] = [
+describe('describeHeldInstrumentsByEntryId', () => {
+  const instruments: readonly BandInstrument[] = [
     { id: DRUMS, name: 'Batterie', icon: 'drum' },
     { id: GUITAR, name: 'Guitare', icon: 'guitar' },
     { id: 'lead-guitar-id', name: 'Guitare lead', icon: 'guitar' },
@@ -132,7 +132,7 @@ describe('describeMemberPartsByEntryId', () => {
   ];
 
   it('names an instrument only when its icon stands for another one too', () => {
-    expect(describeMemberPartsByEntryId({ e1: [DRUMS, GUITAR] }, instruments)).toEqual({
+    expect(describeHeldInstrumentsByEntryId({ e1: [DRUMS, GUITAR] }, instruments)).toEqual({
       e1: [
         { instrumentId: DRUMS, name: 'Batterie', icon: 'drum', isNameNeeded: false },
         { instrumentId: GUITAR, name: 'Guitare', icon: 'guitar', isNameNeeded: true },
@@ -141,12 +141,12 @@ describe('describeMemberPartsByEntryId', () => {
   });
 
   it('names an instrument drawn with the generic glyph', () => {
-    expect(describeMemberPartsByEntryId({ e3: ['kazoo-id'] }, instruments)).toEqual({
+    expect(describeHeldInstrumentsByEntryId({ e3: ['kazoo-id'] }, instruments)).toEqual({
       e3: [{ instrumentId: 'kazoo-id', name: 'Kazoo', icon: 'music', isNameNeeded: true }],
     });
   });
 
   it('drops an instrument the list no longer has', () => {
-    expect(describeMemberPartsByEntryId({ e2: ['gone'] }, instruments)).toEqual({ e2: [] });
+    expect(describeHeldInstrumentsByEntryId({ e2: ['gone'] }, instruments)).toEqual({ e2: [] });
   });
 });

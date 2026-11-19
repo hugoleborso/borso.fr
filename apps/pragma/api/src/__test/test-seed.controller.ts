@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import {
   answerFixtureFeedRequest,
+  isPracticeTodayRequested,
   probeProductionBoundary,
   resetRateLimits,
   seedPreviewFixture,
+  seedTodayPractice,
 } from './test-seed.service';
 
 const PLAIN_TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
@@ -18,7 +20,10 @@ function waitFor(milliseconds: number): Promise<void> {
 export function buildTestSeedRouter() {
   return new Hono()
     .post('/seed', async (context) => {
-      const summary = await seedPreviewFixture(new Date(), new URL(context.req.url).origin);
+      const now = new Date();
+      const summary = await seedPreviewFixture(now, new URL(context.req.url).origin);
+      const isPracticeToday = isPracticeTodayRequested(context.req.query('practice'));
+      if (isPracticeToday) await seedTodayPractice(now);
       return context.json(summary);
     })
     .get('/production-boundary', async (context) => {

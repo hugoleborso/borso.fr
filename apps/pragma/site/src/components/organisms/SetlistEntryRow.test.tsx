@@ -1,24 +1,18 @@
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
-import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
+import type { HeldInstrumentGlyph } from '../molecules/HeldInstrumentGlyphs';
 import { SetlistEntryRow, type SetlistEntryRowProps } from './SetlistEntryRow';
 
-class StillResizeObserver implements ResizeObserver {
-  readonly observe = vi.fn();
-  readonly unobserve = vi.fn();
-  readonly disconnect = vi.fn();
-}
-
-const BASS_PART: MemberPartGlyph = {
+const HELD_BASS: HeldInstrumentGlyph = {
   instrumentId: 'bass',
   name: 'Bass',
   icon: 'bass',
   isNameNeeded: false,
 };
-const GUITAR_PART: MemberPartGlyph = {
+const HELD_GUITAR: HeldInstrumentGlyph = {
   instrumentId: 'guitar',
   name: 'Guitar',
   icon: 'guitar',
@@ -28,7 +22,7 @@ const TOM_COLOR = '#3d8b8b';
 const TOM_RENDERED = 'rgb(61, 139, 139)';
 const LEA_COLOR = '#e07a5f';
 const LEA_RENDERED = 'rgb(224, 122, 95)';
-const LEAD_VOCALS_PART: MemberPartGlyph = {
+const HELD_LEAD_VOCALS: HeldInstrumentGlyph = {
   instrumentId: 'lead-vocals',
   name: 'Lead vocals',
   icon: 'mic-vocal',
@@ -50,7 +44,7 @@ function buildProps(overrides: Partial<SetlistEntryRowProps> = {}): SetlistEntry
       isUnassigned: false,
     },
     lineupChanges: [],
-    memberPart: [],
+    heldInstruments: [],
     isMemberView: false,
     transitionBefore: null,
     onOpen: () => undefined,
@@ -73,10 +67,6 @@ function renderRow(props: SetlistEntryRowProps): void {
 
 // @FollowsBlueprint test-component-render
 describe('a setlist row', () => {
-  beforeEach(() => {
-    vi.stubGlobal('ResizeObserver', StillResizeObserver);
-  });
-
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
@@ -106,8 +96,8 @@ describe('a setlist row', () => {
       buildProps({
         notes: 'Finir sur le refrain',
         lineupChanges: [
-          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldParts: [GUITAR_PART] },
-          { memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldParts: [] },
+          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldInstruments: [HELD_GUITAR] },
+          { memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldInstruments: [] },
         ],
       }),
     );
@@ -121,7 +111,7 @@ describe('a setlist row', () => {
     renderRow(
       buildProps({
         lineupChanges: [
-          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldParts: [GUITAR_PART] },
+          { memberId: 'tom', firstName: 'Tom', color: TOM_COLOR, heldInstruments: [HELD_GUITAR] },
         ],
       }),
     );
@@ -135,7 +125,9 @@ describe('a setlist row', () => {
   it('draws a member who sits out as their ring, with no glyph', () => {
     renderRow(
       buildProps({
-        lineupChanges: [{ memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldParts: [] }],
+        lineupChanges: [
+          { memberId: 'lea', firstName: 'Léa', color: LEA_COLOR, heldInstruments: [] },
+        ],
       }),
     );
     const lea = document.querySelector('[data-lineup-change="lea"]');
@@ -178,7 +170,7 @@ describe('a setlist row', () => {
   });
 
   it('shows the instruments of the chosen member in place of the band lineup', () => {
-    renderRow(buildProps({ isMemberView: true, memberPart: [BASS_PART, LEAD_VOCALS_PART] }));
+    renderRow(buildProps({ isMemberView: true, heldInstruments: [HELD_BASS, HELD_LEAD_VOCALS] }));
     expect(screen.getByRole('img', { name: 'Bass' })).toBeTruthy();
     expect(screen.getByText('Lead vocals')).toBeTruthy();
     expect(screen.queryAllByTitle('Drums')).toHaveLength(0);

@@ -34,7 +34,7 @@ export function selectNextConcert<TSession extends NextConcertSession>(
   return { session, setlistId: setlist?.id ?? null };
 }
 
-export function buildMemberPartPath(setlistId: string, memberId: string): string {
+export function buildMemberSetlistPath(setlistId: string, memberId: string): string {
   if (memberId === '') return `/setlists/${setlistId}`;
   const query = new URLSearchParams({ [MEMBER_FILTER_PARAM]: memberId });
   return `/setlists/${setlistId}?${query.toString()}`;

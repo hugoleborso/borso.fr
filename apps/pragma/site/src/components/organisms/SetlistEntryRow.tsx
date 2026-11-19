@@ -7,7 +7,7 @@ import { MemberMark } from '../atoms/MemberMark';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
 import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
-import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
+import { HeldInstrumentGlyphs, type HeldInstrumentGlyph } from '../molecules/HeldInstrumentGlyphs';
 import { Menu, type MenuItem } from '../molecules/Menu';
 
 const POSITION_DIGITS = 2;
@@ -20,7 +20,7 @@ export interface SetlistEntryLineupChange {
   readonly memberId: string;
   readonly firstName: string;
   readonly color: string;
-  readonly heldParts: readonly MemberPartGlyph[];
+  readonly heldInstruments: readonly HeldInstrumentGlyph[];
 }
 
 export interface SetlistEntryRowProps {
@@ -34,7 +34,7 @@ export interface SetlistEntryRowProps {
   readonly notes: string;
   readonly lineupColumn: LineupColumnView;
   readonly lineupChanges: readonly SetlistEntryLineupChange[];
-  readonly memberPart: readonly MemberPartGlyph[];
+  readonly heldInstruments: readonly HeldInstrumentGlyph[];
   readonly isMemberView: boolean;
   readonly transitionBefore: ReactNode;
   readonly onOpen: () => void;
@@ -51,9 +51,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   ].filter((part) => part !== null);
   const changeLabel = props.lineupChanges
     .map((change) =>
-      change.heldParts.length === 0
+      change.heldInstruments.length === 0
         ? t('setlist.sitsOutTonight', { name: change.firstName })
-        : `${change.firstName}: ${change.heldParts.map((part) => part.name).join(', ')}`,
+        : `${change.firstName}: ${change.heldInstruments.map((instrument) => instrument.name).join(', ')}`,
     )
     .join(CHANGE_SEPARATOR);
   const changeSentence = t('setlist.tonightChange', { change: changeLabel });
@@ -104,7 +104,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </span>
             {props.isMemberView ? (
               <span className="flex shrink-0 items-center pr-1">
-                <MemberPartGlyphs parts={props.memberPart} size="md" />
+                <HeldInstrumentGlyphs instruments={props.heldInstruments} size="md" />
               </span>
             ) : null}
           </span>
@@ -129,11 +129,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                     className="inline-flex items-center gap-1.5"
                   >
                     <MemberMark
-                      shape={change.heldParts.length === 0 ? 'ring' : 'dot'}
+                      shape={change.heldInstruments.length === 0 ? 'ring' : 'dot'}
                       color={change.color}
                     />
-                    {change.heldParts.length === 0 ? null : (
-                      <MemberPartGlyphs parts={change.heldParts} size="sm" />
+                    {change.heldInstruments.length === 0 ? null : (
+                      <HeldInstrumentGlyphs instruments={change.heldInstruments} size="sm" />
                     )}
                   </span>
                 ))}

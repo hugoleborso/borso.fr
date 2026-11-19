@@ -79,3 +79,10 @@ export function selectAdminCredentialsState(
 ): AdminCredentialsState {
   return bootstrapKind === 'ok' ? 'created' : 'already-set';
 }
+
+const PRACTICE_TODAY_QUERY = 'today';
+
+// @FollowsBlueprint core-decision
+export function isPracticeTodayRequested(practiceQuery: string | undefined): boolean {
+  return practiceQuery === PRACTICE_TODAY_QUERY;
+}
