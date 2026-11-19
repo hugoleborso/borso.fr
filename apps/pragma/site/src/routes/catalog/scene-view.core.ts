@@ -14,6 +14,12 @@ export const SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND = 30;
 
 const MILLISECONDS_IN_SECOND = 1000;
 
+export function parseSceneSetting(stored: string | null, fallback: number): number {
+  if (stored === null) return fallback;
+  const storedNumber = Number(stored);
+  return Number.isInteger(storedNumber) ? storedNumber : fallback;
+}
+
 // @FollowsBlueprint utils-pure-module
 export function clampSceneFontSize(fontSizePx: number): number {
   return Math.min(SCENE_FONT_SIZE_MAX_PX, Math.max(SCENE_FONT_SIZE_MIN_PX, fontSizePx));

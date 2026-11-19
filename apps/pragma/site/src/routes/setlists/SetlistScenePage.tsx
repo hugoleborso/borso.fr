@@ -20,6 +20,7 @@ import {
   stopSceneAutoScroll,
 } from '../../lib/scene-scroll.adapter';
 import { useNavigateTo } from '../../lib/navigation.hook';
+import { useScenePreferences } from '../../lib/scene-preferences.store';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
@@ -30,13 +31,6 @@ import { resolveLineup } from '@domain/lineup.core';
 import { selectChordProCharts, selectChordProText } from '../catalog/chart-kind.utils';
 import { useChartSwitch } from '../catalog/chart-switch.hook';
 import { selectHeldInstrumentIds } from '../catalog/opening-chart.core';
-import {
-  clampSceneFontSize,
-  clampSceneScrollSpeed,
-  clampSemitoneOffset,
-  SCENE_FONT_SIZE_DEFAULT_PX,
-  SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND,
-} from '../catalog/scene-view.core';
 import {
   buildSceneHeadline,
   buildScenePills,
@@ -72,9 +66,6 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const instrumentsQuery = useInstrumentsList();
 
   const [index, setIndex] = useState(0);
-  const [semitones, setSemitones] = useState(0);
-  const [fontSizePx, setFontSizePx] = useState(SCENE_FONT_SIZE_DEFAULT_PX);
-  const [scrollSpeed, setScrollSpeed] = useState(SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND);
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
   const setlistEntries = entriesQuery.data?.entries ?? NO_ROWS;
@@ -90,6 +81,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const currentIndex = clampSceneIndex(index, setlistEntries.length);
   const entry = setlistEntries[currentIndex];
   const song = entry === undefined ? undefined : songsById[entry.songId];
+  const preferences = useScenePreferences(entry?.songId);
   const instruments = instrumentsQuery.data?.instruments ?? NO_ROWS;
   const chordProCharts = selectChordProCharts(song?.charts ?? NO_ROWS);
   const entryLineup = resolveLineup(
@@ -114,7 +106,6 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
 
   const goToIndex = (nextIndex: number): void => {
     setIndex(clampSceneIndex(nextIndex, setlistEntries.length));
-    setSemitones(0);
     chartSwitch.resetPick();
     scrollSceneBodyToTop();
   };
@@ -132,13 +123,12 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
       setIsAutoScrolling(false);
       return;
     }
-    startSceneAutoScroll(scrollSpeed);
+    startSceneAutoScroll(preferences.scrollSpeedPxPerSecond);
     setIsAutoScrolling(true);
   };
 
   const changeScrollSpeed = (delta: number): void => {
-    const speed = clampSceneScrollSpeed(scrollSpeed + delta);
-    setScrollSpeed(speed);
+    const speed = preferences.saveScrollSpeed(preferences.scrollSpeedPxPerSecond + delta);
     if (isAutoScrolling) startSceneAutoScroll(speed);
   };
 
@@ -215,12 +205,12 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
           </div>
         </div>
         <SceneControls
-          semitones={semitones}
-          fontSizePx={fontSizePx}
-          scrollSpeedPxPerSecond={scrollSpeed}
+          semitones={preferences.semitones}
+          fontSizePx={preferences.fontSizePx}
+          scrollSpeedPxPerSecond={preferences.scrollSpeedPxPerSecond}
           isAutoScrolling={isAutoScrolling}
-          onTransposeBy={(delta) => setSemitones((current) => clampSemitoneOffset(current + delta))}
-          onZoomBy={(delta) => setFontSizePx(clampSceneFontSize(fontSizePx + delta))}
+          onTransposeBy={preferences.transposeBy}
+          onZoomBy={preferences.zoomBy}
           onScrollSpeedBy={changeScrollSpeed}
           onToggleAutoScroll={toggleAutoScroll}
         />
@@ -236,7 +226,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
       <div
         ref={attachSceneScrollBody}
         className="flex-1 overflow-y-auto px-4 sm:px-10 py-5"
-        style={{ fontSize: `${fontSizePx}px` }}
+        style={{ fontSize: `${preferences.fontSizePx}px` }}
       >
         {setlistEntries.length === 0 ? (
           <p className="text-center font-display text-title text-stage-ink-dim py-20">
@@ -255,7 +245,11 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
                 {t('scene.noChordpro')}
               </p>
             ) : (
-              <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
+              <ChordChartViewer
+                source={chordproText}
+                semitones={preferences.semitones}
+                tone="dark"
+              />
             )}
           </>
         )}

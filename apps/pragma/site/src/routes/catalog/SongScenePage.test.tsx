@@ -80,7 +80,19 @@ describe('SongScenePage', () => {
     });
   }
 
+  function press(label: string): void {
+    const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+    act(() => button?.click());
+  }
+
+  function readouts(): readonly (string | null)[] {
+    return [...container.querySelectorAll('dialog span.tabular-nums')].map(
+      (readout) => readout.textContent,
+    );
+  }
+
   beforeEach(() => {
+    localStorage.clear();
     stubDialogModalMissingFromJsdom();
     container = document.createElement('div');
     document.body.append(container);
@@ -111,5 +123,35 @@ describe('SongScenePage', () => {
     fixture.hasChordPro = false;
     renderScene();
     expect(container.textContent).toContain('No ChordPro chart attached to this song.');
+  });
+
+  it('opens again with the transposition, the zoom and the scroll speed the musician left', () => {
+    press('Transpose up');
+    press('Zoom in');
+    press('Scroll faster');
+    act(() => root.unmount());
+    root = createRoot(container);
+    renderScene();
+
+    expect(readouts()).toEqual(['+1', '40']);
+    expect(
+      container.querySelector<HTMLElement>('dialog [style*="font-size"]')?.style.fontSize,
+    ).toBe('26px');
+  });
+
+  it('paints the status bar like the stage while open and gives it back on leaving', () => {
+    const themeColour = document.createElement('meta');
+    themeColour.name = 'theme-color';
+    themeColour.content = '#f5f1e8';
+    document.head.append(themeColour);
+    act(() => root.unmount());
+    root = createRoot(container);
+    renderScene();
+    expect(themeColour.content).not.toBe('#f5f1e8');
+
+    act(() => root.unmount());
+    root = createRoot(container);
+    expect(themeColour.content).toBe('#f5f1e8');
+    themeColour.remove();
   });
 });
