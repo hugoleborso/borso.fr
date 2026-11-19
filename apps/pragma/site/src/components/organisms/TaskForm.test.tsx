@@ -19,8 +19,16 @@ const SONGS = [
 ];
 const SESSIONS = [{ id: 'session-1', label: 'Practice · Wed 28 Oct 2026' }];
 const TYPED_TITLE = 'Imprimer les setlists';
+const MEMBERS = [
+  { id: 'member-1', firstName: 'Ada', color: '#c0392b' },
+  { id: 'member-2', firstName: 'Bo', color: '#2d5fa0' },
+];
 
-function renderTaskForm(draftKey: string, values: TaskFormValues = BLANK) {
+function renderTaskForm(
+  draftKey: string,
+  values: TaskFormValues = BLANK,
+  members: typeof MEMBERS = [],
+) {
   const onClose = vi.fn();
   const onSubmit = vi.fn(async (): Promise<void> => undefined);
   const view = render(
@@ -28,7 +36,7 @@ function renderTaskForm(draftKey: string, values: TaskFormValues = BLANK) {
       draftKey={draftKey}
       values={values}
       isEditing={draftKey !== 'new'}
-      members={[]}
+      members={members}
       songs={SONGS}
       sessions={SESSIONS}
       onSubmit={onSubmit}
@@ -69,6 +77,20 @@ describe('the task sheet links', () => {
     renderTaskForm('new:session-1', { ...BLANK, sessionId: 'session-1' });
     const field = screen.getByLabelText('Session');
     expect(field instanceof HTMLSelectElement ? field.value : null).toBe('session-1');
+  });
+});
+
+describe('the task sheet assignee picker', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('writes each member’s first name beside their avatar, named once for a screen reader', () => {
+    renderTaskForm('new', BLANK, MEMBERS);
+    for (const member of MEMBERS) {
+      const chip = screen.getByRole('button', { name: member.firstName });
+      expect(screen.getByText(member.firstName).closest('button')).toBe(chip);
+    }
   });
 });
 

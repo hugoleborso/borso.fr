@@ -37,7 +37,7 @@ the element's accessible name, so a screen reader still reads it.
 3. A setlist row with a change tonight shows the member's mark and the instrument glyphs, not the sentence.
 4. The mastery matrix shows instrument glyphs as row headers and avatars as column headers.
 5. A song's lineup chips show avatar then glyphs, with no name.
-6. A page header with three or more actions shows its primary action as word and icon, and the others as icons.
+6. A row of three or more actions, such as the practice day's bottom bar, shows its primary action as word and icon, and the others as icons.
 7. Every screen above works at 375 px wide, and every mark or icon-only button has an accessible name equal to the word it replaced.
 
 ## Out of scope

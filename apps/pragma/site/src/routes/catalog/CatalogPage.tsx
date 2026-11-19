@@ -69,12 +69,12 @@ export function CatalogPage(): JSX.Element {
   const failedWriteSongId = useSongThatLostItsLastWrite();
   const titleOfSongThatLostItsWrite =
     songs.find((song) => song.id === failedWriteSongId)?.title ?? null;
-  const instrumentNames = useMemo(
+  const instrumentsById = useMemo(
     () =>
       new Map(
         (instrumentsQuery.data?.instruments ?? NO_ROWS).map((instrument) => [
           instrument.id,
-          instrument.name,
+          instrument,
         ]),
       ),
     [instrumentsQuery.data],
@@ -83,14 +83,15 @@ export function CatalogPage(): JSX.Element {
 
   const cards = useMemo<SongCardProps[]>(() => {
     if (isToLearn) {
-      return selectSongsToLearn(songs, queue, search).map((entry) =>
-        toSongCard(entry.song, describeSongToLearn(entry, instrumentNames)),
-      );
+      return selectSongsToLearn(songs, queue, search).map((entry) => {
+        const learned = describeSongToLearn(entry, instrumentsById);
+        return toSongCard(entry.song, learned.detail, learned.instruments);
+      });
     }
     return selectVisibleSongs(sortSongsByTitle(songs), filter, search).map((song) =>
       toSongCard(song, song.artist),
     );
-  }, [isToLearn, songs, queue, search, instrumentNames, filter]);
+  }, [isToLearn, songs, queue, search, instrumentsById, filter]);
 
   const chooseFilter = (next: CatalogFilter): void => {
     setSearchParams(buildCatalogFilterSearch(next), { replace: true });

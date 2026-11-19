@@ -2,12 +2,12 @@
 
 import { useTranslation } from 'react-i18next';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Overline } from '../atoms/Overline';
-import { MEMBER_LOADING_COLOR } from '../atoms/member-palette.utils';
+import { MEMBER_LOADING_COLOR, memberInitial } from '../atoms/member-palette.utils';
 import { OfflineBanner } from '../molecules/OfflineBanner';
-import { MemberChip } from '../molecules/MemberChip';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
@@ -66,8 +66,16 @@ export function AppShell(): JSX.Element {
             onClick={scrollPageToTop}
             className="mt-auto flex items-center gap-2.5 rounded-md bg-leaf p-2 text-ink no-underline shadow-leaf"
           >
-            <MemberChip memberName={signedInName} memberColor={signedInColor} size="md" />
-            <div className="min-w-0 truncate text-meta text-ink-soft">{t('shell.meVersion')}</div>
+            <Avatar
+              aria-hidden="true"
+              initials={memberInitial(signedInName)}
+              color={signedInColor}
+              size="md"
+            />
+            <div className="min-w-0">
+              <div className="truncate text-meta font-medium">{signedInName}</div>
+              <div className="truncate text-meta text-ink-soft">{t('shell.meVersion')}</div>
+            </div>
           </Link>
         </nav>
       </div>

@@ -1,5 +1,7 @@
 /** @Feature songs */
 
+import type { InstrumentIcon } from '@domain/instrument.core';
+import { selectInstrumentIdsNamedInWords } from '../../components/molecules/lineup-slots.core';
 import { type ChartKindTag, extractChartKind } from './chart-kind.utils';
 
 export const CATALOG_FILTERS = [
@@ -19,8 +21,7 @@ export type CatalogStatusFilter = Exclude<CatalogFilter, 'learning'>;
 export const TO_LEARN_FILTER = 'learning';
 
 const DEFAULT_FILTER: CatalogFilter = 'all';
-const INSTRUMENT_SEPARATOR = ', ';
-const DETAIL_SEPARATOR = ' · ';
+const SCORE_AFTER_GLYPHS_PREFIX = '· ';
 const MASTERY_SCALE = 10;
 
 export interface CatalogSong {
@@ -113,10 +114,20 @@ export interface SongCardSource<Status extends string> {
   readonly charts: readonly { readonly kind?: unknown }[];
 }
 
+export interface SongCardInstrument {
+  readonly instrumentId: string;
+  readonly name: string;
+  readonly icon: InstrumentIcon;
+  readonly isNameNeeded: boolean;
+}
+
+const NO_CARD_INSTRUMENTS: readonly SongCardInstrument[] = [];
+
 export interface SongCardView<Status extends string> {
   readonly id: string;
   readonly title: string;
   readonly detail: string;
+  readonly instruments: readonly SongCardInstrument[];
   readonly deezerAlbumId: string | null;
   readonly status: Status;
   readonly chartKind: ChartKindTag;
@@ -126,27 +137,55 @@ export interface SongCardView<Status extends string> {
 export function toSongCard<Status extends string>(
   song: SongCardSource<Status>,
   detail: string,
+  instruments: readonly SongCardInstrument[] = NO_CARD_INSTRUMENTS,
 ): SongCardView<Status> {
   return {
     id: song.id,
     title: song.title,
     detail,
+    instruments,
     deezerAlbumId: song.deezerAlbumId,
     status: song.status,
     chartKind: extractChartKind(song.charts[0]),
   };
 }
 
+export interface LearnedInstrument {
+  readonly id: string;
+  readonly name: string;
+  readonly icon: InstrumentIcon;
+}
+
+export interface SongToLearnDetail {
+  readonly instruments: readonly SongCardInstrument[];
+  readonly detail: string;
+}
+
+function describeLowestScore(lowestScore: number | null, isAfterGlyphs: boolean): string {
+  if (lowestScore === null) return '';
+  const score = `${lowestScore}/${MASTERY_SCALE}`;
+  return isAfterGlyphs ? `${SCORE_AFTER_GLYPHS_PREFIX}${score}` : score;
+}
+
+// @FollowsBlueprint core-view-projection
 export function describeSongToLearn(
   entry: SongToLearn<unknown>,
-  instrumentNames: ReadonlyMap<string, string>,
-): string {
-  const names = entry.instrumentIds
-    .map((instrumentId) => instrumentNames.get(instrumentId) ?? '')
-    .filter((name) => name.length > 0)
-    .join(INSTRUMENT_SEPARATOR);
-  if (entry.lowestScore === null) return names;
-  return `${names}${DETAIL_SEPARATOR}${entry.lowestScore}/${MASTERY_SCALE}`;
+  instrumentsById: ReadonlyMap<string, LearnedInstrument>,
+): SongToLearnDetail {
+  const learned = entry.instrumentIds.flatMap((instrumentId) => {
+    const instrument = instrumentsById.get(instrumentId);
+    return instrument === undefined ? [] : [instrument];
+  });
+  const namedInWords = selectInstrumentIdsNamedInWords(learned);
+  return {
+    instruments: learned.map((instrument) => ({
+      instrumentId: instrument.id,
+      name: instrument.name,
+      icon: instrument.icon,
+      isNameNeeded: namedInWords.has(instrument.id),
+    })),
+    detail: describeLowestScore(entry.lowestScore, learned.length > 0),
+  };
 }
 
 export type CatalogEmptyMessageKey =
