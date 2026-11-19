@@ -220,17 +220,20 @@ case "${1:-}" in
     printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' "$total" "$swept"
     ;;
   balance)
-    # A sweep removes at least as much as it adds. Its own records, the swept
-    # log, the inventory and the cost row, are not counted. Over the 60 sweeps
-    # before 2026-11-19 the count was 42,304 lines added for 5,421 removed, and
-    # 5 sweeps passed this, beside a written rule that already said to subtract.
+    # A sweep removes at least as much as it adds. Not counted, by the
+    # operator's choice on 2026-11-19: the sweep's own records, knowledge
+    # entries, ADRs, the operator backlog, the lockfile and test snapshots.
+    # Over the 60 sweeps before that day the full count was 42,304 lines added
+    # for 5,421 removed, beside a written rule that already said to subtract.
+    not_counted='docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md'
+    not_counted+='|docs/(knowledge|adr|operator-backlog)/.*|pnpm-lock[.]yaml|.*/__snapshots__/.*'
     base="${2:-origin/main}"
     numstat="$(git -C "$REPO_ROOT" diff --numstat "$base...HEAD")" ||
       { printf 'scripts/kaizen.sh: cannot compare with %s; fetch origin first\n' "$base" >&2; exit 2; }
     read -r added removed < <(printf '%s\n' "$numstat" |
-      grep -vE '	(docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md)$' |
+      grep -vE "	($not_counted)\$" |
       awk '{ added += $1; removed += $2 } END { print added + 0, removed + 0 }')
-    printf 'Balance: added %s, removed %s outside the sweep'"'"'s records\n' "$added" "$removed"
+    printf 'Balance: added %s, removed %s outside what a sweep does not count\n' "$added" "$removed"
     [ "$added" -le "$removed" ] || {
       printf 'This sweep adds more than it removes. Remove what each addition replaces, or fold it into a file that exists.\n' >&2
       exit 1

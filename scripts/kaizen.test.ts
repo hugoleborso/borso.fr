@@ -10,7 +10,7 @@ const EARLIER_LINE = '- [2026-11-01 10:00] `main` the gate cited ADR-0007 and ra
 const REWRITTEN_LINE =
   '- [2026-11-01 10:00] `main` the gate cited ADR-2026-08-08T1538 and ran nothing';
 const NEW_LINE = '- [2026-11-11 12:00] `agent` the dev server died at start';
-const ENTRY = 'docs/knowledge/an-entry.md';
+const ENTRY = 'docs/dantotsus/an-entry.md';
 const INVENTORY = 'docs/features/meta/lessons-from-pr-1/inventory.md';
 
 const repositories: string[] = [];
@@ -92,10 +92,15 @@ describe('kaizen.sh balance', () => {
     expect(status).toBe(1);
   });
 
-  it('passes a sweep that removes as much as it adds, and does not count its records', () => {
+  it('passes a sweep that removes as much as it adds, and leaves out what a sweep does not count', () => {
     const sweep = {
       [INVENTORY]: lines(9),
       [ARCHIVE]: lines(9),
+      'docs/knowledge/a.md': lines(9),
+      'docs/adr/a.md': lines(9),
+      'docs/operator-backlog/a.md': lines(9),
+      'pnpm-lock.yaml': lines(9),
+      'infra/test/__snapshots__/a.json': lines(9),
       'a.sh': lines(3),
       [ENTRY]: lines(7),
     };

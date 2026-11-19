@@ -17,7 +17,7 @@ each is the whole section, so name what is now impossible in one sentence.
 
 What the sweep found, in numbers. How many rows, how many were already eradicated, how many entries ship. 200.
 
-Balance: added 0, removed 0 outside the sweep's records
+Balance: added 0, removed 0 outside what a sweep does not count
 
 ## Inventory
 
