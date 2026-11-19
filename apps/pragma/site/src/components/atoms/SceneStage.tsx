@@ -1,8 +1,16 @@
 /** @Feature songs */
 
-import { type JSX, type KeyboardEvent, type ReactNode, useCallback, useRef } from 'react';
+import {
+  type JSX,
+  type KeyboardEvent,
+  type ReactNode,
+  type SyntheticEvent,
+  useCallback,
+  useRef,
+} from 'react';
 import { UNSAFE_PortalProvider } from 'react-aria';
 import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
+import { isEventFromItself } from '../../lib/scene-stage.utils';
 
 export interface SceneStageProps {
   readonly label: string;
@@ -23,11 +31,15 @@ export function SceneStage({ label, onClose, onKeyDown, children }: SceneStagePr
     openSceneOnAttach(dialog);
   }, []);
   const getOverlayContainer = useCallback(() => stage.current, []);
+  const leaveOnOwnClose = (event: SyntheticEvent<HTMLDialogElement>) => {
+    const isStageClosing = isEventFromItself(event.target, event.currentTarget);
+    if (isStageClosing) onClose();
+  };
   return (
     // eslint-disable-next-line borso/no-raw-interactive-element -- the scene view is a full-screen stage, not a sheet: no grabber, no title bar, its own dark tokens and its own transport, opened through openSceneOnAttach
     <dialog
       ref={attachStage}
-      onClose={onClose}
+      onClose={leaveOnOwnClose}
       onKeyDown={onKeyDown}
       aria-label={label}
       className={STAGE_CLASS}

@@ -63,4 +63,34 @@ describe('SceneStage', () => {
     expect(sheet).not.toBeNull();
     expect(container.querySelector('dialog')?.contains(sheet)).toBe(true);
   });
+
+  it('leaves the stage when the stage itself closes', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(
+        <SceneStage label="Helpless" onClose={onClose}>
+          <p>chart</p>
+        </SceneStage>,
+      );
+    });
+    act(() => {
+      container.querySelector('dialog')?.dispatchEvent(new Event('close'));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays on stage when a popup nested in it closes', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(
+        <SceneStage label="Helpless" onClose={onClose}>
+          <dialog aria-label="Transition" />
+        </SceneStage>,
+      );
+    });
+    act(() => {
+      container.querySelector('dialog[aria-label="Transition"]')?.dispatchEvent(new Event('close'));
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
