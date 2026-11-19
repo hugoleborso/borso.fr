@@ -11,6 +11,7 @@ import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartSwitcher } from '../../components/organisms/ChordChartSwitcher';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { SceneControls } from '../../components/organisms/SceneControls';
+import { SceneTransitionPreview } from '../../components/organisms/SceneTransitionPreview';
 import { SceneTransport } from '../../components/organisms/SceneTransport';
 import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
 import {
@@ -48,6 +49,8 @@ import {
 } from './setlist-scene.core';
 import { selectMissingSetlistMessageKey } from './missing-setlist.core';
 import { useSceneSwipe } from './scene-swipe.hook';
+import { useSceneTransitionCard } from './scene-transition-card.hook';
+import { useSceneTransitionPreview } from './scene-transition.hook';
 
 const NO_ROWS: readonly never[] = [];
 const NO_LINEUP = {};
@@ -71,6 +74,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const songsQuery = useSongsList();
   const signedInMember = useSignedInMember();
   const instrumentsQuery = useInstrumentsList();
+  const transitionCard = useSceneTransitionCard();
 
   const [index, setIndex] = useState(0);
   const [semitones, setSemitones] = useState(0);
@@ -103,6 +107,13 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
     'setlist-scene',
     entry?.songId,
   );
+  const transitionPreview = useSceneTransitionPreview({
+    song,
+    nextEntry: setlistEntries[currentIndex + 1],
+    songsById,
+    currentLineup: entryLineup,
+    instruments,
+  });
   const pills = useMemo(
     () => buildScenePills(setlistEntries, songsById, currentIndex),
     [setlistEntries, songsById, currentIndex],
@@ -263,9 +274,24 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
             ) : (
               <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
             )}
+            {transitionPreview === null ? null : (
+              <SceneTransitionPreview
+                layout="card"
+                cardRef={transitionCard.attachCard}
+                {...transitionPreview}
+              />
+            )}
           </>
         )}
       </div>
+
+      {transitionPreview === null || transitionCard.isCardInView ? null : (
+        <SceneTransitionPreview
+          layout="strip"
+          onReveal={transitionCard.revealCard}
+          {...transitionPreview}
+        />
+      )}
 
       {setlistEntries.length === 0 ? null : (
         <SceneTransport

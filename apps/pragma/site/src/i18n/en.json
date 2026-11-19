@@ -470,6 +470,8 @@
     "sectionTab": "Tab",
     "sectionVerse": "Verse",
     "title": "Scene Mode",
+    "transitionOpen": "Show the transition to {{title}}",
+    "transitionThen": "Then",
     "transposeDown": "Transpose down",
     "transposeUp": "Transpose up",
     "unknownSong": "Song not found",

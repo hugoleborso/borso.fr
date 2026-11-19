@@ -470,6 +470,8 @@
     "sectionTab": "Tablature",
     "sectionVerse": "Couplet",
     "title": "Mode Scène",
+    "transitionOpen": "Voir la transition vers {{title}}",
+    "transitionThen": "Ensuite",
     "transposeDown": "Transposer plus bas",
     "transposeUp": "Transposer plus haut",
     "unknownSong": "Morceau introuvable",
