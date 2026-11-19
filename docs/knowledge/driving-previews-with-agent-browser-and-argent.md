@@ -1,8 +1,9 @@
 ---
-summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <selector>`. Plus the traps of a signed-in pragma run.'
+summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <selector>`. A swipe is `scripts/phone.sh swipe <selector> <dx> <dy>`. Plus the traps of a signed-in pragma run, such as the saved query cache hiding an API write.'
 triggers:
   commands:
     - '\.preview\.borso\.fr'
+    - 'scripts/dev-server\.sh\s+start\s+pragma'
     - 'scripts/phone\.sh'
     - 'agent-browser install'
   output:
@@ -64,6 +65,13 @@ exits 1 when the browser took the gesture to pan (`pointercancel`), so read the
 page back for the outcome; see
 [`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
 
+A swipe judged by distance rather than by target is `scripts/phone.sh swipe
+'<from>' <dx> <dy>`, such as `swipe 'dialog .overflow-y-auto' -120 0` for the
+next song in Scene Mode. It scrolls the start into view and moves in the same
+CDP connection, and puts the 375 px viewport back before it returns, as `drag`
+and `touch` do. Three validator runs on PR #377 wrote their own CDP swipe
+script instead, and two of them left the page at desktop width.
+
 The `phone` session is its own browser with its own cookies. Sign in there,
 with `agent-browser --session phone`, because a sign-in on the default session
 does not carry over; PR #234 met that as `no element matches` on a signed-out
@@ -98,7 +106,7 @@ each was built from.
 
 ## Traps when the application holds a session
 
-Both cost a visual validator a run on `pragma`.
+Each cost a visual validator a run on `pragma`.
 
 **A full-page navigation drops the session.** `agent-browser open <url>` lands
 on `/login`. Once signed in, move through the application's own links and keep
@@ -109,6 +117,14 @@ on `/login`. Once signed in, move through the application's own links and keep
 member no longer exists and the login screen reports wrong credentials. Seed
 once, before signing in. Five failed sign-ins trip a fifteen-minute rate limit;
 `POST /api/__test/rate-limits/reset` clears it on a preview.
+
+**pragma serves a reload from its saved cache.** The site keeps every API
+answer in `localStorage` under `pragma.query-cache`, fresh for five minutes. A
+chart or a note written through the API therefore does not show after a
+reload, and no request leaves the page. Two validators on PR #377 lost a row
+to it. Put the case in the app's test seed under `api/src/__test/` when you
+can, so the next run has it too. When you must write through the API, run
+`agent-browser eval "localStorage.removeItem('pragma.query-cache')"` and reload.
 
 **`screenshot --full` captures the window, not a scrolled container.** Where a
 page scrolls an inner element, scroll it into view or screenshot the element,
