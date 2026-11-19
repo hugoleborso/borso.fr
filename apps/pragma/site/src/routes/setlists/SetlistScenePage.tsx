@@ -47,6 +47,7 @@ import {
   selectSceneKeyCommand,
 } from './setlist-scene.core';
 import { selectMissingSetlistMessageKey } from './missing-setlist.core';
+import { useSceneSwipe } from './scene-swipe.hook';
 
 const NO_ROWS: readonly never[] = [];
 const NO_LINEUP = {};
@@ -118,6 +119,10 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
     chartSwitch.resetPick();
     scrollSceneBodyToTop();
   };
+
+  const swipeHandlers = useSceneSwipe((command) =>
+    goToIndex(resolveSceneIndex(command, currentIndex, setlistEntries.length)),
+  );
 
   const readKey = (event: KeyboardEvent<HTMLDialogElement>): void => {
     const command = selectSceneKeyCommand(event.key);
@@ -235,6 +240,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
 
       <div
         ref={attachSceneScrollBody}
+        {...swipeHandlers}
         className="flex-1 overflow-y-auto px-4 sm:px-10 py-5"
         style={{ fontSize: `${fontSizePx}px` }}
       >

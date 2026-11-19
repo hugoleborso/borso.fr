@@ -30,6 +30,15 @@ The first paragraph after the heading always belongs to the solo, even when it i
 
 A `{comment: Solo}` inside a chorus, verse, bridge or tab stays a plain comment line of that section.
 
+## Swiping between songs
+
+The operator asked to swipe between songs in Scene Mode.
+
+- A swipe to the left on the chart opens the next song of the setlist, a swipe to the right the previous one, as the arrow keys and the transport buttons do.
+- A swipe counts when it travels at least 64 px sideways and at least one and a half times as far sideways as down, so scrolling the chart never changes the song.
+- A swipe that starts inside a tab block, which scrolls sideways itself, never changes the song.
+- The first and last songs hold, as with the arrow keys.
+
 ## Out of scope
 
 - Solos written as `[Solo]` or as a bare "Solo" line (6 songs, measured). They keep rendering as today. The member can rewrite them as `{comment: Solo}`.

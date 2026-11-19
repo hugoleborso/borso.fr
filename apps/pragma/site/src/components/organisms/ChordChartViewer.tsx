@@ -202,7 +202,7 @@ function renderSectionLines(
   );
   if (section.kind !== 'tab') return lines;
   return (
-    <div className="@container overflow-x-auto">
+    <div className="@container overflow-x-auto" data-scrolls-sideways>
       <div style={{ fontSize: buildTabFontSize(widestTabLineLength(section.lines)) }}>{lines}</div>
     </div>
   );

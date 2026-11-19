@@ -49,7 +49,10 @@ function song(id: string, title: string, extraCharts: readonly unknown[] = []) {
     tonalityEnd: null,
     baseEnergy: 5,
     defaultLineup: { tom: ['guitar'] },
-    charts: [chordProChart(`{title: ${title}}\n[Cm]Take five`, []), ...extraCharts],
+    charts: [
+      chordProChart(`{title: ${title}}\n[Cm]Take five\n{sot}\ne|--0--|\n{eot}`, []),
+      ...extraCharts,
+    ],
     structureNotes: '',
     gimmickNotes: '',
     notes: '',
@@ -151,6 +154,28 @@ function tapChartPill(container: HTMLElement, name: string): void {
   act(() => {
     pill.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     pill.click();
+  });
+}
+
+function touchAt(type: string, clientX: number, clientY: number): Event {
+  const event = new Event(type, { bubbles: true });
+  const touches = type === 'touchend' ? [] : [{ clientX, clientY }];
+  Object.defineProperty(event, 'touches', { value: touches });
+  Object.defineProperty(event, 'changedTouches', { value: [{ clientX, clientY }] });
+  return event;
+}
+
+function swipeChart(
+  container: HTMLElement,
+  fromX: number,
+  toX: number,
+  startTarget?: Element,
+): void {
+  const body = container.querySelector('dialog > div.overflow-y-auto');
+  if (body === null) throw new TypeError('no scene body');
+  act(() => {
+    (startTarget ?? body).dispatchEvent(touchAt('touchstart', fromX, 300));
+    body.dispatchEvent(touchAt('touchend', toX, 310));
   });
 }
 
@@ -260,6 +285,35 @@ describe('SetlistScenePage', () => {
     expect(readTranspose(container)).toBe('+1');
     pressKey(container, 'ArrowRight');
     expect(readTranspose(container)).toBe('+0');
+  });
+
+  it('walks to the next song on a swipe to the left, and back on a swipe to the right', () => {
+    swipeChart(container, 300, 100);
+    expect(readTitle(container)).toBe('Helpless');
+    swipeChart(container, 100, 300);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('stays on the song when the swipe is too short', () => {
+    swipeChart(container, 300, 260);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('stays on the song when the swipe starts in a block that scrolls sideways', () => {
+    const tab = container.querySelector('[data-scrolls-sideways]');
+    if (tab === null) throw new TypeError('the first song carries no tab block');
+    swipeChart(container, 300, 100, tab);
+    expect(readTitle(container)).toBe('Take Five');
+  });
+
+  it('forgets a swipe the browser cancelled', () => {
+    const body = container.querySelector('dialog > div.overflow-y-auto');
+    act(() => {
+      body?.dispatchEvent(touchAt('touchstart', 300, 300));
+      body?.dispatchEvent(touchAt('touchcancel', 300, 300));
+      body?.dispatchEvent(touchAt('touchend', 100, 300));
+    });
+    expect(readTitle(container)).toBe('Take Five');
   });
 
   it('walks back on the left arrow', () => {
