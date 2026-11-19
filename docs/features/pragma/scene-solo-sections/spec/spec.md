@@ -10,7 +10,11 @@ Evidence, measured on the production catalogue on 2026-11-19: 20 of 129 songs me
 
 ## Result
 
-A solo renders as a framed block with a "Solo" badge, in Scene Mode and on the song page, since both use the same chart viewer.
+A solo renders as its own section under an outlined "Solo" badge, in Scene Mode and on the song page, since both use the same chart viewer. The operator asked for it to stand out a little less than a filled frame.
+
+Every section of a chart alternates between the plain background and a slightly lighter one, starting with the second section, so the reader tells sections apart at a glance. The operator liked this on the solo and asked for it everywhere.
+
+A row of chords between bar lines, such as `| [Dm] | [G] | x2`, keeps its chords on the same line as the bars. A line that holds chord names written without brackets and no lyric, such as `Am F#m Cmaj7 | x3`, draws those names in the chord colour.
 
 The block holds the solo's chord rows. Notes on the solo, such as who plays it or how many rounds, render inside the block in full-strength text, not dim italic.
 
@@ -45,10 +49,10 @@ The operator asked to swipe between songs in Scene Mode.
 
 The operator asked to see transitions in Scene Mode, and picked mockup B opening into mockup A at the bottom of the chart.
 
-- A strip above the transport names the next song, its key, its lineup as icons and the start of the band's transition note.
+- A one-line strip above the transport names the next song, its key and, when the gap is risky, the warn icon. Tapping it opens a popup over the chart with the lineup as icons and the full note. The operator found the first strip too large before the end of the chart.
 - Each member who plays the next song shows as their avatar followed by instrument glyphs, never as words. A member who keeps an instrument shows the avatar and that glyph. A member who changes shows the avatar, the glyphs they keep, the glyphs they put down in a dimmer tone, an arrow, and the glyphs they pick up. A glyph held on both songs is never drawn on either side of the arrow. A member who joins shows the avatar, an arrow and the glyphs they pick up.
-- When nobody keeps an instrument across the gap, as the setlist editor's risky flag says, the strip shows the warn icon and its "risky" label.
-- Once the reader scrolls to the end of the chart, the same content shows as a card below the last line, with the full note, and the strip hides. Scrolling back up shows the strip again.
+- When nobody keeps an instrument across the gap, as the setlist editor's risky flag says, the popup and the card show the warn icon and its "risky" label.
+- Once the reader scrolls to the end of the chart, the popup's content shows as a card below the last line, and the strip hides. Moving to another song closes the popup. Scrolling back up shows the strip again.
 - The last song of the setlist has no strip and no card.
 
 ## Out of scope

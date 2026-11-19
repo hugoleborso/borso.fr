@@ -50,6 +50,34 @@ export function groupCellsIntoWords(
   return words;
 }
 
+const REPEAT_MARK_PATTERN = /\bx\d+\b/gi;
+const LETTER_PATTERN = /\p{L}/u;
+
+function isLyricWording(text: string): boolean {
+  return LETTER_PATTERN.test(text.replace(REPEAT_MARK_PATTERN, ''));
+}
+
 export function hasLyricText(tokens: readonly LineToken[]): boolean {
-  return tokens.some((token) => token.kind === 'lyric' && token.text.trim().length > 0);
+  return tokens.some((token) => token.kind === 'lyric' && isLyricWording(token.text));
+}
+
+export const CHORD_NAME_PATTERN =
+  /(?<!\p{L})[A-G][#b]?(?:maj|min|dim|aug|sus|add|m|\d|[#b+-](?=\d))*(?:\/[A-G][#b]?)?(?![\p{L}\d#])/gu;
+
+export interface TextSegment {
+  readonly text: string;
+  readonly isChord: boolean;
+}
+
+export function splitChordNames(text: string): readonly TextSegment[] {
+  const segments: TextSegment[] = [];
+  let cursor = 0;
+  for (const match of text.matchAll(CHORD_NAME_PATTERN)) {
+    if (match.index > cursor)
+      segments.push({ text: text.slice(cursor, match.index), isChord: false });
+    segments.push({ text: match[0], isChord: true });
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), isChord: false });
+  return segments;
 }

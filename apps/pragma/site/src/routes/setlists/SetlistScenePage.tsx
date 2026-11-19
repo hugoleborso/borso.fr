@@ -12,6 +12,7 @@ import { ChordChartSwitcher } from '../../components/organisms/ChordChartSwitche
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { SceneControls } from '../../components/organisms/SceneControls';
 import { SceneTransitionPreview } from '../../components/organisms/SceneTransitionPreview';
+import { SceneTransitionStrip } from '../../components/organisms/SceneTransitionStrip';
 import { SceneTransport } from '../../components/organisms/SceneTransport';
 import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
 import {
@@ -278,6 +279,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
               <SceneTransitionPreview
                 layout="card"
                 cardRef={transitionCard.attachCard}
+                className="mt-8"
                 {...transitionPreview}
               />
             )}
@@ -286,11 +288,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
       </div>
 
       {transitionPreview === null || transitionCard.isCardInView ? null : (
-        <SceneTransitionPreview
-          layout="strip"
-          onReveal={transitionCard.revealCard}
-          {...transitionPreview}
-        />
+        <SceneTransitionStrip key={entry?.id} {...transitionPreview} />
       )}
 
       {setlistEntries.length === 0 ? null : (

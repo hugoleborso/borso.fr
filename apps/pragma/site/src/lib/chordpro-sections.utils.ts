@@ -141,3 +141,9 @@ export function buildSectionHeading(displayName: string, ordinalAmongKind: numbe
   if (ordinalAmongKind <= FIRST_ORDINAL) return displayName;
   return `${displayName} ${ordinalAmongKind}`;
 }
+
+const SHADE_EVERY = 2;
+
+export function isShadedSection(sectionIndex: number): boolean {
+  return sectionIndex % SHADE_EVERY === 1;
+}

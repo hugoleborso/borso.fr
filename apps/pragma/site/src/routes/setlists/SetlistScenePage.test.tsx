@@ -226,6 +226,17 @@ function swipeChart(
   });
 }
 
+function openTransitionPopup(container: HTMLElement, title: string): HTMLElement {
+  const strip = container.querySelector<HTMLButtonElement>(
+    `button[aria-label="Show the transition to ${title}"]`,
+  );
+  if (strip === null) throw new TypeError(`no transition strip to ${title}`);
+  act(() => strip.click());
+  const popup = container.querySelector<HTMLElement>('dialog dialog');
+  if (popup === null) throw new TypeError('the strip opened no popup');
+  return popup;
+}
+
 function getButton(container: HTMLElement, label: string): HTMLButtonElement {
   const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
   if (button === null) throw new TypeError(`no button ${label}`);
@@ -363,17 +374,29 @@ describe('SetlistScenePage', () => {
     expect(readTitle(container)).toBe('Take Five');
   });
 
-  it('shows the next song, its lineup as icons and the start of the note in a strip', () => {
+  it('shows the next song, its key and the risky flag in a one-line strip', () => {
     const strip = container.querySelector('button[aria-label="Show the transition to Helpless"]');
     expect(strip?.textContent).toContain('Helpless');
-    expect(strip?.textContent).toContain('Tom swaps to the bass');
-    expect(
-      strip?.querySelector('[data-transition-move] [role=img]')?.getAttribute('aria-label'),
-    ).toBe('Tom: Guitare → Basse');
     expect(strip?.textContent).toContain('Ebm');
-    expect(strip?.querySelector('[data-transition-move]')?.textContent).not.toContain('Guitare');
-    expect(strip?.querySelector('[data-transition-move]')?.textContent).not.toContain('Basse');
     expect(strip?.querySelector('[data-transition-risky]')).not.toBeNull();
+    expect(strip?.querySelector('[data-transition-move]')).toBeNull();
+    expect(strip?.textContent).not.toContain('Tom swaps');
+  });
+
+  it('opens the lineup as icons and the full note in a popup when the strip is tapped', () => {
+    const popup = openTransitionPopup(container, 'Helpless');
+    expect(
+      popup.querySelector('[data-transition-move] [role=img]')?.getAttribute('aria-label'),
+    ).toBe('Tom: Guitare → Basse');
+    expect(popup.querySelector('[data-transition-move]')?.textContent).not.toContain('Guitare');
+    expect(popup.querySelector('[data-transition-move]')?.textContent).not.toContain('Basse');
+    expect(popup.textContent).toContain('Tom swaps to the bass while the drums vamp');
+  });
+
+  it('closes the popup when the scene moves to the next song', () => {
+    openTransitionPopup(container, 'Helpless');
+    pressKey(container, 'ArrowRight');
+    expect(container.querySelectorAll('dialog dialog')).toHaveLength(0);
   });
 
   it('opens the same transition as a card below the chart and hides the strip once it is in view', () => {
@@ -393,30 +416,18 @@ describe('SetlistScenePage', () => {
     ).not.toBeNull();
   });
 
-  it('scrolls to the card when the strip is tapped', () => {
-    const scrolled = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
-    const strip = container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Show the transition to Helpless"]',
-    );
-    act(() => strip?.click());
-    expect(scrolled.mock.contexts.at(-1)).toBe(
-      container.querySelector('section[aria-label="Transition to Helpless"]'),
-    );
-    scrolled.mockRestore();
-  });
-
   it('names the next song before the members have loaded, with no lineup yet', () => {
     memberReads.isLoaded = false;
     renderScene();
-    const strip = container.querySelector('button[aria-label="Show the transition to Helpless"]');
-    expect(strip?.querySelector('[data-transition-move]')).toBeNull();
+    const popup = openTransitionPopup(container, 'Helpless');
+    expect(popup.querySelector('[data-transition-move]')).toBeNull();
     memberReads.isLoaded = true;
   });
 
   it('shows no note when the band wrote none for the pair', () => {
     pressKey(container, 'ArrowRight');
-    const strip = container.querySelector('button[aria-label="Show the transition to So What"]');
-    expect(strip?.textContent).not.toContain('Tom swaps');
+    const popup = openTransitionPopup(container, 'So What');
+    expect(popup.textContent).not.toContain('Tom swaps');
   });
 
   it('shows no transition on the last song', () => {

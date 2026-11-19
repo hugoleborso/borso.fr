@@ -39,10 +39,4 @@ describe('useSceneTransitionCard', () => {
     hook.unmount();
     vi.unstubAllGlobals();
   });
-
-  it('does nothing when asked to reveal a card that is not attached', () => {
-    const hook = renderHook();
-    expect(() => hook.read().revealCard()).not.toThrow();
-    hook.unmount();
-  });
 });

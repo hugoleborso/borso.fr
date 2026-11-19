@@ -4,6 +4,7 @@ import {
   type ChordProSection,
   groupChordProSections,
   hasSectionHeading,
+  isShadedSection,
 } from './chordpro-sections.utils';
 import { parseChordPro } from './chordpro.utils';
 
@@ -229,5 +230,11 @@ describe('hasSectionHeading', () => {
 
   it('reports no heading for an unmarked body run', () => {
     expect(hasSectionHeading(sectionOf('Plain line'))).toBe(false);
+  });
+});
+
+describe('isShadedSection', () => {
+  it('shades the odd sections and leaves the even ones', () => {
+    expect([0, 1, 2, 3].map(isShadedSection)).toEqual([false, true, false, true]);
   });
 });

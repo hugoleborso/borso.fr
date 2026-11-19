@@ -32,7 +32,7 @@ export const SLOW_BURN_CHORD_CHART = `{title: Slow Burn}
 {comment: Solo}
 {comment: Guitar takes two rounds, keys hold the pad}
 [Am] [F] [C] [G]
-[Am] [F] [E7] [E7]
+| [Am] | [F] | [E7] | x2
 
 {start_of_chorus}
 [F]Hold it [C]low, hold it [G]steady

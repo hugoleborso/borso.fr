@@ -5,6 +5,7 @@ import {
   isCommentDirective,
   isLyricLine,
   isSoloComment,
+  segmentPlainLine,
   shouldEndImplicitSolo,
   hasLyricsInParagraph,
 } from './chordpro-solo.utils';
@@ -133,5 +134,21 @@ describe('hasLyricsInParagraph', () => {
 
   it('answers no for a paragraph that runs to the end without a lyric', () => {
     expect(hasLyricsInParagraph(parseChordPro('[C] [G]\n| [F] |'))).toBe(false);
+  });
+});
+
+describe('segmentPlainLine', () => {
+  it('keeps a lyric line as one plain segment, chord-shaped words included', () => {
+    expect(segmentPlainLine({ kind: 'plain-line', text: 'Am I the one' })).toEqual([
+      { text: 'Am I the one', isChord: false },
+    ]);
+  });
+
+  it('marks the chord names of a line that holds no lyric', () => {
+    expect(segmentPlainLine({ kind: 'plain-line', text: 'Am | G' })).toEqual([
+      { text: 'Am', isChord: true },
+      { text: ' | ', isChord: false },
+      { text: 'G', isChord: true },
+    ]);
   });
 });

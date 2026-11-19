@@ -1,13 +1,12 @@
 /** @Feature songs */
 
+import { CHORD_NAME_PATTERN, splitChordNames, type TextSegment } from './chord-cells.utils';
 import type { ChordLine, ChordProLine, DirectiveLine, PlainLine } from './chordpro.utils';
 
 const COMMENT_DIRECTIVE_NAMES = new Set(['comment', 'c', 'comment_italic', 'ci']);
 const SOLO_WORD_PATTERN = /\bsolo\b/i;
 const PARENTHESISED_PATTERN = /\([^)]*\)/g;
 const LYRIC_WORD_PATTERN = /\p{L}{2,}/u;
-const CHORD_NAME_PATTERN =
-  /(?<!\p{L})[A-G][#b]?(?:maj|min|dim|aug|sus|add|m|\d|[#b+-](?=\d))*(?:\/[A-G][#b]?)?(?![\p{L}\d#])/gu;
 const CHORD_GAP = ' ';
 
 // @FollowsBlueprint utils-pure-module
@@ -69,4 +68,9 @@ export function advanceImplicitSolo(
     hasRows: progress.hasRows || (!isBlank && line.kind !== 'directive'),
     isAfterBlank: isBlank && progress.hasRows,
   };
+}
+
+export function segmentPlainLine(line: PlainLine): readonly TextSegment[] {
+  if (isLyricLine(line)) return [{ text: line.text, isChord: false }];
+  return splitChordNames(line.text);
 }

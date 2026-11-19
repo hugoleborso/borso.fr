@@ -21,8 +21,8 @@ const HEADING_CLASS_BY_TONE = {
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
 const SOLO_HEADING_CLASS_BY_TONE = {
-  light: 'uppercase tracking-wider bg-accent text-on-accent',
-  dark: 'uppercase tracking-wider bg-stage-chord text-stage-bg',
+  light: 'uppercase tracking-wider bg-transparent text-accent border border-accent',
+  dark: 'uppercase tracking-wider bg-transparent text-stage-chord border border-stage-chord',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
 export interface ChordProSectionHeadingProps {
