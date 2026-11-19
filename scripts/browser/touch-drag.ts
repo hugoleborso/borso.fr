@@ -10,6 +10,7 @@ import {
 } from './cdp-session';
 import {
   interpolateDragPath,
+  resolveDragEnd,
   judgeTouchDrag,
   parseDragEnds,
   isOverDestination,
@@ -20,16 +21,19 @@ import {
 import { readReportedEvent, type RecordedInputEvent, type TapPoint } from './touch-tap.core';
 
 const USAGE = [
-  'usage: pnpm exec tsx scripts/browser/touch-drag.ts --from <css> --to <css> [--steps 8]',
+  'usage: pnpm exec tsx scripts/browser/touch-drag.ts --from <css> (--to <css> | --by <dx>,<dy>)',
+  '         [--steps 8]',
   '         [--page <url part>] [--port 9222] [--width 375] [--height 812]',
   '',
   'Drags with a real touch through CDP Input.dispatchTouchEvent, on the Chromium',
   'listening on --port (scripts/phone.sh passes its agent-browser session), at a',
   'phone viewport with touch emulation on: touchStart at the centre of the first',
   'visible --from match, --steps touchMove events, touchEnd at the centre of the',
-  'first visible --to match. Prints which events reached the page. Exits 1 unless',
-  'a touchstart reached --from, a touchmove and a touchend fired, no pointercancel',
-  'said the browser took the gesture to pan, and the touch lifted over --to.',
+  'first visible --to match, or --by CSS pixels away from where it started (a',
+  'swipe, such as --by -120,0). Prints which events reached the page. Exits 1',
+  'unless a touchstart reached --from, a touchmove and a touchend fired, no',
+  'pointercancel said the browser took the gesture to pan, and, with --to, the',
+  'touch lifted over --to.',
   'Whether the page acted on the drag is yours to read back.',
   '',
 ].join('\n');
@@ -55,9 +59,11 @@ function buildPreparationScript(options: TouchDragOptions): string {
     const firstVisible = (selector) =>
       [...document.querySelectorAll(selector)].find((element) => element.checkVisibility());
     const origin = firstVisible(${JSON.stringify(options.fromSelector)});
-    const destination = firstVisible(${JSON.stringify(options.toSelector)});
+    const destination = ${
+      options.offset === null ? `firstVisible(${JSON.stringify(options.toSelector)})` : 'null'
+    };
     const centre = (element) => {
-      if (element === undefined) return null;
+      if (element === undefined || element === null) return null;
       const box = element.getBoundingClientRect();
       return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
     };
@@ -115,12 +121,13 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
     await send('Runtime.enable');
     await send('Runtime.addBinding', { name: TOUCH_DRAG_BINDING });
     await emulatePhone(send, options);
-    const ends = parseDragEnds(
+    const measured = parseDragEnds(
       await send('Runtime.evaluate', {
         expression: buildPreparationScript(options),
         returnByValue: true,
       }),
     );
+    const ends = { from: measured.from, to: resolveDragEnd(measured, options.offset) };
     if (ends.from === null || ends.to === null) {
       throw new Error(describeMissingEnd(ends.from === null, options));
     }
@@ -136,12 +143,14 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
       });
     }
     await pause(TOUCH_STEP_MILLISECONDS);
-    const isLiftOverDestination = isOverDestination(
-      await send('Runtime.evaluate', {
-        expression: buildIsOverDestinationScript(ends.to),
-        returnByValue: true,
-      }),
-    );
+    const isLiftOverDestination =
+      options.offset !== null ||
+      isOverDestination(
+        await send('Runtime.evaluate', {
+          expression: buildIsOverDestinationScript(ends.to),
+          returnByValue: true,
+        }),
+      );
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await pause(SETTLE_MILLISECONDS);
     const page = await send('Runtime.evaluate', {
@@ -153,7 +162,7 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
       `${JSON.stringify(
         {
           from: { selector: options.fromSelector, point: ends.from },
-          to: { selector: options.toSelector, point: ends.to },
+          to: { selector: options.toSelector, offset: options.offset, point: ends.to },
           steps: options.steps,
           isLiftOverDestination,
           page,

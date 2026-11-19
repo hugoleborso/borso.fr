@@ -42,6 +42,7 @@ export function defineStrykerConfig({ mutate, vitest }) {
     testRunner: 'vitest',
     plugins: ['@stryker-mutator/vitest-runner', ZERO_TEST_GUARD_PLUGIN],
     reporters: ['progress-append-only', 'clear-text', ZERO_TEST_GUARD_REPORTER],
+    clearTextReporter: { reportTests: false },
     coverageAnalysis: 'perTest',
     timeoutMS: MUTANT_TIMEOUT_MILLISECONDS,
     dryRunTimeoutMinutes: DRY_RUN_TIMEOUT_MINUTES_UNDER_THE_PARALLEL_PUSH_WAVE,
