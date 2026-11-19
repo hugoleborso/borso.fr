@@ -87,8 +87,11 @@ form, and the stage takes focus on every arrow press. Each has a test in
 +}
 ```
 
-A dialog opened through the adapter now closes when React removes it,
-whatever removed it, so focus goes back to its opener. The shared jsdom setup
+A dialog attached with `ref={openDialogOnAttach}` now closes when React
+removes it, whatever removed it, so focus goes back to its opener. The stage
+is the exception: `openSceneOnAttach` composes adapters that need React's
+null call, so it drops the cleanup, and the stage closes itself before its
+route changes. The shared jsdom setup
 (`scripts/vitest-jsdom-missing-apis.js`) gained `close()`, so a test can see
 it.
 
