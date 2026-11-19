@@ -4,13 +4,13 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { SceneStage } from '../../components/atoms/SceneStage';
 import { Button } from '../../components/atoms/Button';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartSwitcher } from '../../components/organisms/ChordChartSwitcher';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { SceneControls } from '../../components/organisms/SceneControls';
-import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
 import {
   attachSceneScrollBody,
   startSceneAutoScroll,
@@ -87,13 +87,7 @@ export function SongScenePage(): JSX.Element {
   };
 
   return (
-    // eslint-disable-next-line borso/no-raw-interactive-element -- the scene view is a full-screen stage, not a sheet: no grabber, no title bar, its own dark tokens and its own transport, opened through openSceneOnAttach
-    <dialog
-      ref={openSceneOnAttach}
-      onClose={leaveScene}
-      aria-label={song.title}
-      className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
-    >
+    <SceneStage label={song.title} onClose={leaveScene}>
       <header className="shrink-0 px-4 sm:px-10 pt-[calc(1rem+env(safe-area-inset-top))] pb-3 border-b border-stage-line">
         <h2 className="font-display text-stage-title sm:text-stage-hero text-stage-ink m-0 truncate">
           {song.title}
@@ -140,6 +134,6 @@ export function SongScenePage(): JSX.Element {
           </div>
         )}
       </div>
-    </dialog>
+    </SceneStage>
   );
 }

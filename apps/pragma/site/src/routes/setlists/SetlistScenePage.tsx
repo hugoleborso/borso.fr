@@ -4,6 +4,7 @@ import type { JSX, KeyboardEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { SceneStage } from '../../components/atoms/SceneStage';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
@@ -14,7 +15,6 @@ import { SceneControls } from '../../components/organisms/SceneControls';
 import { SceneTransitionPreview } from '../../components/organisms/SceneTransitionPreview';
 import { SceneTransitionStrip } from '../../components/organisms/SceneTransitionStrip';
 import { SceneTransport } from '../../components/organisms/SceneTransport';
-import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
 import {
   attachSceneScrollBody,
   scrollSceneBodyToTop,
@@ -168,14 +168,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const setlistName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
-    // eslint-disable-next-line borso/no-raw-interactive-element -- the scene view is a full-screen stage, not a sheet: no grabber, no title bar, its own dark tokens and its own transport, opened through openSceneOnAttach
-    <dialog
-      ref={openSceneOnAttach}
-      onClose={leaveScene}
-      onKeyDown={readKey}
-      aria-label={t('scene.title')}
-      className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
-    >
+    <SceneStage label={t('scene.title')} onClose={leaveScene} onKeyDown={readKey}>
       <header className="shrink-0 flex flex-col gap-3 px-4 sm:px-8 pt-[calc(1rem+env(safe-area-inset-top))] pb-3 border-b border-stage-line lg:flex-row lg:items-center lg:gap-6">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <Button
@@ -295,6 +288,6 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
           onSelect={goToIndex}
         />
       )}
-    </dialog>
+    </SceneStage>
   );
 }
