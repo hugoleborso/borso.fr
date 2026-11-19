@@ -9,14 +9,6 @@ The closing move of every PR. CLAUDE.md's **Self-improvement loop**
 rule says: when a PR merges or closes, capture the lessons and open
 a follow-up PR labelled `kaizen`. This skill is the procedure.
 
-> **Output is always a PR labelled `kaizen`.** The label is the
-> loop's visible signature in the repo — filter
-> `is:pr label:kaizen` to see every iteration of the loop over time.
-
-> **Hard quality bar:** every Dantotsu in the output PR ships a
-> code-level eradication. No "captured as follow-up; not
-> implemented yet". No issue creation as a substitute.
-
 ## When to invoke
 
 **Where it runs depends on the shipping session's context.** After the merge,
@@ -50,9 +42,6 @@ while the pull request was open with CI running, and its archive was not on
 ## When NOT to invoke
 
 - During the PR (use `/dantotsu` per defect instead, in real time).
-- For trivial PRs with no debugging worth capturing — but still
-  open the follow-up PR with a "no setup changes from PR #N" note
-  so the loop's existence stays visible (per CLAUDE.md).
 
 ## The procedure
 
@@ -272,33 +261,13 @@ that hosts the bug?* That's a **level-1** eradication (structural
 impossibility) instead of the **level-2** lint rule you were about
 to draft.
 
-The pass is mechanical:
-
-1. Name the *role* of the custom code you'd write. Not the bug — the
-   role. *"Subscribe to an external store and dedupe"* → data-fetching
-   library. *"Type a fetch surface with route inference"* → RPC
-   client. *"Parse XML to GeoJSON"* → geo library. *"Manage form state
-   with validation"* → form library.
-2. Search:
-   - `git grep -l '<topic>' node_modules/.modules.yaml` — is something
-     already installed that we forgot about?
-   - npm / web search for the role + the stack we're on (e.g. *"react
-     data fetching library 2026"*).
-   - Skim the top 2-3 hits' README for *"does this do X?"*.
-3. Evaluate against the context:
-   - Bundle weight (front-side only).
-   - Peer-dep constraints (React version, Node version).
-   - Maintenance signal (last release, open-issue trend).
-   - Surface fit — does the library map onto our domain or fight it?
-4. Decide:
-   - **Adopt** → the eradication is the migration, not the plugin.
-     Promote level from 2 to 1. The plugin can still ship as
-     defence-in-depth, but the *cause* of the bug class has to be
-     deleted.
-   - **Build custom** → document the trade-off in the dantotsu's
-     *Eradication* block: what library was considered, why it didn't
-     fit, what the cost-benefit decision was. Without that note, the
-     next kaizen re-discovers the same library.
+Name the role of the code you would write, not the bug, such as "subscribe
+to an external store and dedupe". Look for it in `node_modules/.modules.yaml`,
+then on npm for the stack we are on. Weigh bundle weight, peer dependencies,
+maintenance and fit with our domain. If you adopt, the eradication is the
+migration, at level 1, and it deletes the code that hosts the bug. If you
+build, the dantotsu's *Eradication* block names the library you rejected and
+why, or the next kaizen finds it again.
 
 **Rule of thumb:** if **three** rows in the inventory touch the same
 *architectural layer* (data fetching, routing, form validation,
@@ -399,6 +368,19 @@ Commit one or more commits scoped `docs:` (commitlint scope-enum)
 plus whatever code commits the eradications required. PR title:
 `docs: lessons from PR #<N>`.
 
+**The sweep removes at least as much as it adds.** After the last commit, run
+`scripts/kaizen.sh balance` and paste its line under the body's description.
+It leaves out the sweep's records, knowledge entries, ADRs, the operator
+backlog, the lockfile and test snapshots, and counts the rest. When it
+refuses, remove what each addition replaces: fold an entry into one that
+exists, delete the check or text the new mechanism makes redundant. CI runs
+the same command as `kaizen-balance`. A sweep that still adds more stays red,
+and the operator merges it or sends it back.
+
+Once the friction log is archived, `pnpm exec tsx
+scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines
+about one wall are a wall to add to `docs/quality/working-conditions.md`.
+
 **PR body shape.** Draft from [`template.md`](./template.md) and check it with
 `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>`, which holds the limits.
 Three sections, bounded, because the body is a skim and not the record:
@@ -408,27 +390,11 @@ Three sections, bounded, because the body is a skim and not the record:
    impossible.
 3. `## Patterns` — what the inventory shows that no single row does.
 
-**The full inventory goes in the branch, not the body**, at
-`docs/features/meta/lessons-from-pr-<N>/inventory.md`. It is the evidence
-behind the counts and the artefact this skill exists to produce; nobody reads
-twenty-three rows on a pull-request page, and a body long enough to hold them
-is a body nobody reads at all.
-
 **Apply the `kaizen` label.** This is non-optional — the label is
 the visible signature of the self-improvement loop in the repo.
 
-```
-mcp__github__issue_write
-  method: update
-  issue_number: <new-pr-number>
-  labels: ["kaizen"]
-```
-
-GitHub auto-creates the `kaizen` label the first time it's applied;
-no separate label-creation call is needed. Re-applying is
-idempotent. If you can't apply the label for any reason, surface
-the failure to the user — don't merge a kaizen PR without the
-label.
+Apply it with `mcp__github__issue_write`, `method: update`, `labels: ["kaizen"]`.
+If the call fails, tell the operator and do not merge.
 
 **Merge it yourself when it is tooling only.** Once CI is green, merge the
 kaizen pull request without asking when `pnpm exec tsx scripts/pr/deploy-fanout.ts
@@ -458,58 +424,3 @@ not its volume, is what keeps the system improving.
   decides whether to send it upstream.
 - **Every Dantotsu links its eradication commit + diff snippet.**
   No vague pointers; the reader can verify the fix landed.
-
-## Output checklist before declaring done
-
-- [ ] A `cost.md` row for this pull request in `docs/features/meta/lessons-from-pr-<N>/`.
-- [ ] Every ADR the merge added reads `accepted`.
-- [ ] Inventory built from the archived friction log + commits +
-      review comments + CI runs, not just memory.
-- [ ] Every inventory row has an `Elsewhere` cell naming the problem
-      elsewhere it reveals, or why its cause is local.
-- [ ] Each subject classified using the table; no-ops dropped.
-- [ ] Each surviving real-defect / design-pivot subject has a file
-      under `docs/dantotsus/` matching `_template.md`, with
-      `eradication-level` ≥ 1 backed by a commit reference.
-- [ ] Each surviving vendor-surprise / operator-confusion /
-      reusable-insight subject has a file under `docs/knowledge/`
-      with a `summary:` and `triggers:` that would have fired at the
-      moment it bit, and `scripts/check-knowledge-triggers.sh` passes.
-- [ ] Frontmatter on every new dantotsu file passes
-      `pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts`:
-      no placeholder, a `zone:`, `eradication-paths:` naming code
-      for levels 1 to 4, and `recurs:` where tags overlap.
-- [ ] `pnpm exec tsx scripts/quality/working-conditions.ts --check`
-      passes once the friction log is archived; three unfiled lines
-      about the same wall are a wall to add to
-      `docs/quality/working-conditions.md`.
-- [ ] Cross-links to existing entries added where chains overlap.
-- [ ] All eradication commits exist on the kaizen branch (verify
-      `git log --oneline` shows them).
-- [ ] Branch pushed, PR opened.
-- [ ] **`kaizen` label applied to the PR** (verify via
-      `mcp__github__pull_request_read method: get` — `labels`
-      array should include `"kaizen"`).
-- [ ] Inventory committed to
-      `docs/features/meta/lessons-from-pr-<N>/inventory.md` and linked
-      from the body's *Inventory* section.
-- [ ] Body passes `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>`.
-
-## Reframes
-
-- **"This PR didn't have any bugs, so there's nothing to capture."**
-  → Many of the most useful entries are vendor-knowledge gaps and
-  design pivots, not bugs. Re-scan with that lens.
-- **"The lesson is too small to be worth a file."**
-  → If it cost any time during debugging, it's worth a 30-line
-  entry. The next session will find it for free.
-- **"I'll capture it later."**
-  → No, you won't. Start from the task card as soon as it appears; the
-  archived log is what keeps the context, not your memory of the work.
-  The skill exists because this debt always slips.
-- **"Knowledge is enough for this defect."**
-  → Check the rungs above it first. But a defect already fixed and
-  tested, or one that costs no one anything, is a no-op, not a new
-  gate. PR #228 added a workflow for a cosmetic commit header, and
-  PR #310 forced a test clock on a test #298 had already fixed. The
-  operator removed both.
