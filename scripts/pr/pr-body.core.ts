@@ -465,7 +465,7 @@ export function validateBody(source: string): readonly Violation[] {
   for (const target of readLongLinkTargets(source)) {
     violations.push({
       where: 'Body',
-      problem: `a link target of ${String(target.length)} characters comes back wrapped in backticks; link through /blob/main/ or write the bare URL`,
+      problem: `a link target of ${String(target.length)} characters comes back wrapped in backticks; name a file the branch adds by its path in a code span, since a /blob/main/ link to it is a 404 until merge, or write the bare URL`,
     });
   }
   return violations;

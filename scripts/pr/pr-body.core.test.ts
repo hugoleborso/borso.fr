@@ -281,7 +281,7 @@ describe('validateBody', () => {
     expect(violations).toContainEqual({
       where: 'Body',
       problem:
-        'a link target of 160 characters comes back wrapped in backticks; link through /blob/main/ or write the bare URL',
+        'a link target of 160 characters comes back wrapped in backticks; name a file the branch adds by its path in a code span, since a /blob/main/ link to it is a 404 until merge, or write the bare URL',
     });
   });
 
