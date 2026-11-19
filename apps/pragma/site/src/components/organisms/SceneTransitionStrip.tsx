@@ -31,15 +31,16 @@ export function SceneTransitionStrip(props: SceneTransitionStripProps): JSX.Elem
           className="scheme-dark m-0 mx-auto mt-auto w-full max-w-[34rem] border-0 bg-transparent p-0 pb-[env(safe-area-inset-bottom)]"
         >
           <div className="flex flex-col gap-2 rounded-t-sheet bg-stage-bg p-3 lg:mb-6 lg:rounded-sheet">
-            <IconButton
-              variant="stage"
-              size="sm"
-              icon="close"
-              label={t('common.close')}
-              onClick={close}
-              className="self-end"
-              data-sheet-close
-            />
+            <form method="dialog" className="self-end">
+              <IconButton
+                type="submit"
+                variant="stage"
+                size="sm"
+                icon="close"
+                label={t('common.close')}
+                data-sheet-close
+              />
+            </form>
             <SceneTransitionPreview layout="card" {...props} />
           </div>
         </dialog>

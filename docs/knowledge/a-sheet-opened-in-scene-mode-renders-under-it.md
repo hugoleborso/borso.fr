@@ -1,5 +1,5 @@
 ---
-summary: "pragma's `Sheet` portals to `document.body`, which sits under Scene Mode's native modal dialog, so a Sheet opened from Scene Mode is never seen; nest a native `<dialog>` instead, as `SceneTransitionStrip.tsx` does."
+summary: "Scene Mode is a native modal dialog in the browser's top layer; open a panel from it inside `SceneStage`, which points React Aria's portal at the stage, or the panel renders under the stage and is never seen."
 triggers:
   paths:
     - 'apps/pragma/site/src/routes/**/*Scene*.tsx'
@@ -9,18 +9,22 @@ triggers:
 # A Sheet opened in Scene Mode renders under it
 
 Scene Mode opens with `dialog.showModal()` (`scene-dialog.adapter.ts`), which
-puts the whole scene in the browser's top layer. `Sheet` is a React Aria
-`ModalOverlay`, and React Aria portals every overlay to `document.body`. The
-body is under the top layer, so a Sheet opened from Scene Mode is mounted,
-focused and invisible.
+puts the whole scene in the browser's top layer. React Aria portals every
+overlay, `Sheet` included, to `document.body` by default, and the body is under
+the top layer. PR #377 met it with the transition popup, mounted, focused and
+invisible.
 
-PR #377 met it with the transition popup. The fix is a second native
-`<dialog>` opened with `openDialogOnAttach` inside the scene, because a modal
-dialog opened from inside the top layer stacks above it. See
-`apps/pragma/site/src/components/organisms/SceneTransitionStrip.tsx`.
+Since PR #380 both Scene pages render through
+`apps/pragma/site/src/components/atoms/SceneStage.tsx`, which wraps the stage in
+React Aria's `UNSAFE_PortalProvider` pointed at the stage dialog. A `Sheet`, a
+popover or a tooltip opened inside it lands in the top layer. A new stage-like
+screen built from its own `<dialog>` needs the same provider.
+[ADR-2026-11-19T1802](../adr/2026-11-19T1802-scene-mode-hosts-react-aria-overlays-through-a-portal-provider.md)
+records the choice.
 
-React Aria can portal elsewhere through `UNSAFE_PortalProvider`, exported by
-`react-aria`, which pragma does not depend on directly (checked against
-`react-aria-components` 1.22.1, which does not re-export it). Wrapping the scene
-in that provider would let every `Sheet` work there. It needs the new direct
-dependency, which is an ADR decision.
+Two traps of a hand-made dialog nested in the stage, both met on PR #380:
+
+- React passes the nested dialog's `close` event up to the stage's `onClose`.
+  `SceneStage` leaves only on its own close.
+- A Close button that unmounts the dialog without closing it drops focus to
+  `<body>`. Close it natively, with a `<form method="dialog">` submit button.
