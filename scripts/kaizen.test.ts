@@ -86,13 +86,9 @@ describe('kaizen.sh sweep-input', () => {
 
 describe('kaizen.sh balance', () => {
   it('refuses a sweep that adds more than it removes, a knowledge entry moved into a counted folder included', () => {
-    const before = { [ENTRY]: lines(10), 'docs/knowledge/moved.md': lines(5) };
-    const sweep = {
-      'docs/dantotsus/moved.md': lines(5),
-      'docs/knowledge/moved.md': null,
-      [ENTRY]: lines(8),
-    };
-    const { status, stdout } = kaizenAfter([before, sweep], 'balance', 'HEAD^');
+    const before = { [ENTRY]: lines(2), 'docs/knowledge/moved.md': lines(5) };
+    const sweep = { 'docs/dantotsus/moved.md': lines(5), 'docs/knowledge/moved.md': null };
+    const { status, stdout } = kaizenAfter([before, { ...sweep, [ENTRY]: '' }], 'balance', 'HEAD^');
 
     expect(stdout).toContain('Balance: added 5, removed 2 outside');
     expect(status).toBe(1);

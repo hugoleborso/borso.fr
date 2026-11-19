@@ -49,16 +49,14 @@ while the pull request was open with CI running, and its archive was not on
 > The instinct is to read the PR, name two or three "lessons", and rush
 > to write the dantotsus. That is solution-oriented thinking and it is
 > the failure mode this skill exists to prevent. Step 1 below is the
-> heart of the skill — do it exhaustively, in writing, in the PR
-> description, **before** classifying anything. If step 1 produces fewer
-> than ~10 rows for any non-trivial PR, you are skimming. Restart.
+> heart of the skill — do it exhaustively, in writing, **before**
+> classifying anything. If step 1 produces fewer than ~10 rows for any
+> non-trivial PR, you are skimming. Restart.
 
 ### 1. Build the friction inventory — exhaustive, not curated
 
 Catalogue **every** moment of friction during the PR — not just the
-ones that look like dantotsu material. The table is the **first
-section of the kaizen PR description** so a reader sees the full
-reality before any conclusions.
+ones that look like dantotsu material.
 
 Sources to walk in order, capturing each friction event as one row:
 
