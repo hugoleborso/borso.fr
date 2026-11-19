@@ -6,6 +6,7 @@
 #   scripts/kaizen.sh --from audit-stage-r2 "tapping +1 twice moves the counter and not the chart"
 #   scripts/kaizen.sh show
 #   scripts/kaizen.sh archive <docs-slug>/<feature>
+#   scripts/kaizen.sh balance [<base-ref>]
 #
 # `--from` names the writer, because the sweep reads differently depending on
 # who hit the friction: the same line from four different agents is a systemic
@@ -218,6 +219,23 @@ case "${1:-}" in
     done <<< "$archives"
     printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' "$total" "$swept"
     ;;
+  balance)
+    # A sweep removes at least as much as it adds. Its own records, the swept
+    # log, the inventory and the cost row, are not counted. Over the 60 sweeps
+    # before 2026-11-19 the count was 42,304 lines added for 5,421 removed, and
+    # 5 sweeps passed this, beside a written rule that already said to subtract.
+    base="${2:-origin/main}"
+    numstat="$(git -C "$REPO_ROOT" diff --numstat "$base...HEAD")" ||
+      { printf 'scripts/kaizen.sh: cannot compare with %s; fetch origin first\n' "$base" >&2; exit 2; }
+    read -r added removed < <(printf '%s\n' "$numstat" |
+      grep -vE '	(docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md)$' |
+      awk '{ added += $1; removed += $2 } END { print added + 0, removed + 0 }')
+    printf 'Balance: added %s, removed %s outside the sweep'"'"'s records\n' "$added" "$removed"
+    [ "$added" -le "$removed" ] || {
+      printf 'This sweep adds more than it removes. Remove what each addition replaces, or fold it into a file that exists.\n' >&2
+      exit 1
+    }
+    ;;
   init)
     park_another_sessions_log
     ensure_file
@@ -226,7 +244,7 @@ case "${1:-}" in
     # A friction line is a sentence. One word is a mistyped subcommand, and
     # logging it put `list` in PR #230's archive as if it were friction.
     if [[ "$*" != *[[:space:]]* ]]; then
-      printf 'scripts/kaizen.sh: "%s" is not a subcommand (show, archive, init), and one word is not a friction sentence. Nothing logged.\n' "$*" >&2
+      printf 'scripts/kaizen.sh: "%s" is not a subcommand (show, archive, balance, init), and one word is not a friction sentence. Nothing logged.\n' "$*" >&2
       exit 1
     fi
     ensure_file

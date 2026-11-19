@@ -521,3 +521,21 @@ jobs:
       # the check reads a range, and `build` checks out at depth 1, where a
       # `--cached` read would be a gate that always passes.
       - run: ./scripts/check-dated-records-are-append-only.sh "origin/${{ github.base_ref }}"
+
+  # A kaizen sweep removes at least as much as it adds. A red check here keeps
+  # the session from merging the sweep itself, so the operator sees the count
+  # and decides.
+  kaizen-balance:
+    if: >-
+      github.event_name == 'pull_request' &&
+      (startsWith(github.head_ref, 'claude/lessons-from-pr-') ||
+      startsWith(github.event.pull_request.title, 'docs: lessons from PR'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # `shell: bash` sets pipefail. Without it the step ends on `tee` and passes.
+      - shell: bash
+        run: ./scripts/kaizen.sh balance "origin/${{ github.base_ref }}" | tee -a "$GITHUB_STEP_SUMMARY"
