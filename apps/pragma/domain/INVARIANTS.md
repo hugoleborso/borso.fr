@@ -34,6 +34,9 @@ Held by: `domain/transition.core.test.ts` › leaves an instrument of the other 
   instrument: the link's `is_primary` column stays in the database,
   because Aurora DSQL refuses `DROP COLUMN`, and nothing reads or writes
   it.
+- A lineup, on a screen or in a mockup, is drawn as each member's mark followed
+  by the icon glyph of each instrument they hold, never as a sentence that
+  names them ("Gui keeps the drums"). `pnpm run mockup-kit` prints the glyphs.
 
 Held by: `domain/lineup.core.test.ts` › lifts a single instrument id written before one member could hold two
 Held by: `domain/lineup.core.test.ts` › keeps default members not mentioned in the override

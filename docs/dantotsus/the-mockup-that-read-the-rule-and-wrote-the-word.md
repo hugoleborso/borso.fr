@@ -62,9 +62,11 @@ said what to draw and gave no means to draw it.
 `pnpm --filter @borso-app/pragma run mockup-kit` renders the app's own `Icon`
 for every instrument icon id with `renderToStaticMarkup` and prints the SVG, plus
 a member mark followed by two glyphs. The hook names that command for pragma at
-the design quickstart, so the real glyph is one paste away. The rule also moved
-next to the member colour rule in `api/src/members/INVARIANTS.md`, worded so the
-hook's grep prints it.
+the design quickstart, so the real glyph is one paste away. The rule also went
+into the Lineup section of `domain/INVARIANTS.md`, worded so the hook's grep
+prints it. The shipping session named `api/src/members/INVARIANTS.md`, but a
+markdown line under `api/` makes the pull request gate ask for a technical
+review.
 
 A second paragraph of rule text was the candidate the shipping session named.
 It rests on the premise this entry disproves, so it ships only beside the kit.
