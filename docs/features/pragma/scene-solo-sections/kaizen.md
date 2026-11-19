@@ -18,3 +18,5 @@ Session: 6064bf61-7727-5eb2-af38-4dfb7c945360
 
 - [2026-11-19 08:45] `technical-validator` mutate-changed.sh apps/pragma picked up another agent's untracked scene-swipe.core.ts from the shared working tree and failed on its survivor, so the run's exit code did not grade this branch alone
 - [2026-11-19 09:01] `technical-validator-r2` scripts/mutate-changed.sh prints dozens of failing-test lines marked covered 0 for files outside the changed set, burying the per-file mutation table at the end of a passing run.
+- [2026-11-19 09:06] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-19 09:12] `visual-validator` Pragma persists its query cache in localStorage, so a chart written through the API during validation showed stale content in Scene Mode until the pragma.query-cache key was removed by hand.
