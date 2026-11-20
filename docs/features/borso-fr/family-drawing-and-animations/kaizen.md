@@ -17,3 +17,5 @@ This file is gitignored. Before the pull request opens, run
 Session: b240a2ae-695c-51d5-bd9f-7ded17917f5a
 
 - [2026-11-20 16:23] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-20 16:25] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-20 16:28] `visual-validator` The visual-validator brief names 'agent-browser set media reduce-motion' but the CLI syntax is 'set media [dark|light] [reduced-motion]', so the documented command is wrong.
