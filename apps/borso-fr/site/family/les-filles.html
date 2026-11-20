@@ -14,7 +14,11 @@
       }
 
       body {
-        background-color: lightpink;
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(160deg, lightpink, #ffd6e8, #ffe9c7, lightpink);
+        background-size: 300% 300%;
+        animation: background-drift 12s ease-in-out infinite;
         font-family: 'Comic Sans MS', cursive, sans-serif;
         text-align: center;
         overflow: hidden;
@@ -22,40 +26,117 @@
       }
 
       h1 {
-        font-size: 3em;
+        font-size: clamp(2em, 9vw, 3em);
         color: brown;
-        text-shadow: 2px 2px 5px yellow;
-        animation: text-glow 1s infinite alternate;
-        margin-top: 50px;
+        margin: 50px 16px 0;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 .word {
+        white-space: nowrap;
+      }
+
+      h1 .letter {
+        display: inline-block;
+        animation:
+          letter-wave 1.6s ease-in-out infinite,
+          text-glow 1s infinite alternate;
+        animation-delay: calc(var(--index) * 60ms), 0s;
       }
 
       .main-image {
-        width: 300px;
+        width: min(300px, 80vw);
         height: auto;
         margin: 20px;
         border-radius: 50%;
         border: 5px solid brown;
-        box-shadow: 0px 0px 20px yellow;
+        box-shadow: 0 0 20px yellow;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+        animation:
+          image-wobble 3s ease-in-out infinite,
+          halo-pulse 2s ease-in-out infinite alternate;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .main-image.is-squished {
+        animation: image-squish 0.45s ease-out;
+      }
+
+      .tap-hint {
+        color: brown;
+        opacity: 0.7;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+        animation: hint-blink 2s ease-in-out infinite;
       }
 
       .poop {
-        position: absolute;
-        top: -50px; /* Start from just above the top of the page */
-        width: 30px; /* Fixed size */
-        max-width: 30px;
-        height: 30px; /* Fixed size */
-        animation: fall 5s infinite linear;
-        opacity: 0.8;
+        position: fixed;
+        top: 0;
+        left: var(--left);
+        width: var(--size);
+        height: var(--size);
+        pointer-events: none;
+        z-index: 1;
+        animation: fall var(--fall-duration) linear var(--fall-delay) infinite;
+        will-change: transform;
+      }
+
+      .poop img {
+        width: 100%;
+        height: 100%;
+        animation: sway var(--sway-duration) ease-in-out infinite alternate;
+      }
+
+      .burst {
+        position: fixed;
+        left: var(--x);
+        top: var(--y);
+        width: var(--size);
+        height: var(--size);
+        margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+        pointer-events: none;
+        z-index: 3;
+        animation: burst 1.1s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
       }
 
       .hidden-message {
         font-size: 1.5em;
-        color: lightgray;
-        position: absolute;
+        color: brown;
+        position: fixed;
         bottom: 10px;
         right: 10px;
-        opacity: 0.5;
+        left: 10px;
+        text-align: right;
         font-style: italic;
+        z-index: 4;
+        opacity: 0;
+        animation: message-reveal 1.5s ease-out 4s forwards;
+      }
+
+      @keyframes background-drift {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      @keyframes letter-wave {
+        0%,
+        60%,
+        100% {
+          transform: translateY(0) rotate(0);
+        }
+        30% {
+          transform: translateY(-12px) rotate(-6deg);
+        }
       }
 
       @keyframes text-glow {
@@ -67,102 +148,222 @@
         }
       }
 
-      @keyframes fall {
-        0% {
-          transform: translateY(-100px);
-        }
+      @keyframes image-wobble {
+        0%,
         100% {
-          transform: translateY(100vh);
+          transform: rotate(-3deg) scale(1);
+        }
+        50% {
+          transform: rotate(3deg) scale(1.03);
         }
       }
 
-      /* Defining animation and duration for falling poop */
-      .poop:nth-child(1) {
-        left: 5%;
-        animation-duration: 6s;
+      @keyframes halo-pulse {
+        from {
+          box-shadow: 0 0 15px yellow;
+        }
+        to {
+          box-shadow:
+            0 0 35px orange,
+            0 0 60px hotpink;
+        }
       }
-      .poop:nth-child(2) {
-        left: 15%;
-        animation-duration: 5.5s;
+
+      @keyframes image-squish {
+        0% {
+          transform: scale(1, 1);
+        }
+        30% {
+          transform: scale(1.15, 0.85);
+        }
+        60% {
+          transform: scale(0.92, 1.08);
+        }
+        100% {
+          transform: scale(1, 1);
+        }
       }
-      .poop:nth-child(3) {
-        left: 25%;
-        animation-duration: 6.5s;
+
+      @keyframes hint-blink {
+        0%,
+        100% {
+          opacity: 0.35;
+        }
+        50% {
+          opacity: 0.8;
+        }
       }
-      .poop:nth-child(4) {
-        left: 35%;
-        animation-duration: 7s;
+
+      @keyframes fall {
+        from {
+          transform: translateY(-120px) rotate(0turn);
+        }
+        to {
+          transform: translateY(110vh) rotate(var(--spin));
+        }
       }
-      .poop:nth-child(5) {
-        left: 45%;
-        animation-duration: 5.5s;
+
+      @keyframes sway {
+        from {
+          transform: translateX(calc(var(--sway) * -1));
+        }
+        to {
+          transform: translateX(var(--sway));
+        }
       }
-      .poop:nth-child(6) {
-        left: 55%;
-        animation-duration: 6s;
+
+      @keyframes burst {
+        0% {
+          transform: translate(0, 0) scale(0.3) rotate(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--spin));
+          opacity: 0;
+        }
       }
-      .poop:nth-child(7) {
-        left: 65%;
-        animation-duration: 7s;
+
+      @keyframes message-reveal {
+        0% {
+          opacity: 0;
+          transform: translateY(20px) scale(0.8);
+        }
+        70% {
+          opacity: 0.9;
+          transform: translateY(-4px) scale(1.05);
+        }
+        100% {
+          opacity: 0.75;
+          transform: translateY(0) scale(1);
+        }
       }
-      .poop:nth-child(8) {
-        left: 75%;
-        animation-duration: 6.5s;
-      }
-      .poop:nth-child(9) {
-        left: 85%;
-        animation-duration: 5s;
-      }
-      .poop:nth-child(10) {
-        left: 95%;
-        animation-duration: 6s;
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+
+        .poop {
+          display: none;
+        }
+
+        .hidden-message {
+          animation-delay: 0s !important;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Bonne journée bande de crottons</h1>
+    <h1 id="title">Bonne journée bande de crottons</h1>
 
-    <img class="main-image" src="les-filles.png" alt="Les filles" />
+    <img class="main-image" id="photo" src="les-filles.png" alt="Les filles" />
+    <p class="tap-hint">👆 touche la photo</p>
 
-    <div class="poop">
-      <img src="poop.png" alt="Poop" style="width: 30px; height: 30px" />
-    </div>
-    <div class="poop">
-      <img src="poop.png" alt="Poop" style="width: 30px; height: 30px" />
-    </div>
-    <div class="poop">
-      <img src="poop.png" alt="Poop" style="width: 30px; height: 30px" />
-    </div>
-
-    <div class="hidden-message" style="z-index: 1000">Votre frère qui vous aime</div>
+    <div class="hidden-message">Votre frère qui vous aime</div>
 
     <script type="module">
       // The bundler only rewrites an asset URL it can see, so the decoration is
       // built from an imported URL rather than from a string of markup.
       const decorationUrl = new URL('./poop.png', import.meta.url).href;
 
-      const DECORATION_COUNT = 30;
-      const DECORATION_SIZE_PX = 30;
+      const RAIN_COUNT = 30;
+      const MINIMUM_SIZE_PX = 20;
+      const SIZE_SPREAD_PX = 24;
       const MINIMUM_FALL_SECONDS = 4;
-      const FALL_SECONDS_SPREAD = 3;
-      const HIGHEST_START_OFFSET_PX = 100;
+      const FALL_SECONDS_SPREAD = 4;
+      const MINIMUM_SWAY_SECONDS = 1;
+      const SWAY_SECONDS_SPREAD = 1.5;
+      const MAXIMUM_SWAY_PX = 30;
+      const MAXIMUM_SPIN_TURNS = 2;
+      const BURST_COUNT = 14;
+      const BURST_SIZE_PX = 36;
+      const MINIMUM_BURST_DISTANCE_PX = 80;
+      const BURST_DISTANCE_SPREAD_PX = 120;
+      const BURST_LIFETIME_MS = 1200;
+      const SQUISH_CLASS = 'is-squished';
 
-      for (let index = 0; index < DECORATION_COUNT; index++) {
-        const decoration = document.createElement('div');
-        decoration.classList.add('poop');
-        decoration.style.left = `${Math.random() * 100}%`;
-        decoration.style.top = `${Math.random() * -HIGHEST_START_OFFSET_PX}px`;
-        decoration.style.animationDuration = `${Math.random() * FALL_SECONDS_SPREAD + MINIMUM_FALL_SECONDS}s`;
+      const randomBetween = (minimum, spread) => minimum + Math.random() * spread;
+      const randomSign = () => (Math.random() < 0.5 ? -1 : 1);
 
+      const makeDecorationImage = () => {
         const image = document.createElement('img');
         image.src = decorationUrl;
         image.alt = '';
-        image.width = DECORATION_SIZE_PX;
-        image.height = DECORATION_SIZE_PX;
-        decoration.appendChild(image);
+        return image;
+      };
 
+      const title = document.getElementById('title');
+      const words = title.textContent.split(' ');
+      title.setAttribute('aria-label', title.textContent);
+      title.textContent = '';
+      let letterIndex = 0;
+      words.forEach((word, wordIndex) => {
+        const wordElement = document.createElement('span');
+        wordElement.className = 'word';
+        wordElement.setAttribute('aria-hidden', 'true');
+        for (const character of word) {
+          const letter = document.createElement('span');
+          letter.className = 'letter';
+          letter.style.setProperty('--index', String(letterIndex++));
+          letter.textContent = character;
+          wordElement.appendChild(letter);
+        }
+        title.appendChild(wordElement);
+        if (wordIndex < words.length - 1) title.append(' ');
+        letterIndex++;
+      });
+
+      for (let index = 0; index < RAIN_COUNT; index++) {
+        const fallSeconds = randomBetween(MINIMUM_FALL_SECONDS, FALL_SECONDS_SPREAD);
+        const decoration = document.createElement('div');
+        decoration.className = 'poop';
+        decoration.style.setProperty('--left', `${Math.random() * 100}%`);
+        decoration.style.setProperty(
+          '--size',
+          `${randomBetween(MINIMUM_SIZE_PX, SIZE_SPREAD_PX)}px`,
+        );
+        decoration.style.setProperty('--fall-duration', `${fallSeconds}s`);
+        decoration.style.setProperty('--fall-delay', `${-Math.random() * fallSeconds}s`);
+        decoration.style.setProperty(
+          '--spin',
+          `${randomSign() * Math.random() * MAXIMUM_SPIN_TURNS}turn`,
+        );
+        decoration.style.setProperty(
+          '--sway-duration',
+          `${randomBetween(MINIMUM_SWAY_SECONDS, SWAY_SECONDS_SPREAD)}s`,
+        );
+        decoration.style.setProperty('--sway', `${Math.random() * MAXIMUM_SWAY_PX}px`);
+        decoration.appendChild(makeDecorationImage());
         document.body.appendChild(decoration);
       }
+
+      const photo = document.getElementById('photo');
+      photo.addEventListener('pointerdown', (event) => {
+        photo.classList.remove(SQUISH_CLASS);
+        void photo.offsetWidth;
+        photo.classList.add(SQUISH_CLASS);
+
+        for (let index = 0; index < BURST_COUNT; index++) {
+          const angle = (index / BURST_COUNT) * 2 * Math.PI + Math.random() * 0.4;
+          const distance = randomBetween(MINIMUM_BURST_DISTANCE_PX, BURST_DISTANCE_SPREAD_PX);
+          const piece = makeDecorationImage();
+          piece.className = 'burst';
+          piece.style.setProperty('--x', `${event.clientX}px`);
+          piece.style.setProperty('--y', `${event.clientY}px`);
+          piece.style.setProperty('--size', `${BURST_SIZE_PX}px`);
+          piece.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+          piece.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+          piece.style.setProperty('--spin', `${randomSign()}turn`);
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), BURST_LIFETIME_MS);
+        }
+      });
+      photo.addEventListener('animationend', (event) => {
+        if (event.animationName === 'image-squish') photo.classList.remove(SQUISH_CLASS);
+      });
     </script>
   </body>
 </html>
