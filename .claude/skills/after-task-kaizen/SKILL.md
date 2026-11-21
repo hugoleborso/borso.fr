@@ -97,6 +97,10 @@ Sources to walk in order, capturing each friction event as one row:
   entry into a gate. Entries written as `main` from a task that spawned
   agents mean the agents were never told their label; note it, because
   the sweep is then blind to whatever they hit.
+- **The shipping session's own turns**, when the sweep runs there. Walk them
+  one by one, hook refusals and harness notices included, before reading the
+  archive. The first sweep of PR #385 started from its three archive lines,
+  listed 12 rows and missed 17, and the operator sent it back.
 - **Open kaizen pull requests.** `mcp__github__list_pull_requests` with
   `state: open`, then read each `kaizen`-labelled one's `inventory.md`. A row
   another open sweep already eradicates is `merge into PR #<n>`, not a second

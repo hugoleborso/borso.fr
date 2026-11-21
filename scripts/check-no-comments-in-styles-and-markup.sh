@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fails when a stylesheet or an HTML page carries a comment.
+# Fails when a stylesheet, an HTML page or an SVG carries a comment.
 #
 # `borso/no-comments` is an ESLint rule, and ESLint lints no `.css` and no
 # `.html` in this repository, so the standard in docs/standards/00-principles.md
@@ -54,7 +54,7 @@ while IFS= read -r path; do
     echo "  $path:$line carries a comment" >&2
     failed=1
   done
-done < <(git ls-files '*.html' | grep -v '^docs/features/' || true)
+done < <(git ls-files '*.html' '*.svg' | grep -v '^docs/features/' || true)
 
 if [ "$failed" -ne 0 ]; then
   echo >&2
