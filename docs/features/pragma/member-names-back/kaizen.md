@@ -16,3 +16,5 @@ This file is gitignored. Before the pull request opens, run
 
 Session: bf8f89bb-f672-5432-8e00-e4bdc749a3b0
 
+- [2026-11-21 11:58] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-21 12:02] `visual-validator` The pragma seed has no session task with an assignee, no setlist lineup change tonight, no friends counts and no open vote, so four spec screens needed data created through the UI before they could be seen.
