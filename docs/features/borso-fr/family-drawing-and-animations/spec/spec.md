@@ -19,7 +19,7 @@ The operator asked to remove mom's photo from borso.fr, replace it with a child'
 6. The photo of the girls stays round, wobbles gently and pulses a glowing halo.
 7. About 30 poops fall over the whole screen from the first frame, each with its own size, sway and spin.
 8. Tapping the photo squishes it and bursts poops out from the tap point. The burst pieces fade and leave the page.
-9. A hint "touche la photo" sits under the photo.
+9. No hint text tells the visitor to tap the photo. The burst stays a hidden surprise.
 10. "Votre frère qui vous aime" fades in at the bottom right after a few seconds.
 11. With reduced motion requested, no poop falls and the message shows at once.
 

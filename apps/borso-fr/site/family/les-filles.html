@@ -65,15 +65,6 @@
         animation: image-squish 0.45s ease-out;
       }
 
-      .tap-hint {
-        color: brown;
-        opacity: 0.7;
-        margin: 0;
-        position: relative;
-        z-index: 2;
-        animation: hint-blink 2s ease-in-out infinite;
-      }
-
       .poop {
         position: fixed;
         top: 0;
@@ -184,16 +175,6 @@
         }
       }
 
-      @keyframes hint-blink {
-        0%,
-        100% {
-          opacity: 0.35;
-        }
-        50% {
-          opacity: 0.8;
-        }
-      }
-
       @keyframes fall {
         from {
           transform: translateY(-120px) rotate(0turn);
@@ -260,7 +241,6 @@
     <h1 id="title">Bonne journée bande de crottons</h1>
 
     <img class="main-image" id="photo" src="les-filles.png" alt="Les filles" />
-    <p class="tap-hint">👆 touche la photo</p>
 
     <div class="hidden-message">Votre frère qui vous aime</div>
 
