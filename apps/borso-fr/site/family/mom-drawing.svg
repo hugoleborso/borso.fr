@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" role="img" aria-labelledby="title">
+  <title id="title">Dessin d'enfant de maman qui tient un bébé</title>
+  <defs>
+    <filter id="crayon" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" />
+    </filter>
+  </defs>
+  <rect width="400" height="520" fill="#fffdf6" />
+  <g filter="url(#crayon)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- sun -->
+    <g stroke="#f7b500" stroke-width="5" fill="none">
+      <circle cx="335" cy="62" r="30" fill="#ffe14d" />
+      <path d="M335 18v-12M335 106v12M291 62h-12M379 62h12M304 31l-9-9M366 93l9 9M366 31l9-9M304 93l-9 9" />
+      <path d="M324 55h1M346 55h1" stroke="#222" stroke-width="6" />
+      <path d="M322 70q13 12 26 0" stroke="#222" stroke-width="3" />
+    </g>
+    <!-- clouds -->
+    <path d="M30 70q5-22 26-14q10-18 30-4q22-2 18 18q-2 12-20 10h-44q-14-2-10-10z" fill="#d6ecff" stroke="#6ca8e0" stroke-width="3" />
+    <!-- grass -->
+    <path d="M0 470q20-18 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0v50h-400z" fill="#8fd16a" stroke="#3f9a2b" stroke-width="4" />
+    <!-- flowers -->
+    <g stroke="#3f9a2b" stroke-width="4">
+      <path d="M40 470v-40M370 472v-46" />
+      <circle cx="40" cy="422" r="9" fill="#ff5fa2" stroke="#d6337a" />
+      <circle cx="370" cy="418" r="10" fill="#b57bff" stroke="#7a3fd1" />
+      <circle cx="40" cy="422" r="3" fill="#ffe14d" stroke="none" />
+      <circle cx="370" cy="418" r="3" fill="#ffe14d" stroke="none" />
+    </g>
+    <!-- big hoop dress -->
+    <path d="M175 205l-90 255q115 22 230 0l-90-255z" fill="#ffffff" stroke="#8a8a8a" stroke-width="5" />
+    <path d="M150 290q50 12 100 0M120 370q80 16 160 0M98 435q102 18 204 0" fill="none" stroke="#c9c9c9" stroke-width="4" />
+    <!-- body -->
+    <path d="M172 150h56l6 65h-68z" fill="#c9c9cf" stroke="#7d7d86" stroke-width="5" />
+    <!-- legs peeking -->
+    <path d="M180 462v22M220 462v22" stroke="#e8a77a" stroke-width="6" />
+    <!-- arms -->
+    <path d="M228 162q40 30 10 70" fill="none" stroke="#f2b58e" stroke-width="9" />
+    <path d="M172 162q-35 20-50 18" fill="none" stroke="#f2b58e" stroke-width="9" />
+    <!-- baby -->
+    <ellipse cx="108" cy="200" rx="26" ry="34" fill="#ffe0ea" stroke="#e58aa8" stroke-width="4" />
+    <circle cx="108" cy="152" r="20" fill="#fbd2b3" stroke="#c97f58" stroke-width="4" />
+    <path d="M92 140q16-14 32 0" fill="none" stroke="#6b4428" stroke-width="5" />
+    <path d="M101 152h1M115 152h1" stroke="#222" stroke-width="5" />
+    <path d="M103 161q5 4 10 0" fill="none" stroke="#222" stroke-width="3" />
+    <!-- neck and head -->
+    <path d="M200 128v22" stroke="#f2b58e" stroke-width="12" />
+    <circle cx="200" cy="100" r="34" fill="#fbd2b3" stroke="#c97f58" stroke-width="4" />
+    <!-- curly white wig -->
+    <g fill="#ffffff" stroke="#9aa3b5" stroke-width="4">
+      <circle cx="170" cy="72" r="16" />
+      <circle cx="194" cy="58" r="17" />
+      <circle cx="220" cy="62" r="16" />
+      <circle cx="236" cy="84" r="14" />
+      <circle cx="162" cy="96" r="13" />
+      <circle cx="240" cy="108" r="13" />
+      <circle cx="160" cy="120" r="12" />
+      <circle cx="242" cy="130" r="12" />
+    </g>
+    <!-- face -->
+    <path d="M187 96h1M213 96h1" stroke="#222" stroke-width="7" />
+    <path d="M183 112q17 20 34 0" fill="#ff6b6b" stroke="#c0392b" stroke-width="4" />
+    <circle cx="180" cy="110" r="5" fill="#ff9aa2" stroke="none" />
+    <circle cx="220" cy="110" r="5" fill="#ff9aa2" stroke="none" />
+    <!-- hearts -->
+    <path d="M300 200q0-14 14-14q14 0 14 14q0 16-28 32q-28-16-28-32q0-14 14-14q14 0 14 14z" fill="#ff4d6d" stroke="#c9184a" stroke-width="4" />
+    <path d="M70 290q0-9 9-9q9 0 9 9q0 10-18 21q-18-11-18-21q0-9 9-9q9 0 9 9z" fill="#ff4d6d" stroke="#c9184a" stroke-width="3" />
+  </g>
+  <text x="200" y="508" text-anchor="middle" font-family="'Comic Sans MS', cursive, sans-serif" font-size="26" fill="#d6337a" font-weight="bold">MAMAИ ♥</text>
+</svg>

@@ -1,0 +1,33 @@
+# Visual validation — Mom's drawing and the girls' page animations
+
+- Spec: [`../spec/spec.md`](../spec/spec.md)
+- Dev URL: http://localhost:5173/
+- Run at: 2026-11-20T16:28:40Z
+- Tooling: agent-browser 0.41.2
+
+## Assertions
+
+| # | From | Assertion | Action | Evidence | Verdict |
+|---|---|---|---|---|---|
+| 01 | Assertions 1 | The page shows no photograph of mom. It shows a crayon-style child's drawing of her, with a curly white wig, a big white dress, a baby in her arms, a sun and hearts. | Open `/family/mom.html` at 1280 x 800, screenshot, list `<img>` | `./visual-validation-2026-11-20-1625/01-mom-drawing-desktop.png`; the only `<img>` is `mom-drawing.svg`; broken-image scan `[]` | PASS |
+| 02 | Assertions 2 | The drawing is not cropped into a circle. It sits on a white card that tilts and bounces. | Read computed style of the `<img>` three times 1.3 s apart, screenshot a later frame | `./visual-validation-2026-11-20-1625/02-mom-tilt-bounce-colour-later-frame.png`; `border-radius: 6px`, `clip-path: none`, `background: rgb(255,255,255)`, `padding: 8px`, animation `image-bounce` 2 s; transform rotation moved from -0.13° to -2.2° to +3.0° and translateY from -9.6 to -2.5 to -19.9 px | PASS |
+| 03 | Assertions 3 | The title "Je t'aime maman" stays, and the background still cycles colours. | Read `h1` text and body background three times 1.3 s apart | `h1 = "Je t'aime maman"`; body animation `bg-color-change` 5 s; background read `rgb(244,253,216)`, `rgb(255,197,205)`, `rgb(177,215,229)`; screenshots 01 (green) and 02 (blue) | PASS |
+| 04 | Assertions 4 | `site/family/mom.png` no longer exists in the tree. | `git ls-files apps/borso-fr/site/family` and `find` | Tracked files are `les-filles.html`, `les-filles.png`, `mom-drawing.svg`, `mom.html`, `poop.png`; `find apps/borso-fr -name mom.png` prints nothing; `git diff origin/main --stat` shows `mom.png Bin 2450610 -> 0 bytes` | PASS |
+| 05 | Assertions 5 | Each letter of the title "Bonne journée bande de crottons" waves in turn, and no word breaks across two lines at 375 px. | Sample each `.letter` translateY four times 0.4 s apart; at 375 px count distinct line tops per `.word` | Letters carry `letter-wave` 1.6 s with delays stepping by 0.06 s; sampled offsets show a -12 px crest travelling along the title (e.g. `0,0,…,-11,-12,-12,-12,-10,…` then shifted); every word 1 line at 375 px, `.word` is `white-space: nowrap`; `./visual-validation-2026-11-20-1625/04-filles-375-title-and-photo.png` | PASS |
+| 06 | Assertions 6 | The photo of the girls stays round, wobbles gently and pulses a glowing halo. | Read `#photo` computed style three times 0.5 s apart | `border-radius: 50%`; animations `image-wobble` 3 s and `halo-pulse` 2 s; rotation sampled -2.7°, -0.1°, +2.7°, scale 1.00 to 1.03; box-shadow blur 34.5, 29.4, 20.9 px; `./visual-validation-2026-11-20-1625/03-filles-first-frame-desktop.png` | PASS |
+| 07 | Assertions 7 | About 30 poops fall over the whole screen from the first frame, each with its own size, sway and spin. | 600 ms after load, count `.poop`, measure their spread, count distinct `--size`, `--sway`, `--spin` | 30 `.poop`, `position: fixed`, animation `fall` with an inner `sway`; 23 already inside the 1280 x 800 viewport, spread x 46 to 1314 px and y -110 to 919 px; negative `--fall-delay` values; 30 distinct sizes, 30 distinct sways, 30 distinct spins; `./visual-validation-2026-11-20-1625/03-filles-first-frame-desktop.png` | PASS |
+| 08 | Assertions 8 | Tapping the photo squishes it and bursts poops out from the tap point. The burst pieces fade and leave the page. | `scripts/phone.sh touch '#photo'` with a MutationObserver logging added and removed nodes | phone.sh verdict `isRealTouch: true` at (187.5, 265.5); photo got class `is-squished` with animation `image-squish`; 14 `.burst` nodes added with `--x: 187.5px; --y: 265.5px` (the tap point) and spread `--dx`/`--dy`; opacity 0.148 about 500 ms later; all 14 removed 1.2 s after the tap, `.burst` count 0, `is-squished` cleared; `./visual-validation-2026-11-20-1625/06-filles-tap-burst.png` | PASS |
+| 09 | Assertions 9 | A hint "touche la photo" sits under the photo. | Compare bounding boxes at 375 px | `.tap-hint` text `👆 touche la photo`, top 407 px below photo bottom 393.9 px, both centred at x 187.5; `./visual-validation-2026-11-20-1625/04-filles-375-title-and-photo.png` | PASS |
+| 10 | Assertions 10 | "Votre frère qui vous aime" fades in at the bottom right after a few seconds. | Reload at 375 px, read `.hidden-message` opacity every second for 8 s | Opacity 0 through 3.1 s, 0.05 at 4.1 s, 0.9 at 5.2 s, settles at 0.75; box right 365 px, bottom 802 px of a 375 x 812 viewport; `./visual-validation-2026-11-20-1625/05-filles-375-message-bottom-right.png` | PASS |
+| 11 | Assertions 11 | With reduced motion requested, no poop falls and the message shows at once. | `agent-browser set media light reduced-motion`, reload, read state at first eval | `matchMedia('(prefers-reduced-motion: reduce)')` true; 0 of 30 `.poop` visible; message opacity 0.75 at 1.3 s after navigation start; `./visual-validation-2026-11-20-1625/07-filles-reduced-motion.png` | PASS |
+| 12 | Assertions 12 | At 375 px wide, neither page scrolls sideways and the console shows no error. | At 375 x 812 on both pages, read `scrollWidth`, try `scrollTo(200, 0)`, read `agent-browser errors` | Mom: `scrollWidth 375 = clientWidth 375`, `scrollX` stays 0, errors empty, `./visual-validation-2026-11-20-1625/08-mom-375.png`. Girls: `scrollWidth 375 = clientWidth 375`, `scrollX` stays 0, errors empty after 5 s, `./visual-validation-2026-11-20-1625/04-filles-375-title-and-photo.png` | PASS |
+
+## Notes
+
+- No FAIL or UNVERIFIABLE rows. The broken-image scan returned `[]` after each of the eight screenshots.
+- Row 06, measured: "round" is an ellipse, not a circle. `#photo` is 300 x 225 px with `border-radius: 50%`. `origin/main` used the same rule (`width: 300px; height: auto; border-radius: 50%` on a 640 x 480 image), so the shape is unchanged, which is what "stays round" asks.
+- Row 07, measured: at 1280 px one poop's box reaches x 1314, past the right edge. `html` has `overflow-x: clip` and `body` has `overflow-x: hidden`, so `scrollWidth` stays 1280 and nothing scrolls.
+- Row 01, observed: the caption in the drawing reads "MAMAИ ♥" with a mirrored N. This reads as a deliberate child-drawing touch, not a defect, and the spec says nothing about a caption.
+- `/family/mom.png` still answers 200 from the dev server, with `text/html`. That is the Vite HTML fallback, not the image. The file is gone from the tree (row 04).
+
+## Verdict: PASS
