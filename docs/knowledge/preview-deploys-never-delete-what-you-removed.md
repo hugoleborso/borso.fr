@@ -48,7 +48,11 @@ after its upload. Nothing deletes the prod copy.
 
 When a request is to take something off the site, deleting the source is half
 of it. List the bucket for the built name, then delete the object and
-invalidate its path, which needs AWS write (`docs/operator-backlog/`).
+invalidate its path, which needs AWS write (`docs/operator-backlog/`). On the
+preview distribution, invalidate the rewritten path,
+`/<app>/pr-<n>/assets/<file>`, not the path the browser asks for. The routing
+function rewrites the URI before the cache lookup, so `/assets/<file>` leaves
+every cached copy in place (measured on 2026-11-21).
 
 ## Two ways to close it, for the operator
 

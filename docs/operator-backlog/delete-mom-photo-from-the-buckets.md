@@ -1,6 +1,7 @@
 ---
-status: open
+status: done
 found-in: '#385, #386'
+closed: 2026-11-21
 right: 'AWS write on s3://borso-fr-prod and s3://borso-previews, and cloudfront:CreateInvalidation'
 ---
 
@@ -24,3 +25,15 @@ deletion is its own confirmation.
 
 `curl -s -o /dev/null -w '%{http_code}' https://borso.fr/assets/mom-BzeqhxL2.png`
 prints 403 or 404, and the `grep` in step 3 prints nothing.
+
+## Evidence
+
+Done on 2026-11-21 by the session of PR #385, running as `Borso-Admin`, after
+the operator answered "oui". It deleted the prod object and the 57 preview
+copies. Prod answered 404 after invalidation `I94OSWU7BV0YYGDBW21RFTR4J7`.
+
+The previews still answered 200 from the CDN cache (`x-cache: Hit`) after
+invalidating `/assets/mom-BzeqhxL2.png`. Invalidating the 57 rewritten paths,
+`/borso-fr/pr-<n>/assets/mom-BzeqhxL2.png`, in `I6XZR7K92FDRAS8C4HY44EWR1H`
+brought all 57 preview hosts to 404 (measured with `curl` on each).
+
