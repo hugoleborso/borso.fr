@@ -35,7 +35,7 @@ export function LineupMemberRow({
   return (
     <li className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        <MemberChip memberName={member.name} memberColor={member.color} size="xs" />
+        <MemberChip memberName={member.name} memberColor={member.color} size="xs" withName />
       </div>
       <div
         className="flex flex-wrap gap-1.5"

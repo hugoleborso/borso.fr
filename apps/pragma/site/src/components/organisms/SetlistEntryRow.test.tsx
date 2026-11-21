@@ -91,7 +91,7 @@ describe('a setlist row', () => {
     expect(notice.className).toContain('text-warn');
   });
 
-  it('shows the note written for tonight, and tonight’s lineup change read aloud as its sentence', () => {
+  it('shows the note written for tonight, and tonight’s lineup change named and read aloud as its sentence', () => {
     renderRow(
       buildProps({
         notes: 'Finir sur le refrain',
@@ -103,7 +103,7 @@ describe('a setlist row', () => {
     );
     expect(screen.getByText('Finir sur le refrain')).toBeTruthy();
     const change = screen.getByRole('img', { name: 'Tonight: Tom: Guitar · Léa sits out' });
-    expect(change.textContent).toBe('');
+    expect(change.textContent).toBe('TomLéa');
     expect(screen.queryByText(/Tonight/)).toBeNull();
   });
 

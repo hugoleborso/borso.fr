@@ -132,6 +132,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                       shape={change.heldInstruments.length === 0 ? 'ring' : 'dot'}
                       color={change.color}
                     />
+                    <span className="text-meta text-on-highlight">{change.firstName}</span>
                     {change.heldInstruments.length === 0 ? null : (
                       <HeldInstrumentGlyphs instruments={change.heldInstruments} size="sm" />
                     )}

@@ -25,7 +25,7 @@ export function MemberTaskColumn(props: MemberTaskColumnProps): JSX.Element {
   return (
     <Card className="flex flex-col gap-2.5 min-w-0">
       <div className="flex items-center gap-2">
-        <MemberChip memberName={group.memberName} memberColor={group.memberColor} />
+        <MemberChip memberName={group.memberName} memberColor={group.memberColor} withName />
         <Badge tone="mono" size="sm">
           {group.openCount}
         </Badge>

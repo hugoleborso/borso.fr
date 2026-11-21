@@ -49,4 +49,14 @@ describe('MemberChip', () => {
     expect(avatar?.getAttribute('aria-label')).toBe('Gui');
     expect(avatar?.getAttribute('title')).toBe('Gui');
   });
+
+  it('writes the name beside the initial when asked, and reads the name once', () => {
+    act(() => {
+      root.render(
+        <MemberChip memberName="Gui" memberColor={GREEN_FAR_FROM_EVERY_PALETTE_SWATCH} withName />,
+      );
+    });
+    expect(container.textContent).toBe('GGui');
+    expect(container.querySelector('[role=img]')?.getAttribute('aria-hidden')).toBe('true');
+  });
 });

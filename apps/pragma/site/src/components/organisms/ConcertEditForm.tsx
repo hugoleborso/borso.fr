@@ -124,8 +124,13 @@ export function ConcertEditForm({
                 <div className="flex flex-col gap-2">
                   {members.map((member) => (
                     <div key={member.id} className="flex items-center gap-2.5">
-                      <MemberChip memberName={member.firstName} memberColor={member.color} />
-                      <span className="flex-1" />
+                      <span className="flex min-w-0 flex-1">
+                        <MemberChip
+                          memberName={member.firstName}
+                          memberColor={member.color}
+                          withName
+                        />
+                      </span>
                       <div className="w-20 shrink-0">
                         <Input
                           type="number"

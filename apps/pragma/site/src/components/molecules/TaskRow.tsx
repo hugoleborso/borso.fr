@@ -58,13 +58,10 @@ export function TaskRow(props: TaskRowProps): JSX.Element {
         </ListRow>
         <div className="flex flex-wrap items-center gap-1.5">
           {props.assignee === undefined || props.assignee === null ? null : (
-            <MemberMark
-              shape="dot"
-              color={props.assignee.color}
-              role="img"
-              aria-label={props.assignee.name}
-              title={props.assignee.name}
-            />
+            <span className="inline-flex items-center gap-1 text-meta text-ink-soft">
+              <MemberMark shape="dot" color={props.assignee.color} />
+              {props.assignee.name}
+            </span>
           )}
           <Badge tone="mono" size="sm">
             {t(TASK_STATUS_LABEL_KEY[props.status])}

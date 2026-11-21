@@ -28,7 +28,7 @@ describe('the task row', () => {
     expect(openingButton.querySelector('svg')).not.toBeNull();
   });
 
-  it('draws the assignee as their colour mark, named on hover and to a screen reader', () => {
+  it('writes the assignee’s name beside their colour mark', () => {
     render(
       <TaskRow
         title={TASK_TITLE}
@@ -42,7 +42,6 @@ describe('the task row', () => {
         onDelete={vi.fn()}
       />,
     );
-    expect(screen.getByRole('img', { name: 'Gui' }).getAttribute('title')).toBe('Gui');
-    expect(screen.queryByText('Gui')).toBeNull();
+    expect(screen.getByText('Gui')).toBeTruthy();
   });
 });
