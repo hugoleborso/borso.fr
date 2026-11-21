@@ -1,13 +1,14 @@
 ---
-summary: 'The preview `BucketDeployment` has `prune: false`, so a file a commit deleted stays served on the preview.'
+summary: 'Neither the preview nor the prod `BucketDeployment` prunes, so a file a commit deleted stays served at its old URL, in prod forever and on a preview for 60 days.'
 triggers:
   paths:
     - 'infra/cdk/src/constructs/static-site.ts'
   commands:
     - 's3\s+ls\s+s3://borso-previews'
+    - 'git\s+rm\s+.*\.(png|jpe?g|webp|gif|svg)'
 ---
 
-# A preview keeps serving files your commit deleted
+# A deploy keeps serving files your commit deleted
 
 `infra/cdk/src/constructs/static-site.ts` sets `prune: false` on the preview
 `BucketDeployment`. So a preview deploy uploads what the build produced and
@@ -34,30 +35,27 @@ change. It is not: the new files are all there with the new timestamp.
 Last verified: 2026-08-15 — the listing above, taken minutes after the deploy
 that removed the file.
 
-**Production is not affected.** Its `BucketDeployment` leaves `prune` at the
-CDK default, which is `true`, so a prod deploy does delete what the build no
-longer produces.
+**Production keeps them too.** Commit `0b560c3` set `prune: false` on both
+prod deployments in September 2026, so a browser holding an older page still
+finds its bundle. A file removed from the build therefore stays served in prod
+until someone deletes it from the bucket by hand.
 
-## When this will mislead you
+PR #385 deleted the photo of the operator's mother, because he asked for it
+off the site. After the merge, `https://borso.fr/assets/mom-BzeqhxL2.png` still
+answered 200, and 57 preview prefixes of `borso-previews` held the same file
+(measured 2026-11-21). The `expire-previews` rule deletes a preview copy 60 days
+after its upload. Nothing deletes the prod copy.
 
-- Checking a preview to confirm a file is gone. Check S3, or check that the
-  *new* file is right, rather than that the old URL 404s.
-- A renamed asset: both names serve, and a stale page referencing the old one
-  keeps working on the preview and breaks in production.
-- Reading a preview's file listing as the build output. It is the union of every
-  build that PR has ever deployed.
+When a request is to take something off the site, deleting the source is half
+of it. List the bucket for the built name, then delete the object and
+invalidate its path, which needs AWS write (`docs/operator-backlog/`).
 
-## Why it is still `false`
+## Two ways to close it, for the operator
 
-Nobody has decided otherwise yet. The flag arrived inside a large refactor with
-no stated reason, and since the destination is already scoped per PR
-(`pragma/pr-50`), turning it on would only ever delete that PR's own files.
-Flipping it is a one-line change plus a construct snapshot update, and it is a
-delete verb on a bucket shared by all four apps' previews, so it is the
-operator's call rather than a drive-by.
+| Option | What the operator sees | Cost |
+| --- | --- | --- |
+| A. The prod deploy deletes a built file no page has referenced for 30 days | A file taken off the site goes offline by itself within 30 days of the merge. An urgent removal still needs a hand deletion | A cleanup step in the prod deploy and its tests |
+| B. Keep today's deploy | Each removal needs a "Borso Admin" session to delete the file | Nothing to build, one backlog task per removal |
 
-## Related
-
-- [`redeployed-four-previews-to-move-one-markdown-file.md`](../dantotsus/redeployed-four-previews-to-move-one-markdown-file.md)
-  — the other way a preview drifts from the branch that produced it, and the
-  digest the deploy now records to tell the two apart.
+Only `apps/borso-fr/site/family/mom.png` left a build as an image since
+`0b560c3` (measured with `git log --since=2026-09-18 --diff-filter=D`).

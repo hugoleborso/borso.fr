@@ -69,7 +69,7 @@ If `agent-browser` itself fails, surface it as a single FAIL row at the top of t
    - `prefers-color-scheme: dark` — `agent-browser set media dark` and re-check first-visit palette claim.
    - Touch / coarse-pointer affordances: **not** `agent-browser set device` or `click`, which give no touch events and no coarse pointer. Run `scripts/phone.sh start <url>`, then `scripts/phone.sh touch '<css selector>'`: it taps with `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and exits 1 unless a touch reached the element. The page is the `phone` session of `agent-browser`, so `agent-browser --session phone screenshot …` shows the result. If the assertion needs touch and you could not run it, the row is UNVERIFIABLE; do not pass it on a click.
    - URL state — `agent-browser open <url>?seed=…&palette=…`, screenshot, `agent-browser back`, re-check.
-   - `prefers-reduced-motion: reduce` — try `agent-browser set media reduce-motion` first; if unsupported, mark the row UNVERIFIABLE with a note (don't fake it).
+   - `prefers-reduced-motion: reduce` — `agent-browser set media light reduced-motion`.
 6. **Write the report.** Markdown at `report_path`, format below.
 7. **Log your friction.** Anything that cost you time and is not a finding about the app — a tool that failed in a way that named the wrong problem, a spec assertion you could not turn into a browser action, a harness limit you hit — goes to the task's friction log, one line each, as you hit it:
 
