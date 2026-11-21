@@ -166,7 +166,7 @@ describe('LineupEditor', () => {
       DRUMS.name,
     ]);
     expect(toggles.map((button) => button.textContent.trim())).toEqual(['', '', '']);
-    expect(document.querySelector('[role=img][aria-label="Hugo"]')?.textContent).toBe('H');
+    expect(document.body.textContent).toContain(HUGO.name);
     expect(heldInstrumentNames(HUGO.name)).toEqual([]);
   });
 

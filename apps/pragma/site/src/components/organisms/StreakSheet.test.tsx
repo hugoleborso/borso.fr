@@ -54,18 +54,18 @@ describe('StreakSheet', () => {
     expect(within(sheet).getByText('3 jokers left this week')).toBeTruthy();
   });
 
-  it('lists each member as a dot in their stored colour named after them, then their flame', () => {
+  it('lists each member as a dot in their stored colour, their name, then their flame', () => {
     const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
     const rows = within(sheet).getAllByRole('listitem');
     expect(rows.map((row) => row.textContent)).toEqual([
-      '12today still open',
-      '0No flame yet',
-      '5today counted',
+      'Léa12today still open',
+      'Tom0No flame yet',
+      'Marc5today counted',
     ]);
     const leaDot = rows[0]?.firstElementChild;
     expect(leaDot instanceof HTMLElement ? leaDot.style.backgroundColor : '').toBe(RENDERED_NAVY);
     expect(leaDot?.textContent).toBe('');
-    expect(within(sheet).getByRole('img', { name: 'Léa' }).getAttribute('title')).toBe('Léa');
+    expect(within(sheet).getByTitle('today still open').textContent).toBe('12today still open');
   });
 
   it.each([

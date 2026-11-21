@@ -46,6 +46,7 @@ export function SetlistViewContent(props: SetlistViewContentProps): JSX.Element 
             memberName={props.shownMember.firstName}
             memberColor={props.shownMember.color}
             size="md"
+            withName
           />
         )}
         {props.memberEntryIds.length === 0 ? (

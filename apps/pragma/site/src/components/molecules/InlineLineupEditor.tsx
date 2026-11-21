@@ -61,7 +61,7 @@ export function InlineLineupEditor({
         {rows.map((row, rowIndex) => (
           <li key={row.memberId} className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <MemberChip memberName={row.firstName} memberColor={row.color} size="md" />
+              <MemberChip memberName={row.firstName} memberColor={row.color} size="md" withName />
               {row.isChangedTonight ? (
                 <span className={CHANGED_MARK_CLASS}>{t('lineup.changedTonight')}</span>
               ) : null}
