@@ -10,7 +10,7 @@ PR #385 removed `apps/borso-fr/site/family/mom.png` because the operator asked
 for the photo off the site. Neither deployment prunes, so the built copy is
 still served.
 
-Waits on the operator's answer to the deletion question in PR #386. Each
+Waits on the operator's answer to the deletion question asked in the session of PR #386. Each
 deletion is its own confirmation.
 
 1. `aws s3 rm s3://borso-fr-prod/assets/mom-BzeqhxL2.png`

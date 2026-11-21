@@ -49,3 +49,13 @@ after its upload. Nothing deletes the prod copy.
 When a request is to take something off the site, deleting the source is half
 of it. List the bucket for the built name, then delete the object and
 invalidate its path, which needs AWS write (`docs/operator-backlog/`).
+
+## Two ways to close it, for the operator
+
+| Option | What the operator sees | Cost |
+| --- | --- | --- |
+| A. The prod deploy deletes a built file no page has referenced for 30 days | A file taken off the site goes offline by itself within 30 days of the merge. An urgent removal still needs a hand deletion | A cleanup step in the prod deploy and its tests |
+| B. Keep today's deploy | Each removal needs a "Borso Admin" session to delete the file | Nothing to build, one backlog task per removal |
+
+Only `apps/borso-fr/site/family/mom.png` left a build as an image since
+`0b560c3` (measured with `git log --since=2026-09-18 --diff-filter=D`).
