@@ -73,3 +73,12 @@ An assertion such as "comment directives look as they did before" has no
 before state in the browser. The validator of PR #367 fell back to a git diff of
 the renderer. Name what the reader sees instead, such as "a comment directive
 shows in italics on its own line".
+
+## A spec written after the code
+
+PR #385 wrote its spec at pull-request time, because the visual-validation
+hook asked for a report. Its assertion 9 required a hint, "touche la photo",
+that the operator never asked for. The validator passed it, and the operator
+had it removed. A spec written from the code turns each unasked addition into
+a requirement. Write each assertion from the operator's words, and put
+anything they did not ask for to them as a question.
