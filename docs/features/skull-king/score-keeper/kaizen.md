@@ -42,3 +42,14 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-22 20:27] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
 - [2026-11-22 20:40] `fix-visual` agent-browser has no command for a WebAuthn virtual authenticator, so checking a signed-in screen needs a hand-written playwright-core script that holds a CDP session on the agent-browser page while agent-browser drives it
 - [2026-11-22 20:40] `fix-visual` the visual report found six spec breaks that no test held (a missed toggle kept as local draft, digits in join codes, chips under 44 px), because no gate measures tap target size or reads the spec's data shape against the alphabet
+- [2026-11-22 20:52] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-22 20:54] `visual-validator` agent-browser has no locale setting and --args --lang=fr-FR leaves navigator.language at en-US, so checking French copy needed a hand-written init script.
+- [2026-11-22 20:54] `visual-validator` Passkey screens need a CDP virtual authenticator held open by a background node process, and no repo script provides one for agent-browser sessions.
+- [2026-11-22 20:54] `visual-validator` The service worker is disabled under the dev server, so checking it needed a scratch vite build and vite preview on another port.
+- [2026-11-22 21:07] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-22 21:13] `visual-validator` agent-browser has no locale option, and starting a session with AGENT_BROWSER_ARGS=--lang=fr-FR left navigator.language en-US and sent localhost through the agent proxy, so the page stayed about:blank.
+- [2026-11-22 21:13] `visual-validator` scripts/phone.sh swipe on a horizontally scrolling grid cannot be read back, because its 1280 px relayout clamps scrollLeft to 0 before the 375 px viewport returns.
+- [2026-11-22 21:13] `visual-validator` A CDP virtual authenticator attached with Playwright connectOverCDP landed on a hidden chrome://new-tab-page target, pages()[0], so the first passkey attempt failed silently with no error on screen.
+- [2026-11-22 21:27] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-22 21:28] `visual-validator` The skull-king service worker never registers under the dev server, so checking the spec's caching claim needs a scratch vite build and a vite preview the validator must start and stop by pid.
+- [2026-11-22 21:28] `visual-validator` Passkey flows need a CDP virtual authenticator held open by a hand-written Node WebSocket script, because agent-browser has no WebAuthn command.
