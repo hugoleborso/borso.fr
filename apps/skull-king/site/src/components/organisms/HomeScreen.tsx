@@ -9,6 +9,7 @@ import { sortNewestFirst } from '@site/lib/my-games.core';
 import { useMe, useMyGames } from '@site/lib/queries/account.queries';
 import { useCreateGame } from '@site/lib/queries/game.queries';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
+import { selectCreateErrorKey } from '@site/lib/translation-keys.core';
 import {
   canSeatAnother,
   canStartGame,
@@ -178,7 +179,7 @@ export function HomeScreen() {
       )}
 
       <div className="mt-auto flex flex-col gap-4">
-        <ErrorNote code={readRejectionCode(createGame.error)} />
+        <ErrorNote code={readRejectionCode(createGame.error)} selectKey={selectCreateErrorKey} />
         <Button
           variant="primary"
           disabled={!canStartGame(seated) || createGame.isPending}

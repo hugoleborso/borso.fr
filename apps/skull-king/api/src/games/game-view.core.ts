@@ -32,6 +32,7 @@ export interface EntryFacts extends BonusCounts {
   readonly bid: number | null;
   readonly bidAdjustment: number | null;
   readonly rascalBet: number | null;
+  readonly isMissed: boolean | null;
   readonly tricks: number | null;
 }
 
@@ -70,6 +71,12 @@ export function readRascalBet(stored: number | null): RascalBet {
   return RASCAL_BETS.find((bet) => bet === stored) ?? NO_BET;
 }
 
+const IS_MISSED_WHEN_UNWRITTEN = false;
+
+export function isStoredMissed(stored: boolean | null): boolean {
+  return stored ?? IS_MISSED_WHEN_UNWRITTEN;
+}
+
 function describeEntry(playerId: string, entry: EntryFacts | undefined): EntryView {
   if (entry === undefined) {
     return {
@@ -77,6 +84,7 @@ function describeEntry(playerId: string, entry: EntryFacts | undefined): EntryVi
       bid: null,
       bidAdjustment: NO_ADJUSTMENT,
       rascalBet: NO_BET,
+      isMissed: IS_MISSED_WHEN_UNWRITTEN,
       tricks: null,
       bonuses: NO_BONUS,
     };
@@ -86,6 +94,7 @@ function describeEntry(playerId: string, entry: EntryFacts | undefined): EntryVi
     bid: entry.bid,
     bidAdjustment: readBidAdjustment(entry.bidAdjustment),
     rascalBet: readRascalBet(entry.rascalBet),
+    isMissed: isStoredMissed(entry.isMissed),
     tricks: entry.tricks,
     bonuses: readBonuses(entry),
   };

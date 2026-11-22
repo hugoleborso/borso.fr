@@ -50,10 +50,18 @@ const ERROR_KEYS = {
   'unexpected-failure': 'errors.unexpected-failure',
 } as const;
 
-export type ErrorTranslationKey = (typeof ERROR_KEYS)[keyof typeof ERROR_KEYS];
+const GAME_NOT_CREATED_KEY = 'errors.game-not-created';
+
+export type ErrorTranslationKey =
+  | (typeof ERROR_KEYS)[keyof typeof ERROR_KEYS]
+  | typeof GAME_NOT_CREATED_KEY;
 
 // @FollowsBlueprint core-label-key
 export function selectErrorKey(code: string): ErrorTranslationKey {
   const known = DISPLAYED_ERROR_CODES.find((candidate) => candidate === code);
   return ERROR_KEYS[known ?? 'unexpected-failure'];
+}
+
+export function selectCreateErrorKey(code: string): ErrorTranslationKey {
+  return code === 'value-out-of-range' ? GAME_NOT_CREATED_KEY : selectErrorKey(code);
 }

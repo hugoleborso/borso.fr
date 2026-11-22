@@ -77,6 +77,17 @@ describe('createGameSchema', () => {
       false,
     );
   });
+
+  it('takes one seat marked as the creator, and refuses two', () => {
+    const creator = { ...HUGO, isMe: true };
+    expect(createGameSchema.safeParse({ players: [creator, HUGO, HUGO] }).success).toBe(true);
+    expect(createGameSchema.safeParse({ players: [creator, creator, HUGO] }).success).toBe(false);
+  });
+
+  it('refuses a seat that names its own id, since the server mints every id', () => {
+    const withId = { ...HUGO, id: PLAYER_ID };
+    expect(createGameSchema.safeParse({ players: [withId, HUGO, HUGO] }).success).toBe(false);
+  });
 });
 
 describe('updatePlayerSchema', () => {

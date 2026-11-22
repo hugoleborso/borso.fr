@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { JOIN_CODE_LENGTH } from '@domain/join-code.core';
+import { JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
 import { buildJoinCode, JOIN_CODE_ALPHABET } from './join-code.utils';
 
 // @FollowsBlueprint test-pure-unit
@@ -25,10 +25,17 @@ describe('buildJoinCode', () => {
     expect(new Set(code).size).toBeGreaterThan(1);
   });
 
-  it('leaves out the characters a person reads back wrongly', () => {
+  it('draws letters only, leaving out the two a person reads back as digits', () => {
+    expect(JOIN_CODE_ALPHABET).toMatch(/^[A-Z]+$/u);
     expect(JOIN_CODE_ALPHABET).not.toContain('I');
     expect(JOIN_CODE_ALPHABET).not.toContain('O');
-    expect(JOIN_CODE_ALPHABET).not.toContain('0');
-    expect(JOIN_CODE_ALPHABET).not.toContain('1');
+  });
+
+  it('only ever builds a code that reads back unchanged', () => {
+    const draws = Array.from({ length: JOIN_CODE_ALPHABET.length }, (_, index) => {
+      const value = index / JOIN_CODE_ALPHABET.length;
+      return buildJoinCode(() => value);
+    });
+    for (const code of draws) expect(normalizeJoinCode(code)).toBe(code);
   });
 });

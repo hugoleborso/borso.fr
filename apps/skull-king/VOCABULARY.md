@@ -67,11 +67,22 @@ Lives in: `api/src/games/`
 
 Invariants: `api/src/games/INVARIANTS.md`
 
+## Missed bid
+
+A bid the table marked as not made, with the cross on the results screen.
+The mark is stored on the entry as `isMissed` the moment it is tapped, before
+anyone picks the tricks. An entry nobody marked reads as made, which is what
+a table enters nothing for.
+
+Lives in: `api/src/games/`, `domain/scoring.core.ts`
+
+Invariants: `api/src/games/INVARIANTS.md`
+
 ## Tricks
 
-The tricks one player actually took in one round, entered only when the bid
-was missed. A missing value means the bid was made, which is what a table
-enters nothing for.
+The tricks one player actually took in one round, entered only for a missed
+bid. A missed bid with no tricks yet keeps its round open. On a made bid the
+tricks are the final bid, and any stored value is ignored.
 
 Lives in: `api/src/games/`, `domain/scoring.core.ts`
 
@@ -139,8 +150,8 @@ Invariants: `api/src/games/INVARIANTS.md`
 
 ## Join code
 
-The four characters that name a game. It is the only key: whoever holds it
-reads and writes the game.
+The four letters that name a game, never I or O. It is the only key:
+whoever holds it reads and writes the game.
 
 Lives in: `api/src/games/`, `domain/join-code.core.ts`
 
@@ -183,7 +194,9 @@ connection names a game and nobody in it.
 ## Claim
 
 Saying "this seat is me": linking one player of one game to the signed-in
-account, so the account's rank shows in its list of games.
+account, so the account's rank shows in its list of games. A signed-in
+player who creates a game claims their seat in the same request, by marking
+it `isMe`.
 
 Lives in: `api/src/games/`
 

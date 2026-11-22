@@ -13,8 +13,9 @@ import { readRejectionCode } from '@site/lib/rejection-code.core';
 import {
   isHarryLocked,
   isRascalLocked,
+  selectBidToggle,
   selectRoundCheck,
-  selectTricksWrite,
+  selectTricksCorrection,
 } from '@site/lib/round-results.core';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
@@ -51,7 +52,7 @@ export function EntryCorrectionSheet({
   const entry = selectEntry(round, player.id);
   if (entry === null) return null;
   const points = scoreEntry(entry, round.cardCount);
-  const check = selectRoundCheck(round, 0);
+  const check = selectRoundCheck(round);
 
   const readLatest = (rendered: GameEntry): GameEntry =>
     readLatestEntry(round.number, player.id) ?? rendered;
@@ -87,7 +88,7 @@ export function EntryCorrectionSheet({
           tone="accent"
           surface="card"
           onPick={(value) => {
-            write({ bid: selectTricksWrite(value, entry.bid) });
+            write({ bid: selectBidToggle(value, entry.bid) });
           }}
         />
       </div>
@@ -103,7 +104,7 @@ export function EntryCorrectionSheet({
           tone="accent"
           surface="card"
           onPick={(value) => {
-            write({ tricks: selectTricksWrite(value, selectFinalBid(entry)) });
+            write(selectTricksCorrection(value, selectFinalBid(entry)));
           }}
         />
       </div>

@@ -11,8 +11,12 @@ describe('normalizeJoinCode', () => {
     expect(normalizeJoinCode('  a b-c d ')).toBe('ABCD');
   });
 
-  it('keeps the digits of the code', () => {
-    expect(normalizeJoinCode('ab23')).toBe('AB23');
+  it('keeps letters only, since a code holds no digit', () => {
+    expect(normalizeJoinCode('ab23')).toBe('AB');
+  });
+
+  it('keeps every letter a code was ever made of, so the seeded BRIG still opens', () => {
+    expect(normalizeJoinCode('brig')).toBe('BRIG');
   });
 });
 

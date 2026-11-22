@@ -36,3 +36,28 @@ export function buildGameSearch(joinCode: string, view: SideView | null): string
 export function buildInvitationUrl(origin: string, joinCode: string): string {
   return `${origin.replace(TRAILING_SLASH, '')}/${buildGameSearch(joinCode, null)}`;
 }
+
+export interface RematchWatch {
+  readonly joinCode: string;
+  readonly rematchJoinCode: string | null;
+  readonly follow: string | null;
+}
+
+export function watchRematch(
+  previous: RematchWatch | null,
+  joinCode: string,
+  rematchJoinCode: string | null,
+): RematchWatch {
+  if (previous?.joinCode !== joinCode) return { joinCode, rematchJoinCode, follow: null };
+  if (previous.rematchJoinCode === rematchJoinCode) return previous;
+  const isStartedOnScreen = previous.rematchJoinCode === null;
+  return {
+    joinCode,
+    rematchJoinCode,
+    follow: isStartedOnScreen ? rematchJoinCode : previous.follow,
+  };
+}
+
+export function isWatchMoved(previous: RematchWatch | null, next: RematchWatch): boolean {
+  return previous !== next;
+}

@@ -57,6 +57,7 @@ export const roundEntryTable = pgTable(
     bid: integer('bid'),
     bidAdjustment: integer('bid_adjustment'),
     rascalBet: integer('rascal_bet'),
+    isMissed: boolean('is_missed'),
     tricks: integer('tricks'),
     standardFourteen: integer('standard_fourteen').notNull(),
     blackFourteen: integer('black_fourteen').notNull(),
@@ -83,12 +84,23 @@ const nameSchema = z.string().trim().min(1).max(PLAYER_NAME_MAX_LENGTH);
 const iconSchema = z.enum(PLAYER_ICONS);
 const colorSchema = z.enum(PLAYER_COLORS);
 
-const playerMarkSchema = z
-  .object({ name: nameSchema, icon: iconSchema, color: colorSchema })
+const MOST_SEATS_PER_ACCOUNT = 1;
+
+const seatToCreateSchema = z
+  .object({ name: nameSchema, icon: iconSchema, color: colorSchema, isMe: z.boolean().optional() })
   .strict();
 
 export const createGameSchema = z
-  .object({ players: z.array(playerMarkSchema).min(MINIMUM_PLAYERS).max(MAXIMUM_PLAYERS) })
+  .object({
+    players: z
+      .array(seatToCreateSchema)
+      .min(MINIMUM_PLAYERS)
+      .max(MAXIMUM_PLAYERS)
+      .refine(
+        (players) =>
+          players.filter((player) => player.isMe === true).length <= MOST_SEATS_PER_ACCOUNT,
+      ),
+  })
   .strict();
 
 export const updatePlayerSchema = z
@@ -120,6 +132,7 @@ export const writeEntrySchema = z
     bid: trickCountSchema.nullable().optional(),
     bidAdjustment: z.literal(BID_ADJUSTMENTS).nullable().optional(),
     rascalBet: z.literal(RASCAL_BETS).nullable().optional(),
+    isMissed: z.boolean().optional(),
     tricks: trickCountSchema.nullable().optional(),
     bonuses: bonusesSchema.nullable().optional(),
   })

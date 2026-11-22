@@ -50,9 +50,15 @@ Held by: `api/src/helpers/persistence/conflict-abort.core.test.ts` › gives up 
   on it, written in the same transaction as the game by
   `insertGameUnlessCodeTaken`. A code is never released.
 - A game is found through its claim, by primary key.
-- `normalizeJoinCode` reads the code from the address, so any case works.
+- A code is four letters drawn from `JOIN_CODE_ALPHABET`, which leaves out
+  I and O and holds no digit. `normalizeJoinCode` reads the code from the
+  address or the join field, keeping letters only, so any case works and
+  every code ever made still reads back unchanged.
 
 Held by: `api/src/games/games.schema.test.ts` › makes a join code unique by keying its claim on the code
+Held by: `api/src/games/join-code.utils.test.ts` › draws letters only, leaving out the two a person reads back as digits
+Held by: `api/src/games/join-code.utils.test.ts` › only ever builds a code that reads back unchanged
+Held by: `domain/join-code.core.test.ts` › keeps letters only, since a code holds no digit
 Held by: `api/src/games/games.controller.test.ts` › gives a join code to one of two games claiming it at once, and nothing to the other
 Held by: `api/src/games/games.controller.test.ts` › reads the view by its code in any case, with defaults for every unwritten cell
 
@@ -60,7 +66,14 @@ Held by: `api/src/games/games.controller.test.ts` › reads the view by its code
 
 - `player` holds `game_id`, `seat`, `name`, `icon` and `color`.
 - A game seats `MINIMUM_PLAYERS` to `MAXIMUM_PLAYERS`, in the order the
-  creation sent them, from seat 0.
+  creation sent them, from seat 0. The server mints every player id: a
+  creation that sends one is refused.
+- A creation marks at most one seat `isMe`. With a session, `seatTable`
+  links that seat to the account in the same insert; for a guest it links
+  nothing. A second `isMe` is refused with `value-out-of-range`.
+- A phone follows `rematchJoinCode` only when it changes from null to a code
+  while the finished game is on its screen (`watchRematch`). Opening a
+  finished game that already has a rematch shows that game.
 - A rematch seats the same names and marks at the same seats in a new game,
   and records its code in `rematch_join_code` on the old game, so a second
   request answers the same rematch.
@@ -73,6 +86,13 @@ Held by: `api/src/games/games.controller.test.ts` › reads the view by its code
   code and answers that rematch. A losing request writes nothing, so no
   orphan game, claim or player is left behind.
 
+Held by: `api/src/games/game-write.core.test.ts` › links the seat marked as the creator to the signed-in account, and no other
+Held by: `api/src/games/game-write.core.test.ts` › links nothing for a guest, even on the seat marked as the creator
+Held by: `api/src/games/games.schema.test.ts` › takes one seat marked as the creator, and refuses two
+Held by: `api/src/accounts/accounts.controller.test.ts` › links the seat a signed-in creator marks as theirs to their account, and no other
+Held by: `api/src/accounts/accounts.controller.test.ts` › creates a guest game with a seat marked as theirs and links nobody
+Held by: `site/src/lib/game-address.core.test.ts` › opens a finished game that already has a rematch on that game, not the rematch
+Held by: `site/src/lib/game-address.core.test.ts` › follows a rematch another phone starts while this game is on screen
 Held by: `api/src/games/games.controller.test.ts` › starts a rematch with the same players and marks, once however many phones ask
 Held by: `api/src/games/games.controller.test.ts` › records the rematch when the database aborts its first commit, rather than failing
 Held by: `api/src/games/games.controller.test.ts` › starts one rematch however many phones ask at the same instant
@@ -99,7 +119,7 @@ Held by: `domain/player-mark.core.test.ts` › gives each of the first seats a d
   changes only the columns it names, so two phones writing two cells never
   overwrite each other.
 - A missing row reads as its default: no kraken, no white whale discard, no
-  bid, bid made, no ability, no bonus. `buildGameView` walks rounds 1 to
+  bid, bid made (`isMissed` false), no ability, no bonus. `buildGameView` walks rounds 1 to
   `current_round` and every player in seat order, so the view is always
   complete.
 - A round write or an entry write above `current_round` is refused with
@@ -125,14 +145,36 @@ Held by: `domain/round.core.test.ts` › repeats the largest even deal when the 
 Held by: `api/src/games/games.controller.test.ts` › refuses a bid or tricks above the cards dealt
 Held by: `api/src/games/games.controller.test.ts` › answers each entry write with the fresh view, and clears a value written as null
 
+## Missed bid
+
+- `round_entry.is_missed` says the table marked the bid missed. The column
+  is nullable because DSQL adds no column with a constraint. `isStoredMissed`
+  reads `null` as false, the bid made, and every insert writes `false`
+  explicitly.
+- The mark is stored the moment it is tapped, before any trick is chosen, so
+  every phone shows it and no phone can close the round meanwhile. The site
+  writes `{ isMissed: true }` for the cross and
+  `{ isMissed: false, tricks: null }` for the check.
+
+Held by: `api/src/games/games.controller.test.ts` › stores a bid marked missed at once, and keeps the round open until its tricks are in
+Held by: `api/src/games/game-view.core.test.ts` › reads a stored mark, and a row written before the column existed as made
+Held by: `site/src/lib/round-results.core.test.ts` › marks a made bid missed at once, before any trick is picked
+
 ## Tricks
 
-- `round_entry.tricks` is nullable. `null` reads as the final bid made,
-  through `selectTricksTaken`.
+- `round_entry.tricks` is nullable and read only when the bid is marked
+  missed. `selectTricksTaken` answers the final bid for a made bid, whatever
+  `tricks` holds, and `tricks` for a missed one.
+- A missed bid with `null` tricks has no tricks taken yet. `tallyTricks` reads
+  the round as incomplete, so it cannot close, and `scoreEntry` answers no
+  score.
 - Tricks above the cards dealt that round are refused with
   `value-out-of-range` by `refuseEntryWrite`.
 
-Held by: `domain/scoring.core.test.ts` › reads a missing tricks value as the bid made
+Held by: `domain/scoring.core.test.ts` › ignores tricks left on a bid marked made
+Held by: `domain/scoring.core.test.ts` › knows no tricks for a missed bid nobody counted yet
+Held by: `domain/round.core.test.ts` › waits while a bid marked missed has no tricks yet, so the round cannot close
+Held by: `api/src/games/game-write.core.test.ts` › refuses the next round while a bid marked missed has no tricks yet
 Held by: `api/src/games/games.controller.test.ts` › refuses a bid or tricks above the cards dealt
 
 ## Bonus

@@ -14,6 +14,7 @@ import {
   selectRename,
   trimPlayerName,
   unseatPlayer,
+  selectSeatsToCreate,
   withAccountFirst,
 } from './roster.core';
 
@@ -161,5 +162,19 @@ describe('withAccountFirst', () => {
 
   it('seats the signed-in player first, once', () => {
     expect(withAccountFirst(MAX, [HUGO, { ...MAX, color: 'sky' }])).toEqual([MAX, HUGO]);
+  });
+});
+
+describe('selectSeatsToCreate', () => {
+  it('sends a guest table as names and marks only', () => {
+    expect(selectSeatsToCreate([HUGO, LEA], false)).toStrictEqual([HUGO, LEA]);
+  });
+
+  it('marks the first seat as the signed-in player, and drops the account id it carries', () => {
+    const account = { ...MAX, id: '927ab190-0000-4000-8000-000000000000' };
+    expect(selectSeatsToCreate([account, HUGO], true)).toStrictEqual([
+      { ...MAX, isMe: true },
+      HUGO,
+    ]);
   });
 });

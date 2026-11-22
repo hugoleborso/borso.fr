@@ -27,7 +27,7 @@ export function NumberChip({ value, state, onPick }: NumberChipProps) {
         onPick(value);
       }}
       className={clsx(
-        'h-12 w-full min-w-0 max-w-12 cursor-pointer rounded-chip text-xl font-bold tabular-nums disabled:cursor-default',
+        'h-12 w-full min-w-11 max-w-12 cursor-pointer rounded-chip text-xl font-bold tabular-nums disabled:cursor-default',
         STATES[state],
       )}
     >

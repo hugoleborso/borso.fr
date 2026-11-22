@@ -54,14 +54,18 @@ decides which game screen shows.
      pirate, Skull King, loot). A tap adds one, cycling 0, 1, ..., max, 0. The
      card lights up with a badge showing the points.
    - Missed: chips 0 to cards dealt for the tricks actually taken, the bid's
-     chip disabled.
+     chip disabled. Tapping the cross writes `isMissed: true` at once, so
+     every phone shows the player missed and the round stays open until a
+     trick chip is tapped. Tapping the check writes `isMissed: false` and
+     clears the tricks.
    - Footer: tricks counted over expected (green when it balances, amber
      otherwise), the Kraken card and the White Whale card as toggles that each
      remove one expected trick (the White Whale only when it discarded a trick
      of special cards), and a check button that closes the round. The check
      button stays disabled until the count balances (`canCloseRound`): every
      missed player has their tricks, and the total equals the expected tricks.
-   - The pencil goes back to the bids of this round.
+   - The pencil goes back to the bids of this round, and a scores button
+     opens the scores.
 5. **Scores.** Reachable from every game screen. The ranking as four (to eight)
    tiles, mark, total, last round delta, leader highlighted. Under it a grid,
    one row per played round, one column per player, each cell the points and
@@ -81,8 +85,8 @@ decides which game screen shows.
 ## Install
 
 The app installs as a PWA, as banana-rush does: `site/public/manifest.webmanifest`
-(standalone, portrait, `#0F141B`), icons 192, 512 and a maskable 512 (a gold
-skull on the night ground), an apple touch icon, and the service worker of
+(standalone, portrait, `#0F141B`), icons 192, 512 and a maskable 512 (a gold coin struck with an "SK" monogram, the operator's pick among four
+concepts), an apple touch icon, and the service worker of
 `site/src/sw/`, which caches the shell and never caches `/api/`. Opened from
 the home screen it starts on `/`, where a regular finds their game.
 
@@ -100,7 +104,9 @@ anything.
 - **Home, signed in.** The signed-in player's mark sits first among the
   selected players, already linked to the account. A "Mes parties" strip lists
   their games, newest first: the date, the players' marks, `Manche N` or the
-  winner's mark when finished. A tap reopens the game.
+  winner's mark when finished. A tap reopens the game it shows, even a
+  finished one that has a rematch: a phone follows a rematch only when it
+  starts while the finished game is on its screen.
 - **Which games are "mine".** A game the account created, or opened while
   signed in. Opening a game while signed in adds it to the list. Inside a game,
   a signed-in player taps their own mark once to say "this seat is me"; the
@@ -152,7 +158,8 @@ game route reads the optional session and records `account_game` when present.
 - The other three abilities (Rosie D'Laney, Bendt the Bandit, Juanita Jade)
   change who leads or which cards a player holds, never a score, so the app
   records nothing for them.
-- Rascal's scoring, Cannonball / Grapeshot and variable card counts are not
+- Rascal's scoring (the alternative scoring system, not Rascal of Roatan's
+  bet), Cannonball / Grapeshot and variable card counts are not
   built in this version (operator's call). The two-player ghost rules are excluded by the minimum of
   three players.
 
@@ -168,7 +175,7 @@ type BonusCounts = Record<BonusKind, number>;
 
 // the view every read and every broadcast carries
 interface GameView {
-  joinCode: string;               // four letters
+  joinCode: string;               // four letters, never I or O
   phase: 'bidding' | 'scoring' | 'finished';
   currentRound: number;           // 1..10
   players: { id: string; seat: number; name: string; icon: PlayerIcon; color: PlayerColor }[];
@@ -177,7 +184,7 @@ interface GameView {
     cardCount: number;
     isKrakenPlayed: boolean;
     isWhiteWhaleDiscard: boolean;
-    entries: { playerId: string; bid: number | null; bidAdjustment: -1 | 0 | 1; rascalBet: 0 | 10 | 20; tricks: number | null; bonuses: BonusCounts }[];
+    entries: { playerId: string; bid: number | null; bidAdjustment: -1 | 0 | 1; rascalBet: 0 | 10 | 20; isMissed: boolean; tricks: number | null; bonuses: BonusCounts }[];
   }[];                            // one entry per player in seat order, defaults filled in
   revision: number;               // bumped by every write to the game
   readAt: string;                 // ISO time the server served this view
@@ -198,8 +205,11 @@ as primary keys):
 - `round_entry`: pk (`game_id`, `round_number`, `player_id`), `bid` int null,
   `bid_adjustment` int (default 0, -1..1), `rascal_bet` int (default 0: 0, 10
   or 20),
-  `tricks` int null (null means the bid was made), one int column per bonus
-  kind, `updated_at`.
+  `is_missed` bool null (null reads as false, so a missing value means the bid
+  was made; nullable because DSQL adds no column with a constraint, and every
+  insert writes `false`), `tricks` int null (read only when `is_missed`; a
+  missed bid with no tricks yet keeps the round open), one int column per
+  bonus kind, `updated_at`.
 
 A missing `round` or `round_entry` row reads as the default (no kraken, no bid,
 made, no bonus). Writes upsert.
@@ -211,9 +221,9 @@ Every write answers `{ game: GameView }` and then broadcasts the same view.
 
 | Method and path | Body | Does |
 | --- | --- | --- |
-| `POST /` | `{ players: { name, icon, color }[] }` (3 to 8) | creates a game in round 1, `bidding` |
+| `POST /` | `{ players: { name, icon, color, isMe? }[] }` (3 to 8, at most one `isMe`) | creates a game in round 1, `bidding`; with a session, links the `isMe` seat to the account (ignored for a guest) |
 | `GET /:code` | | reads the view |
-| `PUT /:code/rounds/:round/entries/:playerId` | `{ bid?, bidAdjustment?, rascalBet?, tricks?, bonuses? }`, each optional, `null` clears | upserts one entry |
+| `PUT /:code/rounds/:round/entries/:playerId` | `{ bid?, bidAdjustment?, rascalBet?, isMissed?, tricks?, bonuses? }`, each optional, `null` clears | upserts one entry |
 | `PUT /:code/rounds/:round` | `{ isKrakenPlayed?, isWhiteWhaleDiscard? }` | upserts the round |
 | `PUT /:code/phase` | `{ round, phase }` | moves the game to that round and phase, within the rules below |
 | `PATCH /:code/players/:playerId` | `{ name?, icon?, color? }` | changes a player |
@@ -264,7 +274,7 @@ the view the last broadcast carries.
 
 ## Out of scope
 
-Email or password sign-in, account recovery, Rascal's scoring, a per-round card count
+Email or password sign-in, account recovery, Rascal's scoring system, a per-round card count
 override, offline entry.
 
 ## Decisions taken without the operator

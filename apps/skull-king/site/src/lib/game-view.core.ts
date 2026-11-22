@@ -49,6 +49,7 @@ const gameViewSchema = z.object({
           bid: z.number().nullable(),
           bidAdjustment: z.literal([...BID_ADJUSTMENTS]),
           rascalBet: z.literal([...RASCAL_BETS]),
+          isMissed: z.boolean(),
           tricks: z.number().nullable(),
           bonuses: bonusCountsSchema,
         }),
@@ -76,6 +77,7 @@ export interface GameEntry {
   readonly bid: number | null;
   readonly bidAdjustment: BidAdjustment;
   readonly rascalBet: RascalBet;
+  readonly isMissed: boolean;
   readonly tricks: number | null;
   readonly bonuses: BonusCounts;
 }

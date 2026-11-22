@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import type { GameEntry, GameRound } from './game-view.core';
 import {
   isAwaitingTricks,
-  isEntryMissed,
   formatBid,
   formatBidAdjustment,
   hasUnbalancedClosedRound,
@@ -13,10 +12,11 @@ import {
   isRascalLocked,
   selectClosingMove,
   selectRoundCheck,
+  selectBidToggle,
+  selectMadeToggleEdit,
   selectRoundEntries,
   selectTallyDisplay,
-  selectTricksWrite,
-  withMembership,
+  selectTricksCorrection,
 } from './round-results.core';
 
 const MADE: GameEntry = {
@@ -24,64 +24,79 @@ const MADE: GameEntry = {
   bid: 2,
   bidAdjustment: 0,
   rascalBet: 0,
+  isMissed: false,
   tricks: null,
   bonuses: NO_BONUS,
 };
 
+const MISSED_WITHOUT_TRICKS: GameEntry = { ...MADE, isMissed: true };
+
 // @FollowsBlueprint test-pure-unit
 describe('selectTallyDisplay', () => {
-  it('shows an unknown count while a bid is missing', () => {
-    expect(selectTallyDisplay({ kind: 'incomplete' }, 0)).toEqual({
+  it('shows an unknown count while a bid or a missed count is missing', () => {
+    expect(selectTallyDisplay({ kind: 'incomplete' })).toEqual({
       counted: '?',
       isBalanced: false,
     });
   });
 
   it('shows a balanced count as balanced', () => {
-    expect(selectTallyDisplay({ kind: 'balanced', counted: 5 }, 0)).toEqual({
+    expect(selectTallyDisplay({ kind: 'balanced', counted: 5 })).toEqual({
       counted: '5',
       isBalanced: true,
     });
   });
 
-  it('does not call it balanced while a missed player has no tricks yet', () => {
-    expect(selectTallyDisplay({ kind: 'balanced', counted: 5 }, 1).isBalanced).toBe(false);
-  });
-
   it('shows an unbalanced count as unbalanced', () => {
-    expect(selectTallyDisplay({ kind: 'unbalanced', counted: 4, expected: 5 }, 0)).toEqual({
+    expect(selectTallyDisplay({ kind: 'unbalanced', counted: 4, expected: 5 })).toEqual({
       counted: '4',
       isBalanced: false,
     });
   });
 });
 
-describe('isEntryMissed', () => {
-  it('reads a made bid as made', () => {
-    expect(isEntryMissed(MADE, false)).toBe(false);
-  });
-
-  it('reads tricks that differ from the bid as missed', () => {
-    expect(isEntryMissed({ ...MADE, tricks: 1 }, false)).toBe(true);
-  });
-
-  it('reads tricks equal to the bid as made', () => {
-    expect(isEntryMissed({ ...MADE, tricks: 2 }, false)).toBe(false);
-  });
-
-  it('reads a player toggled to missed as missed before the tricks are picked', () => {
-    expect(isEntryMissed(MADE, true)).toBe(true);
-  });
-});
-
 describe('isAwaitingTricks', () => {
-  it('waits for the tricks of a missed entry that has none', () => {
-    expect(isAwaitingTricks(MADE, true)).toBe(true);
+  it('waits for the tricks of a bid marked missed that has none', () => {
+    expect(isAwaitingTricks(MISSED_WITHOUT_TRICKS)).toBe(true);
   });
 
   it('does not wait once the tricks are picked or the bid is made', () => {
-    expect(isAwaitingTricks({ ...MADE, tricks: 1 }, true)).toBe(false);
-    expect(isAwaitingTricks(MADE, false)).toBe(false);
+    expect(isAwaitingTricks({ ...MISSED_WITHOUT_TRICKS, tricks: 1 })).toBe(false);
+    expect(isAwaitingTricks(MADE)).toBe(false);
+    expect(isAwaitingTricks({ ...MADE, tricks: 1 })).toBe(false);
+  });
+});
+
+describe('selectMadeToggleEdit', () => {
+  it('marks a made bid missed at once, before any trick is picked', () => {
+    expect(selectMadeToggleEdit(MADE)).toStrictEqual({ isMissed: true });
+  });
+
+  it('marks a missed bid made again and clears its tricks', () => {
+    expect(selectMadeToggleEdit({ ...MISSED_WITHOUT_TRICKS, tricks: 1 })).toStrictEqual({
+      isMissed: false,
+      tricks: null,
+    });
+  });
+});
+
+describe('selectTricksCorrection', () => {
+  it('marks the bid missed with the tricks taken when they differ from the final bid', () => {
+    expect(selectTricksCorrection(1, 2)).toStrictEqual({ isMissed: true, tricks: 1 });
+  });
+
+  it('marks the bid made when the tricks equal the final bid', () => {
+    expect(selectTricksCorrection(2, 2)).toStrictEqual({ isMissed: false, tricks: null });
+  });
+});
+
+describe('selectBidToggle', () => {
+  it('sets a bid other than the one chosen', () => {
+    expect(selectBidToggle(1, 2)).toBe(1);
+  });
+
+  it('clears the bid when the chosen one is tapped again', () => {
+    expect(selectBidToggle(2, 2)).toBeNull();
   });
 });
 
@@ -99,44 +114,21 @@ describe('selectClosingMove', () => {
   });
 });
 
-describe('withMembership', () => {
-  it('adds a member', () => {
-    expect([...withMembership(new Set(['a']), 'b', true)]).toEqual(['a', 'b']);
-  });
-
-  it('removes a member', () => {
-    expect([...withMembership(new Set(['a', 'b']), 'a', false)]).toEqual(['b']);
-  });
-});
-
-describe('selectTricksWrite', () => {
-  it('writes the tricks taken when they differ from the bid', () => {
-    expect(selectTricksWrite(1, 2)).toBe(1);
-  });
-
-  it('writes nothing, which means made, when they equal the bid', () => {
-    expect(selectTricksWrite(2, 2)).toBeNull();
-  });
-});
-
 describe('selectRoundCheck', () => {
   const round: GameRound = {
     number: 3,
     cardCount: 3,
     isKrakenPlayed: false,
     isWhiteWhaleDiscard: false,
-    entries: [
-      { playerId: 'p1', bid: 2, bidAdjustment: 0, rascalBet: 0, tricks: null, bonuses: NO_BONUS },
-      { playerId: 'p2', bid: 0, bidAdjustment: 0, rascalBet: 0, tricks: 1, bonuses: NO_BONUS },
-    ],
+    entries: [MADE, { ...MADE, playerId: 'p2', bid: 0, isMissed: true, tricks: 1 }],
   };
 
   it('balances a round whose tricks add up to the cards dealt', () => {
-    expect(selectRoundCheck(round, 0)).toEqual({ counted: '3', expected: 3, isBalanced: true });
+    expect(selectRoundCheck(round)).toEqual({ counted: '3', expected: 3, isBalanced: true });
   });
 
   it('expects one trick fewer once the Kraken was played', () => {
-    expect(selectRoundCheck({ ...round, isKrakenPlayed: true }, 0)).toEqual({
+    expect(selectRoundCheck({ ...round, isKrakenPlayed: true })).toEqual({
       counted: '3',
       expected: 2,
       isBalanced: false,
@@ -145,11 +137,12 @@ describe('selectRoundCheck', () => {
 
   it('flags a round with a bid missing', () => {
     const missing = { ...round, entries: [{ ...MADE, bid: null }] };
-    expect(selectRoundCheck(missing, 0)).toEqual({ counted: '?', expected: 3, isBalanced: false });
+    expect(selectRoundCheck(missing)).toEqual({ counted: '?', expected: 3, isBalanced: false });
   });
 
-  it('does not balance while a missed player has no tricks yet', () => {
-    expect(selectRoundCheck(round, 1).isBalanced).toBe(false);
+  it('does not balance while a bid marked missed has no tricks yet', () => {
+    const awaiting = { ...round, entries: [MADE, { ...MISSED_WITHOUT_TRICKS, playerId: 'p2' }] };
+    expect(selectRoundCheck(awaiting)).toEqual({ counted: '?', expected: 3, isBalanced: false });
   });
 });
 
@@ -162,8 +155,8 @@ describe('selectRoundCheck with the White Whale', () => {
       isWhiteWhaleDiscard: true,
       entries: [{ ...MADE, bid: 2 }],
     };
-    expect(selectRoundCheck(round, 0)).toEqual({ counted: '2', expected: 2, isBalanced: true });
-    expect(selectRoundCheck({ ...round, isKrakenPlayed: true }, 0).expected).toBe(1);
+    expect(selectRoundCheck(round)).toEqual({ counted: '2', expected: 2, isBalanced: true });
+    expect(selectRoundCheck({ ...round, isKrakenPlayed: true }).expected).toBe(1);
   });
 });
 
@@ -199,10 +192,9 @@ describe('hasUnbalancedClosedRound', () => {
   });
 });
 
-describe('isEntryMissed with Harry the Giant', () => {
+describe('selectTricksCorrection with Harry the Giant', () => {
   it('compares the tricks with the adjusted bid', () => {
-    expect(isEntryMissed({ ...MADE, bidAdjustment: 1, tricks: 3 }, false)).toBe(false);
-    expect(isEntryMissed({ ...MADE, bidAdjustment: 1, tricks: 2 }, false)).toBe(true);
+    expect(selectTricksCorrection(3, 3)).toStrictEqual({ isMissed: false, tricks: null });
   });
 });
 
@@ -272,7 +264,9 @@ describe('formatRascalBadge', () => {
 
   it('shows the bet won on a made bid and lost on a missed one', () => {
     expect(formatRascalBadge({ ...MADE, rascalBet: 20 })).toBe('+20');
-    expect(formatRascalBadge({ ...MADE, rascalBet: 10, tricks: 0 })).toBe('\u221210');
+    expect(formatRascalBadge({ ...MADE, rascalBet: 10, isMissed: true, tricks: 0 })).toBe(
+      '\u221210',
+    );
   });
 });
 
@@ -292,6 +286,7 @@ describe('selectRoundEntries', () => {
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       },

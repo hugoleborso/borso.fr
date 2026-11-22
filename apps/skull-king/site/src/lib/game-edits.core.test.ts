@@ -30,8 +30,24 @@ function aGame(): GameView {
       isKrakenPlayed: false,
       isWhiteWhaleDiscard: false,
       entries: [
-        { playerId: 'p1', bid: 1, bidAdjustment: 0, rascalBet: 0, tricks: null, bonuses: NO_BONUS },
-        { playerId: 'p2', bid: 0, bidAdjustment: 0, rascalBet: 0, tricks: 1, bonuses: NO_BONUS },
+        {
+          playerId: 'p1',
+          bid: 1,
+          bidAdjustment: 0,
+          rascalBet: 0,
+          isMissed: false,
+          tricks: null,
+          bonuses: NO_BONUS,
+        },
+        {
+          playerId: 'p2',
+          bid: 0,
+          bidAdjustment: 0,
+          rascalBet: 0,
+          isMissed: true,
+          tricks: 1,
+          bonuses: NO_BONUS,
+        },
       ],
     })),
     revision: 4,
@@ -48,6 +64,7 @@ describe('applyEntryEdit', () => {
       bid: 2,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: false,
       tricks: null,
       bonuses: NO_BONUS,
     });
@@ -59,6 +76,14 @@ describe('applyEntryEdit', () => {
     const edited = applyEntryEdit(aGame(), 1, 'p2', { tricks: null, bid: null });
     expect(edited.rounds[0]?.entries[1]?.tricks).toBeNull();
     expect(edited.rounds[0]?.entries[1]?.bid).toBeNull();
+  });
+
+  it('shows a bid marked missed at once, and made again', () => {
+    const missed = applyEntryEdit(aGame(), 1, 'p1', { isMissed: true });
+    expect(missed.rounds[0]?.entries[0]?.isMissed).toBe(true);
+    const made = applyEntryEdit(missed, 1, 'p1', { isMissed: false, tricks: null });
+    expect(made.rounds[0]?.entries[0]?.isMissed).toBe(false);
+    expect(applyEntryEdit(missed, 1, 'p1', { bid: 1 }).rounds[0]?.entries[0]?.isMissed).toBe(true);
   });
 
   it('replaces the bonuses the edit carries', () => {
@@ -109,6 +134,7 @@ describe('applyPhaseEdit', () => {
           bid: null,
           bidAdjustment: 0,
           rascalBet: 0,
+          isMissed: false,
           tricks: null,
           bonuses: NO_BONUS,
         },
@@ -117,6 +143,7 @@ describe('applyPhaseEdit', () => {
           bid: null,
           bidAdjustment: 0,
           rascalBet: 0,
+          isMissed: false,
           tricks: null,
           bonuses: NO_BONUS,
         },

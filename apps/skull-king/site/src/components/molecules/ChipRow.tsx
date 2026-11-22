@@ -1,4 +1,9 @@
-import { listChipValues, selectChipColumns, selectChipState } from '@site/lib/chip-layout.core';
+import {
+  listChipValues,
+  MOST_CHIPS_ON_ONE_LINE,
+  selectChipColumns,
+  selectChipState,
+} from '@site/lib/chip-layout.core';
 import { NumberChip } from '../atoms/NumberChip';
 
 export interface ChipRowProps {
@@ -20,7 +25,7 @@ export function ChipRow(props: ChipRowProps) {
       aria-label={props.label}
       className="grid min-w-0 flex-1 gap-1.5"
       style={{
-        gridTemplateColumns: `repeat(${selectChipColumns(values.length)}, minmax(0, 3rem))`,
+        gridTemplateColumns: `repeat(${selectChipColumns(values.length, MOST_CHIPS_ON_ONE_LINE[props.surface])}, minmax(2.75rem, 3rem))`,
       }}
     >
       {values.map((value) => (

@@ -107,6 +107,7 @@
     "player-not-found": "That player is not in this game.",
     "round-not-played": "That round has not been played yet.",
     "value-out-of-range": "That number is not possible this round.",
+    "game-not-created": "The game could not be created. Check the players and try again.",
     "unexpected-failure": "Something went overboard. Try again.",
     "reload": "Reload",
     "bids-missing": "Every player needs a bid first.",

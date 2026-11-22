@@ -15,6 +15,7 @@ export interface EntryEdit {
   readonly bid?: number | null;
   readonly bidAdjustment?: BidAdjustment;
   readonly rascalBet?: RascalBet;
+  readonly isMissed?: boolean;
   readonly tricks?: number | null;
   readonly bonuses?: BonusCounts;
 }
@@ -31,6 +32,7 @@ function editEntry(entry: GameEntry, edit: EntryEdit): GameEntry {
     bid: edit.bid === undefined ? entry.bid : edit.bid,
     bidAdjustment: edit.bidAdjustment ?? entry.bidAdjustment,
     rascalBet: edit.rascalBet ?? entry.rascalBet,
+    isMissed: edit.isMissed ?? entry.isMissed,
     tricks: edit.tricks === undefined ? entry.tricks : edit.tricks,
     bonuses: edit.bonuses ?? entry.bonuses,
   };
@@ -91,6 +93,7 @@ function openRound(game: GameView, roundNumber: number): GameRound {
       bid: null,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: false,
       tricks: null,
       bonuses: NO_BONUS,
     })),

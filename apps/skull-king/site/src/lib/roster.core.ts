@@ -116,3 +116,16 @@ export function withAccountFirst(
   if (account === null) return table;
   return [account, ...table.filter((player) => !isSameName(player.name, account.name))];
 }
+
+export interface SeatToCreate extends RosterPlayer {
+  readonly isMe?: true;
+}
+
+export function selectSeatsToCreate(
+  table: readonly RosterPlayer[],
+  isFirstSeatMine: boolean,
+): readonly SeatToCreate[] {
+  return table.map(({ name, icon, color }, seat) =>
+    isFirstSeatMine && seat === 0 ? { name, icon, color, isMe: true } : { name, icon, color },
+  );
+}

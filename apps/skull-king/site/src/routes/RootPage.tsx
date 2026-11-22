@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -5,9 +6,12 @@ import {
   GAME_PARAMETER,
   readGameCode,
   readSideView,
+  isWatchMoved,
+  type RematchWatch,
   selectGameScreen,
   type SideView,
   VIEW_PARAMETER,
+  watchRematch,
 } from '@site/lib/game-address.core';
 import { useGameSocket } from '@site/lib/game-socket.hook';
 import { useConfig, useGame } from '@site/lib/queries/game.queries';
@@ -29,6 +33,7 @@ export function RootPage() {
   const joinCode = readGameCode(searchParams.get(GAME_PARAMETER)) ?? '';
   const view = readSideView(searchParams.get(VIEW_PARAMETER));
 
+  const [rematchWatch, setRematchWatch] = useState<RematchWatch | null>(null);
   const config = useConfig();
   const gameQuery = useGame(joinCode);
   useGameSocket(config.data?.websocketUrl ?? null, joinCode);
@@ -64,8 +69,10 @@ export function RootPage() {
     );
   }
 
-  const rematchJoinCode = game.rematchJoinCode ?? null;
-  if (rematchJoinCode !== null) return <Navigate to={buildGameSearch(rematchJoinCode, 'invite')} />;
+  const watched = watchRematch(rematchWatch, game.joinCode, game.rematchJoinCode ?? null);
+  const isMoved = isWatchMoved(rematchWatch, watched);
+  if (isMoved) setRematchWatch(watched);
+  if (watched.follow !== null) return <Navigate to={buildGameSearch(watched.follow, 'invite')} />;
 
   const screen = selectGameScreen(game.phase, view);
   if (screen === 'invite') {
@@ -93,6 +100,9 @@ export function RootPage() {
       <ScoringScreen
         key={game.currentRound}
         game={game}
+        onScores={() => {
+          show(joinCode, 'scores');
+        }}
         onRoundClosed={() => {
           show(joinCode, 'scores');
         }}

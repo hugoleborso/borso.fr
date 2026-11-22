@@ -22,9 +22,12 @@ const entry = (
   bid,
   bidAdjustment,
   rascalBet,
+  isMissed: tricks !== null,
   tricks,
   bonuses: NO_BONUS,
 });
+
+const missedWithoutTricks = (bid: number) => ({ ...entry(bid), isMissed: true });
 
 // @FollowsBlueprint test-pure-unit
 describe('selectCardCount', () => {
@@ -52,6 +55,12 @@ describe('selectExpectedTricks', () => {
 describe('tallyTricks', () => {
   it('waits while a bid or a missed count is unknown', () => {
     expect(tallyTricks([entry(1), entry(null)], 2, NO_DISCARD)).toEqual({ kind: 'incomplete' });
+  });
+
+  it('waits while a bid marked missed has no tricks yet, so the round cannot close', () => {
+    const tally = tallyTricks([entry(1), missedWithoutTricks(1)], 2, NO_DISCARD);
+    expect(tally).toEqual({ kind: 'incomplete' });
+    expect(canCloseRound(tally)).toBe(false);
   });
 
   it('balances when every trick of the deal is accounted for', () => {

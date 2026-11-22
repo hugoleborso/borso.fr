@@ -317,7 +317,7 @@ describe('passkey accounts, end to end', () => {
     await request('POST', `/api/games/${created.joinCode}/players/${hugo}/claim`, undefined, {
       cookie,
     });
-    await writeEntry(created.joinCode, 1, hugo, { bid: 1, tricks: 0 });
+    await writeEntry(created.joinCode, 1, hugo, { bid: 1, isMissed: true, tricks: 0 });
     await writeEntry(created.joinCode, 1, seatId(created, 1), { bid: 0 });
     const openedLater = await createAGame();
     const unseen = await createAGame();
@@ -350,6 +350,38 @@ describe('passkey accounts, end to end', () => {
 
     expect(finished?.phase).toBe('finished');
     expect(finished?.winnerSeats).toEqual([0]);
+  });
+
+  it('links the seat a signed-in creator marks as theirs to their account, and no other', async () => {
+    const { response, cookie } = await register('credential-1');
+    const [hugo, ...others] = TABLE_OF_FOUR;
+    const created = await request(
+      'POST',
+      '/api/games',
+      { players: [{ ...hugo, isMe: true }, ...others] },
+      { cookie },
+    );
+    const game = await readGameEnvelope(created);
+
+    expect(created.status).toBe(201);
+    expect(game.players.map((player) => player.accountId)).toEqual([
+      (await readAccount(response))?.id,
+      null,
+      null,
+      null,
+    ]);
+    expect((await readMyGames(cookie))[0]?.myRank).toBe(1);
+  });
+
+  it('creates a guest game with a seat marked as theirs and links nobody', async () => {
+    const [hugo, ...others] = TABLE_OF_FOUR;
+    const created = await request('POST', '/api/games', {
+      players: [{ ...hugo, isMe: true }, ...others],
+    });
+    const game = await readGameEnvelope(created);
+
+    expect(created.status).toBe(201);
+    expect(game.players.map((player) => player.accountId)).toEqual([null, null, null, null]);
   });
 
   it('links a seat to the account, and refuses a seat another account holds', async () => {

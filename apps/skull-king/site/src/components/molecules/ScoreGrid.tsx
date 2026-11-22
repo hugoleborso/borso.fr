@@ -25,7 +25,7 @@ const ROUND_COLUMN_ID = 'round';
 
 function RoundNumberCell({ round }: { readonly round: GameRound }) {
   const { t } = useTranslation();
-  const check = selectRoundCheck(round, 0);
+  const check = selectRoundCheck(round);
   return (
     <span
       aria-label={t('scores.roundCheck', {

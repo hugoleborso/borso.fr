@@ -20,7 +20,6 @@ export interface ResultCardProps {
   readonly player: GamePlayer;
   readonly entry: GameEntry;
   readonly cardCount: number;
-  readonly isMissed: boolean;
   readonly isHarryLocked: boolean;
   readonly isRascalLocked: boolean;
   readonly onToggle: () => void;
@@ -33,8 +32,9 @@ export interface ResultCardProps {
 // @FollowsBlueprint organism-presentational
 export function ResultCard(props: ResultCardProps) {
   const { t } = useTranslation();
-  const { player, entry, cardCount, isMissed } = props;
-  const isAwaiting = isAwaitingTricks(entry, isMissed);
+  const { player, entry, cardCount } = props;
+  const { isMissed } = entry;
+  const isAwaiting = isAwaitingTricks(entry);
   const points = isAwaiting ? null : scoreEntry(entry, cardCount);
   const bidLabel = entry.bid === null ? t('scoring.noBid') : t('scoring.bid', { bid: entry.bid });
 

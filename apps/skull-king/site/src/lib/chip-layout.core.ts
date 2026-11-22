@@ -1,6 +1,3 @@
-const MOST_CHIPS_ON_ONE_LINE = 9;
-const LINES_WHEN_WRAPPED = 2;
-
 export type ChipState = 'idle' | 'raised' | 'chosen' | 'missed' | 'blocked';
 
 export interface ChipStyle {
@@ -10,11 +7,15 @@ export interface ChipStyle {
   readonly surface: 'ground' | 'card';
 }
 
+export const MOST_CHIPS_ON_ONE_LINE: Readonly<Record<ChipStyle['surface'], number>> = {
+  ground: 5,
+  card: 6,
+};
+
 // @FollowsBlueprint utils-pure-module
-export function selectChipColumns(chipCount: number): number {
-  return chipCount <= MOST_CHIPS_ON_ONE_LINE
-    ? chipCount
-    : Math.ceil(chipCount / LINES_WHEN_WRAPPED);
+export function selectChipColumns(chipCount: number, mostOnOneLine: number): number {
+  const lines = Math.ceil(chipCount / mostOnOneLine);
+  return Math.ceil(chipCount / lines);
 }
 
 export function listChipValues(highest: number): readonly number[] {

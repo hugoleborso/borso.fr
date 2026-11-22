@@ -4,6 +4,7 @@ import {
   buildGameView,
   type BuildGameViewInput,
   readBidAdjustment,
+  isStoredMissed,
   readRascalBet,
 } from './game-view.core';
 
@@ -87,6 +88,7 @@ describe('buildGameView', () => {
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       },
@@ -95,6 +97,7 @@ describe('buildGameView', () => {
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       },
@@ -115,6 +118,7 @@ describe('buildGameView', () => {
             bid: 1,
             bidAdjustment: -1,
             rascalBet: 20,
+            isMissed: true,
             tricks: 0,
             ...NO_BONUS,
             loot: 1,
@@ -133,6 +137,7 @@ describe('buildGameView', () => {
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       },
@@ -141,6 +146,7 @@ describe('buildGameView', () => {
         bid: 1,
         bidAdjustment: -1,
         rascalBet: 20,
+        isMissed: true,
         tricks: 0,
         bonuses: { ...NO_BONUS, loot: 1 },
       },
@@ -157,6 +163,7 @@ describe('buildGameView', () => {
             bid: 2,
             bidAdjustment: null,
             rascalBet: null,
+            isMissed: null,
             tricks: null,
             ...NO_BONUS,
           },
@@ -174,6 +181,14 @@ describe('readBidAdjustment', () => {
     expect(readBidAdjustment(-1)).toBe(-1);
     expect(readBidAdjustment(null)).toBe(0);
     expect(readBidAdjustment(2)).toBe(0);
+  });
+});
+
+describe('isStoredMissed', () => {
+  it('reads a stored mark, and a row written before the column existed as made', () => {
+    expect(isStoredMissed(true)).toBe(true);
+    expect(isStoredMissed(false)).toBe(false);
+    expect(isStoredMissed(null)).toBe(false);
   });
 });
 

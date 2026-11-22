@@ -107,6 +107,7 @@
     "player-not-found": "Ce joueur n'est pas dans la partie.",
     "round-not-played": "Cette manche n'a pas encore été jouée.",
     "value-out-of-range": "Ce nombre n'est pas possible dans cette manche.",
+    "game-not-created": "La partie n’a pas pu être créée. Vérifie les joueurs et réessaie.",
     "unexpected-failure": "Quelque chose est passé par-dessus bord. Réessaie.",
     "reload": "Recharger",
     "bids-missing": "Il manque une annonce.",

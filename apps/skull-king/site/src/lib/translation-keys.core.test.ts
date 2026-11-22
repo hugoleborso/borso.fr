@@ -3,7 +3,13 @@ import { BONUS_KINDS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import en from '../i18n/en.json';
 import { DISPLAYED_ERROR_CODES } from './error-codes.core';
-import { BONUS_KEYS, COLOR_KEYS, ICON_KEYS, selectErrorKey } from './translation-keys.core';
+import {
+  BONUS_KEYS,
+  COLOR_KEYS,
+  ICON_KEYS,
+  selectCreateErrorKey,
+  selectErrorKey,
+} from './translation-keys.core';
 
 function readKey(catalogue: unknown, key: string): unknown {
   return key.split('.').reduce<unknown>((node, segment) => {
@@ -39,5 +45,18 @@ describe('selectErrorKey', () => {
 
   it('keeps the key of a code it knows', () => {
     expect(selectErrorKey('game-not-found')).toBe('errors.game-not-found');
+  });
+});
+
+describe('selectCreateErrorKey', () => {
+  it('says the game was not created, never that a number is out of range, when the table is refused', () => {
+    const key = selectCreateErrorKey('value-out-of-range');
+    expect(key).toBe('errors.game-not-created');
+    expect(typeof readKey(en, key)).toBe('string');
+  });
+
+  it('keeps the sentence of every other code', () => {
+    expect(selectCreateErrorKey('unexpected-failure')).toBe('errors.unexpected-failure');
+    expect(selectCreateErrorKey('session-required')).toBe('errors.session-required');
   });
 });

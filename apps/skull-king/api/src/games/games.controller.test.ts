@@ -42,7 +42,7 @@ describe('a game of Skull King, end to end', () => {
     const game = await readGameEnvelope(response);
 
     expect(response.status).toBe(201);
-    expect(game.joinCode).toMatch(/^[A-Z0-9]{4}$/u);
+    expect(game.joinCode).toMatch(/^[A-HJ-NP-Z]{4}$/u);
     expect(game.phase).toBe('bidding');
     expect(game.currentRound).toBe(1);
     expect(game.players.map((player) => [player.seat, player.name, player.icon])).toEqual([
@@ -66,6 +66,7 @@ describe('a game of Skull King, end to end', () => {
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       })),
@@ -109,6 +110,7 @@ describe('a game of Skull King, end to end', () => {
       bid: 2,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: false,
       tricks: null,
       bonuses: { ...NO_BONUS, loot: 1 },
     });
@@ -123,12 +125,13 @@ describe('a game of Skull King, end to end', () => {
     const written = await readGameEnvelope(
       await writeEntry(created.joinCode, 2, max, {
         bid: 1,
+        isMissed: true,
         tricks: 2,
         bonuses: { standardFourteen: 3, skullKingByMermaid: 1 },
       }),
     );
     const cleared = await readGameEnvelope(
-      await writeEntry(created.joinCode, 2, max, { tricks: null, bonuses: null }),
+      await writeEntry(created.joinCode, 2, max, { isMissed: false, tricks: null, bonuses: null }),
     );
 
     expect(entryOf(written, 2, max)).toEqual({
@@ -136,6 +139,7 @@ describe('a game of Skull King, end to end', () => {
       bid: 1,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: true,
       tricks: 2,
       bonuses: { ...NO_BONUS, standardFourteen: 3, skullKingByMermaid: 1 },
     });
@@ -144,6 +148,7 @@ describe('a game of Skull King, end to end', () => {
       bid: 1,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: false,
       tricks: null,
       bonuses: NO_BONUS,
     });
@@ -266,6 +271,30 @@ describe('a game of Skull King, end to end', () => {
     expect(back.status).toBe(200);
   });
 
+  it('stores a bid marked missed at once, and keeps the round open until its tricks are in', async () => {
+    const created = await createAGame();
+    const scoring = await reachRound(created, 1, 'scoring');
+    const hugo = seatId(scoring, 0);
+    const madeBid = entryOf(scoring, 1, hugo).bid ?? 0;
+
+    const marked = await readGameEnvelope(
+      await writeEntry(created.joinCode, 1, hugo, { isMissed: true }),
+    );
+    const reread = await readGameView(created.joinCode);
+    const blocked = await movePhase(created.joinCode, 2, 'bidding');
+    const madeAgain = await readGameEnvelope(
+      await writeEntry(created.joinCode, 1, hugo, { isMissed: false, tricks: null }),
+    );
+    const opened = await movePhase(created.joinCode, 2, 'bidding');
+
+    expect(entryOf(marked, 1, hugo)).toMatchObject({ isMissed: true, tricks: null });
+    expect(entryOf(reread, 1, hugo).isMissed).toBe(true);
+    expect(blocked.status).toBe(409);
+    expect(await readError(blocked)).toBe('tricks-unbalanced');
+    expect(entryOf(madeAgain, 1, hugo)).toMatchObject({ bid: madeBid, isMissed: false });
+    expect(opened.status).toBe(200);
+  });
+
   it('expects one trick fewer for the kraken and for a white whale discard', async () => {
     const created = await createAGame();
     for (const player of created.players) {
@@ -296,7 +325,7 @@ describe('a game of Skull King, end to end', () => {
   it('refuses to finish while a corrected earlier round no longer balances', async () => {
     const created = await createAGame();
     const lastRound = await reachRound(created, 10, 'scoring');
-    await writeEntry(created.joinCode, 3, seatId(lastRound, 1), { tricks: 2 });
+    await writeEntry(created.joinCode, 3, seatId(lastRound, 1), { isMissed: true, tricks: 2 });
 
     const response = await movePhase(created.joinCode, 10, 'finished');
 
@@ -509,7 +538,8 @@ describe('two phones writing one game at the same instant', () => {
 
     const [correction, move] = await runWritersWhileHeld(
       holdGameRow(created.joinCode),
-      async () => await writeEntry(created.joinCode, 1, seatId(scoring, 0), { tricks: 0 }),
+      async () =>
+        await writeEntry(created.joinCode, 1, seatId(scoring, 0), { isMissed: true, tricks: 0 }),
       async () => await movePhase(created.joinCode, 2, 'bidding'),
     );
     const game = await readGameView(created.joinCode);

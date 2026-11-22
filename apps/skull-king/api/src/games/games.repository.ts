@@ -136,6 +136,7 @@ export async function upsertRoundEntry(
       bid: null,
       bidAdjustment: 0,
       rascalBet: 0,
+      isMissed: false,
       tricks: null,
       ...NO_BONUS,
       ...changes,

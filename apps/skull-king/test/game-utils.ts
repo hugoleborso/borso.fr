@@ -47,6 +47,7 @@ export const gameViewSchema = z
                 bid: z.number().nullable(),
                 bidAdjustment: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
                 rascalBet: z.union([z.literal(0), z.literal(10), z.literal(20)]),
+                isMissed: z.boolean(),
                 tricks: z.number().nullable(),
                 bonuses: bonusesSchema,
               })

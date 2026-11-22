@@ -43,6 +43,13 @@
       "when": 1795375785043,
       "tag": "0005_game_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795379317176,
+      "tag": "0006_missed_bid",
+      "breakpoints": true
     }
   ]
 }

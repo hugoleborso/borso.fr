@@ -1,7 +1,13 @@
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import { type RoundPhase, selectCardCount } from '@domain/round.core';
 import { scoreEntry } from '@domain/scoring.core';
-import { type EntryFacts, readBidAdjustment, readBonuses, readRascalBet } from './game-view.core';
+import {
+  type EntryFacts,
+  readBidAdjustment,
+  readBonuses,
+  isStoredMissed,
+  readRascalBet,
+} from './game-view.core';
 
 export interface MyGamePlayerFacts {
   readonly id: string;
@@ -50,6 +56,7 @@ function sumPoints(game: MyGameFacts, playerId: string): number {
           bid: entry.bid,
           bidAdjustment: readBidAdjustment(entry.bidAdjustment),
           rascalBet: readRascalBet(entry.rascalBet),
+          isMissed: isStoredMissed(entry.isMissed),
           tricks: entry.tricks,
           bonuses: readBonuses(entry),
         },

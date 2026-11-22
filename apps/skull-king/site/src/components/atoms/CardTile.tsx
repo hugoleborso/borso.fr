@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-const WIDTHS = { regular: 'w-12', small: 'w-10' } as const;
+const WIDTHS = { regular: 'w-12', small: 'w-11' } as const;
 
 export interface CardTileProps {
   readonly source: string;

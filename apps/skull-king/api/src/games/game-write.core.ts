@@ -1,4 +1,5 @@
 import type { GameErrorCode } from '@domain/game-error.core';
+import type { PlayerMark } from '@domain/player-mark.core';
 import {
   canCloseRound,
   isBidAdjustedOnce,
@@ -35,6 +36,7 @@ export interface EntryChangesInput {
   readonly bid?: number | null | undefined;
   readonly bidAdjustment?: BidAdjustment | null | undefined;
   readonly rascalBet?: RascalBet | null | undefined;
+  readonly isMissed?: boolean | undefined;
   readonly tricks?: number | null | undefined;
   readonly bonuses?: Partial<BonusCounts> | null | undefined;
 }
@@ -43,6 +45,7 @@ export interface EntryChanges extends Partial<BonusCounts> {
   readonly bid?: number | null;
   readonly bidAdjustment?: BidAdjustment;
   readonly rascalBet?: RascalBet;
+  readonly isMissed?: boolean;
   readonly tricks?: number | null;
 }
 
@@ -97,9 +100,34 @@ export function selectEntryChanges(input: EntryChangesInput): EntryChanges {
     ...(input.bid === undefined ? {} : { bid: input.bid }),
     ...(input.bidAdjustment === undefined ? {} : { bidAdjustment: input.bidAdjustment ?? 0 }),
     ...(input.rascalBet === undefined ? {} : { rascalBet: input.rascalBet ?? 0 }),
+    ...(input.isMissed === undefined ? {} : { isMissed: input.isMissed }),
     ...(input.tricks === undefined ? {} : { tricks: input.tricks }),
     ...selectBonusChanges(input.bonuses),
   };
+}
+
+export interface SeatToCreate extends PlayerMark {
+  readonly name: string;
+  readonly isMe?: boolean | undefined;
+}
+
+export interface CreatedSeat extends PlayerMark {
+  readonly seat: number;
+  readonly name: string;
+  readonly accountId: string | null;
+}
+
+export function seatTable(
+  players: readonly SeatToCreate[],
+  accountId: string | null,
+): readonly CreatedSeat[] {
+  return players.map(({ name, icon, color, isMe }, seat) => ({
+    seat,
+    name,
+    icon,
+    color,
+    accountId: isMe === true ? accountId : null,
+  }));
 }
 
 export interface ClaimableSeat {

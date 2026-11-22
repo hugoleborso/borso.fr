@@ -57,11 +57,11 @@ async function seedMidGame(sql: postgres.Sql, now: Date): Promise<void> {
     for (const [seat, entry] of entries.entries()) {
       if (entry === null) continue;
       const bonuses = { ...NO_BONUS, ...entry.bonuses };
-      await sql`INSERT INTO round_entry (game_id, round_number, player_id, bid, tricks,
-        standard_fourteen, black_fourteen, mermaid_by_pirate, pirate_by_skull_king,
+      await sql`INSERT INTO round_entry (game_id, round_number, player_id, bid, is_missed,
+        tricks, standard_fourteen, black_fourteen, mermaid_by_pirate, pirate_by_skull_king,
         skull_king_by_mermaid, loot, updated_at)
         VALUES (${gameId}, ${roundNumber}, ${playerIds[seat] ?? ''}, ${entry.bid},
-        ${entry.tricks ?? null}, ${bonuses.standardFourteen}, ${bonuses.blackFourteen},
+        ${entry.tricks !== undefined}, ${entry.tricks ?? null}, ${bonuses.standardFourteen}, ${bonuses.blackFourteen},
         ${bonuses.mermaidByPirate}, ${bonuses.pirateBySkullKing}, ${bonuses.skullKingByMermaid},
         ${bonuses.loot}, ${now})`;
     }

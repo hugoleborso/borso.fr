@@ -16,6 +16,7 @@ const entry = (
   bid,
   bidAdjustment: null,
   rascalBet: null,
+  isMissed: tricks === null ? null : true,
   tricks,
   ...NO_BONUS,
 });

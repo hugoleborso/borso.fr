@@ -39,6 +39,7 @@ function aGame(
           bid: bids[seat] ?? null,
           bidAdjustment: 0,
           rascalBet: 0,
+          isMissed: false,
           tricks: null,
           bonuses: NO_BONUS,
         })),

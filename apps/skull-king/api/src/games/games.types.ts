@@ -16,6 +16,7 @@ export interface EntryView {
   readonly bid: number | null;
   readonly bidAdjustment: BidAdjustment;
   readonly rascalBet: RascalBet;
+  readonly isMissed: boolean;
   readonly tricks: number | null;
   readonly bonuses: BonusCounts;
 }

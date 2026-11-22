@@ -35,3 +35,10 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-22 19:46] `fix-round-1` A PreToolUse hook that refuses a chained Bash command also drops the file edit chained before it, and the refusal reads like a test-runner hint, so an edit can silently never happen.
 - [2026-11-22 19:46] `fix-round-1` Every back-e2e request prints a wide-event JSON line to stdout, so a race test's failure is buried under hundreds of log lines unless the run is grepped.
 - [2026-11-22 19:57] `fix-round-1` Stryker's incremental file kept a Survived verdict for a mutant whose line was unchanged though the code around it changed, so a killed mutant kept failing the gate until its test file moved.
+- [2026-11-22 20:14] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-22 20:25] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-22 20:25] `visual-validator` agent-browser has no WebAuthn virtual-authenticator command, so checking a passkey flow needed a hand-written CDP script held open in the background
+- [2026-11-22 20:25] `visual-validator` agent-browser eval shares one global scope across calls, so a second top-level const in a loop failed with 'Identifier already declared' and silently skipped bid taps
+- [2026-11-22 20:27] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
+- [2026-11-22 20:40] `fix-visual` agent-browser has no command for a WebAuthn virtual authenticator, so checking a signed-in screen needs a hand-written playwright-core script that holds a CDP session on the agent-browser page while agent-browser drives it
+- [2026-11-22 20:40] `fix-visual` the visual report found six spec breaks that no test held (a missed toggle kept as local draft, digits in join codes, chips under 44 px), because no gate measures tap target size or reads the spec's data shape against the alphabet

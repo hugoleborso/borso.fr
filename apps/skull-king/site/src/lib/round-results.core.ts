@@ -9,6 +9,7 @@ import {
   tallyTricks,
   type TrickTally,
 } from '@domain/round.core';
+import type { EntryEdit } from './game-edits.core';
 import type { GameEntry, GameRound, GameView } from './game-view.core';
 
 export interface TallyDisplay {
@@ -23,20 +24,21 @@ export interface RoundCheck extends TallyDisplay {
 const UNKNOWN_COUNT = '?';
 
 // @FollowsBlueprint utils-pure-module
-export function selectTallyDisplay(tally: TrickTally, awaitingCount: number): TallyDisplay {
+export function selectTallyDisplay(tally: TrickTally): TallyDisplay {
   if (tally.kind === 'incomplete') return { counted: UNKNOWN_COUNT, isBalanced: false };
-  return {
-    counted: String(tally.counted),
-    isBalanced: canCloseRound(tally) && awaitingCount === 0,
-  };
+  return { counted: String(tally.counted), isBalanced: canCloseRound(tally) };
 }
 
-export function isEntryMissed(entry: GameEntry, isAwaitingTricks: boolean): boolean {
-  return isAwaitingTricks || (entry.tricks !== null && entry.tricks !== selectFinalBid(entry));
+export function isAwaitingTricks(entry: GameEntry): boolean {
+  return entry.isMissed && entry.tricks === null;
 }
 
-export function isAwaitingTricks(entry: GameEntry, isMissed: boolean): boolean {
-  return isMissed && entry.tricks === null;
+export function selectMadeToggleEdit(entry: GameEntry): EntryEdit {
+  return entry.isMissed ? { isMissed: false, tricks: null } : { isMissed: true };
+}
+
+export function selectTricksCorrection(value: number, finalBid: number | null): EntryEdit {
+  return value === finalBid ? { isMissed: false, tricks: null } : { isMissed: true, tricks: value };
 }
 
 export function selectClosingMove(roundNumber: number): {
@@ -48,32 +50,21 @@ export function selectClosingMove(roundNumber: number): {
     : { round: roundNumber, phase: 'finished' };
 }
 
-export function withMembership(
-  members: ReadonlySet<string>,
-  member: string,
-  isMember: boolean,
-): ReadonlySet<string> {
-  const next = new Set(members);
-  if (isMember) next.add(member);
-  else next.delete(member);
-  return next;
-}
-
-export function selectTricksWrite(value: number, bid: number | null): number | null {
+export function selectBidToggle(value: number, bid: number | null): number | null {
   return value === bid ? null : value;
 }
 
-export function selectRoundCheck(round: GameRound, awaitingCount: number): RoundCheck {
+export function selectRoundCheck(round: GameRound): RoundCheck {
   const tally = tallyTricks(round.entries, round.cardCount, round);
   return {
-    ...selectTallyDisplay(tally, awaitingCount),
+    ...selectTallyDisplay(tally),
     expected: selectExpectedTricks(round.cardCount, round),
   };
 }
 
 export function hasUnbalancedClosedRound(game: GameView): boolean {
   return game.rounds.some(
-    (round) => round.number < game.currentRound && !selectRoundCheck(round, 0).isBalanced,
+    (round) => round.number < game.currentRound && !selectRoundCheck(round).isBalanced,
   );
 }
 
@@ -130,6 +121,7 @@ export function selectRoundEntries(
         bid: null,
         bidAdjustment: 0,
         rascalBet: 0,
+        isMissed: false,
         tricks: null,
         bonuses: NO_BONUS,
       },

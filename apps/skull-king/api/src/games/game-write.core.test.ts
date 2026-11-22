@@ -7,6 +7,7 @@ import {
   refuseRoundWrite,
   type RoundEntryFacts,
   decideSeatClaim,
+  seatTable,
   selectEntryChanges,
 } from './game-write.core';
 
@@ -20,6 +21,7 @@ const entryOf = (
   bid: null,
   bidAdjustment: 0,
   rascalBet: 0,
+  isMissed: false,
   tricks: null,
   bonuses: NO_BONUS,
   ...abilities,
@@ -182,6 +184,14 @@ describe('selectEntryChanges', () => {
     expect(selectEntryChanges({ bid: 2, tricks: null })).toStrictEqual({ bid: 2, tricks: null });
   });
 
+  it('keeps a missed or made mark when one is given', () => {
+    expect(selectEntryChanges({ isMissed: true })).toStrictEqual({ isMissed: true });
+    expect(selectEntryChanges({ isMissed: false, tricks: null })).toStrictEqual({
+      isMissed: false,
+      tricks: null,
+    });
+  });
+
   it('changes only the bonus kinds given', () => {
     expect(selectEntryChanges({ bonuses: { loot: 1 } })).toStrictEqual({ loot: 1 });
   });
@@ -205,9 +215,12 @@ const made = (bid: number | null, tricks: number | null = null) => ({
   bid,
   bidAdjustment: 0 as const,
   rascalBet: 0 as const,
+  isMissed: tricks !== null,
   tricks,
   bonuses: NO_BONUS,
 });
+
+const missedWithoutTricks = (bid: number) => ({ ...made(bid), isMissed: true });
 
 const round = (number: number, entries: PlayedRound['entries'], discards = {}): PlayedRound => ({
   number,
@@ -273,6 +286,16 @@ describe('refusePhaseMove', () => {
         current: { round: 2, phase: 'scoring' },
         target: { round: 3, phase: 'bidding' },
         rounds: [BALANCED_FIRST, UNBALANCED_SECOND],
+      }),
+    ).toBe('tricks-unbalanced');
+  });
+
+  it('refuses the next round while a bid marked missed has no tricks yet', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'scoring' },
+        target: { round: 3, phase: 'bidding' },
+        rounds: [BALANCED_FIRST, round(2, [made(2), missedWithoutTricks(0)])],
       }),
     ).toBe('tricks-unbalanced');
   });
@@ -411,5 +434,34 @@ describe('decideSeatClaim', () => {
       refusal: 'player-not-found',
       isLinking: false,
     });
+  });
+});
+
+describe('seatTable', () => {
+  const ACCOUNT = 'account-1';
+  const anna = { name: 'Anna', icon: 'skull', color: 'gold' } as const;
+  const bob = { name: 'Bob', icon: 'parrot', color: 'lagoon' } as const;
+
+  it('seats the players in the order sent, from seat 0, with their marks', () => {
+    expect(seatTable([anna, bob], null)).toStrictEqual([
+      { seat: 0, name: 'Anna', icon: 'skull', color: 'gold', accountId: null },
+      { seat: 1, name: 'Bob', icon: 'parrot', color: 'lagoon', accountId: null },
+    ]);
+  });
+
+  it('links the seat marked as the creator to the signed-in account, and no other', () => {
+    const seats = seatTable(
+      [
+        { ...anna, isMe: true },
+        { ...bob, isMe: false },
+      ],
+      ACCOUNT,
+    );
+    expect(seats.map((seat) => seat.accountId)).toStrictEqual([ACCOUNT, null]);
+  });
+
+  it('links nothing for a guest, even on the seat marked as the creator', () => {
+    const seats = seatTable([{ ...anna, isMe: true }, bob], null);
+    expect(seats.map((seat) => seat.accountId)).toStrictEqual([null, null]);
   });
 });

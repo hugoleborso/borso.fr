@@ -4,7 +4,9 @@ import {
   buildInvitationUrl,
   readGameCode,
   readSideView,
+  isWatchMoved,
   selectGameScreen,
+  watchRematch,
 } from './game-address.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -72,5 +74,42 @@ describe('buildInvitationUrl', () => {
     expect(buildInvitationUrl('http://localhost:5178', 'BRIG')).toBe(
       'http://localhost:5178/?game=BRIG',
     );
+  });
+});
+
+describe('watchRematch', () => {
+  it('opens a finished game that already has a rematch on that game, not the rematch', () => {
+    expect(watchRematch(null, 'SGRN', 'VZJR')).toStrictEqual({
+      joinCode: 'SGRN',
+      rematchJoinCode: 'VZJR',
+      follow: null,
+    });
+  });
+
+  it('follows a rematch another phone starts while this game is on screen', () => {
+    const before = watchRematch(null, 'SGRN', null);
+    expect(watchRematch(before, 'SGRN', 'VZJR').follow).toBe('VZJR');
+  });
+
+  it('keeps following once it decided to, until the address moves', () => {
+    const started = watchRematch(watchRematch(null, 'SGRN', null), 'SGRN', 'VZJR');
+    expect(watchRematch(started, 'SGRN', 'VZJR')).toBe(started);
+    expect(watchRematch(started, 'SGRN', 'KRAK').follow).toBe('VZJR');
+  });
+
+  it('starts over, following nothing, for another game', () => {
+    const started = watchRematch(watchRematch(null, 'SGRN', null), 'SGRN', 'VZJR');
+    expect(watchRematch(started, 'VZJR', null)).toStrictEqual({
+      joinCode: 'VZJR',
+      rematchJoinCode: null,
+      follow: null,
+    });
+  });
+
+  it('answers the same watch while nothing changed, so the screen renders once', () => {
+    const watching = watchRematch(null, 'SGRN', null);
+    expect(watchRematch(watching, 'SGRN', null)).toBe(watching);
+    expect(isWatchMoved(watching, watchRematch(watching, 'SGRN', null))).toBe(false);
+    expect(isWatchMoved(null, watching)).toBe(true);
   });
 });

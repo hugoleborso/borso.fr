@@ -9,6 +9,7 @@ import {
   refusePhaseMove,
   refuseRoundWrite,
   decideSeatClaim,
+  seatTable,
   selectEntryChanges,
 } from './game-write.core';
 import type {
@@ -138,7 +139,7 @@ async function insertGameWithFreeCode(
 }
 
 export async function createGame(input: CreateGameInput, visit: Visit): Promise<GameView> {
-  const players = input.players.map((player, seat) => ({ ...player, seat }));
+  const players = seatTable(input.players, visit.accountId);
   const written = await retryOnConflictAbort(
     async () =>
       await runInOneTransaction(async (executor): Promise<WrittenGame> => {

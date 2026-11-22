@@ -1,6 +1,6 @@
 import { JOIN_CODE_LENGTH } from '@domain/join-code.core';
 
-export const JOIN_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export const JOIN_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 // @FollowsBlueprint utils-code-from-an-injected-draw
 export function buildJoinCode(draw: () => number): string {

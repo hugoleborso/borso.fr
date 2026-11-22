@@ -56,6 +56,7 @@ export interface ScoredEntry {
   readonly bid: number | null;
   readonly bidAdjustment: BidAdjustment;
   readonly rascalBet: RascalBet;
+  readonly isMissed: boolean;
   readonly tricks: number | null;
   readonly bonuses: BonusCounts;
 }
@@ -65,7 +66,7 @@ export function selectFinalBid(entry: ScoredEntry): number | null {
 }
 
 export function selectTricksTaken(entry: ScoredEntry): number | null {
-  return entry.tricks ?? selectFinalBid(entry);
+  return entry.isMissed ? entry.tricks : selectFinalBid(entry);
 }
 
 export function sumBonusPoints(bonuses: BonusCounts): number {
@@ -84,8 +85,8 @@ function scoreBid(bid: number, tricks: number, entry: ScoredEntry, cardCount: nu
 // @FollowsBlueprint domain-shared-selection
 export function scoreEntry(entry: ScoredEntry, cardCount: number): number | null {
   const bid = selectFinalBid(entry);
-  if (bid === null) return null;
-  const tricks = entry.tricks ?? bid;
+  const tricks = selectTricksTaken(entry);
+  if (bid === null || tricks === null) return null;
   const rascalPoints = tricks === bid ? entry.rascalBet : -entry.rascalBet;
   return scoreBid(bid, tricks, entry, cardCount) + rascalPoints;
 }

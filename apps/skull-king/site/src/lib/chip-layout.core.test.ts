@@ -2,20 +2,33 @@ import { describe, expect, it } from 'vitest';
 import {
   isChipChosen,
   listChipValues,
+  MOST_CHIPS_ON_ONE_LINE,
   selectChipColumns,
   selectChipState,
 } from './chip-layout.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('selectChipColumns', () => {
-  it('keeps up to nine chips on one line, the most eight players are dealt', () => {
-    expect(selectChipColumns(2)).toBe(2);
-    expect(selectChipColumns(9)).toBe(9);
+  it('keeps every chip on one line while they fit at full size', () => {
+    expect(selectChipColumns(2, 5)).toBe(2);
+    expect(selectChipColumns(5, 5)).toBe(5);
+    expect(selectChipColumns(6, 6)).toBe(6);
   });
 
-  it('splits ten chips or more over two lines', () => {
-    expect(selectChipColumns(10)).toBe(5);
-    expect(selectChipColumns(11)).toBe(6);
+  it('wraps onto two even lines rather than shrink a chip below a fingertip', () => {
+    expect(selectChipColumns(6, 5)).toBe(3);
+    expect(selectChipColumns(9, 5)).toBe(5);
+    expect(selectChipColumns(10, 5)).toBe(5);
+    expect(selectChipColumns(11, 6)).toBe(6);
+  });
+
+  it('takes a third line only for eleven chips beside a mark', () => {
+    expect(selectChipColumns(11, 5)).toBe(4);
+  });
+
+  it('fits fewer chips beside a mark than across a card', () => {
+    expect(MOST_CHIPS_ON_ONE_LINE.ground).toBe(5);
+    expect(MOST_CHIPS_ON_ONE_LINE.card).toBe(6);
   });
 });
 

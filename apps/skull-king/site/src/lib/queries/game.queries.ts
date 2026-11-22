@@ -16,7 +16,7 @@ import {
 import type { EntryEdit, GameEdit, PlayerEdit, RoundEdit } from '../game-edits.core';
 import { selectLatestEntry } from '../game-scores.core';
 import type { GameEntry, GameView } from '../game-view.core';
-import type { RosterPlayer } from '../roster.core';
+import { type RosterPlayer, selectSeatsToCreate } from '../roster.core';
 
 export const gameKeys = {
   all: ['game'] as const,
@@ -84,16 +84,8 @@ export function useCreateGame() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (table: TableToSeat): Promise<GameView> => {
-      const created = await readGame(
-        await api.api.games.$post({ json: { players: [...table.players] } }),
-      );
-      const firstSeat = created.players[0];
-      if (!table.isFirstSeatMine || firstSeat === undefined) return created;
-      return await readGame(
-        await api.api.games[':code'].players[':playerId'].claim.$post({
-          param: { code: created.joinCode, playerId: firstSeat.id },
-        }),
-      );
+      const players = selectSeatsToCreate(table.players, table.isFirstSeatMine);
+      return await readGame(await api.api.games.$post({ json: { players: [...players] } }));
     },
     onSuccess: (game) => {
       settleGame(queryClient, game);

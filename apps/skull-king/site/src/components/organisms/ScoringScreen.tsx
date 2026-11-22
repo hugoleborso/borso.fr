@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { selectCardCount } from '@domain/round.core';
 import { cycleBonus, cycleRascalBet, selectNextBidAdjustment } from '@site/lib/game-edits.core';
@@ -12,13 +11,12 @@ import {
 } from '@site/lib/queries/game.queries';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
 import {
-  isEntryMissed,
   isHarryLocked,
   isRascalLocked,
   selectClosingMove,
+  selectMadeToggleEdit,
   selectRoundCheck,
   selectRoundEntries,
-  withMembership,
 } from '@site/lib/round-results.core';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
@@ -30,17 +28,17 @@ import { ResultCard } from './ResultCard';
 
 export interface ScoringScreenProps {
   readonly game: GameView;
+  readonly onScores: () => void;
   readonly onRoundClosed: () => void;
 }
 
 // @FollowsBlueprint organism-query-owning
-export function ScoringScreen({ game, onRoundClosed }: ScoringScreenProps) {
+export function ScoringScreen({ game, onScores, onRoundClosed }: ScoringScreenProps) {
   const { t } = useTranslation();
   const writeEntry = useWriteEntry(game.joinCode);
   const writeRound = useWriteRound(game.joinCode);
   const movePhase = useMovePhase(game.joinCode);
   const readLatestEntry = useReadLatestEntry(game.joinCode);
-  const [awaitingTricks, setAwaitingTricks] = useState<ReadonlySet<string>>(new Set());
 
   const roundNumber = game.currentRound;
   const round = selectRound(game, roundNumber) ?? {
@@ -56,21 +54,26 @@ export function ScoringScreen({ game, onRoundClosed }: ScoringScreenProps) {
   );
   const readLatest = (playerId: string, rendered: GameEntry): GameEntry =>
     readLatestEntry(roundNumber, playerId) ?? rendered;
-  const check = selectRoundCheck({ ...round, entries: roundEntries }, awaitingTricks.size);
+  const check = selectRoundCheck({ ...round, entries: roundEntries });
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col">
       <header className="px-4 pt-4 pb-3">
         <ScreenHeader title={t('common.round', { number: roundNumber })}>
-          <Button
-            variant="surface"
-            aria-label={t('scoring.backToBids')}
-            onClick={() => {
-              movePhase.mutate({ round: roundNumber, phase: 'bidding' });
-            }}
-          >
-            <Glyph name="pencil" className="size-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="surface"
+              aria-label={t('scoring.backToBids')}
+              onClick={() => {
+                movePhase.mutate({ round: roundNumber, phase: 'bidding' });
+              }}
+            >
+              <Glyph name="pencil" className="size-5" />
+            </Button>
+            <Button variant="surface" aria-label={t('common.scores')} onClick={onScores}>
+              <Glyph name="chart" className="size-5" />
+            </Button>
+          </div>
         </ScreenHeader>
       </header>
 
@@ -78,25 +81,27 @@ export function ScoringScreen({ game, onRoundClosed }: ScoringScreenProps) {
         {game.players.map((player, seat) => {
           const entry = roundEntries[seat];
           if (entry === undefined) return null;
-          const isMissed = isEntryMissed(entry, awaitingTricks.has(player.id));
-          const hasTricks = entry.tricks !== null;
           return (
             <ResultCard
               key={player.id}
               player={player}
               entry={entry}
               cardCount={round.cardCount}
-              isMissed={isMissed}
               isHarryLocked={isHarryLocked(roundEntries, entry)}
               isRascalLocked={isRascalLocked(roundEntries, entry)}
               onToggle={() => {
-                setAwaitingTricks(withMembership(awaitingTricks, player.id, !isMissed));
-                if (!isMissed || !hasTricks) return;
-                writeEntry.mutate({ roundNumber, playerId: player.id, edit: { tricks: null } });
+                writeEntry.mutate({
+                  roundNumber,
+                  playerId: player.id,
+                  edit: selectMadeToggleEdit(readLatest(player.id, entry)),
+                });
               }}
               onTricks={(tricks) => {
-                setAwaitingTricks(withMembership(awaitingTricks, player.id, false));
-                writeEntry.mutate({ roundNumber, playerId: player.id, edit: { tricks } });
+                writeEntry.mutate({
+                  roundNumber,
+                  playerId: player.id,
+                  edit: { isMissed: true, tricks },
+                });
               }}
               onCycleBonus={(kind) => {
                 writeEntry.mutate({
