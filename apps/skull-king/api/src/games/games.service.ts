@@ -1,4 +1,4 @@
-import type { RoundPhase } from '@domain/round.core';
+import { MAXIMUM_PLAYERS, type RoundPhase } from '@domain/round.core';
 import type { DatabaseExecutor } from '../database/client';
 import { GameError } from '../helpers/errors/game-error.types';
 import { retryOnConflictAbort } from '../helpers/persistence/conflict-abort.core';
@@ -48,7 +48,7 @@ export { refuseInvalidInput } from '../helpers/errors/invalid-input.core';
 const FIRST_ROUND = 1;
 const OPENING_PHASE: RoundPhase = 'bidding';
 const JOIN_CODE_ATTEMPTS = 8;
-const CONFLICT_RETRIES = 3;
+const CONFLICT_RETRIES = MAXIMUM_PLAYERS - 1;
 
 export interface Visit {
   readonly accountId: string | null;

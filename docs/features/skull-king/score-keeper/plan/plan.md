@@ -16,8 +16,10 @@ The app is a copy of banana-rush's shape with its game logic removed. The plan n
 | API | Each write answers the view, then broadcasts it | `games.service.ts`: write, read the view on the same connection, `broadcastGame` | e2e asserts the body of every write is a full `GameView` |
 | API | `PUT /phase` sets a target | `games.service.ts` `moveToPhase`; refuses `finished` before round 10 | e2e: two identical calls leave one state |
 | API | Bounds depend on the game | Zod holds types and static bounds; the service checks `bid` and `tricks` against `selectCardCount` | e2e: `bid` above the cards dealt answers `value-out-of-range` |
+| Sync | Every write to a game is serialised | `games.service.ts` `writeGame` opens one transaction (`runInOneTransaction`, repository-owned), bumps `game.revision`, reads, checks with the domain rules, writes; `retryOnConflictAbort` reruns it on a DSQL abort, `MAXIMUM_PLAYERS - 1` times | Concurrent e2e tests that prove the overlap (`runWritersWhileHeld`): two Harry holders, correction plus phase move, two cells, rematch, seat claim |
+| Sync | Views ordered by revision, `readAt` breaks a tie | `site/src/lib/game-cache.core.ts` `receiveGame`; the cache is `{ server, pending }` and `selectShownGame` lays pending edits over the newest server view | Unit test: a broadcast is written even while a write is pending, unless the cached view is newer |
+| API | Phase moves: within the round, next round's bids, or `finished` from round 10 scoring | `game-write.core.ts` `refusePhaseMove` | e2e: a backward move across rounds answers `value-out-of-range` |
 | Sync | Socket pushes, never commands | `api/src/realtime/` kept from banana-rush, `$connect` needs only `code` | `socket-route.core.test.ts` refuses a connect without `code` |
-| Sync | Newest view wins on the phone | `site/src/lib/game-view.core.ts` (or the name the site agent chose) compares `readAt`; the socket hook and every mutation's `onSuccess` go through it | Unit test: an older `readAt` leaves the cache untouched |
 | Screens | Query routing, `/?game=CODE` | `site/src/App.tsx` reads `useSearchParams` | A preview deep link `/?game=BRIG&view=scores` opens the scores screen |
 | Screens | Official card images | `site/public/cards/*.jpg`, one constant table maps `BonusKind` to its file | `ls site/public/cards` matches `BONUS_KINDS` plus `kraken` |
 | Registration | New app known to CI | `.github/path-filters.yml`, commitlint, knip, Sentry DSN in both workflows, quality dashboard, prod reader | `scripts/check-app-registration.sh` passes |
@@ -29,11 +31,11 @@ Pattern coherence. banana-rush keeps the private part of a broadcast (`viewerBid
 
 | Risk | Severity | Mitigation in plan | Detection if it slips |
 |---|---|---|---|
-| Two phones write the same cell together | Low | Last write wins on one primary key row; both phones settle on the last broadcast | e2e writes the same cell twice and reads the second value |
-| Two phones write different cells of one round | High if lost | Different rows, upserts touch only their own row; no write to the `game` row on a cell write, so DSQL optimistic concurrency has nothing to conflict on | e2e writes two cells in parallel and reads both |
-| A late broadcast undoes a newer view | Medium | `readAt` comparison on the phone | Unit test of the comparison; visual check of two tabs tapping fast |
+| Two phones write the same cell together | Low | The writes are serialised by the revision bump; the last one wins and both phones settle on the highest revision | e2e writes the same cell twice and reads the second value |
+| Two phones write different cells of one round | High if lost | Both bump the game revision, so one waits (Postgres) or is retried (DSQL); neither is refused | e2e writes two cells in parallel and reads both |
+| A late broadcast undoes a newer view | Medium | Revision comparison on the phone, `readAt` on a tie | Unit test of the comparison; visual check of two tabs tapping fast |
 | DSQL read-after-write is per connection (`docs/knowledge/dsql-strong-consistency-is-per-connection.md`) | Medium | The view returned and broadcast is read inside the write's repository call, on the same connection; the site settles from the response, never refetches after a write | e2e on local Postgres cannot show it; Sentry and the preview do |
-| `readAt` from two Lambdas' clocks | Low | Clock skew between Lambdas is small against human tap speed | A reverted tap reported from the table |
+| Eight phones write bids in the same instant on DSQL | Medium | Serialised writes retry `MAXIMUM_PLAYERS - 1` times; each wave of aborts commits one write | A 500 with an `OC000` cause in Sentry |
 | Preview serves `/` only for this app, no SPA rewrite (`infra/cdk/src/internal/cf-host-routing-function.code.js`) | High | Query routing, no path routes; no change to `infra/` or `infra/shared` | Opening a shared invite link on the preview |
 | Preview API is cross-origin (`docs/knowledge/preview-api-cross-origin.md`) | Medium | `api.client.ts` reads `VITE_API_BASE` as banana-rush does; `cors()` kept in `app.ts` | First write on the preview |
 | Copied `@Blueprint` declarations collide with banana-rush | Low | Every copied declaration becomes `@FollowsBlueprint` | Pre-commit `blueprint-index` refuses the commit |

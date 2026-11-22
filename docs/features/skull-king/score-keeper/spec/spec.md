@@ -238,7 +238,8 @@ Every write to a game runs in one transaction that first bumps
 `game.revision`, then reads what it checks, then writes. Two writes to one game
 therefore happen one after the other: on Postgres the second waits for the
 first's row lock, and on DSQL the second commit is aborted and the whole write
-is retried, up to three more times. So the one-Harry and one-Rascal rules, the
+is retried, up to one fewer time than the maximum of eight players, because
+each wave of aborts lets one write commit. So the one-Harry and one-Rascal rules, the
 phase checks, the seat claim and the rematch hold under concurrent requests,
 and two phones writing different cells both land.
 

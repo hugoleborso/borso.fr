@@ -30,7 +30,9 @@ Held by: `api/src/games/game-write.core.test.ts` › refuses to finish from an e
 - On Postgres the bump takes the row lock, so the second transaction waits and
   then reads what the first committed. On DSQL the second commit is aborted
   (`OC000`, `OC001` or `40001`), and `retryOnConflictAbort` runs the whole
-  service operation again, up to `CONFLICT_RETRIES` (3) more times. Two
+  service operation again, up to `CONFLICT_RETRIES` more times, one fewer than `MAXIMUM_PLAYERS`:
+  each wave of aborts lets one write commit, so eight phones writing at
+  once all land. Two
   phones writing two different cells both land: one waits or is retried,
   neither is refused.
 - The column is nullable, because DSQL adds no column with a constraint.
