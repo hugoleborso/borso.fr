@@ -90,10 +90,10 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
     getRowId: (round) => String(round.number),
   });
   const layout = {
-    gridTemplateColumns: `2.25rem repeat(${String(players.length)}, minmax(2.75rem, 1fr))`,
+    gridTemplateColumns: `1.25rem repeat(${String(players.length)}, minmax(2.75rem, 1fr))`,
   };
   return (
-    <section aria-label={t('scores.detail')} className="overflow-x-auto rounded-tile bg-surface">
+    <section aria-label={t('scores.detail')} className="overflow-x-auto bg-surface sm:rounded-tile">
       <div className="min-w-fit">
         {table.getHeaderGroups().map((headerGroup) => (
           <div key={headerGroup.id} className="grid py-2" style={layout} aria-hidden="true">

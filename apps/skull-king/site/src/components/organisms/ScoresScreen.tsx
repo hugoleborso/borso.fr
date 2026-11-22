@@ -90,7 +90,7 @@ export function ScoresScreen({ game, onContinue, onRematch }: ScoresScreenProps)
         ))}
       </ol>
 
-      <div className="flex-1 px-4">
+      <div className="flex-1 sm:px-4">
         <ScoreGrid
           players={game.players}
           rounds={selectScoredRounds(game)}
