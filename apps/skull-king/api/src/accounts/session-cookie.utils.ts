@@ -54,8 +54,10 @@ export function readSessionAccountId(
   hmacKey: Buffer,
   nowMillis: number,
 ): string | null {
-  const [payloadEncoded, signature, ...rest] = cookieValue.split(COOKIE_SEPARATOR);
-  if (payloadEncoded === undefined || signature === undefined || rest.length > 0) return null;
+  const separatorAt = cookieValue.indexOf(COOKIE_SEPARATOR);
+  const payloadEncoded = cookieValue.slice(0, separatorAt);
+  const signature = cookieValue.slice(separatorAt + 1);
+  if (signature.includes(COOKIE_SEPARATOR)) return null;
   if (!hasValidSignature(payloadEncoded, signature, hmacKey)) return null;
   const session = parsePayload(payloadEncoded);
   if (session === null || nowMillis >= session.expiresAt) return null;

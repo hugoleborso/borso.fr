@@ -42,6 +42,12 @@ describe('the session cookie', () => {
     expect(readSessionAccountId('a.', KEY, NOW)).toBeNull();
   });
 
+  it('refuses a well signed cookie with anything after its signature', () => {
+    const cookie = buildSessionCookie(KEY, NOW, ACCOUNT_ID);
+    expect(readSessionAccountId(`${cookie}.`, KEY, NOW)).toBeNull();
+    expect(readSessionAccountId(`${cookie}.!`, KEY, NOW)).toBeNull();
+  });
+
   it('refuses a signed payload that is not a session', () => {
     const notJson = Buffer.from('nope').toString('base64url');
     const notSession = Buffer.from(JSON.stringify({ accountId: 'x' })).toString('base64url');

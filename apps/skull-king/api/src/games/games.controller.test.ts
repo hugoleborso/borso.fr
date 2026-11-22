@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { NO_BONUS } from '@domain/scoring.core';
-import { abortCommitsUpdatingColumn, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsUpdatingColumn,
+  countRows,
+  holdGameRow,
+  holdWritesToTable,
+  runWritersWhileHeld,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import {
   createAGame,
   entryOf,
@@ -17,6 +24,7 @@ import {
   writeEntry,
 } from '../../../test/game-utils';
 import { useConnectionPoster } from '../realtime/connection-poster.setup';
+import { insertGameUnlessCodeTaken, runInOneTransaction } from './games.repository';
 import { buildSocketReply } from '../realtime/realtime.service';
 
 const broadcastSchema = z.object({ kind: z.literal('game'), game: gameViewSchema });
@@ -431,6 +439,125 @@ describe('a game of Skull King, end to end', () => {
     } finally {
       await conflict.remove();
     }
+  });
+});
+
+describe('two phones writing one game at the same instant', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  it('gives a join code to one of two games claiming it at once, and nothing to the other', async () => {
+    const seated = TABLE_OF_FOUR.map((player, seat) => ({
+      seat,
+      name: player.name,
+      icon: 'skull' as const,
+      color: 'gold' as const,
+    }));
+    const claim = async () =>
+      await runInOneTransaction(
+        async (executor) =>
+          await insertGameUnlessCodeTaken(executor, {
+            joinCode: 'BRIG',
+            phase: 'bidding',
+            currentRound: 1,
+            players: seated,
+            now: new Date(),
+          }),
+      );
+
+    const games = await runWritersWhileHeld(holdWritesToTable('join_code_claim'), claim, claim);
+
+    expect(games.filter((game) => game === null)).toHaveLength(1);
+    expect(games.map((game) => game?.joinCode).filter((code) => code !== undefined)).toEqual([
+      'BRIG',
+    ]);
+    expect(
+      await countRows('SELECT count(*) FROM join_code_claim WHERE join_code = $1', ['BRIG']),
+    ).toBe(1);
+    expect(await countRows('SELECT count(*) FROM game WHERE join_code = $1', ['BRIG'])).toBe(1);
+    expect(await countRows('SELECT count(*) FROM player', [])).toBe(4);
+  });
+
+  it('gives Harry the Giant to the first of two players asking for it at once', async () => {
+    const created = await createAGame();
+    const [hugo, lea] = [seatId(created, 0), seatId(created, 1)];
+
+    const [first, second] = await runWritersWhileHeld(
+      holdGameRow(created.joinCode),
+      async () => await writeEntry(created.joinCode, 1, hugo, { bidAdjustment: 1 }),
+      async () => await writeEntry(created.joinCode, 1, lea, { bidAdjustment: -1 }),
+    );
+    const game = await readGameView(created.joinCode);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(400);
+    expect(await readError(second)).toBe('value-out-of-range');
+    expect(entryOf(game, 1, hugo).bidAdjustment).toBe(1);
+    expect(entryOf(game, 1, lea).bidAdjustment).toBe(0);
+    expect(
+      await countRows(
+        'SELECT count(*) FROM round_entry WHERE round_number = 1 AND bid_adjustment <> 0',
+        [],
+      ),
+    ).toBe(1);
+  });
+
+  it('refuses to leave a round that a correction sent at the same instant unbalances', async () => {
+    const created = await createAGame();
+    const scoring = await reachRound(created, 1, 'scoring');
+
+    const [correction, move] = await runWritersWhileHeld(
+      holdGameRow(created.joinCode),
+      async () => await writeEntry(created.joinCode, 1, seatId(scoring, 0), { tricks: 0 }),
+      async () => await movePhase(created.joinCode, 2, 'bidding'),
+    );
+    const game = await readGameView(created.joinCode);
+
+    expect(correction.status).toBe(200);
+    expect(move.status).toBe(409);
+    expect(await readError(move)).toBe('tricks-unbalanced');
+    expect([game.currentRound, game.phase]).toEqual([1, 'scoring']);
+  });
+
+  it('keeps two writes to different cells sent at once, retrying the one the database aborts', async () => {
+    const created = await createAGame();
+    const [hugo, lea] = [seatId(created, 0), seatId(created, 1)];
+    const conflict = await abortCommitsUpdatingColumn('game', 'revision', 1);
+
+    try {
+      const [first, second] = await runWritersWhileHeld(
+        holdGameRow(created.joinCode),
+        async () => await writeEntry(created.joinCode, 1, hugo, { bid: 1 }),
+        async () => await writeEntry(created.joinCode, 1, lea, { bid: 0 }),
+      );
+      const game = await readGameView(created.joinCode);
+
+      expect([first.status, second.status]).toEqual([200, 200]);
+      expect(await conflict.countCommitsSeen()).toBe(3);
+      expect([entryOf(game, 1, hugo).bid, entryOf(game, 1, lea).bid]).toEqual([1, 0]);
+      expect(game.revision).toBe(2);
+    } finally {
+      await conflict.remove();
+    }
+  });
+
+  it('starts one rematch however many phones ask at the same instant', async () => {
+    const created = await createAGame();
+    await reachRound(created, 10, 'finished');
+
+    const answers = await runWritersWhileHeld(
+      holdGameRow(created.joinCode),
+      async () => await request('POST', `/api/games/${created.joinCode}/rematch`),
+      async () => await request('POST', `/api/games/${created.joinCode}/rematch`),
+    );
+    const [first, second] = await Promise.all(answers.map(readGameEnvelope));
+
+    expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+    expect(second?.joinCode).toBe(first?.joinCode);
+    expect(await countRows('SELECT count(*) FROM game', [])).toBe(2);
+    expect(await countRows('SELECT count(*) FROM join_code_claim', [])).toBe(2);
+    expect(await countRows('SELECT count(*) FROM player', [])).toBe(8);
   });
 });
 

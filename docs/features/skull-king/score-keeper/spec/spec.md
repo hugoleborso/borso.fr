@@ -179,7 +179,8 @@ interface GameView {
     isWhiteWhaleDiscard: boolean;
     entries: { playerId: string; bid: number | null; bidAdjustment: -1 | 0 | 1; rascalBet: 0 | 10 | 20; tricks: number | null; bonuses: BonusCounts }[];
   }[];                            // one entry per player in seat order, defaults filled in
-  readAt: string;                 // ISO time the server built this view
+  revision: number;               // bumped by every write to the game
+  readAt: string;                 // ISO time the server served this view
 }
 ```
 
@@ -187,7 +188,9 @@ Tables (Aurora DSQL: no foreign keys, no unique index relied on, natural keys
 as primary keys):
 
 - `game`: `id` uuid pk, `join_code` text, `phase` text, `current_round` int,
-  `created_at`, `updated_at`. A `join_code_claim` table keyed on `join_code`
+  `rematch_join_code` text null, `revision` int, `created_at`, `updated_at`.
+  `revision` is nullable in the database because DSQL adds no column with a
+  constraint; every insert writes 0 and a `null` reads as 0. A `join_code_claim` table keyed on `join_code`
   makes a code unique from the first write, the way banana-rush does it.
 - `player`: `id` uuid pk, `game_id`, `seat` int, `name`, `icon`, `color`.
 - `round`: pk (`game_id`, `round_number`), `is_kraken_played` bool,
@@ -208,11 +211,11 @@ Every write answers `{ game: GameView }` and then broadcasts the same view.
 
 | Method and path | Body | Does |
 | --- | --- | --- |
-| `POST /` | `{ players: { name, icon, color }[] }` (2 to 8) | creates a game in round 1, `bidding` |
+| `POST /` | `{ players: { name, icon, color }[] }` (3 to 8) | creates a game in round 1, `bidding` |
 | `GET /:code` | | reads the view |
 | `PUT /:code/rounds/:round/entries/:playerId` | `{ bid?, bidAdjustment?, rascalBet?, tricks?, bonuses? }`, each optional, `null` clears | upserts one entry |
 | `PUT /:code/rounds/:round` | `{ isKrakenPlayed?, isWhiteWhaleDiscard? }` | upserts the round |
-| `PUT /:code/phase` | `{ round, phase }` | moves the game to that round and phase |
+| `PUT /:code/phase` | `{ round, phase }` | moves the game to that round and phase, within the rules below |
 | `PATCH /:code/players/:playerId` | `{ name?, icon?, color? }` | changes a player |
 | `POST /:code/rematch` | | creates a new game with the same players, answers it |
 
@@ -222,11 +225,22 @@ non-zero `rascalBet`, in the same round answers
 `value-out-of-range`;
 `bid` and `tricks` are between 0 and the cards dealt; a bonus count is between
 0 and `MAXIMUM_BONUS_COUNT`. `PUT /phase` is idempotent: it sets the target, so
-two phones pressing play together land on the same state. The server holds the
-checker too, so no phone can skip it: moving a round to `scoring` answers
-`bids-missing` 409 while a bid is missing, and moving forward to a later
-round or to `finished` answers `tricks-unbalanced` 409 while any played round
-does not balance.
+two phones pressing play together land on the same state. It accepts three
+moves: any phase but `finished` within the current round, the `bidding` phase
+of the next round, and `finished` from the `scoring` phase of round 10. Any
+other target answers `value-out-of-range`, so the game never moves back across
+rounds and never skips one. The server holds the checker too, so no phone can
+skip it: moving a round to `scoring` answers `bids-missing` 409 while a bid is
+missing, and opening the next round or finishing answers `tricks-unbalanced`
+409 while any played round does not balance.
+
+Every write to a game runs in one transaction that first bumps
+`game.revision`, then reads what it checks, then writes. Two writes to one game
+therefore happen one after the other: on Postgres the second waits for the
+first's row lock, and on DSQL the second commit is aborted and the whole write
+is retried, up to three more times. So the one-Harry and one-Rascal rules, the
+phase checks, the seat claim and the rematch hold under concurrent requests,
+and two phones writing different cells both land.
 
 ## Sync
 
@@ -234,9 +248,14 @@ The pattern of banana-rush, kept whole: `api/src/realtime/`. A phone opens
 `WEBSOCKET_CLIENT_URL?code=BRIG`; the socket carries no command. After every
 write the service broadcasts `{ kind: 'game', game }` to every connection of
 that game. The site writes each broadcast into the TanStack Query cache for
-`['game', code]` unless the cached view's `readAt` is later, which keeps an
-older broadcast arriving late from undoing a newer one. A write's own answer
-goes through the same comparison.
+`['game', code]` unless the cached view is newer: a higher `revision`, or the
+same revision with a later `readAt`. That keeps an older broadcast arriving
+late from undoing a newer one. A write's own answer and a read go through the
+same comparison, always, even while this phone has a write in flight. The
+taps this phone has not heard back about are kept apart and laid over the
+newest server view, so a broadcast from another phone shows at once and the
+tap still shows. `readAt` alone could not order two views: it is when a
+request was served, and a request that started first can commit last.
 
 Two phones writing different cells touch different rows and never conflict.
 Two phones writing the same cell: the last write wins, and both phones end on

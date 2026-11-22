@@ -9,8 +9,10 @@ import {
   findAccount,
   findHmacKey,
   findPasskey,
-  insertAccountWithPasskey,
+  insertAccount,
   insertChallenge,
+  insertPasskey,
+  runInOneTransaction,
   takeChallenge,
   updatePasskeyCounter,
 } from './accounts.repository';
@@ -93,22 +95,24 @@ export async function finishRegistration(input: RegistrationInput, now: Date): P
     challenge: stored.challenge,
   });
   if (verdict === null) throw new GameError('passkey-not-verified');
-  const account = await insertAccountWithPasskey(
-    {
-      id: stored.accountId,
+  const accountId = stored.accountId;
+  const account = await runInOneTransaction(async (executor) => {
+    const inserted = await insertAccount(executor, {
+      id: accountId,
       name: input.name,
       icon: input.icon,
       color: input.color,
       createdAt: now,
-    },
-    {
+    });
+    await insertPasskey(executor, {
       credentialId: verdict.credentialId,
-      accountId: stored.accountId,
+      accountId,
       publicKey: verdict.publicKey,
       counter: verdict.counter,
       createdAt: now,
-    },
-  );
+    });
+    return inserted;
+  });
   return await signIn(account, now);
 }
 

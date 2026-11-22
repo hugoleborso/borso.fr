@@ -51,7 +51,7 @@ function editRound(
  * @Blueprint core-predicting-the-view-a-write-will-answer
  * @BlueprintName Core Predicting The View A Write Will Answer
  * @BlueprintUsage Use for the optimistic half of a write whose answer is the whole record, when the request alone decides every field the screen shows.
- * @BlueprintDescription Applies the request to the cached view the way the server applies it to its rows, so the tapped value shows at once and the answer that follows replaces the prediction rather than correcting it. The prediction keeps the cached `readAt`, which is what lets the server's answer and any broadcast newer than it win the comparison that guards the cache, and an older broadcast still lose it.
+ * @BlueprintDescription Applies the request to a view the way the server applies it to its rows, so the tapped value shows at once. Every edit sets values and never adds to them, so laying it again over a server view that already holds it changes nothing, which is what lets the cache lay every pending edit over the newest server view each time one arrives rather than keep a prediction the server has since moved past.
  */
 export function applyEntryEdit(
   game: GameView,
@@ -124,6 +124,33 @@ export function applySeatClaim(game: GameView, playerId: string, accountId: stri
       player.id === playerId ? { ...player, accountId } : player,
     ),
   };
+}
+
+export type GameEdit =
+  | {
+      readonly kind: 'entry';
+      readonly roundNumber: number;
+      readonly playerId: string;
+      readonly edit: EntryEdit;
+    }
+  | { readonly kind: 'round'; readonly roundNumber: number; readonly edit: RoundEdit }
+  | { readonly kind: 'phase'; readonly round: number; readonly phase: RoundPhase }
+  | { readonly kind: 'player'; readonly playerId: string; readonly edit: PlayerEdit }
+  | { readonly kind: 'seat'; readonly playerId: string; readonly accountId: string };
+
+export function applyGameEdit(game: GameView, change: GameEdit): GameView {
+  switch (change.kind) {
+    case 'entry':
+      return applyEntryEdit(game, change.roundNumber, change.playerId, change.edit);
+    case 'round':
+      return applyRoundEdit(game, change.roundNumber, change.edit);
+    case 'phase':
+      return applyPhaseEdit(game, change.round, change.phase);
+    case 'player':
+      return applyPlayerEdit(game, change.playerId, change.edit);
+    case 'seat':
+      return applySeatClaim(game, change.playerId, change.accountId);
+  }
 }
 
 export function cycleBonus(bonuses: BonusCounts, kind: BonusKind): BonusCounts {

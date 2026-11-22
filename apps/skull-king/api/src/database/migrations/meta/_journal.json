@@ -36,6 +36,13 @@
       "when": 1795372875138,
       "tag": "0004_rascal_bet",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795375785043,
+      "tag": "0005_game_revision",
+      "breakpoints": true
     }
   ]
 }

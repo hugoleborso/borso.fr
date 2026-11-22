@@ -14,18 +14,14 @@ function readStringProperty(value: unknown, key: string): string | null {
   return typeof found === 'string' && found.length > 0 ? found : null;
 }
 
-function parseJsonOrNull(text: string): unknown {
+function decodeClientDataChallenge(clientDataJson: string): string | null {
+  const clientDataText = Buffer.from(clientDataJson, 'base64url').toString('utf8');
   try {
-    const decodedValue: unknown = JSON.parse(text);
-    return decodedValue;
+    const decoded: unknown = JSON.parse(clientDataText);
+    return readStringProperty(decoded, 'challenge');
   } catch {
     return null;
   }
-}
-
-function decodeClientDataChallenge(clientDataJson: string): string | null {
-  const decoded = parseJsonOrNull(Buffer.from(clientDataJson, 'base64url').toString('utf8'));
-  return readStringProperty(decoded, 'challenge');
 }
 
 // @FollowsBlueprint core-parse-untrusted

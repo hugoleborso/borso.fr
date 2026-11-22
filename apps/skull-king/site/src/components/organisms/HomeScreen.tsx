@@ -1,3 +1,4 @@
+import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -37,9 +38,8 @@ export function HomeScreen() {
   const createGame = useCreateGame();
   const [regulars] = useState(loadRegulars);
   const [table, setTable] = useState<readonly RosterPlayer[]>([]);
-  const [draftName, setDraftName] = useState<string | null>(null);
+  const [isNaming, setIsNaming] = useState(false);
   const [editedSeat, setEditedSeat] = useState<number | null>(null);
-  const [joinCode, setJoinCode] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const account = useMe().data ?? null;
   const myGames = useMyGames(account !== null);
@@ -48,14 +48,24 @@ export function HomeScreen() {
   const absentRegulars = selectAbsentRegulars(regulars, seated);
   const canAdd = canSeatAnother(seated);
   const recentGames = sortNewestFirst(myGames.data ?? []);
-  const canJoin = isCompleteJoinCode(joinCode);
   const edited = editedSeat === null ? undefined : table[editedSeat];
 
-  const seatNamedPlayer = () => {
-    const name = trimPlayerName(draftName ?? '');
-    setTable(seatPlayer(table, { name, ...selectFreeMark(seated) }));
-    setDraftName(null);
-  };
+  const nameForm = useForm({
+    defaultValues: { name: '' },
+    onSubmit: ({ value, formApi }) => {
+      setTable(seatPlayer(table, { name: trimPlayerName(value.name), ...selectFreeMark(seated) }));
+      formApi.reset();
+      setIsNaming(false);
+    },
+  });
+
+  const joinForm = useForm({
+    defaultValues: { code: '' },
+    onSubmit: ({ value }) => {
+      const isJoinable = isCompleteJoinCode(value.code);
+      if (isJoinable) void navigate(buildGameSearch(value.code, null));
+    },
+  });
 
   const startGame = () => {
     createGame.mutate(
@@ -115,9 +125,9 @@ export function HomeScreen() {
             <Button
               variant="dashed"
               aria-label={t('home.addPlayer')}
-              aria-expanded={draftName !== null}
+              aria-expanded={isNaming}
               onClick={() => {
-                setDraftName('');
+                setIsNaming(true);
               }}
             >
               <Glyph name="plus" className="size-6.5" />
@@ -126,33 +136,37 @@ export function HomeScreen() {
         ) : null}
       </ul>
 
-      {draftName === null ? null : (
+      {isNaming ? (
         <form
           className="m-0 flex gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            seatNamedPlayer();
+            void nameForm.handleSubmit();
           }}
         >
-          <label className="flex min-w-0 flex-1">
-            <span className="sr-only">{t('home.playerName')}</span>
-            <TextInput
-              // eslint-disable-next-line jsx-a11y-js/no-autofocus -- the field appears because the player just tapped the add button, so the keyboard is what they asked for
-              autoFocus
-              value={draftName}
-              maxLength={PLAYER_NAME_MAX_LENGTH}
-              placeholder={t('home.playerName')}
-              onChange={(event) => {
-                setDraftName(event.target.value);
-              }}
-              className="flex-1"
-            />
-          </label>
+          <nameForm.Field name="name">
+            {(field) => (
+              <label className="flex min-w-0 flex-1">
+                <span className="sr-only">{t('home.playerName')}</span>
+                <TextInput
+                  // eslint-disable-next-line jsx-a11y-js/no-autofocus -- the field appears because the player just tapped the add button, so the keyboard is what they asked for
+                  autoFocus
+                  value={field.state.value}
+                  maxLength={PLAYER_NAME_MAX_LENGTH}
+                  placeholder={t('home.playerName')}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  className="flex-1"
+                />
+              </label>
+            )}
+          </nameForm.Field>
           <Button type="submit" variant="outline" aria-label={t('home.confirmName')}>
             <Glyph name="check" strokeWidth={2.5} />
           </Button>
         </form>
-      )}
+      ) : null}
 
       {recentGames.length === 0 ? null : (
         <MyGamesStrip
@@ -179,22 +193,26 @@ export function HomeScreen() {
           className="m-0 flex gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            if (canJoin) void navigate(buildGameSearch(joinCode, null));
+            void joinForm.handleSubmit();
           }}
         >
-          <label className="flex min-w-0 flex-1">
-            <span className="sr-only">{t('home.joinCode')}</span>
-            <TextInput
-              value={joinCode}
-              maxLength={JOIN_CODE_LENGTH}
-              autoCapitalize="characters"
-              placeholder={t('home.joinPlaceholder')}
-              onChange={(event) => {
-                setJoinCode(normalizeJoinCode(event.target.value));
-              }}
-              className="flex-1 text-center tracking-[0.3em] uppercase"
-            />
-          </label>
+          <joinForm.Field name="code">
+            {(field) => (
+              <label className="flex min-w-0 flex-1">
+                <span className="sr-only">{t('home.joinCode')}</span>
+                <TextInput
+                  value={field.state.value}
+                  maxLength={JOIN_CODE_LENGTH}
+                  autoCapitalize="characters"
+                  placeholder={t('home.joinPlaceholder')}
+                  onChange={(event) => {
+                    field.handleChange(normalizeJoinCode(event.target.value));
+                  }}
+                  className="flex-1 text-center tracking-[0.3em] uppercase"
+                />
+              </label>
+            )}
+          </joinForm.Field>
           {account === null ? (
             <Button
               variant="surface"
@@ -207,9 +225,18 @@ export function HomeScreen() {
               <Glyph name="key" />
             </Button>
           ) : null}
-          <Button type="submit" variant="outline" aria-label={t('home.join')} disabled={!canJoin}>
-            <Glyph name="arrow" strokeWidth={2.2} />
-          </Button>
+          <joinForm.Subscribe selector={(state) => isCompleteJoinCode(state.values.code)}>
+            {(canJoin) => (
+              <Button
+                type="submit"
+                variant="outline"
+                aria-label={t('home.join')}
+                disabled={!canJoin}
+              >
+                <Glyph name="arrow" strokeWidth={2.2} />
+              </Button>
+            )}
+          </joinForm.Subscribe>
         </form>
       </div>
 

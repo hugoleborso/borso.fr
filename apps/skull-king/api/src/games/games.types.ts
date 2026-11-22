@@ -33,6 +33,7 @@ export interface GameView {
   readonly phase: RoundPhase;
   readonly currentRound: number;
   readonly rematchJoinCode: string | null;
+  readonly revision: number;
   readonly players: readonly PlayerView[];
   readonly rounds: readonly RoundView[];
   readonly readAt: string;

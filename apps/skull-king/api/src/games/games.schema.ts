@@ -16,6 +16,7 @@ export const gameTable = pgTable('game', {
   phase: text('phase', { enum: ROUND_PHASES }).notNull(),
   currentRound: integer('current_round').notNull(),
   rematchJoinCode: text('rematch_join_code'),
+  revision: integer('revision'),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull(),
 });

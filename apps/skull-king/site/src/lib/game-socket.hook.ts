@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { isWithoutPendingWrite, parseBroadcast } from './game-view.core';
-import { gameKeys, settleGame } from './queries/game.queries';
+import { type GameCache, receiveBroadcast } from './game-cache.core';
+import { gameKeys } from './queries/game.queries';
 
 const RECONNECT_DELAY_MS = 1_500;
 
@@ -27,12 +27,9 @@ export function useGameSocket(socketUrl: string | null, joinCode: string): void 
       if (isClosed) return;
       socket = new WebSocket(buildSocketAddress(socketUrl, joinCode));
       socket.addEventListener('message', (event: MessageEvent<unknown>) => {
-        const incoming = parseBroadcast(event.data);
-        if (incoming === null || incoming.joinCode !== joinCode) return;
-        const isIdle = isWithoutPendingWrite(
-          queryClient.isMutating({ mutationKey: gameKeys.writes(joinCode) }),
+        queryClient.setQueryData<GameCache>(gameKeys.detail(joinCode), (cache) =>
+          receiveBroadcast(cache, event.data, joinCode),
         );
-        if (isIdle) settleGame(queryClient, incoming);
       });
       socket.addEventListener('close', () => {
         if (isClosed) return;

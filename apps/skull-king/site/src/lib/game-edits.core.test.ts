@@ -2,6 +2,7 @@ import { MAXIMUM_BONUS_COUNT, NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import {
   applyEntryEdit,
+  applyGameEdit,
   applyRoundEdit,
   applyPhaseEdit,
   applyPlayerEdit,
@@ -33,6 +34,7 @@ function aGame(): GameView {
         { playerId: 'p2', bid: 0, bidAdjustment: 0, rascalBet: 0, tricks: 1, bonuses: NO_BONUS },
       ],
     })),
+    revision: 4,
     readAt: READ_AT,
   };
 }
@@ -201,5 +203,27 @@ describe('applyEntryEdit with a Rascal bet', () => {
     const edited = applyEntryEdit(aGame(), 1, 'p1', { rascalBet: 20 });
     expect(edited.rounds[0]?.entries[0]?.rascalBet).toBe(20);
     expect(edited.rounds[0]?.entries[0]?.bidAdjustment).toBe(0);
+  });
+});
+
+describe('applyGameEdit', () => {
+  it('applies each kind of edit the way its own function does', () => {
+    const game = aGame();
+
+    expect(
+      applyGameEdit(game, { kind: 'entry', roundNumber: 2, playerId: 'p1', edit: { bid: 2 } }),
+    ).toStrictEqual(applyEntryEdit(game, 2, 'p1', { bid: 2 }));
+    expect(
+      applyGameEdit(game, { kind: 'round', roundNumber: 1, edit: { isKrakenPlayed: true } }),
+    ).toStrictEqual(applyRoundEdit(game, 1, { isKrakenPlayed: true }));
+    expect(applyGameEdit(game, { kind: 'phase', round: 2, phase: 'scoring' })).toStrictEqual(
+      applyPhaseEdit(game, 2, 'scoring'),
+    );
+    expect(
+      applyGameEdit(game, { kind: 'player', playerId: 'p2', edit: { name: 'Léane' } }),
+    ).toStrictEqual(applyPlayerEdit(game, 'p2', { name: 'Léane' }));
+    expect(applyGameEdit(game, { kind: 'seat', playerId: 'p1', accountId: 'me' })).toStrictEqual(
+      applySeatClaim(game, 'p1', 'me'),
+    );
   });
 });

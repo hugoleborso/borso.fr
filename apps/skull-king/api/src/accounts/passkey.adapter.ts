@@ -66,30 +66,41 @@ export async function buildAuthenticationOptions(): Promise<Record<string, unkno
   return { ...options };
 }
 
+async function attemptVerification<Verification>(
+  verify: () => Promise<Verification>,
+): Promise<Verification | null> {
+  try {
+    return await verify();
+  } catch {
+    return null;
+  }
+}
+
 export async function checkRegistration(params: {
   readonly response: unknown;
   readonly challenge: string;
 }): Promise<RegistrationVerdict | null> {
   const relyingParty = readRelyingParty();
-  if (!isRegistrationResponse(params.response)) return null;
-  try {
-    const verification = await verifyRegistrationResponse({
-      response: params.response,
-      expectedChallenge: params.challenge,
-      expectedOrigin: relyingParty.origin,
-      expectedRPID: relyingParty.id,
-      requireUserVerification: false,
-    });
-    const info = verification.registrationInfo;
-    if (!verification.verified || info === undefined) return null;
-    return {
-      credentialId: info.credential.id,
-      publicKey: Buffer.from(info.credential.publicKey),
-      counter: info.credential.counter,
-    };
-  } catch {
-    return null;
-  }
+  const { response } = params;
+  if (!isRegistrationResponse(response)) return null;
+  const verification = await attemptVerification(
+    async () =>
+      await verifyRegistrationResponse({
+        response,
+        expectedChallenge: params.challenge,
+        expectedOrigin: relyingParty.origin,
+        expectedRPID: relyingParty.id,
+        requireUserVerification: false,
+      }),
+  );
+  if (verification === null) return null;
+  if (!verification.verified) return null;
+  const info = verification.registrationInfo;
+  return {
+    credentialId: info.credential.id,
+    publicKey: Buffer.from(info.credential.publicKey),
+    counter: info.credential.counter,
+  };
 }
 
 export async function checkAuthentication(params: {
@@ -98,23 +109,24 @@ export async function checkAuthentication(params: {
   readonly passkey: StoredPasskey;
 }): Promise<AuthenticationVerdict | null> {
   const relyingParty = readRelyingParty();
-  if (!isAuthenticationResponse(params.response)) return null;
-  try {
-    const verification = await verifyAuthenticationResponse({
-      response: params.response,
-      expectedChallenge: params.challenge,
-      expectedOrigin: relyingParty.origin,
-      expectedRPID: relyingParty.id,
-      requireUserVerification: false,
-      credential: {
-        id: params.passkey.credentialId,
-        publicKey: new Uint8Array(params.passkey.publicKey),
-        counter: params.passkey.counter,
-      },
-    });
-    if (!verification.verified) return null;
-    return { counter: verification.authenticationInfo.newCounter };
-  } catch {
-    return null;
-  }
+  const { response } = params;
+  if (!isAuthenticationResponse(response)) return null;
+  const verification = await attemptVerification(
+    async () =>
+      await verifyAuthenticationResponse({
+        response,
+        expectedChallenge: params.challenge,
+        expectedOrigin: relyingParty.origin,
+        expectedRPID: relyingParty.id,
+        requireUserVerification: false,
+        credential: {
+          id: params.passkey.credentialId,
+          publicKey: new Uint8Array(params.passkey.publicKey),
+          counter: params.passkey.counter,
+        },
+      }),
+  );
+  if (verification === null) return null;
+  if (!verification.verified) return null;
+  return { counter: verification.authenticationInfo.newCounter };
 }

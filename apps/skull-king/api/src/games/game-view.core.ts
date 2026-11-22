@@ -10,12 +10,14 @@ import {
 import type { EntryView, GameView, PlayerView, RoundView } from './games.types';
 
 const FIRST_ROUND = 1;
+const UNWRITTEN_REVISION = 0;
 
 export interface GameFacts {
   readonly joinCode: string;
   readonly phase: RoundPhase;
   readonly currentRound: number;
   readonly rematchJoinCode: string | null;
+  readonly revision: number | null;
 }
 
 export interface RoundFacts {
@@ -116,6 +118,7 @@ export function buildGameView(input: BuildGameViewInput): GameView {
     phase: input.game.phase,
     currentRound: input.game.currentRound,
     rematchJoinCode: input.game.rematchJoinCode,
+    revision: input.game.revision ?? UNWRITTEN_REVISION,
     players: players.map((player) => ({
       id: player.id,
       seat: player.seat,

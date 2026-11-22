@@ -1,9 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, desc, eq, inArray, isNull, or } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { RoundPhase } from '@domain/round.core';
 import { NO_BONUS } from '@domain/scoring.core';
-import { getDatabase } from '../database/client';
-import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import type { EntryChanges } from './game-write.core';
 import {
   accountGameTable,
@@ -18,6 +17,8 @@ export type GameRow = typeof gameTable.$inferSelect;
 export type PlayerRow = typeof playerTable.$inferSelect;
 export type RoundRow = typeof roundTable.$inferSelect;
 export type RoundEntryRow = typeof roundEntryTable.$inferSelect;
+
+const INITIAL_REVISION = 0;
 
 export type PlayerToSeat = Omit<typeof playerTable.$inferInsert, 'id' | 'gameId'>;
 
@@ -35,10 +36,19 @@ export interface EntryKey {
   readonly playerId: string;
 }
 
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
+}
+
 // @FollowsBlueprint repository-query
-export async function findGameByJoinCode(joinCode: string): Promise<GameRow | null> {
-  const database = getDatabase();
-  const rows = await database
+export async function findGameByJoinCode(
+  executor: DatabaseExecutor,
+  joinCode: string,
+): Promise<GameRow | null> {
+  const rows = await executor
     .select({ game: gameTable })
     .from(joinCodeClaimTable)
     .innerJoin(gameTable, eq(gameTable.id, joinCodeClaimTable.gameId))
@@ -47,64 +57,79 @@ export async function findGameByJoinCode(joinCode: string): Promise<GameRow | nu
   return rows[0]?.game ?? null;
 }
 
-export async function listPlayers(gameId: string): Promise<PlayerRow[]> {
-  const database = getDatabase();
-  return await database
+export async function bumpGameRevision(
+  executor: DatabaseExecutor,
+  gameId: string,
+  now: Date,
+): Promise<GameRow | null> {
+  const [row] = await executor
+    .update(gameTable)
+    .set({ revision: sql`coalesce(${gameTable.revision}, 0) + 1`, updatedAt: now })
+    .where(eq(gameTable.id, gameId))
+    .returning();
+  return row ?? null;
+}
+
+export async function listPlayers(
+  executor: DatabaseExecutor,
+  gameId: string,
+): Promise<PlayerRow[]> {
+  return await executor
     .select()
     .from(playerTable)
     .where(eq(playerTable.gameId, gameId))
     .orderBy(asc(playerTable.seat));
 }
 
-export async function listRounds(gameId: string): Promise<RoundRow[]> {
-  const database = getDatabase();
-  return await database.select().from(roundTable).where(eq(roundTable.gameId, gameId));
+export async function listRounds(executor: DatabaseExecutor, gameId: string): Promise<RoundRow[]> {
+  return await executor.select().from(roundTable).where(eq(roundTable.gameId, gameId));
 }
 
-export async function listRoundEntries(gameId: string): Promise<RoundEntryRow[]> {
-  const database = getDatabase();
-  return await database.select().from(roundEntryTable).where(eq(roundEntryTable.gameId, gameId));
+export async function listRoundEntries(
+  executor: DatabaseExecutor,
+  gameId: string,
+): Promise<RoundEntryRow[]> {
+  return await executor.select().from(roundEntryTable).where(eq(roundEntryTable.gameId, gameId));
 }
 
 // @FollowsBlueprint repository-owned-transaction-losing-a-race-quietly
-export async function insertGameUnlessCodeTaken(input: GameToCreate): Promise<GameRow | null> {
-  const database = getDatabase();
+export async function insertGameUnlessCodeTaken(
+  executor: DatabaseExecutor,
+  input: GameToCreate,
+): Promise<GameRow | null> {
   const gameId = randomUUID();
-  return await database.transaction(async (transaction) => {
-    const claimed = await transaction
-      .insert(joinCodeClaimTable)
-      .values({ joinCode: input.joinCode, gameId })
-      .onConflictDoNothing()
-      .returning({ joinCode: joinCodeClaimTable.joinCode });
-    if (claimed.length === 0) return null;
-    const [game] = await transaction
-      .insert(gameTable)
-      .values({
-        id: gameId,
-        joinCode: input.joinCode,
-        phase: input.phase,
-        currentRound: input.currentRound,
-        rematchJoinCode: null,
-        createdAt: input.now,
-        updatedAt: input.now,
-      })
-      .returning();
-    if (game === undefined) throw new Error('insert returned no game row');
-    await transaction
-      .insert(playerTable)
-      .values(input.players.map((player) => ({ ...player, gameId })));
-    return game;
-  });
+  const claimed = await executor
+    .insert(joinCodeClaimTable)
+    .values({ joinCode: input.joinCode, gameId })
+    .onConflictDoNothing()
+    .returning({ joinCode: joinCodeClaimTable.joinCode });
+  if (claimed.length === 0) return null;
+  const [game] = await executor
+    .insert(gameTable)
+    .values({
+      id: gameId,
+      joinCode: input.joinCode,
+      phase: input.phase,
+      currentRound: input.currentRound,
+      rematchJoinCode: null,
+      revision: INITIAL_REVISION,
+      createdAt: input.now,
+      updatedAt: input.now,
+    })
+    .returning();
+  if (game === undefined) throw new Error('insert returned no game row');
+  await executor.insert(playerTable).values(input.players.map((player) => ({ ...player, gameId })));
+  return game;
 }
 
 // @FollowsBlueprint repository-idempotent-upsert
 export async function upsertRoundEntry(
+  executor: DatabaseExecutor,
   key: EntryKey,
   changes: EntryChanges,
   now: Date,
 ): Promise<void> {
-  const database = getDatabase();
-  await database
+  await executor
     .insert(roundEntryTable)
     .values({
       ...key,
@@ -128,13 +153,13 @@ export interface RoundChanges {
 }
 
 export async function upsertRound(
+  executor: DatabaseExecutor,
   gameId: string,
   roundNumber: number,
   changes: RoundChanges,
   now: Date,
 ): Promise<void> {
-  const database = getDatabase();
-  await database
+  await executor
     .insert(roundTable)
     .values({
       gameId,
@@ -151,13 +176,13 @@ export async function upsertRound(
 }
 
 export async function updateGamePhase(
+  executor: DatabaseExecutor,
   gameId: string,
   phase: RoundPhase,
   currentRound: number,
   now: Date,
 ): Promise<GameRow | null> {
-  const database = getDatabase();
-  const [row] = await database
+  const [row] = await executor
     .update(gameTable)
     .set({ phase, currentRound, updatedAt: now })
     .where(eq(gameTable.id, gameId))
@@ -166,12 +191,12 @@ export async function updateGamePhase(
 }
 
 export async function updatePlayer(
+  executor: DatabaseExecutor,
   gameId: string,
   playerId: string,
   changes: Partial<PlayerToSeat>,
 ): Promise<PlayerRow | null> {
-  const database = getDatabase();
-  const [row] = await database
+  const [row] = await executor
     .update(playerTable)
     .set(changes)
     .where(and(eq(playerTable.gameId, gameId), eq(playerTable.id, playerId)))
@@ -179,24 +204,16 @@ export async function updatePlayer(
   return row ?? null;
 }
 
-// @FollowsBlueprint repository-conditional-claim
-export async function didRecordRematch(
+export async function recordRematch(
+  executor: DatabaseExecutor,
   gameId: string,
   rematchJoinCode: string,
   now: Date,
-): Promise<boolean> {
-  const database = getDatabase();
-  try {
-    const written = await database
-      .update(gameTable)
-      .set({ rematchJoinCode, updatedAt: now })
-      .where(and(eq(gameTable.id, gameId), isNull(gameTable.rematchJoinCode)))
-      .returning({ id: gameTable.id });
-    return written.length > 0;
-  } catch (error) {
-    if (isConflictAbort(error)) return false;
-    throw error;
-  }
+): Promise<void> {
+  await executor
+    .update(gameTable)
+    .set({ rematchJoinCode, updatedAt: now })
+    .where(eq(gameTable.id, gameId));
 }
 
 export async function upsertAccountGame(
@@ -249,27 +266,14 @@ export async function listRoundEntriesOfGames(
     .where(inArray(roundEntryTable.gameId, [...gameIds]));
 }
 
-export async function didClaimSeat(
+export async function linkSeat(
+  executor: DatabaseExecutor,
   gameId: string,
   playerId: string,
   accountId: string,
-): Promise<boolean> {
-  const database = getDatabase();
-  try {
-    const written = await database
-      .update(playerTable)
-      .set({ accountId })
-      .where(
-        and(
-          eq(playerTable.gameId, gameId),
-          eq(playerTable.id, playerId),
-          or(isNull(playerTable.accountId), eq(playerTable.accountId, accountId)),
-        ),
-      )
-      .returning({ id: playerTable.id });
-    return written.length > 0;
-  } catch (error) {
-    if (isConflictAbort(error)) return false;
-    throw error;
-  }
+): Promise<void> {
+  await executor
+    .update(playerTable)
+    .set({ accountId })
+    .where(and(eq(playerTable.gameId, gameId), eq(playerTable.id, playerId)));
 }

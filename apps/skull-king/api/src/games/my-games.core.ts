@@ -68,7 +68,7 @@ export function selectMyRank(game: MyGameFacts, accountId: string): number | nul
 }
 
 export function selectWinnerSeats(game: MyGameFacts): readonly number[] {
-  if (game.phase !== 'finished' || game.players.length === 0) return [];
+  if (game.phase !== 'finished') return [];
   const totals = game.players.map((player) => ({
     seat: player.seat,
     total: sumPoints(game, player.id),

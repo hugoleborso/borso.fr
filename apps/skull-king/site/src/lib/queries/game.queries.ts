@@ -5,21 +5,17 @@ import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tansta
 import { api, ApiError } from '../api.client';
 import { readFailureCode } from '../api-failure.core';
 import {
-  applyEntryEdit,
-  applyPhaseEdit,
-  applyPlayerEdit,
-  applyRoundEdit,
-  type EntryEdit,
-  type PlayerEdit,
-  type RoundEdit,
-} from '../game-edits.core';
+  addPendingEdit,
+  dropPendingEdit,
+  type GameCache,
+  type PendingEdit,
+  readShownGame,
+  receiveGame,
+  selectShownGame,
+} from '../game-cache.core';
+import type { EntryEdit, GameEdit, PlayerEdit, RoundEdit } from '../game-edits.core';
 import { selectLatestEntry } from '../game-scores.core';
-import {
-  type GameEntry,
-  type GameView,
-  isLastPendingWrite,
-  selectNewerGame,
-} from '../game-view.core';
+import type { GameEntry, GameView } from '../game-view.core';
 import type { RosterPlayer } from '../roster.core';
 
 export const gameKeys = {
@@ -45,8 +41,8 @@ async function readGame(response: GameAnswer): Promise<GameView> {
 }
 
 export function settleGame(queryClient: QueryClient, game: GameView): void {
-  queryClient.setQueryData<GameView>(gameKeys.detail(game.joinCode), (cached) =>
-    selectNewerGame(cached, game),
+  queryClient.setQueryData<GameCache>(gameKeys.detail(game.joinCode), (cache) =>
+    receiveGame(cache, game),
   );
 }
 
@@ -64,12 +60,16 @@ export function useConfig() {
 
 // @FollowsBlueprint query-module
 export function useGame(joinCode: string) {
+  const queryClient = useQueryClient();
+  const key = gameKeys.detail(joinCode);
   return useQuery({
-    queryKey: gameKeys.detail(joinCode),
-    queryFn: async (): Promise<GameView> => {
+    queryKey: key,
+    queryFn: async (): Promise<GameCache> => {
       const response = await api.api.games[':code'].$get({ param: { code: joinCode } });
-      return await readGame(response);
+      const fetched = await readGame(response);
+      return receiveGame(queryClient.getQueryData<GameCache>(key), fetched);
     },
+    select: selectShownGame,
     enabled: joinCode.length > 0,
   });
 }
@@ -116,13 +116,13 @@ export function useRematch(joinCode: string) {
 
 /**
  * @Blueprint query-optimistic-write-guarded-by-read-time
- * @BlueprintName Query Optimistic Write Guarded By Read Time
+ * @BlueprintName Query Optimistic Write Laid Over The Newest Server View
  * @BlueprintUsage Use for a write that a broadcast of the whole record also reaches, where every tap has to show at once and several phones write the same record.
- * @BlueprintDescription Predicts the view from the request in `onMutate` and settles from the answer, never from a second read, and writes the answer only when its `readAt` is not older than the cached view, so the answer to an early tap cannot undo a broadcast that already carried a later one. A failure restores the snapshot only when nothing newer has reached the cache since, because a broadcast that arrived in the meantime is the truth and the snapshot is not.
+ * @BlueprintDescription Records the edit as pending in `onMutate` beside the server's view rather than writing a prediction over it, so a broadcast from another phone that lands meanwhile still replaces the server's view and the screen shows both. The answer goes through the same newest-wins rule as every broadcast and read, and the edit leaves the pending list once the write settles, whether it succeeded or failed, so a refused write vanishes from the screen without any snapshot to restore.
  */
-function useOptimisticGameWrite<TVariables>(
+export function useOptimisticGameWrite<TVariables>(
   joinCode: string,
-  predict: (game: GameView, variables: TVariables) => GameView,
+  describeEdit: (variables: TVariables) => GameEdit,
   send: (variables: TVariables) => Promise<GameView>,
 ) {
   const queryClient = useQueryClient();
@@ -133,22 +133,17 @@ function useOptimisticGameWrite<TVariables>(
     scope: { id: `game-${joinCode}` },
     onMutate: async (variables: TVariables) => {
       await queryClient.cancelQueries({ queryKey: key });
-      const snapshot = queryClient.getQueryData<GameView>(key);
-      if (snapshot !== undefined) queryClient.setQueryData(key, predict(snapshot, variables));
-      return { snapshot };
-    },
-    onError: (_failure, _variables, context) => {
-      const snapshot = context?.snapshot;
-      if (snapshot === undefined) return;
-      queryClient.setQueryData<GameView>(key, (cached) =>
-        cached === undefined || cached.readAt === snapshot.readAt ? snapshot : cached,
-      );
+      const pending: PendingEdit = { edit: describeEdit(variables) };
+      queryClient.setQueryData<GameCache>(key, (cache) => addPendingEdit(cache, pending));
+      return { pending };
     },
     onSuccess: (game) => {
-      const isLast = isLastPendingWrite(
-        queryClient.isMutating({ mutationKey: gameKeys.writes(joinCode) }),
-      );
-      if (isLast) settleGame(queryClient, game);
+      settleGame(queryClient, game);
+    },
+    onSettled: (_game, _failure, _variables, context) => {
+      const pending = context?.pending;
+      if (pending === undefined) return;
+      queryClient.setQueryData<GameCache>(key, (cache) => dropPendingEdit(cache, pending));
     },
   });
 }
@@ -162,8 +157,12 @@ export interface EntryWrite {
 export function useWriteEntry(joinCode: string) {
   return useOptimisticGameWrite(
     joinCode,
-    (game, write: EntryWrite) =>
-      applyEntryEdit(game, write.roundNumber, write.playerId, write.edit),
+    (write: EntryWrite) => ({
+      kind: 'entry',
+      roundNumber: write.roundNumber,
+      playerId: write.playerId,
+      edit: write.edit,
+    }),
     async (write) => {
       const response = await api.api.games[':code'].rounds[':round'].entries[':playerId'].$put({
         param: { code: joinCode, round: String(write.roundNumber), playerId: write.playerId },
@@ -182,7 +181,7 @@ export interface RoundWrite {
 export function useWriteRound(joinCode: string) {
   return useOptimisticGameWrite(
     joinCode,
-    (game, write: RoundWrite) => applyRoundEdit(game, write.roundNumber, write.edit),
+    (write: RoundWrite) => ({ kind: 'round', roundNumber: write.roundNumber, edit: write.edit }),
     async (write) => {
       const response = await api.api.games[':code'].rounds[':round'].$put({
         param: { code: joinCode, round: String(write.roundNumber) },
@@ -201,7 +200,7 @@ export interface PhaseMove {
 export function useMovePhase(joinCode: string) {
   return useOptimisticGameWrite(
     joinCode,
-    (game, move: PhaseMove) => applyPhaseEdit(game, move.round, move.phase),
+    (move: PhaseMove) => ({ kind: 'phase', round: move.round, phase: move.phase }),
     async (move) => {
       const response = await api.api.games[':code'].phase.$put({
         param: { code: joinCode },
@@ -220,7 +219,7 @@ export interface PlayerChange {
 export function useChangePlayer(joinCode: string) {
   return useOptimisticGameWrite(
     joinCode,
-    (game, change: PlayerChange) => applyPlayerEdit(game, change.playerId, change.edit),
+    (change: PlayerChange) => ({ kind: 'player', playerId: change.playerId, edit: change.edit }),
     async (change) => {
       const response = await api.api.games[':code'].players[':playerId'].$patch({
         param: { code: joinCode, playerId: change.playerId },
@@ -235,7 +234,7 @@ export function useReadLatestEntry(joinCode: string) {
   const queryClient = useQueryClient();
   return (roundNumber: number, playerId: string): GameEntry | null =>
     selectLatestEntry(
-      queryClient.getQueryData<GameView>(gameKeys.detail(joinCode)),
+      readShownGame(queryClient.getQueryData<GameCache>(gameKeys.detail(joinCode))),
       roundNumber,
       playerId,
     );

@@ -1,4 +1,5 @@
-import postgres from 'postgres';
+import postgres, { type TransactionSql } from 'postgres';
+import { z } from 'zod';
 
 const TRUNCATED_TABLES = [
   'round_entry',
@@ -70,4 +71,71 @@ export async function abortCommitsUpdatingColumn(
       await sql.unsafe(`DROP SEQUENCE "${SIMULATED_CONFLICT_SEQUENCE}"`);
     },
   };
+}
+
+const LOCK_WAITER_POLL_MILLISECONDS = 10;
+const LOCK_WAITER_DEADLINE_MILLISECONDS = 10_000;
+const lockWaiterCountSchema = z.array(z.object({ waiting: z.coerce.number() }));
+
+async function countLockWaiters(): Promise<number> {
+  const rows: unknown = await testSql().unsafe(
+    `SELECT count(*) AS waiting FROM pg_stat_activity
+     WHERE datname = current_database() AND wait_event_type = 'Lock'`,
+  );
+  return lockWaiterCountSchema.parse(rows)[0]?.waiting ?? 0;
+}
+
+async function waitForLockWaiters(expected: number, heldOn: string): Promise<void> {
+  const deadline = Date.now() + LOCK_WAITER_DEADLINE_MILLISECONDS;
+  while ((await countLockWaiters()) < expected) {
+    if (Date.now() > deadline) {
+      throw new Error(
+        `fewer than ${expected} writers ever waited on ${heldOn}: check that the write under test touches it`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, LOCK_WAITER_POLL_MILLISECONDS));
+  }
+}
+
+export interface LockHold {
+  readonly heldOn: string;
+  readonly take: (transaction: TransactionSql) => Promise<unknown>;
+}
+
+export function holdGameRow(joinCode: string): LockHold {
+  return {
+    heldOn: `the game row of ${joinCode}`,
+    take: async (transaction) =>
+      await transaction`SELECT 1 FROM game WHERE join_code = ${joinCode} FOR UPDATE`,
+  };
+}
+
+export function holdWritesToTable(tableName: string): LockHold {
+  return {
+    heldOn: `table "${tableName}"`,
+    take: async (transaction) =>
+      await transaction.unsafe(`LOCK TABLE "${tableName}" IN SHARE MODE`),
+  };
+}
+
+// @FollowsBlueprint test-database-isolation
+export async function runWritersWhileHeld<First, Second>(
+  hold: LockHold,
+  first: () => Promise<First>,
+  second: () => Promise<Second>,
+): Promise<readonly [First, Second]> {
+  const started = await testSql().begin(async (transaction) => {
+    await hold.take(transaction);
+    const firstPending = first();
+    await waitForLockWaiters(1, hold.heldOn);
+    const secondPending = second();
+    await waitForLockWaiters(2, hold.heldOn);
+    return { firstPending, secondPending };
+  });
+  return [await started.firstPending, await started.secondPending];
+}
+
+export async function countRows(query: string, parameters: readonly string[]): Promise<number> {
+  const rows: unknown = await testSql().unsafe(query, [...parameters]);
+  return z.array(z.object({ count: z.coerce.number() })).parse(rows)[0]?.count ?? 0;
 }

@@ -27,7 +27,7 @@ const LEA = {
 } as const;
 
 const input = (overrides: Partial<BuildGameViewInput> = {}): BuildGameViewInput => ({
-  game: { joinCode: 'BRIG', phase: 'scoring', currentRound: 2, rematchJoinCode: null },
+  game: { joinCode: 'BRIG', phase: 'scoring', currentRound: 2, rematchJoinCode: null, revision: 7 },
   players: [LEA, HUGO],
   rounds: [],
   entries: [],
@@ -48,12 +48,20 @@ describe('buildGameView', () => {
     expect(view.rematchJoinCode).toBeNull();
   });
 
+  it('carries the revision of the game, and reads a game nobody wrote since its creation as 0', () => {
+    const unwritten = { ...input().game, revision: null };
+
+    expect(buildGameView(input()).revision).toBe(7);
+    expect(buildGameView(input({ game: unwritten })).revision).toBe(0);
+  });
+
   it('names the rematch once one exists, so every phone can follow it', () => {
     const finished = {
       joinCode: 'BRIG',
       phase: 'finished',
       currentRound: 10,
       rematchJoinCode: 'KRAK',
+      revision: 7,
     } as const;
 
     expect(buildGameView(input({ game: finished })).rematchJoinCode).toBe('KRAK');

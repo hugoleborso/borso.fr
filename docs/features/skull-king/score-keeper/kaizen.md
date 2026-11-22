@@ -30,3 +30,8 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-22 18:49] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-22 18:51] `hook:no-swallowed-push` sent git push or git commit errors to /dev/null
 - [2026-11-22 18:53] `vocab-agent` The skull-king glossary pointed eleven terms at one combined 'Round and entry' invariants section, which check-vocabulary-paths only catches at pre-commit, after the docs were written.
+- [2026-11-22 19:20] `technical-validator` A probe test's console.log output in the skull-king back-e2e project shows only with --reporter=verbose, so the first probe run printed nothing and had to be repeated.
+- [2026-11-22 19:34] `hook:no-test-double-dash` passed -- to a pnpm test script, which makes Vitest run every file
+- [2026-11-22 19:46] `fix-round-1` A PreToolUse hook that refuses a chained Bash command also drops the file edit chained before it, and the refusal reads like a test-runner hint, so an edit can silently never happen.
+- [2026-11-22 19:46] `fix-round-1` Every back-e2e request prints a wide-event JSON line to stdout, so a race test's failure is buried under hundreds of log lines unless the run is grepped.
+- [2026-11-22 19:57] `fix-round-1` Stryker's incremental file kept a Survived verdict for a mutant whose line was unchanged though the code around it changed, so a killed mutant kept failing the gate until its test file moved.

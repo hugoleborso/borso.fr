@@ -92,20 +92,23 @@ describe('passkey.adapter', () => {
     });
     expect(verifyRegistrationResponse).toHaveBeenCalledWith(
       expect.objectContaining({
+        response: BROWSER_RESPONSE,
         expectedChallenge: CHALLENGE,
         expectedOrigin: 'http://localhost:5178',
         expectedRPID: 'localhost',
+        requireUserVerification: false,
       }),
     );
   });
 
   it('refuses a registration that is not a browser response, unverified, or thrown on', async () => {
     expect(await checkRegistration({ response: { nope: true }, challenge: CHALLENGE })).toBeNull();
-    verifyRegistrationResponse.mockResolvedValueOnce({ verified: false });
-    expect(
-      await checkRegistration({ response: BROWSER_RESPONSE, challenge: CHALLENGE }),
-    ).toBeNull();
-    verifyRegistrationResponse.mockResolvedValueOnce({ verified: true });
+    verifyRegistrationResponse.mockResolvedValueOnce({
+      verified: false,
+      registrationInfo: {
+        credential: { id: 'credential-1', publicKey: new Uint8Array([9]), counter: 0 },
+      },
+    });
     expect(
       await checkRegistration({ response: BROWSER_RESPONSE, challenge: CHALLENGE }),
     ).toBeNull();
@@ -130,6 +133,11 @@ describe('passkey.adapter', () => {
     ).toEqual({ counter: 5 });
     expect(verifyAuthenticationResponse).toHaveBeenCalledWith(
       expect.objectContaining({
+        response: BROWSER_RESPONSE,
+        expectedChallenge: CHALLENGE,
+        expectedOrigin: 'http://localhost:5178',
+        expectedRPID: 'localhost',
+        requireUserVerification: false,
         credential: { id: 'credential-1', publicKey: new Uint8Array([1, 2, 3]), counter: 4 },
       }),
     );
@@ -138,6 +146,11 @@ describe('passkey.adapter', () => {
   it('refuses a sign-in that is not a browser response, unverified, or thrown on', async () => {
     expect(await attemptSignIn({ nope: true })).toBeNull();
     verifyAuthenticationResponse.mockResolvedValueOnce({ verified: false });
+    expect(await attemptSignIn(BROWSER_RESPONSE)).toBeNull();
+    verifyAuthenticationResponse.mockResolvedValueOnce({
+      verified: false,
+      authenticationInfo: { newCounter: 9 },
+    });
     expect(await attemptSignIn(BROWSER_RESPONSE)).toBeNull();
     verifyAuthenticationResponse.mockRejectedValueOnce(new Error('bad signature'));
     expect(await attemptSignIn(BROWSER_RESPONSE)).toBeNull();

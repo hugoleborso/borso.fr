@@ -130,8 +130,8 @@ Invariants: `api/src/games/INVARIANTS.md`
 
 The step the game is on: `bidding`, `scoring` or `finished`, from
 `ROUND_PHASES` in `domain/round.core.ts`. It decides which screen shows. A
-phase moves forward only when every bid is placed and every played round
-balances.
+phase moves forward one round at a time, only when every bid is placed and
+every played round balances.
 
 Lives in: `api/src/games/`
 
@@ -204,10 +204,34 @@ records which seat is the account's.
 ## View
 
 The whole game as one phone shows it, `GameView`: players, every played
-round with its entries, the phase and the time the server built it. Every
-write answers it, and every connection receives it.
+round with its entries, the phase, the revision and the time the server
+read it. Every write answers it, and every connection receives it.
 
 Lives in: `api/src/games/`
+
+Invariants: `api/src/games/INVARIANTS.md`
+
+## Revision
+
+A counter on the game that every write bumps first, inside the write's own
+transaction, so two writes to one game happen one after the other. The view
+carries it, and the higher revision is the newer view.
+
+Lives in: `api/src/games/`
+
+Invariants: `api/src/games/INVARIANTS.md`
+
+Often confused with **readAt**. The revision counts committed writes; `readAt`
+is only when a request was served, and a request that started first can
+commit last.
+
+## Pending edit
+
+A tap this phone sent and has not heard back about. The site keeps it beside
+the server's view and lays it over that view to draw the screen, until the
+write answers or fails.
+
+Lives in: `site/src/lib/game-cache.core.ts`
 
 Invariants: `api/src/games/INVARIANTS.md`
 

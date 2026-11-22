@@ -182,6 +182,7 @@ describe('hasUnbalancedClosedRound', () => {
     currentRound: 3,
     players: [],
     rounds: [balanced, unbalanced],
+    revision: 1,
     readAt: '2026-11-22T10:00:00.000Z',
   };
 
@@ -237,7 +238,12 @@ describe('isHarryLocked', () => {
 
   it('leaves Harry open to the player who used him, and to all before anyone did', () => {
     expect(isHarryLocked([MADE, adjusted], adjusted)).toBe(false);
-    expect(isHarryLocked([MADE], MADE)).toBe(false);
+    expect(isHarryLocked([MADE, { ...MADE, playerId: 'p2' }], MADE)).toBe(false);
+  });
+
+  it('never locks Harry away from a player already using him, even beside a second holder', () => {
+    const second: GameEntry = { ...MADE, playerId: 'p3', bidAdjustment: -1 };
+    expect(isHarryLocked([MADE, adjusted, second], adjusted)).toBe(false);
   });
 });
 
@@ -250,7 +256,12 @@ describe('isRascalLocked', () => {
 
   it('leaves the Rascal open to the player who bet, and to all before anyone did', () => {
     expect(isRascalLocked([MADE, betting], betting)).toBe(false);
-    expect(isRascalLocked([MADE], MADE)).toBe(false);
+    expect(isRascalLocked([MADE, { ...MADE, playerId: 'p2' }], MADE)).toBe(false);
+  });
+
+  it('never locks the Rascal away from a player already betting, even beside a second bettor', () => {
+    const second: GameEntry = { ...MADE, playerId: 'p3', rascalBet: 10 };
+    expect(isRascalLocked([MADE, betting, second], betting)).toBe(false);
   });
 });
 

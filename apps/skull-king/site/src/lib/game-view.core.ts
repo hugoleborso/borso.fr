@@ -55,6 +55,7 @@ const gameViewSchema = z.object({
       ),
     }),
   ),
+  revision: z.number(),
   readAt: z.string(),
   rematchJoinCode: z.string().nullish(),
 });
@@ -94,6 +95,7 @@ export interface GameView {
   readonly currentRound: number;
   readonly players: readonly GamePlayer[];
   readonly rounds: readonly GameRound[];
+  readonly revision: number;
   readonly readAt: string;
   readonly rematchJoinCode?: string | null;
 }
@@ -106,23 +108,4 @@ export function parseBroadcast(rawMessage: unknown): GameView | null {
   } catch {
     return null;
   }
-}
-
-/**
- * @Blueprint core-newest-view-wins
- * @BlueprintName Core Newest View Wins
- * @BlueprintUsage Use where the same whole record reaches the cache from several paths, a write's own answer and a broadcast, in an order the network decides.
- * @BlueprintDescription Compares the instant the server built each view and keeps the later one, so a broadcast that left the server before a newer write's answer cannot undo it by arriving after it. The comparison is on the server's clock only, which every view carries, so two phones never compare their own clocks. A cache with nothing yet takes whatever arrives, and a tie takes the incoming view, because the same instant means the same rows.
- */
-export function selectNewerGame(previous: GameView | undefined, incoming: GameView): GameView {
-  if (previous === undefined) return incoming;
-  return Date.parse(incoming.readAt) >= Date.parse(previous.readAt) ? incoming : previous;
-}
-
-export function isLastPendingWrite(pendingWrites: number): boolean {
-  return pendingWrites <= 1;
-}
-
-export function isWithoutPendingWrite(pendingWrites: number): boolean {
-  return pendingWrites === 0;
 }

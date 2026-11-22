@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { isConflictAbort } from './conflict-abort.core';
+import { describe, expect, it, vi } from 'vitest';
+import { isConflictAbort, retryOnConflictAbort } from './conflict-abort.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('isConflictAbort', () => {
@@ -29,5 +29,42 @@ describe('isConflictAbort', () => {
     expect(isConflictAbort({ cause: new Error('no code') })).toBe(false);
     expect(isConflictAbort(new Error('timeout'))).toBe(false);
     expect(isConflictAbort('OC000')).toBe(false);
+  });
+});
+
+const CONFLICT = Object.assign(new Error('change conflicts with another transaction'), {
+  code: 'OC000',
+});
+
+function failingFirst(failures: readonly Error[]) {
+  const queue = [...failures];
+  return vi.fn(async () => {
+    const failure = queue.shift();
+    if (failure !== undefined) throw failure;
+    return await Promise.resolve('written');
+  });
+}
+
+describe('retryOnConflictAbort', () => {
+  it('answers the first attempt that commits, after as many conflicts as it may retry', async () => {
+    const operation = failingFirst([CONFLICT, CONFLICT, CONFLICT]);
+
+    await expect(retryOnConflictAbort(operation, 3)).resolves.toBe('written');
+    expect(operation).toHaveBeenCalledTimes(4);
+  });
+
+  it('gives up with the conflict once the retries are spent', async () => {
+    const operation = failingFirst([CONFLICT, CONFLICT, CONFLICT]);
+
+    await expect(retryOnConflictAbort(operation, 2)).rejects.toBe(CONFLICT);
+    expect(operation).toHaveBeenCalledTimes(3);
+  });
+
+  it('never retries a failure that is not a conflict', async () => {
+    const refusal = new Error('round-not-played');
+    const operation = failingFirst([refusal]);
+
+    await expect(retryOnConflictAbort(operation, 3)).rejects.toBe(refusal);
+    expect(operation).toHaveBeenCalledTimes(1);
   });
 });

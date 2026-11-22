@@ -65,6 +65,11 @@ describe('selectMyRank', () => {
     expect(selectMyRank(betAndLost, MY_ACCOUNT_ID)).toBe(1);
   });
 
+  it('counts the round the game is playing now', () => {
+    const playingSecond = game({ currentRound: 2, entries: [entry(2, 'lea', 2)] });
+    expect(selectMyRank(playingSecond, MY_ACCOUNT_ID)).toBe(2);
+  });
+
   it('leaves out a round the game has moved back from', () => {
     const movedBack = game({ currentRound: 1, entries: [entry(2, 'lea', 2)] });
     expect(selectMyRank(movedBack, MY_ACCOUNT_ID)).toBe(1);

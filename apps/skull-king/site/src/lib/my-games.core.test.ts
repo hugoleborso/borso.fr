@@ -23,6 +23,7 @@ function aGame(): GameView {
       { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'coral' },
     ],
     rounds: [],
+    revision: 1,
     readAt: '2026-11-22T10:00:00.000Z',
   };
 }
@@ -65,11 +66,16 @@ describe('canClaimSeat', () => {
   it('refuses once a seat already carries the account, and for a guest', () => {
     expect(canClaimSeat(aGame(), MY_ACCOUNT)).toBe(false);
     expect(canClaimSeat(aGame(), null)).toBe(false);
+    const everySeatClaimed = {
+      ...aGame(),
+      players: aGame().players.map((player) => ({ ...player, accountId: `account-${player.id}` })),
+    };
+    expect(canClaimSeat(everySeatClaimed, null)).toBe(false);
   });
 });
 
 describe('isMySeat', () => {
-  const [, mine, other] = aGame().players;
+  const [unclaimed, mine, other] = aGame().players;
 
   it('recognises the seat carrying my account', () => {
     expect(mine === undefined ? null : isMySeat(mine, MY_ACCOUNT)).toBe(true);
@@ -78,6 +84,7 @@ describe('isMySeat', () => {
   it('recognises no seat for a guest or another account', () => {
     expect(mine === undefined ? null : isMySeat(mine, null)).toBe(false);
     expect(other === undefined ? null : isMySeat(other, MY_ACCOUNT)).toBe(false);
+    expect(unclaimed === undefined ? null : isMySeat(unclaimed, null)).toBe(false);
   });
 });
 

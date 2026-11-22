@@ -86,6 +86,10 @@ describe('selectFreeMark', () => {
     });
   });
 
+  it("answers the first free icon rather than the next seat's", () => {
+    expect(selectFreeMark([{ ...HUGO, icon: 'parrot' }]).icon).toBe('skull');
+  });
+
   it('falls back to the mark of the next seat once every icon and colour is taken', () => {
     const everyMark = PLAYER_ICONS.map((icon, seat) => ({
       name: `P${seat}`,

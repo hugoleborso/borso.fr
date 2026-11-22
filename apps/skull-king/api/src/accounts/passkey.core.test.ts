@@ -18,9 +18,13 @@ describe('readChallengeFromResponse', () => {
     expect(readChallengeFromResponse(response)).toBe('abc');
   });
 
+  it('answers no challenge for a browser response without client data', () => {
+    expect(readChallengeFromResponse({ response: {} })).toBeNull();
+    expect(readChallengeFromResponse({ response: { clientDataJSON: 7 } })).toBeNull();
+  });
+
   it('answers no challenge for anything else', () => {
     expect(readChallengeFromResponse('abc')).toBeNull();
-    expect(readChallengeFromResponse({ response: {} })).toBeNull();
     expect(readChallengeFromResponse({ response: { clientDataJSON: clientData({}) } })).toBeNull();
     expect(
       readChallengeFromResponse({ response: { clientDataJSON: 'not json at all' } }),
@@ -37,5 +41,6 @@ describe('the credential of a browser response', () => {
   it('recognises a browser response by its id and raw id', () => {
     expect(isWebauthnResponse({ id: 'a', rawId: 'a' })).toBe(true);
     expect(isWebauthnResponse({ id: 'a' })).toBe(false);
+    expect(isWebauthnResponse({ rawId: 'a' })).toBe(false);
   });
 });

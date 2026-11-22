@@ -1,5 +1,5 @@
 import { eq, lt } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import {
   accountTable,
   appSecretTable,
@@ -80,17 +80,26 @@ export async function takeChallenge(challenge: string): Promise<ChallengeRow | n
 }
 
 // @FollowsBlueprint repository-owned-transaction
-export async function insertAccountWithPasskey(
+export async function runInOneTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
+}
+
+export async function insertAccount(
+  executor: DatabaseExecutor,
   account: AccountRow,
-  passkey: PasskeyRow,
 ): Promise<AccountRow> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    const [row] = await transaction.insert(accountTable).values(account).returning();
-    if (row === undefined) throw new Error('insert returned no account row');
-    await transaction.insert(passkeyTable).values(passkey);
-    return row;
-  });
+  const [row] = await executor.insert(accountTable).values(account).returning();
+  if (row === undefined) throw new Error('insert returned no account row');
+  return row;
+}
+
+export async function insertPasskey(
+  executor: DatabaseExecutor,
+  passkey: PasskeyRow,
+): Promise<void> {
+  await executor.insert(passkeyTable).values(passkey);
 }
 
 export async function updatePasskeyCounter(credentialId: string, counter: number): Promise<void> {

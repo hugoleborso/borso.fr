@@ -20,6 +20,7 @@ export const gameViewSchema = z
     phase: z.enum(['bidding', 'scoring', 'finished']),
     currentRound: z.number(),
     rematchJoinCode: z.string().nullable(),
+    revision: z.number(),
     players: z.array(
       z
         .object({

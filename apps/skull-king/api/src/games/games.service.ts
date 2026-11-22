@@ -1,13 +1,14 @@
 import type { RoundPhase } from '@domain/round.core';
+import type { DatabaseExecutor } from '../database/client';
 import { GameError } from '../helpers/errors/game-error.types';
+import { retryOnConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import { broadcastGame } from '../realtime/broadcast.service';
 import { buildGameView } from './game-view.core';
 import {
   refuseEntryWrite,
   refusePhaseMove,
   refuseRoundWrite,
-  selectAbilityHolders,
-  selectSeatHolding,
+  decideSeatClaim,
   selectEntryChanges,
 } from './game-write.core';
 import type {
@@ -18,18 +19,20 @@ import type {
   WriteRoundInput,
 } from './games.schema';
 import {
-  didClaimSeat,
-  didRecordRematch,
+  bumpGameRevision,
   findGameByJoinCode,
   type GameRow,
   insertGameUnlessCodeTaken,
+  linkSeat,
   listGamesOpenedBy,
   listPlayers,
   listPlayersOfGames,
-  listRoundEntriesOfGames,
   listRoundEntries,
+  listRoundEntriesOfGames,
   listRounds,
   type PlayerToSeat,
+  recordRematch,
+  runInOneTransaction,
   updateGamePhase,
   updatePlayer,
   upsertAccountGame,
@@ -37,18 +40,15 @@ import {
   upsertRoundEntry,
 } from './games.repository';
 import type { GameView } from './games.types';
-import { buildMyGames, type MyGameView } from './my-games.core';
 import { buildJoinCode } from './join-code.utils';
+import { buildMyGames, type MyGameView } from './my-games.core';
 
 export { refuseInvalidInput } from '../helpers/errors/invalid-input.core';
 
 const FIRST_ROUND = 1;
 const OPENING_PHASE: RoundPhase = 'bidding';
 const JOIN_CODE_ATTEMPTS = 8;
-const FIRST_REMATCH_ATTEMPT = 1;
-const REMATCH_RECORD_ATTEMPTS = 2;
-const FIRST_SEAT_CLAIM_ATTEMPT = 1;
-const SEAT_CLAIM_ATTEMPTS = 2;
+const CONFLICT_RETRIES = 3;
 
 export interface Visit {
   readonly accountId: string | null;
@@ -61,44 +61,71 @@ export interface EntryAddress {
   readonly playerId: string;
 }
 
-async function loadGameOrRefuse(joinCode: string): Promise<GameRow> {
-  const game = await findGameByJoinCode(joinCode);
-  if (game === null) throw new GameError('game-not-found');
-  return game;
-}
+type GameWrite = (executor: DatabaseExecutor, game: GameRow) => Promise<GameRow>;
 
 async function recordVisit(gameId: string, visit: Visit): Promise<void> {
   if (visit.accountId === null) return;
   await upsertAccountGame(visit.accountId, gameId, visit.now);
 }
 
-async function openGameOrRefuse(joinCode: string, visit: Visit): Promise<GameRow> {
-  const game = await loadGameOrRefuse(joinCode);
-  await recordVisit(game.id, visit);
-  return game;
-}
-
-async function describeGame(game: GameRow, now: Date): Promise<GameView> {
+async function describeGame(
+  executor: DatabaseExecutor,
+  game: GameRow,
+  now: Date,
+): Promise<GameView> {
   const [players, rounds, entries] = await Promise.all([
-    listPlayers(game.id),
-    listRounds(game.id),
-    listRoundEntries(game.id),
+    listPlayers(executor, game.id),
+    listRounds(executor, game.id),
+    listRoundEntries(executor, game.id),
   ]);
   return buildGameView({ game, players, rounds, entries, readAt: now });
 }
 
-async function publishGame(game: GameRow, now: Date): Promise<GameView> {
-  const view = await describeGame(game, now);
-  await broadcastGame(game.id, view);
-  return view;
+async function getGameOrRefuse(executor: DatabaseExecutor, joinCode: string): Promise<GameRow> {
+  const game = await findGameByJoinCode(executor, joinCode);
+  if (game === null) throw new GameError('game-not-found');
+  return game;
+}
+
+async function takeGameTurn(
+  executor: DatabaseExecutor,
+  joinCode: string,
+  now: Date,
+): Promise<GameRow> {
+  const found = await getGameOrRefuse(executor, joinCode);
+  const game = await bumpGameRevision(executor, found.id, now);
+  if (game === null) throw new GameError('game-not-found');
+  return game;
+}
+
+interface WrittenGame {
+  readonly gameId: string;
+  readonly view: GameView;
+}
+
+// @FollowsBlueprint service-orchestration
+async function writeGame(joinCode: string, visit: Visit, write: GameWrite): Promise<GameView> {
+  const written = await retryOnConflictAbort(
+    async () =>
+      await runInOneTransaction(async (executor): Promise<WrittenGame> => {
+        const game = await takeGameTurn(executor, joinCode, visit.now);
+        const after = await write(executor, game);
+        return { gameId: game.id, view: await describeGame(executor, after, visit.now) };
+      }),
+    CONFLICT_RETRIES,
+  );
+  await recordVisit(written.gameId, visit);
+  await broadcastGame(written.gameId, written.view);
+  return written.view;
 }
 
 async function insertGameWithFreeCode(
+  executor: DatabaseExecutor,
   players: readonly PlayerToSeat[],
   now: Date,
 ): Promise<GameRow> {
   for (let attempt = 0; attempt < JOIN_CODE_ATTEMPTS; attempt += 1) {
-    const game = await insertGameUnlessCodeTaken({
+    const game = await insertGameUnlessCodeTaken(executor, {
       joinCode: buildJoinCode(() => Math.random()),
       phase: OPENING_PHASE,
       currentRound: FIRST_ROUND,
@@ -110,20 +137,34 @@ async function insertGameWithFreeCode(
   throw new Error('could not find a free join code');
 }
 
-// @FollowsBlueprint service-orchestration
 export async function createGame(input: CreateGameInput, visit: Visit): Promise<GameView> {
   const players = input.players.map((player, seat) => ({ ...player, seat }));
-  const game = await insertGameWithFreeCode(players, visit.now);
-  await recordVisit(game.id, visit);
-  return await publishGame(game, visit.now);
+  const written = await retryOnConflictAbort(
+    async () =>
+      await runInOneTransaction(async (executor): Promise<WrittenGame> => {
+        const game = await insertGameWithFreeCode(executor, players, visit.now);
+        return { gameId: game.id, view: await describeGame(executor, game, visit.now) };
+      }),
+    CONFLICT_RETRIES,
+  );
+  await recordVisit(written.gameId, visit);
+  await broadcastGame(written.gameId, written.view);
+  return written.view;
 }
 
 export async function readGame(joinCode: string, visit: Visit): Promise<GameView> {
-  return await describeGame(await openGameOrRefuse(joinCode, visit), visit.now);
+  const written = await runInOneTransaction(async (executor): Promise<WrittenGame> => {
+    const game = await getGameOrRefuse(executor, joinCode);
+    return { gameId: game.id, view: await describeGame(executor, game, visit.now) };
+  });
+  await recordVisit(written.gameId, visit);
+  return written.view;
 }
 
 export async function findGameIdForSocket(joinCode: string): Promise<string | null> {
-  const game = await findGameByJoinCode(joinCode);
+  const game = await runInOneTransaction(
+    async (executor) => await findGameByJoinCode(executor, joinCode),
+  );
   return game?.id ?? null;
 }
 
@@ -132,26 +173,27 @@ export async function writeEntry(
   input: WriteEntryInput,
   visit: Visit,
 ): Promise<GameView> {
-  const game = await openGameOrRefuse(address.joinCode, visit);
-  const [players, entries] = await Promise.all([listPlayers(game.id), listRoundEntries(game.id)]);
-  const refusal = refuseEntryWrite({
-    roundNumber: address.roundNumber,
-    currentRound: game.currentRound,
-    seatedPlayerIds: players.map((player) => player.id),
-    playerId: address.playerId,
-    bid: input.bid,
-    bidAdjustment: input.bidAdjustment,
-    rascalBet: input.rascalBet,
-    tricks: input.tricks,
-    holders: selectAbilityHolders(entries, address.roundNumber),
+  const changes = selectEntryChanges(input);
+  return await writeGame(address.joinCode, visit, async (executor, game) => {
+    const before = await describeGame(executor, game, visit.now);
+    const refusal = refuseEntryWrite({
+      roundNumber: address.roundNumber,
+      currentRound: game.currentRound,
+      seatedPlayerIds: before.players.map((player) => player.id),
+      playerId: address.playerId,
+      changes,
+      roundEntries:
+        before.rounds.find((round) => round.number === address.roundNumber)?.entries ?? [],
+    });
+    if (refusal !== null) throw new GameError(refusal);
+    await upsertRoundEntry(
+      executor,
+      { gameId: game.id, roundNumber: address.roundNumber, playerId: address.playerId },
+      changes,
+      visit.now,
+    );
+    return game;
   });
-  if (refusal !== null) throw new GameError(refusal);
-  await upsertRoundEntry(
-    { gameId: game.id, roundNumber: address.roundNumber, playerId: address.playerId },
-    selectEntryChanges(input),
-    visit.now,
-  );
-  return await publishGame(game, visit.now);
 }
 
 export async function writeRound(
@@ -160,11 +202,12 @@ export async function writeRound(
   changes: WriteRoundInput,
   visit: Visit,
 ): Promise<GameView> {
-  const game = await openGameOrRefuse(joinCode, visit);
-  const refusal = refuseRoundWrite(roundNumber, game.currentRound);
-  if (refusal !== null) throw new GameError(refusal);
-  await upsertRound(game.id, roundNumber, changes, visit.now);
-  return await publishGame(game, visit.now);
+  return await writeGame(joinCode, visit, async (executor, game) => {
+    const refusal = refuseRoundWrite(roundNumber, game.currentRound);
+    if (refusal !== null) throw new GameError(refusal);
+    await upsertRound(executor, game.id, roundNumber, changes, visit.now);
+    return game;
+  });
 }
 
 export async function movePhase(
@@ -172,17 +215,18 @@ export async function movePhase(
   target: MovePhaseInput,
   visit: Visit,
 ): Promise<GameView> {
-  const game = await openGameOrRefuse(joinCode, visit);
-  const before = await describeGame(game, visit.now);
-  const refusal = refusePhaseMove({
-    current: { round: before.currentRound, phase: before.phase },
-    target,
-    rounds: before.rounds,
+  return await writeGame(joinCode, visit, async (executor, game) => {
+    const before = await describeGame(executor, game, visit.now);
+    const refusal = refusePhaseMove({
+      current: { round: before.currentRound, phase: before.phase },
+      target,
+      rounds: before.rounds,
+    });
+    if (refusal !== null) throw new GameError(refusal);
+    const moved = await updateGamePhase(executor, game.id, target.phase, target.round, visit.now);
+    if (moved === null) throw new GameError('game-not-found');
+    return moved;
   });
-  if (refusal !== null) throw new GameError(refusal);
-  const moved = await updateGamePhase(game.id, target.phase, target.round, visit.now);
-  if (moved === null) throw new GameError('game-not-found');
-  return await publishGame(moved, visit.now);
 }
 
 export async function changePlayer(
@@ -191,24 +235,11 @@ export async function changePlayer(
   changes: UpdatePlayerInput,
   visit: Visit,
 ): Promise<GameView> {
-  const game = await openGameOrRefuse(joinCode, visit);
-  const player = await updatePlayer(game.id, playerId, changes);
-  if (player === null) throw new GameError('player-not-found');
-  return await publishGame(game, visit.now);
-}
-
-async function takeSeat(
-  gameId: string,
-  playerId: string,
-  accountId: string,
-  attempt: number,
-): Promise<void> {
-  if (await didClaimSeat(gameId, playerId, accountId)) return;
-  const holding = selectSeatHolding(await listPlayers(gameId), playerId, accountId);
-  if (holding === 'mine') return;
-  if (holding !== 'free') throw new GameError(holding);
-  if (attempt >= SEAT_CLAIM_ATTEMPTS) throw new Error('could not claim the seat');
-  await takeSeat(gameId, playerId, accountId, attempt + 1);
+  return await writeGame(joinCode, visit, async (executor, game) => {
+    const player = await updatePlayer(executor, game.id, playerId, changes);
+    if (player === null) throw new GameError('player-not-found');
+    return game;
+  });
 }
 
 export async function claimSeat(
@@ -216,45 +247,21 @@ export async function claimSeat(
   playerId: string,
   visit: Visit,
 ): Promise<GameView> {
-  if (visit.accountId === null) throw new GameError('session-required');
-  const game = await openGameOrRefuse(joinCode, visit);
-  await takeSeat(game.id, playerId, visit.accountId, FIRST_SEAT_CLAIM_ATTEMPT);
-  return await publishGame(game, visit.now);
+  const { accountId } = visit;
+  if (accountId === null) throw new GameError('session-required');
+  return await writeGame(joinCode, visit, async (executor, game) => {
+    const claim = decideSeatClaim(await listPlayers(executor, game.id), playerId, accountId);
+    if (claim.refusal !== null) throw new GameError(claim.refusal);
+    if (claim.isLinking) await linkSeat(executor, game.id, playerId, accountId);
+    return game;
+  });
 }
 
-async function announceRematch(
-  game: GameRow,
-  rematchJoinCode: string,
-  visit: Visit,
-): Promise<GameView> {
-  await publishGame(game, visit.now);
-  return await readGame(rematchJoinCode, visit);
-}
-
-async function recordRematch(
-  joinCode: string,
-  rematchJoinCode: string,
-  visit: Visit,
-  attempt: number,
-): Promise<GameView> {
-  const game = await loadGameOrRefuse(joinCode);
-  if (game.rematchJoinCode !== null) {
-    return await announceRematch(game, game.rematchJoinCode, visit);
-  }
-  if (attempt > REMATCH_RECORD_ATTEMPTS) throw new Error('could not record the rematch');
-  if (await didRecordRematch(game.id, rematchJoinCode, visit.now)) {
-    return await announceRematch({ ...game, rematchJoinCode }, rematchJoinCode, visit);
-  }
-  return await recordRematch(joinCode, rematchJoinCode, visit, attempt + 1);
-}
-
-export async function startRematch(joinCode: string, visit: Visit): Promise<GameView> {
-  const game = await openGameOrRefuse(joinCode, visit);
-  if (game.rematchJoinCode !== null) {
-    return await announceRematch(game, game.rematchJoinCode, visit);
-  }
-  const players = await listPlayers(game.id);
+async function seatRematch(executor: DatabaseExecutor, game: GameRow, now: Date): Promise<GameRow> {
+  if (game.rematchJoinCode !== null) return game;
+  const players = await listPlayers(executor, game.id);
   const rematch = await insertGameWithFreeCode(
+    executor,
     players.map(({ seat, name, icon, color, accountId }) => ({
       seat,
       name,
@@ -262,9 +269,20 @@ export async function startRematch(joinCode: string, visit: Visit): Promise<Game
       color,
       accountId,
     })),
-    visit.now,
+    now,
   );
-  return await recordRematch(joinCode, rematch.joinCode, visit, FIRST_REMATCH_ATTEMPT);
+  await recordRematch(executor, game.id, rematch.joinCode, now);
+  return { ...game, rematchJoinCode: rematch.joinCode };
+}
+
+export async function startRematch(joinCode: string, visit: Visit): Promise<GameView> {
+  const finished = await writeGame(
+    joinCode,
+    visit,
+    async (executor, game) => await seatRematch(executor, game, visit.now),
+  );
+  if (finished.rematchJoinCode === null) throw new Error('the rematch was not recorded');
+  return await readGame(finished.rematchJoinCode, visit);
 }
 
 export async function listMyGames(accountId: string): Promise<MyGameView[]> {

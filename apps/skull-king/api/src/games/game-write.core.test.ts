@@ -5,25 +5,40 @@ import {
   refuseEntryWrite,
   refusePhaseMove,
   refuseRoundWrite,
-  selectSeatHolding,
-  selectAbilityHolders,
+  type RoundEntryFacts,
+  decideSeatClaim,
   selectEntryChanges,
 } from './game-write.core';
 
 const SEATED = ['p1', 'p2', 'p3', 'p4'];
+
+const entryOf = (
+  playerId: string,
+  abilities: Partial<Pick<RoundEntryFacts, 'bidAdjustment' | 'rascalBet'>> = {},
+): RoundEntryFacts => ({
+  playerId,
+  bid: null,
+  bidAdjustment: 0,
+  rascalBet: 0,
+  tricks: null,
+  bonuses: NO_BONUS,
+  ...abilities,
+});
+
+const UNTOUCHED_ROUND = SEATED.map((playerId) => entryOf(playerId));
 
 const facts = (overrides: Partial<Parameters<typeof refuseEntryWrite>[0]> = {}) => ({
   roundNumber: 3,
   currentRound: 3,
   seatedPlayerIds: SEATED,
   playerId: 'p2',
-  bid: undefined,
-  bidAdjustment: undefined,
-  rascalBet: undefined,
-  tricks: undefined,
-  holders: { adjusted: [], betting: [] },
+  changes: {},
+  roundEntries: UNTOUCHED_ROUND,
   ...overrides,
 });
+
+const roundWith = (holder: string, abilities: Parameters<typeof entryOf>[1]) =>
+  SEATED.map((playerId) => entryOf(playerId, playerId === holder ? abilities : {}));
 
 // @FollowsBlueprint test-pure-unit
 describe('refuseRoundWrite', () => {
@@ -39,17 +54,17 @@ describe('refuseRoundWrite', () => {
 
 describe('refuseEntryWrite', () => {
   it('accepts a bid and tricks up to the cards dealt', () => {
-    expect(refuseEntryWrite(facts({ bid: 3, tricks: 0 }))).toBeNull();
+    expect(refuseEntryWrite(facts({ changes: { bid: 3, tricks: 0 } }))).toBeNull();
   });
 
   it('accepts a cleared bid and cleared tricks', () => {
-    expect(refuseEntryWrite(facts({ bid: null, tricks: null }))).toBeNull();
+    expect(refuseEntryWrite(facts({ changes: { bid: null, tricks: null } }))).toBeNull();
   });
 
   it('refuses a round the table has not reached yet before anything else', () => {
-    expect(refuseEntryWrite(facts({ roundNumber: 4, playerId: 'stranger', bid: 9 }))).toBe(
-      'round-not-played',
-    );
+    expect(
+      refuseEntryWrite(facts({ roundNumber: 4, playerId: 'stranger', changes: { bid: 9 } })),
+    ).toBe('round-not-played');
   });
 
   it('refuses a player who is not seated at the game', () => {
@@ -57,72 +72,103 @@ describe('refuseEntryWrite', () => {
   });
 
   it('refuses a bid above the cards dealt this round', () => {
-    expect(refuseEntryWrite(facts({ bid: 4 }))).toBe('value-out-of-range');
+    expect(refuseEntryWrite(facts({ changes: { bid: 4 } }))).toBe('value-out-of-range');
   });
 
   it('refuses tricks above the cards dealt this round', () => {
-    expect(refuseEntryWrite(facts({ tricks: 4 }))).toBe('value-out-of-range');
+    expect(refuseEntryWrite(facts({ changes: { tricks: 4 } }))).toBe('value-out-of-range');
   });
 
   it('reads the cards dealt from the number of players', () => {
     const eight = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
     const tenthRound = { roundNumber: 10, currentRound: 10, seatedPlayerIds: eight };
-    expect(refuseEntryWrite(facts({ ...tenthRound, bid: 8 }))).toBeNull();
-    expect(refuseEntryWrite(facts({ ...tenthRound, bid: 9 }))).toBe('value-out-of-range');
+    expect(refuseEntryWrite(facts({ ...tenthRound, changes: { bid: 8 } }))).toBeNull();
+    expect(refuseEntryWrite(facts({ ...tenthRound, changes: { bid: 9 } }))).toBe(
+      'value-out-of-range',
+    );
   });
 });
 
 describe('the one Harry the Giant of a round', () => {
-  it('lets one player move their bid', () => {
-    expect(refuseEntryWrite(facts({ bidAdjustment: -1 }))).toBeNull();
+  it('lets one player move their bid, and move it again', () => {
+    expect(refuseEntryWrite(facts({ changes: { bidAdjustment: -1 } }))).toBeNull();
     expect(
-      refuseEntryWrite(facts({ bidAdjustment: 1, holders: { adjusted: ['p2'], betting: [] } })),
+      refuseEntryWrite(
+        facts({
+          changes: { bidAdjustment: 1 },
+          roundEntries: roundWith('p2', { bidAdjustment: -1 }),
+        }),
+      ),
     ).toBeNull();
   });
 
   it('refuses a second player moving their bid in the same round', () => {
     expect(
-      refuseEntryWrite(facts({ bidAdjustment: 1, holders: { adjusted: ['p1'], betting: [] } })),
+      refuseEntryWrite(
+        facts({
+          changes: { bidAdjustment: 1 },
+          roundEntries: roundWith('p1', { bidAdjustment: -1 }),
+        }),
+      ),
     ).toBe('value-out-of-range');
+  });
+
+  it('lets another player write anything else while one player holds Harry', () => {
+    expect(
+      refuseEntryWrite(
+        facts({ changes: { bid: 2 }, roundEntries: roundWith('p1', { bidAdjustment: 1 }) }),
+      ),
+    ).toBeNull();
   });
 
   it('always lets an adjustment be taken back', () => {
     expect(
-      refuseEntryWrite(facts({ bidAdjustment: 0, holders: { adjusted: ['p1'], betting: [] } })),
+      refuseEntryWrite(
+        facts({
+          playerId: 'p1',
+          changes: { bidAdjustment: 0 },
+          roundEntries: roundWith('p1', { bidAdjustment: 1 }),
+        }),
+      ),
     ).toBeNull();
-    expect(
-      refuseEntryWrite(facts({ bidAdjustment: null, holders: { adjusted: ['p1'], betting: [] } })),
-    ).toBeNull();
-  });
-
-  it('reads who moved their bid and who bet in one round', () => {
-    const roundEntries = [
-      { roundNumber: 3, playerId: 'p1', bidAdjustment: 1, rascalBet: 0 },
-      { roundNumber: 3, playerId: 'p2', bidAdjustment: 0, rascalBet: 20 },
-      { roundNumber: 3, playerId: 'p3', bidAdjustment: null, rascalBet: null },
-      { roundNumber: 2, playerId: 'p4', bidAdjustment: -1, rascalBet: 10 },
-    ];
-    expect(selectAbilityHolders(roundEntries, 3)).toEqual({ adjusted: ['p1'], betting: ['p2'] });
   });
 });
 
 describe('the one Rascal of Roatan bet of a round', () => {
   it('lets one player bet, and the same player change the bet', () => {
-    expect(refuseEntryWrite(facts({ rascalBet: 20 }))).toBeNull();
+    expect(refuseEntryWrite(facts({ changes: { rascalBet: 20 } }))).toBeNull();
     expect(
-      refuseEntryWrite(facts({ rascalBet: 10, holders: { adjusted: [], betting: ['p2'] } })),
+      refuseEntryWrite(
+        facts({ changes: { rascalBet: 10 }, roundEntries: roundWith('p2', { rascalBet: 20 }) }),
+      ),
     ).toBeNull();
   });
 
   it('refuses a second player betting in the same round', () => {
     expect(
-      refuseEntryWrite(facts({ rascalBet: 10, holders: { adjusted: [], betting: ['p1'] } })),
+      refuseEntryWrite(
+        facts({ changes: { rascalBet: 10 }, roundEntries: roundWith('p1', { rascalBet: 20 }) }),
+      ),
     ).toBe('value-out-of-range');
+  });
+
+  it('lets another player write anything else while one player bets', () => {
+    expect(
+      refuseEntryWrite(
+        facts({ changes: { tricks: 1 }, roundEntries: roundWith('p1', { rascalBet: 10 }) }),
+      ),
+    ).toBeNull();
   });
 
   it('always lets a bet be taken back', () => {
     expect(
-      refuseEntryWrite(facts({ rascalBet: null, holders: { adjusted: [], betting: ['p1'] } })),
+      refuseEntryWrite(
+        facts({
+          playerId: 'p1',
+          changes: { rascalBet: 0 },
+          roundEntries: roundWith('p1', { rascalBet: 10 }),
+        }),
+      ),
     ).toBeNull();
   });
 });
@@ -175,6 +221,11 @@ const round = (number: number, entries: PlayedRound['entries'], discards = {}): 
 const BALANCED_FIRST = round(1, [made(1), made(0)]);
 const UNBALANCED_SECOND = round(2, [made(1), made(0)]);
 
+const BALANCED_SECOND = round(2, [made(2), made(0)]);
+const EVERY_ROUND_BALANCED = Array.from({ length: 10 }, (_, index) =>
+  round(index + 1, [made(index + 1), made(0)]),
+);
+
 describe('refusePhaseMove', () => {
   it('lets a phone press play again on the state it already shows', () => {
     expect(
@@ -196,24 +247,24 @@ describe('refusePhaseMove', () => {
     ).toBe('bids-missing');
   });
 
-  it('refuses to score a round nobody has bid on yet', () => {
+  it('scores a round once its own bids are placed, whatever an earlier round holds', () => {
     expect(
       refusePhaseMove({
-        current: { round: 1, phase: 'scoring' },
+        current: { round: 2, phase: 'bidding' },
         target: { round: 2, phase: 'scoring' },
-        rounds: [BALANCED_FIRST],
-      }),
-    ).toBe('bids-missing');
-  });
-
-  it('scores a round once every bid is placed', () => {
-    expect(
-      refusePhaseMove({
-        current: { round: 1, phase: 'bidding' },
-        target: { round: 1, phase: 'scoring' },
-        rounds: [BALANCED_FIRST],
+        rounds: [round(1, [made(null), made(1)]), BALANCED_SECOND],
       }),
     ).toBeNull();
+  });
+
+  it('refuses to score the round played while one of its own bids is missing, after a complete one', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'bidding' },
+        target: { round: 2, phase: 'scoring' },
+        rounds: [BALANCED_FIRST, round(2, [made(1), made(null)])],
+      }),
+    ).toBe('bids-missing');
   });
 
   it('refuses the next round while any played round does not balance', () => {
@@ -224,6 +275,92 @@ describe('refusePhaseMove', () => {
         rounds: [BALANCED_FIRST, UNBALANCED_SECOND],
       }),
     ).toBe('tricks-unbalanced');
+  });
+
+  it('opens the next round once every played round balances', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'scoring' },
+        target: { round: 3, phase: 'bidding' },
+        rounds: [BALANCED_FIRST, BALANCED_SECOND],
+      }),
+    ).toBeNull();
+  });
+
+  it('moves on once the discards bring every round into balance', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'scoring' },
+        target: { round: 3, phase: 'bidding' },
+        rounds: [BALANCED_FIRST, round(2, [made(1), made(0)], { isWhiteWhaleDiscard: true })],
+      }),
+    ).toBeNull();
+  });
+
+  it('lets the table go back to the bids of the round it plays, balanced or not', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'scoring' },
+        target: { round: 2, phase: 'bidding' },
+        rounds: [BALANCED_FIRST, round(2, [made(null), made(0, 5)])],
+      }),
+    ).toBeNull();
+  });
+
+  it('refuses any other round than the one played and the next one', () => {
+    const rounds = [BALANCED_FIRST, BALANCED_SECOND];
+    const from = { round: 2, phase: 'scoring' } as const;
+    expect(refusePhaseMove({ current: from, target: { round: 1, phase: 'bidding' }, rounds })).toBe(
+      'value-out-of-range',
+    );
+    expect(refusePhaseMove({ current: from, target: { round: 4, phase: 'bidding' }, rounds })).toBe(
+      'value-out-of-range',
+    );
+  });
+
+  it('opens the next round only on its bids', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 2, phase: 'scoring' },
+        target: { round: 3, phase: 'scoring' },
+        rounds: [BALANCED_FIRST, BALANCED_SECOND],
+      }),
+    ).toBe('value-out-of-range');
+  });
+
+  it('finishes the game from the scores of the last round', () => {
+    expect(
+      refusePhaseMove({
+        current: { round: 10, phase: 'scoring' },
+        target: { round: 10, phase: 'finished' },
+        rounds: EVERY_ROUND_BALANCED,
+      }),
+    ).toBeNull();
+  });
+
+  it('refuses to finish from an earlier round, from the bids of the last one, or onto another round', () => {
+    const finished = { round: 10, phase: 'finished' } as const;
+    const rounds = EVERY_ROUND_BALANCED;
+    expect(
+      refusePhaseMove({ current: { round: 9, phase: 'scoring' }, target: finished, rounds }),
+    ).toBe('value-out-of-range');
+    expect(
+      refusePhaseMove({
+        current: { round: 9, phase: 'scoring' },
+        target: { round: 9, phase: 'finished' },
+        rounds,
+      }),
+    ).toBe('value-out-of-range');
+    expect(
+      refusePhaseMove({ current: { round: 10, phase: 'bidding' }, target: finished, rounds }),
+    ).toBe('value-out-of-range');
+    expect(
+      refusePhaseMove({
+        current: { round: 10, phase: 'scoring' },
+        target: { round: 9, phase: 'finished' },
+        rounds,
+      }),
+    ).toBe('value-out-of-range');
   });
 
   it('refuses to finish while a played round does not balance', () => {
@@ -237,54 +374,42 @@ describe('refusePhaseMove', () => {
     ).toBe('tricks-unbalanced');
   });
 
-  it('moves on once the discards bring every round into balance', () => {
+  it('lets a finished table go back to the scores of the last round', () => {
     expect(
       refusePhaseMove({
-        current: { round: 2, phase: 'scoring' },
-        target: { round: 3, phase: 'bidding' },
-        rounds: [BALANCED_FIRST, round(2, [made(1), made(0)], { isWhiteWhaleDiscard: true })],
-      }),
-    ).toBeNull();
-  });
-
-  it('always lets the table go back to an earlier step', () => {
-    const rounds = [BALANCED_FIRST, round(2, [made(null), made(0, 5)])];
-    expect(
-      refusePhaseMove({
-        current: { round: 2, phase: 'scoring' },
-        target: { round: 2, phase: 'bidding' },
-        rounds,
-      }),
-    ).toBeNull();
-    expect(
-      refusePhaseMove({
-        current: { round: 2, phase: 'scoring' },
-        target: { round: 1, phase: 'bidding' },
-        rounds,
+        current: { round: 10, phase: 'finished' },
+        target: { round: 10, phase: 'scoring' },
+        rounds: EVERY_ROUND_BALANCED,
       }),
     ).toBeNull();
   });
 });
 
-describe('selectSeatHolding', () => {
+describe('decideSeatClaim', () => {
   const seats = [
     { id: 'p1', accountId: null },
     { id: 'p2', accountId: 'me' },
   ];
 
-  it('reads a seat the account already holds as mine', () => {
-    expect(selectSeatHolding(seats, 'p2', 'me')).toBe('mine');
+  it('keeps a seat the account already holds, without writing it again', () => {
+    expect(decideSeatClaim(seats, 'p2', 'me')).toStrictEqual({ refusal: null, isLinking: false });
   });
 
-  it('reads a seat another account holds as taken', () => {
-    expect(selectSeatHolding(seats, 'p2', 'someone-else')).toBe('seat-taken');
+  it('refuses a seat another account holds', () => {
+    expect(decideSeatClaim(seats, 'p2', 'someone-else')).toStrictEqual({
+      refusal: 'seat-taken',
+      isLinking: false,
+    });
   });
 
-  it('reads a seat nobody holds as free', () => {
-    expect(selectSeatHolding(seats, 'p1', 'me')).toBe('free');
+  it('links a seat nobody holds', () => {
+    expect(decideSeatClaim(seats, 'p1', 'me')).toStrictEqual({ refusal: null, isLinking: true });
   });
 
-  it('reads a seat that is not at the table as missing', () => {
-    expect(selectSeatHolding(seats, 'p9', 'me')).toBe('player-not-found');
+  it('refuses a seat that is not at the table', () => {
+    expect(decideSeatClaim(seats, 'p9', 'me')).toStrictEqual({
+      refusal: 'player-not-found',
+      isLinking: false,
+    });
   });
 });

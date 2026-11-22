@@ -79,6 +79,7 @@ function aGame(phase: GameView['phase']): GameView {
         ],
       },
     ],
+    revision: 1,
     readAt: '2026-11-22T10:00:00.000Z',
   };
 }
@@ -131,6 +132,23 @@ describe('selectStandings', () => {
     const game = aGame('bidding');
     const tied = { ...game, rounds: [] };
     expect(selectStandings(tied).map((standing) => standing.player.id)).toEqual(['p1', 'p2', 'p3']);
+    const listedBackwards = { ...tied, players: tied.players.toReversed() };
+    expect(selectStandings(listedBackwards).map((standing) => standing.player.id)).toEqual([
+      'p1',
+      'p2',
+      'p3',
+    ]);
+  });
+
+  it('takes the delta from the last scored round, however many there are', () => {
+    const game = aGame('scoring');
+    const [first, second] = game.rounds;
+    const rounds =
+      first === undefined || second === undefined ? [] : [first, second, { ...first, number: 3 }];
+    const third = { ...game, currentRound: 3, rounds };
+    expect(selectStandings(third).find((standing) => standing.player.id === 'p1')?.lastDelta).toBe(
+      20,
+    );
   });
 
   it('shows no delta before any round is scored', () => {

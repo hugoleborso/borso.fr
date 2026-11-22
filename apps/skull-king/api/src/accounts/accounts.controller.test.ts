@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { truncateAllTables } from '../../../test/database-utils';
+import {
+  countRows,
+  holdGameRow,
+  holdWritesToTable,
+  runWritersWhileHeld,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import {
   createAGame,
   readError,
@@ -107,6 +113,19 @@ async function register(credentialId: string, name = 'Hugo') {
   return { response, cookie: readSessionCookie(response) };
 }
 
+function registrationAnswering(challenge: string, credentialId: string, name: string) {
+  return async () =>
+    await request('POST', '/api/accounts/registration', {
+      name,
+      icon: 'skull',
+      color: 'gold',
+      response: browserResponse(credentialId, challenge),
+    });
+}
+
+const CHALLENGE_LIFETIME_MILLISECONDS = 120_000;
+const CHALLENGE_ISSUED_AT = Date.parse('2026-11-22T20:00:00.000Z');
+
 async function readMyGames(cookie: string) {
   const response = await request('GET', '/api/accounts/me/games', undefined, { cookie });
   const body: unknown = await response.json();
@@ -207,6 +226,72 @@ describe('passkey accounts, end to end', () => {
     expect(await readError(wrongKind)).toBe('passkey-not-verified');
   });
 
+  it('refuses a challenge answered once its two minutes are over', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(CHALLENGE_ISSUED_AT);
+      const expiring = await askForOptions('/api/accounts/registration/options', { name: 'Hugo' });
+      vi.setSystemTime(CHALLENGE_ISSUED_AT + CHALLENGE_LIFETIME_MILLISECONDS);
+      const late = await registrationAnswering(expiring, 'credential-1', 'Hugo')();
+      const fresh = await askForOptions('/api/accounts/registration/options', { name: 'Hugo' });
+      vi.setSystemTime(CHALLENGE_ISSUED_AT + 2 * CHALLENGE_LIFETIME_MILLISECONDS - 1);
+      const inTime = await registrationAnswering(fresh, 'credential-2', 'Hugo')();
+
+      expect(late.status).toBe(400);
+      expect(await readError(late)).toBe('passkey-not-verified');
+      expect(inTime.status).toBe(201);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('answers a challenge once when two phones send it at the same instant', async () => {
+    await register('credential-1');
+    const challenge = await askForOptions('/api/accounts/sign-in/options');
+    const signIn = async () =>
+      await request('POST', '/api/accounts/sign-in', {
+        response: browserResponse('credential-1', challenge),
+      });
+
+    const answers = await runWritersWhileHeld(
+      holdWritesToTable('webauthn_challenge'),
+      signIn,
+      signIn,
+    );
+    const statuses = answers
+      .map((answer) => answer.status)
+      .toSorted((first, second) => first - second);
+    const refused = answers.find((answer) => answer.status !== 200);
+
+    expect(statuses).toEqual([200, 400]);
+    expect(refused === undefined ? null : await readError(refused)).toBe('passkey-not-verified');
+  });
+
+  it('keeps one session key when the first two sign-ins write it at the same instant', async () => {
+    const first = await askForOptions('/api/accounts/registration/options', { name: 'Hugo' });
+    const second = await askForOptions('/api/accounts/registration/options', { name: 'Léa' });
+
+    const answers = await runWritersWhileHeld(
+      holdWritesToTable('app_secret'),
+      registrationAnswering(first, 'credential-1', 'Hugo'),
+      registrationAnswering(second, 'credential-2', 'Léa'),
+    );
+    const accounts = await Promise.all(
+      answers.map(
+        async (answer) =>
+          await readAccount(
+            await request('GET', '/api/accounts/me', undefined, {
+              cookie: readSessionCookie(answer),
+            }),
+          ),
+      ),
+    );
+
+    expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+    expect(new Set(accounts.map((account) => account?.name))).toEqual(new Set(['Hugo', 'Léa']));
+    expect(await countRows('SELECT count(*) FROM app_secret', [])).toBe(1);
+  });
+
   it('signs out by clearing the cookie', async () => {
     const { cookie } = await register('credential-1');
 
@@ -288,6 +373,31 @@ describe('passkey accounts, end to end', () => {
     expect(await readError(taken)).toBe('seat-taken');
     expect(guest.status).toBe(401);
     expect(await readError(guest)).toBe('session-required');
+  });
+
+  it('gives a seat to the first of two accounts claiming it at the same instant', async () => {
+    const hugo = await register('credential-1', 'Hugo');
+    const lea = await register('credential-2', 'Léa');
+    const created = await createAGame();
+    const seat = seatId(created, 0);
+    const claimPath = `/api/games/${created.joinCode}/players/${seat}/claim`;
+
+    const [first, second] = await runWritersWhileHeld(
+      holdGameRow(created.joinCode),
+      async () => await request('POST', claimPath, undefined, { cookie: hugo.cookie }),
+      async () => await request('POST', claimPath, undefined, { cookie: lea.cookie }),
+    );
+    const hugoId = (await readAccount(hugo.response))?.id ?? '';
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(409);
+    expect(await readError(second)).toBe('seat-taken');
+    expect(
+      await countRows('SELECT count(*) FROM player WHERE id = $1 AND account_id = $2', [
+        seat,
+        hugoId,
+      ]),
+    ).toBe(1);
   });
 
   it('lets the site, and only the site, send its cookie across origins', async () => {

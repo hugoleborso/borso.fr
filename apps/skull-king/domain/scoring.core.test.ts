@@ -17,6 +17,9 @@ describe('scoreEntry', () => {
     expect(
       scoreEntry({ bidAdjustment: 0, rascalBet: 0, bid: null, tricks: null, bonuses: NO_BONUS }, 3),
     ).toBeNull();
+    expect(
+      scoreEntry({ bidAdjustment: 0, rascalBet: 0, bid: null, tricks: 2, bonuses: NO_BONUS }, 3),
+    ).toBeNull();
   });
 
   it('reads a missing tricks value as the bid made', () => {

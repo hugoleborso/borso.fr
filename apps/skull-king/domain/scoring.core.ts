@@ -84,8 +84,8 @@ function scoreBid(bid: number, tricks: number, entry: ScoredEntry, cardCount: nu
 // @FollowsBlueprint domain-shared-selection
 export function scoreEntry(entry: ScoredEntry, cardCount: number): number | null {
   const bid = selectFinalBid(entry);
-  const tricks = selectTricksTaken(entry);
-  if (bid === null || tricks === null) return null;
+  if (bid === null) return null;
+  const tricks = entry.tricks ?? bid;
   const rascalPoints = tricks === bid ? entry.rascalBet : -entry.rascalBet;
   return scoreBid(bid, tricks, entry, cardCount) + rascalPoints;
 }

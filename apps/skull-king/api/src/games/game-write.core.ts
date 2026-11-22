@@ -1,7 +1,10 @@
 import type { GameErrorCode } from '@domain/game-error.core';
 import {
   canCloseRound,
+  isBidAdjustedOnce,
   isEveryBidPlaced,
+  isRascalBetOnce,
+  ROUND_COUNT,
   type RoundDiscards,
   type RoundPhase,
   selectCardCount,
@@ -15,16 +18,17 @@ import {
   type ScoredEntry,
 } from '@domain/scoring.core';
 
+export interface RoundEntryFacts extends ScoredEntry {
+  readonly playerId: string;
+}
+
 export interface EntryWriteFacts {
   readonly roundNumber: number;
   readonly currentRound: number;
   readonly seatedPlayerIds: readonly string[];
   readonly playerId: string;
-  readonly bid: number | null | undefined;
-  readonly bidAdjustment: BidAdjustment | null | undefined;
-  readonly rascalBet: RascalBet | null | undefined;
-  readonly tricks: number | null | undefined;
-  readonly holders: AbilityHolders;
+  readonly changes: EntryChanges;
+  readonly roundEntries: readonly RoundEntryFacts[];
 }
 
 export interface EntryChangesInput {
@@ -43,52 +47,26 @@ export interface EntryChanges extends Partial<BonusCounts> {
 }
 
 function isAboveCardCount(count: number | null | undefined, cardCount: number): boolean {
-  return typeof count === 'number' && count > cardCount;
-}
-
-export interface AbilityFacts {
-  readonly roundNumber: number;
-  readonly playerId: string;
-  readonly bidAdjustment: number | null;
-  readonly rascalBet: number | null;
-}
-
-export interface AbilityHolders {
-  readonly adjusted: readonly string[];
-  readonly betting: readonly string[];
-}
-
-export function selectAbilityHolders(
-  entries: readonly AbilityFacts[],
-  roundNumber: number,
-): AbilityHolders {
-  const ofRound = entries.filter((entry) => entry.roundNumber === roundNumber);
-  return {
-    adjusted: ofRound
-      .filter((entry) => (entry.bidAdjustment ?? 0) !== 0)
-      .map((entry) => entry.playerId),
-    betting: ofRound.filter((entry) => (entry.rascalBet ?? 0) !== 0).map((entry) => entry.playerId),
-  };
+  return (count ?? 0) > cardCount;
 }
 
 export function refuseRoundWrite(roundNumber: number, currentRound: number): GameErrorCode | null {
   return roundNumber > currentRound ? 'round-not-played' : null;
 }
 
-function isUsedByAnother(
-  value: number | null | undefined,
-  holders: readonly string[],
-  playerId: string,
-): boolean {
-  if (value === undefined || value === null || value === 0) return false;
-  return holders.some((holder) => holder !== playerId);
+function withAbilities(entry: RoundEntryFacts, changes: EntryChanges): RoundEntryFacts {
+  return {
+    ...entry,
+    bidAdjustment: changes.bidAdjustment ?? entry.bidAdjustment,
+    rascalBet: changes.rascalBet ?? entry.rascalBet,
+  };
 }
 
 function isSecondAbility(facts: EntryWriteFacts): boolean {
-  return (
-    isUsedByAnother(facts.bidAdjustment, facts.holders.adjusted, facts.playerId) ||
-    isUsedByAnother(facts.rascalBet, facts.holders.betting, facts.playerId)
+  const after = facts.roundEntries.map((entry) =>
+    entry.playerId === facts.playerId ? withAbilities(entry, facts.changes) : entry,
   );
+  return !isBidAdjustedOnce(after) || !isRascalBetOnce(after);
 }
 
 // @FollowsBlueprint core-decision-table-for-a-lifecycle
@@ -97,7 +75,10 @@ export function refuseEntryWrite(facts: EntryWriteFacts): GameErrorCode | null {
   if (roundRefusal !== null) return roundRefusal;
   if (!facts.seatedPlayerIds.includes(facts.playerId)) return 'player-not-found';
   const cardCount = selectCardCount(facts.roundNumber, facts.seatedPlayerIds.length);
-  if (isAboveCardCount(facts.bid, cardCount) || isAboveCardCount(facts.tricks, cardCount)) {
+  if (
+    isAboveCardCount(facts.changes.bid, cardCount) ||
+    isAboveCardCount(facts.changes.tricks, cardCount)
+  ) {
     return 'value-out-of-range';
   }
   if (isSecondAbility(facts)) return 'value-out-of-range';
@@ -126,17 +107,20 @@ export interface ClaimableSeat {
   readonly accountId: string | null;
 }
 
-export type SeatHolding = 'mine' | 'free' | 'seat-taken' | 'player-not-found';
+export interface SeatClaim {
+  readonly refusal: GameErrorCode | null;
+  readonly isLinking: boolean;
+}
 
-export function selectSeatHolding(
+export function decideSeatClaim(
   seats: readonly ClaimableSeat[],
   playerId: string,
   accountId: string,
-): SeatHolding {
+): SeatClaim {
   const seat = seats.find((candidate) => candidate.id === playerId);
-  if (seat === undefined) return 'player-not-found';
-  if (seat.accountId === null) return 'free';
-  return seat.accountId === accountId ? 'mine' : 'seat-taken';
+  if (seat === undefined) return { refusal: 'player-not-found', isLinking: false };
+  if (seat.accountId === null) return { refusal: null, isLinking: true };
+  return { refusal: seat.accountId === accountId ? null : 'seat-taken', isLinking: false };
 }
 
 export interface PhasePosition {
@@ -160,13 +144,22 @@ function isSamePosition(first: PhasePosition, second: PhasePosition): boolean {
   return first.round === second.round && first.phase === second.phase;
 }
 
-function isMovingForward(facts: PhaseMoveFacts): boolean {
-  return facts.target.round > facts.current.round || facts.target.phase === 'finished';
+function isWithinRound(current: PhasePosition, target: PhasePosition): boolean {
+  return target.round === current.round && target.phase !== 'finished';
+}
+
+function isNextRound(current: PhasePosition, target: PhasePosition): boolean {
+  return target.round === current.round + 1 && target.phase === 'bidding';
+}
+
+function isClosingLastRound(current: PhasePosition, target: PhasePosition): boolean {
+  return (
+    current.round === ROUND_COUNT && current.phase === 'scoring' && target.round === ROUND_COUNT
+  );
 }
 
 function areBidsPlaced(rounds: readonly PlayedRound[], roundNumber: number): boolean {
-  const round = rounds.find((candidate) => candidate.number === roundNumber);
-  return round !== undefined && isEveryBidPlaced(round.entries);
+  return rounds.every((round) => round.number !== roundNumber || isEveryBidPlaced(round.entries));
 }
 
 function isBalanced(round: PlayedRound): boolean {
@@ -174,10 +167,15 @@ function isBalanced(round: PlayedRound): boolean {
 }
 
 export function refusePhaseMove(facts: PhaseMoveFacts): GameErrorCode | null {
-  if (isSamePosition(facts.current, facts.target)) return null;
-  if (facts.target.phase === 'scoring' && !areBidsPlaced(facts.rounds, facts.target.round)) {
+  const { current, target } = facts;
+  if (isSamePosition(current, target)) return null;
+  const isWithin = isWithinRound(current, target);
+  if (!isWithin && !isNextRound(current, target) && !isClosingLastRound(current, target)) {
+    return 'value-out-of-range';
+  }
+  if (target.phase === 'scoring' && !areBidsPlaced(facts.rounds, target.round)) {
     return 'bids-missing';
   }
-  if (isMovingForward(facts) && !facts.rounds.every(isBalanced)) return 'tricks-unbalanced';
+  if (!isWithin && !facts.rounds.every(isBalanced)) return 'tricks-unbalanced';
   return null;
 }

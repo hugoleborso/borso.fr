@@ -81,16 +81,20 @@ const NO_BID = '\u2013';
 const ADJUSTED_TO = '\u2192';
 const MINUS_SIGN = '\u2212';
 
+const BID_ADJUSTMENT_LABELS: Readonly<Record<BidAdjustment, string | null>> = {
+  [-1]: `${MINUS_SIGN}1`,
+  0: null,
+  1: '+1',
+};
+
 export function formatBid(entry: GameEntry): string {
-  const finalBid = selectFinalBid(entry);
-  if (entry.bid === null || finalBid === null) return NO_BID;
+  if (entry.bid === null) return NO_BID;
   if (entry.bidAdjustment === 0) return String(entry.bid);
-  return `${String(entry.bid)}${ADJUSTED_TO}${String(finalBid)}`;
+  return `${String(entry.bid)}${ADJUSTED_TO}${String(selectFinalBid(entry))}`;
 }
 
 export function formatBidAdjustment(adjustment: BidAdjustment): string | null {
-  if (adjustment === 0) return null;
-  return adjustment > 0 ? '+1' : `${MINUS_SIGN}1`;
+  return BID_ADJUSTMENT_LABELS[adjustment];
 }
 
 function withEntry(entries: readonly GameEntry[], changed: GameEntry): readonly GameEntry[] {

@@ -3,11 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../api.client';
 import { readFailureCode } from '../api-failure.core';
-import { applySeatClaim } from '../game-edits.core';
-import type { GameView } from '../game-view.core';
 import { startPasskeyEnrolment, startPasskeyLogin } from '../passkey.adapter';
 import type { RosterPlayer } from '../roster.core';
-import { gameKeys, settleGame } from './game.queries';
+import { useOptimisticGameWrite } from './game.queries';
 
 export const accountKeys = {
   all: ['account'] as const,
@@ -120,10 +118,10 @@ export interface SeatClaim {
 
 // @FollowsBlueprint query-optimistic-write-guarded-by-read-time
 export function useClaimSeat(joinCode: string) {
-  const queryClient = useQueryClient();
-  const key = gameKeys.detail(joinCode);
-  return useMutation({
-    mutationFn: async (claim: SeatClaim): Promise<GameView> => {
+  return useOptimisticGameWrite(
+    joinCode,
+    (claim: SeatClaim) => ({ kind: 'seat', playerId: claim.playerId, accountId: claim.accountId }),
+    async (claim) => {
       const response = await api.api.games[':code'].players[':playerId'].claim.$post({
         param: { code: joinCode, playerId: claim.playerId },
       });
@@ -131,25 +129,5 @@ export function useClaimSeat(joinCode: string) {
       const body = await response.json();
       return body.game;
     },
-    mutationKey: gameKeys.writes(joinCode),
-    scope: { id: `game-${joinCode}` },
-    onMutate: async (claim) => {
-      await queryClient.cancelQueries({ queryKey: key });
-      const snapshot = queryClient.getQueryData<GameView>(key);
-      if (snapshot !== undefined) {
-        queryClient.setQueryData(key, applySeatClaim(snapshot, claim.playerId, claim.accountId));
-      }
-      return { snapshot };
-    },
-    onError: (_failure, _claim, context) => {
-      const snapshot = context?.snapshot;
-      if (snapshot === undefined) return;
-      queryClient.setQueryData<GameView>(key, (cached) =>
-        cached === undefined || cached.readAt === snapshot.readAt ? snapshot : cached,
-      );
-    },
-    onSuccess: (game) => {
-      settleGame(queryClient, game);
-    },
-  });
+  );
 }

@@ -6,17 +6,41 @@ and the tests that hold them. A `Held by` path is relative to `apps/skull-king/`
 ## Game
 
 - `game` holds `join_code`, `phase`, `current_round`, `rematch_join_code`,
-  `created_at` and `updated_at`.
+  `revision`, `created_at` and `updated_at`.
 - `phase` is one of `ROUND_PHASES`. The Drizzle column is typed by that list,
   and `movePhaseSchema` is the only input that writes it.
 - `PUT /:code/phase` sets the target round and phase rather than stepping
   them, so two phones pressing play at once land on the same state.
-- `finished` is accepted only with round `ROUND_COUNT`.
+- `finished` is accepted only with round `ROUND_COUNT`, and only from the
+  `scoring` phase of that round (see Phase).
 - A game is never deleted.
 - The score is never stored. Every view derives it from the entries.
 
 Held by: `api/src/games/games.controller.test.ts` › moves the phase idempotently, so two phones pressing play land on the same state
 Held by: `api/src/games/games.schema.test.ts` › finishes the game only after the last round
+Held by: `api/src/games/game-write.core.test.ts` › refuses to finish from an earlier round, from the bids of the last one, or onto another round
+
+## Revision
+
+- Every write to a game runs in one transaction, opened by
+  `runInOneTransaction` in the repository, that first bumps `game.revision`
+  (`bumpGameRevision`), then reads what its rule checks, then writes. Entry,
+  round, phase, player, claim and rematch writes all do it. So two writes to
+  one game never both pass a check made over rows the other is changing.
+- On Postgres the bump takes the row lock, so the second transaction waits and
+  then reads what the first committed. On DSQL the second commit is aborted
+  (`OC000`, `OC001` or `40001`), and `retryOnConflictAbort` runs the whole
+  service operation again, up to `CONFLICT_RETRIES` (3) more times. Two
+  phones writing two different cells both land: one waits or is retried,
+  neither is refused.
+- The column is nullable, because DSQL adds no column with a constraint.
+  Every insert writes 0, and `buildGameView` reads `null` as 0.
+- The view carries the revision. A view of a higher revision holds every
+  write a lower one holds.
+
+Held by: `api/src/games/games.controller.test.ts` › keeps two writes to different cells sent at once, retrying the one the database aborts
+Held by: `api/src/games/game-view.core.test.ts` › carries the revision of the game, and reads a game nobody wrote since its creation as 0
+Held by: `api/src/helpers/persistence/conflict-abort.core.test.ts` › gives up with the conflict once the retries are spent
 
 ## Join code
 
@@ -27,6 +51,7 @@ Held by: `api/src/games/games.schema.test.ts` › finishes the game only after t
 - `normalizeJoinCode` reads the code from the address, so any case works.
 
 Held by: `api/src/games/games.schema.test.ts` › makes a join code unique by keying its claim on the code
+Held by: `api/src/games/games.controller.test.ts` › gives a join code to one of two games claiming it at once, and nothing to the other
 Held by: `api/src/games/games.controller.test.ts` › reads the view by its code in any case, with defaults for every unwritten cell
 
 ## Player
@@ -40,15 +65,15 @@ Held by: `api/src/games/games.controller.test.ts` › reads the view by its code
 - The old game's view carries `rematchJoinCode`, and every rematch request
   broadcasts it to the old game's connections, so the other phones can
   follow.
-- The code is recorded by a conditional update. A loser on Postgres updates
-  no row. A loser on DSQL is aborted at commit (`OC000`, `OC001` or `40001`),
-  which `isConflictAbort` reads as a lost race rather than a failure. Either
-  way the service re-reads the game and answers the winner's rematch. When no
-  winner was recorded, because the abort came from another write to the same
-  game, it tries to record once more.
+- The new game and the code recorded on the old one are written in one
+  transaction, after the old game's revision bump (see Revision). A second
+  request waits for, or is retried after, the first, then reads the recorded
+  code and answers that rematch. A losing request writes nothing, so no
+  orphan game, claim or player is left behind.
 
 Held by: `api/src/games/games.controller.test.ts` › starts a rematch with the same players and marks, once however many phones ask
 Held by: `api/src/games/games.controller.test.ts` › records the rematch when the database aborts its first commit, rather than failing
+Held by: `api/src/games/games.controller.test.ts` › starts one rematch however many phones ask at the same instant
 Held by: `api/src/games/games.controller.test.ts` › tells the phones of a finished game where its rematch is
 
 ## Mark
@@ -128,14 +153,15 @@ Held by: `domain/scoring.core.test.ts` › takes 10 points per trick of differen
   column is nullable because DSQL adds no column with a constraint.
   `readBidAdjustment` reads `null`, or any value outside the list, as 0,
   and every insert writes 0 explicitly. A `null` in a write resets to 0.
-- At most one player of a round moves a bid. `refuseEntryWrite` answers
-  `value-out-of-range` for a second one, from the holders
-  `selectAbilityHolders` reads. Taking the ability back is always allowed.
-  Two phones giving it to two players at the same instant can both pass
-  this check, because no key holds it.
+- At most one player of a round moves a bid. `refuseEntryWrite` applies the
+  write to the round's entries and answers `value-out-of-range` when the
+  result fails the domain's `isBidAdjustedOnce`. Taking the ability back is
+  always allowed. The check runs after the revision bump (see Revision), so
+  two phones giving it to two players at the same instant cannot both pass.
 - The score reads the final bid, `selectFinalBid`, never below 0.
 
 Held by: `api/src/games/games.controller.test.ts` › moves a bid with Harry the Giant, for one player of the round only
+Held by: `api/src/games/games.controller.test.ts` › gives Harry the Giant to the first of two players asking for it at once
 Held by: `api/src/games/game-view.core.test.ts` › reads a stored adjustment, and anything else as none
 Held by: `domain/scoring.core.test.ts` › scores against the bid after the adjustment, never below zero
 
@@ -145,11 +171,11 @@ Held by: `domain/scoring.core.test.ts` › scores against the bid after the adju
   nullable because DSQL adds no column with a constraint. `readRascalBet`
   reads `null`, or any value outside the list, as 0, and every insert writes
   0 explicitly. A `null` in a write resets to 0.
-- At most one player of a round bets. `refuseEntryWrite` answers
-  `value-out-of-range` for a second one, from the holders
-  `selectAbilityHolders` reads. Taking the bet back is always allowed. Two
-  phones giving it to two players at the same instant can both pass this
-  check, because no key holds it.
+- At most one player of a round bets. `refuseEntryWrite` applies the write
+  to the round's entries and answers `value-out-of-range` when the result
+  fails the domain's `isRascalBetOnce`. Taking the bet back is always
+  allowed. The check runs after the revision bump (see Revision), so two
+  phones cannot both pass it.
 - The bet is added to a made final bid and taken from a missed one.
 
 Held by: `api/src/games/games.controller.test.ts` › records one Rascal of Roatan bet per round, and refuses a second
@@ -180,15 +206,26 @@ Held by: `api/src/games/games.controller.test.ts` › expects one trick fewer fo
 
 ## Phase
 
-- The trick checker blocks on the server too, in `refusePhaseMove`. Moving a
-  round to `scoring` while any of its bids is missing answers
-  `bids-missing`. Moving to a later round or to `finished` while any played
-  round does not balance answers `tricks-unbalanced`. Staying put and moving
-  back are always allowed, so the table can correct anything.
+- `refusePhaseMove` accepts three moves and answers `value-out-of-range` to
+  any other: any phase but `finished` within the current round, the
+  `bidding` phase of the next round, and `finished` from the `scoring` phase
+  of round `ROUND_COUNT`. Staying put is always accepted. So the game never
+  moves back across rounds and never skips one.
+- The trick checker blocks on the server too. Moving a round to `scoring`
+  while any of its bids is missing answers `bids-missing`. Opening the next
+  round or finishing while any played round does not balance answers
+  `tricks-unbalanced`. Going back to the bids of the current round is always
+  allowed, so the table can correct anything; an earlier round is corrected
+  from the scores grid.
+- The check runs after the revision bump (see Revision), so a correction
+  that unbalances a round and a move past it, sent at the same instant,
+  cannot both succeed.
 
 Held by: `api/src/games/games.controller.test.ts` › refuses to score a round while a bid is missing
 Held by: `api/src/games/games.controller.test.ts` › refuses the next round while the tricks do not balance, and lets the table go back
 Held by: `api/src/games/games.controller.test.ts` › refuses to finish while a corrected earlier round no longer balances
+Held by: `api/src/games/game-write.core.test.ts` › refuses any other round than the one played and the next one
+Held by: `api/src/games/games.controller.test.ts` › refuses to leave a round that a correction sent at the same instant unbalances
 
 ## Account game
 
@@ -212,17 +249,37 @@ Held by: `api/src/accounts/accounts.controller.test.ts` › names the winning se
 
 - `player.account_id` links a seat to an account. `POST
   /:code/players/:playerId/claim` writes it only while the seat is free or
-  already held by the same account, in one conditional update. A seat held by
-  another account answers `seat-taken`. A guest answers `session-required`.
+  already held by the same account, as `decideSeatClaim` reads it after the
+  revision bump (see Revision). A seat held by another account answers
+  `seat-taken`, even to a claim sent at the same instant as the winning one.
+  A guest answers `session-required`.
 - A rematch carries the links over.
 
 Held by: `api/src/accounts/accounts.controller.test.ts` › links a seat to the account, and refuses a seat another account holds
+Held by: `api/src/accounts/accounts.controller.test.ts` › gives a seat to the first of two accounts claiming it at the same instant
 
 ## View
 
-- Every write answers `{ game }` with the view built after the write, then
-  broadcasts the same view.
-- `readAt` is the time the server built the view. The site keeps the latest
-  one, so a late broadcast cannot undo a newer view.
+- Every write answers `{ game }` with the view built inside its own
+  transaction, after the write, then broadcasts the same view.
+- The view carries the game's `revision` and `readAt`, the time the request
+  was served. The site keeps the view of the highest revision, and of two
+  views of one revision the one read later, so a late broadcast cannot undo
+  a newer view. A request's start time alone cannot order two views, because
+  a request that started first can commit last.
 
 Held by: `api/src/games/games.controller.test.ts` › pushes the view a write answers to every connection of that game
+
+## Pending edit
+
+- The site's cache for one game holds the newest server view and, apart from
+  it, the edits this phone sent and has not heard back about
+  (`site/src/lib/game-cache.core.ts`). The screen shows the edits laid over
+  the server view, in the order they were tapped.
+- Every broadcast, every write answer and every read goes through
+  `receiveGame`, whatever this phone has pending, so no path is ever dropped.
+- An edit leaves the list when its write settles, success or failure, so a
+  refused tap disappears and the screen shows what the server holds.
+
+Held by: `site/src/lib/game-cache.core.test.ts` › writes each broadcast unless the cached view is newer, even while this phone has a write pending
+Held by: `site/src/lib/game-cache.core.test.ts` › drops a refused edit, so the screen goes back to what the server holds
