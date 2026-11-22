@@ -90,28 +90,30 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
     getRowId: (round) => String(round.number),
   });
   const layout = {
-    gridTemplateColumns: `2.25rem repeat(${String(players.length)}, minmax(0, 1fr))`,
+    gridTemplateColumns: `2.25rem repeat(${String(players.length)}, minmax(2.75rem, 1fr))`,
   };
   return (
-    <section aria-label={t('scores.detail')} className="overflow-hidden rounded-tile bg-surface">
-      {table.getHeaderGroups().map((headerGroup) => (
-        <div key={headerGroup.id} className="grid py-2" style={layout} aria-hidden="true">
-          {headerGroup.headers.map((header) => (
-            <Fragment key={header.id}>
-              {flexRender(header.column.columnDef.header, header.getContext())}
-            </Fragment>
-          ))}
-        </div>
-      ))}
-      {table.getRowModel().rows.map((row) => (
-        <div key={row.id} className="grid border-t border-ground" style={layout}>
-          {row.getVisibleCells().map((cell) => (
-            <Fragment key={cell.id}>
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </Fragment>
-          ))}
-        </div>
-      ))}
+    <section aria-label={t('scores.detail')} className="overflow-x-auto rounded-tile bg-surface">
+      <div className="min-w-fit">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <div key={headerGroup.id} className="grid py-2" style={layout} aria-hidden="true">
+            {headerGroup.headers.map((header) => (
+              <Fragment key={header.id}>
+                {flexRender(header.column.columnDef.header, header.getContext())}
+              </Fragment>
+            ))}
+          </div>
+        ))}
+        {table.getRowModel().rows.map((row) => (
+          <div key={row.id} className="grid border-t border-ground" style={layout}>
+            {row.getVisibleCells().map((cell) => (
+              <Fragment key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </Fragment>
+            ))}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

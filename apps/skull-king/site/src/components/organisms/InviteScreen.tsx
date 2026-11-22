@@ -44,7 +44,7 @@ export function InviteScreen({ game, onPlay }: InviteScreenProps) {
       <section className="flex items-center justify-center gap-3">
         <span
           aria-label={t('invite.code', { code: game.joinCode })}
-          className="font-display text-6xl leading-none tracking-[0.15em]"
+          className="font-sans text-6xl font-black leading-none tracking-[0.15em]"
         >
           {game.joinCode}
         </span>
