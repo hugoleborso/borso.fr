@@ -1,0 +1,245 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { isCompleteJoinCode, JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
+import { PLAYER_NAME_MAX_LENGTH } from '@domain/player-mark.core';
+import { buildGameSearch } from '@site/lib/game-address.core';
+import { sortNewestFirst } from '@site/lib/my-games.core';
+import { useMe, useMyGames } from '@site/lib/queries/account.queries';
+import { useCreateGame } from '@site/lib/queries/game.queries';
+import { readRejectionCode } from '@site/lib/rejection-code.core';
+import {
+  canSeatAnother,
+  canStartGame,
+  replacePlayer,
+  type RosterPlayer,
+  seatPlayer,
+  selectAbsentRegulars,
+  selectFreeMark,
+  trimPlayerName,
+  unseatPlayer,
+  withAccountFirst,
+} from '@site/lib/roster.core';
+import { loadRegulars, saveRegulars } from '@site/lib/roster.store';
+import { Button } from '../atoms/Button';
+import { ErrorNote } from '../atoms/ErrorNote';
+import { Glyph } from '../atoms/Glyph';
+import { TextInput } from '../atoms/TextInput';
+import { MyGamesStrip } from '../molecules/MyGamesStrip';
+import { RosterMark } from '../molecules/RosterMark';
+import { AccountSheet } from './AccountSheet';
+import { MarkPickerSheet } from './MarkPickerSheet';
+
+// @FollowsBlueprint organism-form-of-closed-choices
+export function HomeScreen() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const createGame = useCreateGame();
+  const [regulars] = useState(loadRegulars);
+  const [table, setTable] = useState<readonly RosterPlayer[]>([]);
+  const [draftName, setDraftName] = useState<string | null>(null);
+  const [editedSeat, setEditedSeat] = useState<number | null>(null);
+  const [joinCode, setJoinCode] = useState('');
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const account = useMe().data ?? null;
+  const myGames = useMyGames(account !== null);
+
+  const seated = withAccountFirst(account, table);
+  const absentRegulars = selectAbsentRegulars(regulars, seated);
+  const canAdd = canSeatAnother(seated);
+  const recentGames = sortNewestFirst(myGames.data ?? []);
+  const canJoin = isCompleteJoinCode(joinCode);
+  const edited = editedSeat === null ? undefined : table[editedSeat];
+
+  const seatNamedPlayer = () => {
+    const name = trimPlayerName(draftName ?? '');
+    setTable(seatPlayer(table, { name, ...selectFreeMark(seated) }));
+    setDraftName(null);
+  };
+
+  const startGame = () => {
+    createGame.mutate(
+      { players: seated, isFirstSeatMine: account !== null },
+      {
+        onSuccess: (game) => {
+          saveRegulars(seated);
+          void navigate(buildGameSearch(game.joinCode, 'invite'));
+        },
+      },
+    );
+  };
+
+  return (
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-8 px-4 pt-14 pb-6">
+      <h1 className="m-0 text-center font-display text-6xl leading-none font-normal">
+        {t('appName')}
+      </h1>
+
+      <ul className="m-0 grid list-none grid-cols-4 gap-x-2 gap-y-4 p-0">
+        {account === null ? null : (
+          <RosterMark
+            player={account}
+            isSeated
+            label={t('account.title')}
+            onPress={() => {
+              setIsAccountOpen(true);
+            }}
+          />
+        )}
+        {table.map((player, seat) => (
+          <RosterMark
+            key={seat}
+            player={player}
+            isSeated
+            label={t('home.editPlayer', { name: player.name })}
+            onPress={() => {
+              setEditedSeat(seat);
+            }}
+          />
+        ))}
+        {canAdd
+          ? absentRegulars.map((regular) => (
+              <RosterMark
+                key={regular.name}
+                player={regular}
+                isSeated={false}
+                label={t('home.addRegular', { name: regular.name })}
+                onPress={() => {
+                  setTable(seatPlayer(table, regular));
+                }}
+              />
+            ))
+          : null}
+        {canAdd ? (
+          <li className="flex flex-col items-center">
+            <Button
+              variant="dashed"
+              aria-label={t('home.addPlayer')}
+              aria-expanded={draftName !== null}
+              onClick={() => {
+                setDraftName('');
+              }}
+            >
+              <Glyph name="plus" className="size-6.5" />
+            </Button>
+          </li>
+        ) : null}
+      </ul>
+
+      {draftName === null ? null : (
+        <form
+          className="m-0 flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            seatNamedPlayer();
+          }}
+        >
+          <label className="flex min-w-0 flex-1">
+            <span className="sr-only">{t('home.playerName')}</span>
+            <TextInput
+              // eslint-disable-next-line jsx-a11y-js/no-autofocus -- the field appears because the player just tapped the add button, so the keyboard is what they asked for
+              autoFocus
+              value={draftName}
+              maxLength={PLAYER_NAME_MAX_LENGTH}
+              placeholder={t('home.playerName')}
+              onChange={(event) => {
+                setDraftName(event.target.value);
+              }}
+              className="flex-1"
+            />
+          </label>
+          <Button type="submit" variant="outline" aria-label={t('home.confirmName')}>
+            <Glyph name="check" strokeWidth={2.5} />
+          </Button>
+        </form>
+      )}
+
+      {recentGames.length === 0 ? null : (
+        <MyGamesStrip
+          games={recentGames}
+          onOpen={(code) => {
+            void navigate(buildGameSearch(code, null));
+          }}
+        />
+      )}
+
+      <div className="mt-auto flex flex-col gap-4">
+        <ErrorNote code={readRejectionCode(createGame.error)} />
+        <Button
+          variant="primary"
+          disabled={!canStartGame(seated) || createGame.isPending}
+          onClick={startGame}
+          className="w-full"
+        >
+          <Glyph name="play" />
+          {t('home.play')}
+        </Button>
+
+        <form
+          className="m-0 flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (canJoin) void navigate(buildGameSearch(joinCode, null));
+          }}
+        >
+          <label className="flex min-w-0 flex-1">
+            <span className="sr-only">{t('home.joinCode')}</span>
+            <TextInput
+              value={joinCode}
+              maxLength={JOIN_CODE_LENGTH}
+              autoCapitalize="characters"
+              placeholder={t('home.joinPlaceholder')}
+              onChange={(event) => {
+                setJoinCode(normalizeJoinCode(event.target.value));
+              }}
+              className="flex-1 text-center tracking-[0.3em] uppercase"
+            />
+          </label>
+          {account === null ? (
+            <Button
+              variant="surface"
+              aria-label={t('account.title')}
+              className="size-13"
+              onClick={() => {
+                setIsAccountOpen(true);
+              }}
+            >
+              <Glyph name="key" />
+            </Button>
+          ) : null}
+          <Button type="submit" variant="outline" aria-label={t('home.join')} disabled={!canJoin}>
+            <Glyph name="arrow" strokeWidth={2.2} />
+          </Button>
+        </form>
+      </div>
+
+      {isAccountOpen ? (
+        <AccountSheet
+          account={account}
+          suggestedMark={{ name: '', ...selectFreeMark(table) }}
+          onClose={() => {
+            setIsAccountOpen(false);
+          }}
+        />
+      ) : null}
+
+      {edited === undefined || editedSeat === null ? null : (
+        <MarkPickerSheet
+          key={editedSeat}
+          player={edited}
+          onChange={(player) => {
+            setTable(replacePlayer(table, editedSeat, player));
+          }}
+          onRemove={() => {
+            setTable(unseatPlayer(table, editedSeat));
+            setEditedSeat(null);
+          }}
+          onClaim={null}
+          onClose={() => {
+            setEditedSeat(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}

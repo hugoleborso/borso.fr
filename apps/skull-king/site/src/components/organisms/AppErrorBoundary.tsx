@@ -1,0 +1,50 @@
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { reportRenderFailure } from '../../observability/error-reporting.adapter';
+import { Glyph } from '../atoms/Glyph';
+
+export interface AppErrorBoundaryProps {
+  readonly children: ReactNode;
+}
+
+interface AppErrorBoundaryState {
+  readonly failed: boolean;
+}
+
+// @FollowsBlueprint organism-error-boundary
+export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
+  constructor(props: AppErrorBoundaryProps) {
+    super(props);
+    this.state = { failed: false };
+  }
+
+  static getDerivedStateFromError(): AppErrorBoundaryState {
+    return { failed: true };
+  }
+
+  override componentDidCatch(failure: Error, info: ErrorInfo): void {
+    console.error('skull-king crashed', failure, info.componentStack);
+    reportRenderFailure(failure, info.componentStack);
+  }
+
+  override render(): ReactNode {
+    if (!this.state.failed) return this.props.children;
+    return <CrashScreen />;
+  }
+}
+
+function CrashScreen() {
+  const { t } = useTranslation();
+  return (
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
+      <p className="text-lg font-semibold">{t('errors.unexpected-failure')}</p>
+      <a
+        href="/"
+        aria-label={t('errors.reload')}
+        className="flex h-16 w-full items-center justify-center rounded-action bg-accent text-accent-ink"
+      >
+        <Glyph name="replay" className="size-6" />
+      </a>
+    </main>
+  );
+}

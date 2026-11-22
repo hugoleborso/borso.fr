@@ -16,6 +16,7 @@
         "scripts/browser/*.ts",
         "scripts/wiki/*.ts",
         "scripts/knip/*.ts",
+        "scripts/mockup/*.ts",
         "scripts/**/*.test.ts",
         "eslint-rules/js-plugins/*.js",
         "eslint-rules/**/*.test.js"
@@ -23,6 +24,29 @@
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts", "eslint-rules/**/*.js"]
     },
     "apps/banana-rush": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "api/src/main.ts",
+        "api/src/main.websocket.ts",
+        "site/src/sw/main.worker.ts",
+        "api/src/**/*.test.ts",
+        "domain/**/*.core.test.ts",
+        "site/src/**/*.utils.test.ts",
+        "site/src/**/*.core.test.ts",
+        "test/**/*.ts",
+        "vitest.mutation.config.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "domain/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ],
+      "ignoreDependencies": ["tailwindcss"]
+    },
+    "apps/skull-king": {
       "entry": [
         "cdk/bin/cdk.ts",
         "api/src/main.ts",

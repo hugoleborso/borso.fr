@@ -158,6 +158,11 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-mockup-reads-visual-rules.sh",
             "statusMessage": "Naming the visual rules a mockup follows"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-mockup-copy.sh",
+            "statusMessage": "Counting the words on each mockup screen"
           }
         ]
       }

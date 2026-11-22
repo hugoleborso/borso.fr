@@ -17,6 +17,7 @@ with. The rules a term holds sit elsewhere: for an application, in the
 - [borsouvertures](../apps/borsouvertures/VOCABULARY.md)
 - [last-loop-lepin](../apps/last-loop-lepin/VOCABULARY.md)
 - [pragma](../apps/pragma/VOCABULARY.md)
+- [skull-king](../apps/skull-king/VOCABULARY.md)
 - [talos](../apps/talos/VOCABULARY.md)
 
 ## Operator

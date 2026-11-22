@@ -1,0 +1,129 @@
+{
+  "appName": "Skull King",
+  "common": {
+    "loading": "Chargement…",
+    "back": "Retour",
+    "round": "Manche {{number}}",
+    "roundProgress": "Manche {{number}} sur {{total}}",
+    "scores": "Scores",
+    "share": "Partager le lien",
+    "shareText": "Les scores de notre Skull King",
+    "linkCopied": "Lien copié",
+    "done": "Terminé"
+  },
+  "home": {
+    "addPlayer": "Ajouter un joueur",
+    "addRegular": "Ajouter {{name}}",
+    "editPlayer": "Modifier {{name}}",
+    "playerName": "Nom",
+    "confirmName": "Ajouter",
+    "play": "Jouer",
+    "joinCode": "Code de la partie",
+    "joinPlaceholder": "CODE",
+    "join": "Rejoindre"
+  },
+  "picker": {
+    "icon": "Icône",
+    "color": "Couleur",
+    "name": "Nom",
+    "remove": "Retirer {{name}}"
+  },
+  "invite": {
+    "code": "Code de la partie {{code}}"
+  },
+  "bidding": {
+    "bidOf": "Annonce de {{name}}",
+    "bidSum": "{{count}} plis annoncés sur {{total}}",
+    "play": "Jouer la manche",
+    "playBlocked": "Chaque joueur doit annoncer avant de jouer la manche"
+  },
+  "scoring": {
+    "backToBids": "Revenir aux annonces",
+    "bid": "Annonce {{bid}}",
+    "noBid": "Pas d'annonce",
+    "made": "Réussi, toucher pour marquer raté",
+    "missed": "Raté, toucher pour marquer réussi",
+    "tricksOf": "Plis faits par {{name}}",
+    "bonuses": "Bonus",
+    "bonusCount": "{{card}}, {{count}}, toucher pour ajouter",
+    "tally": "{{counted}} plis comptés sur {{expected}}",
+    "kraken": "Kraken joué",
+    "close": "Valider la manche",
+    "closeBlocked": "Les plis doivent tomber juste avant de valider la manche",
+    "whiteWhale": "Baleine blanche, un pli défaussé",
+    "harry": "Harry le Géant, {{adjustment}}",
+    "harryMinus": "Harry : annonce moins un",
+    "harryPlus": "Harry : annonce plus un",
+    "harryNone": "aucun",
+    "rascal": "Rascal de Roatan, mise {{bet}}, toucher pour monter"
+  },
+  "scores": {
+    "detail": "Détail par manche",
+    "cell": "{{name}}, manche {{round}}, {{points}}. Corriger",
+    "correction": "{{name}}, manche {{round}}",
+    "bid": "Annonce",
+    "tricks": "Plis faits",
+    "winner": "Vainqueur",
+    "rematch": "Rejouer",
+    "roundCheck": "Manche {{round}}, {{counted}} plis comptés sur {{expected}}",
+    "continueBlocked": "Une manche ne tombe pas juste : corrige-la d’abord"
+  },
+  "cards": {
+    "standardFourteen": "14 de couleur",
+    "blackFourteen": "14 noir",
+    "mermaidByPirate": "Sirène capturée par un pirate",
+    "pirateBySkullKing": "Pirate capturé par le Skull King",
+    "skullKingByMermaid": "Skull King capturé par une sirène",
+    "loot": "Butin"
+  },
+  "marks": {
+    "icons": {
+      "skull": "Crâne",
+      "parrot": "Perroquet",
+      "anchor": "Ancre",
+      "crown": "Couronne",
+      "wheel": "Barre",
+      "kraken": "Kraken",
+      "chest": "Coffre",
+      "compass": "Boussole",
+      "swords": "Sabres",
+      "hook": "Crochet",
+      "bottle": "Bouteille",
+      "spyglass": "Longue-vue"
+    },
+    "colors": {
+      "gold": "Or",
+      "lagoon": "Lagon",
+      "coral": "Corail",
+      "amethyst": "Améthyste",
+      "sky": "Ciel",
+      "rose": "Rose",
+      "lime": "Lime",
+      "sand": "Sable"
+    }
+  },
+  "errors": {
+    "game-not-found": "Aucune partie avec ce code.",
+    "player-not-found": "Ce joueur n'est pas dans la partie.",
+    "round-not-played": "Cette manche n'a pas encore été jouée.",
+    "value-out-of-range": "Ce nombre n'est pas possible dans cette manche.",
+    "unexpected-failure": "Quelque chose est passé par-dessus bord. Réessaie.",
+    "reload": "Recharger",
+    "bids-missing": "Il manque une annonce.",
+    "tricks-unbalanced": "Les plis d’une manche ne tombent pas juste.",
+    "seat-taken": "Un autre compte occupe déjà cette place.",
+    "session-required": "Connecte-toi d’abord.",
+    "passkey-not-verified": "La clé d’accès n’a pas été reconnue."
+  },
+  "account": {
+    "title": "Compte",
+    "signIn": "Se connecter avec une clé d’accès",
+    "signOut": "Se déconnecter",
+    "create": "Créer un compte",
+    "createWithPasskey": "Créer le compte avec une clé d’accès",
+    "myGames": "Mes parties",
+    "openGame": "Ouvrir la partie {{code}}",
+    "claimSeat": "Cette place, c’est moi",
+    "mySeat": "Ma place"
+  }
+}
