@@ -11,12 +11,22 @@ import {
   type TypeReference,
 } from 'typescript/unstable/sync';
 
-const CLIENT_FILE = 'site/src/lib/api.client.ts';
-const CLIENT_EXPORT = 'api';
+export interface ResponseShapeSource {
+  readonly projectDirectory: string;
+  readonly configFile: string;
+  readonly clientFile: string;
+  readonly clientExport: string;
+}
+
+export type CompilerOpener = () => API;
+
+const PRAGMA_CLIENT_FILE = 'site/src/lib/api.client.ts';
+const PRAGMA_CLIENT_EXPORT = 'api';
 const READ_METHOD = '$get';
 const CLIENT_MEMBER_PREFIX = '$';
 const FINGERPRINT_LENGTH = 12;
 const CYCLE_MARK = '<cycle>';
+const MISSING_ANSWER = 'response shape: the compiler left a type unanswered';
 const SCALAR_FLAGS =
   TypeFlags.StringLike |
   TypeFlags.NumberLike |
@@ -25,11 +35,10 @@ const SCALAR_FLAGS =
   TypeFlags.Null |
   TypeFlags.Undefined |
   TypeFlags.Unknown |
-  TypeFlags.Any |
   TypeFlags.Never;
 
-export function assertPresent<Value>(value: Value | undefined, what: string): Value {
-  if (value === undefined) throw new Error(`response shape: no ${what}`);
+export function assertPresent<Value>(value: Value | undefined): Value {
+  if (value === undefined) throw new Error(MISSING_ANSWER);
   return value;
 }
 
@@ -38,22 +47,22 @@ function isReference(type: Type): type is TypeReference {
 }
 
 function getReference(type: Type): TypeReference {
-  return assertPresent([type].find(isReference), 'type reference');
+  return assertPresent([type].find(isReference));
 }
 
 function getFirstTypeArgument(checker: Checker, type: Type): Type {
   const argument = checker.getTypeArguments(getReference(type))[0];
-  return assertPresent(argument, 'type argument');
+  return assertPresent(argument);
 }
 
 function getTypeOf(checker: Checker, symbol: CompilerSymbol): Type {
-  return assertPresent(checker.getTypeOfSymbol(symbol), `type of ${symbol.name}`);
+  return assertPresent(checker.getTypeOfSymbol(symbol));
 }
 
 function getCallResult(checker: Checker, type: Type): Type[] {
   return checker
     .getSignaturesOfType(type, SignatureKind.Call)
-    .map((signature) => assertPresent(checker.getReturnTypeOfSignature(signature), 'return type'));
+    .map((signature) => assertPresent(checker.getReturnTypeOfSignature(signature)));
 }
 
 function buildShape(checker: Checker, type: Type, seen: Map<number, string>): string {
@@ -67,7 +76,7 @@ function buildShape(checker: Checker, type: Type, seen: Map<number, string>): st
 
 function composeShape(checker: Checker, type: Type, seen: Map<number, string>): string {
   if (type.isUnionType()) {
-    return assertPresent(type.getTypes(), 'union members')
+    return assertPresent(type.getTypes())
       .map((member) => buildShape(checker, member, seen))
       .sort()
       .join('|');
@@ -95,43 +104,54 @@ function listReadShapes(checker: Checker, route: Type, path: string): string[] {
     }
     return getCallResult(checker, memberType).flatMap((pending) => {
       const response = getFirstTypeArgument(checker, pending);
-      const answers = response.isUnionType()
-        ? assertPresent(response.getTypes(), 'answers')
-        : [response];
+      const answers = response.isUnionType() ? assertPresent(response.getTypes()) : [response];
       return answers.map((answer) => {
-        const json = assertPresent(checker.getPropertyOfType(answer, 'json'), 'json reader');
+        const json = assertPresent(checker.getPropertyOfType(answer, 'json'));
         const [body] = getCallResult(checker, getTypeOf(checker, json));
-        const payload = getFirstTypeArgument(checker, assertPresent(body, 'json body'));
+        const payload = getFirstTypeArgument(checker, assertPresent(body));
         return `${path} ${buildShape(checker, payload, new Map())}`;
       });
     });
   });
 }
 
+function openTypeScript(): API {
+  return new API();
+}
+
 // @FollowsBlueprint adapter-external-service
-export function readResponseShapeFingerprint(appDirectory: string): string {
-  const compiler = new API({ cwd: appDirectory });
+export function listResponseShapes(
+  source: ResponseShapeSource,
+  openCompiler: CompilerOpener = openTypeScript,
+): string[] {
+  const compiler = openCompiler();
   try {
     const snapshot = compiler.updateSnapshot({
-      openProjects: [join(appDirectory, 'tsconfig.json')],
+      openProjects: [join(source.projectDirectory, source.configFile)],
     });
-    const project = assertPresent(snapshot.getProjects()[0], 'project');
+    const project = assertPresent(snapshot.getProjects()[0]);
     const { checker } = project;
     const client = assertPresent(
-      project.program.getSourceFile(join(appDirectory, CLIENT_FILE)),
-      CLIENT_FILE,
+      project.program.getSourceFile(join(source.projectDirectory, source.clientFile)),
     );
-    const clientModule = assertPresent(checker.getSymbolAtLocation(client), 'client module');
+    const clientModule = assertPresent(checker.getSymbolAtLocation(client));
     const clientExport = assertPresent(
-      checker.getExportsOfModule(clientModule).find((symbol) => symbol.name === CLIENT_EXPORT),
-      `${CLIENT_EXPORT} export`,
+      checker
+        .getExportsOfModule(clientModule)
+        .find((symbol) => symbol.name === source.clientExport),
     );
-    const shapes = listReadShapes(checker, getTypeOf(checker, clientExport), '').sort();
-    return createHash('sha256')
-      .update(shapes.join('\n'))
-      .digest('hex')
-      .slice(0, FINGERPRINT_LENGTH);
+    return listReadShapes(checker, getTypeOf(checker, clientExport), '').sort();
   } finally {
     compiler.close();
   }
+}
+
+export function readResponseShapeFingerprint(appDirectory: string): string {
+  const shapes = listResponseShapes({
+    projectDirectory: appDirectory,
+    configFile: 'tsconfig.json',
+    clientFile: PRAGMA_CLIENT_FILE,
+    clientExport: PRAGMA_CLIENT_EXPORT,
+  });
+  return createHash('sha256').update(shapes.join('\n')).digest('hex').slice(0, FINGERPRINT_LENGTH);
 }
