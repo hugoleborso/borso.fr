@@ -18,7 +18,13 @@ describe('readSeats', () => {
   });
 
   it('answers an empty slice for JSON of another shape', () => {
-    expect(readSeats(JSON.stringify({ ABCD: { playerId: 42 } }))).toEqual({});
+    expect(readSeats(JSON.stringify(['ABCD']))).toEqual({});
+  });
+
+  it('drops only the entry that no longer matches', () => {
+    expect(readSeats(JSON.stringify({ ABCD: seat, EFGH: { playerId: 42 } }))).toEqual({
+      ABCD: seat,
+    });
   });
 });
 
