@@ -66,14 +66,12 @@ decides which game screen shows.
    connected.
 3. **Bids** (phase `bidding`). "Manche N", a ten segment progress bar, a
    scores button. One row per player: the mark and name, then a bid stepper.
-   The value shows the bid, or "–" with no bid yet. From no bid, `−` sets 0
-   and `+` sets 1. Then each tap moves the bid by one between 0 and the cards
-   dealt, `−` disabled at 0 and `+` at the cards dealt. A bid is never cleared
-   back to no bid from the stepper.
+   Every bid starts at 0 (operator call, 2026-11-23). Each tap moves the bid
+   by one between 0 and the cards dealt, `−` disabled at 0 and `+` at the
+   cards dealt. A bid is never cleared from the stepper.
    The footer shows the sum of bids over the cards dealt, and a play button
-   moves to scoring. The play button stays disabled until every player has a
-   bid (`isEveryBidPlaced`), and the player rows still missing one are
-   highlighted.
+   moves to scoring. The play button stays disabled while a stored bid is
+   cleared (`isEveryBidPlaced`), and those rows are highlighted.
 4. **Results** (phase `scoring`). One card per player: mark and name, bid, live round
    points, and a big toggle, check (made, default) or cross (missed).
    - Made: a strip of the six bonus cards (standard 14, black 14, mermaid,
@@ -255,7 +253,7 @@ as primary keys):
   missed bid with no tricks yet keeps the round open), one int column per
   bonus kind, `updated_at`.
 
-A missing `round` or `round_entry` row reads as the default (no kraken, no bid,
+A missing `round` or `round_entry` row reads as the default (no kraken, bid 0,
 made, no bonus). Writes upsert.
 
 ## API
@@ -284,8 +282,8 @@ moves: any phase but `finished` within the current round, the `bidding` phase
 of the next round, and `finished` from the `scoring` phase of round 10. Any
 other target answers `value-out-of-range`, so the game never moves back across
 rounds and never skips one. The server holds the checker too, so no phone can
-skip it: moving a round to `scoring` answers `bids-missing` 409 while a bid is
-missing, and opening the next round or finishing answers `tricks-unbalanced`
+skip it: moving a round to `scoring` answers `bids-missing` 409 while a stored bid
+is cleared, and opening the next round or finishing answers `tricks-unbalanced`
 409 while any played round does not balance.
 
 Every write to a game runs in one transaction that first bumps

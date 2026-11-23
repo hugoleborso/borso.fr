@@ -1,4 +1,10 @@
-import { type BidAdjustment, isBidMade, NO_BONUS, selectFinalBid } from '@domain/scoring.core';
+import {
+  type BidAdjustment,
+  DEFAULT_BID,
+  isBidMade,
+  NO_BONUS,
+  selectFinalBid,
+} from '@domain/scoring.core';
 import {
   canCloseRound,
   isBidAdjustedOnce,
@@ -106,7 +112,7 @@ export function selectRoundEntries(
     (playerId) =>
       round.entries.find((entry) => entry.playerId === playerId) ?? {
         playerId,
-        bid: null,
+        bid: DEFAULT_BID,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,

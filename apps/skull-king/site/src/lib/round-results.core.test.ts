@@ -272,7 +272,7 @@ describe('selectRoundEntries', () => {
     expect(selectRoundEntries(round, ['p9', 'p1'])).toEqual([
       {
         playerId: 'p9',
-        bid: null,
+        bid: 0,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,

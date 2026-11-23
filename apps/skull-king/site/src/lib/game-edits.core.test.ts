@@ -130,7 +130,7 @@ describe('applyPhaseEdit', () => {
       entries: [
         {
           playerId: 'p1',
-          bid: null,
+          bid: 0,
           bidAdjustment: 0,
           rascalBet: 0,
           isMissed: false,
@@ -139,7 +139,7 @@ describe('applyPhaseEdit', () => {
         },
         {
           playerId: 'p2',
-          bid: null,
+          bid: 0,
           bidAdjustment: 0,
           rascalBet: 0,
           isMissed: false,

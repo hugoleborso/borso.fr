@@ -1,5 +1,6 @@
 import { selectCardCount, type RoundPhase } from '@domain/round.core';
 import {
+  DEFAULT_BID,
   BID_ADJUSTMENTS,
   type BidAdjustment,
   type BonusCounts,
@@ -81,7 +82,7 @@ function describeEntry(playerId: string, entry: EntryFacts | undefined): EntryVi
   if (entry === undefined) {
     return {
       playerId,
-      bid: null,
+      bid: DEFAULT_BID,
       bidAdjustment: NO_ADJUSTMENT,
       rascalBet: NO_BET,
       isMissed: IS_MISSED_WHEN_UNWRITTEN,

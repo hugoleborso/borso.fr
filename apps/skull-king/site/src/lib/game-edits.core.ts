@@ -1,6 +1,7 @@
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import { type RoundPhase, selectCardCount } from '@domain/round.core';
 import {
+  DEFAULT_BID,
   type BidAdjustment,
   type BonusCounts,
   NO_BONUS,
@@ -89,7 +90,7 @@ function openRound(game: GameView, roundNumber: number): GameRound {
     isWhiteWhaleDiscard: false,
     entries: game.players.map((player) => ({
       playerId: player.id,
-      bid: null,
+      bid: DEFAULT_BID,
       bidAdjustment: 0,
       rascalBet: 0,
       isMissed: false,

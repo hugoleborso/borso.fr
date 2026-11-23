@@ -42,6 +42,8 @@ const POINTS_PER_TRICK_MADE = 20;
 const POINTS_PER_TRICK_MISSED = 10;
 const POINTS_PER_CARD_FOR_A_ZERO_BID = 10;
 
+export const DEFAULT_BID = 0;
+
 export const BID_ADJUSTMENTS = [-1, 0, 1] as const;
 export type BidAdjustment = (typeof BID_ADJUSTMENTS)[number];
 

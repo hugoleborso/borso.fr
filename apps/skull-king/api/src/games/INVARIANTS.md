@@ -265,7 +265,7 @@ Held by: `api/src/games/games.controller.test.ts` › expects one trick fewer fo
   that unbalances a round and a move past it, sent at the same instant,
   cannot both succeed.
 
-Held by: `api/src/games/games.controller.test.ts` › refuses to score a round while a bid is missing
+Held by: `api/src/games/games.controller.test.ts` › refuses to score a round while a bid was cleared
 Held by: `api/src/games/games.controller.test.ts` › refuses the next round while the tricks do not balance, and lets the table go back
 Held by: `api/src/games/games.controller.test.ts` › refuses to finish while a corrected earlier round no longer balances
 Held by: `api/src/games/game-write.core.test.ts` › refuses any other round than the one played and the next one

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { RoundPhase } from '@domain/round.core';
-import { NO_BONUS } from '@domain/scoring.core';
+import { DEFAULT_BID, NO_BONUS } from '@domain/scoring.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import type { EntryChanges } from './game-write.core';
 import {
@@ -133,7 +133,7 @@ export async function upsertRoundEntry(
     .insert(roundEntryTable)
     .values({
       ...key,
-      bid: null,
+      bid: DEFAULT_BID,
       bidAdjustment: 0,
       rascalBet: 0,
       isMissed: false,

@@ -63,7 +63,7 @@ describe('a game of Skull King, end to end', () => {
     expect(game.rounds[0]?.entries).toEqual(
       created.players.map((player) => ({
         playerId: player.id,
-        bid: null,
+        bid: 0,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,
@@ -245,9 +245,9 @@ describe('a game of Skull King, end to end', () => {
     expect(finished.rounds).toHaveLength(10);
   });
 
-  it('refuses to score a round while a bid is missing', async () => {
+  it('refuses to score a round while a bid was cleared', async () => {
     const created = await createAGame();
-    await writeEntry(created.joinCode, 1, seatId(created, 0), { bid: 1 });
+    await writeEntry(created.joinCode, 1, seatId(created, 0), { bid: null });
 
     const response = await movePhase(created.joinCode, 1, 'scoring');
 

@@ -85,7 +85,7 @@ describe('buildGameView', () => {
     expect(first?.entries).toStrictEqual([
       {
         playerId: 'hugo',
-        bid: null,
+        bid: 0,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,
@@ -94,7 +94,7 @@ describe('buildGameView', () => {
       },
       {
         playerId: 'lea',
-        bid: null,
+        bid: 0,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,
@@ -134,7 +134,7 @@ describe('buildGameView', () => {
     expect(view.rounds[1]?.entries).toStrictEqual([
       {
         playerId: 'hugo',
-        bid: null,
+        bid: 0,
         bidAdjustment: 0,
         rascalBet: 0,
         isMissed: false,
