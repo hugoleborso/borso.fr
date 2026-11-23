@@ -131,7 +131,14 @@ shows. The face comes from the DiceBear `avataaars` style
 ([ADR](../../../../adr/2026-11-23T1659-skull-king-pirate-avatars.md)). The
 tricorne, the bandana, the scars, the gold hoop, the gold tooth, the pipe and
 the parrot are drawn by this app in `PiratePortrait.tsx`, over the face, in the
-same 280 by 280 frame.
+same 280 by 280 frame. The scars are an exception: they are painted inside the
+face, under the eyes, the eyebrows and the hair.
+
+Every mark sits behind a thin brass porthole (operator call, 2026-11-23): a
+brass ring from the app's CC0 brass texture, a glass glint in its top-left
+quarter and an inner shadow. The ring stays thin enough that a 24 px mark in
+the 8-player scores grid still shows the face. A highlighted mark keeps its
+ring in the player's colour around the porthole.
 
 ```ts
 // domain/pirate-avatar.core.ts, each field one of a const list
