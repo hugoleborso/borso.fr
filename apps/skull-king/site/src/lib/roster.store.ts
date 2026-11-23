@@ -1,7 +1,13 @@
 /** @DependsOnExternal browser-local-storage */
 
 import type { PirateAvatar } from '@domain/pirate-avatar.core';
-import { readLastPirate, readRegulars, rememberRegulars, type RosterPlayer } from './roster.core';
+import {
+  readLastPirate,
+  readRegulars,
+  type Regular,
+  rememberRegulars,
+  type RosterPlayer,
+} from './roster.core';
 
 const STORAGE_KEY = 'skull-king.regulars';
 const LAST_PIRATE_KEY = 'skull-king.last-pirate';
@@ -16,7 +22,7 @@ function browserStorage(): Storage | null {
 }
 
 // @FollowsBlueprint persisted-store-module
-export function loadRegulars(): readonly RosterPlayer[] {
+export function loadRegulars(): readonly Regular[] {
   const storage = browserStorage();
   if (storage === null) return [];
   try {

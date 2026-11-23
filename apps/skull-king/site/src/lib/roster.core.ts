@@ -32,6 +32,13 @@ export interface RosterPlayer {
   readonly avatar: PirateAvatar;
 }
 
+export interface Regular {
+  readonly name: string;
+  readonly icon: PlayerIcon;
+  readonly color: PlayerColor;
+  readonly avatar: PirateAvatar | null;
+}
+
 export interface AccountMark {
   readonly name: string;
   readonly icon: PlayerIcon;
@@ -56,34 +63,40 @@ function parseStored(rawValue: string | null): unknown {
 }
 // Stryker restore BlockStatement
 
-function readRegular(entry: unknown, index: number): RosterPlayer[] {
+function readRegular(entry: unknown): Regular[] {
   const regular = rosterPlayerSchema.safeParse(entry);
   if (!regular.success) return [];
   const { avatar, ...mark } = regular.data;
   const pirate = pirateAvatarSchema.safeParse(avatar);
-  return [{ ...mark, avatar: pirate.success ? pirate.data : suggestAvatar(index) }];
+  return [{ ...mark, avatar: pirate.success ? pirate.data : null }];
 }
 
 // @FollowsBlueprint core-persisted-slice-parsed-not-trusted
-export function readRegulars(rawValue: string | null): readonly RosterPlayer[] {
+export function readRegulars(rawValue: string | null): readonly Regular[] {
   const storedRegulars = z.array(z.unknown()).safeParse(parseStored(rawValue));
   if (!storedRegulars.success) return [];
-  return storedRegulars.data.flatMap(readRegular);
+  return storedRegulars.data.flatMap((entry) => readRegular(entry));
+}
+
+export function dressRegular(regular: Regular, table: readonly RosterPlayer[]): RosterPlayer {
+  return { ...regular, avatar: regular.avatar ?? suggestAvatar(table.length) };
 }
 
 export function rememberRegulars(
-  regulars: readonly RosterPlayer[],
+  regulars: readonly Regular[],
   table: readonly RosterPlayer[],
-): readonly RosterPlayer[] {
+): readonly Regular[] {
   const others = regulars.filter((regular) => !isListed(table, regular.name));
   return [...table, ...others].slice(0, MAXIMUM_REGULARS);
 }
 
 export function selectAbsentRegulars(
-  regulars: readonly RosterPlayer[],
+  regulars: readonly Regular[],
   table: readonly RosterPlayer[],
 ): readonly RosterPlayer[] {
-  return regulars.filter((regular) => !isListed(table, regular.name));
+  return regulars
+    .filter((regular) => !isListed(table, regular.name))
+    .map((regular) => dressRegular(regular, table));
 }
 
 export function trimPlayerName(rawName: string): string {
@@ -180,13 +193,13 @@ export function selectNewSeatAvatar(
 
 export function selectTypedSeat(
   typedName: string,
-  regulars: readonly RosterPlayer[],
+  regulars: readonly Regular[],
   lastPirate: PirateAvatar | null,
   table: readonly RosterPlayer[],
 ): RosterPlayer {
   const name = trimPlayerName(typedName);
   const regular = regulars.find((candidate) => isSameName(candidate.name, name));
-  if (regular !== undefined) return regular;
+  if (regular !== undefined) return dressRegular(regular, table);
   return { name, ...selectFreeMark(table), avatar: selectNewSeatAvatar(lastPirate, table) };
 }
 
@@ -194,7 +207,7 @@ const ACCOUNT_SEAT = 0;
 
 export function seatAccount(
   account: AccountMark | null,
-  regulars: readonly RosterPlayer[],
+  regulars: readonly Regular[],
 ): RosterPlayer | null {
   if (account === null) return null;
   const regular = regulars.find((candidate) => isSameName(candidate.name, account.name));

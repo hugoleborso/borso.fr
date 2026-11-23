@@ -13,6 +13,7 @@ import {
   seatAccount,
   seatPlayer,
   selectAbsentRegulars,
+  dressRegular,
   selectFreeMark,
   selectTypedSeat,
   selectNewSeatAvatar,
@@ -61,20 +62,16 @@ describe('readRegulars', () => {
     expect(readRegulars('{')).toEqual([]);
   });
 
-  it('dresses a regular stored before pirates existed as the pirate of their place in the list', () => {
-    const stored = JSON.stringify([
-      { name: 'Hugo', icon: 'skull', color: 'gold' },
-      { name: 'Léa', icon: 'bird', color: 'ice' },
-    ]);
-    expect(readRegulars(stored).map((regular) => regular.avatar)).toEqual([
-      suggestAvatar(0),
-      suggestAvatar(1),
+  it('reads no pirate for a regular stored before pirates existed', () => {
+    const stored = JSON.stringify([{ name: 'Hugo', icon: 'skull', color: 'gold' }]);
+    expect(readRegulars(stored)).toEqual([
+      { name: 'Hugo', icon: 'skull', color: 'gold', avatar: null },
     ]);
   });
 });
 
 describe('readRegulars, one bad regular', () => {
-  it('keeps every other regular and dresses one with an unknown part as their place', () => {
+  it('keeps every other regular and reads no pirate for one with an unknown part', () => {
     const stored = JSON.stringify([
       {
         name: 'Hugo',
@@ -86,7 +83,7 @@ describe('readRegulars, one bad regular', () => {
       { name: 'Max', icon: 'not-an-icon', color: 'ice' },
     ]);
     expect(readRegulars(stored)).toEqual([
-      { name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) },
+      { name: 'Hugo', icon: 'skull', color: 'gold', avatar: null },
       { name: 'Léa', icon: 'bird', color: 'ice', avatar: suggestAvatar(3) },
     ]);
   });
@@ -100,7 +97,14 @@ describe('selectTypedSeat', () => {
   const PIRATE = suggestAvatar(6);
 
   it('seats a regular whose name is typed, in any case, with their own mark and pirate', () => {
-    expect(selectTypedSeat('  max ', [HUGO, MAX], PIRATE, [HUGO])).toBe(MAX);
+    expect(selectTypedSeat('  max ', [HUGO, MAX], PIRATE, [HUGO])).toEqual(MAX);
+  });
+
+  it('dresses a typed regular with no pirate as the seat they take', () => {
+    expect(selectTypedSeat('Max', [{ ...MAX, avatar: null }], PIRATE, [HUGO, LEA])).toEqual({
+      ...MAX,
+      avatar: suggestAvatar(2),
+    });
   });
 
   it('seats a new name with a free mark and the last pirate', () => {
@@ -108,6 +112,16 @@ describe('selectTypedSeat', () => {
       name: 'Eve',
       ...selectFreeMark([HUGO]),
       avatar: PIRATE,
+    });
+  });
+});
+
+describe('dressRegular', () => {
+  it('keeps the own pirate of a regular and dresses one without as the seat they take', () => {
+    expect(dressRegular(MAX, [HUGO])).toEqual(MAX);
+    expect(dressRegular({ ...MAX, avatar: null }, [HUGO])).toEqual({
+      ...MAX,
+      avatar: suggestAvatar(1),
     });
   });
 });
@@ -127,6 +141,12 @@ describe('rememberRegulars', () => {
 describe('selectAbsentRegulars', () => {
   it('leaves out the regulars already at the table, whatever the case of their name', () => {
     expect(selectAbsentRegulars([HUGO, LEA, MAX], [{ ...LEA, name: 'LÉA' }])).toEqual([HUGO, MAX]);
+  });
+
+  it('shows a regular with no pirate as the seat they would take', () => {
+    expect(selectAbsentRegulars([{ ...MAX, avatar: null }], [HUGO, LEA])).toEqual([
+      { ...MAX, avatar: suggestAvatar(2) },
+    ]);
   });
 });
 
