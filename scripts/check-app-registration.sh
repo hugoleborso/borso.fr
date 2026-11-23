@@ -57,6 +57,16 @@ for app_directory in apps/*/; do
     fi
   fi
 
+  # The README hero shows every app, and its alt text names each one by its
+  # page title. Skull King shipped to prod without a phone in the hero until
+  # the operator asked (PR #400).
+  title=$(grep -o '<title>[^<]*' "${app_directory}site/index.html" 2>/dev/null | head -1 | sed 's/<title>//')
+  if [ -n "$title" ] && ! grep -o 'src="docs/assets/readme/hero.jpg" alt="[^"]*"' README.md | grep -qiF "$title"; then
+    echo "[check-app-registration] $slug ($title) is not in the README hero image." >&2
+    echo "    Add its phone to docs/assets/readme/hero.jpg and its title to the image's alt text." >&2
+    missing=$((missing + 1))
+  fi
+
   # S3 bucket names are global, and a NoSuchBucket answer does not prove a name
   # is free, so a new app cannot check that <slug>-prod is available before its
   # first deploy. The apps listed here already own their short bucket name,
