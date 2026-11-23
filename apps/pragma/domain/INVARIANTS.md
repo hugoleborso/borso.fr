@@ -111,13 +111,20 @@ Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed re
   gap with an active day on its older side; while today is open, today
   stands as the newer side. A day bridged by a joker adds nothing.
 - Jokers left this week is 3 minus the jokers the walk spent since Monday.
+- The personal flame carries its week, Monday to Sunday of today's week,
+  always 7 days. A day after today is `future`. An active day is `active`.
+  A missed day the walk bridged is `joker`. Today, not yet active, is
+  `open`. Any other missed day is `missed`. A day is a session day when a
+  session is dated on it. The `joker` days of this week are the jokers
+  spent this week, so the jokers card and the timeline cannot disagree.
 - The band flame counts a day when any current member is active, and has no
   joker: its first missed day ends it. A deleted member's presences drop
   out.
 - Not stored: it is computed on every read from the last 400 days of
   presences and sessions (`STREAK_LOOKBACK_DAYS`).
-- Shown on Home as two chips that open the streak sheet: the member's own
-  flame and the band's. Both are drawn marks, not `Icon` glyphs. The
+- Shown on Home as one chip that opens the streak sheet. It carries the
+  member's own flame, a rule, then the band's. Both are drawn marks, not
+  `Icon` glyphs. The
   personal flame is the `BlazeMark`, one flame in three layers with sparks.
   The band flame is the `BonfireMark`, three tilted flames. Each reads a
   tone. `counted` (today counts) layers `flame-deep`, `flame-mid` and
@@ -126,7 +133,7 @@ Held by: `site/src/lib/queries/streaks.queries.test.tsx` › reports a failed re
   `accent` outline and a faint core. `out` (0 days) is an `ink-faint`
   outline with no spark.
 
-Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
+Held by: `site/src/routes/home/HomePage.test.tsx` › puts one chip with both flames on the title line, and a tap opens the streak sheet
 Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers
@@ -134,6 +141,9 @@ Held by: `domain/practice-flame.core.test.ts` › ends the flame on a fourth mis
 Held by: `domain/practice-flame.core.test.ts` › spends no joker on a gap it cannot bridge whole
 Held by: `domain/practice-flame.core.test.ts` › counts jokers left this week from the jokers spent since Monday
 Held by: `domain/practice-flame.core.test.ts` › ends the band flame on its first missed day, with no joker
+Held by: `domain/practice-flame.core.test.ts` › marks each day of today’s week active, joker, open or future, and the session days
+Held by: `domain/practice-flame.core.test.ts` › shows only this week’s days of a bridged gap that crosses the Monday
+Held by: `domain/practice-flame.core.test.ts` › leaves the days of a gap it could not bridge missed
 Held by: `api/src/streaks/streaks.core.test.ts` › lights a member’s day and the band’s from the member opening the app
 Held by: `api/src/streaks/streaks.core.test.ts` › ignores the presence of a member who was deleted
 Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’s day when a session is dated today

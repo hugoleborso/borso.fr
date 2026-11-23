@@ -113,6 +113,8 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
+  { key: 'streaks.caption.joker', readsTheSameBecause: 'the band says "joker" in both languages' },
+  { key: 'streaks.chipLabel', readsTheSameBecause: 'two placeholders, no word' },
   { key: 'takes.concert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'tasks.linkedSession', readsTheSameBecause: '"Sessions" is the tab name in French too' },
   { key: 'tasks.notes', readsTheSameBecause: 'same word, same spelling' },

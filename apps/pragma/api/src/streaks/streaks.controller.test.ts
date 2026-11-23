@@ -13,8 +13,20 @@ import { presenceTable } from './streaks.schema';
 
 type TestApp = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
+const flameWeekDaySchema = z
+  .object({
+    day: z.string(),
+    state: z.enum(['active', 'joker', 'missed', 'open', 'future']),
+    isSessionDay: z.boolean(),
+  })
+  .strict();
 const personalFlameSchema = z
-  .object({ days: z.number(), isTodayCounted: z.boolean(), jokersLeftThisWeek: z.number() })
+  .object({
+    days: z.number(),
+    isTodayCounted: z.boolean(),
+    jokersLeftThisWeek: z.number(),
+    week: z.array(flameWeekDaySchema).length(7),
+  })
   .strict();
 const streaksEnvelope = z
   .object({
@@ -34,8 +46,9 @@ const streaksEnvelope = z
   })
   .strict();
 
-const COUNTED_TODAY = { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 };
-const NO_FLAME = { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 };
+const ANY_WEEK = expect.any(Array);
+const COUNTED_TODAY = { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3, week: ANY_WEEK };
+const NO_FLAME = { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3, week: ANY_WEEK };
 
 async function readStreaks(app: TestApp, cookieHeader: string) {
   return await readJson(await jsonRequest(app, '/api/streaks', { cookieHeader }), streaksEnvelope);
@@ -108,6 +121,11 @@ describe('streaks controller (back-e2e)', () => {
     expect(streaks.mine).toEqual(COUNTED_TODAY);
     expect(streaks.band).toEqual({ days: 1, isTodayCounted: true });
     expect(streaks.members.map((member) => member.flame)).toEqual([COUNTED_TODAY, COUNTED_TODAY]);
+    expect(streaks.mine.week).toContainEqual({
+      day: streaks.today,
+      state: 'active',
+      isSessionDay: true,
+    });
   });
 
   it('lists each member with their stored colour', async () => {

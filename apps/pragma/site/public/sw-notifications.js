@@ -27,7 +27,8 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': 'Setlist changed',
       'song-lineup-changed': 'Lineup changed',
       'transition-changed': 'Transition changed',
-      'streak-at-risk': 'Flame at risk',
+      'streak-at-risk': 'Your {days}-day flame is waiting',
+      'streak-at-risk-last': 'Your {days}-day flame goes out at midnight',
       'streak-band-count': 'Practice time',
       'streak-band-count-one': 'Practice time',
     },
@@ -40,7 +41,9 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} changed the setlist {setlistName}',
       'song-lineup-changed': '{actorName} changed the lineup of {songTitle}',
       'transition-changed': '{actorName} changed the transition {songATitle} → {songBTitle}',
-      'streak-at-risk': 'Keep your {days}-day flame alive. Open Pragma before midnight.',
+      'streak-at-risk':
+        'Come by before midnight, or a joker goes. You will have {jokersAfter} left.',
+      'streak-at-risk-last': 'No joker left this week. Open Pragma before midnight.',
       'streak-band-count': '{count} members already lit their flame today. Your turn?',
       'streak-band-count-one': '1 member already lit their flame today. Your turn?',
     },
@@ -58,7 +61,8 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': 'Setlist modifiée',
       'song-lineup-changed': 'Composition modifiée',
       'transition-changed': 'Transition modifiée',
-      'streak-at-risk': 'Flamme en danger',
+      'streak-at-risk': 'Ta flamme de {days} jours attend',
+      'streak-at-risk-last': 'Ta flamme de {days} jours s’éteint à minuit',
       'streak-band-count': 'À toi de jouer',
       'streak-band-count-one': 'À toi de jouer',
     },
@@ -71,7 +75,8 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} a modifié la setlist {setlistName}',
       'song-lineup-changed': '{actorName} a modifié la composition de {songTitle}',
       'transition-changed': '{actorName} a modifié la transition {songATitle} → {songBTitle}',
-      'streak-at-risk': 'Garde ta flamme de {days} jours. Ouvre Pragma avant minuit.',
+      'streak-at-risk': 'Passe avant minuit. Sinon un joker part, il t’en restera {jokersAfter}.',
+      'streak-at-risk-last': 'Tu n’as plus de joker cette semaine. Ouvre Pragma avant minuit.',
       'streak-band-count': '{count} membres ont déjà allumé leur flamme aujourd’hui. À toi ?',
       'streak-band-count-one': '1 membre a déjà allumé sa flamme aujourd’hui. À toi ?',
     },
@@ -116,6 +121,12 @@ function readParameters(payload, deviceLanguage, text) {
   return parameters;
 }
 
+function fillParameters(template, parameters) {
+  return template.replace(PARAMETER_PATTERN, (placeholder, name) =>
+    readText(parameters[name], placeholder),
+  );
+}
+
 function renderNotification(payload, deviceLanguage) {
   const text = NOTIFICATION_TEXT[selectLanguage(deviceLanguage)];
   const messageKey = readText(payload.messageKey, '');
@@ -123,10 +134,10 @@ function renderNotification(payload, deviceLanguage) {
     return { title: text.titles.fallback, body: text.fallback };
   }
   const parameters = readParameters(payload, deviceLanguage, text);
-  const body = text.templates[messageKey].replace(PARAMETER_PATTERN, (placeholder, name) =>
-    readText(parameters[name], placeholder),
-  );
-  return { title: text.titles[messageKey], body };
+  return {
+    title: fillParameters(text.titles[messageKey], parameters),
+    body: fillParameters(text.templates[messageKey], parameters),
+  };
 }
 
 self.addEventListener('push', (event) => {

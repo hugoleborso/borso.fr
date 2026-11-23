@@ -980,17 +980,31 @@
     "sectionsLabel": "Ma partie ou mes tâches"
   },
   "streaks": {
-    "mineChip_one": "Ta flamme, {{count}} jour, {{status}}",
-    "mineChip_other": "Ta flamme, {{count}} jours, {{status}}",
-    "bandChip_one": "Flamme du groupe, {{count}} jour",
-    "bandChip_other": "Flamme du groupe, {{count}} jours",
-    "todayCounted": "aujourd’hui compté",
-    "todayOpen": "aujourd’hui encore ouvert",
-    "jokersLeft_one": "{{count}} joker restant cette semaine",
-    "jokersLeft_other": "{{count}} jokers restants cette semaine",
-    "noFlame": "Pas encore de flamme",
-    "sheetTitle": "Flammes",
-    "bandTitle": "Groupe"
+    "chipLabel": "{{mine}} {{band}}",
+    "mineChip_one": "Ta flamme, {{count}} jour.",
+    "mineChip_other": "Ta flamme, {{count}} jours.",
+    "bandChip_one": "Flamme du groupe, {{count}} jour.",
+    "bandChip_other": "Flamme du groupe, {{count}} jours.",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "mineTitle": "Ta flamme",
+    "bandTitle": "Le groupe",
+    "todayOpen": "pas encore aujourd’hui",
+    "jokersTitle": "Jokers · {{left}} sur {{total}}",
+    "jokersBack": "Reviennent lundi",
+    "caption": {
+      "joker": "joker",
+      "session": "séance",
+      "today": "auj."
+    },
+    "dayState": {
+      "active": "{{weekday}}, compté",
+      "joker": "{{weekday}}, sauvé par un joker",
+      "missed": "{{weekday}}, manqué",
+      "open": "{{weekday}}, pas encore aujourd’hui",
+      "future": "{{weekday}}, à venir"
+    },
+    "sheetTitle": "Flammes"
   },
   "band": {
     "title": "Groupe",

@@ -6,28 +6,31 @@ import { BonfireMark } from '../atoms/BonfireMark';
 import { Chip } from '../atoms/Chip';
 import type { FlameTone } from '../atoms/flame-mark.utils';
 
-export type FlameScope = 'personal' | 'band';
-
-const FLAME_MARK = {
-  personal: BlazeMark,
-  band: BonfireMark,
-} as const satisfies Readonly<Record<FlameScope, typeof BlazeMark>>;
-
 export interface FlameChipProps {
-  readonly scope: FlameScope;
-  readonly days: number;
-  readonly tone: FlameTone;
+  readonly mineDays: number;
+  readonly mineTone: FlameTone;
+  readonly bandDays: number;
+  readonly bandTone: FlameTone;
   readonly label: string;
   readonly onPress: () => void;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function FlameChip({ scope, days, tone, label, onPress }: FlameChipProps): JSX.Element {
-  const Mark = FLAME_MARK[scope];
+export function FlameChip({
+  mineDays,
+  mineTone,
+  bandDays,
+  bandTone,
+  label,
+  onPress,
+}: FlameChipProps): JSX.Element {
   return (
     <Chip aria-label={label} title={label} onPress={onPress} className="tabular-nums">
-      <Mark tone={tone} size="md" />
-      {days}
+      <BlazeMark tone={mineTone} size="md" />
+      {mineDays}
+      <span aria-hidden="true" className="mx-1 h-4 w-px bg-rule-strong" />
+      <BonfireMark tone={bandTone} size="md" />
+      {bandDays}
     </Chip>
   );
 }

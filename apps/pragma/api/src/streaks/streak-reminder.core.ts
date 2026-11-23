@@ -1,4 +1,5 @@
 import type { CalendarDay } from '@domain/paris-day.core';
+import type { PersonalFlame } from '@domain/practice-flame.core';
 import {
   type CategoryPreference,
   isCategoryEnabled,
@@ -8,7 +9,6 @@ import {
   type RecipientSubscription,
   type StreakReminderKey,
 } from '../notifications/notifications.core';
-import type { MemberFlame } from './streaks.types';
 
 export const AT_RISK_MIN_DAYS = 3;
 export const REMINDER_HOUR = 20;
@@ -16,18 +16,28 @@ export const STREAK_CATEGORY: NotificationCategory = 'streak';
 
 const STREAK_REMINDER_URL = '/';
 const SINGLE_MEMBER = 1;
+const NO_JOKER_LEFT = 0;
+const JOKER_SPENT_TONIGHT = 1;
 
 export type StreakReminderKind = 'at-risk' | 'band-count';
 
 const KIND_BY_MESSAGE_KEY = {
   'streak-at-risk': 'at-risk',
+  'streak-at-risk-last': 'at-risk',
   'streak-band-count': 'band-count',
   'streak-band-count-one': 'band-count',
 } as const satisfies Record<StreakReminderKey, StreakReminderKind>;
 
+type ReminderFlame = Pick<PersonalFlame, 'days' | 'isTodayCounted' | 'jokersLeftThisWeek'>;
+
+interface ReminderMember {
+  readonly memberId: string;
+  readonly flame: ReminderFlame;
+}
+
 export interface StreakReminderInput<Subscription extends RecipientSubscription> {
   readonly today: CalendarDay;
-  readonly members: readonly Pick<MemberFlame, 'memberId' | 'flame'>[];
+  readonly members: readonly ReminderMember[];
   readonly subscriptions: readonly Subscription[];
   readonly preferences: readonly CategoryPreference[];
 }
@@ -48,10 +58,17 @@ export interface StreakReminderCount {
   readonly count: number;
 }
 
-function selectReminderMessage(flameDays: number, countedToday: number): ReminderMessage | null {
-  if (flameDays >= AT_RISK_MIN_DAYS) {
-    return { messageKey: 'streak-at-risk', parameters: { days: String(flameDays) } };
+function selectAtRiskMessage(flame: ReminderFlame): ReminderMessage {
+  const days = String(flame.days);
+  if (flame.jokersLeftThisWeek === NO_JOKER_LEFT) {
+    return { messageKey: 'streak-at-risk-last', parameters: { days } };
   }
+  const jokersAfter = String(flame.jokersLeftThisWeek - JOKER_SPENT_TONIGHT);
+  return { messageKey: 'streak-at-risk', parameters: { days, jokersAfter } };
+}
+
+function selectReminderMessage(flame: ReminderFlame, countedToday: number): ReminderMessage | null {
+  if (flame.days >= AT_RISK_MIN_DAYS) return selectAtRiskMessage(flame);
   if (countedToday === 0) return null;
   return {
     messageKey: countedToday === SINGLE_MEMBER ? 'streak-band-count-one' : 'streak-band-count',
@@ -82,7 +99,7 @@ export function selectStreakReminders<Subscription extends RecipientSubscription
       (subscription) => subscription.memberId === member.memberId,
     );
     if (recipients.length === 0) return [];
-    const message = selectReminderMessage(member.flame.days, countedToday);
+    const message = selectReminderMessage(member.flame, countedToday);
     if (message === null) return [];
     return [
       {

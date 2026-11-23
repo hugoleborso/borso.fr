@@ -1,111 +1,157 @@
+import type { FlameWeekDay } from '@domain/practice-flame.core';
 import { cleanup, render, screen, within } from '@testing-library/react';
+import i18next from 'i18next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { StreakSheet } from './StreakSheet';
 
-const LEA = {
-  memberId: 'member-lea',
-  firstName: 'Léa',
-  color: '#1f3a5f',
-  flame: { days: 12, isTodayCounted: false, jokersLeftThisWeek: 1 },
-};
-const TOM = {
-  memberId: 'member-tom',
-  firstName: 'Tom',
-  color: '#f4d35e',
-  flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 },
-};
-const MARC = {
-  memberId: 'member-marc',
-  firstName: 'Marc',
-  color: '#e07a5f',
-  flame: { days: 5, isTodayCounted: true, jokersLeftThisWeek: 3 },
-};
+const TODAY = '2026-10-31';
+const WEEK: readonly FlameWeekDay[] = [
+  { day: '2026-10-26', state: 'active', isSessionDay: false },
+  { day: '2026-10-27', state: 'active', isSessionDay: true },
+  { day: '2026-10-28', state: 'joker', isSessionDay: false },
+  { day: '2026-10-29', state: 'missed', isSessionDay: false },
+  { day: '2026-10-30', state: 'active', isSessionDay: false },
+  { day: TODAY, state: 'open', isSessionDay: false },
+  { day: '2026-11-01', state: 'future', isSessionDay: false },
+];
+const MY_FLAME = { days: 5, isTodayCounted: false, jokersLeftThisWeek: 2, week: WEEK };
+const QUIET_WEEK = WEEK.map((weekDay): FlameWeekDay => ({ ...weekDay, state: 'missed' }));
+
+function memberOf(firstName: string, color: string, days: number, isTodayCounted: boolean) {
+  return {
+    memberId: `member-${firstName}`,
+    firstName,
+    color,
+    flame: { days, isTodayCounted, jokersLeftThisWeek: 3, week: QUIET_WEEK },
+  };
+}
+
 const VIEW = {
-  today: '2026-10-29',
-  mine: LEA.flame,
-  band: { days: 4, isTodayCounted: true },
-  members: [LEA, TOM],
+  today: TODAY,
+  mine: MY_FLAME,
+  band: { days: 12, isTodayCounted: true },
+  members: [
+    memberOf('Marc', '#e07a5f', 0, false),
+    memberOf('Sarah', '#f4d35e', 3, false),
+    memberOf('Léa', '#3d6b38', 1, true),
+    memberOf('Hugo', '#1f3a5f', 5, true),
+  ],
 };
 const RENDERED_NAVY = 'rgb(31, 58, 95)';
 
-function renderSheet(view: typeof VIEW): HTMLElement {
+function renderSheet(view: typeof VIEW = VIEW): HTMLElement {
   render(<StreakSheet view={view} onClose={vi.fn()} />);
-  return screen.getByRole('dialog', { name: 'Flames' });
+  return screen.getByRole('dialog', { name: i18next.t('streaks.sheetTitle') });
+}
+
+function getListAt(sheet: HTMLElement, index: number): HTMLElement {
+  const list = within(sheet).getAllByRole('list')[index];
+  if (list === undefined) throw new Error(`no list at ${index}`);
+  return list;
 }
 
 // @FollowsBlueprint test-component-render
 describe('StreakSheet', () => {
-  afterEach(() => {
+  afterEach(async () => {
     cleanup();
+    await i18next.changeLanguage('en');
   });
 
-  it('shows my flame with the state of today and the jokers left, then the band', () => {
-    const sheet = renderSheet(VIEW);
-    expect(within(sheet).getAllByText('12')).toHaveLength(2);
-    expect(within(sheet).getAllByText('today still open')).toHaveLength(2);
-    expect(within(sheet).getByText('1 joker left this week')).toBeTruthy();
-    expect(within(sheet).getByText('Band')).toBeTruthy();
-    expect(within(sheet).getByText('today counted')).toBeTruthy();
-  });
-
-  it('pluralises the jokers left', () => {
-    const sheet = renderSheet({ ...VIEW, mine: TOM.flame });
-    expect(within(sheet).getByText('3 jokers left this week')).toBeTruthy();
-  });
-
-  it('lists each member as a dot in their stored colour, their name, then their flame', () => {
-    const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
-    const rows = within(sheet).getAllByRole('listitem');
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'Léa12today still open',
-      'Tom0No flame yet',
-      'Marc5today counted',
+  it('shows my flame with its unit, then the band’s, as two large marks', () => {
+    const sheet = renderSheet();
+    const mine = within(sheet).getByRole('region', { name: 'Your flame' });
+    const band = within(sheet).getByRole('region', { name: 'The band' });
+    expect(mine.textContent).toBe('Your flame5 days');
+    expect(band.textContent).toBe('The band12 days');
+    const marks = [mine, band].map((hero) => hero.querySelector('svg[data-flame-mark]'));
+    expect(marks.map((mark) => mark?.getAttribute('data-flame-mark'))).toEqual([
+      'blaze',
+      'bonfire',
     ]);
-    const leaDot = rows[0]?.firstElementChild;
-    expect(leaDot instanceof HTMLElement ? leaDot.style.backgroundColor : '').toBe(RENDERED_NAVY);
-    expect(leaDot?.textContent).toBe('');
-    expect(within(sheet).getByTitle('today still open').textContent).toBe('12today still open');
-  });
-
-  it.each([
-    { memberIndex: 0, tone: 'open', layers: 2, sparks: 1 },
-    { memberIndex: 1, tone: 'out', layers: 1, sparks: 0 },
-    { memberIndex: 2, tone: 'counted', layers: 3, sparks: 3 },
-  ])(
-    'draws row $memberIndex with a $tone blaze of $layers layers and $sparks sparks',
-    ({ memberIndex, tone, layers, sparks }) => {
-      const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
-      const mark = within(sheet)
-        .getAllByRole('listitem')
-        [memberIndex]?.querySelector('svg[data-flame-mark]');
-      expect(mark?.getAttribute('data-flame-mark')).toBe('blaze');
-      expect(mark?.getAttribute('data-tone')).toBe(tone);
-      expect(mark?.querySelectorAll('path')).toHaveLength(layers);
-      expect(mark?.querySelectorAll('circle')).toHaveLength(sparks);
-    },
-  );
-
-  it('draws my flame as a large blaze and the band as a bonfire that flickers once today counts', () => {
-    const sheet = renderSheet(VIEW);
-    const marks = [...sheet.querySelectorAll('[data-sheet-body] section svg[data-flame-mark]')];
-    expect(marks.map((mark) => mark.getAttribute('data-flame-mark'))).toEqual(['blaze', 'bonfire']);
-    expect(marks.map((mark) => mark.getAttribute('data-tone'))).toEqual(['open', 'counted']);
-    expect(marks[0]?.getAttribute('width')).toBe('40');
-    expect(marks[0]?.getAttribute('class')).not.toContain('animate-flame-flicker');
+    expect(marks.map((mark) => mark?.getAttribute('data-tone'))).toEqual(['open', 'counted']);
+    expect(marks.map((mark) => mark?.getAttribute('width'))).toEqual(['40', '40']);
     expect(marks[1]?.getAttribute('class')).toContain('motion-safe:animate-flame-flicker');
   });
 
-  it('keeps the band bonfire still while today is open for the band', () => {
-    const sheet = renderSheet({ ...VIEW, band: { days: 4, isTodayCounted: false } });
-    const bonfire = sheet.querySelector('svg[data-flame-mark="bonfire"]');
-    expect(bonfire?.getAttribute('data-tone')).toBe('open');
-    expect(bonfire?.getAttribute('class')).not.toContain('animate-flame-flicker');
+  it('pluralises one day', () => {
+    const sheet = renderSheet({ ...VIEW, band: { days: 1, isTodayCounted: true } });
+    expect(within(sheet).getByRole('region', { name: 'The band' }).textContent).toBe(
+      'The band1 day',
+    );
   });
 
-  it('says No flame yet for a flame of zero days, and offers no action', () => {
-    const sheet = renderSheet({ ...VIEW, mine: TOM.flame, members: [TOM] });
-    expect(within(sheet).getAllByText('No flame yet')).toHaveLength(2);
-    expect(within(sheet).queryByRole('link')).toBeNull();
+  it('draws the seven days of the week with their state, caption and name', () => {
+    const sheet = renderSheet();
+    const week = getListAt(sheet, 0);
+    const days = within(week).getAllByRole('listitem');
+    expect(
+      days.map((day) => day.querySelector('[data-day-state]')?.getAttribute('data-day-state')),
+    ).toEqual(['active', 'active', 'joker', 'missed', 'active', 'open', 'future']);
+    expect(days.map((day) => day.textContent)).toEqual([
+      'Monday, countedM',
+      'Tuesday, countedTsession',
+      'Wednesday, saved by a jokerWjoker',
+      'Thursday, missedT',
+      'Friday, countedF',
+      'Saturday, not yet todayStoday',
+      'Sunday, still to comeS',
+    ]);
+    const today = days[5]?.querySelector('[data-day-state]');
+    expect(today?.getAttribute('class')).toContain('border-accent');
+    expect(today?.querySelector('svg')?.getAttribute('data-tone')).toBe('open');
+    expect(days[2]?.querySelector('svg')?.getAttribute('data-tone')).toBe('out');
+    expect(days[0]?.querySelector('svg')?.getAttribute('data-tone')).toBe('counted');
+    expect(days[3]?.querySelector('svg')).toBeNull();
+    expect(days[6]?.querySelector('svg')).toBeNull();
+  });
+
+  it('counts the jokers left, and labels each spent joker with the day it saved', () => {
+    const sheet = renderSheet();
+    const card = within(sheet).getByRole('group', { name: 'Jokers · 2 of 3' });
+    const pips = [...card.querySelectorAll('[data-joker]')];
+    expect(pips.map((pip) => [pip.getAttribute('data-joker'), pip.textContent])).toEqual([
+      ['spent', 'Wed'],
+      ['left', ''],
+      ['left', ''],
+    ]);
+    expect(within(card).getByText('Back on Monday')).toBeTruthy();
+  });
+
+  it('lists every member under the band, longest flame first, and names who has not come today', () => {
+    const sheet = renderSheet();
+    const band = within(sheet).getByRole('region', { name: 'The band' });
+    const members = getListAt(sheet, 1);
+    expect(band.compareDocumentPosition(members)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    const rows = within(members).getAllByRole('listitem');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'Hugo55 days',
+      'Sarahnot yet today33 days',
+      'Léa11 day',
+      'Marcnot yet today00 days',
+    ]);
+    const hugoDot = rows[0]?.firstElementChild;
+    expect(hugoDot instanceof HTMLElement ? hugoDot.style.backgroundColor : '').toBe(RENDERED_NAVY);
+    expect(rows.map((row) => row.querySelector('svg')?.getAttribute('data-tone'))).toEqual([
+      'counted',
+      'open',
+      'counted',
+      'out',
+    ]);
+    expect(rows[0]?.getAttribute('class')).toContain('min-h-11');
+  });
+
+  it('writes the week and the jokers in French on a French reader', async () => {
+    await i18next.changeLanguage('fr');
+    const sheet = renderSheet();
+    const week = getListAt(sheet, 0);
+    expect(
+      within(week)
+        .getAllByRole('listitem')
+        .map((day) => day.querySelector('[aria-hidden="true"]')?.textContent),
+    ).toEqual(['L', 'M', 'M', 'J', 'V', 'S', 'D']);
+    expect(within(sheet).getByRole('group', { name: 'Jokers · 2 sur 3' })).toBeTruthy();
+    expect(within(sheet).getByText('mer.')).toBeTruthy();
+    expect(within(sheet).getByText('auj.')).toBeTruthy();
   });
 });

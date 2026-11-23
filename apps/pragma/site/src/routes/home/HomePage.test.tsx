@@ -90,14 +90,14 @@ const SIGNED_IN = {
 
 const STREAKS = {
   today: '2026-10-29',
-  mine: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
+  mine: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2, week: [] },
   band: { days: 4, isTodayCounted: true },
   members: [
     {
       memberId: MEMBER.id,
       firstName: MEMBER.firstName,
       color: MEMBER.color,
-      flame: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
+      flame: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2, week: [] },
     },
   ],
 };
@@ -228,28 +228,24 @@ describe('the home page', () => {
     expect(screen.queryByRole('region', { name: 'Next session' })).toBe(null);
   });
 
-  it('puts both flames on the title line, and a tap on either opens the streak sheet', async () => {
+  it('puts one chip with both flames on the title line, and a tap opens the streak sheet', async () => {
     const answer = answerHomeApi([NEXT_PRACTICE]);
     stub = stubFetch((request) => Promise.resolve(answer(request)));
     renderHomePage();
     const header = screen.getByRole('banner');
-    const mine = await within(header).findByRole('button', {
-      name: 'Your flame, 12 days, today counted',
+    const chip = await within(header).findByRole('button', {
+      name: 'Your flame, 12 days. Band flame, 4 days.',
     });
-    const band = within(header).getByRole('button', { name: 'Band flame, 4 days' });
-    expect(mine.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('blaze');
-    expect(band.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('bonfire');
-    expect(band.querySelector('svg')?.getAttribute('class')).toContain(
-      'motion-safe:animate-flame-flicker',
-    );
-    fireEvent.click(mine);
+    expect(within(header).getAllByRole('button', { name: /flame/ })).toHaveLength(1);
+    const marks = [...chip.querySelectorAll('svg[data-flame-mark]')];
+    expect(marks.map((mark) => mark.getAttribute('data-flame-mark'))).toEqual(['blaze', 'bonfire']);
+    expect(marks[1]?.getAttribute('class')).toContain('motion-safe:animate-flame-flicker');
+    fireEvent.click(chip);
     const sheet = screen.getByRole('dialog', { name: 'Flames' });
     expect(within(sheet).getByText(MEMBER.firstName)).toBeTruthy();
     expect(recordProductEvent).toHaveBeenCalledWith('streak_sheet_opened');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Flames' })).toBe(null);
-    fireEvent.click(within(header).getByRole('button', { name: 'Band flame, 4 days' }));
-    expect(screen.getByRole('dialog', { name: 'Flames' })).toBeTruthy();
   });
 
   it('shows no flame when the flames cannot be read, and the rest of Home still works', async () => {

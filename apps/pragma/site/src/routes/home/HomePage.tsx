@@ -11,7 +11,7 @@ import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { Overline } from '../../components/atoms/Overline';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { FlameChip } from '../../components/molecules/FlameChip';
-import { selectFlameTone, selectTodayStatusKey } from '../../components/molecules/flame-tone.core';
+import { selectFlameTone } from '../../components/molecules/flame-tone.core';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SectionTabs } from '../../components/molecules/SectionTabs';
 import {
@@ -187,25 +187,17 @@ export function HomePage(): JSX.Element {
         className="mb-0 sm:mb-0"
         actions={
           streaks === undefined ? null : (
-            <>
-              <FlameChip
-                scope="personal"
-                days={streaks.mine.days}
-                tone={selectFlameTone(streaks.mine)}
-                label={t('streaks.mineChip', {
-                  count: streaks.mine.days,
-                  status: t(selectTodayStatusKey(streaks.mine)),
-                })}
-                onPress={openStreakSheet}
-              />
-              <FlameChip
-                scope="band"
-                days={streaks.band.days}
-                tone={selectFlameTone(streaks.band)}
-                label={t('streaks.bandChip', { count: streaks.band.days })}
-                onPress={openStreakSheet}
-              />
-            </>
+            <FlameChip
+              mineDays={streaks.mine.days}
+              mineTone={selectFlameTone(streaks.mine)}
+              bandDays={streaks.band.days}
+              bandTone={selectFlameTone(streaks.band)}
+              label={t('streaks.chipLabel', {
+                mine: t('streaks.mineChip', { count: streaks.mine.days }),
+                band: t('streaks.bandChip', { count: streaks.band.days }),
+              })}
+              onPress={openStreakSheet}
+            />
           )
         }
       />
