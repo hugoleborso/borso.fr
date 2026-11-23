@@ -23,21 +23,9 @@ LLM-driven implementation has a confirmation-bias failure mode: the same agent t
 
 This is a structural mitigation, not a culture rule. The skill is required to use the dedicated `visual-validator` agent (defined in `.claude/agents/visual-validator.md`) — not `general-purpose`. The agent's frontmatter and brief are the carriers of the rule; a generic agent would dilute them.
 
-## Why this matters (Jidoka)
-
-Same lineage as `specification` and `technical-conception`: catch defects at the earliest place they can appear. For *visible* defects that, by definition, is the moment the feature renders in a real browser. Earlier than production smoke-test. Later than nothing.
-
-A visible defect that ships erodes trust faster than any other kind. The user sees it. They tell their friends. They don't open a Sentry ticket — they leave. Visual validation is the cheapest gate against that class of damage.
-
 ## Tooling: `agent-browser`
 
-The validator calls [`agent-browser`](https://github.com/vercel-labs/agent-browser), a Rust CLI that exposes browser control to LLM agents, directly. What it gives an agent:
-
-- **Reference-based snapshots.** `agent-browser snapshot -i --json` returns the accessibility tree with `@e1`, `@e2` refs. The agent acts on refs, not CSS selectors. This eliminates a category of selector-fragility that plagues Playwright in agent hands.
-- **Stateful daemon.** A persistent process holds the browser session; commands are individual shell calls. The agent's loop is "snapshot → reason → act → re-snapshot", which matches LLM affordances.
-- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting. They do not cover touch: `set device` leaves `matchMedia('(pointer: coarse)')` false, and a click is still a mouse press. An assertion about tap behaviour is answered with `scripts/phone.sh touch '<css selector>'`, which sends `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and fails unless a touch reached the element, or it is UNVERIFIABLE.
-
-Playwright would have worked for this skill, but agent-browser is *shaped* for LLMs. The validation reports are richer because the agent isn't fighting an imperative JS API.
+The validator drives [`agent-browser`](https://github.com/vercel-labs/agent-browser) and taps with `scripts/phone.sh`. Its commands and traps are in `.claude/agents/visual-validator.md`.
 
 ## What gets validated
 
@@ -102,11 +90,6 @@ The report is always committed. Its screenshots split by verdict, per
 - **Every other screenshot is published to the previews CDN and never committed.** A PASS
   screenshot is read once, by the reviewer of that pull request. The previews bucket expires
   its objects after 60 days, so the record is deliberately temporary.
-
-The third argument this section used to carry — that storage does not matter — was measured
-and was wrong. On `origin/main` at `3cdf324`, 791 PNGs under `docs/features/**` weighed 96.6 MB
-of a 118 MB `.git`: 82% of the repository, growing near 28 MB a month with nothing removing
-any of it.
 
 `.gitignore` at the repo root **must not** match `docs/features/**/validation/**`, because the
 FAIL set still lands there. The agent never writes outside its given `evidence_dir`, so which
