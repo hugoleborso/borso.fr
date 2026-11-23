@@ -19,7 +19,7 @@ export function RosterMark({ player, isSeated, label, onPress }: RosterMarkProps
         className="flex max-w-full cursor-pointer justify-center"
       >
         <NamedMark
-          icon={player.icon}
+          avatar={player.avatar}
           color={player.color}
           name={player.name}
           size="big"

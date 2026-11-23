@@ -7,6 +7,12 @@ import {
   type PlayerMark,
   suggestMark,
 } from '@domain/player-mark.core';
+import {
+  isSameAvatar,
+  type PirateAvatar,
+  pirateAvatarSchema,
+  suggestAvatar,
+} from '@domain/pirate-avatar.core';
 import { MAXIMUM_PLAYERS, MINIMUM_PLAYERS } from '@domain/round.core';
 import { z } from 'zod';
 
@@ -16,9 +22,17 @@ const rosterPlayerSchema = z.object({
   name: z.string(),
   icon: z.enum(PLAYER_ICONS),
   color: z.enum(PLAYER_COLORS),
+  avatar: pirateAvatarSchema.optional(),
 });
 
 export interface RosterPlayer {
+  readonly name: string;
+  readonly icon: PlayerIcon;
+  readonly color: PlayerColor;
+  readonly avatar: PirateAvatar;
+}
+
+export interface AccountMark {
   readonly name: string;
   readonly icon: PlayerIcon;
   readonly color: PlayerColor;
@@ -37,7 +51,10 @@ export function readRegulars(rawValue: string | null): readonly RosterPlayer[] {
   try {
     const stored: unknown = JSON.parse(String(rawValue));
     const regulars = z.array(rosterPlayerSchema).safeParse(stored);
-    return regulars.success ? regulars.data : [];
+    return (regulars.data ?? []).map(({ avatar, ...regular }, index) => ({
+      ...regular,
+      avatar: avatar ?? suggestAvatar(index),
+    }));
   } catch {
     return [];
   }
@@ -125,7 +142,43 @@ export function selectSeatsToCreate(
   table: readonly RosterPlayer[],
   isFirstSeatMine: boolean,
 ): readonly SeatToCreate[] {
-  return table.map(({ name, icon, color }, seat) =>
-    isFirstSeatMine && seat === 0 ? { name, icon, color, isMe: true } : { name, icon, color },
+  return table.map(({ name, icon, color, avatar }, seat) =>
+    isFirstSeatMine && seat === 0
+      ? { name, icon, color, avatar, isMe: true }
+      : { name, icon, color, avatar },
   );
+}
+
+export function readLastPirate(rawValue: string | null): PirateAvatar | null {
+  try {
+    const stored = pirateAvatarSchema.safeParse(JSON.parse(String(rawValue)));
+    return stored.success ? stored.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function selectNewSeatAvatar(
+  lastPirate: PirateAvatar | null,
+  table: readonly RosterPlayer[],
+): PirateAvatar {
+  if (lastPirate === null) return suggestAvatar(table.length);
+  const isWorn = table.some((player) => isSameAvatar(player.avatar, lastPirate));
+  return isWorn ? suggestAvatar(table.length) : lastPirate;
+}
+
+const ACCOUNT_SEAT = 0;
+
+export function seatAccount(
+  account: AccountMark | null,
+  regulars: readonly RosterPlayer[],
+): RosterPlayer | null {
+  if (account === null) return null;
+  const regular = regulars.find((candidate) => isSameName(candidate.name, account.name));
+  return {
+    name: account.name,
+    icon: account.icon,
+    color: account.color,
+    avatar: regular?.avatar ?? suggestAvatar(ACCOUNT_SEAT),
+  };
 }

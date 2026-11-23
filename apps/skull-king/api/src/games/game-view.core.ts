@@ -1,3 +1,4 @@
+import { readStoredAvatar } from '@domain/pirate-avatar.core';
 import { selectCardCount, type RoundPhase } from '@domain/round.core';
 import {
   DEFAULT_BID,
@@ -37,9 +38,13 @@ export interface EntryFacts extends BonusCounts {
   readonly tricks: number | null;
 }
 
+export interface PlayerFacts extends Omit<PlayerView, 'avatar'> {
+  readonly avatar: string | null;
+}
+
 export interface BuildGameViewInput {
   readonly game: GameFacts;
-  readonly players: readonly PlayerView[];
+  readonly players: readonly PlayerFacts[];
   readonly rounds: readonly RoundFacts[];
   readonly entries: readonly EntryFacts[];
   readonly readAt: Date;
@@ -135,6 +140,7 @@ export function buildGameView(input: BuildGameViewInput): GameView {
       name: player.name,
       icon: player.icon,
       color: player.color,
+      avatar: readStoredAvatar(player.avatar, player.seat),
       accountId: player.accountId,
     })),
     rounds,

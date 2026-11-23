@@ -10,6 +10,7 @@ import {
   refuseRoundWrite,
   decideSeatClaim,
   seatTable,
+  selectPlayerChanges,
   selectEntryChanges,
 } from './game-write.core';
 import type {
@@ -237,7 +238,7 @@ export async function changePlayer(
   visit: Visit,
 ): Promise<GameView> {
   return await writeGame(joinCode, visit, async (executor, game) => {
-    const player = await updatePlayer(executor, game.id, playerId, changes);
+    const player = await updatePlayer(executor, game.id, playerId, selectPlayerChanges(changes));
     if (player === null) throw new GameError('player-not-found');
     return game;
   });
@@ -263,11 +264,12 @@ async function seatRematch(executor: DatabaseExecutor, game: GameRow, now: Date)
   const players = await listPlayers(executor, game.id);
   const rematch = await insertGameWithFreeCode(
     executor,
-    players.map(({ seat, name, icon, color, accountId }) => ({
+    players.map(({ seat, name, icon, color, avatar, accountId }) => ({
       seat,
       name,
       icon,
       color,
+      avatar,
       accountId,
     })),
     now,

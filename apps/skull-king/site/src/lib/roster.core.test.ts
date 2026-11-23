@@ -1,16 +1,20 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { PLAYER_COLORS, PLAYER_ICONS, PLAYER_NAME_MAX_LENGTH } from '@domain/player-mark.core';
 import { MAXIMUM_PLAYERS } from '@domain/round.core';
 import { describe, expect, it } from 'vitest';
 import {
   canSeatAnother,
   canStartGame,
+  readLastPirate,
   readRegulars,
   rememberRegulars,
   replacePlayer,
   type RosterPlayer,
+  seatAccount,
   seatPlayer,
   selectAbsentRegulars,
   selectFreeMark,
+  selectNewSeatAvatar,
   selectRename,
   trimPlayerName,
   unseatPlayer,
@@ -18,15 +22,21 @@ import {
   withAccountFirst,
 } from './roster.core';
 
-const HUGO: RosterPlayer = { name: 'Hugo', icon: 'skull', color: 'gold' };
-const LEA: RosterPlayer = { name: 'Léa', icon: 'bird', color: 'ice' };
-const MAX: RosterPlayer = { name: 'Max', icon: 'anchor', color: 'magenta' };
+const HUGO: RosterPlayer = { name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) };
+const LEA: RosterPlayer = { name: 'Léa', icon: 'bird', color: 'ice', avatar: suggestAvatar(1) };
+const MAX: RosterPlayer = {
+  name: 'Max',
+  icon: 'anchor',
+  color: 'magenta',
+  avatar: suggestAvatar(2),
+};
 
 function aFullTable(): readonly RosterPlayer[] {
   return Array.from({ length: MAXIMUM_PLAYERS }, (_, seat) => ({
     name: `Player ${seat}`,
     icon: PLAYER_ICONS[seat] ?? 'skull',
     color: PLAYER_COLORS[seat] ?? 'gold',
+    avatar: suggestAvatar(seat),
   }));
 }
 
@@ -48,6 +58,17 @@ describe('readRegulars', () => {
 
   it('answers no regular for text that is not JSON', () => {
     expect(readRegulars('{')).toEqual([]);
+  });
+
+  it('dresses a regular stored before pirates existed as the pirate of their place in the list', () => {
+    const stored = JSON.stringify([
+      { name: 'Hugo', icon: 'skull', color: 'gold' },
+      { name: 'Léa', icon: 'bird', color: 'ice' },
+    ]);
+    expect(readRegulars(stored).map((regular) => regular.avatar)).toEqual([
+      suggestAvatar(0),
+      suggestAvatar(1),
+    ]);
   });
 });
 
@@ -96,6 +117,7 @@ describe('selectFreeMark', () => {
       name: `P${seat}`,
       icon,
       color: PLAYER_COLORS[seat % PLAYER_COLORS.length] ?? 'gold',
+      avatar: suggestAvatar(seat),
     }));
     expect(selectFreeMark(everyMark)).toEqual({ icon: 'skull', color: 'amethyst' });
   });
@@ -166,7 +188,7 @@ describe('withAccountFirst', () => {
 });
 
 describe('selectSeatsToCreate', () => {
-  it('sends a guest table as names and marks only', () => {
+  it('sends a guest table as names, marks and pirates only', () => {
     expect(selectSeatsToCreate([HUGO, LEA], false)).toStrictEqual([HUGO, LEA]);
   });
 
@@ -176,5 +198,56 @@ describe('selectSeatsToCreate', () => {
       { ...MAX, isMe: true },
       HUGO,
     ]);
+  });
+});
+
+const CAPTAIN = { ...suggestAvatar(5), companion: 'parrot', headwear: 'tricorne' } as const;
+
+describe('readLastPirate', () => {
+  it('reads back the last pirate this phone built', () => {
+    expect(readLastPirate(JSON.stringify(CAPTAIN))).toEqual(CAPTAIN);
+  });
+
+  it('answers no pirate for nothing stored, another shape, or text that is not JSON', () => {
+    expect(readLastPirate(null)).toBeNull();
+    expect(readLastPirate(JSON.stringify({ ...CAPTAIN, hair: 'mohawk' }))).toBeNull();
+    expect(readLastPirate('{')).toBeNull();
+  });
+});
+
+describe('selectNewSeatAvatar', () => {
+  it('dresses a new seat as the last pirate this phone built', () => {
+    expect(selectNewSeatAvatar(CAPTAIN, [HUGO, LEA])).toEqual(CAPTAIN);
+  });
+
+  it('suggests the pirate of the seat once somebody at the table already wears the last one', () => {
+    expect(selectNewSeatAvatar(CAPTAIN, [HUGO, { ...LEA, avatar: CAPTAIN }])).toEqual(
+      suggestAvatar(2),
+    );
+  });
+
+  it('suggests the pirate of the seat on a phone that never built one', () => {
+    expect(selectNewSeatAvatar(null, [HUGO])).toEqual(suggestAvatar(1));
+  });
+});
+
+describe('seatAccount', () => {
+  const account = { name: 'Max', icon: 'anchor', color: 'magenta' } as const;
+
+  it('seats nobody for a guest', () => {
+    expect(seatAccount(null, [MAX])).toBeNull();
+  });
+
+  it('dresses the account as the regular of the same name, whatever its case', () => {
+    expect(seatAccount({ ...account, name: 'MAX' }, [HUGO, { ...MAX, avatar: CAPTAIN }])).toEqual({
+      name: 'MAX',
+      icon: 'anchor',
+      color: 'magenta',
+      avatar: CAPTAIN,
+    });
+  });
+
+  it('dresses an account no regular matches as the pirate of the first seat', () => {
+    expect(seatAccount(account, [HUGO])?.avatar).toEqual(suggestAvatar(0));
   });
 });

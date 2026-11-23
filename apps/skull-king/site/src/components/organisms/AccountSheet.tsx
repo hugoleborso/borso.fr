@@ -33,7 +33,7 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
     return (
       <Sheet label={t('account.title')} onClose={onClose}>
         <NamedMark
-          icon={account.icon}
+          avatar={account.avatar}
           color={account.color}
           name={account.name}
           size="hero"
@@ -60,7 +60,7 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
     return (
       <Sheet label={t('account.create')} onClose={onClose}>
         <div className="flex items-center gap-4">
-          <PlayerMark icon={draft.icon} color={draft.color} size="hero" />
+          <PlayerMark avatar={draft.avatar} color={draft.color} size="hero" />
           <label className="flex min-w-0 flex-1">
             <span className="sr-only">{t('picker.name')}</span>
             <TextInput
@@ -75,11 +75,8 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
           </label>
         </div>
         <MarkPicker
-          icon={draft.icon}
+          avatar={draft.avatar}
           color={draft.color}
-          onIcon={(icon) => {
-            setDraft({ ...draft, icon });
-          }}
           onColor={(color) => {
             setDraft({ ...draft, color });
           }}

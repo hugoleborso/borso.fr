@@ -4,6 +4,7 @@ import {
   type PlayerColor,
   type PlayerIcon,
 } from '@domain/player-mark.core';
+import { type PirateAvatar, pirateAvatarSchema } from '@domain/pirate-avatar.core';
 import { ROUND_PHASES, type RoundPhase } from '@domain/round.core';
 import {
   BID_ADJUSTMENTS,
@@ -34,6 +35,7 @@ const gameViewSchema = z.object({
       name: z.string(),
       icon: z.enum(PLAYER_ICONS),
       color: z.enum(PLAYER_COLORS),
+      avatar: pirateAvatarSchema,
       accountId: z.string().nullish(),
     }),
   ),
@@ -69,6 +71,7 @@ export interface GamePlayer {
   readonly name: string;
   readonly icon: PlayerIcon;
   readonly color: PlayerColor;
+  readonly avatar: PirateAvatar;
   readonly accountId?: string | null;
 }
 

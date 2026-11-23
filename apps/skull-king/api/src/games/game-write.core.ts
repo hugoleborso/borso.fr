@@ -1,5 +1,6 @@
 import type { GameErrorCode } from '@domain/game-error.core';
-import type { PlayerMark } from '@domain/player-mark.core';
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
+import type { PlayerColor, PlayerIcon, PlayerMark } from '@domain/player-mark.core';
 import {
   canCloseRound,
   isBidAdjustedOnce,
@@ -108,26 +109,56 @@ export function selectEntryChanges(input: EntryChangesInput): EntryChanges {
 
 export interface SeatToCreate extends PlayerMark {
   readonly name: string;
+  readonly avatar?: PirateAvatar | undefined;
   readonly isMe?: boolean | undefined;
 }
 
 export interface CreatedSeat extends PlayerMark {
   readonly seat: number;
   readonly name: string;
+  readonly avatar: string | null;
   readonly accountId: string | null;
+}
+
+function storeAvatar(avatar: PirateAvatar | undefined): string | null {
+  return avatar === undefined ? null : JSON.stringify(avatar);
 }
 
 export function seatTable(
   players: readonly SeatToCreate[],
   accountId: string | null,
 ): readonly CreatedSeat[] {
-  return players.map(({ name, icon, color, isMe }, seat) => ({
+  return players.map(({ name, icon, color, avatar, isMe }, seat) => ({
     seat,
     name,
     icon,
     color,
+    avatar: storeAvatar(avatar),
     accountId: isMe === true ? accountId : null,
   }));
+}
+
+export interface PlayerChangesInput {
+  readonly name?: string | undefined;
+  readonly icon?: PlayerIcon | undefined;
+  readonly color?: PlayerColor | undefined;
+  readonly avatar?: PirateAvatar | undefined;
+}
+
+export interface PlayerChanges {
+  readonly name?: string;
+  readonly icon?: PlayerIcon;
+  readonly color?: PlayerColor;
+  readonly avatar?: string;
+}
+
+export function selectPlayerChanges(input: PlayerChangesInput): PlayerChanges {
+  return {
+    ...(input.name === undefined ? {} : { name: input.name }),
+    ...(input.icon === undefined ? {} : { icon: input.icon }),
+    ...(input.color === undefined ? {} : { color: input.color }),
+    ...(input.avatar === undefined ? {} : { avatar: JSON.stringify(input.avatar) }),
+  };
 }
 
 export interface ClaimableSeat {

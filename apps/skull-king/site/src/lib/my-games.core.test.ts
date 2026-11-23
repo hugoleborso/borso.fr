@@ -1,3 +1,4 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { describe, expect, it } from 'vitest';
 import type { GameView } from './game-view.core';
 import {
@@ -18,9 +19,32 @@ function aGame(): GameView {
     phase: 'bidding',
     currentRound: 1,
     players: [
-      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', accountId: null },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice', accountId: MY_ACCOUNT },
-      { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'magenta' },
+      {
+        id: 'p1',
+        seat: 0,
+        name: 'Hugo',
+        icon: 'skull',
+        color: 'gold',
+        avatar: suggestAvatar(0),
+        accountId: null,
+      },
+      {
+        id: 'p2',
+        seat: 1,
+        name: 'Léa',
+        icon: 'bird',
+        color: 'ice',
+        avatar: suggestAvatar(1),
+        accountId: MY_ACCOUNT,
+      },
+      {
+        id: 'p3',
+        seat: 2,
+        name: 'Max',
+        icon: 'anchor',
+        color: 'magenta',
+        avatar: suggestAvatar(2),
+      },
     ],
     rounds: [],
     revision: 1,
@@ -100,9 +124,9 @@ describe('isGameFinished', () => {
 describe('selectWinners', () => {
   it('picks the players sitting in the winning seats', () => {
     const players = [
-      { seat: 0, icon: 'skull', color: 'gold', accountId: null },
-      { seat: 1, icon: 'bird', color: 'ice', accountId: null },
-      { seat: 2, icon: 'anchor', color: 'magenta', accountId: null },
+      { seat: 0, icon: 'skull', color: 'gold', avatar: suggestAvatar(0), accountId: null },
+      { seat: 1, icon: 'bird', color: 'ice', avatar: suggestAvatar(1), accountId: null },
+      { seat: 2, icon: 'anchor', color: 'magenta', avatar: suggestAvatar(2), accountId: null },
     ] as const;
     const game = {
       ...aListedGame('DONE', '2026-11-01T20:00:00.000Z'),

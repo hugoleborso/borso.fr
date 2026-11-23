@@ -23,13 +23,15 @@
     "synth": "../../scripts/ensure-infra-built.sh && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"skull-king-pr-${PR_NUMBER:?PR_NUMBER env var required \u2014 skull-king destroy targets the per-PR app stack only, never the shared skull-king-cluster stack}\" --force",
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"skull-king-pr-${PR_NUMBER:?PR_NUMBER env var required — skull-king destroy targets the per-PR app stack only, never the shared skull-king-cluster stack}\" --force",
     "test:mutation": "stryker run"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "catalog:",
     "@aws-sdk/dsql-signer": "catalog:",
     "@borso/infra": "workspace:*",
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.3",
     "@hono/aws-lambda": "catalog:",
     "@hono/zod-validator": "catalog:",
     "@sentry/aws-serverless": "catalog:",

@@ -1,6 +1,7 @@
 import { boolean, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
+import { pirateAvatarSchema } from '@domain/pirate-avatar.core';
 import { PLAYER_COLORS, PLAYER_ICONS, PLAYER_NAME_MAX_LENGTH } from '@domain/player-mark.core';
 import { MAXIMUM_PLAYERS, MINIMUM_PLAYERS, ROUND_COUNT, ROUND_PHASES } from '@domain/round.core';
 import { BID_ADJUSTMENTS, MAXIMUM_BONUS_COUNT, RASCAL_BETS } from '@domain/scoring.core';
@@ -34,6 +35,7 @@ export const playerTable = pgTable('player', {
   icon: text('icon', { enum: PLAYER_ICONS }).notNull(),
   color: text('color', { enum: PLAYER_COLORS }).notNull(),
   accountId: uuid('account_id'),
+  avatar: text('avatar'),
 });
 
 export const roundTable = pgTable(
@@ -87,7 +89,13 @@ const colorSchema = z.enum(PLAYER_COLORS);
 const MOST_SEATS_PER_ACCOUNT = 1;
 
 const seatToCreateSchema = z
-  .object({ name: nameSchema, icon: iconSchema, color: colorSchema, isMe: z.boolean().optional() })
+  .object({
+    name: nameSchema,
+    icon: iconSchema,
+    color: colorSchema,
+    avatar: pirateAvatarSchema.optional(),
+    isMe: z.boolean().optional(),
+  })
   .strict();
 
 export const createGameSchema = z
@@ -108,6 +116,7 @@ export const updatePlayerSchema = z
     name: nameSchema.optional(),
     icon: iconSchema.optional(),
     color: colorSchema.optional(),
+    avatar: pirateAvatarSchema.optional(),
   })
   .strict()
   .refine((changes) => Object.keys(changes).length > 0);

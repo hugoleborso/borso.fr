@@ -6,12 +6,13 @@ import { canClaimSeat } from '@site/lib/my-games.core';
 import { useClaimSeat, useMe } from '@site/lib/queries/account.queries';
 import { useChangePlayer } from '@site/lib/queries/game.queries';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
+import { saveLastPirate } from '@site/lib/roster.store';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
 import { RosterMark } from '../molecules/RosterMark';
 import { ShareButton } from '../molecules/ShareButton';
-import { MarkPickerSheet } from './MarkPickerSheet';
+import { PirateSheet } from './PirateSheet';
 
 export interface InviteScreenProps {
   readonly game: GameView;
@@ -74,14 +75,15 @@ export function InviteScreen({ game, onPlay }: InviteScreenProps) {
       </div>
 
       {edited === undefined ? null : (
-        <MarkPickerSheet
+        <PirateSheet
           key={edited.id}
           player={edited}
           onChange={(player) => {
             changePlayer.mutate({
               playerId: edited.id,
-              edit: { name: player.name, icon: player.icon, color: player.color },
+              edit: { name: player.name, color: player.color, avatar: player.avatar },
             });
+            saveLastPirate(player.avatar);
           }}
           onRemove={null}
           onClaim={

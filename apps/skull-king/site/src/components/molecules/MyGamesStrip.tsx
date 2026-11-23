@@ -43,7 +43,7 @@ export function MyGamesStrip({ games, onOpen }: MyGamesStripProps) {
                 {game.players.map((player) => (
                   <PlayerMark
                     key={player.seat}
-                    icon={player.icon}
+                    avatar={player.avatar}
                     color={player.color}
                     size="tiny"
                   />
@@ -55,7 +55,7 @@ export function MyGamesStrip({ games, onOpen }: MyGamesStripProps) {
                   {selectWinners(game).map((winner) => (
                     <PlayerMark
                       key={winner.seat}
-                      icon={winner.icon}
+                      avatar={winner.avatar}
                       color={winner.color}
                       size="tiny"
                     />

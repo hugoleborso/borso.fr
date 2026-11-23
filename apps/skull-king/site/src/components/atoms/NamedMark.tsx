@@ -1,4 +1,5 @@
-import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
+import type { PlayerColor } from '@domain/player-mark.core';
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { PlayerMark, type PlayerMarkEmphasis, type PlayerMarkSize } from './PlayerMark';
@@ -31,7 +32,7 @@ const NAME_TONES: Readonly<Record<PlayerMarkEmphasis, string>> = {
 };
 
 export interface NamedMarkProps {
-  readonly icon: PlayerIcon;
+  readonly avatar: PirateAvatar;
   readonly color: PlayerColor;
   readonly name: string;
   readonly size: PlayerMarkSize;
@@ -43,7 +44,7 @@ export interface NamedMarkProps {
 
 // @FollowsBlueprint atom-variant-table
 export function NamedMark({
-  icon,
+  avatar,
   color,
   name,
   size,
@@ -54,7 +55,7 @@ export function NamedMark({
 }: NamedMarkProps) {
   return (
     <span className={clsx(LAYOUTS[layout].root, GAPS[size])}>
-      <PlayerMark icon={icon} color={color} size={size} emphasis={emphasis} />
+      <PlayerMark avatar={avatar} color={color} size={size} emphasis={emphasis} />
       <span className={LAYOUTS[layout].text}>
         <span className={clsx('min-w-0 truncate', NAME_STYLES[nameStyle], NAME_TONES[emphasis])}>
           {name}

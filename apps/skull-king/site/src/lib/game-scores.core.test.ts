@@ -1,3 +1,4 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -23,9 +24,16 @@ function aGame(phase: GameView['phase']): GameView {
     phase,
     currentRound: 2,
     players: [
-      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
-      { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'magenta' },
+      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice', avatar: suggestAvatar(1) },
+      {
+        id: 'p3',
+        seat: 2,
+        name: 'Max',
+        icon: 'anchor',
+        color: 'magenta',
+        avatar: suggestAvatar(2),
+      },
     ],
     rounds: [
       {

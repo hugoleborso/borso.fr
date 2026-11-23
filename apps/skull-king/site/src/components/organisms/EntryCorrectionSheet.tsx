@@ -65,7 +65,7 @@ export function EntryCorrectionSheet({
     >
       <div className="flex items-center gap-2.5">
         <NamedMark
-          icon={player.icon}
+          avatar={player.avatar}
           color={player.color}
           name={player.name}
           size="small"

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { type PirateAvatar, suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import { buildMyGames, type MyGameFacts, selectMyRank, selectWinnerSeats } from './my-games.core';
 
 const MY_ACCOUNT_ID = '11111111-1111-4111-8111-111111111111';
 const OPENED_AT = new Date('2026-11-22T20:00:00.000Z');
+const HUGO_PIRATE: PirateAvatar = { ...suggestAvatar(3), earring: 'hoop' };
 
 const entry = (
   roundNumber: number,
@@ -27,8 +29,15 @@ const game = (overrides: Partial<MyGameFacts> = {}): MyGameFacts => ({
   currentRound: 2,
   openedAt: OPENED_AT,
   players: [
-    { id: 'lea', seat: 1, icon: 'bird', color: 'ice', accountId: null },
-    { id: 'hugo', seat: 0, icon: 'skull', color: 'gold', accountId: MY_ACCOUNT_ID },
+    { id: 'lea', seat: 1, icon: 'bird', color: 'ice', avatar: null, accountId: null },
+    {
+      id: 'hugo',
+      seat: 0,
+      icon: 'skull',
+      color: 'gold',
+      avatar: JSON.stringify(HUGO_PIRATE),
+      accountId: MY_ACCOUNT_ID,
+    },
   ],
   entries: [],
   ...overrides,
@@ -101,7 +110,7 @@ describe('selectWinnerSeats', () => {
 });
 
 describe('buildMyGames', () => {
-  it('keeps the order it was given and lists the marks in seat order', () => {
+  it('keeps the order it was given and lists the marks and pirates in seat order', () => {
     const second = game({ joinCode: 'KRAK' });
     expect(buildMyGames([game(), second], MY_ACCOUNT_ID)).toEqual([
       {
@@ -110,8 +119,14 @@ describe('buildMyGames', () => {
         currentRound: 2,
         openedAt: '2026-11-22T20:00:00.000Z',
         players: [
-          { seat: 0, icon: 'skull', color: 'gold', accountId: MY_ACCOUNT_ID },
-          { seat: 1, icon: 'bird', color: 'ice', accountId: null },
+          {
+            seat: 0,
+            icon: 'skull',
+            color: 'gold',
+            avatar: HUGO_PIRATE,
+            accountId: MY_ACCOUNT_ID,
+          },
+          { seat: 1, icon: 'bird', color: 'ice', avatar: suggestAvatar(1), accountId: null },
         ],
         myRank: 1,
         winnerSeats: [],

@@ -50,6 +50,13 @@
       "when": 1795379317176,
       "tag": "0006_missed_bid",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795452308473,
+      "tag": "0007_pirate_avatar",
+      "breakpoints": true
     }
   ]
 }

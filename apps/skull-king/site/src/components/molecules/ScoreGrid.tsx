@@ -59,7 +59,7 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
         id: player.id,
         header: () => (
           <NamedMark
-            icon={player.icon}
+            avatar={player.avatar}
             color={player.color}
             name={player.name}
             size="tiny"

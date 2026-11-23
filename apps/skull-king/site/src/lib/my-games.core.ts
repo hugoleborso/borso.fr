@@ -1,3 +1,4 @@
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import type { RoundPhase } from '@domain/round.core';
 import type { GamePlayer, GameView } from './game-view.core';
@@ -11,6 +12,7 @@ export interface MyGame {
     readonly seat: number;
     readonly icon: PlayerIcon;
     readonly color: PlayerColor;
+    readonly avatar: PirateAvatar;
     readonly accountId: string | null;
   }[];
   readonly myRank: number | null;

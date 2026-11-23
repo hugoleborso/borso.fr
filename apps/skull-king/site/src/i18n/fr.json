@@ -23,7 +23,6 @@
     "join": "Rejoindre"
   },
   "picker": {
-    "icon": "Icône",
     "color": "Couleur",
     "name": "Nom",
     "remove": "Retirer {{name}}"
@@ -84,20 +83,6 @@
     "loot": "Butin"
   },
   "marks": {
-    "icons": {
-      "skull": "Crâne",
-      "anchor": "Ancre",
-      "crown": "Couronne",
-      "compass": "Boussole",
-      "swords": "Sabres",
-      "ship": "Navire",
-      "shipWheel": "Barre",
-      "bird": "Perroquet",
-      "telescope": "Longue-vue",
-      "map": "Carte au trésor",
-      "coins": "Doublons",
-      "treePalm": "Palmier"
-    },
     "colors": {
       "gold": "Or",
       "sky": "Ciel",
@@ -133,5 +118,24 @@
     "openGame": "Ouvrir la partie {{code}}",
     "claimSeat": "Cette place, c’est moi",
     "mySeat": "Ma place"
+  },
+  "pirate": {
+    "title": "Mon pirate",
+    "previous": "{{part}} : précédent",
+    "next": "{{part}} : suivant",
+    "skinTone": "Teint {{number}}",
+    "parts": {
+      "skin": "Teint",
+      "hair": "Cheveux",
+      "hairColor": "Couleur des cheveux",
+      "facialHair": "Barbe",
+      "expression": "Visage",
+      "headwear": "Chapeau",
+      "eyepatch": "Cache-œil",
+      "scar": "Cicatrice",
+      "earring": "Boucle d’oreille",
+      "mouthpiece": "Bouche",
+      "companion": "Perroquet"
+    }
   }
 }

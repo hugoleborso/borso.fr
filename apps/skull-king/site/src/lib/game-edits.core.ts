@@ -1,3 +1,4 @@
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import { type RoundPhase, selectCardCount } from '@domain/round.core';
 import {
@@ -24,6 +25,7 @@ export interface PlayerEdit {
   readonly name?: string;
   readonly icon?: PlayerIcon;
   readonly color?: PlayerColor;
+  readonly avatar?: PirateAvatar;
 }
 
 function editEntry(entry: GameEntry, edit: EntryEdit): GameEntry {

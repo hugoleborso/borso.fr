@@ -28,8 +28,8 @@ Invariants: `api/src/games/INVARIANTS.md`
 
 ## Player
 
-One person seated at one game, at a fixed seat. A player is a name and a
-mark, nothing more. A player is not a phone: the same phone may enter the
+One person seated at one game, at a fixed seat. A player is a name, a
+mark and a pirate, nothing more. A player is not a phone: the same phone may enter the
 score of every player at the table.
 
 Lives in: `api/src/games/`
@@ -38,14 +38,41 @@ Invariants: `api/src/games/INVARIANTS.md`
 
 ## Mark
 
-How a player is shown on every screen: one icon on a coloured disc, picked
-from `PLAYER_ICONS` and `PLAYER_COLORS` in `domain/player-mark.core.ts`. Each
-icon id is the name of a Lucide icon, which `Glyph` draws. Inside a game the
-mark carries the player's first name, through `NamedMark`. No colour may read as
-the green of a made bid or the red of a missed one, which
-`site/src/styles/palette.test.ts` checks against `tokens.css`.
+How a player is shown on every screen: their pirate on a disc of their
+colour, picked from `PLAYER_COLORS` in `domain/player-mark.core.ts`.
+`PlayerMark` draws it. Inside a game the mark carries the player's first
+name, through `NamedMark`. No colour may read as the green of a made bid or
+the red of a missed one, which `site/src/styles/palette.test.ts` checks
+against `tokens.css`. A player still stores an icon from `PLAYER_ICONS`,
+which no screen shows any more.
 
 Lives in: `domain/player-mark.core.ts`
+
+Invariants: `api/src/games/INVARIANTS.md`
+
+## Pirate
+
+The face a player builds in the "Mon pirate" sheet, `PirateAvatar`: one
+choice per part (skin, hair, hair colour, beard, expression, hat, eyepatch,
+scar, earring, mouthpiece, parrot), each from a const list in
+`domain/pirate-avatar.core.ts`. `PiratePortrait` draws the face with the
+DiceBear avataaars style and lays the app's own pirate layers over it. A
+player with no stored pirate reads as `suggestAvatar(seat)`.
+
+Lives in: `domain/pirate-avatar.core.ts`, `site/src/lib/pirate-portrait.core.ts`
+
+Invariants: `api/src/games/INVARIANTS.md`
+
+Often confused with **mark**. The pirate is the face; the mark is that face
+on the player's colour.
+
+## Last pirate
+
+The last pirate this phone built, kept in local storage. A name newly typed
+on the home screen starts as that pirate, unless somebody at the table
+already wears it.
+
+Lives in: `site/src/lib/roster.core.ts`, `site/src/lib/roster.store.ts`
 
 Invariants: `api/src/games/INVARIANTS.md`
 

@@ -52,7 +52,7 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
           return (
             <div key={player.id} className="flex items-center gap-2">
               <NamedMark
-                icon={player.icon}
+                avatar={player.avatar}
                 color={player.color}
                 name={player.name}
                 size="large"

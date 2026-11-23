@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import {
   type PlayedRound,
@@ -9,6 +10,7 @@ import {
   decideSeatClaim,
   seatTable,
   selectEntryChanges,
+  selectPlayerChanges,
 } from './game-write.core';
 
 const SEATED = ['p1', 'p2', 'p3', 'p4'];
@@ -444,9 +446,14 @@ describe('seatTable', () => {
 
   it('seats the players in the order sent, from seat 0, with their marks', () => {
     expect(seatTable([anna, bob], null)).toStrictEqual([
-      { seat: 0, name: 'Anna', icon: 'skull', color: 'gold', accountId: null },
-      { seat: 1, name: 'Bob', icon: 'bird', color: 'ice', accountId: null },
+      { seat: 0, name: 'Anna', icon: 'skull', color: 'gold', avatar: null, accountId: null },
+      { seat: 1, name: 'Bob', icon: 'bird', color: 'ice', avatar: null, accountId: null },
     ]);
+  });
+
+  it('stores the pirate a seat was sent with as the text of the column', () => {
+    const [seat] = seatTable([{ ...anna, avatar: suggestAvatar(4) }], null);
+    expect(seat?.avatar).toBe(JSON.stringify(suggestAvatar(4)));
   });
 
   it('links the seat marked as the creator to the signed-in account, and no other', () => {
@@ -463,5 +470,22 @@ describe('seatTable', () => {
   it('links nothing for a guest, even on the seat marked as the creator', () => {
     const seats = seatTable([{ ...anna, isMe: true }, bob], null);
     expect(seats.map((seat) => seat.accountId)).toStrictEqual([null, null]);
+  });
+});
+
+describe('selectPlayerChanges', () => {
+  it('changes only the fields it was sent', () => {
+    expect(selectPlayerChanges({})).toStrictEqual({});
+    expect(selectPlayerChanges({ name: 'Anna' })).toStrictEqual({ name: 'Anna' });
+    expect(selectPlayerChanges({ icon: 'crown', color: 'sky' })).toStrictEqual({
+      icon: 'crown',
+      color: 'sky',
+    });
+  });
+
+  it('writes a new pirate as the text of the column', () => {
+    expect(selectPlayerChanges({ avatar: suggestAvatar(2) })).toStrictEqual({
+      avatar: JSON.stringify(suggestAvatar(2)),
+    });
   });
 });

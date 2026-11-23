@@ -1,4 +1,5 @@
-import { PLAYER_COLORS, PLAYER_ICONS } from '@domain/player-mark.core';
+import { PIRATE_PARTS } from '@domain/pirate-avatar.core';
+import { PLAYER_COLORS } from '@domain/player-mark.core';
 import { BONUS_KINDS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import en from '../i18n/en.json';
@@ -6,7 +7,7 @@ import { DISPLAYED_ERROR_CODES } from './error-codes.core';
 import {
   BONUS_KEYS,
   COLOR_KEYS,
-  ICON_KEYS,
+  PIRATE_PART_KEYS,
   selectCreateErrorKey,
   selectErrorKey,
 } from './translation-keys.core';
@@ -20,9 +21,9 @@ function readKey(catalogue: unknown, key: string): unknown {
 
 // @FollowsBlueprint test-exhaustive-domain
 describe('the lookup keys', () => {
-  it('name a sentence in the catalogue for every icon, colour and bonus card', () => {
+  it('name a sentence in the catalogue for every pirate part, colour and bonus card', () => {
     const keys = [
-      ...PLAYER_ICONS.map((icon) => ICON_KEYS[icon]),
+      ...PIRATE_PARTS.map((part) => PIRATE_PART_KEYS[part]),
       ...PLAYER_COLORS.map((color) => COLOR_KEYS[color]),
       ...BONUS_KINDS.map((kind) => BONUS_KEYS[kind]),
     ];

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { type PirateAvatar, suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import {
   buildGameView,
@@ -10,6 +11,12 @@ import {
 
 const READ_AT = new Date('2026-11-22T20:00:00.000Z');
 
+const HUGO_PIRATE: PirateAvatar = {
+  ...suggestAvatar(5),
+  companion: 'parrot',
+  headwear: 'tricorne',
+};
+
 const HUGO = {
   id: 'hugo',
   seat: 0,
@@ -17,6 +24,7 @@ const HUGO = {
   icon: 'skull',
   color: 'gold',
   accountId: '11111111-1111-4111-8111-111111111111',
+  avatar: JSON.stringify(HUGO_PIRATE),
 } as const;
 const LEA = {
   id: 'lea',
@@ -25,6 +33,7 @@ const LEA = {
   icon: 'bird',
   color: 'ice',
   accountId: null,
+  avatar: null,
 } as const;
 
 const input = (overrides: Partial<BuildGameViewInput> = {}): BuildGameViewInput => ({
@@ -44,7 +53,10 @@ describe('buildGameView', () => {
     expect(view.joinCode).toBe('BRIG');
     expect(view.phase).toBe('scoring');
     expect(view.currentRound).toBe(2);
-    expect(view.players).toStrictEqual([HUGO, LEA]);
+    expect(view.players).toStrictEqual([
+      { ...HUGO, avatar: HUGO_PIRATE },
+      { ...LEA, avatar: suggestAvatar(LEA.seat) },
+    ]);
     expect(view.readAt).toBe('2026-11-22T20:00:00.000Z');
     expect(view.rematchJoinCode).toBeNull();
   });

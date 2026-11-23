@@ -56,7 +56,7 @@ decides which game screen shows.
 1. **Home.** The title, the selected players as marks with their name under,
    a dashed `+` to add one (a name field appears), and the regulars kept on
    this phone shown faded, one tap to add. Tapping a selected mark opens the
-   mark picker. A big `Jouer` button creates the game. Below, a four letter
+   "Mon pirate" sheet. A big `Jouer` button creates the game. Below, a four letter
    code field and an arrow join an existing game. Three to eight players: the
    two-player rules add a ghost hand whose tricks the app does not track.
 2. **Invite.** The code in large type, a share
@@ -115,13 +115,56 @@ decides which game screen shows.
    shows an amber mark in the grid, the correction sheet shows that round's
    tally with its Kraken and White Whale toggles, and the play button stays
    disabled while any played round is unbalanced.
-6. **Mark picker.** Twelve icons, eight colours, the preview disc and the name.
-   The colours are `PLAYER_COLORS` in `domain/player-mark.core.ts`, drawn from
-   the `--color-mark-*` tokens of `site/src/styles/tokens.css`; none reads as
-   made or missed.
-   The icons are the Lucide `skull`, `anchor`, `crown`, `compass`, `swords`,
-   `ship`, `ship-wheel`, `bird`, `telescope`, `map`, `coins` and `tree-palm`,
-   and each id is the Lucide icon's own name.
+6. **Mon pirate.** The sheet a tap on a mark opens, on the home screen and the
+   invite screen. A header that stays on screen while the sheet scrolls holds
+   the live preview and the name. Under it, the eight colours, then five skin
+   swatches, then one `‹ ›` stepper per remaining part of the pirate, two per
+   row. Each tap writes at once. The colours are `PLAYER_COLORS` in
+   `domain/player-mark.core.ts`, drawn from the `--color-mark-*` tokens of
+   `site/src/styles/tokens.css`; none reads as made or missed. The colour is
+   the disc behind the pirate.
+
+## Pirate avatar
+
+Every player is drawn as a pirate on their colour disc, wherever their mark
+shows. The face comes from the DiceBear `avataaars` style
+([ADR](../../../../adr/2026-11-23T1659-skull-king-pirate-avatars.md)). The
+tricorne, the bandana, the scars, the gold hoop, the gold tooth, the pipe and
+the parrot are drawn by this app in `PiratePortrait.tsx`, over the face, in the
+same 280 by 280 frame.
+
+```ts
+// domain/pirate-avatar.core.ts, each field one of a const list
+interface PirateAvatar {
+  skin: 'fair' | 'light' | 'tan' | 'brown' | 'dark';
+  hair: 'bald' | 'crop' | 'waves' | 'curls' | 'caesar' | 'sides' | 'mullet'
+    | 'shaggy' | 'long' | 'dreads' | 'bun' | 'fro';
+  hairColor: 'black' | 'darkBrown' | 'brown' | 'auburn' | 'ginger' | 'blonde'
+    | 'platinum' | 'grey';
+  facialHair: 'none' | 'stubble' | 'beard' | 'fullBeard' | 'moustache' | 'handlebar';
+  expression: 'grin' | 'wink' | 'fierce' | 'roar' | 'cheerful';
+  headwear: 'none' | 'tricorne' | 'bandana';
+  eyepatch: 'none' | 'patch';
+  scar: 'none' | 'cheek' | 'eye';
+  earring: 'none' | 'hoop';
+  mouthpiece: 'none' | 'goldTooth' | 'pipe';
+  companion: 'none' | 'parrot';
+}
+```
+
+- The record stores this app's own words, never the avataaars option names.
+  `site/src/lib/pirate-portrait.core.ts` maps each field onto avataaars, with
+  every probability at 0 or 100, so one record draws the same face on every
+  phone.
+- Under a hat, hair that would poke through is drawn as a short crop. Long
+  hair keeps falling under it.
+- `suggestAvatar(seat)` gives each seat of a full table a different pirate. A
+  player stored before avatars existed, or with a part a later version no
+  longer offers, reads as the pirate of their seat.
+- The phone keeps the last pirate it built (`skull-king.last-pirate` in local
+  storage). A new name typed on the home screen starts as that pirate, unless
+  somebody at the table already wears it. A regular keeps the pirate they had,
+  and a signed-in account takes the pirate of the regular with its name.
 
 ## Install
 
@@ -220,7 +263,7 @@ interface GameView {
   joinCode: string;               // four letters, never I or O
   phase: 'bidding' | 'scoring' | 'finished';
   currentRound: number;           // 1..10
-  players: { id: string; seat: number; name: string; icon: PlayerIcon; color: PlayerColor }[];
+  players: { id: string; seat: number; name: string; icon: PlayerIcon; color: PlayerColor; avatar: PirateAvatar }[];
   rounds: {                       // 1..currentRound, oldest first
     number: number;
     cardCount: number;
@@ -241,7 +284,11 @@ as primary keys):
   `revision` is nullable in the database because DSQL adds no column with a
   constraint; every insert writes 0 and a `null` reads as 0. A `join_code_claim` table keyed on `join_code`
   makes a code unique from the first write, the way banana-rush does it.
-- `player`: `id` uuid pk, `game_id`, `seat` int, `name`, `icon`, `color`.
+- `player`: `id` uuid pk, `game_id`, `seat` int, `name`, `icon`, `color`,
+  `avatar` text null. `avatar` holds the pirate as JSON text, because DSQL has
+  no `jsonb` column and adds no column with a constraint. A `null`, or text
+  the schema refuses, reads as `suggestAvatar(seat)`. `icon` is still written
+  and no longer shown.
 - `round`: pk (`game_id`, `round_number`), `is_kraken_played` bool,
   `is_white_whale_discard` bool.
 - `round_entry`: pk (`game_id`, `round_number`, `player_id`), `bid` int null,
@@ -263,12 +310,12 @@ Every write answers `{ game: GameView }` and then broadcasts the same view.
 
 | Method and path | Body | Does |
 | --- | --- | --- |
-| `POST /` | `{ players: { name, icon, color, isMe? }[] }` (3 to 8, at most one `isMe`) | creates a game in round 1, `bidding`; with a session, links the `isMe` seat to the account (ignored for a guest) |
+| `POST /` | `{ players: { name, icon, color, avatar?, isMe? }[] }` (3 to 8, at most one `isMe`) | creates a game in round 1, `bidding`; with a session, links the `isMe` seat to the account (ignored for a guest) |
 | `GET /:code` | | reads the view |
 | `PUT /:code/rounds/:round/entries/:playerId` | `{ bid?, bidAdjustment?, rascalBet?, isMissed?, tricks?, bonuses? }`, each optional, `null` clears | upserts one entry |
 | `PUT /:code/rounds/:round` | `{ isKrakenPlayed?, isWhiteWhaleDiscard? }` | upserts the round |
 | `PUT /:code/phase` | `{ round, phase }` | moves the game to that round and phase, within the rules below |
-| `PATCH /:code/players/:playerId` | `{ name?, icon?, color? }` | changes a player |
+| `PATCH /:code/players/:playerId` | `{ name?, icon?, color?, avatar? }` | changes a player |
 | `POST /:code/rematch` | | creates a new game with the same players, answers it |
 
 Validation: a round is between 1 and `currentRound` for entries and rounds;

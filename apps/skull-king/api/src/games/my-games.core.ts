@@ -1,3 +1,4 @@
+import { type PirateAvatar, readStoredAvatar } from '@domain/pirate-avatar.core';
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import { type RoundPhase, selectCardCount } from '@domain/round.core';
 import { scoreEntry } from '@domain/scoring.core';
@@ -14,6 +15,7 @@ export interface MyGamePlayerFacts {
   readonly seat: number;
   readonly icon: PlayerIcon;
   readonly color: PlayerColor;
+  readonly avatar: string | null;
   readonly accountId: string | null;
 }
 
@@ -30,6 +32,7 @@ export interface MyGamePlayerView {
   readonly seat: number;
   readonly icon: PlayerIcon;
   readonly color: PlayerColor;
+  readonly avatar: PirateAvatar;
   readonly accountId: string | null;
 }
 
@@ -96,10 +99,11 @@ export function buildMyGames(games: readonly MyGameFacts[], accountId: string): 
     openedAt: game.openedAt.toISOString(),
     players: game.players
       .toSorted((first, second) => first.seat - second.seat)
-      .map(({ seat, icon, color, accountId: seatAccountId }) => ({
+      .map(({ seat, icon, color, avatar, accountId: seatAccountId }) => ({
         seat,
         icon,
         color,
+        avatar: readStoredAvatar(avatar, seat),
         accountId: seatAccountId,
       })),
     myRank: selectMyRank(game, accountId),

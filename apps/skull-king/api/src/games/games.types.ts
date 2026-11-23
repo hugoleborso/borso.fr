@@ -1,3 +1,4 @@
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
 import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
 import type { RoundPhase } from '@domain/round.core';
 import type { BidAdjustment, BonusCounts, RascalBet } from '@domain/scoring.core';
@@ -8,6 +9,7 @@ export interface PlayerView {
   readonly name: string;
   readonly icon: PlayerIcon;
   readonly color: PlayerColor;
+  readonly avatar: PirateAvatar;
   readonly accountId: string | null;
 }
 

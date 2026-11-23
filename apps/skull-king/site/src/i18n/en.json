@@ -23,7 +23,6 @@
     "join": "Join"
   },
   "picker": {
-    "icon": "Icon",
     "color": "Colour",
     "name": "Name",
     "remove": "Remove {{name}}"
@@ -84,20 +83,6 @@
     "loot": "Loot"
   },
   "marks": {
-    "icons": {
-      "skull": "Skull",
-      "anchor": "Anchor",
-      "crown": "Crown",
-      "compass": "Compass",
-      "swords": "Sabres",
-      "ship": "Ship",
-      "shipWheel": "Helm",
-      "bird": "Parrot",
-      "telescope": "Spyglass",
-      "map": "Treasure map",
-      "coins": "Doubloons",
-      "treePalm": "Palm tree"
-    },
     "colors": {
       "gold": "Gold",
       "sky": "Sky",
@@ -133,5 +118,24 @@
     "openGame": "Open game {{code}}",
     "claimSeat": "This seat is me",
     "mySeat": "My seat"
+  },
+  "pirate": {
+    "title": "My pirate",
+    "previous": "{{part}}: previous",
+    "next": "{{part}}: next",
+    "skinTone": "Skin tone {{number}}",
+    "parts": {
+      "skin": "Skin",
+      "hair": "Hair",
+      "hairColor": "Hair colour",
+      "facialHair": "Beard",
+      "expression": "Face",
+      "headwear": "Hat",
+      "eyepatch": "Eyepatch",
+      "scar": "Scar",
+      "earring": "Earring",
+      "mouthpiece": "Mouth",
+      "companion": "Parrot"
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -25,8 +26,8 @@ function aGame(
     phase: 'bidding',
     currentRound: 1,
     players: [
-      { id: 'hugo', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'lea', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
+      { id: 'hugo', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) },
+      { id: 'lea', seat: 1, name: 'Léa', icon: 'bird', color: 'ice', avatar: suggestAvatar(1) },
     ],
     rounds: [
       {

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import {
   abortCommitsUpdatingColumn,
@@ -413,8 +414,40 @@ describe('a game of Skull King, end to end', () => {
       name: 'Léane',
       icon: 'bird',
       color: 'sky',
+      avatar: suggestAvatar(1),
       accountId: null,
     });
+  });
+
+  it('dresses a seat created without a pirate as the pirate its seat suggests', async () => {
+    const created = await createAGame();
+
+    expect(created.players.map((player) => player.avatar)).toEqual(
+      created.players.map((player) => suggestAvatar(player.seat)),
+    );
+  });
+
+  it('keeps the pirate a seat was created with', async () => {
+    const [hugo, ...others] = TABLE_OF_FOUR;
+    const captain = { ...suggestAvatar(6), companion: 'parrot' } as const;
+
+    const created = await createAGame([{ ...hugo, avatar: captain }, ...others]);
+
+    expect(created.players[0]?.avatar).toEqual(captain);
+  });
+
+  it('changes a player’s pirate as a write that bumps the revision', async () => {
+    const created = await createAGame();
+    const lea = seatId(created, 1);
+    const pirate = { ...suggestAvatar(1), headwear: 'tricorne', scar: 'eye' } as const;
+
+    const game = await readGameEnvelope(
+      await request('PATCH', `/api/games/${created.joinCode}/players/${lea}`, { avatar: pirate }),
+    );
+
+    expect(game.players[1]?.avatar).toEqual(pirate);
+    expect(game.revision).toBe(created.revision + 1);
+    expect((await readGameView(created.joinCode)).players[1]?.avatar).toEqual(pirate);
   });
 
   it('refuses to change a player who is not at the table', async () => {
@@ -430,7 +463,7 @@ describe('a game of Skull King, end to end', () => {
     expect(await readError(response)).toBe('player-not-found');
   });
 
-  it('starts a rematch with the same players and marks, once however many phones ask', async () => {
+  it('starts a rematch with the same players, marks and pirates, once however many phones ask', async () => {
     const created = await createAGame();
     await reachRound(created, 10, 'finished');
 
@@ -445,8 +478,22 @@ describe('a game of Skull King, end to end', () => {
     expect(rematch.phase).toBe('bidding');
     expect(rematch.currentRound).toBe(1);
     expect(
-      rematch.players.map(({ seat, name, icon, color }) => ({ seat, name, icon, color })),
-    ).toEqual(created.players.map(({ seat, name, icon, color }) => ({ seat, name, icon, color })));
+      rematch.players.map(({ seat, name, icon, color, avatar }) => ({
+        seat,
+        name,
+        icon,
+        color,
+        avatar,
+      })),
+    ).toEqual(
+      created.players.map(({ seat, name, icon, color, avatar }) => ({
+        seat,
+        name,
+        icon,
+        color,
+        avatar,
+      })),
+    );
     expect(again.joinCode).toBe(rematch.joinCode);
     expect(rematch.rematchJoinCode).toBeNull();
     const finished = await readGameView(created.joinCode);

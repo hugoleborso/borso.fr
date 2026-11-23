@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createApp } from '@api/app';
+import { pirateAvatarSchema } from '@domain/pirate-avatar.core';
 
 const app = createApp();
 
@@ -29,6 +30,7 @@ export const gameViewSchema = z
           name: z.string(),
           icon: z.string(),
           color: z.string(),
+          avatar: pirateAvatarSchema,
           accountId: z.string().nullable(),
         })
         .strict(),

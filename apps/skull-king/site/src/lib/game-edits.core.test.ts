@@ -1,3 +1,4 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -20,8 +21,8 @@ function aGame(): GameView {
     phase: 'bidding',
     currentRound: 2,
     players: [
-      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
+      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice', avatar: suggestAvatar(1) },
     ],
     rounds: [1, 2].map((number) => ({
       number,
@@ -158,13 +159,14 @@ describe('applyPhaseEdit', () => {
 
 describe('applyPlayerEdit', () => {
   it('changes the named fields of the one player it names', () => {
-    const edited = applyPlayerEdit(aGame(), 'p2', { icon: 'crown' });
+    const edited = applyPlayerEdit(aGame(), 'p2', { avatar: suggestAvatar(6) });
     expect(edited.players[1]).toEqual({
       id: 'p2',
       seat: 1,
       name: 'Léa',
-      icon: 'crown',
+      icon: 'bird',
       color: 'ice',
+      avatar: suggestAvatar(6),
     });
     expect(edited.players[0]).toEqual(aGame().players[0]);
   });

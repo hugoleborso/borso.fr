@@ -64,7 +64,7 @@ Held by: `api/src/games/games.controller.test.ts` › reads the view by its code
 
 ## Player
 
-- `player` holds `game_id`, `seat`, `name`, `icon` and `color`.
+- `player` holds `game_id`, `seat`, `name`, `icon`, `color` and `avatar`.
 - A game seats `MINIMUM_PLAYERS` to `MAXIMUM_PLAYERS`, in the order the
   creation sent them, from seat 0. The server mints every player id: a
   creation that sends one is refused.
@@ -74,7 +74,7 @@ Held by: `api/src/games/games.controller.test.ts` › reads the view by its code
 - A phone follows `rematchJoinCode` only when it changes from null to a code
   while the finished game is on its screen (`watchRematch`). Opening a
   finished game that already has a rematch shows that game.
-- A rematch seats the same names and marks at the same seats in a new game,
+- A rematch seats the same names, marks and pirates at the same seats in a new game,
   and records its code in `rematch_join_code` on the old game, so a second
   request answers the same rematch.
 - The old game's view carries `rematchJoinCode`, and every rematch request
@@ -93,7 +93,7 @@ Held by: `api/src/accounts/accounts.controller.test.ts` › links the seat a sig
 Held by: `api/src/accounts/accounts.controller.test.ts` › creates a guest game with a seat marked as theirs and links nobody
 Held by: `site/src/lib/game-address.core.test.ts` › opens a finished game that already has a rematch on that game, not the rematch
 Held by: `site/src/lib/game-address.core.test.ts` › follows a rematch another phone starts while this game is on screen
-Held by: `api/src/games/games.controller.test.ts` › starts a rematch with the same players and marks, once however many phones ask
+Held by: `api/src/games/games.controller.test.ts` › starts a rematch with the same players, marks and pirates, once however many phones ask
 Held by: `api/src/games/games.controller.test.ts` › records the rematch when the database aborts its first commit, rather than failing
 Held by: `api/src/games/games.controller.test.ts` › starts one rematch however many phones ask at the same instant
 Held by: `api/src/games/games.controller.test.ts` › tells the phones of a finished game where its rematch is
@@ -103,14 +103,53 @@ Held by: `api/src/games/games.controller.test.ts` › tells the phones of a fini
 - `player.icon` is one of `PLAYER_ICONS` and `player.color` one of
   `PLAYER_COLORS`. Both Drizzle columns are typed by those lists, and the
   creation and player-change schemas refuse any other value.
-- A name and a mark change through `PATCH /:code/players/:playerId`, which
-  changes only the fields it is sent.
+- A name, a mark and a pirate change through `PATCH /:code/players/:playerId`,
+  which changes only the fields it is sent.
 - `suggestMark` gives each seat a default mark, so the first seats of a
   table differ in icon and colour.
 
 Held by: `api/src/games/games.schema.test.ts` › refuses one player, too many players, an empty name and an unknown mark
 Held by: `api/src/games/games.controller.test.ts` › changes a player’s name and mark
 Held by: `domain/player-mark.core.test.ts` › gives each of the first seats a different icon and colour
+
+## Pirate
+
+- `player.avatar` is the pirate as JSON text, or `null`. It is text because
+  DSQL has no `jsonb` column, and nullable because DSQL adds no column with a
+  constraint.
+- A creation and a player change accept a pirate only when
+  `pirateAvatarSchema` does: every part present, each one of its const list,
+  no other key.
+- The view always carries a pirate. A `null`, text that is not JSON, or a part
+  no list holds reads as `suggestAvatar(seat)`.
+- A pirate change is a player write: it bumps `game.revision` first and is
+  broadcast like every other write (see Revision).
+- `suggestAvatar` gives each seat of a full table a different pirate.
+- The record stores the app's own words. `selectAvataaarsOptions` maps them
+  onto avataaars with every probability at 0 or 100, so one record draws the
+  same face on every phone. Under a hat, hair that would poke through is drawn
+  as a short crop.
+Held by: `api/src/games/games.schema.test.ts` › takes a pirate on any seat, and refuses one with a part it does not know
+Held by: `api/src/games/games.schema.test.ts` › refuses a pirate missing a part
+Held by: `domain/pirate-avatar.core.test.ts` › suggests the pirate of the seat for a row written before avatars existed
+Held by: `domain/pirate-avatar.core.test.ts` › suggests the pirate of the seat for a stored part a later version no longer offers
+Held by: `domain/pirate-avatar.core.test.ts` › gives every seat of a full table a different pirate
+Held by: `api/src/games/games.controller.test.ts` › changes a player’s pirate as a write that bumps the revision
+Held by: `api/src/games/games.controller.test.ts` › dresses a seat created without a pirate as the pirate its seat suggests
+Held by: `site/src/lib/pirate-portrait.core.test.ts` › draws a bare pirate with one fixed choice per part and nothing left to chance
+Held by: `site/src/lib/pirate-portrait.core.test.ts` › cuts hair that would poke through a hat down to a short crop
+
+## Last pirate
+
+- The phone keeps the last pirate it built in local storage, under
+  `skull-king.last-pirate`, and reads it back through `pirateAvatarSchema`.
+  Anything else reads as no pirate.
+- A name typed on the home screen starts as the last pirate, unless a seated
+  player already wears it; then it starts as `suggestAvatar(seat)`.
+
+Held by: `site/src/lib/roster.core.test.ts` › answers no pirate for nothing stored, another shape, or text that is not JSON
+Held by: `site/src/lib/roster.core.test.ts` › dresses a new seat as the last pirate this phone built
+Held by: `site/src/lib/roster.core.test.ts` › suggests the pirate of the seat once somebody at the table already wears the last one
 
 ## Round
 

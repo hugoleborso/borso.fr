@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { pirateAvatarSchema, suggestAvatar } from '@domain/pirate-avatar.core';
 import {
   countRows,
   holdGameRow,
@@ -63,6 +64,7 @@ const myGamesSchema = z
                 seat: z.number(),
                 icon: z.string(),
                 color: z.string(),
+                avatar: pirateAvatarSchema,
                 accountId: z.string().nullable(),
               })
               .strict(),
@@ -335,6 +337,7 @@ describe('passkey accounts, end to end', () => {
       seat: 0,
       icon: 'skull',
       color: 'gold',
+      avatar: suggestAvatar(0),
       accountId: expect.any(String),
     });
   });

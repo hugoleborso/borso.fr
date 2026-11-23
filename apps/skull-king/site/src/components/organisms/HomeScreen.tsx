@@ -15,14 +15,16 @@ import {
   canStartGame,
   replacePlayer,
   type RosterPlayer,
+  seatAccount,
   seatPlayer,
   selectAbsentRegulars,
   selectFreeMark,
+  selectNewSeatAvatar,
   trimPlayerName,
   unseatPlayer,
   withAccountFirst,
 } from '@site/lib/roster.core';
-import { loadRegulars, saveRegulars } from '@site/lib/roster.store';
+import { loadLastPirate, loadRegulars, saveLastPirate, saveRegulars } from '@site/lib/roster.store';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
@@ -30,7 +32,7 @@ import { TextInput } from '../atoms/TextInput';
 import { MyGamesStrip } from '../molecules/MyGamesStrip';
 import { RosterMark } from '../molecules/RosterMark';
 import { AccountSheet } from './AccountSheet';
-import { MarkPickerSheet } from './MarkPickerSheet';
+import { PirateSheet } from './PirateSheet';
 
 // @FollowsBlueprint organism-form-of-closed-choices
 export function HomeScreen() {
@@ -38,6 +40,7 @@ export function HomeScreen() {
   const navigate = useNavigate();
   const createGame = useCreateGame();
   const [regulars] = useState(loadRegulars);
+  const [lastPirate, setLastPirate] = useState(loadLastPirate);
   const [table, setTable] = useState<readonly RosterPlayer[]>([]);
   const [isNaming, setIsNaming] = useState(false);
   const [editedSeat, setEditedSeat] = useState<number | null>(null);
@@ -45,7 +48,8 @@ export function HomeScreen() {
   const account = useMe().data ?? null;
   const myGames = useMyGames(account !== null);
 
-  const seated = withAccountFirst(account, table);
+  const accountSeat = seatAccount(account, regulars);
+  const seated = withAccountFirst(accountSeat, table);
   const absentRegulars = selectAbsentRegulars(regulars, seated);
   const canAdd = canSeatAnother(seated);
   const recentGames = sortNewestFirst(myGames.data ?? []);
@@ -54,7 +58,13 @@ export function HomeScreen() {
   const nameForm = useForm({
     defaultValues: { name: '' },
     onSubmit: ({ value, formApi }) => {
-      setTable(seatPlayer(table, { name: trimPlayerName(value.name), ...selectFreeMark(seated) }));
+      setTable(
+        seatPlayer(table, {
+          name: trimPlayerName(value.name),
+          ...selectFreeMark(seated),
+          avatar: selectNewSeatAvatar(lastPirate, seated),
+        }),
+      );
       formApi.reset();
       setIsNaming(false);
     },
@@ -87,9 +97,9 @@ export function HomeScreen() {
       </h1>
 
       <ul className="m-0 grid list-none grid-cols-4 gap-x-2 gap-y-4 p-0">
-        {account === null ? null : (
+        {accountSeat === null ? null : (
           <RosterMark
-            player={account}
+            player={accountSeat}
             isSeated
             label={t('account.title')}
             onPress={() => {
@@ -243,8 +253,12 @@ export function HomeScreen() {
 
       {isAccountOpen ? (
         <AccountSheet
-          account={account}
-          suggestedMark={{ name: '', ...selectFreeMark(table) }}
+          account={accountSeat}
+          suggestedMark={{
+            name: '',
+            ...selectFreeMark(table),
+            avatar: selectNewSeatAvatar(lastPirate, table),
+          }}
           onClose={() => {
             setIsAccountOpen(false);
           }}
@@ -252,11 +266,13 @@ export function HomeScreen() {
       ) : null}
 
       {edited === undefined || editedSeat === null ? null : (
-        <MarkPickerSheet
+        <PirateSheet
           key={editedSeat}
           player={edited}
           onChange={(player) => {
             setTable(replacePlayer(table, editedSeat, player));
+            setLastPirate(player.avatar);
+            saveLastPirate(player.avatar);
           }}
           onRemove={() => {
             setTable(unseatPlayer(table, editedSeat));

@@ -1,21 +1,21 @@
-import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
+import type { PiratePart } from '@domain/pirate-avatar.core';
+import type { PlayerColor } from '@domain/player-mark.core';
 import type { BonusKind } from '@domain/scoring.core';
 import { DISPLAYED_ERROR_CODES } from './error-codes.core';
 
-export const ICON_KEYS = {
-  skull: 'marks.icons.skull',
-  anchor: 'marks.icons.anchor',
-  crown: 'marks.icons.crown',
-  compass: 'marks.icons.compass',
-  swords: 'marks.icons.swords',
-  ship: 'marks.icons.ship',
-  'ship-wheel': 'marks.icons.shipWheel',
-  bird: 'marks.icons.bird',
-  telescope: 'marks.icons.telescope',
-  map: 'marks.icons.map',
-  coins: 'marks.icons.coins',
-  'tree-palm': 'marks.icons.treePalm',
-} as const satisfies Record<PlayerIcon, string>;
+export const PIRATE_PART_KEYS = {
+  skin: 'pirate.parts.skin',
+  hair: 'pirate.parts.hair',
+  hairColor: 'pirate.parts.hairColor',
+  facialHair: 'pirate.parts.facialHair',
+  expression: 'pirate.parts.expression',
+  headwear: 'pirate.parts.headwear',
+  eyepatch: 'pirate.parts.eyepatch',
+  scar: 'pirate.parts.scar',
+  earring: 'pirate.parts.earring',
+  mouthpiece: 'pirate.parts.mouthpiece',
+  companion: 'pirate.parts.companion',
+} as const satisfies Record<PiratePart, string>;
 
 export const COLOR_KEYS = {
   gold: 'marks.colors.gold',

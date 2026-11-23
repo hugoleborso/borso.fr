@@ -1,6 +1,7 @@
-import type { PlayerColor, PlayerIcon } from '@domain/player-mark.core';
+import type { PirateAvatar } from '@domain/pirate-avatar.core';
+import type { PlayerColor } from '@domain/player-mark.core';
 import clsx from 'clsx';
-import { Glyph } from './Glyph';
+import { PiratePortrait } from './PiratePortrait';
 
 const COLOR_BACKGROUNDS: Readonly<Record<PlayerColor, string>> = {
   gold: 'bg-mark-gold ring-mark-gold',
@@ -14,12 +15,12 @@ const COLOR_BACKGROUNDS: Readonly<Record<PlayerColor, string>> = {
 };
 
 const SIZES = {
-  tiny: { disc: 'size-6', glyph: 'size-3.5 text-ink', stroke: 2.5 },
-  small: { disc: 'size-10', glyph: 'size-5.5 text-ink', stroke: 2 },
-  medium: { disc: 'size-11', glyph: 'size-6 text-ink', stroke: 2 },
-  large: { disc: 'size-12', glyph: 'size-6 text-ink', stroke: 2 },
-  big: { disc: 'size-16', glyph: 'size-7.5 text-ink', stroke: 2 },
-  hero: { disc: 'size-24', glyph: 'size-12 text-ink', stroke: 1.8 },
+  tiny: 'size-6',
+  small: 'size-10',
+  medium: 'size-11',
+  large: 'size-12',
+  big: 'size-16',
+  hero: 'size-24',
 } as const;
 
 export type PlayerMarkSize = keyof typeof SIZES;
@@ -33,24 +34,24 @@ const EMPHASES = {
 export type PlayerMarkEmphasis = keyof typeof EMPHASES;
 
 export interface PlayerMarkProps {
-  readonly icon: PlayerIcon;
+  readonly avatar: PirateAvatar;
   readonly color: PlayerColor;
   readonly size: PlayerMarkSize;
   readonly emphasis?: PlayerMarkEmphasis;
 }
 
 // @FollowsBlueprint atom-variant-table
-export function PlayerMark({ icon, color, size, emphasis = 'plain' }: PlayerMarkProps) {
+export function PlayerMark({ avatar, color, size, emphasis = 'plain' }: PlayerMarkProps) {
   return (
     <span
       className={clsx(
-        'flex shrink-0 items-center justify-center rounded-full',
-        SIZES[size].disc,
+        'flex shrink-0 overflow-hidden rounded-full',
+        SIZES[size],
         COLOR_BACKGROUNDS[color],
         EMPHASES[emphasis],
       )}
     >
-      <Glyph name={icon} className={SIZES[size].glyph} strokeWidth={SIZES[size].stroke} />
+      <PiratePortrait avatar={avatar} className="size-full" />
     </span>
   );
 }

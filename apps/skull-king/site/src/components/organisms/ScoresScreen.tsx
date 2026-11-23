@@ -67,7 +67,7 @@ export function ScoresScreen({ game, onContinue, onRematch }: ScoresScreenProps)
             {winners.map((winner) => (
               <NamedMark
                 key={winner.id}
-                icon={winner.icon}
+                avatar={winner.avatar}
                 color={winner.color}
                 name={winner.name}
                 size="big"

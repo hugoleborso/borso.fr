@@ -1,5 +1,6 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { MAXIMUM_PLAYERS, ROUND_COUNT } from '@domain/round.core';
 import { BONUS_KINDS, MAXIMUM_BONUS_COUNT } from '@domain/scoring.core';
 import {
@@ -88,11 +89,26 @@ describe('createGameSchema', () => {
     const withId = { ...HUGO, id: PLAYER_ID };
     expect(createGameSchema.safeParse({ players: [withId, HUGO, HUGO] }).success).toBe(false);
   });
+
+  it('takes a pirate on any seat, and refuses one with a part it does not know', () => {
+    const pirate = { ...HUGO, avatar: suggestAvatar(0) };
+    expect(createGameSchema.safeParse({ players: [pirate, HUGO, HUGO] }).success).toBe(true);
+    const unknownPart = { ...HUGO, avatar: { ...suggestAvatar(0), hair: 'mohawk' } };
+    expect(createGameSchema.safeParse({ players: [unknownPart, HUGO, HUGO] }).success).toBe(false);
+  });
 });
 
 describe('updatePlayerSchema', () => {
   it('accepts any one change', () => {
     expect(updatePlayerSchema.parse({ color: 'sky' })).toEqual({ color: 'sky' });
+    expect(updatePlayerSchema.parse({ avatar: suggestAvatar(1) })).toEqual({
+      avatar: suggestAvatar(1),
+    });
+  });
+
+  it('refuses a pirate missing a part', () => {
+    const { companion: _dropped, ...partial } = suggestAvatar(1);
+    expect(updatePlayerSchema.safeParse({ avatar: partial }).success).toBe(false);
   });
 
   it('refuses a body that changes nothing', () => {

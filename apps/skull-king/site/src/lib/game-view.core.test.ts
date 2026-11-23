@@ -1,3 +1,4 @@
+import { suggestAvatar } from '@domain/pirate-avatar.core';
 import { NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import { type GameView, parseBroadcast } from './game-view.core';
@@ -9,7 +10,9 @@ function aGame(readAt: string): GameView {
     joinCode: 'BRIG',
     phase: 'bidding',
     currentRound: 1,
-    players: [{ id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' }],
+    players: [
+      { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', avatar: suggestAvatar(0) },
+    ],
     rounds: [
       {
         number: 1,

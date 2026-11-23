@@ -40,7 +40,7 @@ export function ResultCard(props: ResultCardProps) {
     <section aria-label={player.name} className="flex flex-col gap-3 rounded-tile p-3 panel">
       <div className="flex items-center gap-2.5">
         <NamedMark
-          icon={player.icon}
+          avatar={player.avatar}
           color={player.color}
           name={player.name}
           size="small"

@@ -24,7 +24,7 @@ export function RankingTile({ standing, isLeader, isMine, claimLabel, onClaim }:
     >
       {claimLabel === null ? (
         <NamedMark
-          icon={player.icon}
+          avatar={player.avatar}
           color={player.color}
           name={player.name}
           size="medium"
@@ -40,7 +40,7 @@ export function RankingTile({ standing, isLeader, isMine, claimLabel, onClaim }:
           className="flex max-w-full cursor-pointer justify-center"
         >
           <NamedMark
-            icon={player.icon}
+            avatar={player.avatar}
             color={player.color}
             name={player.name}
             size="medium"
