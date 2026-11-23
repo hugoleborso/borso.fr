@@ -22,7 +22,7 @@ const rosterPlayerSchema = z.object({
   name: z.string(),
   icon: z.enum(PLAYER_ICONS),
   color: z.enum(PLAYER_COLORS),
-  avatar: pirateAvatarSchema.optional(),
+  avatar: z.unknown().optional(),
 });
 
 export interface RosterPlayer {
@@ -46,18 +46,29 @@ function isListed(roster: readonly RosterPlayer[], name: string): boolean {
   return roster.some((player) => isSameName(player.name, name));
 }
 
+// Stryker disable BlockStatement: equivalent mutant, an emptied catch answers undefined, which fails the list schema below exactly like this null.
+function parseStored(rawValue: string | null): unknown {
+  try {
+    return JSON.parse(String(rawValue));
+  } catch {
+    return null;
+  }
+}
+// Stryker restore BlockStatement
+
+function readRegular(entry: unknown, index: number): RosterPlayer[] {
+  const regular = rosterPlayerSchema.safeParse(entry);
+  if (!regular.success) return [];
+  const { avatar, ...mark } = regular.data;
+  const pirate = pirateAvatarSchema.safeParse(avatar);
+  return [{ ...mark, avatar: pirate.success ? pirate.data : suggestAvatar(index) }];
+}
+
 // @FollowsBlueprint core-persisted-slice-parsed-not-trusted
 export function readRegulars(rawValue: string | null): readonly RosterPlayer[] {
-  try {
-    const stored: unknown = JSON.parse(String(rawValue));
-    const regulars = z.array(rosterPlayerSchema).safeParse(stored);
-    return (regulars.data ?? []).map(({ avatar, ...regular }, index) => ({
-      ...regular,
-      avatar: avatar ?? suggestAvatar(index),
-    }));
-  } catch {
-    return [];
-  }
+  const storedRegulars = z.array(z.unknown()).safeParse(parseStored(rawValue));
+  if (!storedRegulars.success) return [];
+  return storedRegulars.data.flatMap(readRegular);
 }
 
 export function rememberRegulars(
@@ -165,6 +176,18 @@ export function selectNewSeatAvatar(
   if (lastPirate === null) return suggestAvatar(table.length);
   const isWorn = table.some((player) => isSameAvatar(player.avatar, lastPirate));
   return isWorn ? suggestAvatar(table.length) : lastPirate;
+}
+
+export function selectTypedSeat(
+  typedName: string,
+  regulars: readonly RosterPlayer[],
+  lastPirate: PirateAvatar | null,
+  table: readonly RosterPlayer[],
+): RosterPlayer {
+  const name = trimPlayerName(typedName);
+  const regular = regulars.find((candidate) => isSameName(candidate.name, name));
+  if (regular !== undefined) return regular;
+  return { name, ...selectFreeMark(table), avatar: selectNewSeatAvatar(lastPirate, table) };
 }
 
 const ACCOUNT_SEAT = 0;

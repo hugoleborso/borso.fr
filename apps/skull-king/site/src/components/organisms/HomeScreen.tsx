@@ -20,7 +20,7 @@ import {
   selectAbsentRegulars,
   selectFreeMark,
   selectNewSeatAvatar,
-  trimPlayerName,
+  selectTypedSeat,
   unseatPlayer,
   withAccountFirst,
 } from '@site/lib/roster.core';
@@ -58,13 +58,7 @@ export function HomeScreen() {
   const nameForm = useForm({
     defaultValues: { name: '' },
     onSubmit: ({ value, formApi }) => {
-      setTable(
-        seatPlayer(table, {
-          name: trimPlayerName(value.name),
-          ...selectFreeMark(seated),
-          avatar: selectNewSeatAvatar(lastPirate, seated),
-        }),
-      );
+      setTable(seatPlayer(table, selectTypedSeat(value.name, regulars, lastPirate, seated)));
       formApi.reset();
       setIsNaming(false);
     },
