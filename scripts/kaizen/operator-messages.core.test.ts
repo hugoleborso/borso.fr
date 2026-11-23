@@ -87,6 +87,19 @@ describe('selectOperatorMessages on what the harness files as user events', () =
       selectOperatorMessages(page(synthetic, catchall([{ type: 'tool_result', content: answer }]))),
     ).toEqual([{ at: AT, text: answer, isAnswer: true }]);
   });
+
+  it("drops the brief a subagent received, which carries the subagent's id", () => {
+    const brief = {
+      created_at: AT,
+      user: {
+        internal_anthropic_catchall: {
+          agent_id: 'a262a8e3d12f00868',
+          message: { content: 'You are validating a feature spec' },
+        },
+      },
+    };
+    expect(selectOperatorMessages(page(brief))).toEqual([]);
+  });
 });
 
 describe('readSavedPage', () => {
