@@ -91,7 +91,7 @@ The worked example the rules were explained with: three players holding ten bana
 - **The largest stash on the table is zero.** The crate is refilled to one banana rather than zero, so a game can never reach a state where nothing can be won.
 - **Two players cross the winning score in the same round.** The one with the larger stash wins. If those are equal too, they win together.
 - **The timer runs out.** Every player who has not bid is entered at one banana and the round resolves normally.
-- **A player closes their phone mid game.** Their seat stays, their stash stays, and their bids keep being filled by the timer. Reopening the address restores them from the token held in local storage.
+- **A player closes their phone mid game.** Their seat stays, their stash stays, and their bids keep being filled by the timer. Reopening the address restores them from the token held in local storage. A seat for one game that an older build stored in a shape this one no longer reads costs only that game: the seats of every other game on the phone still restore.
 - **A player opens the game in two tabs.** Both tabs are the same player, both see the same state, and a second bid in the same round is refused.
 
 ### Error cases
