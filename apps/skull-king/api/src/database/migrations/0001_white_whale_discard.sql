@@ -1,0 +1,1 @@
+ALTER TABLE "round" ADD COLUMN "is_white_whale_discard" boolean;

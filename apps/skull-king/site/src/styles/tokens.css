@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ground: #2e241a;
+  --color-surface: #2b1b10;
+  --color-surface-2: #1e130b;
+  --color-brass: #cc9d4c;
+  --color-wash-ground: rgb(20 13 8 / 55%);
+  --color-wash-surface: rgb(20 13 8 / 40%);
+  --color-outline: rgb(212 165 72 / 0.45);
+  --color-outline-strong: rgb(212 165 72 / 0.7);
+  --color-text: #f1e3c8;
+  --color-muted: #b59c7a;
+  --color-muted-2: #a3896a;
+  --color-accent: #d4a548;
+  --color-accent-deep: #8a6a2a;
+  --color-gilt-light: #f3d48a;
+  --color-gilt-dark: #c98f2e;
+  --color-ink: #1c1208;
+  --color-made: #22c55e;
+  --color-missed: #f56565;
+  --color-scrim: rgb(8 5 3 / 0.65);
+
+  --color-mark-gold: #f0b429;
+  --color-mark-sky: #5aa9f0;
+  --color-mark-magenta: #d946ef;
+  --color-mark-ice: #67e8f9;
+  --color-mark-amethyst: #9b7be8;
+  --color-mark-sand: #d9c6a0;
+  --color-mark-indigo: #6366f1;
+  --color-mark-slate: #94a3b8;
+
+  --font-display: 'Pirata One', 'Georgia', serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-chip: 0.75rem;
+  --radius-tile: 1rem;
+  --radius-action: 1.125rem;
+  --radius-sheet: 1.375rem;
+
+  --shadow-plank: inset 0 0 0 1px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.5);
+}
+
+@utility bg-planks {
+  background-color: var(--color-ground);
+  background-image:
+    linear-gradient(var(--color-wash-ground), var(--color-wash-ground)),
+    url('/textures/wood-planks.jpg');
+  background-image:
+    linear-gradient(var(--color-wash-ground), var(--color-wash-ground)),
+    image-set(
+      url('/textures/wood-planks.webp') type('image/webp'),
+      url('/textures/wood-planks.jpg') type('image/jpeg')
+    );
+  background-size: 512px;
+}
+
+@utility bg-panel {
+  background-color: var(--color-surface);
+  background-image:
+    linear-gradient(var(--color-wash-surface), var(--color-wash-surface)),
+    url('/textures/dark-wood-panel.jpg');
+  background-image:
+    linear-gradient(var(--color-wash-surface), var(--color-wash-surface)),
+    image-set(
+      url('/textures/dark-wood-panel.webp') type('image/webp'),
+      url('/textures/dark-wood-panel.jpg') type('image/jpeg')
+    );
+  background-size: 512px;
+}
+
+@utility bg-brass {
+  background-color: var(--color-brass);
+  background-image: url('/textures/brass.jpg');
+  background-image: image-set(
+    url('/textures/brass.webp') type('image/webp'),
+    url('/textures/brass.jpg') type('image/jpeg')
+  );
+  background-size: 256px;
+}
+
+@utility panel {
+  @apply bg-panel border border-outline shadow-plank;
+}
+
+@utility text-gilt {
+  background-image: linear-gradient(180deg, var(--color-gilt-light), var(--color-gilt-dark));
+  background-clip: text;
+  color: transparent;
+}
+
+@layer base {
+  html {
+    @apply bg-planks;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    touch-action: manipulation;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

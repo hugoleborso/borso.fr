@@ -36,6 +36,7 @@ export default {
         'borsouvertures',
         'last-loop-lepin',
         'pragma',
+        'skull-king',
         'talos',
         'infra',
         'ci',

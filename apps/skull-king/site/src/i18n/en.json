@@ -1,0 +1,141 @@
+{
+  "appName": "Skull King",
+  "common": {
+    "loading": "Loading…",
+    "back": "Back",
+    "round": "Round {{number}}",
+    "roundProgress": "Round {{number}} of {{total}}",
+    "scores": "Scores",
+    "share": "Share the link",
+    "shareText": "Our Skull King scores",
+    "linkCopied": "Link copied",
+    "done": "Done"
+  },
+  "home": {
+    "addPlayer": "Add a player",
+    "addRegular": "Add {{name}}",
+    "editPlayer": "Change {{name}}",
+    "playerName": "Name",
+    "confirmName": "Add",
+    "play": "Play",
+    "joinCode": "Game code",
+    "joinPlaceholder": "CODE",
+    "join": "Join"
+  },
+  "picker": {
+    "color": "Colour",
+    "name": "Name",
+    "remove": "Remove {{name}}"
+  },
+  "invite": {
+    "code": "Game code {{code}}"
+  },
+  "bidding": {
+    "bidOf": "Bid of {{name}}",
+    "bidSum": "{{count}} tricks bid out of {{total}}",
+    "play": "Play the round",
+    "playBlocked": "Every player needs a bid before the round is played"
+  },
+  "scoring": {
+    "backToBids": "Back to the bids",
+    "bid": "Bid {{bid}}",
+    "noBid": "No bid",
+    "made": "Made, tap to mark missed",
+    "missed": "Missed, tap to mark made",
+    "tricksOf": "Tricks taken by {{name}}",
+    "bonuses": "Bonuses",
+    "bonusCount": "{{card}}, {{count}}, tap to add one",
+    "bonusRemove": "{{card}}, remove one",
+    "tally": "{{counted}} tricks counted out of {{expected}}",
+    "kraken": "Kraken played",
+    "close": "Close the round",
+    "closeBlocked": "The tricks must add up before the round closes",
+    "whiteWhale": "White Whale discarded a trick",
+    "harry": "Harry the Giant, {{adjustment}}",
+    "harryMinus": "Harry: bid one less",
+    "harryPlus": "Harry: bid one more",
+    "harryNone": "none",
+    "rascal": "Rascal of Roatan, bet {{bet}}",
+    "rascalMinus": "Rascal: bet 10 less",
+    "rascalPlus": "Rascal: bet 10 more"
+  },
+  "scores": {
+    "detail": "Round by round",
+    "cell": "{{name}}, round {{round}}, {{points}}. Correct",
+    "correction": "{{name}}, round {{round}}",
+    "bid": "Bid",
+    "tricks": "Tricks",
+    "winner": "Winner",
+    "rematch": "Play again",
+    "roundCheck": "Round {{round}}, {{counted}} tricks counted out of {{expected}}",
+    "continueBlocked": "A round above does not add up: correct it first"
+  },
+  "stepper": {
+    "less": "One less",
+    "more": "One more"
+  },
+  "cards": {
+    "standardFourteen": "Coloured 14",
+    "blackFourteen": "Black 14",
+    "mermaidByPirate": "Mermaid captured by a pirate",
+    "pirateBySkullKing": "Pirate captured by the Skull King",
+    "skullKingByMermaid": "Skull King captured by a mermaid",
+    "loot": "Loot"
+  },
+  "marks": {
+    "colors": {
+      "gold": "Gold",
+      "sky": "Sky",
+      "magenta": "Magenta",
+      "ice": "Ice",
+      "amethyst": "Amethyst",
+      "sand": "Sand",
+      "indigo": "Indigo",
+      "slate": "Slate"
+    }
+  },
+  "errors": {
+    "game-not-found": "There is no game with that code.",
+    "player-not-found": "That player is not in this game.",
+    "round-not-played": "That round has not been played yet.",
+    "value-out-of-range": "That number is not possible this round.",
+    "game-not-created": "The game could not be created. Check the players and try again.",
+    "unexpected-failure": "Something went overboard. Try again.",
+    "reload": "Reload",
+    "bids-missing": "Every player needs a bid first.",
+    "tricks-unbalanced": "The tricks of a round do not add up.",
+    "seat-taken": "Another account already holds that seat.",
+    "session-required": "Sign in first.",
+    "passkey-not-verified": "The passkey was not recognised."
+  },
+  "account": {
+    "title": "Account",
+    "signIn": "Sign in with a passkey",
+    "signOut": "Sign out",
+    "create": "Create an account",
+    "createWithPasskey": "Create the account with a passkey",
+    "myGames": "My games",
+    "openGame": "Open game {{code}}",
+    "claimSeat": "This seat is me",
+    "mySeat": "My seat"
+  },
+  "pirate": {
+    "title": "My pirate",
+    "previous": "{{part}}: previous",
+    "next": "{{part}}: next",
+    "skinTone": "Skin tone {{number}}",
+    "parts": {
+      "skin": "Skin",
+      "hair": "Hair",
+      "hairColor": "Hair colour",
+      "facialHair": "Beard",
+      "expression": "Face",
+      "headwear": "Hat",
+      "eyepatch": "Eyepatch",
+      "scar": "Scar",
+      "earring": "Earring",
+      "mouthpiece": "Mouth",
+      "companion": "Parrot"
+    }
+  }
+}

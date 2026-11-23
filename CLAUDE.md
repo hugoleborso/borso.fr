@@ -82,7 +82,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Commits, pull requests, merges
 
-- Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
+- Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `skull-king`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, upper-case documents such as `README.md` or test configs. A merge skips the same changes, and a change to an app's test seed under `api/src/__test/` too.
 - On a watched pull request, act on CI results and the merge state. Skip every review thread and comment except those written by the operator's login, `hugoleborso`.

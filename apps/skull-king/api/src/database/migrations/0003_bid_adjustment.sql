@@ -1,0 +1,1 @@
+ALTER TABLE "round_entry" ADD COLUMN "bid_adjustment" integer;

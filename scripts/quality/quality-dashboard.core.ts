@@ -96,6 +96,7 @@ export const FULL_STACK_APPS: readonly string[] = [
   'pragma',
   'last-loop-lepin',
   'banana-rush',
+  'skull-king',
   'talos',
 ];
 export const FRONT_END_APPS: readonly string[] = ['borso-fr', 'borsouvertures'];
@@ -103,6 +104,7 @@ export const SENTRY_APPS: readonly string[] = [
   'pragma',
   'last-loop-lepin',
   'banana-rush',
+  'skull-king',
   'talos',
   'borso-fr',
   'borsouvertures',
