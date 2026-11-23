@@ -3,15 +3,26 @@ import type { PlayerColor } from '@domain/player-mark.core';
 import clsx from 'clsx';
 import { PiratePortrait } from './PiratePortrait';
 
-const COLOR_BACKGROUNDS: Readonly<Record<PlayerColor, string>> = {
-  gold: 'bg-mark-gold ring-mark-gold',
-  sky: 'bg-mark-sky ring-mark-sky',
-  magenta: 'bg-mark-magenta ring-mark-magenta',
-  ice: 'bg-mark-ice ring-mark-ice',
-  amethyst: 'bg-mark-amethyst ring-mark-amethyst',
-  sand: 'bg-mark-sand ring-mark-sand',
-  indigo: 'bg-mark-indigo ring-mark-indigo',
-  slate: 'bg-mark-slate ring-mark-slate',
+const COLOR_FILLS: Readonly<Record<PlayerColor, string>> = {
+  gold: 'bg-mark-gold',
+  sky: 'bg-mark-sky',
+  magenta: 'bg-mark-magenta',
+  ice: 'bg-mark-ice',
+  amethyst: 'bg-mark-amethyst',
+  sand: 'bg-mark-sand',
+  indigo: 'bg-mark-indigo',
+  slate: 'bg-mark-slate',
+};
+
+const COLOR_RINGS: Readonly<Record<PlayerColor, string>> = {
+  gold: 'ring-mark-gold',
+  sky: 'ring-mark-sky',
+  magenta: 'ring-mark-magenta',
+  ice: 'ring-mark-ice',
+  amethyst: 'ring-mark-amethyst',
+  sand: 'ring-mark-sand',
+  indigo: 'ring-mark-indigo',
+  slate: 'ring-mark-slate',
 };
 
 const SIZES = {
@@ -24,6 +35,15 @@ const SIZES = {
 } as const;
 
 export type PlayerMarkSize = keyof typeof SIZES;
+
+const RIMS: Readonly<Record<PlayerMarkSize, string>> = {
+  tiny: 'p-0.5',
+  small: 'p-0.75',
+  medium: 'p-0.75',
+  large: 'p-0.75',
+  big: 'p-1',
+  hero: 'p-1.5',
+};
 
 const EMPHASES = {
   plain: '',
@@ -45,13 +65,19 @@ export function PlayerMark({ avatar, color, size, emphasis = 'plain' }: PlayerMa
   return (
     <span
       className={clsx(
-        'flex shrink-0 overflow-hidden rounded-full',
+        'porthole flex shrink-0 rounded-full',
         SIZES[size],
-        COLOR_BACKGROUNDS[color],
+        RIMS[size],
+        COLOR_RINGS[color],
         EMPHASES[emphasis],
       )}
     >
-      <PiratePortrait avatar={avatar} className="size-full" />
+      <span
+        className={clsx('relative flex size-full overflow-hidden rounded-full', COLOR_FILLS[color])}
+      >
+        <PiratePortrait avatar={avatar} className="size-full" />
+        <span className="porthole-glass pointer-events-none absolute inset-0 rounded-full" />
+      </span>
     </span>
   );
 }
