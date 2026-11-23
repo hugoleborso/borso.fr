@@ -1,5 +1,5 @@
 ---
-summary: 'agent-browser traps: launch flags ignored by a running daemon, no `resize`, a shared `eval` scope, sessions that wedge, clicks and fills that do nothing, `record start` without the cookie, uncorsed mocked routes, offline emulation that keeps a WebSocket and lets service-worker and worker requests through, a full resource timing buffer under Vite, and element screenshots that cut off a box-shadow ring.'
+summary: 'agent-browser traps: launch flags ignored by a running daemon, no `resize`, a shared `eval` scope, sessions that wedge, clicks and fills that do nothing, `record start` without the cookie, uncorsed mocked routes, offline emulation that keeps a WebSocket and lets service-worker and worker requests through, and a full resource timing buffer under Vite.'
 triggers:
   commands:
     - '\bagent-browser\b'
