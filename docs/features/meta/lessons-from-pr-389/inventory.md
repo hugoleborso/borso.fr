@@ -112,4 +112,4 @@ Read from `session_01K69KnD7qY66biYdG7XZVpc` with `list_events`, `kinds: ["user"
 | OP43 | 19:05 | Yes, add the rule to the kaizen. | D | merge into 48 |
 | OP44 | 19:05 | Merge. | D | no-op: the merge. |
 | OP45 | 19:21 | (answer) run the kaizen in a new session. | D | no-op: answer. |
-| OP46 | 19:21 | Dispatch shared-deploy yourself. | C | question to the operator in this PR: CLAUDE.md tells a session to ask him to dispatch it. |
+| OP46 | 19:21 | Dispatch shared-deploy yourself. | C | question to the operator in the sweep's reply: CLAUDE.md tells a session to ask him to dispatch it. |
