@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 
 // @FollowsBlueprint atom-variant
 export const weekCellVariants = cva(
@@ -20,8 +20,6 @@ export const weekCellVariants = cva(
     defaultVariants: { isToday: false },
   },
 );
-
-export type WeekCellVariantProps = VariantProps<typeof weekCellVariants>;
 
 export const JOKER_PIP_CLASS = {
   spent: 'size-6 rounded-pill border border-dashed border-ink-faint',
