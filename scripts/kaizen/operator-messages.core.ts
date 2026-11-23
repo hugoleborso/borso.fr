@@ -58,7 +58,7 @@ function readTyped(content: unknown): string | null {
     const text = textBlockSchema.safeParse(block);
     return text.success ? [text.data.text] : [];
   });
-  return texts.length === content.length && texts.length > 0 ? texts.join('\n') : null;
+  return texts.length === content.length ? texts.join('\n') : null;
 }
 
 // @FollowsBlueprint utils-pure-module
