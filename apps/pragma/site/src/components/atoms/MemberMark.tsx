@@ -5,11 +5,21 @@ import { type MemberMarkVariantProps, memberMarkVariants } from './member-mark.v
 
 export type MemberMarkShape = NonNullable<MemberMarkVariantProps['shape']>;
 
-export interface MemberMarkProps
-  extends HTMLAttributes<HTMLSpanElement>, Omit<MemberMarkVariantProps, 'ink' | 'shape'> {
-  readonly color: string;
-  readonly shape: MemberMarkShape;
+type UnnamedSpanProps = Omit<
+  HTMLAttributes<HTMLSpanElement>,
+  'aria-label' | 'title' | 'role' | 'children'
+>;
+
+interface EmptyMarkProps extends UnnamedSpanProps {
+  readonly shape: 'dot' | 'ring';
 }
+
+interface HoldingMarkProps extends HTMLAttributes<HTMLSpanElement> {
+  readonly shape: 'cell' | 'lane';
+}
+
+export type MemberMarkProps = (EmptyMarkProps | HoldingMarkProps) &
+  Omit<MemberMarkVariantProps, 'ink' | 'shape'> & { readonly color: string };
 
 const MEMBER_LANE_TINT_SHARE = '18%';
 
@@ -32,6 +42,7 @@ export const MemberMark = forwardRef<HTMLSpanElement, MemberMarkProps>(
         className,
       )}
       style={{ ...STYLE_BY_SHAPE[shape](color), ...style }}
+      aria-hidden={shape === 'dot' || shape === 'ring' ? true : undefined}
       {...rest}
     />
   ),

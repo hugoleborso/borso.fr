@@ -49,9 +49,9 @@ describe('MemberMark', () => {
     );
   });
 
-  it('fills a dot with the colour', () => {
-    expect(renderMark(<MemberMark color={PLUM} shape="dot" />)?.style.backgroundColor).toBe(
-      'rgb(138, 79, 122)',
-    );
+  it('fills a dot with the colour and hides it, since a colour alone names nobody', () => {
+    const dot = renderMark(<MemberMark color={PLUM} shape="dot" />);
+    expect(dot?.style.backgroundColor).toBe('rgb(138, 79, 122)');
+    expect(dot?.getAttribute('aria-hidden')).toBe('true');
   });
 });
