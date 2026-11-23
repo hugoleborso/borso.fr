@@ -279,3 +279,32 @@ the bracket form for files in the repository, where nothing rewrites it.
 ## See also
 
 - [`docs/dantotsus/orchestrator-shipped-with-stale-pr-description.md`](../dantotsus/orchestrator-shipped-with-stale-pr-description.md) — neighbour: PR-description ergonomics from a different angle (an orchestrator's stale snapshot, not a sanitizer's silent rewrite).
+
+## Every form, measured on PR #60
+
+Moved here from the header of `.claude/hooks/pretool-github-pr-body.sh`.
+
+The server sanitizes the body before it is stored, and what it removes it
+removes silently: the call succeeds, the PR page renders, and the missing
+half is only visible to whoever reads the body back. Measured on PR #60 on
+2026-08-18, one probe per form:
+
+```
+  <details> / <summary>      removed, their contents kept and flattened
+  <img src="…">              the src attribute removed, the tag kept
+  ![alt](….png)              the URL wrapped in backticks, so it renders
+                             as code rather than as an image
+  [text](….png)              same, whether or not it is an image tag
+  <https://…>                removed entirely
+  [text](….md), (…/tree/…),  untouched, including at a pinned 40-hex SHA,
+  (…/commit/…)               so the rule is the extension, not the URL
+```
+
+One more form, measured on PR #51 and PR #49 on 2026-08-15, on PR #82 on
+2026-08-21 and twice on PR #83 the same day: an angle-bracket placeholder is
+read as an HTML tag and deleted, and a code span does NOT protect it. The
+sanitizer strips markup before markdown fencing is considered, so a body
+saying it in backticks loses it exactly like a body saying it in prose. That
+is why the hook's placeholder check reads the raw body rather than the
+rendered one. For this rule there is no such thing as a mention.
+
