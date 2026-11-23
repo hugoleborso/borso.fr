@@ -74,7 +74,7 @@ const pipe = (shift: Shift) => (
 
 const LAYER_ART: Readonly<Record<PirateLayer, ReactElement>> = {
   cheekScar: scar('M164 123l21 16', 'M166 129.5l5-6.6M172.5 134.4l5-6.6M179 139.3l5-6.6'),
-  eyeScar: scar('M156 82l8 18M167 123l8 18', 'M157 93l6.4-3M168.6 134l6.4-3'),
+  eyeScar: scar('M155 84l16 50', 'M155.1 95l6.2-2M164.7 125l6.2-2M166.9 132l6.2-2'),
   goldToothSmile: goldTooth('M143.5 147.2h7v3.6a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2Z', 'M145.2 148.6v2'),
   goldToothGrimace: goldTooth('M148.6 143.6h7.8v8.3h-7.8Z', 'M150.4 145.2v4.6'),
   goldToothScream: goldTooth('M142.4 147.4h6v4.6h-6Z', 'M144 148.6v2.2'),
