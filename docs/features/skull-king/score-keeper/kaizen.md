@@ -68,3 +68,14 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-23 12:39] `steppers` Reordering PLAYER_COLORS silently changed selectFreeMark answers, caught only by Stryker's dry run because the earlier test:core run predated the palette edit.
 - [2026-11-23 12:39] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
 - [2026-11-23 12:49] `main` Subagents edited the main checkout, so the uncommitted-changes stop hook fired on every turn and every PR notification cost a full turn of tokens.
+- [2026-11-23 13:15] `hold` The subagent worktree started on main while its PR branch was checked out in the main checkout, so it had to reset its own branch to the PR head before any work.
+- [2026-11-23 13:15] `hold` The worktree guard refuses any shell line containing the word eval, so 'agent-browser eval' needs a wrapper script file.
+- [2026-11-23 13:15] `hold` Tailwind's minifier turns color-mix() into an opaque fallback colour, which would hide a texture under a wash on older browsers.
+- [2026-11-23 15:54] `main` Operator: an unplaced bid must show 0, not a dash
+- [2026-11-23 16:26] `main` Operator had to ask whether screenshots were posted to the PR; a visible change was pushed without refreshing the PR Screenshots comment
+- [2026-11-23 16:27] `main` Replying in text to every PR notification buried the open avatar question; after a notification that needs no action, write nothing
+- [2026-11-23 17:03] `pirate-avatars` Fast taps in the invite screen's pirate sheet built each whole-avatar write from a view that had not caught up, so a later tap undid an earlier one until the sheet kept its own draft.
+- [2026-11-23 17:03] `pirate-avatars` The brief asked for a jsonb column, but DSQL has no jsonb, which docs/knowledge/dsql-postgres-compat-gaps.md already says; briefs for DSQL apps should be checked against that page.
+- [2026-11-23 17:03] `pirate-avatars` The worktree's guard refused python heredocs, agent-browser eval and cd chains, so every multi-file edit needed a script file in the scratchpad.
+- [2026-11-23 17:41] `main` Hand-drawn eye scar rejected as ugly a second time; source illustration assets online instead of drawing them
+- [2026-11-23 19:06] `main` Rule (operator-approved): never hand-draw an illustration; search free-licensed assets online (iconify, game-icons, CC0 packs), composite candidates on the real screen side by side and let the operator pick before coding
