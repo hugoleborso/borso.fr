@@ -61,11 +61,11 @@ pushed, and uploaded no screenshot is blocked once with the reason.
 **Reference:** the commit adding this file.
 
 ```diff
-+    inputs = "\n".join(turn_inputs(turn))
++    inputs = json.dumps([row.get("message", {}).get("content") for row in turn if row.get("type") == "assistant"])
 +    if not PUSH.search(inputs) or SCREENSHOTS_TAKEN.search(inputs):
 +        return False
 +    moves = git("reflog", "--format=%H", "-n", "2", "@{upstream}").split()
-+    return len(moves) == 2 and bool(VISIBLE_SOURCE.search(git("diff", "--name-only", moves[1], moves[0])))
++    return len(moves) == 2 and re.search(r"^apps/[^/]+/site/src/", git("diff", "--name-only", *moves[::-1]), re.MULTILINE)
 ```
 
 **Proof it can fail:** in a scratch clone pushed twice, the second push

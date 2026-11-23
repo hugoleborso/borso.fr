@@ -72,34 +72,19 @@ def must_show(turn):
 
 PUSH = re.compile(r"\bgit\s+push\b")
 SCREENSHOTS_TAKEN = re.compile(r"screenshots/pr-|screenshots\.yml|visual-validation")
-VISIBLE_SOURCE = re.compile(r"^apps/[^/]+/site/src/", re.MULTILINE)
 PUSH_REASON = (
     "[screens-shown] This turn pushed a change to a screen and posted no new screenshot. "
-    "Take the changed screens at 375 px and publish them as open-pr step 5b says, "
-    "so the Screenshots comment shows the screen the preview now serves. "
-    "See docs/dantotsus/a-screen-pushed-without-its-picture.md."
+    "Publish the changed screens as open-pr step 5b says. See docs/dantotsus/a-screen-pushed-without-its-picture.md."
 )
 
 
-def turn_inputs(turn):
-    for row in turn:
-        if row.get("type") != "assistant":
-            continue
-        for block in row.get("message", {}).get("content", []):
-            if isinstance(block, dict) and block.get("type") == "tool_use":
-                yield json.dumps(block.get("input", {}))
-
-
-def git(*arguments):
-    return subprocess.run(["git", *arguments], capture_output=True, text=True, timeout=10).stdout
-
-
 def pushed_a_screen_unshown(turn):
-    inputs = "\n".join(turn_inputs(turn))
+    inputs = json.dumps([row.get("message", {}).get("content") for row in turn if row.get("type") == "assistant"])
     if not PUSH.search(inputs) or SCREENSHOTS_TAKEN.search(inputs):
         return False
+    git = lambda *arguments: subprocess.run(["git", *arguments], capture_output=True, text=True, timeout=10).stdout
     moves = git("reflog", "--format=%H", "-n", "2", "@{upstream}").split()
-    return len(moves) == 2 and bool(VISIBLE_SOURCE.search(git("diff", "--name-only", moves[1], moves[0])))
+    return len(moves) == 2 and re.search(r"^apps/[^/]+/site/src/", git("diff", "--name-only", *moves[::-1]), re.MULTILINE)
 
 
 def main():
