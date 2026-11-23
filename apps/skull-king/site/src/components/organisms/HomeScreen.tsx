@@ -217,8 +217,8 @@ export function HomeScreen() {
           {account === null ? (
             <Button
               variant="surface"
+              size="large"
               aria-label={t('account.title')}
-              className="size-13"
               onClick={() => {
                 setIsAccountOpen(true);
               }}

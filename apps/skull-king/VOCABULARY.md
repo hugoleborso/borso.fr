@@ -39,7 +39,9 @@ Invariants: `api/src/games/INVARIANTS.md`
 ## Mark
 
 How a player is shown on every screen: one icon on a coloured disc, picked
-from `PLAYER_ICONS` and `PLAYER_COLORS` in `domain/player-mark.core.ts`.
+from `PLAYER_ICONS` and `PLAYER_COLORS` in `domain/player-mark.core.ts`. Each
+icon id is the name of a Lucide icon, which `Glyph` draws. Inside a game the
+mark carries the player's first name, through `NamedMark`.
 
 Lives in: `domain/player-mark.core.ts`
 

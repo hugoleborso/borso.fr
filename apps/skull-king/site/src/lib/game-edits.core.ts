@@ -9,6 +9,7 @@ import {
   RASCAL_BETS,
   type RascalBet,
 } from '@domain/scoring.core';
+import { selectStep, type StepDirection } from './ability-stepper.core';
 import type { GameEntry, GameRound, GameView } from './game-view.core';
 
 export interface EntryEdit {
@@ -168,7 +169,6 @@ export function selectNextBidAdjustment(
   return picked === current ? 0 : picked;
 }
 
-export function cycleRascalBet(bet: RascalBet): RascalBet {
-  const next = RASCAL_BETS[RASCAL_BETS.indexOf(bet) + 1];
-  return next ?? 0;
+export function stepRascalBet(bet: RascalBet, direction: StepDirection): RascalBet {
+  return selectStep(RASCAL_BETS, bet, direction) ?? bet;
 }

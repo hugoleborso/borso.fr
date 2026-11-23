@@ -2,9 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { scoreEntry, selectFinalBid, selectTricksTaken } from '@domain/scoring.core';
 import {
   cycleBonus,
-  cycleRascalBet,
   type EntryEdit,
   selectNextBidAdjustment,
+  stepRascalBet,
 } from '@site/lib/game-edits.core';
 import { formatPointsOrPending, selectEntry, selectPointsTone } from '@site/lib/game-scores.core';
 import type { GameEntry, GamePlayer, GameRound } from '@site/lib/game-view.core';
@@ -20,7 +20,7 @@ import {
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { PointsText } from '../atoms/PointsText';
 import { Sheet } from '../atoms/Sheet';
 import { TrickTally } from '../atoms/TrickTally';
@@ -67,13 +67,21 @@ export function EntryCorrectionSheet({
       onClose={onClose}
     >
       <div className="flex items-center gap-2.5">
-        <PlayerMark icon={player.icon} color={player.color} size="small" />
-        <span className="font-display text-3xl">{t('common.round', { number: round.number })}</span>
+        <NamedMark
+          icon={player.icon}
+          color={player.color}
+          name={player.name}
+          size="small"
+          layout="beside"
+          nameStyle="label"
+        />
+        <span className="shrink-0 font-display text-3xl">
+          {t('common.round', { number: round.number })}
+        </span>
         <PointsText
           text={formatPointsOrPending(points, NO_POINTS)}
           tone={selectPointsTone(points)}
           size="huge"
-          className="ml-auto"
         />
       </div>
       <div className="flex items-center gap-2.5">
@@ -124,8 +132,8 @@ export function EntryCorrectionSheet({
               bidAdjustment: selectNextBidAdjustment(readLatest(entry).bidAdjustment, picked),
             });
           }}
-          onRaiseRascalBet={() => {
-            write({ rascalBet: cycleRascalBet(readLatest(entry).rascalBet) });
+          onStepRascalBet={(step) => {
+            write({ rascalBet: stepRascalBet(readLatest(entry).rascalBet, step) });
           }}
         />
       </div>
@@ -147,7 +155,7 @@ export function EntryCorrectionSheet({
         <Button
           variant="primary"
           aria-label={t('common.done')}
-          className="h-14 flex-1"
+          className="flex-1"
           onClick={onClose}
         >
           <Glyph name="check" className="size-6" strokeWidth={3} />

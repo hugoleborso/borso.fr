@@ -11,7 +11,7 @@ import {
 } from '@site/lib/game-scores.core';
 import type { GamePlayer, GameRound } from '@site/lib/game-view.core';
 import { selectRoundCheck } from '@site/lib/round-results.core';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { ScoreCell } from '../atoms/ScoreCell';
 
 export interface ScoreGridProps {
@@ -58,9 +58,14 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
       ...players.map((player): ColumnDef<GameRound> => ({
         id: player.id,
         header: () => (
-          <span className="flex justify-center">
-            <PlayerMark icon={player.icon} color={player.color} size="tiny" />
-          </span>
+          <NamedMark
+            icon={player.icon}
+            color={player.color}
+            name={player.name}
+            size="tiny"
+            layout="under"
+            nameStyle="caption"
+          />
         ),
         cell: ({ row }) => {
           const round = row.original;

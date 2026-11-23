@@ -1,30 +1,45 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BidAdjustment } from '@domain/scoring.core';
+import {
+  type Ability,
+  type OpenAbility,
+  selectHarrySteps,
+  selectOpenAfterStep,
+  selectRascalSteps,
+  type StepDirection,
+  type StepView,
+  toggleAbility,
+} from '@site/lib/ability-stepper.core';
 import { HARRY_CARD_IMAGE, RASCAL_CARD_IMAGE } from '@site/lib/card-faces.core';
 import type { GameEntry } from '@site/lib/game-view.core';
 import { formatBidAdjustment, formatRascalBadge } from '@site/lib/round-results.core';
-import { Button } from '../atoms/Button';
 import { CardTile } from '../atoms/CardTile';
+import { Stepper } from '../atoms/Stepper';
 
 export interface AbilityStripProps {
   readonly entry: GameEntry;
   readonly isHarryLocked: boolean;
   readonly isRascalLocked: boolean;
   readonly onAdjustBid: (picked: BidAdjustment) => void;
-  readonly onRaiseRascalBet: () => void;
+  readonly onStepRascalBet: (direction: StepDirection) => void;
 }
-
-const MINUS_ONE = '\u22121';
-const PLUS_ONE = '+1';
 
 // @FollowsBlueprint molecule-local-state
 export function AbilityStrip(props: AbilityStripProps) {
-  const { entry, isHarryLocked, isRascalLocked, onAdjustBid, onRaiseRascalBet } = props;
+  const { entry, isHarryLocked, isRascalLocked, onAdjustBid, onStepRascalBet } = props;
   const { t } = useTranslation();
-  const [isHarryOpen, setIsHarryOpen] = useState(false);
+  const [openAbility, setOpenAbility] = useState<OpenAbility>(null);
   const adjustment = formatBidAdjustment(entry.bidAdjustment);
   const rascalBadge = formatRascalBadge(entry);
+  const stepsOf: Readonly<Record<Ability, readonly StepView[]>> = {
+    harry: selectHarrySteps(entry.bidAdjustment),
+    rascal: selectRascalSteps(entry.rascalBet),
+  };
+  const onStepOf: Readonly<Record<Ability, (direction: StepDirection) => void>> = {
+    harry: onAdjustBid,
+    rascal: onStepRascalBet,
+  };
 
   return (
     <div className="flex items-center gap-1.5">
@@ -36,7 +51,7 @@ export function AbilityStrip(props: AbilityStripProps) {
         badge={adjustment}
         isDisabled={isHarryLocked}
         onPress={() => {
-          setIsHarryOpen(!isHarryOpen);
+          setOpenAbility(toggleAbility(openAbility, 'harry'));
         }}
       />
       <CardTile
@@ -46,36 +61,24 @@ export function AbilityStrip(props: AbilityStripProps) {
         isLit={rascalBadge !== null}
         badge={rascalBadge}
         isDisabled={isRascalLocked}
-        onPress={onRaiseRascalBet}
+        onPress={() => {
+          setOpenAbility(toggleAbility(openAbility, 'rascal'));
+        }}
       />
-      {isHarryOpen ? (
-        <div className="ml-auto flex gap-2">
-          <Button
-            variant="surface"
-            aria-label={t('scoring.harryMinus')}
-            aria-pressed={entry.bidAdjustment < 0}
-            className="h-11 w-14 text-lg font-extrabold bg-surface-2"
-            onClick={() => {
-              onAdjustBid(-1);
-              setIsHarryOpen(false);
-            }}
-          >
-            {MINUS_ONE}
-          </Button>
-          <Button
-            variant="surface"
-            aria-label={t('scoring.harryPlus')}
-            aria-pressed={entry.bidAdjustment > 0}
-            className="h-11 w-14 text-lg font-extrabold bg-surface-2"
-            onClick={() => {
-              onAdjustBid(1);
-              setIsHarryOpen(false);
-            }}
-          >
-            {PLUS_ONE}
-          </Button>
-        </div>
-      ) : null}
+      {openAbility === null ? null : (
+        <Stepper
+          steps={stepsOf[openAbility].map((step) => ({
+            text: step.text,
+            label: t(step.labelKey),
+            isDisabled: step.isDisabled,
+            isPressed: step.isPressed,
+            onPress: () => {
+              onStepOf[openAbility](step.direction);
+              setOpenAbility(selectOpenAfterStep(openAbility));
+            },
+          }))}
+        />
+      )}
     </div>
   );
 }

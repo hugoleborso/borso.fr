@@ -22,7 +22,7 @@ interface SeededEntry {
 
 const PLAYERS: readonly SeededPlayer[] = [
   { name: 'Hugo', icon: 'skull', color: 'gold' },
-  { name: 'Léa', icon: 'parrot', color: 'lagoon' },
+  { name: 'Léa', icon: 'bird', color: 'lagoon' },
   { name: 'Max', icon: 'anchor', color: 'coral' },
   { name: 'Inès', icon: 'crown', color: 'amethyst' },
 ];

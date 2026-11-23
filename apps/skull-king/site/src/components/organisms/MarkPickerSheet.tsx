@@ -69,9 +69,8 @@ export function MarkPickerSheet({
       <div className="flex gap-3">
         {onRemove === null ? null : (
           <Button
-            variant="surface"
+            variant="danger"
             aria-label={t('picker.remove', { name: player.name })}
-            className="size-14 text-missed bg-surface-2"
             onClick={onRemove}
           >
             <Glyph name="trash" />
@@ -79,9 +78,8 @@ export function MarkPickerSheet({
         )}
         {onClaim === null ? null : (
           <Button
-            variant="surface"
+            variant="raised"
             aria-label={t('account.claimSeat')}
-            className="size-14 bg-surface-2"
             onClick={() => {
               onClaim();
               onClose();
@@ -93,7 +91,7 @@ export function MarkPickerSheet({
         <Button
           variant="primary"
           aria-label={t('common.done')}
-          className="h-14 flex-1"
+          className="flex-1"
           onClick={() => {
             commitName();
             onClose();

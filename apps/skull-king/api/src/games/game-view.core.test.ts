@@ -22,7 +22,7 @@ const LEA = {
   id: 'lea',
   seat: 1,
   name: 'Léa',
-  icon: 'parrot',
+  icon: 'bird',
   color: 'lagoon',
   accountId: null,
 } as const;

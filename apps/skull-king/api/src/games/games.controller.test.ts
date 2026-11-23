@@ -47,7 +47,7 @@ describe('a game of Skull King, end to end', () => {
     expect(game.currentRound).toBe(1);
     expect(game.players.map((player) => [player.seat, player.name, player.icon])).toEqual([
       [0, 'Hugo', 'skull'],
-      [1, 'Léa', 'parrot'],
+      [1, 'Léa', 'bird'],
       [2, 'Max', 'anchor'],
       [3, 'Inès', 'crown'],
     ]);
@@ -411,7 +411,7 @@ describe('a game of Skull King, end to end', () => {
       id: lea,
       seat: 1,
       name: 'Léane',
-      icon: 'parrot',
+      icon: 'bird',
       color: 'sky',
       accountId: null,
     });

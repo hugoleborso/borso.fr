@@ -19,7 +19,7 @@ function aGame(): GameView {
     currentRound: 1,
     players: [
       { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold', accountId: null },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'parrot', color: 'lagoon', accountId: MY_ACCOUNT },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'lagoon', accountId: MY_ACCOUNT },
       { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'coral' },
     ],
     rounds: [],
@@ -101,7 +101,7 @@ describe('selectWinners', () => {
   it('picks the players sitting in the winning seats', () => {
     const players = [
       { seat: 0, icon: 'skull', color: 'gold', accountId: null },
-      { seat: 1, icon: 'parrot', color: 'lagoon', accountId: null },
+      { seat: 1, icon: 'bird', color: 'lagoon', accountId: null },
       { seat: 2, icon: 'anchor', color: 'coral', accountId: null },
     ] as const;
     const game = {

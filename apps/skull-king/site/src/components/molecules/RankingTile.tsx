@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { formatSignedPoints, selectPointsTone, type Standing } from '@site/lib/game-scores.core';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { PointsText } from '../atoms/PointsText';
 
 export interface RankingTileProps {
@@ -23,10 +23,13 @@ export function RankingTile({ standing, isLeader, isMine, claimLabel, onClaim }:
       )}
     >
       {claimLabel === null ? (
-        <PlayerMark
+        <NamedMark
           icon={player.icon}
           color={player.color}
+          name={player.name}
           size="medium"
+          layout="under"
+          nameStyle="caption"
           emphasis={isMine ? 'ringed' : 'plain'}
         />
       ) : (
@@ -34,9 +37,16 @@ export function RankingTile({ standing, isLeader, isMine, claimLabel, onClaim }:
           type="button"
           aria-label={claimLabel}
           onClick={onClaim}
-          className="cursor-pointer rounded-full"
+          className="flex max-w-full cursor-pointer justify-center"
         >
-          <PlayerMark icon={player.icon} color={player.color} size="medium" />
+          <NamedMark
+            icon={player.icon}
+            color={player.color}
+            name={player.name}
+            size="medium"
+            layout="under"
+            nameStyle="caption"
+          />
         </button>
       )}
       <span className="text-2xl font-extrabold tabular-nums">{total}</span>

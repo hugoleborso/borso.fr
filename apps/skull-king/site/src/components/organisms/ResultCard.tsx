@@ -5,12 +5,13 @@ import {
   scoreEntry,
   selectFinalBid,
 } from '@domain/scoring.core';
+import type { StepDirection } from '@site/lib/ability-stepper.core';
 import { formatPointsOrPending, selectPointsTone } from '@site/lib/game-scores.core';
 import { formatBid, isAwaitingTricks } from '@site/lib/round-results.core';
 import type { GameEntry, GamePlayer } from '@site/lib/game-view.core';
 import { Button } from '../atoms/Button';
 import { Glyph } from '../atoms/Glyph';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { PointsText } from '../atoms/PointsText';
 import { AbilityStrip } from '../molecules/AbilityStrip';
 import { BonusStrip } from '../molecules/BonusStrip';
@@ -26,7 +27,7 @@ export interface ResultCardProps {
   readonly onTricks: (tricks: number) => void;
   readonly onCycleBonus: (kind: BonusKind) => void;
   readonly onAdjustBid: (picked: BidAdjustment) => void;
-  readonly onRaiseRascalBet: () => void;
+  readonly onStepRascalBet: (direction: StepDirection) => void;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -41,7 +42,14 @@ export function ResultCard(props: ResultCardProps) {
   return (
     <section aria-label={player.name} className="flex flex-col gap-3 rounded-tile p-3 bg-surface">
       <div className="flex items-center gap-2.5">
-        <PlayerMark icon={player.icon} color={player.color} size="small" />
+        <NamedMark
+          icon={player.icon}
+          color={player.color}
+          name={player.name}
+          size="small"
+          layout="beside"
+          nameStyle="label"
+        />
         <span
           aria-label={bidLabel}
           className="flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-lg font-extrabold whitespace-nowrap bg-surface-2"
@@ -52,7 +60,6 @@ export function ResultCard(props: ResultCardProps) {
           text={formatPointsOrPending(points, '?')}
           tone={selectPointsTone(points)}
           size="large"
-          className="ml-auto"
         />
         <Button
           variant={isMissed ? 'missed' : 'made'}
@@ -81,7 +88,7 @@ export function ResultCard(props: ResultCardProps) {
         isHarryLocked={props.isHarryLocked}
         isRascalLocked={props.isRascalLocked}
         onAdjustBid={props.onAdjustBid}
-        onRaiseRascalBet={props.onRaiseRascalBet}
+        onStepRascalBet={props.onStepRascalBet}
       />
     </section>
   );

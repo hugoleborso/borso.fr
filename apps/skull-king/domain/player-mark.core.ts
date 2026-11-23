@@ -1,16 +1,16 @@
 export const PLAYER_ICONS = [
   'skull',
-  'parrot',
   'anchor',
   'crown',
-  'wheel',
-  'kraken',
-  'chest',
   'compass',
   'swords',
-  'hook',
-  'bottle',
-  'spyglass',
+  'ship',
+  'ship-wheel',
+  'bird',
+  'telescope',
+  'map',
+  'coins',
+  'tree-palm',
 ] as const;
 
 export type PlayerIcon = (typeof PLAYER_ICONS)[number];

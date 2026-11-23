@@ -19,7 +19,7 @@ import {
 } from './roster.core';
 
 const HUGO: RosterPlayer = { name: 'Hugo', icon: 'skull', color: 'gold' };
-const LEA: RosterPlayer = { name: 'Léa', icon: 'parrot', color: 'lagoon' };
+const LEA: RosterPlayer = { name: 'Léa', icon: 'bird', color: 'lagoon' };
 const MAX: RosterPlayer = { name: 'Max', icon: 'anchor', color: 'coral' };
 
 function aFullTable(): readonly RosterPlayer[] {
@@ -88,7 +88,7 @@ describe('selectFreeMark', () => {
   });
 
   it("answers the first free icon rather than the next seat's", () => {
-    expect(selectFreeMark([{ ...HUGO, icon: 'parrot' }]).icon).toBe('skull');
+    expect(selectFreeMark([{ ...HUGO, icon: 'bird' }]).icon).toBe('skull');
   });
 
   it('falls back to the mark of the next seat once every icon and colour is taken', () => {

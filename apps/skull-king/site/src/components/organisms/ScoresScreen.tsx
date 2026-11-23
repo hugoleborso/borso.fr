@@ -15,7 +15,7 @@ import { hasUnbalancedClosedRound } from '@site/lib/round-results.core';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { ScreenHeader } from '../atoms/ScreenHeader';
 import { RankingTile } from '../molecules/RankingTile';
 import { ScoreGrid } from '../molecules/ScoreGrid';
@@ -53,7 +53,7 @@ export function ScoresScreen({ game, onContinue, onRematch }: ScoresScreenProps)
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col">
       <header className="px-4 pt-4 pb-3">
         <ScreenHeader title={t('common.scores')}>
-          <ShareButton joinCode={game.joinCode} size="surface" />
+          <ShareButton joinCode={game.joinCode} variant="surface" />
         </ScreenHeader>
       </header>
 
@@ -65,10 +65,16 @@ export function ScoresScreen({ game, onContinue, onRematch }: ScoresScreenProps)
           <Glyph name="crown" className="size-8 text-accent" />
           <div className="flex flex-wrap justify-center gap-4">
             {winners.map((winner) => (
-              <div key={winner.id} className="flex flex-col items-center gap-1">
-                <PlayerMark icon={winner.icon} color={winner.color} size="big" emphasis="ringed" />
-                <span className="font-display text-3xl leading-none">{winner.name}</span>
-              </div>
+              <NamedMark
+                key={winner.id}
+                icon={winner.icon}
+                color={winner.color}
+                name={winner.name}
+                size="big"
+                layout="under"
+                nameStyle="title"
+                emphasis="ringed"
+              />
             ))}
           </div>
         </section>

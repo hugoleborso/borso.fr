@@ -1,6 +1,5 @@
-import clsx from 'clsx';
 import type { RosterPlayer } from '@site/lib/roster.core';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 
 export interface RosterMarkProps {
   readonly player: RosterPlayer;
@@ -12,28 +11,23 @@ export interface RosterMarkProps {
 // @FollowsBlueprint molecule-presentational
 export function RosterMark({ player, isSeated, label, onPress }: RosterMarkProps) {
   return (
-    <li className="flex min-w-0 flex-col items-center gap-1.5">
+    <li className="flex min-w-0 flex-col items-center">
       <button
         type="button"
         aria-label={label}
         onClick={onPress}
-        className="cursor-pointer rounded-full"
+        className="flex max-w-full cursor-pointer justify-center"
       >
-        <PlayerMark
+        <NamedMark
           icon={player.icon}
           color={player.color}
+          name={player.name}
           size="big"
+          layout="under"
+          nameStyle="label"
           emphasis={isSeated ? 'ringed' : 'faded'}
         />
       </button>
-      <span
-        className={clsx(
-          'max-w-full truncate text-sm font-semibold',
-          isSeated ? 'text-text' : 'text-muted-2',
-        )}
-      >
-        {player.name}
-      </span>
     </li>
   );
 }

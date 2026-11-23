@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { selectCardCount } from '@domain/round.core';
-import { cycleBonus, cycleRascalBet, selectNextBidAdjustment } from '@site/lib/game-edits.core';
+import { cycleBonus, selectNextBidAdjustment, stepRascalBet } from '@site/lib/game-edits.core';
 import { selectRound } from '@site/lib/game-scores.core';
 import type { GameEntry, GameView } from '@site/lib/game-view.core';
 import {
@@ -122,11 +122,11 @@ export function ScoringScreen({ game, onScores, onRoundClosed }: ScoringScreenPr
                   },
                 });
               }}
-              onRaiseRascalBet={() => {
+              onStepRascalBet={(step) => {
                 writeEntry.mutate({
                   roundNumber,
                   playerId: player.id,
-                  edit: { rascalBet: cycleRascalBet(readLatest(player.id, entry).rascalBet) },
+                  edit: { rascalBet: stepRascalBet(readLatest(player.id, entry).rascalBet, step) },
                 });
               }}
             />

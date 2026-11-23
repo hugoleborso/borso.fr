@@ -53,3 +53,6 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-22 21:27] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
 - [2026-11-22 21:28] `visual-validator` The skull-king service worker never registers under the dev server, so checking the spec's caching claim needs a scratch vite build and a vite preview the validator must start and stop by pid.
 - [2026-11-22 21:28] `visual-validator` Passkey flows need a CDP virtual authenticator held open by a hand-written Node WebSocket script, because agent-browser has no WebAuthn command.
+- [2026-11-23 11:02] `main` The app drew its own icon SVG paths instead of reusing lucide-react, already in the repo; the operator found them ugly and the components short on reuse.
+- [2026-11-23 11:08] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
+- [2026-11-23 11:15] `icons-reuse` A className override on a variant atom (h-14 over h-16, text-missed over text-text, rounded-action over rounded-chip) silently loses to the variant's own class because clsx does not merge Tailwind conflicts, and no gate catches it.

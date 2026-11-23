@@ -14,11 +14,11 @@ function readShareSheet(candidate: Navigator): ShareSheet | null {
 
 export interface ShareButtonProps {
   readonly joinCode: string;
-  readonly size: 'surface' | 'large';
+  readonly variant: 'surface' | 'tile';
 }
 
 // @FollowsBlueprint molecule-handing-an-address-to-someone-else
-export function ShareButton({ joinCode, size }: ShareButtonProps) {
+export function ShareButton({ joinCode, variant }: ShareButtonProps) {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
 
@@ -35,9 +35,8 @@ export function ShareButton({ joinCode, size }: ShareButtonProps) {
 
   return (
     <Button
-      variant="surface"
+      variant={variant}
       aria-label={isCopied ? t('common.linkCopied') : t('common.share')}
-      className={size === 'large' ? 'size-12 rounded-tile' : undefined}
       onClick={() => {
         share().catch(() => {
           setIsCopied(false);

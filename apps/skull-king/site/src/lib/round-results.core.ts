@@ -10,6 +10,7 @@ import {
   type TrickTally,
 } from '@domain/round.core';
 import type { EntryEdit } from './game-edits.core';
+import { formatSignedPoints } from './game-scores.core';
 import type { GameEntry, GameRound, GameView } from './game-view.core';
 
 export interface TallyDisplay {
@@ -70,13 +71,6 @@ export function hasUnbalancedClosedRound(game: GameView): boolean {
 
 const NO_BID = '\u2013';
 const ADJUSTED_TO = '\u2192';
-const MINUS_SIGN = '\u2212';
-
-const BID_ADJUSTMENT_LABELS: Readonly<Record<BidAdjustment, string | null>> = {
-  [-1]: `${MINUS_SIGN}1`,
-  0: null,
-  1: '+1',
-};
 
 export function formatBid(entry: GameEntry): string {
   if (entry.bid === null) return NO_BID;
@@ -85,7 +79,7 @@ export function formatBid(entry: GameEntry): string {
 }
 
 export function formatBidAdjustment(adjustment: BidAdjustment): string | null {
-  return BID_ADJUSTMENT_LABELS[adjustment];
+  return adjustment === 0 ? null : formatSignedPoints(adjustment);
 }
 
 function withEntry(entries: readonly GameEntry[], changed: GameEntry): readonly GameEntry[] {
@@ -105,9 +99,7 @@ export function isRascalLocked(entries: readonly GameEntry[], entry: GameEntry):
 
 export function formatRascalBadge(entry: GameEntry): string | null {
   if (entry.rascalBet === 0) return null;
-  return isBidMade(entry)
-    ? `+${String(entry.rascalBet)}`
-    : `${MINUS_SIGN}${String(entry.rascalBet)}`;
+  return formatSignedPoints(isBidMade(entry) ? entry.rascalBet : -entry.rascalBet);
 }
 
 export function selectRoundEntries(

@@ -48,7 +48,7 @@ export function InviteScreen({ game, onPlay }: InviteScreenProps) {
         >
           {game.joinCode}
         </span>
-        <ShareButton joinCode={game.joinCode} size="large" />
+        <ShareButton joinCode={game.joinCode} variant="tile" />
       </section>
 
       <ul className="m-0 grid list-none grid-cols-4 gap-x-2 gap-y-4 p-0">

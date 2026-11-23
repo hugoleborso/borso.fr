@@ -4,6 +4,15 @@ import type { RoundEdit } from '@site/lib/game-edits.core';
 import type { GameRound } from '@site/lib/game-view.core';
 import { CardTile } from '../atoms/CardTile';
 
+const DISCARD_CARDS = [
+  { field: 'isKrakenPlayed', source: KRAKEN_CARD_IMAGE, labelKey: 'scoring.kraken' },
+  { field: 'isWhiteWhaleDiscard', source: WHITE_WHALE_CARD_IMAGE, labelKey: 'scoring.whiteWhale' },
+] as const satisfies readonly {
+  readonly field: keyof RoundEdit;
+  readonly source: string;
+  readonly labelKey: string;
+}[];
+
 export interface DiscardTogglesProps {
   readonly round: GameRound;
   readonly onChange: (edit: RoundEdit) => void;
@@ -14,24 +23,18 @@ export function DiscardToggles({ round, onChange }: DiscardTogglesProps) {
   const { t } = useTranslation();
   return (
     <>
-      <CardTile
-        source={KRAKEN_CARD_IMAGE}
-        label={t('scoring.kraken')}
-        isLit={round.isKrakenPlayed}
-        badge={null}
-        onPress={() => {
-          onChange({ isKrakenPlayed: !round.isKrakenPlayed });
-        }}
-      />
-      <CardTile
-        source={WHITE_WHALE_CARD_IMAGE}
-        label={t('scoring.whiteWhale')}
-        isLit={round.isWhiteWhaleDiscard}
-        badge={null}
-        onPress={() => {
-          onChange({ isWhiteWhaleDiscard: !round.isWhiteWhaleDiscard });
-        }}
-      />
+      {DISCARD_CARDS.map((card) => (
+        <CardTile
+          key={card.field}
+          source={card.source}
+          label={t(card.labelKey)}
+          isLit={round[card.field]}
+          badge={null}
+          onPress={() => {
+            onChange({ [card.field]: !round[card.field] });
+          }}
+        />
+      ))}
     </>
   );
 }

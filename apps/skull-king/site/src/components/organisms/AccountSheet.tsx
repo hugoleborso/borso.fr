@@ -7,6 +7,7 @@ import { type RosterPlayer, trimPlayerName } from '@site/lib/roster.core';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
+import { NamedMark } from '../atoms/NamedMark';
 import { PlayerMark } from '../atoms/PlayerMark';
 import { Sheet } from '../atoms/Sheet';
 import { TextInput } from '../atoms/TextInput';
@@ -31,15 +32,19 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
   if (account !== null) {
     return (
       <Sheet label={t('account.title')} onClose={onClose}>
-        <div className="flex items-center gap-4">
-          <PlayerMark icon={account.icon} color={account.color} size="hero" />
-          <span className="min-w-0 truncate font-display text-4xl">{account.name}</span>
-        </div>
+        <NamedMark
+          icon={account.icon}
+          color={account.color}
+          name={account.name}
+          size="hero"
+          layout="beside"
+          nameStyle="headline"
+        />
         <ErrorNote code={failure} />
         <Button
-          variant="primary"
+          variant="secondary"
           aria-label={t('account.signOut')}
-          className="h-14 w-full bg-surface-2 text-text"
+          className="w-full"
           disabled={signOut.isPending}
           onClick={() => {
             signOut.mutate(undefined, { onSuccess: onClose });
@@ -83,7 +88,7 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
         <Button
           variant="primary"
           aria-label={t('account.createWithPasskey')}
-          className="h-14 w-full"
+          className="w-full"
           disabled={draftName === '' || createAccount.isPending}
           onClick={() => {
             createAccount.mutate({ ...draft, name: draftName }, { onSuccess: onClose });
@@ -102,7 +107,7 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
         <Button
           variant="primary"
           aria-label={t('account.signIn')}
-          className="h-16 flex-1"
+          className="flex-1"
           disabled={signIn.isPending}
           onClick={() => {
             signIn.mutate(undefined, { onSuccess: onClose });
@@ -111,9 +116,9 @@ export function AccountSheet({ account, suggestedMark, onClose }: AccountSheetPr
           <Glyph name="key" className="size-7" />
         </Button>
         <Button
-          variant="surface"
+          variant="raised"
+          size="huge"
           aria-label={t('account.create')}
-          className="size-16 rounded-action bg-surface-2"
           onClick={() => {
             setDraft({ ...suggestedMark, name: '' });
           }}

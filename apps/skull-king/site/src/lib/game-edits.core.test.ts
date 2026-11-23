@@ -8,8 +8,8 @@ import {
   applyPlayerEdit,
   applySeatClaim,
   cycleBonus,
-  cycleRascalBet,
   selectNextBidAdjustment,
+  stepRascalBet,
 } from './game-edits.core';
 import type { GameView } from './game-view.core';
 
@@ -22,7 +22,7 @@ function aGame(): GameView {
     currentRound: 2,
     players: [
       { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'parrot', color: 'lagoon' },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'lagoon' },
     ],
     rounds: [1, 2].map((number) => ({
       number,
@@ -217,11 +217,17 @@ describe('selectNextBidAdjustment', () => {
   });
 });
 
-describe('cycleRascalBet', () => {
-  it('raises the bet from nothing to ten to twenty, then back to nothing', () => {
-    expect(cycleRascalBet(0)).toBe(10);
-    expect(cycleRascalBet(10)).toBe(20);
-    expect(cycleRascalBet(20)).toBe(0);
+describe('stepRascalBet', () => {
+  it('raises the bet by ten up to twenty and lowers it by ten down to nothing', () => {
+    expect(stepRascalBet(0, 1)).toBe(10);
+    expect(stepRascalBet(10, 1)).toBe(20);
+    expect(stepRascalBet(20, -1)).toBe(10);
+    expect(stepRascalBet(10, -1)).toBe(0);
+  });
+
+  it('stays put at either end', () => {
+    expect(stepRascalBet(20, 1)).toBe(20);
+    expect(stepRascalBet(0, -1)).toBe(0);
   });
 });
 

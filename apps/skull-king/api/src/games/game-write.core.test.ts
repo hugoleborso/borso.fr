@@ -440,12 +440,12 @@ describe('decideSeatClaim', () => {
 describe('seatTable', () => {
   const ACCOUNT = 'account-1';
   const anna = { name: 'Anna', icon: 'skull', color: 'gold' } as const;
-  const bob = { name: 'Bob', icon: 'parrot', color: 'lagoon' } as const;
+  const bob = { name: 'Bob', icon: 'bird', color: 'lagoon' } as const;
 
   it('seats the players in the order sent, from seat 0, with their marks', () => {
     expect(seatTable([anna, bob], null)).toStrictEqual([
       { seat: 0, name: 'Anna', icon: 'skull', color: 'gold', accountId: null },
-      { seat: 1, name: 'Bob', icon: 'parrot', color: 'lagoon', accountId: null },
+      { seat: 1, name: 'Bob', icon: 'bird', color: 'lagoon', accountId: null },
     ]);
   });
 

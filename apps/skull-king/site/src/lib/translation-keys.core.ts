@@ -4,17 +4,17 @@ import { DISPLAYED_ERROR_CODES } from './error-codes.core';
 
 export const ICON_KEYS = {
   skull: 'marks.icons.skull',
-  parrot: 'marks.icons.parrot',
   anchor: 'marks.icons.anchor',
   crown: 'marks.icons.crown',
-  wheel: 'marks.icons.wheel',
-  kraken: 'marks.icons.kraken',
-  chest: 'marks.icons.chest',
   compass: 'marks.icons.compass',
   swords: 'marks.icons.swords',
-  hook: 'marks.icons.hook',
-  bottle: 'marks.icons.bottle',
-  spyglass: 'marks.icons.spyglass',
+  ship: 'marks.icons.ship',
+  'ship-wheel': 'marks.icons.shipWheel',
+  bird: 'marks.icons.bird',
+  telescope: 'marks.icons.telescope',
+  map: 'marks.icons.map',
+  coins: 'marks.icons.coins',
+  'tree-palm': 'marks.icons.treePalm',
 } as const satisfies Record<PlayerIcon, string>;
 
 export const COLOR_KEYS = {

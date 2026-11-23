@@ -55,7 +55,9 @@
     "harryMinus": "Harry : annonce moins un",
     "harryPlus": "Harry : annonce plus un",
     "harryNone": "aucun",
-    "rascal": "Rascal de Roatan, mise {{bet}}, toucher pour monter"
+    "rascal": "Rascal de Roatan, mise {{bet}}",
+    "rascalMinus": "Rascal : miser 10 de moins",
+    "rascalPlus": "Rascal : miser 10 de plus"
   },
   "scores": {
     "detail": "Détail par manche",
@@ -79,17 +81,17 @@
   "marks": {
     "icons": {
       "skull": "Crâne",
-      "parrot": "Perroquet",
       "anchor": "Ancre",
       "crown": "Couronne",
-      "wheel": "Barre",
-      "kraken": "Kraken",
-      "chest": "Coffre",
       "compass": "Boussole",
       "swords": "Sabres",
-      "hook": "Crochet",
-      "bottle": "Bouteille",
-      "spyglass": "Longue-vue"
+      "ship": "Navire",
+      "shipWheel": "Barre",
+      "bird": "Perroquet",
+      "telescope": "Longue-vue",
+      "map": "Carte au trésor",
+      "coins": "Doublons",
+      "treePalm": "Palmier"
     },
     "colors": {
       "gold": "Or",

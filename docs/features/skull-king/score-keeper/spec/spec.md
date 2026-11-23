@@ -18,8 +18,13 @@ Mockups validated by the operator: https://claude.ai/artifact/FVqS42YbwSCAYT7HgK
 - Almost no text. Numbers, the player marks and the official card images carry
   the meaning. Titles are "Manche N" and "Scores". Buttons are icons (play,
   check, share, edit) with an `aria-label`.
-- A player is shown by their mark (an icon on a coloured disc), not by their
-  name, everywhere except where a name is set.
+- A player is shown by their mark (an icon on a coloured disc) with their
+  first name: beside the mark on rows and cards, under it on tiles and in the
+  score grid header, cut with an ellipsis when it does not fit. The list of
+  games is the one exception, because its tile holds up to eight marks in a
+  phone's third of a width.
+- Every icon, the player marks included, comes from the Lucide icon set
+  (`lucide-react`). The app draws no icon of its own.
 - A made bid is the default. Nobody types anything for a player who made it.
 - Every tap writes at once. There is no save button and no draft.
 - Every page works at 375 px wide. Touch targets are at least 44 px.
@@ -42,13 +47,13 @@ decides which game screen shows.
    dropped: a phone is not a player, so the app cannot know whose phone is
    connected.
 3. **Bids** (phase `bidding`). "Manche N", a ten segment progress bar, a
-   scores button. One row per player: the mark, then one chip per possible bid
+   scores button. One row per player: the mark and name, then one chip per possible bid
    from 0 to the cards dealt. One tap sets the bid; tapping it again clears it.
    The footer shows the sum of bids over the cards dealt, and a play button
    moves to scoring. The play button stays disabled until every player has a
    bid (`isEveryBidPlaced`), and the player rows still missing one are
    highlighted.
-4. **Results** (phase `scoring`). One card per player: mark, bid, live round
+4. **Results** (phase `scoring`). One card per player: mark and name, bid, live round
    points, and a big toggle, check (made, default) or cross (missed).
    - Made: a strip of the six bonus cards (standard 14, black 14, mermaid,
      pirate, Skull King, loot). A tap adds one, cycling 0, 1, ..., max, 0. The
@@ -67,7 +72,7 @@ decides which game screen shows.
    - The pencil goes back to the bids of this round, and a scores button
      opens the scores.
 5. **Scores.** Reachable from every game screen. The ranking as four (to eight)
-   tiles, mark, total, last round delta, leader highlighted. Under it a grid,
+   tiles, mark and name, total, last round delta, leader highlighted. Under it a grid,
    one row per played round, one column per player, each cell the points and
    `bid/tricks`. Tapping a cell opens a sheet to correct that player's bid,
    tricks and bonuses for that round, saved on every tap. A play button
@@ -81,6 +86,9 @@ decides which game screen shows.
    tally with its Kraken and White Whale toggles, and the play button stays
    disabled while any played round is unbalanced.
 6. **Mark picker.** Twelve icons, eight colours, the preview disc and the name.
+   The icons are the Lucide `skull`, `anchor`, `crown`, `compass`, `swords`,
+   `ship`, `ship-wheel`, `bird`, `telescope`, `map`, `coins` and `tree-palm`,
+   and each id is the Lucide icon's own name.
 
 ## Install
 
@@ -153,8 +161,9 @@ game route reads the optional session and records `account_game` when present.
   player per round uses it (one Harry card).
 - Rascal of Roatan (advanced pirate ability) bets 0, 10 or 20 points: won if
   the bid is made, lost otherwise, on top of the round score. The results
-  screen has a Rascal card per player that cycles 0, 10, 20. At most one
-  player per round bets (one Rascal card).
+  screen has a Rascal card per player: tapping it opens a -10 / +10 stepper
+  that moves the bet between 0 and 20, each end disabling its button. At most
+  one player per round bets (one Rascal card).
 - The other three abilities (Rosie D'Laney, Bendt the Bandit, Juanita Jade)
   change who leads or which cards a player holds, never a score, so the app
   records nothing for them.

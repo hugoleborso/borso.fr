@@ -55,7 +55,9 @@
     "harryMinus": "Harry: bid one less",
     "harryPlus": "Harry: bid one more",
     "harryNone": "none",
-    "rascal": "Rascal of Roatan, bet {{bet}}, tap to raise"
+    "rascal": "Rascal of Roatan, bet {{bet}}",
+    "rascalMinus": "Rascal: bet 10 less",
+    "rascalPlus": "Rascal: bet 10 more"
   },
   "scores": {
     "detail": "Round by round",
@@ -79,17 +81,17 @@
   "marks": {
     "icons": {
       "skull": "Skull",
-      "parrot": "Parrot",
       "anchor": "Anchor",
       "crown": "Crown",
-      "wheel": "Helm",
-      "kraken": "Kraken",
-      "chest": "Chest",
       "compass": "Compass",
       "swords": "Sabres",
-      "hook": "Hook",
-      "bottle": "Bottle",
-      "spyglass": "Spyglass"
+      "ship": "Ship",
+      "shipWheel": "Helm",
+      "bird": "Parrot",
+      "telescope": "Spyglass",
+      "map": "Treasure map",
+      "coins": "Doubloons",
+      "treePalm": "Palm tree"
     },
     "colors": {
       "gold": "Gold",

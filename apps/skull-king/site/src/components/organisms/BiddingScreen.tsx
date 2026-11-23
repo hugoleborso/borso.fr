@@ -8,7 +8,7 @@ import clsx from 'clsx';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
-import { PlayerMark } from '../atoms/PlayerMark';
+import { NamedMark } from '../atoms/NamedMark';
 import { ProgressBar } from '../atoms/ProgressBar';
 import { ScreenHeader } from '../atoms/ScreenHeader';
 import { ChipRow } from '../molecules/ChipRow';
@@ -48,13 +48,16 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
         {game.players.map((player) => {
           const bid = round === null ? null : (selectEntry(round, player.id)?.bid ?? null);
           return (
-            <div key={player.id} className="flex items-center gap-3">
-              <PlayerMark
-                icon={player.icon}
-                color={player.color}
-                size="large"
-                emphasis={bid === null ? 'ringed' : 'plain'}
-              />
+            <NamedMark
+              key={player.id}
+              icon={player.icon}
+              color={player.color}
+              name={player.name}
+              size="large"
+              layout="beside"
+              nameStyle="label"
+              emphasis={bid === null ? 'ringed' : 'plain'}
+            >
               <ChipRow
                 label={t('bidding.bidOf', { name: player.name })}
                 highest={cardCount}
@@ -70,7 +73,7 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
                   });
                 }}
               />
-            </div>
+            </NamedMark>
           );
         })}
         <ErrorNote code={readRejectionCode(writeEntry.error ?? movePhase.error)} />
