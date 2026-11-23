@@ -21,7 +21,7 @@ onto serverless AWS that costs about a coffee a month while idle.
 
 <br/>
 
-<img src="docs/assets/readme/hero.jpg" alt="The six apps on a phone: borso.fr, Borsouvertures, Last Loop Lépin, Banana Rush, Pragma and Talos" width="100%"/>
+<img src="docs/assets/readme/hero.jpg" alt="The apps on a phone: borso.fr, Borsouvertures, Last Loop Lépin, Banana Rush, Pragma, Talos and Skull King" width="100%"/>
 
 </div>
 
