@@ -1,33 +1,9 @@
-/** @DependsOnExternal browser-local-storage */
-
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './en.json';
 import fr from './fr.json';
-import { DEFAULT_LOCALE, detectInitialLocale, type Locale } from './i18n.utils';
-import { readPersistedLocale } from './locale-storage.utils';
 
-export function browserStorage(): Storage | undefined {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    return window.localStorage;
-  } catch {
-    return undefined;
-  }
-}
-
-function recallLocale(): Locale | null {
-  try {
-    return readPersistedLocale(browserStorage());
-  } catch {
-    return null;
-  }
-}
-
-const persistedLocale = recallLocale();
-const initialLocale =
-  persistedLocale ??
-  detectInitialLocale(typeof navigator === 'undefined' ? undefined : navigator.language);
+const FRENCH = 'fr';
 
 // @FollowsBlueprint i18n-setup
 void i18next.use(initReactI18next).init({
@@ -35,8 +11,8 @@ void i18next.use(initReactI18next).init({
     en: { translation: en },
     fr: { translation: fr },
   },
-  lng: initialLocale,
-  fallbackLng: DEFAULT_LOCALE,
+  lng: FRENCH,
+  fallbackLng: FRENCH,
   interpolation: { escapeValue: false },
   returnNull: false,
 });
@@ -48,5 +24,3 @@ function applyDocumentLanguage(language: string): void {
 
 applyDocumentLanguage(i18next.language);
 i18next.on('languageChanged', applyDocumentLanguage);
-
-export { i18next };
