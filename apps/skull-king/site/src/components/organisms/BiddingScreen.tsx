@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { isEveryBidPlaced, ROUND_COUNT, selectCardCount } from '@domain/round.core';
+import { selectBidStepEdit, selectCountSteps, stepBid } from '@site/lib/count-stepper.core';
 import { selectEntry, selectRound, sumBids } from '@site/lib/game-scores.core';
 import type { GameView } from '@site/lib/game-view.core';
-import { useMovePhase, useWriteEntry } from '@site/lib/queries/game.queries';
+import { useMovePhase, useReadLatestEntry, useWriteEntry } from '@site/lib/queries/game.queries';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
 import clsx from 'clsx';
 import { Button } from '../atoms/Button';
@@ -11,7 +12,7 @@ import { Glyph } from '../atoms/Glyph';
 import { NamedMark } from '../atoms/NamedMark';
 import { ProgressBar } from '../atoms/ProgressBar';
 import { ScreenHeader } from '../atoms/ScreenHeader';
-import { ChipRow } from '../molecules/ChipRow';
+import { CountStepper } from '../molecules/CountStepper';
 
 export interface BiddingScreenProps {
   readonly game: GameView;
@@ -23,6 +24,7 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
   const { t } = useTranslation();
   const writeEntry = useWriteEntry(game.joinCode);
   const movePhase = useMovePhase(game.joinCode);
+  const readLatestEntry = useReadLatestEntry(game.joinCode);
   const roundNumber = game.currentRound;
   const round = selectRound(game, roundNumber);
   const cardCount = round?.cardCount ?? selectCardCount(roundNumber, game.players.length);
@@ -48,32 +50,34 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
         {game.players.map((player) => {
           const bid = round === null ? null : (selectEntry(round, player.id)?.bid ?? null);
           return (
-            <NamedMark
-              key={player.id}
-              icon={player.icon}
-              color={player.color}
-              name={player.name}
-              size="large"
-              layout="beside"
-              nameStyle="label"
-              emphasis={bid === null ? 'ringed' : 'plain'}
-            >
-              <ChipRow
+            <div key={player.id} className="flex items-center gap-2">
+              <NamedMark
+                icon={player.icon}
+                color={player.color}
+                name={player.name}
+                size="large"
+                layout="beside"
+                nameStyle="label"
+                emphasis={bid === null ? 'ringed' : 'plain'}
+              />
+              <CountStepper
                 label={t('bidding.bidOf', { name: player.name })}
-                highest={cardCount}
-                chosen={bid}
-                blocked={null}
-                tone="accent"
-                surface="ground"
-                onPick={(value) => {
+                count={bid}
+                steps={selectCountSteps((direction) => stepBid(bid, direction, cardCount))}
+                onStep={(direction) => {
+                  const latest = readLatestEntry(roundNumber, player.id);
                   writeEntry.mutate({
                     roundNumber,
                     playerId: player.id,
-                    edit: { bid: value === bid ? null : value },
+                    edit: selectBidStepEdit(
+                      latest === null ? bid : latest.bid,
+                      direction,
+                      cardCount,
+                    ),
                   });
                 }}
               />
-            </NamedMark>
+            </div>
           );
         })}
         <ErrorNote code={readRejectionCode(writeEntry.error ?? movePhase.error)} />

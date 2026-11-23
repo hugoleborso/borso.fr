@@ -51,10 +51,6 @@ export function selectClosingMove(roundNumber: number): {
     : { round: roundNumber, phase: 'finished' };
 }
 
-export function selectBidToggle(value: number, bid: number | null): number | null {
-  return value === bid ? null : value;
-}
-
 export function selectRoundCheck(round: GameRound): RoundCheck {
   const tally = tallyTricks(round.entries, round.cardCount, round);
   return {

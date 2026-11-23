@@ -67,6 +67,7 @@ export function AbilityStrip(props: AbilityStripProps) {
       />
       {openAbility === null ? null : (
         <Stepper
+          className="ml-auto"
           steps={stepsOf[openAbility].map((step) => ({
             text: step.text,
             label: t(step.labelKey),

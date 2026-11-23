@@ -12,7 +12,6 @@ import {
   isRascalLocked,
   selectClosingMove,
   selectRoundCheck,
-  selectBidToggle,
   selectMadeToggleEdit,
   selectRoundEntries,
   selectTallyDisplay,
@@ -87,16 +86,6 @@ describe('selectTricksCorrection', () => {
 
   it('marks the bid made when the tricks equal the final bid', () => {
     expect(selectTricksCorrection(2, 2)).toStrictEqual({ isMissed: false, tricks: null });
-  });
-});
-
-describe('selectBidToggle', () => {
-  it('sets a bid other than the one chosen', () => {
-    expect(selectBidToggle(1, 2)).toBe(1);
-  });
-
-  it('clears the bid when the chosen one is tapped again', () => {
-    expect(selectBidToggle(2, 2)).toBeNull();
   });
 });
 

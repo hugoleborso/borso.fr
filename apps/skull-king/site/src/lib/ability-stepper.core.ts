@@ -16,7 +16,9 @@ export type StepLabelKey =
   | 'scoring.harryMinus'
   | 'scoring.harryPlus'
   | 'scoring.rascalMinus'
-  | 'scoring.rascalPlus';
+  | 'scoring.rascalPlus'
+  | 'stepper.less'
+  | 'stepper.more';
 
 export interface StepView {
   readonly direction: StepDirection;

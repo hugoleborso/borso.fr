@@ -46,6 +46,7 @@
     "tricksOf": "Plis faits par {{name}}",
     "bonuses": "Bonus",
     "bonusCount": "{{card}}, {{count}}, toucher pour ajouter",
+    "bonusRemove": "{{card}}, en retirer un",
     "tally": "{{counted}} plis comptés sur {{expected}}",
     "kraken": "Kraken joué",
     "close": "Valider la manche",
@@ -64,11 +65,15 @@
     "cell": "{{name}}, manche {{round}}, {{points}}. Corriger",
     "correction": "{{name}}, manche {{round}}",
     "bid": "Annonce",
-    "tricks": "Plis faits",
+    "tricks": "Plis",
     "winner": "Vainqueur",
     "rematch": "Rejouer",
     "roundCheck": "Manche {{round}}, {{counted}} plis comptés sur {{expected}}",
     "continueBlocked": "Une manche ne tombe pas juste : corrige-la d’abord"
+  },
+  "stepper": {
+    "less": "Un de moins",
+    "more": "Un de plus"
   },
   "cards": {
     "standardFourteen": "14 de couleur",
@@ -95,13 +100,13 @@
     },
     "colors": {
       "gold": "Or",
-      "lagoon": "Lagon",
-      "coral": "Corail",
-      "amethyst": "Améthyste",
       "sky": "Ciel",
-      "rose": "Rose",
-      "lime": "Lime",
-      "sand": "Sable"
+      "magenta": "Magenta",
+      "ice": "Glace",
+      "amethyst": "Améthyste",
+      "sand": "Sable",
+      "indigo": "Indigo",
+      "slate": "Ardoise"
     }
   },
   "errors": {

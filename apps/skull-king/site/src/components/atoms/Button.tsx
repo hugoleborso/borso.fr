@@ -20,6 +20,7 @@ const VARIANTS = {
 const SIZES = {
   action: 'h-16',
   step: 'h-11 w-14 text-lg font-extrabold',
+  stepSquare: 'size-11 text-lg font-extrabold',
   icon: 'size-11',
   tile: 'size-12',
   large: 'size-13',

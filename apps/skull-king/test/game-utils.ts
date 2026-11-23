@@ -68,8 +68,8 @@ export type EntrySnapshot = GameSnapshot['rounds'][number]['entries'][number];
 
 export const TABLE_OF_FOUR = [
   { name: 'Hugo', icon: 'skull', color: 'gold' },
-  { name: 'Léa', icon: 'bird', color: 'lagoon' },
-  { name: 'Max', icon: 'anchor', color: 'coral' },
+  { name: 'Léa', icon: 'bird', color: 'ice' },
+  { name: 'Max', icon: 'anchor', color: 'magenta' },
   { name: 'Inès', icon: 'crown', color: 'amethyst' },
 ];
 

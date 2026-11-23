@@ -24,8 +24,8 @@ function aGame(phase: GameView['phase']): GameView {
     currentRound: 2,
     players: [
       { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'lagoon' },
-      { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'coral' },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
+      { id: 'p3', seat: 2, name: 'Max', icon: 'anchor', color: 'magenta' },
     ],
     rounds: [
       {

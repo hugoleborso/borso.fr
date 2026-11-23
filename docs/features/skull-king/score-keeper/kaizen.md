@@ -56,3 +56,15 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-23 11:02] `main` The app drew its own icon SVG paths instead of reusing lucide-react, already in the repo; the operator found them ugly and the components short on reuse.
 - [2026-11-23 11:08] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
 - [2026-11-23 11:15] `icons-reuse` A className override on a variant atom (h-14 over h-16, text-missed over text-text, rounded-action over rounded-chip) silently loses to the variant's own class because clsx does not merge Tailwind conflicts, and no gate catches it.
+- [2026-11-23 12:27] `hook:subagent-no-staging` a subagent ran a git command that writes the shared index
+- [2026-11-23 12:30] `main` Player mark colours reused the made/missed hues (lagoon teal, coral), so a mark read as a win or a loss.
+- [2026-11-23 12:30] `main` Made and missed were teal and orange instead of an unmistakable green and red.
+- [2026-11-23 12:30] `main` The operator asked for player avatars and I shipped icons twice (hand-drawn, then lucide) without asking what an avatar meant to him.
+- [2026-11-23 12:30] `main` Every operator message in this session was a correction the spec or a gate could have caught first; corrections are not being turned into checks fast enough.
+- [2026-11-23 12:33] `operator` Non. Pas de hook pour journaliser mes messages, utilise le transcript de la session
+- [2026-11-23 12:33] `hook:no-discarding-reset` ran `git checkout -- .claude/settings.json `, which would discard uncommitted work
+- [2026-11-23 12:36] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-23 12:39] `steppers` Vitest's core project returns an empty string for a '?raw' CSS import, so a test that reads tokens.css must use node:fs with import.meta.dirname.
+- [2026-11-23 12:39] `steppers` Reordering PLAYER_COLORS silently changed selectFreeMark answers, caught only by Stryker's dry run because the earlier test:core run predated the palette edit.
+- [2026-11-23 12:39] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
+- [2026-11-23 12:49] `main` Subagents edited the main checkout, so the uncommitted-changes stop hook fired on every turn and every PR notification cost a full turn of tokens.

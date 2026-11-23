@@ -1,11 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import {
-  type BidAdjustment,
-  type BonusKind,
-  scoreEntry,
-  selectFinalBid,
-} from '@domain/scoring.core';
+import { type BidAdjustment, type BonusKind, scoreEntry } from '@domain/scoring.core';
 import type { StepDirection } from '@site/lib/ability-stepper.core';
+import { selectCountSteps, stepMissedTricks } from '@site/lib/count-stepper.core';
 import { formatPointsOrPending, selectPointsTone } from '@site/lib/game-scores.core';
 import { formatBid, isAwaitingTricks } from '@site/lib/round-results.core';
 import type { GameEntry, GamePlayer } from '@site/lib/game-view.core';
@@ -15,7 +11,7 @@ import { NamedMark } from '../atoms/NamedMark';
 import { PointsText } from '../atoms/PointsText';
 import { AbilityStrip } from '../molecules/AbilityStrip';
 import { BonusStrip } from '../molecules/BonusStrip';
-import { ChipRow } from '../molecules/ChipRow';
+import { CountStepper } from '../molecules/CountStepper';
 
 export interface ResultCardProps {
   readonly player: GamePlayer;
@@ -24,8 +20,9 @@ export interface ResultCardProps {
   readonly isHarryLocked: boolean;
   readonly isRascalLocked: boolean;
   readonly onToggle: () => void;
-  readonly onTricks: (tricks: number) => void;
-  readonly onCycleBonus: (kind: BonusKind) => void;
+  readonly onStepTricks: (direction: StepDirection) => void;
+  readonly onAddBonus: (kind: BonusKind) => void;
+  readonly onRemoveBonus: (kind: BonusKind) => void;
   readonly onAdjustBid: (picked: BidAdjustment) => void;
   readonly onStepRascalBet: (direction: StepDirection) => void;
 }
@@ -71,17 +68,18 @@ export function ResultCard(props: ResultCardProps) {
         </Button>
       </div>
       {isMissed ? (
-        <ChipRow
+        <CountStepper
           label={t('scoring.tricksOf', { name: player.name })}
-          highest={cardCount}
-          chosen={entry.tricks}
-          blocked={selectFinalBid(entry)}
-          tone="missed"
-          surface="card"
-          onPick={props.onTricks}
+          count={entry.tricks}
+          steps={selectCountSteps((direction) => stepMissedTricks(entry, direction, cardCount))}
+          onStep={props.onStepTricks}
         />
       ) : (
-        <BonusStrip bonuses={entry.bonuses} onCycle={props.onCycleBonus} />
+        <BonusStrip
+          bonuses={entry.bonuses}
+          onAdd={props.onAddBonus}
+          onRemove={props.onRemoveBonus}
+        />
       )}
       <AbilityStrip
         entry={entry}

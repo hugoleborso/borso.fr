@@ -41,7 +41,9 @@ Invariants: `api/src/games/INVARIANTS.md`
 How a player is shown on every screen: one icon on a coloured disc, picked
 from `PLAYER_ICONS` and `PLAYER_COLORS` in `domain/player-mark.core.ts`. Each
 icon id is the name of a Lucide icon, which `Glyph` draws. Inside a game the
-mark carries the player's first name, through `NamedMark`.
+mark carries the player's first name, through `NamedMark`. No colour may read as
+the green of a made bid or the red of a missed one, which
+`site/src/lib/color-clash.core.test.ts` checks against `tokens.css`.
 
 Lives in: `domain/player-mark.core.ts`
 
@@ -93,7 +95,8 @@ Invariants: `api/src/games/INVARIANTS.md`
 ## Bonus
 
 Points a player earns with a made bid for a capture or a loot alliance,
-counted per kind. The kinds, their points and their maximum counts are
+counted per kind. A tap adds one card up to the kind's maximum, and the `−`
+under the card removes one (`site/src/lib/bonus-count.core.ts`). The kinds, their points and their maximum counts are
 `BONUS_KINDS`, `BONUS_POINTS` and `MAXIMUM_BONUS_COUNT` in
 `domain/scoring.core.ts`.
 

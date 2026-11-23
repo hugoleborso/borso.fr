@@ -46,6 +46,7 @@
     "tricksOf": "Tricks taken by {{name}}",
     "bonuses": "Bonuses",
     "bonusCount": "{{card}}, {{count}}, tap to add one",
+    "bonusRemove": "{{card}}, remove one",
     "tally": "{{counted}} tricks counted out of {{expected}}",
     "kraken": "Kraken played",
     "close": "Close the round",
@@ -64,11 +65,15 @@
     "cell": "{{name}}, round {{round}}, {{points}}. Correct",
     "correction": "{{name}}, round {{round}}",
     "bid": "Bid",
-    "tricks": "Tricks taken",
+    "tricks": "Tricks",
     "winner": "Winner",
     "rematch": "Play again",
     "roundCheck": "Round {{round}}, {{counted}} tricks counted out of {{expected}}",
     "continueBlocked": "A round above does not add up: correct it first"
+  },
+  "stepper": {
+    "less": "One less",
+    "more": "One more"
   },
   "cards": {
     "standardFourteen": "Coloured 14",
@@ -95,13 +100,13 @@
     },
     "colors": {
       "gold": "Gold",
-      "lagoon": "Lagoon",
-      "coral": "Coral",
-      "amethyst": "Amethyst",
       "sky": "Sky",
-      "rose": "Rose",
-      "lime": "Lime",
-      "sand": "Sand"
+      "magenta": "Magenta",
+      "ice": "Ice",
+      "amethyst": "Amethyst",
+      "sand": "Sand",
+      "indigo": "Indigo",
+      "slate": "Slate"
     }
   },
   "errors": {

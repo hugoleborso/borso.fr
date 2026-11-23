@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { selectCardCount } from '@domain/round.core';
-import { cycleBonus, selectNextBidAdjustment, stepRascalBet } from '@site/lib/game-edits.core';
+import { addBonus, removeBonus } from '@site/lib/bonus-count.core';
+import { selectMissedTricksStepEdit } from '@site/lib/count-stepper.core';
+import { selectNextBidAdjustment, stepRascalBet } from '@site/lib/game-edits.core';
 import { selectRound } from '@site/lib/game-scores.core';
 import type { GameEntry, GameView } from '@site/lib/game-view.core';
 import {
@@ -96,18 +98,29 @@ export function ScoringScreen({ game, onScores, onRoundClosed }: ScoringScreenPr
                   edit: selectMadeToggleEdit(readLatest(player.id, entry)),
                 });
               }}
-              onTricks={(tricks) => {
+              onStepTricks={(direction) => {
                 writeEntry.mutate({
                   roundNumber,
                   playerId: player.id,
-                  edit: { isMissed: true, tricks },
+                  edit: selectMissedTricksStepEdit(
+                    readLatest(player.id, entry),
+                    direction,
+                    round.cardCount,
+                  ),
                 });
               }}
-              onCycleBonus={(kind) => {
+              onAddBonus={(kind) => {
                 writeEntry.mutate({
                   roundNumber,
                   playerId: player.id,
-                  edit: { bonuses: cycleBonus(readLatest(player.id, entry).bonuses, kind) },
+                  edit: { bonuses: addBonus(readLatest(player.id, entry).bonuses, kind) },
+                });
+              }}
+              onRemoveBonus={(kind) => {
+                writeEntry.mutate({
+                  roundNumber,
+                  playerId: player.id,
+                  edit: { bonuses: removeBonus(readLatest(player.id, entry).bonuses, kind) },
                 });
               }}
               onAdjustBid={(picked) => {

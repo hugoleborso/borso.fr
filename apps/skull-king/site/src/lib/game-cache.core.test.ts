@@ -26,7 +26,7 @@ function aGame(
     currentRound: 1,
     players: [
       { id: 'hugo', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'lea', seat: 1, name: 'Léa', icon: 'bird', color: 'lagoon' },
+      { id: 'lea', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
     ],
     rounds: [
       {

@@ -1,4 +1,4 @@
-import { MAXIMUM_BONUS_COUNT, NO_BONUS } from '@domain/scoring.core';
+import { NO_BONUS } from '@domain/scoring.core';
 import { describe, expect, it } from 'vitest';
 import {
   applyEntryEdit,
@@ -7,7 +7,6 @@ import {
   applyPhaseEdit,
   applyPlayerEdit,
   applySeatClaim,
-  cycleBonus,
   selectNextBidAdjustment,
   stepRascalBet,
 } from './game-edits.core';
@@ -22,7 +21,7 @@ function aGame(): GameView {
     currentRound: 2,
     players: [
       { id: 'p1', seat: 0, name: 'Hugo', icon: 'skull', color: 'gold' },
-      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'lagoon' },
+      { id: 'p2', seat: 1, name: 'Léa', icon: 'bird', color: 'ice' },
     ],
     rounds: [1, 2].map((number) => ({
       number,
@@ -165,28 +164,9 @@ describe('applyPlayerEdit', () => {
       seat: 1,
       name: 'Léa',
       icon: 'crown',
-      color: 'lagoon',
+      color: 'ice',
     });
     expect(edited.players[0]).toEqual(aGame().players[0]);
-  });
-});
-
-describe('cycleBonus', () => {
-  it('adds one card of the kind it names', () => {
-    expect(cycleBonus(NO_BONUS, 'pirateBySkullKing')).toEqual({
-      ...NO_BONUS,
-      pirateBySkullKing: 1,
-    });
-  });
-
-  it('goes back to zero after the maximum count', () => {
-    const atMaximum = { ...NO_BONUS, standardFourteen: MAXIMUM_BONUS_COUNT.standardFourteen };
-    expect(cycleBonus(atMaximum, 'standardFourteen').standardFourteen).toBe(0);
-  });
-
-  it('still adds one just below the maximum', () => {
-    const belowMaximum = { ...NO_BONUS, loot: MAXIMUM_BONUS_COUNT.loot - 1 };
-    expect(cycleBonus(belowMaximum, 'loot').loot).toBe(MAXIMUM_BONUS_COUNT.loot);
   });
 });
 

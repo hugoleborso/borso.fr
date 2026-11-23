@@ -3,8 +3,6 @@ import { type RoundPhase, selectCardCount } from '@domain/round.core';
 import {
   type BidAdjustment,
   type BonusCounts,
-  type BonusKind,
-  MAXIMUM_BONUS_COUNT,
   NO_BONUS,
   RASCAL_BETS,
   type RascalBet,
@@ -155,11 +153,6 @@ export function applyGameEdit(game: GameView, change: GameEdit): GameView {
     case 'seat':
       return applySeatClaim(game, change.playerId, change.accountId);
   }
-}
-
-export function cycleBonus(bonuses: BonusCounts, kind: BonusKind): BonusCounts {
-  const next = bonuses[kind] >= MAXIMUM_BONUS_COUNT[kind] ? 0 : bonuses[kind] + 1;
-  return { ...bonuses, [kind]: next };
 }
 
 export function selectNextBidAdjustment(

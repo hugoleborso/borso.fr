@@ -19,8 +19,8 @@ import {
 } from './roster.core';
 
 const HUGO: RosterPlayer = { name: 'Hugo', icon: 'skull', color: 'gold' };
-const LEA: RosterPlayer = { name: 'Léa', icon: 'bird', color: 'lagoon' };
-const MAX: RosterPlayer = { name: 'Max', icon: 'anchor', color: 'coral' };
+const LEA: RosterPlayer = { name: 'Léa', icon: 'bird', color: 'ice' };
+const MAX: RosterPlayer = { name: 'Max', icon: 'anchor', color: 'magenta' };
 
 function aFullTable(): readonly RosterPlayer[] {
   return Array.from({ length: MAXIMUM_PLAYERS }, (_, seat) => ({
@@ -83,7 +83,7 @@ describe('selectFreeMark', () => {
   it('answers the first icon and colour nobody at the table has', () => {
     expect(selectFreeMark([HUGO, { ...LEA, color: 'gold' }])).toEqual({
       icon: 'anchor',
-      color: 'lagoon',
+      color: 'sky',
     });
   });
 
@@ -97,7 +97,7 @@ describe('selectFreeMark', () => {
       icon,
       color: PLAYER_COLORS[seat % PLAYER_COLORS.length] ?? 'gold',
     }));
-    expect(selectFreeMark(everyMark)).toEqual({ icon: 'skull', color: 'sky' });
+    expect(selectFreeMark(everyMark)).toEqual({ icon: 'skull', color: 'amethyst' });
   });
 });
 

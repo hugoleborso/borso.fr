@@ -28,6 +28,14 @@ Mockups validated by the operator: https://claude.ai/artifact/FVqS42YbwSCAYT7HgK
 - A made bid is the default. Nobody types anything for a player who made it.
 - Every tap writes at once. There is no save button and no draft.
 - Every page works at 375 px wide. Touch targets are at least 44 px.
+- A count (a bid, the tricks of a missed bid, a Harry or Rascal step) is
+  entered with one stepper, `−` value `+`, the value large between the
+  buttons. Every step writes at once.
+- Made reads green and missed reads red, each at least 4.5:1 against the
+  ground colour and both surface colours, where their points and notes sit. No player colour sits within 45 degrees of OKLCH hue of
+  either, unless it is a grey (chroma under 0.06).
+  `site/src/lib/color-clash.core.test.ts` reads `tokens.css` and holds both
+  rules.
 
 ## Screens
 
@@ -47,8 +55,11 @@ decides which game screen shows.
    dropped: a phone is not a player, so the app cannot know whose phone is
    connected.
 3. **Bids** (phase `bidding`). "Manche N", a ten segment progress bar, a
-   scores button. One row per player: the mark and name, then one chip per possible bid
-   from 0 to the cards dealt. One tap sets the bid; tapping it again clears it.
+   scores button. One row per player: the mark and name, then a bid stepper.
+   The value shows the bid, or "–" with no bid yet. From no bid, `−` sets 0
+   and `+` sets 1. Then each tap moves the bid by one between 0 and the cards
+   dealt, `−` disabled at 0 and `+` at the cards dealt. A bid is never cleared
+   back to no bid from the stepper.
    The footer shows the sum of bids over the cards dealt, and a play button
    moves to scoring. The play button stays disabled until every player has a
    bid (`isEveryBidPlaced`), and the player rows still missing one are
@@ -56,13 +67,19 @@ decides which game screen shows.
 4. **Results** (phase `scoring`). One card per player: mark and name, bid, live round
    points, and a big toggle, check (made, default) or cross (missed).
    - Made: a strip of the six bonus cards (standard 14, black 14, mermaid,
-     pirate, Skull King, loot). A tap adds one, cycling 0, 1, ..., max, 0. The
-     card lights up with a badge showing the points.
-   - Missed: chips 0 to cards dealt for the tricks actually taken, the bid's
-     chip disabled. Tapping the cross writes `isMissed: true` at once, so
-     every phone shows the player missed and the round stays open until a
-     trick chip is tapped. Tapping the check writes `isMissed: false` and
-     clears the tricks.
+     pirate, Skull King, loot), wrapping onto a second line when the width
+     runs out. A tap on a card adds one, up to `MAXIMUM_BONUS_COUNT` of its
+     kind; at the maximum a tap does nothing. The card lights up with a badge,
+     `+10` for one card and `2×10` for two. From one card on, a `−` button
+     under the card removes one.
+   - Missed: a tricks stepper for the tricks actually taken. From no tricks
+     yet, `−` sets the final bid minus one and `+` the final bid plus one.
+     Each step moves by one between 0 and the cards dealt and skips over the
+     final bid, which a missed bid cannot take. A step with nowhere to land
+     is disabled. Tapping the cross writes `isMissed: true` at once, so every
+     phone shows the player missed and the round stays open until the tricks
+     are stepped. Tapping the check writes `isMissed: false` and clears the
+     tricks.
    - Footer: tricks counted over expected (green when it balances, amber
      otherwise), the Kraken card and the White Whale card as toggles that each
      remove one expected trick (the White Whale only when it discarded a trick
@@ -75,7 +92,12 @@ decides which game screen shows.
    tiles, mark and name, total, last round delta, leader highlighted. Under it a grid,
    one row per played round, one column per player, each cell the points and
    `bid/tricks`. Tapping a cell opens a sheet to correct that player's bid,
-   tricks and bonuses for that round, saved on every tap. A play button
+   tricks and bonuses for that round, saved on every tap. Its rows say
+   "Annonce" and "Plis" in words, each with a stepper. The bid stepper is the
+   bids screen's. The tricks stepper shows the tricks taken, which is the
+   final bid on a made bid, and moves by one between 0 and the cards dealt
+   without skipping the bid: landing on the final bid marks the bid made,
+   and any other value marks it missed with those tricks. A play button
    continues the game. After round 10 the phase is `finished`: the scores
    screen shows the winner and a `Rejouer` button that starts a new game with
    the same players and marks.
@@ -86,6 +108,9 @@ decides which game screen shows.
    tally with its Kraken and White Whale toggles, and the play button stays
    disabled while any played round is unbalanced.
 6. **Mark picker.** Twelve icons, eight colours, the preview disc and the name.
+   The colours are `PLAYER_COLORS` in `domain/player-mark.core.ts`, drawn from
+   the `--color-mark-*` tokens of `site/src/styles/tokens.css`; none reads as
+   made or missed.
    The icons are the Lucide `skull`, `anchor`, `crown`, `compass`, `swords`,
    `ship`, `ship-wheel`, `bird`, `telescope`, `map`, `coins` and `tree-palm`,
    and each id is the Lucide icon's own name.
@@ -157,7 +182,7 @@ game route reads the optional session and records `account_game` when present.
   that counter goes from 0 to 6.
 - Harry the Giant (advanced pirate ability) moves a bid by -1 or +1 after the
   last trick. The results screen has a Harry card per player: tapping it opens
-  -1 / +1; the score uses `bid + adjustment` (never below 0). At most one
+  the -1 / +1 stepper; the score uses `bid + adjustment` (never below 0). At most one
   player per round uses it (one Harry card).
 - Rascal of Roatan (advanced pirate ability) bets 0, 10 or 20 points: won if
   the bid is made, lost otherwise, on top of the round score. The results

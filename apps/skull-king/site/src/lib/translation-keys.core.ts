@@ -19,13 +19,13 @@ export const ICON_KEYS = {
 
 export const COLOR_KEYS = {
   gold: 'marks.colors.gold',
-  lagoon: 'marks.colors.lagoon',
-  coral: 'marks.colors.coral',
-  amethyst: 'marks.colors.amethyst',
   sky: 'marks.colors.sky',
-  rose: 'marks.colors.rose',
-  lime: 'marks.colors.lime',
+  magenta: 'marks.colors.magenta',
+  ice: 'marks.colors.ice',
+  amethyst: 'marks.colors.amethyst',
   sand: 'marks.colors.sand',
+  indigo: 'marks.colors.indigo',
+  slate: 'marks.colors.slate',
 } as const satisfies Record<PlayerColor, string>;
 
 export const BONUS_KEYS = {

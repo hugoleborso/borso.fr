@@ -27,7 +27,7 @@ const game = (overrides: Partial<MyGameFacts> = {}): MyGameFacts => ({
   currentRound: 2,
   openedAt: OPENED_AT,
   players: [
-    { id: 'lea', seat: 1, icon: 'bird', color: 'lagoon', accountId: null },
+    { id: 'lea', seat: 1, icon: 'bird', color: 'ice', accountId: null },
     { id: 'hugo', seat: 0, icon: 'skull', color: 'gold', accountId: MY_ACCOUNT_ID },
   ],
   entries: [],
@@ -111,7 +111,7 @@ describe('buildMyGames', () => {
         openedAt: '2026-11-22T20:00:00.000Z',
         players: [
           { seat: 0, icon: 'skull', color: 'gold', accountId: MY_ACCOUNT_ID },
-          { seat: 1, icon: 'bird', color: 'lagoon', accountId: null },
+          { seat: 1, icon: 'bird', color: 'ice', accountId: null },
         ],
         myRank: 1,
         winnerSeats: [],

@@ -4,13 +4,13 @@ import { Glyph } from './Glyph';
 
 const COLOR_BACKGROUNDS: Readonly<Record<PlayerColor, string>> = {
   gold: 'bg-mark-gold ring-mark-gold',
-  lagoon: 'bg-mark-lagoon ring-mark-lagoon',
-  coral: 'bg-mark-coral ring-mark-coral',
-  amethyst: 'bg-mark-amethyst ring-mark-amethyst',
   sky: 'bg-mark-sky ring-mark-sky',
-  rose: 'bg-mark-rose ring-mark-rose',
-  lime: 'bg-mark-lime ring-mark-lime',
+  magenta: 'bg-mark-magenta ring-mark-magenta',
+  ice: 'bg-mark-ice ring-mark-ice',
+  amethyst: 'bg-mark-amethyst ring-mark-amethyst',
   sand: 'bg-mark-sand ring-mark-sand',
+  indigo: 'bg-mark-indigo ring-mark-indigo',
+  slate: 'bg-mark-slate ring-mark-slate',
 };
 
 const SIZES = {

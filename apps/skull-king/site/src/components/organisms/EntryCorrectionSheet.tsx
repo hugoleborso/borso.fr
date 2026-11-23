@@ -1,22 +1,19 @@
 import { useTranslation } from 'react-i18next';
-import { scoreEntry, selectFinalBid, selectTricksTaken } from '@domain/scoring.core';
+import { scoreEntry, selectTricksTaken } from '@domain/scoring.core';
+import { addBonus, removeBonus } from '@site/lib/bonus-count.core';
 import {
-  cycleBonus,
-  type EntryEdit,
-  selectNextBidAdjustment,
-  stepRascalBet,
-} from '@site/lib/game-edits.core';
+  selectBidStepEdit,
+  selectCountSteps,
+  selectTricksTakenStepEdit,
+  stepBid,
+  stepTricksTaken,
+} from '@site/lib/count-stepper.core';
+import { type EntryEdit, selectNextBidAdjustment, stepRascalBet } from '@site/lib/game-edits.core';
 import { formatPointsOrPending, selectEntry, selectPointsTone } from '@site/lib/game-scores.core';
 import type { GameEntry, GamePlayer, GameRound } from '@site/lib/game-view.core';
 import { useReadLatestEntry, useWriteEntry, useWriteRound } from '@site/lib/queries/game.queries';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
-import {
-  isHarryLocked,
-  isRascalLocked,
-  selectBidToggle,
-  selectRoundCheck,
-  selectTricksCorrection,
-} from '@site/lib/round-results.core';
+import { isHarryLocked, isRascalLocked, selectRoundCheck } from '@site/lib/round-results.core';
 import { Button } from '../atoms/Button';
 import { ErrorNote } from '../atoms/ErrorNote';
 import { Glyph } from '../atoms/Glyph';
@@ -26,7 +23,7 @@ import { Sheet } from '../atoms/Sheet';
 import { TrickTally } from '../atoms/TrickTally';
 import { AbilityStrip } from '../molecules/AbilityStrip';
 import { BonusStrip } from '../molecules/BonusStrip';
-import { ChipRow } from '../molecules/ChipRow';
+import { CountStepper } from '../molecules/CountStepper';
 import { DiscardToggles } from '../molecules/DiscardToggles';
 
 export interface EntryCorrectionSheetProps {
@@ -85,42 +82,37 @@ export function EntryCorrectionSheet({
         />
       </div>
       <div className="flex items-center gap-2.5">
-        <span role="img" aria-label={t('scores.bid')} className="text-muted-2">
-          <Glyph name="bid" />
-        </span>
-        <ChipRow
+        <span className="text-lg font-bold text-muted-2">{t('scores.bid')}</span>
+        <CountStepper
           label={t('scores.bid')}
-          highest={round.cardCount}
-          chosen={entry.bid}
-          blocked={null}
-          tone="accent"
-          surface="card"
-          onPick={(value) => {
-            write({ bid: selectBidToggle(value, entry.bid) });
+          count={entry.bid}
+          steps={selectCountSteps((direction) => stepBid(entry.bid, direction, round.cardCount))}
+          onStep={(direction) => {
+            write(selectBidStepEdit(readLatest(entry).bid, direction, round.cardCount));
           }}
         />
       </div>
       <div className="flex items-center gap-2.5">
-        <span role="img" aria-label={t('scores.tricks')} className="text-muted-2">
-          <Glyph name="tricks" />
-        </span>
-        <ChipRow
+        <span className="text-lg font-bold text-muted-2">{t('scores.tricks')}</span>
+        <CountStepper
           label={t('scores.tricks')}
-          highest={round.cardCount}
-          chosen={selectTricksTaken(entry)}
-          blocked={null}
-          tone="accent"
-          surface="card"
-          onPick={(value) => {
-            write(selectTricksCorrection(value, selectFinalBid(entry)));
+          count={selectTricksTaken(entry)}
+          steps={selectCountSteps((direction) =>
+            stepTricksTaken(entry, direction, round.cardCount),
+          )}
+          onStep={(direction) => {
+            write(selectTricksTakenStepEdit(readLatest(entry), direction, round.cardCount));
           }}
         />
       </div>
       <div className="flex flex-col gap-2">
         <BonusStrip
           bonuses={entry.bonuses}
-          onCycle={(kind) => {
-            write({ bonuses: cycleBonus(readLatest(entry).bonuses, kind) });
+          onAdd={(kind) => {
+            write({ bonuses: addBonus(readLatest(entry).bonuses, kind) });
+          }}
+          onRemove={(kind) => {
+            write({ bonuses: removeBonus(readLatest(entry).bonuses, kind) });
           }}
         />
         <AbilityStrip

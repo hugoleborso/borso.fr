@@ -17,13 +17,13 @@ export type PlayerIcon = (typeof PLAYER_ICONS)[number];
 
 export const PLAYER_COLORS = [
   'gold',
-  'lagoon',
-  'coral',
-  'amethyst',
   'sky',
-  'rose',
-  'lime',
+  'magenta',
+  'ice',
+  'amethyst',
   'sand',
+  'indigo',
+  'slate',
 ] as const;
 
 export type PlayerColor = (typeof PLAYER_COLORS)[number];
