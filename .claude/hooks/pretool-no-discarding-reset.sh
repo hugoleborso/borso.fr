@@ -6,13 +6,8 @@
 # reflog entry for the working tree. That is fine when the changes are the ones
 # you meant to discard, and it is a silent loss when anything else is in flight.
 #
-# It keeps happening here for one reason: the moment you reach for it is the
-# moment you are *verifying* something. Proving an eradication works means
-# breaking the code on purpose and then undoing the break — and the undo takes
-# the real fix sitting beside it. `docs/knowledge/destructive-git-with-uncommitted-verification-work.md`
-# has recorded that since three losses in one session; two more happened after
-# it was written, one of them in the sweep that added this hook, which is the
-# evidence that a written warning is not a countermeasure.
+# Agents reach for it to undo a defect planted to prove an eradication, and
+# lose the real fix beside it.
 #
 # The hook does not refuse the command. It refuses it *while tracked
 # modifications exist*, which is the only state where it destroys something, and
@@ -20,12 +15,7 @@
 #
 # See docs/dantotsus/a-warning-that-had-to-become-a-gate.md.
 #
-# Output contract (Claude Code PreToolUse hook):
-#   - exit 0 + no stderr → command runs as-is.
-#   - exit 2 + stderr message → command is blocked; the message is surfaced to
-#     the agent so it can self-correct. Exit 1 does NOT block: the harness
-#     treats any non-zero-but-not-2 code as a non-blocking error, prints it,
-#     and runs the command anyway.
+# Output contract: exit 2 with a message on stderr blocks the call; exit 1 does not.
 
 set -euo pipefail
 

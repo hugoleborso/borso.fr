@@ -1,6 +1,6 @@
 # ADR-2026-11-23T1659: Skull King players are DiceBear avataaars pirates with parts the app draws itself
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-23
 - **Deciders:** hugoleborso
 - **Tags:** skull-king, site, dependencies

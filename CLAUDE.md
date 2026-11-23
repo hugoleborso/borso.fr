@@ -85,7 +85,7 @@ They cover replies, documents, commits and PR bodies.
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `skull-king`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, upper-case documents such as `README.md` or test configs. A merge skips the same changes, and a change to an app's test seed under `api/src/__test/` too.
-- On a watched pull request, act on CI results and the merge state. Skip every review thread and comment except those written by the operator's login, `hugoleborso`.
+- On a watched pull request, act on CI results, the merge state and what `hugoleborso`, the operator's login, writes. A notification that needs no action gets no reply text, because each reply buries the open question.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.
 - `infra/shared` deploys only when the operator dispatches `shared-deploy`. Do not propose a confirmation step.
@@ -97,7 +97,7 @@ Log friction as it happens, the problem only, with `scripts/kaizen.sh "<one sent
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
 1. If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch `shared-deploy`.
-2. Run the kaizen where `/after-task-kaizen` *When to invoke* says, by this session's context size, unless the operator names where. Then run it there without asking again. In a new conversation, propose it with a self-contained prompt that names the merged PR, the archived `kaizen.md` path and `/after-task-kaizen`, and pastes any line logged after the archive. Once the operator approves, start it with whatever tool this session has for opening a new session or queueing a task. Which one that is changes between sessions, so look at the tools you hold rather than reaching for a name. With none, give the operator the same prompt to paste.
+2. Run the kaizen where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen` and the lines logged after the archive, and nothing the skill already says.
 
 ## Checking a screen
 

@@ -4,6 +4,7 @@ triggers:
   paths:
     - 'apps/*/site/src/components/atoms/class-name.utils.ts'
     - 'apps/*/site/src/**/*.variants.ts'
+    - 'apps/*/site/src/components/atoms/*Button*.tsx'
 ---
 
 # Conflicting Tailwind classes are not merged

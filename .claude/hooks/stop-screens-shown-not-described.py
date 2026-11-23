@@ -1,29 +1,18 @@
 #!/usr/bin/env python3
 # Stop hook: a turn that reports how screens compare has to show them.
 #
-# PR #249 moved fourteen of pragma's primitives onto React Aria with the
-# condition that the screens stay as they were. Two subagents took before and
-# after shots and left them as PNGs in the scratchpad. The main session's
-# report said the screens were "identical by eye" and differed by "at most
-# 41/255 on one pixel channel", with no image and no link, and the operator had
-# to answer "SCREENSHOTS !!!!!" before seeing one. A claim about what a screen
-# looks like is evidence only when the reader can look.
-#
-# The hook reads the turn that is ending. When its text claims a visual
-# comparison and the turn neither published an Artifact, sent a file nor
-# embedded an image, the stop is blocked with the reason, once: a second stop
-# in a row passes, so the hook can never trap a turn. Quoted text and
-# blockquote lines are skipped: the sweep of PR #249 quoted the old report's
-# "identical by eye" and was blocked for a comparison it never made. "Before
-# and after" is no claim on its own: it blocked three turns of PR #302 that
-# compared probe output and quoted a kaizen prompt, and PR #249's report is
-# still caught by "by eye" and "pixel channel".
+# When the turn's text claims a visual comparison and the turn neither
+# published an Artifact, sent a file nor embedded an image, the stop is blocked
+# once. Quoted text and blockquotes are skipped. When the turn ran `git push`
+# over a range touching `apps/*/site/src/` on a branch already pushed, and
+# uploaded no screenshot, the stop is blocked once too.
 #
 # Best-effort by contract: any error lets the turn end.
 #
 # See docs/dantotsus/the-screens-described-instead-of-shown.md.
 import json
 import re
+import subprocess
 import sys
 
 VISUAL_CLAIM = re.compile(
@@ -81,12 +70,47 @@ def must_show(turn):
     return bool(VISUAL_CLAIM.search(claims)) and not SHOWN_IN_TEXT.search(text)
 
 
+PUSH = re.compile(r"\bgit\s+push\b")
+SCREENSHOTS_TAKEN = re.compile(r"screenshots/pr-|screenshots\.yml|visual-validation")
+VISIBLE_SOURCE = re.compile(r"^apps/[^/]+/site/src/", re.MULTILINE)
+PUSH_REASON = (
+    "[screens-shown] This turn pushed a change to a screen and posted no new screenshot. "
+    "Take the changed screens at 375 px and publish them as open-pr step 5b says, "
+    "so the Screenshots comment shows the screen the preview now serves. "
+    "See docs/dantotsus/a-screen-pushed-without-its-picture.md."
+)
+
+
+def turn_inputs(turn):
+    for row in turn:
+        if row.get("type") != "assistant":
+            continue
+        for block in row.get("message", {}).get("content", []):
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                yield json.dumps(block.get("input", {}))
+
+
+def git(*arguments):
+    return subprocess.run(["git", *arguments], capture_output=True, text=True, timeout=10).stdout
+
+
+def pushed_a_screen_unshown(turn):
+    inputs = "\n".join(turn_inputs(turn))
+    if not PUSH.search(inputs) or SCREENSHOTS_TAKEN.search(inputs):
+        return False
+    moves = git("reflog", "--format=%H", "-n", "2", "@{upstream}").split()
+    return len(moves) == 2 and bool(VISIBLE_SOURCE.search(git("diff", "--name-only", moves[1], moves[0])))
+
+
 def main():
     payload = json.load(sys.stdin)
     if payload.get("stop_hook_active"):
         return
-    if must_show(read_turn(payload["transcript_path"])):
+    turn = read_turn(payload["transcript_path"])
+    if must_show(turn):
         print(json.dumps({"decision": "block", "reason": REASON}))
+    elif pushed_a_screen_unshown(turn):
+        print(json.dumps({"decision": "block", "reason": PUSH_REASON}))
 
 
 try:
