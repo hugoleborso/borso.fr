@@ -90,15 +90,18 @@ export function selectOperatorMessages(page: unknown): OperatorMessage[] {
 }
 
 const savedBlocksSchema = z.array(z.object({ text: z.string() }).loose());
+const wrappedPageSchema = z.object({ ccr: z.unknown() });
 
 export function readSavedPage(saved: string): unknown {
-  const text = saved.trimStart().startsWith('[')
+  const text = saved.startsWith('[')
     ? savedBlocksSchema
         .parse(JSON.parse(saved))
         .map((block) => block.text)
         .join('')
     : saved;
-  const line = text.split('\n').find((candidate) => candidate.trimStart().startsWith('{')) ?? '';
-  const parsed: unknown = JSON.parse(line);
-  return typeof parsed === 'object' && parsed !== null && 'ccr' in parsed ? parsed.ccr : parsed;
+  const line = text.split('\n').find((candidate) => candidate.trimStart().startsWith('{'));
+  // Stryker disable next-line StringLiteral: equivalent mutant, JSON.parse refuses any fallback string alike
+  const parsed: unknown = JSON.parse(line ?? '');
+  const wrapped = wrappedPageSchema.safeParse(parsed);
+  return wrapped.success ? wrapped.data.ccr : parsed;
 }

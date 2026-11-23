@@ -94,7 +94,13 @@ describe('readSavedPage', () => {
 
   it.each([
     ['after an untrusted-data envelope line', `<other-session nonce="n">\nData.\n    ${json}\n`],
-    ['inside an array of text blocks', JSON.stringify([{ type: 'text', text: json }])],
+    [
+      'split across text blocks',
+      JSON.stringify([
+        { type: 'text', text: json.slice(0, 5) },
+        { type: 'text', text: json.slice(5) },
+      ]),
+    ],
     ['bare', JSON.stringify(page())],
   ])('reads a page saved %s', (_shape, saved) => {
     expect(readSavedPage(saved)).toEqual(page());
