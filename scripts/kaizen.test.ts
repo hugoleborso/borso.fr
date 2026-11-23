@@ -10,7 +10,7 @@ const EARLIER_LINE = '- [2026-11-01 10:00] `main` the gate cited ADR-0007 and ra
 const REWRITTEN_LINE =
   '- [2026-11-01 10:00] `main` the gate cited ADR-2026-08-08T1538 and ran nothing';
 const NEW_LINE = '- [2026-11-11 12:00] `agent` the dev server died at start';
-const ENTRY = 'docs/dantotsus/an-entry.md';
+const ENTRY = 'scripts/an-entry.sh';
 const INVENTORY = 'docs/features/meta/lessons-from-pr-1/inventory.md';
 
 const repositories: string[] = [];
@@ -87,7 +87,7 @@ describe('kaizen.sh sweep-input', () => {
 describe('kaizen.sh balance', () => {
   it('refuses a sweep that adds more than it removes, a knowledge entry moved into a counted folder included', () => {
     const before = { [ENTRY]: lines(2), 'docs/knowledge/moved.md': lines(5) };
-    const sweep = { 'docs/dantotsus/moved.md': lines(5), 'docs/knowledge/moved.md': null };
+    const sweep = { 'docs/standards/moved.md': lines(5), 'docs/knowledge/moved.md': null };
     const { status, stdout } = kaizenAfter([before, { ...sweep, [ENTRY]: '' }], 'balance', 'HEAD^');
 
     expect(stdout).toContain('Balance: added 5, removed 2 outside');
@@ -98,8 +98,8 @@ describe('kaizen.sh balance', () => {
     const sweep = {
       [INVENTORY]: lines(9),
       [ARCHIVE]: lines(9),
-      'docs/knowledge/a.md': lines(9),
       'docs/adr/a.md': lines(9),
+      'docs/dantotsus/a.md': lines(9),
       'docs/operator-backlog/a.md': lines(9),
       'pnpm-lock.yaml': lines(9),
       'infra/test/__snapshots__/a.json': lines(9),
