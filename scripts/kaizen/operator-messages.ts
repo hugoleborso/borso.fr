@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { readFileSync } from 'node:fs';
-import { selectOperatorMessages } from './operator-messages.core';
+import { readSavedPage, selectOperatorMessages } from './operator-messages.core';
 
 const pages = process.argv.slice(2);
 if (pages.length === 0) {
@@ -13,10 +13,7 @@ if (pages.length === 0) {
 
 const seen = new Set<string>();
 for (const path of pages) {
-  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
-  const page =
-    typeof parsed === 'object' && parsed !== null && 'ccr' in parsed ? parsed.ccr : parsed;
-  for (const message of selectOperatorMessages(page)) {
+  for (const message of selectOperatorMessages(readSavedPage(readFileSync(path, 'utf8')))) {
     const key = `${message.at}|${message.text}`;
     if (seen.has(key)) continue;
     seen.add(key);

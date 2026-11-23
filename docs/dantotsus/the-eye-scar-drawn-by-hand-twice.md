@@ -29,6 +29,12 @@ commits of PR #389.
 | 2026-11-23 17:13 and 17:51 | An eye scar redrawn as two strokes, then one slash, rejected twice | A free-licensed scar picked from candidates |
 | 2026-11-23 17:51 | "Stitched wound" by Lorc from game-icons.net, CC BY 3.0, accepted | The same, on the first try |
 
+The transcript holds more of the same. 2026-11-22 18:00: "Récupère les images
+officielles". 18:08: "Trouve les cartes en meilleure qualité". 18:50: "On peut
+faire vraiment mieux sur le logo par pitié". 2026-11-23 12:29, answering the
+visual direction: "C mais moins fait par toi en svg. Trouve des assets".
+17:41: "Bah non c'est super moche. Trouve des svg de cicatrice online."
+
 ## Causal chain
 
 - The operator rejected each drawing and asked for another.

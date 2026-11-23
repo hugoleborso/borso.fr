@@ -8,7 +8,7 @@ Writers in the log: `main` 15, hooks 17, `visual-validator` 10, `pirate-avatars`
 | --- | --- | --- | --- | --- | --- | --- |
 | 01 | conception | Mockups carried too much text again; "less text, you always have this problem". | log 18:00 `main` | No measure of the words on a mockup screen. | none, the mockup step itself | no-op: `pretool-mockup-copy.sh` shipped in this PR counts visible words per screen, and PR #394 bounds a phone board to one screen. |
 | 02 | conception | Offered a reduced "one phone, no sync" option while banana-rush holds the sync pattern; the operator called it lazy. | log 18:14 `main` | The option list was built before looking for the pattern in the repo. | CLAUDE.md *Reuse first* | no-op: CLAUDE.md already says "Reuse first. Look in this repo"; the session skipped it once, and the pull request copied banana-rush (Decisions table). |
-| 03 | spec | Spec written without `/specification` and without the whole rulebook; ghost, Harry and Tigress rules surfaced only when the operator asked. | log 18:38 `main` | `/route` sizes work but nothing forces the spec skill on a new app. | `/route` tiering | no-op: one occurrence, and no gate can know a rulebook was read whole. |
+| 03 | spec | Spec written without `/specification` and without the whole rulebook; ghost, Harry and Tigress rules surfaced only when the operator asked. | log 18:38 `main` | `/route` sizes work but nothing forces the spec skill on a new app. | `/route` tiering | fixed: ten operator messages (OP08 to OP31) were product rules a spec question would have drawn out, and PR #351 also drew mockups before any skill ran. The design-canvas hook now says to run `/specification` and ask its questions before the first variant when the feature has no spec (this PR). |
 | 04 | implementation | Scaffolding the app from banana-rush was a manual tar, rename and strip. | log 18:11 `main` | No script or blueprint creates an app. | the new-app path in CLAUDE.md *Layout* | merge into 05 |
 | 05 | implementation | The copied scaffold had no `pnpm-lock.yaml` importer, so every agent's gates failed until a non-frozen install. | log 18:17 `api-agent` | A copied `package.json` is unknown to the lockfile until `pnpm install` runs once. | rows 04, 06 share the cause: an app copied by hand | no-op: a new app happens a few times a year; `scripts/check-app-registration.sh` already names the registration steps, and a scaffolder is more code than the three frictions cost (guess). Rows 04 to 06 recorded so the next new app can weigh it. |
 | 06 | implementation | Copied files kept banana-rush's `@Blueprint` declarations, which the index refused as duplicates. | log 18:33 `site-agent` | same as 05 | same as 05 | merge into 05 (the index refusal is the guard working) |
@@ -58,3 +58,58 @@ Writers in the log: `main` 15, hooks 17, `visual-validator` 10, `pirate-avatars`
 | 50 | post-merge | The merged ADR was still `proposed`. | `docs/adr/2026-11-23T1659-skull-king-pirate-avatars.md` | Step 1c of this skill. | none | fixed: stamped `accepted` (this PR). |
 | 51 | post-merge | The feature cost $229.89, above the $150 target, at 321,864 tokens of context. | `cost.md` | Four visual rounds and a day of art rework (rows 23, 27 to 48). | rows 27, 43 | no-op: measured in `cost.md`; the art rework is what row 27's hook removes. |
 | 52 | post-merge | The screens-shown stop hook blocked this sweep's turn for writing "side by side" about the art-picking procedure. | this session's stop-hook feedback | "side by side" names a procedure as often as a comparison. | `.claude/hooks/stop-screens-shown-not-described.py` | fixed: the phrase leaves the claim pattern; PR #249's report is still caught by "by eye" and "pixel channel" (this PR). |
+| 53 | post-merge | `operator-messages.ts` crashed on spilled pages (an envelope line, or text blocks), reported skill bodies, compaction summaries and subagent image notes as operator messages, and missed every answer worded "Your questions have been answered". | log 19:23 to 19:33 `transcript-389`, four lines; 4 answers it now finds that the agent read by eye | The extractor shipped in `2cf7c78` was tested on hand-made events only. | `scripts/kaizen/operator-messages.core.ts` | fixed: it drops `isSynthetic` events, accepts both answer wordings and reads all three saved shapes, with tests (this PR). |
+| 54 | post-merge | Reading the transcript took one agent 229 calls and 330,744 tokens, because pages under about 50k characters land inline. | agent usage at hand-back | `list_events` has no size bound but `limit`. | `docs/knowledge/reading-another-sessions-transcript-with-list-events.md` | no-op: the entry already says so; the remedy is the harness's. |
+
+## Operator messages
+
+Read from `session_01K69KnD7qY66biYdG7XZVpc` with `list_events`, `kinds: ["user"]`, to the session start. Times are UTC. Kind: R a request the first brief could have carried, C a correction of something shipped, Q a question the session should have asked first, D direction with no lesson.
+
+| # | When | Message (translated) | Kind | Decision |
+| --- | --- | --- | --- | --- |
+| OP01 | 11-22 17:55 | Create skull-king.borso.fr to score Skull King; have me validate mockups; least typing. | D | no-op: the brief. |
+| OP02 | 18:00 | Less text in the interface, you still have the problem; fetch the official images; propose player icons. | C | merge into 01 and `the-eye-scar-drawn-by-hand-twice` |
+| OP03 | 18:00 | Look at banana-rush for sync, don't be lazy. | C | merge into 02 |
+| OP04 | 18:08 | You didn't follow the feature flow? Find the cards in better quality. | C | merge into 03 and `the-eye-scar-drawn-by-hand-twice` |
+| OP05 | 18:17 | We don't need the non-special cards; agents can fetch cards in a second PR. | D | no-op: scope direction. |
+| OP06 | 18:17 | (answer) the better-quality cards question. | D | no-op: answer. |
+| OP07 | 18:19 | The 14s, yes, later at worst. | D | no-op: scope direction. |
+| OP08 | 18:25 | The counter needs a built-in trick checker and a Kraken flag. | Q | merge into 03 |
+| OP09 | 18:26 | Accounts with a passkey to see your games, or join as a guest. | Q | merge into 03 |
+| OP10 | 18:26 | No, the checker must block. | C | merge into 03 |
+| OP11 | 18:35 | Did you write a spec? You asked me no questions. Did you read all the rules? | C | merge into 03 |
+| OP12 | 18:37 | (answer) a two-player rule question. | D | no-op: answer. |
+| OP13 | 18:39 | We do have to handle the pirates' powers. | Q | merge into 03 |
+| OP14 | 18:48 | Installable as a PWA, of course. | R | merge into 03 |
+| OP15 | 18:50 | We can do much better on the logo, launch a subagent. | C | merge into `the-eye-scar-drawn-by-hand-twice` |
+| OP16 | 19:09 | (answer) the logo choice. | D | no-op: answer. |
+| OP17 | 11-23 11:00 | We prefer a + / − button to bet amounts. | C | merge into 03 |
+| OP18 | 11:01 | Use known icons, not what you drew, which is ugly; your components lack reuse. | C | merge into `the-eye-scar-drawn-by-hand-twice` |
+| OP19 | 11:02 | We want to see first names in the app too. | C | merge into 03 |
+| OP20 | 11:58 | Put the screenshots back. | C | merge into `a-screen-pushed-without-its-picture` |
+| OP21 | 12:25 | More than one coloured 14 can fall in a trick. | C | merge into 03 (rulebook read in part) |
+| OP22 | 12:26 | Colours and textures a bit more Skull King, without being cheesy. | C | no-op: taste direction, shipped in `5235d26`. |
+| OP23 | 12:29 | (answer) direction C, "but less hand-made by you in SVG. Find assets". | C | merge into `the-eye-scar-drawn-by-hand-twice` |
+| OP24 | 12:30 | Icon colours not the win and loss colours; greener green, redder red; avatars, not icons; each message is a kaizen source. | C | merge into 30 and 33 |
+| OP25 | 12:32 | (answer) pirate avatar, not a priority. | D | no-op: answer. |
+| OP26 | 12:32 | The kaizen tooling must read all my messages. | C | merge into 33 |
+| OP27 | 12:32 | No hook to log my messages, use the transcript. | D | merge into 34 |
+| OP28 | 12:49 | You spend a huge amount of tokens on the uncommitted-content checks. | C | merge into 38 |
+| OP29 | 13:10 | screenshots please | C | merge into `a-screen-pushed-without-its-picture` |
+| OP30 | 15:31 | screenshots please | C | merge into `a-screen-pushed-without-its-picture` |
+| OP31 | 15:31 | French by default please. | Q | merge into 03 |
+| OP32 | 15:53 | The default bid is 0, not a dash. Avatars? Screenshots? | C | merge into 42 and `a-screen-pushed-without-its-picture` |
+| OP33 | 16:25 | Did you post the screenshots in the PR???? | C | merge into `a-screen-pushed-without-its-picture` |
+| OP34 | 16:27 | I miss your avatar questions because you reply to notifications; write nothing after notifications. | C | merge into 44 |
+| OP35 | 16:28 | (answer) a customisable pirate, faces, hats, hair, accessories. | D | no-op: answer. |
+| OP36 | 16:31 | (answer) this style, plus tricorne, scars and accessories. | D | no-op: answer. |
+| OP37 | 16:31 | Isn't there a kit with more pirate choices? | Q | merge into `the-eye-scar-drawn-by-hand-twice` (search first) |
+| OP38 | 16:32 | (answer) the free-kit question. | D | no-op: answer. |
+| OP39 | 17:12 | Perfect except the eye scars. | C | merge into `the-eye-scar-drawn-by-hand-twice` |
+| OP40 | 17:41 | Super ugly; find scar SVGs online; you need a drawing skill. | C | merge into `the-eye-scar-drawn-by-hand-twice` |
+| OP41 | 17:48 | (answer) the scar choice; row 2 must go under the hair. | C | no-op: layering fixed in `1bea71a`. |
+| OP42 | 18:02 | Under the eye too. | C | no-op: fixed in `49d0e5a`. |
+| OP43 | 19:05 | Yes, add the rule to the kaizen. | D | merge into 48 |
+| OP44 | 19:05 | Merge. | D | no-op: the merge. |
+| OP45 | 19:21 | (answer) run the kaizen in a new session. | D | no-op: answer. |
+| OP46 | 19:21 | Dispatch shared-deploy yourself. | C | question to the operator in this PR: CLAUDE.md tells a session to ask him to dispatch it. |

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { selectOperatorMessages, stripHarnessWrappers } from './operator-messages.core';
+import {
+  readSavedPage,
+  selectOperatorMessages,
+  stripHarnessWrappers,
+} from './operator-messages.core';
 
 const AT = '2026-11-23T12:00:00Z';
 
@@ -69,6 +73,35 @@ describe('selectOperatorMessages', () => {
     expect(selectOperatorMessages({ events: [] })).toEqual([]);
     expect(selectOperatorMessages(page({ created_at: AT, assistant: {} }))).toEqual([]);
     expect(selectOperatorMessages(page({ created_at: AT, user: {} }))).toEqual([]);
+  });
+});
+
+describe('selectOperatorMessages on what the harness files as user events', () => {
+  it('drops a synthetic event and keeps an answer worded "Your questions have been answered"', () => {
+    const answer = 'Your questions have been answered: "Logo"="SK"';
+    const synthetic = {
+      created_at: AT,
+      user: { internal_anthropic_catchall: { isSynthetic: true, message: { content: 'Skill' } } },
+    };
+    expect(
+      selectOperatorMessages(page(synthetic, catchall([{ type: 'tool_result', content: answer }]))),
+    ).toEqual([{ at: AT, text: answer, isAnswer: true }]);
+  });
+});
+
+describe('readSavedPage', () => {
+  const json = JSON.stringify({ ccr: page() });
+
+  it.each([
+    ['after an untrusted-data envelope line', `<other-session nonce="n">\nData.\n    ${json}\n`],
+    ['inside an array of text blocks', JSON.stringify([{ type: 'text', text: json }])],
+    ['bare', JSON.stringify(page())],
+  ])('reads a page saved %s', (_shape, saved) => {
+    expect(readSavedPage(saved)).toEqual(page());
+  });
+
+  it('refuses a file that holds no JSON line', () => {
+    expect(() => readSavedPage('nothing saved')).toThrow(SyntaxError);
   });
 });
 

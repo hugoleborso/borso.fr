@@ -17,9 +17,13 @@ recurs: [the-screens-described-instead-of-shown]
 
 ## User impact
 
-On PR #389 the bid default changed from a dash to 0 and was pushed. The
-operator had to ask whether screenshots were posted (friction log, 2026-11-23
-16:26). The Screenshots comment then gained the folder `2026-11-23-1610`.
+On PR #389 the operator asked for screenshots five times in one day, each
+after a pushed change to a screen: "Remet les screenshots" at 11:58, "screenshots
+please" at 13:10 and 15:31, "Et des screenshots ?" at 15:53, and "Est-ce que tu
+as posté les sreenshots dans la PR ????" at 16:25 (UTC, read from the shipping
+session's transcript). The bid default had changed from a dash to 0 in
+`f6e2a7a`, and the Screenshots comment gained the folder `2026-11-23-1610` only
+after the fifth ask.
 
 | | Seen | Expected |
 | --- | --- | --- |

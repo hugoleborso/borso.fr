@@ -9,27 +9,15 @@
 # and `b.ts` — unchanged, so a cache hit — still reports the error the fix
 # removed. Re-running does not help, because the cache hits again.
 #
-# docs/knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md has
-# said this since before PR #95, in full, correctly. PR #95 hit it anyway: a
-# dependency bump changed another package's types, 24 no-unsafe-* errors named
-# pragma's query modules, the fix landed, and the same 24 errors came back. The
-# entry is only reachable by someone who already suspects the cache, and the
-# symptom argues the other way — it reads as "my fix did not work".
-#
-# PR #153 hit it a third time and this hook stayed silent: it looked for
-# .eslintcache in the working directory, and the run was `pnpm run lint` from
-# apps/pragma, whose cache lived under the root node_modules. It now looks for
-# every cache this repository writes, from the repository root.
+# docs/knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md holds
+# it, and PRs #95 and #153 hit it anyway. The hook looks for every cache this
+# repository writes, from the repository root.
 #
 # Best-effort by contract: it ALWAYS exits 0, and it never asserts staleness —
 # these errors are usually real. It names the one command that tells them apart.
 #
-# A lint run that reports an error exits non-zero, and a failing Bash call fires
-# PostToolUseFailure with the output in `.error`, not PostToolUse with a
-# `.tool_response`. Plain stdout from either event reaches the debug log and not
-# the model. This hook did both wrong until 2026-10-10, so it never spoke on the
-# run it was written for; it is registered on both events now and answers with
-# `additionalContext`. See docs/adr/2026-10-10T0122-knowledge-is-delivered-by-trigger.md.
+# It is registered on PostToolUse and PostToolUseFailure, where a failing lint
+# run lands, and answers with `additionalContext`.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0

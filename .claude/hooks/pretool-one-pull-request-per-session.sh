@@ -2,11 +2,7 @@
 # PreToolUse hook for `mcp__github__create_pull_request`.
 #
 # A feature is one branch and one pull request (`.claude/skills/route/SKILL.md`).
-# The operator reviews it on one preview and merges it at once. That rule was a
-# sentence, and a sentence did not hold: PR #216 was seven stacked pull
-# requests, and on 2026-11-11 one session opened #286, #289 and #292 from
-# `main` for work where each needed the one before. Two were closed unmerged
-# and their code shipped in the third.
+# The operator reviews it on one preview and merges it at once.
 # See docs/dantotsus/three-pull-requests-for-one-afternoon-of-talos.md.
 #
 # The hook refuses two shapes:
