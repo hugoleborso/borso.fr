@@ -27,20 +27,11 @@ Read the spec, build the assertion list per your standard, drive agent-browser, 
 
 Do not ask the user questions. Do not summarise the implementation. Do not skip edge cases.
 
-PIXEL-CONTENT CHECK (mandatory per screenshot — see standard.md):
-For every screenshot you take, run this `agent-browser eval` immediately
-afterwards on the same page:
-
-  Array.from(document.querySelectorAll('img'))
-    .filter((img) => img.complete && img.naturalWidth === 0)
-    .map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }));
-
-A non-empty result means one or more `<img>` tags rendered their `alt`
-text instead of the image (CDN 403, hotlink block, missing asset). The
-row that captured the screenshot is then FAIL — name the broken `src`(s)
-in the report's Notes section. DOM-presence assertions are not
-sufficient; users see broken alt-text where icons / sprites / glyphs
-should be.
+PIXEL-CONTENT CHECK (mandatory per screenshot, see standard.md):
+After every screenshot, run `scripts/browser/broken-images.sh` with the
+screenshot's `--session` flag. A non-zero exit means an `<img>` or an SVG
+`<image>` did not render. The row that captured the screenshot is then FAIL,
+and the report's Notes name the broken sources.
 ```
 
 The brief is intentionally short. The agent's standard, tooling rules, report format, and verdict semantics live in its definition file (`.claude/agents/visual-validator.md`). The brief only carries the *task-specific* paths.

@@ -139,26 +139,17 @@ Silently dropping a PASS run's evidence because an upload failed would turn the 
 ## Pixel-content checks (every screenshot)
 
 Before declaring any row PASS, the validator runs the broken-image scan
-against the current page. A typical PWA / SPA defect is that an `<img src>`
-404s or 403s (third-party CDN block, CORS refusal, missing asset) and the
-browser falls back to rendering the `alt` text in place of the image. DOM
-assertions pass — the `<img>` is there, the parent component rendered, the
-layout is correct — but the user sees broken alt-text where pieces /
-icons / glyphs should be.
+against the current page. A typical PWA / SPA defect is an image that 404s,
+403s or fails to decode. DOM assertions pass, because the element is there,
+but the user sees alt text or an empty disc where a piece, an icon or a face
+should be.
 
-The canonical check:
-
-```js
-Array.from(document.querySelectorAll('img'))
-  .filter((img) => img.complete && img.naturalWidth === 0)
-  .map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }));
-```
-
-Returns the set of `<img>` tags that completed loading their alt text
-instead of the actual image. Non-empty → FAIL the row that covered the
-screenshot and name the broken src(s) in the report. The validator runs
-this **for every screenshot it takes**, not just suspect ones; the cost is
-one `agent-browser eval` per shot.
+The canonical check is `scripts/browser/broken-images.sh`, with the same
+`--session` flag as the screenshot. It lists every `<img>` that fell back to
+its alt text and every SVG `<image>` whose source fails to decode, and exits 1
+when there is one. A non-zero exit FAILs the row that covered the screenshot,
+and the report names the broken sources. The validator runs it **for every
+screenshot it takes**, not just suspect ones.
 
 Sibling checks worth running per row when the asserted UI has them:
 

@@ -108,10 +108,10 @@ Pair this with the broken-image scan from `/visual-validation`'s standard if you
 
 ```bash
 agent-browser screenshot /tmp/self-check.png
-agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+scripts/browser/broken-images.sh
 ```
 
-A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
+A non-zero exit is a stop-the-line — the row is not done, the broken image has to be diagnosed and fixed *before* you tag the slice complete.
 
 ## Procedure
 
