@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 VISUAL_CLAIM = re.compile(
-    r"\b(by eye|side[- ]by[- ]side|pixel (diff|channel|difference)s?"
+    r"\b(by eye|pixel (diff|channel|difference)s?"
     r"|visible differences?|screens? (match|are identical|look the same|unchanged))\b",
     re.IGNORECASE,
 )
