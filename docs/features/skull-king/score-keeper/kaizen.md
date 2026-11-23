@@ -79,3 +79,10 @@ Session: ad865e12-19a9-534e-8381-937289236af4
 - [2026-11-23 17:03] `pirate-avatars` The worktree's guard refused python heredocs, agent-browser eval and cd chains, so every multi-file edit needed a script file in the scratchpad.
 - [2026-11-23 17:41] `main` Hand-drawn eye scar rejected as ugly a second time; source illustration assets online instead of drawing them
 - [2026-11-23 19:06] `main` Rule (operator-approved): never hand-draw an illustration; search free-licensed assets online (iconify, game-icons, CC0 packs), composite candidates on the real screen side by side and let the operator pick before coding
+- [2026-11-23 20:15] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-23 20:22] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-23 20:23] `visual-validator` The mandatory broken-image scan only checks <img>, so a pirate face drawn as an SVG <image> data URI is never covered by it and needed a separate decode check.
+- [2026-11-23 20:35] `visual-validator` Spec says a legacy player 'reads as the pirate of their seat' without saying whether a home-screen regular's seat is its regulars-list index or its table seat, so the duplicate-pirate check needed a full game to settle.
+- [2026-11-23 20:35] `visual-validator` Pirate faces are SVG <image> data URIs, so the mandatory broken-<img> scan cannot see a face that failed to decode; a separate Image() decode check was needed.
+- [2026-11-23 20:45] `visual-validator` agent-browser element screenshots clip to the border box, so a box-shadow ring such as the highlighted porthole ring is cut off and needs a parent element to be captured
+- [2026-11-23 20:45] `visual-validator` The pirate editor shows no label for the current value of each part, so mapping a preview to a spec value needed reading skull-king.last-pirate from local storage
