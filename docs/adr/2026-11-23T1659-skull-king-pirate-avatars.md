@@ -45,8 +45,8 @@ the free kits and its flat style is easy to match; the operator chose it.
 - `-` The eye scar is "Stitched wound" by Lorc, from game-icons.net, under
   CC BY 3.0. It must stay credited here and in `apps/skull-king/CREDITS.md`.
   The operator rejected two hand-drawn eye scars, so it replaced them.
-- `+` Both scars are painted inside the avataaars face, before its hair layer,
-  so hair falls over them.
+- `+` Both scars are painted inside the avataaars face, before its eyes layer,
+  so the eyes, the eyebrows and the hair are drawn over them.
 - `+` Every player gets a recognisable pirate built from eleven parts, stored
   as the app's own words, so a renamed avataaars option is one line in
   `pirate-portrait.core.ts` and no stored row changes.

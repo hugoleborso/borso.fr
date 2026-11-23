@@ -190,7 +190,7 @@ export function selectPirateLayers(avatar: PirateAvatar): readonly PirateLayer[]
   ];
 }
 
-const HAIR_LAYER = '<g transform="translate(-1)">';
+const EYES_LAYER = '<g transform="translate(76 90)">';
 const AVATAAARS_SHIFT = 'translate(-8)';
 const SCAR_LINE = '#8E2A35';
 const SCAR_HALO = '#F6C9C4';
@@ -205,11 +205,14 @@ const SCAR_ART = {
   eye: `<svg x="140" y="88" width="52" height="52" viewBox="0 0 512 512" opacity=".8"><path fill="${SCAR_LINE}" d="${STITCHED_WOUND}"/></svg>`,
 } as const satisfies Readonly<Record<PirateAvatar['scar'], string>>;
 
-export function paintScarUnderHair(avataaarsSvg: string, scar: PirateAvatar['scar']): string {
+export function paintScarUnderEyesAndHair(
+  avataaarsSvg: string,
+  scar: PirateAvatar['scar'],
+): string {
   const art = SCAR_ART[scar];
-  if (art === '' || !avataaarsSvg.includes(HAIR_LAYER)) return avataaarsSvg;
+  if (art === '' || !avataaarsSvg.includes(EYES_LAYER)) return avataaarsSvg;
   return avataaarsSvg.replace(
-    HAIR_LAYER,
-    `<g transform="${AVATAAARS_SHIFT}">${art}</g>${HAIR_LAYER}`,
+    EYES_LAYER,
+    `<g transform="${AVATAAARS_SHIFT}">${art}</g>${EYES_LAYER}`,
   );
 }

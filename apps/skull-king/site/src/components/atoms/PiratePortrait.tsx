@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import type { PirateAvatar } from '@domain/pirate-avatar.core';
 import {
   type PirateLayer,
-  paintScarUnderHair,
+  paintScarUnderEyesAndHair,
   selectAvataaarsOptions,
   selectPirateLayers,
 } from '@site/lib/pirate-portrait.core';
@@ -171,7 +171,7 @@ export interface PiratePortraitProps {
 // @FollowsBlueprint atom-generated-illustration
 export function PiratePortrait({ avatar, className }: PiratePortraitProps) {
   const face = createAvatar(avataaars, selectAvataaarsOptions(avatar)).toString();
-  const base = `data:image/svg+xml;utf8,${encodeURIComponent(paintScarUnderHair(face, avatar.scar))}`;
+  const base = `data:image/svg+xml;utf8,${encodeURIComponent(paintScarUnderEyesAndHair(face, avatar.scar))}`;
   return (
     <svg viewBox={FRAME} className={className} aria-hidden="true" focusable="false">
       <image href={base} width={AVATAAARS_SIZE} height={AVATAAARS_SIZE} />
