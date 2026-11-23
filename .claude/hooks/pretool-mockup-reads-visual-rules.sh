@@ -15,6 +15,12 @@
 # kit that hands over the real glyphs, which makes the right drawing the
 # shortest one.
 #
+# On the flames redesign the session drew a streak sheet 1080 px tall, so the
+# timeline, the jokers and the band all scrolled on a phone. The operator's
+# rule is that only a list scrolls. A lint rule holds it in code
+# (no-vertical-scroll-container), but a mockup is drawn before any code, so
+# the hook states the board size here, at the canvas.
+#
 # Advisory: it always exits 0 and answers with additionalContext. It speaks on
 # a quickstart whose intent is a design, once per session. A publish names its
 # type only by URL, so it says nothing there.
@@ -38,6 +44,8 @@ NOTE=$(
   grep -rn -i -E 'colou?r|hue|icon|font|token' apps/<app>/VOCABULARY.md apps/<app>/DESIGN.md $(find apps/<app> -name INVARIANTS.md -not -path '*/node_modules/*')
 
 A variant that breaks one of them is not an option the operator can pick.
+
+A phone board is one screen, 375 x 812, sheets included. Only a list may run past it. When anything else would make the screen scroll, cut or merge content until it fits, and say what went.
 
 pragma: draw members and instruments with the app's own marks, never as words. `pnpm --filter @borso-app/pragma run mockup-kit` prints each instrument glyph as SVG and a member-mark example to paste.
 NOTE
