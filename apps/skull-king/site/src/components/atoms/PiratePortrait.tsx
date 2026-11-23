@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import type { PirateAvatar } from '@domain/pirate-avatar.core';
 import {
   type PirateLayer,
+  paintScarUnderHair,
   selectAvataaarsOptions,
   selectPirateLayers,
 } from '@site/lib/pirate-portrait.core';
@@ -13,8 +14,6 @@ const FRAME = '24 6 232 232';
 
 const GOLD = '#F0B429';
 const GOLD_SHINE = '#FFE9A8';
-const SCAR_LINE = '#8E2A35';
-const SCAR_HALO = '#F6C9C4';
 const FELT = '#262E33';
 const BANDANA = '#D0353F';
 const PIPE_WOOD = '#8A5428';
@@ -24,14 +23,6 @@ const MACAW_YELLOW = '#F6C343';
 const MACAW_BLUE = '#2F6FD1';
 const BONE = '#F3EFE6';
 const INK = '#1B1B1B';
-
-const scar = (line: string, stitches: string) => (
-  <g strokeLinecap="round" fill="none">
-    <path d={line} stroke={SCAR_HALO} strokeOpacity=".7" strokeWidth="5" />
-    <path d={line} stroke={SCAR_LINE} strokeOpacity=".75" strokeWidth="2.4" />
-    <path d={stitches} stroke={SCAR_LINE} strokeOpacity=".75" strokeWidth="1.8" />
-  </g>
-);
 
 const goldTooth = (tooth: string, shine: string) => (
   <>
@@ -73,8 +64,6 @@ const pipe = (shift: Shift) => (
 );
 
 const LAYER_ART: Readonly<Record<PirateLayer, ReactElement>> = {
-  cheekScar: scar('M164 123l21 16', 'M166 129.5l5-6.6M172.5 134.4l5-6.6M179 139.3l5-6.6'),
-  eyeScar: scar('M155 84l16 50', 'M155.1 95l6.2-2M164.7 125l6.2-2M166.9 132l6.2-2'),
   goldToothSmile: goldTooth('M143.5 147.2h7v3.6a2 2 0 0 1-2 2h-3a2 2 0 0 1-2-2Z', 'M145.2 148.6v2'),
   goldToothGrimace: goldTooth('M148.6 143.6h7.8v8.3h-7.8Z', 'M150.4 145.2v4.6'),
   goldToothScream: goldTooth('M142.4 147.4h6v4.6h-6Z', 'M144 148.6v2.2'),
@@ -181,7 +170,8 @@ export interface PiratePortraitProps {
 
 // @FollowsBlueprint atom-generated-illustration
 export function PiratePortrait({ avatar, className }: PiratePortraitProps) {
-  const base = createAvatar(avataaars, selectAvataaarsOptions(avatar)).toDataUri();
+  const face = createAvatar(avataaars, selectAvataaarsOptions(avatar)).toString();
+  const base = `data:image/svg+xml;utf8,${encodeURIComponent(paintScarUnderHair(face, avatar.scar))}`;
   return (
     <svg viewBox={FRAME} className={className} aria-hidden="true" focusable="false">
       <image href={base} width={AVATAAARS_SIZE} height={AVATAAARS_SIZE} />

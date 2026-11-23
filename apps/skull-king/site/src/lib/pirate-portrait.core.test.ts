@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { PirateAvatar } from '@domain/pirate-avatar.core';
-import { selectAvataaarsOptions, selectPirateLayers } from './pirate-portrait.core';
+import {
+  paintScarUnderHair,
+  selectAvataaarsOptions,
+  selectPirateLayers,
+} from './pirate-portrait.core';
 
 const DECKHAND: PirateAvatar = {
   skin: 'dark',
@@ -97,7 +101,7 @@ describe('selectPirateLayers', () => {
     expect(selectPirateLayers(DECKHAND)).toEqual([]);
   });
 
-  it('stacks scars under the mouth, the earring, the hat and then the parrot', () => {
+  it('stacks the mouth, the earring, the hat and then the parrot', () => {
     expect(
       selectPirateLayers({
         ...DECKHAND,
@@ -107,12 +111,11 @@ describe('selectPirateLayers', () => {
         headwear: 'bandana',
         companion: 'parrot',
       }),
-    ).toEqual(['eyeScar', 'pipeSmile', 'hoop', 'bandana', 'parrot']);
+    ).toEqual(['pipeSmile', 'hoop', 'bandana', 'parrot']);
   });
 
-  it('draws the cheek scar and the tricorne each as their own layer', () => {
+  it('draws the tricorne as its own layer and leaves scars to the face', () => {
     expect(selectPirateLayers({ ...DECKHAND, scar: 'cheek', headwear: 'tricorne' })).toEqual([
-      'cheekScar',
       'tricorne',
     ]);
   });
@@ -127,5 +130,28 @@ describe('selectPirateLayers', () => {
     expect(pipeFor('cheerful')).toEqual(['pipeSmile']);
     expect(pipeFor('fierce')).toEqual(['pipeGrimace']);
     expect(pipeFor('roar')).toEqual(['pipeScream']);
+  });
+});
+
+describe('paintScarUnderHair', () => {
+  const FACE =
+    '<svg><g transform="translate(8)"><path/><g transform="translate(-1)">hair</g></g></svg>';
+
+  it('slips the eye scar in just before the hair, shifted back into the frame', () => {
+    const painted = paintScarUnderHair(FACE, 'eye');
+    expect(painted).toMatch(
+      /^<svg><g transform="translate\(8\)"><path\/><g transform="translate\(-8\)"><svg x="140" y="88" width="52" height="52" viewBox="0 0 512 512" opacity=".8"><path fill="#8E2A35" d="M135.688 [^"]+"\/><\/svg><\/g><g transform="translate\(-1\)">hair<\/g><\/g><\/svg>$/u,
+    );
+  });
+
+  it('slips the cheek scar in before the hair too', () => {
+    expect(paintScarUnderHair(FACE, 'cheek')).toBe(
+      '<svg><g transform="translate(8)"><path/><g transform="translate(-8)"><g stroke-linecap="round" fill="none"><path d="M164 123l21 16" stroke="#F6C9C4" stroke-opacity=".7" stroke-width="5"/><path d="M164 123l21 16" stroke="#8E2A35" stroke-opacity=".75" stroke-width="2.4"/><path d="M166 129.5l5-6.6M172.5 134.4l5-6.6M179 139.3l5-6.6" stroke="#8E2A35" stroke-opacity=".75" stroke-width="1.8"/></g></g><g transform="translate(-1)">hair</g></g></svg>',
+    );
+  });
+
+  it('leaves the face untouched without a scar or without a hair layer to slip under', () => {
+    expect(paintScarUnderHair(FACE, 'none')).toBe(FACE);
+    expect(paintScarUnderHair('<svg></svg>', 'eye')).toBe('<svg></svg>');
   });
 });
