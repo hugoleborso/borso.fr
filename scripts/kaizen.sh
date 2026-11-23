@@ -235,7 +235,9 @@ case "${1:-}" in
       awk '{ added += $1; removed += $2 } END { print added + 0, removed + 0 }')
     printf 'Balance: added %s, removed %s outside what a sweep does not count\n' "$added" "$removed"
     [ "$added" -le "$removed" ] || {
-      printf 'This sweep adds more than it removes. Remove what each addition replaces, or fold it into a file that exists.\n' >&2
+      printf 'This sweep adds more than it removes. The best code is the code you do not write.\n' >&2
+      printf 'For each file you wrote, name its role and look for it in a package already installed (node_modules/.modules.yaml) before keeping it. Offer that option to the operator even when it costs something he sees.\n' >&2
+      printf 'Then remove what each addition replaces, or clean up elsewhere, until this passes.\n' >&2
       exit 1
     }
     ;;

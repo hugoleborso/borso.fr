@@ -19,7 +19,7 @@
 # reaches the debug log and not the model, and a failing Bash command fires
 # PostToolUseFailure rather than PostToolUse, so both are needed.
 #
-# An entry is shown once per session: repeating it on every match teaches the
+# An entry is shown once per session and agent: repeating it on every match teaches the
 # reader to skip it. Output that comes from reading a markdown document is not
 # matched, because a document quoting an error is not that error happening.
 #
@@ -115,7 +115,8 @@ else
 fi
 [ -n "$MATCHED" ] || exit 0
 
-SESSION="$(jq -r '.session_id // ""' <<<"$INPUT" | tr -cd 'A-Za-z0-9_-')"
+# A subagent shares its parent's session_id but not what its parent read.
+SESSION="$(jq -r '[.session_id, .agent_id] | map(select(. != null and . != "")) | join("-")' <<<"$INPUT" | tr -cd 'A-Za-z0-9_-')"
 SEEN=""
 if [ -n "$SESSION" ]; then
   SEEN="${TMPDIR:-/tmp}/knowledge-triggers-$SESSION.seen"

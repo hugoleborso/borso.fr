@@ -22,8 +22,10 @@ set -e
 
 push_base=''
 pushed_ref=''
+pushes_a_commit=''
 while read -r _local_ref local_sha remote_ref remote_sha; do
   [ -z "$local_sha" ] && continue
+  case "$local_sha" in *[!0]*) pushes_a_commit=1 ;; esac
   # A remote sha of all zeros means the branch does not exist upstream yet.
   case "$remote_sha" in
     *[!0]*)
@@ -33,6 +35,14 @@ while read -r _local_ref local_sha remote_ref remote_sha; do
       ;;
   esac
 done
+
+# Git runs this hook with no ref line when everything is up to date, and the
+# empty base below would then gate the whole branch: eight minutes after a
+# failed commit on the sweep of PR #395.
+if [ -z "$pushes_a_commit" ]; then
+  echo "[pre-push] no commit to push, no gate to run"
+  exit 0
+fi
 
 # The remote branch sits on a commit this checkout has never fetched: another
 # session pushed to the same branch. Git refuses a plain push over it only after
@@ -56,6 +66,12 @@ fi
 # is about to open a connection to the same remote either way, so the refresh
 # costs one round-trip and buys back the scoping this file exists for.
 git fetch --quiet origin main 2>/dev/null || true
+
+# A sweep removes at least as much as it adds. CI ran this only once the pull
+# request was open, and the sweep of PR #395 answered its red with "as expected".
+case "$(git branch --show-current)" in
+  claude/lessons-from-*) scripts/kaizen.sh balance || exit 1 ;;
+esac
 
 # A branch that conflicts with main gets no CI at all. GitHub cannot build
 # refs/pull/<n>/merge for it, so it dispatches no workflow run: no red check, an

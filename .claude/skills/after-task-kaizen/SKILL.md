@@ -266,42 +266,6 @@ For each surviving subject (i.e. not a `merge into` row):
 | **Reusable insight** (something the team should know but isn't really a defect) | We learned how something works; future contributors would benefit. | **Knowledge entry**. Knowledge is broad — anything genuinely useful. |
 | **No-op** | Friction was real but already eradicated by an upstream rule, or genuinely too small. | One-line reason inline in the table. Never a silent skip. |
 
-### 2c. Library-search pass — before writing custom anything
-
-For every subject classified as **real defect** or **design pivot**
-whose draft eradication is *"add an ESLint rule"*, *"add a hook"*,
-*"add a CI script"*, *"build a wrapper / a helper / a custom utility"*,
-or any other "we'll write X" — pause and run a library-search pass
-**before** opening the dantotsu file.
-
-The question to ask: *is there a battle-tested library that, if
-adopted, would make the bug class impossible by deleting our code
-that hosts the bug?* That's a **level-1** eradication (structural
-impossibility) instead of the **level-2** lint rule you were about
-to draft.
-
-Name the role of the code you would write, not the bug, such as "subscribe
-to an external store and dedupe". Look for it in `node_modules/.modules.yaml`,
-then on npm for the stack we are on. Weigh bundle weight, peer dependencies,
-maintenance and fit with our domain. If you adopt, the eradication is the
-migration, at level 1, and it deletes the code that hosts the bug. If you
-build, the dantotsu's *Eradication* block names the library you rejected and
-why, or the next kaizen finds it again.
-
-**Rule of thumb:** if **three** rows in the inventory touch the same
-*architectural layer* (data fetching, routing, form validation,
-i18n, …), the meta-pattern is *"we built our own where a library
-exists"*. Add an inventory row that says so, classify it as a
-real-defect / design-pivot with level-1 migration as the
-eradication, and merge the three original rows into it. **Reuse
-before reinvent** is the lean rule ; you can build custom *after*
-you've named the libraries you rejected and why.
-
-> *Mirrors [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../../../docs/dantotsus/built-my-own-before-checking-the-library.md)
-> applied at kaizen time instead of implementation time. See also
-> [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md)
-> for the planning-stage analogue.*
-
 ### 3. Write the entries
 
 For each surviving subject:
@@ -392,8 +356,8 @@ plus whatever code commits the eradications required. PR title:
 It counts code, and its `not_counted` list names what it leaves out. When it
 refuses, remove what each addition replaces: fold an entry into one that
 exists, delete the check or text the new mechanism makes redundant. CI runs
-the same command as `kaizen-balance`. A sweep that still adds more stays red,
-and the operator merges it or sends it back.
+the same command as `kaizen-balance`, and `pre-push` refuses a
+`lessons-from` branch on it. A removal is the only answer to its refusal.
 
 Once the friction log is archived, `pnpm exec tsx
 scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines
