@@ -136,7 +136,9 @@ and `lg:` for wider screens. See
 - `oxlint:borso/no-vertical-scroll-container (pragma/site)` rejects
   `overflow-auto`, `overflow-y-auto`, `overflow-scroll` and `overflow-y-scroll`
   outside `Sheet` and the two scene views. The document scrolls; a list that
-  scrolls inside it traps a thumb that meant to scroll the page.
+  scrolls inside it traps a thumb that meant to scroll the page. Only a list
+  may push a screen or a `Sheet` past 812 px tall at 375 px wide. Anything
+  else that would scroll is cut or merged until it fits, mockups included.
 - `test:design-tokens.utils.test.ts` reads pragma's `tokens.css`, fails on a
   listed text pair under 4.5:1 in either scheme, and compiles every colour,
   text, radius and shadow utility found under `site/src` through Tailwind: a
