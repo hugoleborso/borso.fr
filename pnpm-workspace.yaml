@@ -38,7 +38,7 @@ catalog:
   '@vitejs/plugin-react': '^4.3.4'
   '@vitest/coverage-v8': '^4.1.12'
   aws-cdk: '^2.1147.0'
-  aws-cdk-lib: '^2.275.0'
+  aws-cdk-lib: '^2.277.0'
   class-variance-authority: '0.7.1'
   clsx: '2.1.1'
   concurrently: '9.2.5'
