@@ -102,10 +102,10 @@ const STREAKS = {
   ],
 };
 
-function answerHomeApi(sessions: readonly unknown[], streaksStatus = 200) {
+function answerHomeApi(sessions: readonly unknown[], streaksStatus = 200, streaks = STREAKS) {
   return (request: Request): Response => {
     const { pathname } = new URL(request.url);
-    if (pathname === '/api/streaks') return jsonResponse(STREAKS, streaksStatus);
+    if (pathname === '/api/streaks') return jsonResponse(streaks, streaksStatus);
     if (pathname === '/api/sessions') return jsonResponse({ sessions });
     if (pathname.startsWith('/api/setlists/by-session/session-next')) {
       return jsonResponse({ setlists: [SETLIST] });
@@ -246,6 +246,22 @@ describe('the home page', () => {
     expect(recordProductEvent).toHaveBeenCalledWith('streak_sheet_opened');
     fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog', { name: 'Flames' })).toBe(null);
+  });
+
+  it('names one day in the singular on the chip', async () => {
+    const oneDay = {
+      ...STREAKS,
+      mine: { ...STREAKS.mine, days: 1 },
+      band: { ...STREAKS.band, days: 1 },
+    };
+    const answer = answerHomeApi([NEXT_PRACTICE], 200, oneDay);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    expect(
+      await within(screen.getByRole('banner')).findByRole('button', {
+        name: 'Your flame, 1 day. Band flame, 1 day.',
+      }),
+    ).toBeTruthy();
   });
 
   it('shows no flame when the flames cannot be read, and the rest of Home still works', async () => {
