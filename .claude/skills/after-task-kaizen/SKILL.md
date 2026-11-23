@@ -87,6 +87,26 @@ Sources to walk in order, capturing each friction event as one row:
   journals — expensive, and lossy for whatever the subagents learned.
   Add an inventory row saying so.
 
+- **Every operator message of the shipping session (always).** The
+  friction log holds only what the session chose to write down; the operator
+  reads each of their own messages as a correction to learn from. Find the
+  shipping session from the `Claude-Session:` trailer of the pull request's
+  commits (or the session link at the end of its body), then read its
+  transcript with the remote-session tool that lists a session's events,
+  filtered to user messages (`kinds: ["user"]`, paging back with `before_id`
+  until `has_more` is false). Save each page and run
+  `pnpm exec tsx scripts/kaizen/operator-messages.ts <page.json>...`: it keeps
+  the messages the operator typed and their answers to questions, and drops
+  tool results, hook output, reminders and agent hand-backs, which the
+  transcript also files as user events. Give each message it prints its own
+  inventory row,
+  classified as a request the first brief could have carried, a correction of
+  something shipped, a question the session should have asked first, or
+  direction with no lesson. On PR #389 almost every
+  operator message was a correction, and the log held only a few of them.
+  When no tool can read the transcript, say so in an inventory row and ask the
+  operator to paste their messages.
+
   **Read the writer, not only the line.** Every entry names who logged
   it. One agent hitting a wall is a local problem; four agents hitting
   the same wall is a systemic one, and the two deserve different
