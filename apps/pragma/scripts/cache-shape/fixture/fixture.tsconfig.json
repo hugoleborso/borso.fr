@@ -1,5 +1,0 @@
-{
-  "extends": "/home/user/borso.fr/apps/pragma/scripts/cache-shape/fixture/tsconfig.json",
-  "include": [],
-  "files": ["./fixture-client.d.ts"]
-}

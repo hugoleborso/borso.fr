@@ -46,7 +46,7 @@ function isMutationPersisted(): boolean {
 export const queryCachePersistOptions = {
   persister: queryCachePersister,
   maxAge: PERSISTED_CACHE_MAX_AGE_MS,
-  buster: __PERSISTED_CACHE_SHAPE__,
+  buster: __BUILD_VERSION__,
   dehydrateOptions: {
     shouldDehydrateMutation: isMutationPersisted,
     shouldDehydrateQuery: isQueryPersisted,

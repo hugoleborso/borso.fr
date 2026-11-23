@@ -3,7 +3,6 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type PluginOption } from 'vite';
-import { readResponseShapeFingerprint } from './scripts/cache-shape/response-shape.adapter';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
@@ -26,6 +25,8 @@ function readBuildSetting(name: string): string | undefined {
 }
 
 const sentryAuthToken = readBuildSetting('SENTRY_AUTH_TOKEN');
+const LOCAL_BUILD_VERSION = 'local';
+const buildVersion = readBuildSetting('GITHUB_SHA') ?? LOCAL_BUILD_VERSION;
 
 function buildSourceMapUpload(authToken: string): PluginOption {
   const release = readBuildSetting('GITHUB_SHA');
@@ -42,7 +43,7 @@ function buildSourceMapUpload(authToken: string): PluginOption {
 export default defineConfig({
   root: fromHere('./site'),
   define: {
-    __PERSISTED_CACHE_SHAPE__: JSON.stringify(readResponseShapeFingerprint(fromHere('.'))),
+    __BUILD_VERSION__: JSON.stringify(buildVersion),
   },
   publicDir: fromHere('./site/public'),
   resolve: {

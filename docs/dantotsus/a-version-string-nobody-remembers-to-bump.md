@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#395'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [apps/pragma/scripts/cache-shape/response-shape.adapter.ts, apps/pragma/vite.config.ts, apps/pragma/site/src/lib/query-client.setup.ts]
+eradication-paths: [apps/pragma/vite.config.ts, apps/pragma/site/src/lib/query-client.setup.ts]
 time-to-detect: 15 minutes
 tags: [pragma, tanstack-query, cache, offline, typescript]
 zone: apps/pragma/site/src/lib/query-client.setup.ts
@@ -49,9 +49,10 @@ match.
 
 The sweep of PR #363 saw the same buster miss and chose the entry. Its
 inventory row 04 says: "Deriving the buster from the build would wipe every
-member's cache at each deploy, which is a product call nobody asked for." That
-held for a buster derived from source files. It does not hold for one derived
-from the response types.
+member's cache at each deploy, which is a product call nobody asked for." The
+operator made that call on 2026-11-23, after this sweep first shipped a script
+that hashed the response types. He chose the persister's own lever over code
+written for it.
 
 ## Detection failure causes
 
@@ -70,50 +71,41 @@ removes the hand step.
 
 **Reference:** the commit adding this file.
 
-`readResponseShapeFingerprint` opens pragma's TypeScript project through
-`typescript/unstable/sync`, the TypeScript 7 compiler API already installed.
-It walks every `$get` of the Hono client `api`, writes out each JSON body
-structurally (fields, optional marks, unions, arrays, scalars), sorts the
-lines and hashes them. Vite injects the hash as `__PERSISTED_CACHE_SHAPE__`,
-and the query client uses it as its `buster`. A response shape change now
-changes the buster in the same build. Any other change leaves it, and the
-members' saved data with it.
+TanStack Query's persister drops the saved cache when `buster` changes. The
+buster is now the commit the build came from, `GITHUB_SHA`, which every GitHub
+Actions job sets and `vite.config.ts` already read for Sentry. A local build
+uses `local`. A build can no longer restore an answer saved by another build,
+so no response shape change can reach a member through the cache.
 
 ```diff
 -const PERSISTED_CACHE_SHAPE_VERSION = '3';
  …
 -  buster: PERSISTED_CACHE_SHAPE_VERSION,
-+  buster: __PERSISTED_CACHE_SHAPE__,
++  buster: __BUILD_VERSION__,
 ```
 
 ```diff
- export default defineConfig({
-   root: fromHere('./site'),
-+  define: {
-+    __PERSISTED_CACHE_SHAPE__: JSON.stringify(readResponseShapeFingerprint(fromHere('.'))),
-+  },
++const buildVersion = readBuildSetting('GITHUB_SHA') ?? LOCAL_BUILD_VERSION;
+ …
++  define: { __BUILD_VERSION__: JSON.stringify(buildVersion) },
 ```
 
 The knowledge entry is deleted, because nothing is left to remember.
 
-Costs, measured here. The walk covers 96 response bodies in about 2.5 s, once
-per `vite` start and once per `vite build`. A full `pnpm build` of pragma took
-7.41 s with it. The first deploy of this change drops every member's saved
-cache once, because the hash replaces `'3'`. It leans on an API TypeScript
-labels unstable, so a TypeScript bump can break the build. That failure is
-loud, in CI.
+Cost. Every pragma deploy drops every member's saved cache, so the first open
+after it loads from the network. Pragma deployed 84 times in the 30 days
+up to 2026-11-23 (measured with `git log --first-parent -- apps/pragma`).
+Before, the cache was dropped only on a hand bump, twice since the buster
+was added in PR #247 (measured with `git log -G`).
 
-Rejected alternatives. A hash of the API and domain source files would bust on
-32 of the 84 pragma merges of the last 30 days, where 2 changed a response
-(measured with `git log --first-parent` since 2026-10-24), so members would
-lose their saved data about once a day. A CI gate on those paths would flag the
-same 32. No library derives a cache key from TypeScript types, since types do
-not exist at run time.
+Rejected. A script that hashed every GET response type through the TypeScript
+7 compiler kept the cache across deploys that changed no shape. It took 137
+lines, a fixture and a mutation suite, and the operator turned it down as cache
+code written by hand. A source-file hash would bust on 32 of those 84 deploys,
+where 2 changed a response.
 
-**Proof it can fail:** with the four files PR #395 changed put back to their
-state before the merge, the fingerprint reads `c9fd50b09064`. With them
-restored it reads `cc0ea6773ce5`. Two runs on the same tree give the same
-hash, which `response-shape.adapter.test.ts` holds.
+**Proof it can fail:** `GITHUB_SHA=abc123 pnpm build` writes `buster:"abc123"`
+into the bundle, and a build without it writes `buster:"local"`.
 
 **Similar instances:** `grep -rn "buster" apps --include=*.ts` finds pragma's
 only. The other apps persist no query cache.
