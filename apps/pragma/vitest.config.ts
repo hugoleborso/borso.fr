@@ -70,6 +70,7 @@ export default defineConfig({
     projects: [
       {
         resolve: { alias: workspaceAliases },
+        define: { __PERSISTED_CACHE_SHAPE__: JSON.stringify('test') },
         test: {
           name: 'core',
           environment: 'jsdom',
