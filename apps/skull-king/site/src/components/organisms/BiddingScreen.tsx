@@ -83,7 +83,7 @@ export function BiddingScreen({ game, onScores }: BiddingScreenProps) {
         <ErrorNote code={readRejectionCode(writeEntry.error ?? movePhase.error)} />
       </div>
 
-      <footer className="sticky bottom-0 flex items-center gap-3 px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-ground">
+      <footer className="sticky bottom-0 flex items-center gap-3 px-4 pt-3 border-t border-outline pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-planks">
         <span
           aria-label={t('bidding.bidSum', { count: bidSum, total: cardCount })}
           className={clsx(

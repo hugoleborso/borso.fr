@@ -41,7 +41,7 @@ function CrashScreen() {
       <a
         href="/"
         aria-label={t('errors.reload')}
-        className="flex h-16 w-full items-center justify-center rounded-action bg-accent text-accent-ink"
+        className="flex h-16 w-full items-center justify-center rounded-action bg-brass text-ink shadow-plank"
       >
         <Glyph name="replay" className="size-6" />
       </a>

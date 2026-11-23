@@ -150,7 +150,7 @@ export function ScoringScreen({ game, onScores, onRoundClosed }: ScoringScreenPr
         />
       </div>
 
-      <footer className="sticky bottom-0 flex items-center gap-2 border-t border-surface-2 px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-ground">
+      <footer className="sticky bottom-0 flex items-center gap-2 border-t border-outline px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-planks">
         <TrickTally
           counted={check.counted}
           expected={check.expected}

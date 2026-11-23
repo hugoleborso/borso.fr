@@ -4,16 +4,16 @@ import clsx from 'clsx';
 const ACTION = 'gap-2.5 rounded-action px-5 text-xl font-extrabold disabled:opacity-40';
 
 const VARIANTS = {
-  primary: `${ACTION} bg-accent text-accent-ink`,
-  secondary: `${ACTION} bg-surface-2 text-text`,
-  surface: 'rounded-chip bg-surface text-text',
-  raised: 'rounded-chip bg-surface-2 text-text disabled:opacity-40',
-  danger: 'rounded-chip bg-surface-2 text-missed disabled:opacity-40',
-  tile: 'rounded-tile bg-surface text-text',
+  primary: `${ACTION} bg-brass text-ink shadow-plank`,
+  secondary: `${ACTION} panel text-text`,
+  surface: 'rounded-chip border border-outline bg-panel text-text',
+  raised: 'rounded-chip border border-outline-strong bg-surface-2 text-text disabled:opacity-40',
+  danger: 'rounded-chip border border-outline bg-surface-2 text-missed disabled:opacity-40',
+  tile: 'rounded-tile panel text-text',
   outline: 'rounded-chip border border-accent bg-transparent text-accent disabled:opacity-40',
   dashed: 'rounded-full border-2 border-dashed border-outline-strong bg-transparent text-muted',
-  made: 'rounded-chip bg-made text-ground',
-  missed: 'rounded-chip bg-missed text-ground',
+  made: 'rounded-chip bg-made text-ink',
+  missed: 'rounded-chip bg-missed text-ink',
   quiet: 'rounded-chip bg-transparent text-text',
 } as const;
 

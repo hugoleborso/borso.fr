@@ -34,8 +34,18 @@ Mockups validated by the operator: https://claude.ai/artifact/FVqS42YbwSCAYT7HgK
 - Made reads green and missed reads red, each at least 4.5:1 against the
   ground colour and both surface colours, where their points and notes sit. No player colour sits within 45 degrees of OKLCH hue of
   either, unless it is a grey (chroma under 0.06).
-  `site/src/lib/color-clash.core.test.ts` reads `tokens.css` and holds both
+  `site/src/styles/palette.test.ts` reads `tokens.css` and holds both
   rules.
+- The look is a ship's hold. The page is dark planks, cards and sheets are
+  dark wood panels with a thin brass edge, and the main action is brass with
+  dark ink on it. Titles are Pirata One filled with a gold gradient. The
+  textures are photographs, not drawings, and there is no glow.
+- A dark wash over each wood texture keeps every text colour at 4.5:1 or more
+  on its lightest 5% of pixels. The ground and surface colours are each
+  texture's mean colour under its wash, and the palette test holds that link.
+- The textures are CC0: "Dark Wooden Planks" by Amal Kumar on Poly Haven
+  (polyhaven.com/a/dark_wooden_planks), and Wood067 and Metal007 on ambientCG
+  (ambientcg.com). They load as WebP with a JPEG fallback, 281 KB in all.
 
 ## Screens
 

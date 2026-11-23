@@ -31,7 +31,7 @@ export function MyGamesStrip({ games, onOpen }: MyGamesStripProps) {
               onClick={() => {
                 onOpen(game.joinCode);
               }}
-              className="flex min-h-11 w-36 cursor-pointer flex-col gap-2 rounded-tile p-3 text-left bg-surface"
+              className="flex min-h-11 w-36 cursor-pointer flex-col gap-2 rounded-tile p-3 text-left panel"
             >
               <span className="flex items-center justify-between text-xs font-semibold text-muted">
                 {formatGameDate(game.openedAt, i18n.language)}

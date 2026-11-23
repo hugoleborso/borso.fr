@@ -14,12 +14,12 @@ const COLOR_BACKGROUNDS: Readonly<Record<PlayerColor, string>> = {
 };
 
 const SIZES = {
-  tiny: { disc: 'size-6', glyph: 'size-3.5 text-ground', stroke: 2.5 },
-  small: { disc: 'size-10', glyph: 'size-5.5 text-ground', stroke: 2 },
-  medium: { disc: 'size-11', glyph: 'size-6 text-ground', stroke: 2 },
-  large: { disc: 'size-12', glyph: 'size-6 text-ground', stroke: 2 },
-  big: { disc: 'size-16', glyph: 'size-7.5 text-ground', stroke: 2 },
-  hero: { disc: 'size-24', glyph: 'size-12 text-ground', stroke: 1.8 },
+  tiny: { disc: 'size-6', glyph: 'size-3.5 text-ink', stroke: 2.5 },
+  small: { disc: 'size-10', glyph: 'size-5.5 text-ink', stroke: 2 },
+  medium: { disc: 'size-11', glyph: 'size-6 text-ink', stroke: 2 },
+  large: { disc: 'size-12', glyph: 'size-6 text-ink', stroke: 2 },
+  big: { disc: 'size-16', glyph: 'size-7.5 text-ink', stroke: 2 },
+  hero: { disc: 'size-24', glyph: 'size-12 text-ink', stroke: 1.8 },
 } as const;
 
 export type PlayerMarkSize = keyof typeof SIZES;

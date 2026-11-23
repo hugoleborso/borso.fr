@@ -17,7 +17,7 @@ export function ProgressBar({ current, total, label }: ProgressBarProps) {
             'h-1.5 rounded-full',
             step < current && 'bg-accent-deep',
             step === current && 'bg-accent',
-            step > current && 'bg-surface-2',
+            step > current && 'bg-surface-2 ring-1 ring-inset ring-outline',
           )}
         />
       ))}

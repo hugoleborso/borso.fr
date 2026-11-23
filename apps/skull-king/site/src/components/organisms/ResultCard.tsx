@@ -37,7 +37,7 @@ export function ResultCard(props: ResultCardProps) {
   const bidLabel = entry.bid === null ? t('scoring.noBid') : t('scoring.bid', { bid: entry.bid });
 
   return (
-    <section aria-label={player.name} className="flex flex-col gap-3 rounded-tile p-3 bg-surface">
+    <section aria-label={player.name} className="flex flex-col gap-3 rounded-tile p-3 panel">
       <div className="flex items-center gap-2.5">
         <NamedMark
           icon={player.icon}
@@ -49,7 +49,7 @@ export function ResultCard(props: ResultCardProps) {
         />
         <span
           aria-label={bidLabel}
-          className="flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-lg font-extrabold whitespace-nowrap bg-surface-2"
+          className="flex h-8 min-w-8 items-center justify-center rounded-lg px-1.5 text-lg font-extrabold whitespace-nowrap border border-outline bg-surface-2"
         >
           {formatBid(entry)}
         </span>

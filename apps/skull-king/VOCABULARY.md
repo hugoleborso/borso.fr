@@ -43,7 +43,7 @@ from `PLAYER_ICONS` and `PLAYER_COLORS` in `domain/player-mark.core.ts`. Each
 icon id is the name of a Lucide icon, which `Glyph` draws. Inside a game the
 mark carries the player's first name, through `NamedMark`. No colour may read as
 the green of a made bid or the red of a missed one, which
-`site/src/lib/color-clash.core.test.ts` checks against `tokens.css`.
+`site/src/styles/palette.test.ts` checks against `tokens.css`.
 
 Lives in: `domain/player-mark.core.ts`
 

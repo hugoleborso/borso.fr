@@ -106,7 +106,7 @@ export function ScoresScreen({ game, onContinue, onRematch }: ScoresScreenProps)
         />
       </div>
 
-      <footer className="sticky bottom-0 flex flex-col gap-3 px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-ground">
+      <footer className="sticky bottom-0 flex flex-col gap-3 px-4 pt-3 border-t border-outline pb-[max(1.5rem,env(safe-area-inset-bottom))] bg-planks">
         <ErrorNote code={readRejectionCode(rematch.error ?? claimSeat.error)} />
         {isFinished ? (
           <Button

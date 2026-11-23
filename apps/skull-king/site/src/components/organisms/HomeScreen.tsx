@@ -82,7 +82,7 @@ export function HomeScreen() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-8 px-4 pt-14 pb-6">
-      <h1 className="m-0 text-center font-display text-6xl leading-none font-normal">
+      <h1 className="m-0 text-center font-display text-6xl leading-none font-normal text-gilt">
         {t('appName')}
       </h1>
 

@@ -13,6 +13,7 @@ const MINIMUM_HUE_DISTANCE = 45;
 const NEUTRAL_CHROMA = 0.06;
 const MINIMUM_CONTRAST = 4.5;
 
+const PERCENT = 100;
 const HEX_TOKEN = /--color-([a-z0-9-]+):\s*(#[0-9a-f]{6});/gu;
 const CHANNEL_MAXIMUM = 255;
 const HEX_RADIX = 16;
@@ -123,9 +124,9 @@ function selectContrast(first: string, second: string): number {
   return ((lighter ?? 0) + CONTRAST_FLARE) / ((darker ?? 0) + CONTRAST_FLARE);
 }
 
-const PALETTE = readColorTokens(
-  readFileSync(join(import.meta.dirname, '../styles/tokens.css'), 'utf8'),
-);
+const TOKENS_CSS = readFileSync(join(import.meta.dirname, '../styles/tokens.css'), 'utf8');
+
+const PALETTE = readColorTokens(TOKENS_CSS);
 
 function readToken(name: string): string {
   const hex = PALETTE.get(name);
@@ -133,8 +134,49 @@ function readToken(name: string): string {
   return hex;
 }
 
+interface Wash {
+  readonly channels: Vector;
+  readonly share: number;
+}
+
+function readWash(name: string): Wash {
+  const match = new RegExp(
+    `--color-wash-${name}:\\s*rgb\\((\\d+) (\\d+) (\\d+) / (\\d+)%\\);`,
+    'u',
+  ).exec(TOKENS_CSS);
+  if (match === null) throw new Error(`tokens.css has no --color-wash-${name}`);
+  return {
+    channels: [Number(match[1]), Number(match[2]), Number(match[3])],
+    share: Number(match[4]) / PERCENT,
+  };
+}
+
+function mixChannels(texture: Vector, wash: Wash): Vector {
+  const [red, green, blue] = texture.map(
+    (channel, index) => channel * (1 - wash.share) + (wash.channels[index] ?? 0) * wash.share,
+  );
+  return [red ?? 0, green ?? 0, blue ?? 0];
+}
+
+function readChannels(hex: string): Vector {
+  return [
+    readChannel(hex, RED_START) * CHANNEL_MAXIMUM,
+    readChannel(hex, GREEN_START) * CHANNEL_MAXIMUM,
+    readChannel(hex, BLUE_START) * CHANNEL_MAXIMUM,
+  ];
+}
+
+const ROUNDING_CHANNELS = 1;
 const SIGNALS = ['made', 'missed'] as const;
+const TEXTS = ['text', 'muted', 'muted-2', 'accent', ...SIGNALS] as const;
 const BACKGROUNDS = ['ground', 'surface', 'surface-2'] as const;
+const INK_FILLS = ['brass', 'accent', ...SIGNALS] as const;
+
+const MEASURED_TEXTURES = [
+  { file: 'wood-planks', meanRgb: [77, 63, 49], wash: 'ground', token: 'ground' },
+  { file: 'dark-wood-panel', meanRgb: [58, 36, 22], wash: 'surface', token: 'surface' },
+] as const;
+const MEASURED_BRASS_RGB: Vector = [204, 157, 76];
 
 // @FollowsBlueprint test-pure-unit
 describe('the palette in tokens.css', () => {
@@ -145,12 +187,39 @@ describe('the palette in tokens.css', () => {
     },
   );
 
-  it.each(
-    SIGNALS.flatMap((signal) => BACKGROUNDS.map((background) => [signal, background] as const)),
-  )('keeps the %s colour readable on the %s colour', (signal, background) => {
-    expect(selectContrast(readToken(signal), readToken(background))).toBeGreaterThanOrEqual(
+  it.each(TEXTS.flatMap((text) => BACKGROUNDS.map((background) => [text, background] as const)))(
+    'keeps the %s colour readable on the %s colour',
+    (text, background) => {
+      expect(selectContrast(readToken(text), readToken(background))).toBeGreaterThanOrEqual(
+        MINIMUM_CONTRAST,
+      );
+    },
+  );
+
+  it.each(INK_FILLS)('keeps the dark ink readable on the %s colour', (fill) => {
+    expect(selectContrast(readToken('ink'), readToken(fill))).toBeGreaterThanOrEqual(
       MINIMUM_CONTRAST,
     );
+  });
+});
+
+describe('the textures behind the ground, surface and brass colours', () => {
+  it.each(MEASURED_TEXTURES)(
+    'paints $file under its wash at the $token colour',
+    ({ meanRgb, wash, token }) => {
+      const washed = mixChannels(meanRgb, readWash(wash));
+      const painted = readChannels(readToken(token));
+      washed.forEach((channel, index) => {
+        expect(Math.abs(channel - (painted[index] ?? 0))).toBeLessThanOrEqual(ROUNDING_CHANNELS);
+      });
+    },
+  );
+
+  it('paints the brass texture at the brass colour', () => {
+    const painted = readChannels(readToken('brass'));
+    MEASURED_BRASS_RGB.forEach((channel, index) => {
+      expect(Math.abs(channel - (painted[index] ?? 0))).toBeLessThanOrEqual(ROUNDING_CHANNELS);
+    });
   });
 });
 

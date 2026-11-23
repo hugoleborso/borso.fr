@@ -18,8 +18,8 @@ export function RankingTile({ standing, isLeader, isMine, claimLabel, onClaim }:
     <li
       aria-label={`${player.name} ${String(total)}`}
       className={clsx(
-        'flex flex-col items-center gap-1 rounded-tile px-1 py-3',
-        isLeader ? 'bg-accent-shade ring-2 ring-inset ring-accent-deep' : 'bg-surface',
+        'flex flex-col items-center gap-1 rounded-tile px-1 py-3 panel',
+        isLeader && 'ring-2 ring-inset ring-accent',
       )}
     >
       {claimLabel === null ? (

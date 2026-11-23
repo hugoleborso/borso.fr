@@ -43,7 +43,7 @@ export function CardTile({
         )}
       />
       {badge === null ? null : (
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-1.5 text-xs font-extrabold bg-accent text-accent-ink">
+        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-1.5 text-xs font-extrabold bg-accent text-ink">
           {badge}
         </span>
       )}

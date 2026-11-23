@@ -98,7 +98,7 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
     gridTemplateColumns: `1.25rem repeat(${String(players.length)}, minmax(2.75rem, 1fr))`,
   };
   return (
-    <section aria-label={t('scores.detail')} className="overflow-x-auto bg-surface sm:rounded-tile">
+    <section aria-label={t('scores.detail')} className="overflow-x-auto panel sm:rounded-tile">
       <div className="min-w-fit">
         {table.getHeaderGroups().map((headerGroup) => (
           <div key={headerGroup.id} className="grid py-2" style={layout} aria-hidden="true">
@@ -110,7 +110,7 @@ export function ScoreGrid({ players, rounds, onOpenCell }: ScoreGridProps) {
           </div>
         ))}
         {table.getRowModel().rows.map((row) => (
-          <div key={row.id} className="grid border-t border-ground" style={layout}>
+          <div key={row.id} className="grid border-t border-surface-2" style={layout}>
             {row.getVisibleCells().map((cell) => (
               <Fragment key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
