@@ -25,6 +25,8 @@ function readBuildSetting(name: string): string | undefined {
 }
 
 const sentryAuthToken = readBuildSetting('SENTRY_AUTH_TOKEN');
+const LOCAL_BUILD_VERSION = 'local';
+const buildVersion = readBuildSetting('GITHUB_SHA') ?? LOCAL_BUILD_VERSION;
 
 function buildSourceMapUpload(authToken: string): PluginOption {
   const release = readBuildSetting('GITHUB_SHA');
@@ -40,6 +42,9 @@ function buildSourceMapUpload(authToken: string): PluginOption {
 
 export default defineConfig({
   root: fromHere('./site'),
+  define: {
+    __BUILD_VERSION__: JSON.stringify(buildVersion),
+  },
   publicDir: fromHere('./site/public'),
   resolve: {
     alias: {

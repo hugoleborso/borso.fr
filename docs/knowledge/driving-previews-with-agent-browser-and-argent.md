@@ -1,11 +1,12 @@
 ---
-summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <target>`. A swipe is `scripts/phone.sh swipe <target> <dx> <dy>`. A target is a CSS selector or `text=<name>`. Plus the traps of a signed-in pragma run, such as the saved query cache hiding an API write.'
+summary: 'Call `agent-browser` directly: it needs no flag or config here. A click is a mouse press, so a real tap is `scripts/phone.sh touch <target>`. A swipe is `scripts/phone.sh swipe <target> <dx> <dy>`. A target is a CSS selector or `text=<name>`. Plus the traps of a signed-in pragma run, such as the saved query cache hiding an API write and reads batched behind one POST.'
 triggers:
   commands:
     - '\.preview\.borso\.fr'
     - 'scripts/dev-server\.sh\s+start\s+pragma'
     - 'scripts/phone\.sh'
     - 'agent-browser install'
+    - 'agent-browser\s+network\s+route'
   output:
     - 'ERR_CONNECTION_RESET'
 ---
@@ -133,6 +134,12 @@ reload, and no request leaves the page. Two validators on PR #377 lost a row
 to it. Put the case in the app's test seed under `api/src/__test/` when you
 can, so the next run has it too. When you must write through the API, run
 `agent-browser eval "localStorage.removeItem('pragma.query-cache')"` and reload.
+
+**pragma sends its reads as one `POST /api/read-batch`.** A `network route`
+on `/api/streaks` never matches, because no `GET /api/streaks` leaves the page
+(measured on PR #395). Seed the state instead. If you must mock a read, wrap
+`fetch` in an init script and answer the batch entry, then clear
+`pragma.query-cache` so the restored answer does not hide it.
 
 **`screenshot --full` captures the window, not a scrolled container.** Where a
 page scrolls an inner element, scroll it into view or screenshot the element,

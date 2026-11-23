@@ -110,11 +110,10 @@ describe('StreakSheet', () => {
     const sheet = renderSheet();
     const card = within(sheet).getByRole('group', { name: 'Jokers · 2 of 3' });
     const pips = [...card.querySelectorAll('[data-joker]')];
-    expect(pips.map((pip) => [pip.getAttribute('data-joker'), pip.textContent])).toEqual([
-      ['spent', 'Wed'],
-      ['left', ''],
-      ['left', ''],
-    ]);
+    expect(pips.map((pip) => pip.getAttribute('data-joker'))).toEqual(['spent', 'left', 'left']);
+    expect(within(card).getByText('Wed').getAttribute('aria-hidden')).toBe('true');
+    expect(within(card).getByText('Wed, saved by a joker').getAttribute('class')).toBe('sr-only');
+    expect(pips[1]?.textContent).toBe('');
     expect(within(card).getByText('Back on Monday')).toBeTruthy();
   });
 

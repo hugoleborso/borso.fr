@@ -24,7 +24,14 @@ export function JokersCard({ pips, jokersLeft, jokersPerWeek }: JokersCardProps)
           <span key={pip.id} data-joker={pip.kind} className="flex flex-col items-center gap-1">
             <span aria-hidden="true" className={JOKER_PIP_CLASS[pip.kind]} />
             {pip.weekdayName === null ? null : (
-              <span className="text-label text-ink-soft">{pip.weekdayName}</span>
+              <>
+                <span aria-hidden="true" className="text-label text-ink-soft">
+                  {pip.weekdayName}
+                </span>
+                <span className="sr-only">
+                  {t('streaks.dayState.joker', { weekday: pip.weekdayName })}
+                </span>
+              </>
             )}
           </span>
         ))}

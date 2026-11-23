@@ -15,7 +15,6 @@ import { isQueryPersisted } from './queries/persisted-query.core';
 const DEFAULT_STALE_TIME_MS = 300_000;
 const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const PERSISTED_CACHE_KEY = 'pragma.query-cache';
-const PERSISTED_CACHE_SHAPE_VERSION = '3';
 
 const ENDED_SESSION: SessionProbeResult = { authenticated: false };
 
@@ -47,7 +46,7 @@ function isMutationPersisted(): boolean {
 export const queryCachePersistOptions = {
   persister: queryCachePersister,
   maxAge: PERSISTED_CACHE_MAX_AGE_MS,
-  buster: PERSISTED_CACHE_SHAPE_VERSION,
+  buster: __BUILD_VERSION__,
   dehydrateOptions: {
     shouldDehydrateMutation: isMutationPersisted,
     shouldDehydrateQuery: isQueryPersisted,

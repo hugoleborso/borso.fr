@@ -1,12 +1,17 @@
 import { readFunctionName } from './impurity.js';
 
+const VERB_TABLE =
+  'Verbs: `find…` the thing or `null`, `get…` the thing and throws when absent, `list…` an array, ' +
+  '`build…` or `compose…` a new value, `project…` or `derive…` a view, `select…` what a rule chooses, ' +
+  '`is…`, `has…` or `can…` a boolean.';
+
 const ARRAY_MESSAGE =
   '`{{name}}` starts with `{{verb}}`, which promises {{promise}}, and the return type is {{actual}}. ' +
-  'Rename it or change what it returns. See docs/standards/01-naming.md.';
+  `Rename it or change what it returns. ${VERB_TABLE}`;
 
 const THROWING_FIND_MESSAGE =
   '`{{name}}` starts with `find…`, which promises `null` when the thing is absent, and it throws. ' +
-  'Return `null` instead, or rename it `get…`, the verb that throws. See docs/standards/01-naming.md.';
+  `Return \`null\` instead, or rename it \`get…\`, the verb that throws. ${VERB_TABLE}`;
 
 const LIST_PREFIX = /^list(?=[A-Z])/;
 const FIND_PREFIX = /^find(?=[A-Z])/;
