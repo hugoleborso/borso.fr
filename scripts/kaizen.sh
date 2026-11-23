@@ -222,11 +222,11 @@ case "${1:-}" in
   balance)
     # A sweep removes at least as much as it adds. Not counted, by the
     # operator's choice on 2026-11-19: the sweep's own records, knowledge
-    # entries, ADRs, the operator backlog, the lockfile and test snapshots.
+    # entries and dantotsus, ADRs, the operator backlog, the lockfile and test snapshots.
     # Over the 60 sweeps before that day the full count was 42,304 lines added
     # for 5,421 removed, beside a written rule that already said to subtract.
     not_counted='docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md'
-    not_counted+='|docs/(knowledge|adr|operator-backlog)/.*|pnpm-lock[.]yaml|.*/__snapshots__/.*'
+    not_counted+='|docs/(knowledge|dantotsus|adr|operator-backlog)/.*|pnpm-lock[.]yaml|.*/__snapshots__/.*'
     base="${2:-origin/main}"
     numstat="$(git -C "$REPO_ROOT" diff --numstat --no-renames "$base...HEAD")" ||
       { printf 'scripts/kaizen.sh: cannot compare with %s; fetch origin first\n' "$base" >&2; exit 2; }

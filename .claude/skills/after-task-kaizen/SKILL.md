@@ -369,8 +369,7 @@ plus whatever code commits the eradications required. PR title:
 
 **The sweep removes at least as much as it adds.** After the last commit, run
 `scripts/kaizen.sh balance` and paste its line under the body's description.
-It leaves out the sweep's records, knowledge entries, ADRs, the operator
-backlog, the lockfile and test snapshots, and counts the rest. When it
+It counts code, and its `not_counted` list names what it leaves out. When it
 refuses, remove what each addition replaces: fold an entry into one that
 exists, delete the check or text the new mechanism makes redundant. CI runs
 the same command as `kaizen-balance`. A sweep that still adds more stays red,
