@@ -1,5 +1,5 @@
 ---
-summary: 'Driving pragma from a validator: the seeded logins, ids that change on every seed, the `pragma.session-seen` localStorage marker a cookie alone lacks, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
+summary: 'Driving pragma from a validator: the seeded logins, ids that change on every seed, the `pragma.session-seen` localStorage marker a cookie alone lacks, a fresh rate-limit bucket per `X-Forwarded-For`, and why claims about stored passkeys belong in back-e2e.'
 triggers:
   paths:
     - 'docs/features/pragma/*/validation/**'
@@ -73,13 +73,13 @@ never prod. Restarting `pnpm dev` no longer clears them, because they live in
 the database rather than in the process; reseeding does not clear them
 either.
 
-## Passkeys cannot be exercised in a browser here
+## Passkeys in the browser need a virtual authenticator
 
-`agent-browser` exposes no WebAuthn virtual authenticator, and no seeded
-member holds a passkey, so a claim such as "a member's passkeys survive a
-recovery" cannot be observed from the browser in either direction. Put it
-in a back-e2e case instead: insert a `member_passkey` row through the
-repository, perform the action, and assert the row is still there.
+`agent-browser` has no WebAuthn command. A CDP virtual authenticator signs
+the ceremony, as [a-passkey-screen-through-a-cdp-virtual-authenticator](./a-passkey-screen-through-a-cdp-virtual-authenticator.md)
+says. A claim about stored rows, such as "a member's passkeys survive a
+recovery", still belongs in back-e2e: insert a `member_passkey` row through
+the repository, perform the action, and assert the row is still there.
 `auth.controller.test.ts` does exactly that.
 
 ## Proving one named test ran

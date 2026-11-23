@@ -104,6 +104,8 @@ The session that shipped the feature runs the kaizen sweep itself or hands it to
    - the instruction to run `/after-task-kaizen` on that pull request;
    - any line logged after the archive, pasted verbatim, since the local `KAIZEN.md` dies with this container.
 
+   Nothing else. The skill holds its own steps and reads every operator message from the transcript, so a step or a lesson restated here is a second copy the operator has to read twice.
+
    Title it `Kaizen sweep for PR #N`. When the session holds no such tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
 
 ## What the budget leaves out

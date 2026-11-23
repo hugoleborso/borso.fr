@@ -2,13 +2,8 @@
 # PreToolUse, PostToolUse and PostToolUseFailure — put a knowledge entry in
 # front of the agent at the moment it applies, rather than wait to be searched.
 #
-# A knowledge entry is found only by someone who already suspects its answer.
-# Nine dantotsus record the same thing: the entry existed, was correct, and the
-# trap hit anyway; what finally held each time was a hook or a gate printing the
-# entry where the wrong conclusion was being formed. This hook is that, for
-# every entry: each one declares in its front matter the file paths, commands
-# and output text it applies to (see knowledge-triggers.py), and this matches
-# the call against them.
+# Each entry declares in its front matter the paths, commands and output text
+# it applies to (see knowledge-triggers.py), and this matches the call.
 #
 #   PreToolUse  (Write, Edit, MultiEdit, NotebookEdit)  the target path
 #   PreToolUse  (Bash)                                   the command, minus mentions,

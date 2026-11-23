@@ -8,16 +8,9 @@
 #
 # The hook owns no limit of its own. It hands the body to the checker, so the
 # numbers live in one place and a body that passes the checker by hand cannot
-# be refused here. Until 2026-09-16 it enforced the opposite — a floor of 800
-# characters and three toggles — which is what made a body nobody wanted to
-# rewrite.
+# be refused here.
 #
-# Output contract (Claude Code PreToolUse hook):
-#   - exit 0 + no stderr → command runs as-is.
-#   - exit 2 + stderr message → command is blocked; the message is
-#     surfaced to the agent so it can self-correct. Exit 1 does NOT block:
-#     the harness treats any non-zero-but-not-2 code as a non-blocking
-#     error, prints it, and runs the command anyway.
+# Output contract: exit 2 with a message on stderr blocks the call; exit 1 does not.
 #
 # The hook never edits the command. The /open-pr skill is the only path
 # that produces a compliant body.

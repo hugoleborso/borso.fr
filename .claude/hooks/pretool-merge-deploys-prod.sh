@@ -2,24 +2,9 @@
 # PreToolUse — merging to `main` is the prod deploy, so name what it is about to
 # deploy before it happens.
 #
-# CLAUDE.md said, for months, that only the human can merge to `main` ("Claude
-# cannot"), and built the case for automatic prod deploys on it: the merge IS
-# the gate. On PR #95 the operator asked Claude to merge and Claude merged.
-# Nothing in this repository can see a branch-protection rule, so the sentence
-# was never checkable — it was a belief about the harness written in a file
-# that cannot observe the harness, exactly what CLAUDE.md's own last "Don't"
-# forbids.
-#
-# The honest replacement is not a confirmation prompt. CLAUDE.md rules that out
-# for owner-triggered deploys in a one-person lab, and prefers making the
-# consequence visible beforehand. So this hook prints the consequence: which
-# applications this merge will deploy to production, and whether the merge owes
-# a `shared-deploy` dispatch afterwards.
-#
-# It answers two tool shapes, because there are two ways to merge from here and
-# for months it watched only one. Registered on `mcp__github__merge_pull_request`
-# alone, it stayed silent through PR #199's `gh pr merge` in a Bash call, and six
-# applications deployed to production with nothing printed. See
+# It prints which applications the merge deploys and whether it owes a
+# `shared-deploy` dispatch, on both `mcp__github__merge_pull_request` and
+# `gh pr merge`. The history is in
 # docs/dantotsus/the-merge-whose-blast-radius-nobody-printed.md.
 #
 # The application list is NOT computed here. `scripts/pr/deploy-fanout.ts` holds

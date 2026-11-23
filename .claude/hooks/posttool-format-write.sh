@@ -2,11 +2,6 @@
 # PostToolUse (Edit|Write|MultiEdit) — format the file that was just written, so
 # style drift never reaches the pre-commit gate.
 #
-# The gate checks the format of the staged files and fails on drift; it does
-# not fix it. Nothing formatted a file between the edit and the commit, so a
-# single misplaced line cost a whole rejected-commit cycle for zero semantic
-# change. This hook is the writer that was missing above the detector.
-#
 # Best-effort by contract: it ALWAYS exits 0. The commit-time gate is the real
 # enforcement, so a hiccup here must never block an edit or feed an error back
 # to the model.
@@ -18,10 +13,10 @@
 # agent ends up reasoning about a file it no longer has. Lint stays a gate that
 # reports, and the author fixes it.
 #
-# Markdown is excluded for the reason the formatter's ignore list gives — the
-# formatters rewrite emphasis markers and pad table cells with no way to stop
-# it — but relying on that list alone would still spawn a formatter per
-# markdown edit, so the case statement below skips those extensions outright.
+# Markdown is skipped: the formatters rewrite its emphasis and tables.
+#
+# When the formatter changed the file, the agent is told, because a later
+# exact-text replace written against the text it sent finds nothing (PR #389).
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0
@@ -54,9 +49,12 @@ esac
 
 # A repository with neither formatter installed has nothing to format with, and
 # this hook ships in a plugin that such a repository can install.
+BEFORE=$(cksum <"$FILE")
 if [ -x node_modules/.bin/oxfmt ]; then
   node_modules/.bin/oxfmt "$FILE" >/dev/null 2>&1 || true
 elif [ -x node_modules/.bin/prettier ]; then
   node_modules/.bin/prettier --write --ignore-unknown --cache "$FILE" >/dev/null 2>&1 || true
 fi
+[ "$BEFORE" = "$(cksum <"$FILE")" ] ||
+  jq -n --arg f "$FILE" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: "[format-write] The formatter rewrote \($f). Read it again before an exact-text replace."}}'
 exit 0

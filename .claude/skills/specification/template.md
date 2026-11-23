@@ -88,7 +88,8 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 
 ### Types / domain model
 ```ts
-// New value objects, entities, request/response shapes.
+// New value objects, entities, and the request and response body of every route.
+// Each value a person enters names what the screen shows before anyone touches it (a bid shows 0, not a dash).
 ```
 
 ### Database changes

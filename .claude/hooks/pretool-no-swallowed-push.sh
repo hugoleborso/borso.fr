@@ -8,25 +8,15 @@
 # is not piped and scrolls past above whatever `tail` printed. The failure looks
 # exactly like the success.
 #
-# That is not hypothetical: a push rejected by the pre-push gate read as a
-# successful one for two hours on the branch that added this file, because the
-# command was written `git push … | tail -3` to keep the output short.
-#
 # The same shape swallows a commit: `git commit | tail` hides a hook rejection
 # and leaves the tree looking committed when nothing was.
 #
 # See docs/dantotsus/a-push-that-failed-and-reported-success.md.
 #
 # A commit or push that skips its hooks with `--no-verify` or `HUSKY=0` throws
-# the gates' status away before it exists, so it is refused here too. CLAUDE.md
-# carried "Never --no-verify" as prose for months with nothing that refused it.
+# the gates' status away before it exists, so it is refused here too.
 #
-# Output contract (Claude Code PreToolUse hook):
-#   - exit 0 + no stderr → command runs as-is.
-#   - exit 2 + stderr message → command is blocked; the message is surfaced to
-#     the agent so it can self-correct. Exit 1 does NOT block: the harness
-#     treats any non-zero-but-not-2 code as a non-blocking error, prints it,
-#     and runs the command anyway.
+# Output contract: exit 2 with a message on stderr blocks the call; exit 1 does not.
 
 set -euo pipefail
 

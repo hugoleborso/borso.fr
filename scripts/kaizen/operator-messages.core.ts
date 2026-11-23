@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const ANSWER_PREFIX = 'The user answered:';
+const ANSWER_PREFIXES = ['The user answered:', 'Your questions have been answered:'];
 const HARNESS_MARKERS = [
   '<system-reminder>',
   '<task-notification>',
@@ -19,7 +19,10 @@ const userEventSchema = z.object({
   created_at: z.string(),
   user: z.object({
     internal_anthropic_catchall: z
-      .object({ message: z.object({ content: z.unknown() }).loose() })
+      .object({
+        message: z.object({ content: z.unknown() }).loose(),
+        isSynthetic: z.boolean().optional(),
+      })
       .loose()
       .optional(),
     message: z.object({ content: z.unknown() }).loose().optional(),
@@ -48,7 +51,8 @@ function isTypedByTheOperator(text: string): boolean {
 function readAnswer(block: unknown): string | null {
   const result = toolResultSchema.safeParse(block);
   if (!result.success || typeof result.data.content !== 'string') return null;
-  return result.data.content.startsWith(ANSWER_PREFIX) ? result.data.content : null;
+  const text = result.data.content;
+  return ANSWER_PREFIXES.some((prefix) => text.startsWith(prefix)) ? text : null;
 }
 
 function readTyped(content: unknown): string | null {
@@ -67,7 +71,8 @@ export function selectOperatorMessages(page: unknown): OperatorMessage[] {
   if (!parsed.success) return [];
   return parsed.data.data.flatMap((raw): OperatorMessage[] => {
     const event = userEventSchema.safeParse(raw);
-    if (!event.success) return [];
+    if (!event.success || event.data.user.internal_anthropic_catchall?.isSynthetic === true)
+      return [];
     const message = event.data.user.message ?? event.data.user.internal_anthropic_catchall?.message;
     const content = message?.content;
     const typedRaw = readTyped(content);
@@ -82,4 +87,21 @@ export function selectOperatorMessages(page: unknown): OperatorMessage[] {
       : [];
     return answers.map((text) => ({ at: event.data.created_at, text, isAnswer: true }));
   });
+}
+
+const savedBlocksSchema = z.array(z.object({ text: z.string() }).loose());
+const wrappedPageSchema = z.object({ ccr: z.unknown() });
+
+export function readSavedPage(saved: string): unknown {
+  const text = saved.startsWith('[')
+    ? savedBlocksSchema
+        .parse(JSON.parse(saved))
+        .map((block) => block.text)
+        .join('')
+    : saved;
+  const line = text.split('\n').find((candidate) => candidate.trimStart().startsWith('{'));
+  // Stryker disable next-line StringLiteral: equivalent mutant, JSON.parse refuses any fallback string alike
+  const parsed: unknown = JSON.parse(line ?? '');
+  const wrapped = wrappedPageSchema.safeParse(parsed);
+  return wrapped.success ? wrapped.data.ccr : parsed;
 }

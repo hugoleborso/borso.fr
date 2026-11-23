@@ -2,12 +2,7 @@
 # PostToolUse (Edit|Write|MultiEdit) — lint the code file that was just written
 # and hand its errors back while the change is still one edit old.
 #
-# The repository's custom rules carry the lessons of its dantotsus, and each
-# rule's message names its entry. They spoke only at the commit, after a whole
-# implementation stood on the shape they forbid. In PR #343 the first draft made
-# pragma's <main> scroll, which no-scroll-container-on-main and
-# docs/dantotsus/the-shell-that-scrolled-inside-a-window-that-still-could.md
-# already forbade, and only the lint run before the commit said so. See
+# Custom rules otherwise spoke only at the commit. See
 # docs/dantotsus/the-rule-that-spoke-only-at-the-commit.md.
 #
 # Every rule but the type-aware ones. tsgolint builds the program of the whole

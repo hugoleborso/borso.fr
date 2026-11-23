@@ -10,24 +10,15 @@
 # `get_status` answers `pending` with no statuses, forever, and nothing else on
 # the pull request says why.
 #
-# docs/knowledge/a-conflicted-pull-request-gets-no-checks.md has said this since
-# 2026-08-18, written after it cost a session on PR #62. It cost another session
-# an hour on PR #64 two days later, which is what a knowledge entry cannot fix:
-# it is only found by someone who already suspects the answer. This hook is the
-# detector that entry was missing — it fires on the reading itself, where the
-# wrong conclusion ("Actions must be down") is formed.
+# docs/knowledge/a-conflicted-pull-request-gets-no-checks.md holds the history.
 #
 # Best-effort by contract: it ALWAYS exits 0, and it never asserts the
 # conflict — it names the one field that settles it. A pull request can also
 # legitimately have no checks before its first workflow starts, and telling the
 # reader to go and look is right in both cases.
 #
-# It also speaks on a list that is not finished, or not whole. On PR #206 the
-# orchestrator told the operator CI was green while a job was still running, and
-# a list read with a page size shows a few runs of a total it names in the same
-# answer. Both read as "every check I can see passed". The hook names the runs
-# still going and the runs the page left out, because "green" is a claim about
-# all of them. See docs/dantotsus/green-said-of-a-run-still-going.md.
+# It also names runs still going and runs a page left out, because "green" is
+# a claim about all of them. See docs/dantotsus/green-said-of-a-run-still-going.md.
 #
 # It answers with `additionalContext`: plain stdout from a PostToolUse hook
 # reaches the debug log and not the model, which is what this hook printed into

@@ -3,10 +3,7 @@
 # container.
 #
 # A session ends at merge, and its container is reclaimed with whatever was not
-# pushed. PR #249 merged with an energy-bar prototype parked in `git stash` and
-# a patch in the scratchpad, both unreachable once the container went. The
-# final message said to "treat it as lost unless you want it saved somewhere",
-# after the merge, when saving it was no longer the session's to do.
+# pushed.
 #
 # The hook refuses the merge while tracked changes or stash entries exist in
 # the checkout, and names the ways out: push the work to the pull request's
@@ -14,10 +11,8 @@
 # Untracked files are not counted: build output and scratch files live there
 # and are meant to go.
 #
-# A hosted session is told to push to one branch only. On PR #293 that made the
-# `-wip` push look forbidden, so the session moved its stash to a patch in the
-# scratchpad, which is the loss this hook exists to stop and which it cannot
-# see. The message now says the push is asked for.
+# The message says the push to a `-wip` branch is asked for, because a hosted
+# session told to push to one branch only read it as forbidden (PR #293).
 #
 # See docs/dantotsus/a-prototype-in-the-tree-the-merge-was-using.md.
 #

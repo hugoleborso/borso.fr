@@ -47,6 +47,8 @@ NOTE=$(
 
 A variant that breaks one of them is not an option the operator can pick.
 
+With no `docs/features/<app>/<slug>/spec/spec.md` yet, run `/specification` and ask its questions first. PR #389 drew a new app's mockups with none asked, and ten operator corrections followed. Art comes from a free-licensed set, never drawn by hand.
+
 Draw a change over a capture of the real screen (`scripts/dev-server.sh start <app>`, then `agent-browser screenshot`), uploaded as an asset. Never redraw the rest of the app from memory.
 
 A phone board is one screen, 375 x 812, sheets included. Only a list may run past it. When anything else would make the screen scroll, cut or merge content until it fits, and say what went.
