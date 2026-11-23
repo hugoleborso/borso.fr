@@ -104,14 +104,7 @@ If the slice you just shipped touches visible UI, **open it in the running dev s
 
 The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
-Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
-
-```bash
-agent-browser screenshot /tmp/self-check.png
-scripts/browser/broken-images.sh
-```
-
-A non-zero exit is a stop-the-line — the row is not done, the broken image has to be diagnosed and fixed *before* you tag the slice complete.
+After the screenshot, run `scripts/browser/broken-images.sh`. A non-zero exit means the slice is not done.
 
 ## Procedure
 

@@ -167,7 +167,8 @@ interface PirateAvatar {
   hair keeps falling under it.
 - `suggestAvatar(seat)` gives each seat of a full table a different pirate. A
   player stored before avatars existed, or with a part a later version no
-  longer offers, reads as the pirate of their seat.
+  longer offers, reads as the pirate of the table seat they take, never of
+  their place in the regulars list.
 - The phone keeps the last pirate it built (`skull-king.last-pirate` in local
   storage). A new name typed on the home screen starts as that pirate, unless
   somebody at the table already wears it. A regular keeps the pirate they had,

@@ -138,32 +138,11 @@ Silently dropping a PASS run's evidence because an upload failed would turn the 
 
 ## Pixel-content checks (every screenshot)
 
-Before declaring any row PASS, the validator runs the broken-image scan
-against the current page. A typical PWA / SPA defect is an image that 404s,
-403s or fails to decode. DOM assertions pass, because the element is there,
-but the user sees alt text or an empty disc where a piece, an icon or a face
-should be.
-
-The canonical check is `scripts/browser/broken-images.sh`, with the same
-`--session` flag as the screenshot. It lists every `<img>` that fell back to
-its alt text and every SVG `<image>` whose source fails to decode, and exits 1
-when there is one. A non-zero exit FAILs the row that covered the screenshot,
-and the report names the broken sources. The validator runs it **for every
-screenshot it takes**, not just suspect ones.
-
-Sibling checks worth running per row when the asserted UI has them:
-
-- *"Does the rendered text match what the spec says?"* — `eval`
-  `document.querySelector(<selector>).textContent` and compare verbatim,
-  not just check existence.
-- *"Is the element positioned where the spec says it should be?"* —
-  `getBoundingClientRect()` against the related elements (e.g. "banner
-  above board" → `banner.top < board.top`).
-
-These three checks together turn the validator from a *DOM-presence
-inspector* into a *rendered-pixel-content inspector*. The gap closed
-here is the one where DOM assertions pass against an image that never
-actually rendered.
+DOM assertions pass on an image that never rendered. So after every
+screenshot the validator runs `scripts/browser/broken-images.sh` with the
+screenshot's `--session` flag. It covers `<img>` and SVG `<image>`, and a
+non-zero exit FAILs the row. Per row, it also compares asserted text verbatim
+with `textContent`, and asserted placement with `getBoundingClientRect()`.
 
 ## Common mistakes
 

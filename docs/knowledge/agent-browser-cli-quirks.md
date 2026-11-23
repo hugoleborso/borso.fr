@@ -1,5 +1,5 @@
 ---
-summary: 'agent-browser traps: launch flags ignored by a running daemon, no `resize`, a shared `eval` scope, sessions that wedge, clicks and fills that do nothing, `record start` without the cookie, uncorsed mocked routes, offline emulation that keeps a WebSocket and lets service-worker and worker requests through, and a full resource timing buffer under Vite.'
+summary: 'agent-browser traps: launch flags ignored by a running daemon, no `resize`, a shared `eval` scope, sessions that wedge, clicks and fills that do nothing, `record start` without the cookie, uncorsed mocked routes, offline emulation that keeps a WebSocket and lets service-worker and worker requests through, a full resource timing buffer under Vite, and element screenshots that cut off a box-shadow ring.'
 triggers:
   commands:
     - '\bagent-browser\b'
@@ -305,6 +305,15 @@ script the session opens with:
 ```js
 performance.setResourceTimingBufferSize(5000);
 ```
+
+## An element screenshot stops at the border box, so a box-shadow ring is cut off
+
+_Measured 2026-11-23, agent-browser 0.41.2._ `agent-browser screenshot '#mark' out.png`
+captures the element's border box. A ring drawn with `box-shadow` lies outside
+it, so it is missing from the image: a 40 px box with an 8 px ring gave a
+40 by 40 shot, and its 12 px padded parent gave 64 by 64 with the ring. To show
+a ring, such as Skull King's highlighted porthole, screenshot a parent with
+room around the element, or the viewport.
 
 ## Related
 

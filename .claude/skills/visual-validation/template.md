@@ -26,12 +26,6 @@ INPUTS:
 Read the spec, build the assertion list per your standard, drive agent-browser, capture evidence inside evidence_dir as absolute paths, and write the report at report_path. Return only the report path.
 
 Do not ask the user questions. Do not summarise the implementation. Do not skip edge cases.
-
-PIXEL-CONTENT CHECK (mandatory per screenshot, see standard.md):
-After every screenshot, run `scripts/browser/broken-images.sh` with the
-screenshot's `--session` flag. A non-zero exit means an `<img>` or an SVG
-`<image>` did not render. The row that captured the screenshot is then FAIL,
-and the report's Notes name the broken sources.
 ```
 
 The brief is intentionally short. The agent's standard, tooling rules, report format, and verdict semantics live in its definition file (`.claude/agents/visual-validator.md`). The brief only carries the *task-specific* paths.
