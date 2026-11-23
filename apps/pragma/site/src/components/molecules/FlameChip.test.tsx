@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import '../../i18n/i18n.setup';
+import { i18next } from '../../i18n/i18n.setup';
 import type { FlameTone } from '../atoms/flame-mark.utils';
 import { FlameChip } from './FlameChip';
 
@@ -56,5 +56,22 @@ describe('FlameChip', () => {
     expect(bonfire?.dataset.tone).toBe(tone);
     expect(bonfire?.getAttribute('class')).not.toContain(FLICKER);
     expect(bonfire?.getAttribute('class')).not.toContain('drop-shadow');
+  });
+});
+
+// @FollowsBlueprint test-component-render
+describe('the flame chip’s name', () => {
+  it.each([
+    ['en', 'Your flame, 1 day. Band flame, 1 day.'],
+    ['fr', 'Ta flamme, 1 jour. Flamme du groupe, 1 jour.'],
+  ])('says one day in the singular in %s', async (language, expected) => {
+    const translate = i18next.getFixedT(language);
+    await i18next.loadLanguages(language);
+    expect(
+      translate('streaks.chipLabel', {
+        mine: translate('streaks.mineChip', { count: 1 }),
+        band: translate('streaks.bandChip', { count: 1 }),
+      }),
+    ).toBe(expected);
   });
 });
