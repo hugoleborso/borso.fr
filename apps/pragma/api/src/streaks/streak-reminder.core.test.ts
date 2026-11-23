@@ -19,16 +19,16 @@ const TOM_PHONE = { memberId: TOM, endpoint: 'https://push.example/tom' };
 const ANA_PHONE = { memberId: ANA, endpoint: 'https://push.example/ana' };
 const EVERY_PHONE = [LEA_PHONE, TOM_PHONE, ANA_PHONE];
 
-function flameOf(memberId: string, days: number, isTodayCounted: boolean) {
-  return { memberId, flame: { days, isTodayCounted, jokersLeftThisWeek: 3 } };
+function flameOf(memberId: string, days: number, isTodayCounted: boolean, jokersLeftThisWeek = 3) {
+  return { memberId, flame: { days, isTodayCounted, jokersLeftThisWeek } };
 }
 
 // @FollowsBlueprint test-pure-unit
 describe('selectStreakReminders', () => {
-  it('warns a member whose open flame is above 2 days that it is at risk', () => {
+  it('warns a member whose open flame is above 2 days that tonight costs a joker', () => {
     const reminders = selectStreakReminders({
       today: TODAY,
-      members: [flameOf(LEA, 3, false)],
+      members: [flameOf(LEA, 3, false, 2)],
       subscriptions: [LEA_PHONE],
       preferences: [],
     });
@@ -37,9 +37,21 @@ describe('selectStreakReminders', () => {
         memberId: LEA,
         groupKey: `streak:${LEA}:${TODAY}`,
         messageKey: 'streak-at-risk',
-        parameters: { days: '3' },
+        parameters: { days: '3', jokersAfter: '1' },
         recipients: [LEA_PHONE],
       },
+    ]);
+  });
+
+  it('warns a member with no joker left that the flame goes out at midnight', () => {
+    const reminders = selectStreakReminders({
+      today: TODAY,
+      members: [flameOf(LEA, 9, false, 0)],
+      subscriptions: [LEA_PHONE],
+      preferences: [],
+    });
+    expect(reminders.map((reminder) => [reminder.messageKey, reminder.parameters])).toEqual([
+      ['streak-at-risk-last', { days: '9' }],
     ]);
   });
 
@@ -136,7 +148,7 @@ describe('buildStreakPayload', () => {
     if (reminder === undefined) throw new Error('no reminder selected');
     expect(buildStreakPayload(reminder)).toEqual({
       messageKey: 'streak-at-risk',
-      parameters: { days: '12' },
+      parameters: { days: '12', jokersAfter: '2' },
       url: '/',
       tag: 'streak:member-lea:2026-10-29',
     });
@@ -170,7 +182,7 @@ describe('countSentRemindersByKind', () => {
       countSentRemindersByKind([
         sent('streak-at-risk'),
         sent('streak-band-count'),
-        sent('streak-at-risk'),
+        sent('streak-at-risk-last'),
         sent('streak-band-count-one'),
       ]),
     ).toEqual([

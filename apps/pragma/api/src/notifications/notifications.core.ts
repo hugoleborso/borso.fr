@@ -261,7 +261,11 @@ function selectSubjectParameters(event: NotificationEvent): MessageParameters {
   }
 }
 
-export type StreakReminderKey = 'streak-at-risk' | 'streak-band-count' | 'streak-band-count-one';
+export type StreakReminderKey =
+  | 'streak-at-risk'
+  | 'streak-at-risk-last'
+  | 'streak-band-count'
+  | 'streak-band-count-one';
 
 export interface NotificationPayload {
   readonly messageKey: NotificationEvent['kind'] | StreakReminderKey;

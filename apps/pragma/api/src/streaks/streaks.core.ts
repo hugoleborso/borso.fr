@@ -50,10 +50,7 @@ function memberDaysOf(
     .map((presence) => presence.presentOn);
 }
 
-function activeDaysOf(input: OwnFlameInput): Set<CalendarDay> {
-  const ownDays = memberDaysOf(input.presences, (memberId) => memberId === input.memberId);
-  return new Set([...input.sessionDays, ...ownDays]);
-}
+const NO_DAY = new Set<CalendarDay>();
 
 export function firstLookbackDay(today: CalendarDay): CalendarDay {
   return shiftCalendarDay(today, -STREAK_LOOKBACK_DAYS);
@@ -69,7 +66,8 @@ export function collectSessionDays(
 }
 
 export function buildOwnFlame(input: OwnFlameInput): PersonalFlame {
-  return computePersonalFlame(activeDaysOf(input), input.today);
+  const ownDays = memberDaysOf(input.presences, (memberId) => memberId === input.memberId);
+  return computePersonalFlame(ownDays, input.sessionDays, input.today);
 }
 
 export function buildMemberFlames(input: MemberFlamesInput): MemberFlame[] {
@@ -91,7 +89,7 @@ export function buildStreaksView(input: StreaksInput): StreaksView {
   const mine = members.find((member) => member.memberId === input.memberId)?.flame;
   return {
     today: input.today,
-    mine: mine ?? computePersonalFlame(new Set(), input.today),
+    mine: mine ?? computePersonalFlame(NO_DAY, NO_DAY, input.today),
     band: computeBandFlame(new Set([...input.sessionDays, ...bandMemberDays]), input.today),
     members,
   };
@@ -99,7 +97,11 @@ export function buildStreaksView(input: StreaksInput): StreaksView {
 
 export function projectStreaksForTool(view: StreaksView) {
   return {
-    mine: view.mine,
+    mine: {
+      days: view.mine.days,
+      isTodayCounted: view.mine.isTodayCounted,
+      jokersLeftThisWeek: view.mine.jokersLeftThisWeek,
+    },
     band: view.band,
     members: view.members.map((member) => ({
       firstName: member.firstName,

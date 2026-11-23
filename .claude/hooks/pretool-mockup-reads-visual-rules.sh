@@ -19,7 +19,9 @@
 # timeline, the jokers and the band all scrolled on a phone. The operator's
 # rule is that only a list scrolls. A lint rule holds it in code
 # (no-vertical-scroll-container), but a mockup is drawn before any code, so
-# the hook states the board size here, at the canvas.
+# the hook states the board size here, at the canvas. On the same canvas the
+# session redrew the whole Home around the one chip it changed, inventing its
+# copy, cards and navigation, so it now names the capture to draw over.
 #
 # Advisory: it always exits 0 and answers with additionalContext. It speaks on
 # a quickstart whose intent is a design, once per session. A publish names its
@@ -44,6 +46,8 @@ NOTE=$(
   grep -rn -i -E 'colou?r|hue|icon|font|token' apps/<app>/VOCABULARY.md apps/<app>/DESIGN.md $(find apps/<app> -name INVARIANTS.md -not -path '*/node_modules/*')
 
 A variant that breaks one of them is not an option the operator can pick.
+
+Draw a change over a capture of the real screen (`scripts/dev-server.sh start <app>`, then `agent-browser screenshot`), uploaded as an asset. Never redraw the rest of the app from memory.
 
 A phone board is one screen, 375 x 812, sheets included. Only a list may run past it. When anything else would make the screen scroll, cut or merge content until it fits, and say what went.
 

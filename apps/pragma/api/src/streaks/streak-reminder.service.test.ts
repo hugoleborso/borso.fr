@@ -124,7 +124,7 @@ describe('the 20:00 streak reminder (back-e2e)', () => {
       {
         endpoint: deviceEndpoint('hugo-phone'),
         messageKey: 'streak-at-risk',
-        parameters: { days: '3' },
+        parameters: { days: '3', jokersAfter: '2' },
         url: '/',
         tag: `streak:${band.hugo.memberId}:${TODAY}`,
       },

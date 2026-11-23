@@ -980,17 +980,31 @@
     "sectionsLabel": "My part or my tasks"
   },
   "streaks": {
-    "mineChip_one": "Your flame, {{count}} day, {{status}}",
-    "mineChip_other": "Your flame, {{count}} days, {{status}}",
-    "bandChip_one": "Band flame, {{count}} day",
-    "bandChip_other": "Band flame, {{count}} days",
-    "todayCounted": "today counted",
-    "todayOpen": "today still open",
-    "jokersLeft_one": "{{count}} joker left this week",
-    "jokersLeft_other": "{{count}} jokers left this week",
-    "noFlame": "No flame yet",
-    "sheetTitle": "Flames",
-    "bandTitle": "Band"
+    "chipLabel": "{{mine}} {{band}}",
+    "mineChip_one": "Your flame, {{count}} day.",
+    "mineChip_other": "Your flame, {{count}} days.",
+    "bandChip_one": "Band flame, {{count}} day.",
+    "bandChip_other": "Band flame, {{count}} days.",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "mineTitle": "Your flame",
+    "bandTitle": "The band",
+    "todayOpen": "not yet today",
+    "jokersTitle": "Jokers · {{left}} of {{total}}",
+    "jokersBack": "Back on Monday",
+    "caption": {
+      "joker": "joker",
+      "session": "session",
+      "today": "today"
+    },
+    "dayState": {
+      "active": "{{weekday}}, counted",
+      "joker": "{{weekday}}, saved by a joker",
+      "missed": "{{weekday}}, missed",
+      "open": "{{weekday}}, not yet today",
+      "future": "{{weekday}}, still to come"
+    },
+    "sheetTitle": "Flames"
   },
   "band": {
     "title": "Band",

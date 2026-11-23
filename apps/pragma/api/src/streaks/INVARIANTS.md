@@ -23,6 +23,15 @@ Held by: `api/src/me/me-tools.controller.test.ts` › reads the flames in get_me
 - The `streak-reminder` job runs at 20:00 `Europe/Paris` in production only.
   A member whose day has not counted gets at most one push that day, claimed
   on the group key `streak:<memberId>:<day>`.
+- The at-risk push names what a missed day costs. With a joker left it is
+  `streak-at-risk` and says how many jokers will be left after tonight.
+  With none left it is `streak-at-risk-last` and says the flame goes out at
+  midnight.
+- `GET /api/streaks` returns the week of each flame. An assistant's
+  `get_me` does not: its projection keeps the count, today and the jokers.
 
 Held by: `api/src/streaks/streaks.controller.test.ts` › counts today once the member opens the app, with one presence for the day
 Held by: `api/src/streaks/streak-reminder.service.test.ts` › sends one push per open member and claims each group once when run twice
+Held by: `api/src/streaks/streak-reminder.core.test.ts` › warns a member whose open flame is above 2 days that tonight costs a joker
+Held by: `api/src/streaks/streak-reminder.core.test.ts` › warns a member with no joker left that the flame goes out at midnight
+Held by: `api/src/streaks/streaks.core.test.ts` › keeps both flames and each member’s count, without ids or colours

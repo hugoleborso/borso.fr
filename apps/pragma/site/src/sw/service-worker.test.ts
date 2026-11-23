@@ -199,7 +199,8 @@ describe('sw.js, push notifications', () => {
       ['setlist-changed', { setlistName: 'Summer' }],
       ['song-lineup-changed', { songTitle: 'Song' }],
       ['transition-changed', { songATitle: 'One', songBTitle: 'Two' }],
-      ['streak-at-risk', { days: '12' }],
+      ['streak-at-risk', { days: '12', jokersAfter: '2' }],
+      ['streak-at-risk-last', { days: '12' }],
       ['streak-band-count', { count: '3' }],
       ['streak-band-count-one', { count: '1' }],
     ] as const;
@@ -218,7 +219,8 @@ describe('sw.js, push notifications', () => {
       'Setlist changed',
       'Lineup changed',
       'Transition changed',
-      'Flame at risk',
+      'Your 12-day flame is waiting',
+      'Your 12-day flame goes out at midnight',
       'Practice time',
       'Practice time',
     ]);
@@ -230,7 +232,8 @@ describe('sw.js, push notifications', () => {
       'Setlist modifiée',
       'Composition modifiée',
       'Transition modifiée',
-      'Flamme en danger',
+      'Ta flamme de 12 jours attend',
+      'Ta flamme de 12 jours s’éteint à minuit',
       'À toi de jouer',
       'À toi de jouer',
     ]);
@@ -242,7 +245,8 @@ describe('sw.js, push notifications', () => {
       'Ana changed the setlist Summer',
       'Ana changed the lineup of Song',
       'Ana changed the transition One → Two',
-      'Keep your 12-day flame alive. Open Pragma before midnight.',
+      'Come by before midnight, or a joker goes. You will have 2 left.',
+      'No joker left this week. Open Pragma before midnight.',
       '3 members already lit their flame today. Your turn?',
       '1 member already lit their flame today. Your turn?',
     ]);
@@ -254,7 +258,8 @@ describe('sw.js, push notifications', () => {
       'Ana a modifié la setlist Summer',
       'Ana a modifié la composition de Song',
       'Ana a modifié la transition One → Two',
-      'Garde ta flamme de 12 jours. Ouvre Pragma avant minuit.',
+      'Passe avant minuit. Sinon un joker part, il t’en restera 2.',
+      'Tu n’as plus de joker cette semaine. Ouvre Pragma avant minuit.',
       '3 membres ont déjà allumé leur flamme aujourd’hui. À toi ?',
       '1 membre a déjà allumé sa flamme aujourd’hui. À toi ?',
     ]);

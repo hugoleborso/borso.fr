@@ -13,6 +13,7 @@ const YESTERDAY = '2026-10-28';
 const LEA = { id: 'member-lea', firstName: 'Léa', color: '#e0533a' };
 const TOM = { id: 'member-tom', firstName: 'Tom', color: '#3a7be0' };
 const NO_SESSION = new Set<string>();
+const ANY_WEEK = expect.any(Array);
 const LEA_ROW = { memberId: LEA.id, firstName: LEA.firstName, color: LEA.color };
 const TOM_ROW = { memberId: TOM.id, firstName: TOM.firstName, color: TOM.color };
 
@@ -28,20 +29,20 @@ describe('buildStreaksView', () => {
     });
     expect(view).toEqual({
       today: TODAY,
-      mine: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
+      mine: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3, week: ANY_WEEK },
       band: { days: 2, isTodayCounted: true },
       members: [
         {
           memberId: LEA.id,
           firstName: 'Léa',
           color: '#e0533a',
-          flame: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3 },
+          flame: { days: 2, isTodayCounted: true, jokersLeftThisWeek: 3, week: ANY_WEEK },
         },
         {
           memberId: TOM.id,
           firstName: 'Tom',
           color: '#3a7be0',
-          flame: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 },
+          flame: { days: 1, isTodayCounted: false, jokersLeftThisWeek: 3, week: ANY_WEEK },
         },
       ],
     });
@@ -59,7 +60,12 @@ describe('buildStreaksView', () => {
       sessionDays: NO_SESSION,
     });
     expect(view.band).toEqual({ days: 2, isTodayCounted: true });
-    expect(view.mine).toEqual({ days: 1, isTodayCounted: false, jokersLeftThisWeek: 3 });
+    expect(view.mine).toEqual({
+      days: 1,
+      isTodayCounted: false,
+      jokersLeftThisWeek: 3,
+      week: ANY_WEEK,
+    });
   });
 
   it('lights a member’s day and the band’s from the member opening the app', () => {
@@ -73,12 +79,18 @@ describe('buildStreaksView', () => {
       ],
       sessionDays: NO_SESSION,
     });
-    expect(view.mine).toEqual({ days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 });
+    expect(view.mine).toEqual({
+      days: 1,
+      isTodayCounted: true,
+      jokersLeftThisWeek: 3,
+      week: ANY_WEEK,
+    });
     expect(view.band).toEqual({ days: 2, isTodayCounted: true });
     expect(view.members[1]?.flame).toEqual({
       days: 1,
       isTodayCounted: false,
       jokersLeftThisWeek: 3,
+      week: ANY_WEEK,
     });
   });
 
@@ -101,7 +113,12 @@ describe('buildStreaksView', () => {
       presences: [{ memberId: LEA.id, presentOn: TODAY }],
       sessionDays: new Set([TODAY]),
     });
-    expect(view.mine).toEqual({ days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 });
+    expect(view.mine).toEqual({
+      days: 0,
+      isTodayCounted: false,
+      jokersLeftThisWeek: 3,
+      week: ANY_WEEK,
+    });
   });
 });
 
@@ -114,8 +131,14 @@ describe('buildMemberFlames', () => {
       sessionDays: NO_SESSION,
     });
     expect(flames).toEqual([
-      { ...LEA_ROW, flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 } },
-      { ...TOM_ROW, flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 } },
+      {
+        ...LEA_ROW,
+        flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3, week: ANY_WEEK },
+      },
+      {
+        ...TOM_ROW,
+        flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3, week: ANY_WEEK },
+      },
     ]);
   });
 });
@@ -132,7 +155,25 @@ describe('buildOwnFlame', () => {
         ],
         sessionDays: new Set(['2026-10-27']),
       }),
-    ).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 3 });
+    ).toEqual({ days: 2, isTodayCounted: false, jokersLeftThisWeek: 3, week: ANY_WEEK });
+  });
+
+  it('marks the days of the week that carry a session', () => {
+    const flame = buildOwnFlame({
+      today: TODAY,
+      memberId: TOM.id,
+      presences: [{ memberId: TOM.id, presentOn: YESTERDAY }],
+      sessionDays: new Set(['2026-10-27']),
+    });
+    expect(flame.week.map((weekDay) => [weekDay.state, weekDay.isSessionDay])).toEqual([
+      ['missed', false],
+      ['active', true],
+      ['active', false],
+      ['open', false],
+      ['future', false],
+      ['future', false],
+      ['future', false],
+    ]);
   });
 });
 
