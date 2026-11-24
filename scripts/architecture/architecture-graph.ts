@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { existsSync, globSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { filePathOfLocation, statusOfNode } from './journey-status.core';
 import { type LevelLayout, layoutLevel, skipLevelLayout } from './architecture-layout';
@@ -42,11 +42,8 @@ import {
 const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '__fixtures__']);
-
-function isToolingDirectory(name: string): boolean {
-  return name.startsWith('.') || SKIPPED_DIRECTORIES.has(name);
-}
 const SOURCE_PATTERN = /\.tsx?$/;
+
 const REPOSITORY_SLUG = 'hugoleborso/borso.fr';
 const SHORT_SHA_LENGTH = 12;
 const GROUPING_LEVELS = ['container', 'component'] as const;
@@ -73,14 +70,6 @@ function listTrackedStandardFileNames(directory: string, root: string): string[]
     return readdirSync(directory)
       .filter((name) => name.endsWith('.md') && name !== 'README.md' && tracked.has(name))
       .sort();
-  } catch {
-    return [];
-  }
-}
-
-function listSourceFilesOrEmpty(directory: string): string[] {
-  try {
-    return listSourceFiles(directory);
   } catch {
     return [];
   }
@@ -206,7 +195,7 @@ const HTML_MODULE_SCRIPT = /<script[^>]+type=["']module["'][^>]+src=["']([^"']+)
 
 function readHtmlEntries(applicationRoot: string, scanRoot: string): string[] {
   const found: string[] = [];
-  for (const page of listFilesNamed(applicationRoot, 'index.html')) {
+  for (const page of listFiles(applicationRoot, '**/index.html')) {
     for (const match of readSourceOrEmpty(relative(scanRoot, page), scanRoot).matchAll(
       HTML_MODULE_SCRIPT,
     )) {
@@ -218,31 +207,15 @@ function readHtmlEntries(applicationRoot: string, scanRoot: string): string[] {
   return [...new Set(found)].sort();
 }
 
-function listFilesNamed(directory: string, name: string): string[] {
-  const found: string[] = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (isToolingDirectory(entry.name)) continue;
-      found.push(...listFilesNamed(join(directory, entry.name), name));
-      continue;
-    }
-    if (entry.name === name) found.push(join(directory, entry.name));
-  }
-  return found;
+function listFiles(directory: string, pattern: string): string[] {
+  return globSync(pattern, {
+    cwd: directory,
+    exclude: (name) => SKIPPED_DIRECTORIES.has(basename(name)),
+  }).map((file) => join(directory, file));
 }
 
 function listSourceFiles(directory: string): string[] {
-  const found: string[] = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      if (isToolingDirectory(entry.name)) continue;
-      found.push(...listSourceFiles(join(directory, entry.name)));
-      continue;
-    }
-    if (!SOURCE_PATTERN.test(entry.name)) continue;
-    found.push(join(directory, entry.name));
-  }
-  return found;
+  return listFiles(directory, '**/*.{ts,tsx}');
 }
 
 export interface GraphNode {
@@ -895,7 +868,7 @@ function readRepositoryDeclarations(root: string): Map<string, string> {
   const declaredIn = new Map<string, string>();
   const pattern = /@Blueprint\s+([\w-]+)/g;
   for (const directory of ['apps', 'infra', 'eslint-rules', 'scripts']) {
-    const absolute = listSourceFilesOrEmpty(join(root, directory));
+    const absolute = listSourceFiles(join(root, directory));
     for (const path of absolute.sort()) {
       const relativePath = relative(root, path);
       for (const match of readSourceOrEmpty(relativePath, root).matchAll(pattern)) {
