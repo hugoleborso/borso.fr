@@ -262,35 +262,14 @@ For each surviving subject:
 
 **Real defects / design pivots → `docs/dantotsus/<slug>.md`:**
 
-1. Pick a slug `kebab-case` whose title sparks curiosity, not the
-   user-story name.
-2. Copy `docs/dantotsus/_template.md`.
-3. Fill the frontmatter by the rules in
-   [`/dantotsu`](../dantotsu/SKILL.md)'s *Output* section, which
-   `scripts/quality/check-dantotsu-front-matter.ts` enforces on the
-   commit. Tag pool: `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
-   — only add a new tag if no existing one fits. Three fields place
-   the entry on the weak-point map: `zone:` where the defect lived
-   (not where the eradication landed), `weak-point:` when it belongs
-   to a row of `docs/quality/weak-points.md`, and `recurs:` naming the
-   earlier entry it repeats, or `none (<reason>)`. The eradication
-   usually ships in the same commit as the entry, so `fix-commits:
-   [self]` is the usual value: a branch hash does not survive the
-   squash merge.
-4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
-5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible level of the ladder: 1 structural impossibility, 2 DevX
-   check, 3 vendor patch, 4 detection, 5 knowledge as last resort.
-   The frontmatter records `eradication-level` as the number alone;
-   everywhere a person reads it, the *Eradication* block and the pull
-   request's *Shipped* table, write the name beside the number. Each entry links the commit SHA + diff
-   snippet of the eradication.
-   **A new check proves it can fail, here, once.** Reintroduce the
-   defect on a scratch copy, run the check, paste its refusal into the
-   entry, then revert. Feed a guard hook with `KAIZEN_LOG_REFUSALS=0`, or each
-   proof lands in `KAIZEN.md` as friction. The repository keeps no standing canary, so this
-   step is the only proof. Prefer removing a mechanism over adding a
-   check, and never add a check that only guards the harness.
+1. Write it with [`/dantotsu`](../dantotsu/SKILL.md), whose *Eradication* and
+   *Front matter* sections hold the ladder, the proof on a scratch copy and the
+   fields. Take a tag from `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
+   when one fits.
+2. **Ship the eradication**, code in this PR. Write the level's name beside
+   its number wherever a person reads it. Feed a guard hook its proof with
+   `KAIZEN_LOG_REFUSALS=0`, or the proof lands in `KAIZEN.md` as friction.
+   Never add a check that only guards the harness.
    **A mechanism that changes how the operator works is his call.** That
    is one that changes when he is asked for something, when CI or a
    preview runs, or what a session waits for. Write its entry in
@@ -308,22 +287,10 @@ For each surviving subject:
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
 
-1. Pick a slug. First search the corpus for an entry on the same
-   tool or symptom (`grep -ril <tool> docs/knowledge/`); extending it
-   beats a second entry the hook would print beside the first.
-2. Write whatever helps the next reader. No fixed sections required;
-   keep it concrete and short.
-3. **Give it front matter with a `summary:` and `triggers:`**, as
-   described in `docs/knowledge/README.md`. The summary is the one
-   sentence a hook prints. The triggers are the moment the subject bit
-   in this task, read off the inventory row: the file being written
-   (`paths`), the command that was about to run (`commands`), or the
-   error text a tool printed (`output`). Prefer the narrowest one that
-   would have fired at that moment. If no path, command or output
-   recognises the moment, the entry would have no reader: fold the
-   lesson into an existing entry that has one, or into a hook, a gate
-   or a skill instead. `scripts/check-knowledge-triggers.sh` refuses an
-   entry without triggers.
+1. Extend an entry on the same tool or symptom
+   (`grep -ril <tool> docs/knowledge/`) before writing a second one.
+2. Follow [`docs/knowledge/README.md`](../../../docs/knowledge/README.md). Take
+   the `triggers:` from the inventory row, at the moment the subject bit.
 
 ### 4. Cross-link
 
