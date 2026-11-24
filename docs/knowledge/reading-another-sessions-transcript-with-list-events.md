@@ -48,8 +48,9 @@ sweep (inferred, 2026-10-29).
 
 ## Finding what the operator typed
 
-Parse the spilled file, do not read it. It holds a wrapper line, then JSON
-from `{"ccr"`. The operator's own messages are `user` events whose
+Do not read a page, inline or spilled. `scripts/kaizen/operator-messages.ts`
+finds every page in this session's own transcript, where an inline page is
+kept in the shape a spilled one is saved in. The operator's own messages are `user` events whose
 `message.content` is a string. A closed question is an `assistant` event's
 `tool_use` named `AskUserQuestion`, and its answer is the next `tool_result`.
 The sweep of PR #310 found both in three pages this way, where the pull

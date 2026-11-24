@@ -63,29 +63,18 @@ Sources to walk in order, capturing each friction event as one row:
 - **The archived friction log (primary input).** `git fetch origin main`,
   then `scripts/kaizen.sh sweep-input <merge-sha>`. It names every archive
   the merge touched and, in each, the entry lines *this* merge added. Read
-  that, not the path the prompt names: the prompt is written by hand and gets
-  this wrong two ways. A task that archives into a slug an earlier pull
-  request already used merges its lines into that committed file, so the
-  prompt hands you lines an earlier sweep already eradicated (16 of the 19 in
-  PR #281's `meta/quality-dashboard`). And a task that archives into two
-  slugs gives the prompt's author two files to remember, who named one
-  (PR #281 also archived `meta/quality-dashboard-range-switch`). An archive
-  path the prompt names that the command does not is a line to check, not a
-  file to read. The archive is the merged session's `KAIZEN.md`, copied by
+  that, not the path the prompt names, for the reasons its `sweep-input`
+  comment gives. The archive is the merged session's `KAIZEN.md`, copied by
   `scripts/kaizen.sh archive` and appended to by the main session *and
   by every subagent that was told to*, one line per friction event,
-  problem-only. Lines the prompt pasted because they were logged after
-  the archive count the same. The local `KAIZEN.md` of this session is
+  problem-only. The local `KAIZEN.md` of this session is
   not the input: it was created empty at this session's start. Map
   every line to an inventory row. Many will resolve to
   `no-op: already eradicated by <existing entry>` once cross-checked
   against the corpus — that cross-check is the point.
 
-  A missing or empty archive is a finding, not an absence: it means the
-  task ran without logging or never archived, so the inventory has to be
-  rebuilt from the pull request's commits, review threads and any agent
-  journals — expensive, and lossy for whatever the subagents learned.
-  Add an inventory row saying so.
+  A missing or empty archive is a finding, not an absence: the task ran
+  without logging or never archived. Add an inventory row saying so.
 
 - **Every operator message of the shipping session (always).** The
   friction log holds only what the session chose to write down; the operator
@@ -94,11 +83,12 @@ Sources to walk in order, capturing each friction event as one row:
   commits (or the session link at the end of its body), then read its
   transcript with the remote-session tool that lists a session's events,
   filtered to user messages (`kinds: ["user"]`, paging back with `before_id`
-  until `has_more` is false). Save each page and run
-  `pnpm exec tsx scripts/kaizen/operator-messages.ts <page.json>...`: it keeps
-  the messages the operator typed and their answers to questions, and drops
-  tool results, hook output, reminders and agent hand-backs, which the
-  transcript also files as user events. Give each message it prints its own
+  until `has_more` is false). Then run
+  `pnpm exec tsx scripts/kaizen/operator-messages.ts`. It reads every page
+  this session listed, inline or spilled, from this session's own transcript.
+  It prints the messages the operator typed and their answers to questions,
+  then every friction line the listed session logged, those logged after its
+  archive included. Give each message and each such line its own
   inventory row,
   classified as a request the first brief could have carried, a correction of
   something shipped, a question the session should have asked first, or
@@ -272,35 +262,14 @@ For each surviving subject:
 
 **Real defects / design pivots → `docs/dantotsus/<slug>.md`:**
 
-1. Pick a slug `kebab-case` whose title sparks curiosity, not the
-   user-story name.
-2. Copy `docs/dantotsus/_template.md`.
-3. Fill the frontmatter by the rules in
-   [`/dantotsu`](../dantotsu/SKILL.md)'s *Output* section, which
-   `scripts/quality/check-dantotsu-front-matter.ts` enforces on the
-   commit. Tag pool: `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
-   — only add a new tag if no existing one fits. Three fields place
-   the entry on the weak-point map: `zone:` where the defect lived
-   (not where the eradication landed), `weak-point:` when it belongs
-   to a row of `docs/quality/weak-points.md`, and `recurs:` naming the
-   earlier entry it repeats, or `none (<reason>)`. The eradication
-   usually ships in the same commit as the entry, so `fix-commits:
-   [self]` is the usual value: a branch hash does not survive the
-   squash merge.
-4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
-5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible level of the ladder: 1 structural impossibility, 2 DevX
-   check, 3 vendor patch, 4 detection, 5 knowledge as last resort.
-   The frontmatter records `eradication-level` as the number alone;
-   everywhere a person reads it, the *Eradication* block and the pull
-   request's *Shipped* table, write the name beside the number. Each entry links the commit SHA + diff
-   snippet of the eradication.
-   **A new check proves it can fail, here, once.** Reintroduce the
-   defect on a scratch copy, run the check, paste its refusal into the
-   entry, then revert. Feed a guard hook with `KAIZEN_LOG_REFUSALS=0`, or each
-   proof lands in `KAIZEN.md` as friction. The repository keeps no standing canary, so this
-   step is the only proof. Prefer removing a mechanism over adding a
-   check, and never add a check that only guards the harness.
+1. Write it with [`/dantotsu`](../dantotsu/SKILL.md), whose *Eradication* and
+   *Front matter* sections hold the ladder, the proof on a scratch copy and the
+   fields. Take a tag from `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
+   when one fits.
+2. **Ship the eradication**, code in this PR. Write the level's name beside
+   its number wherever a person reads it. Feed a guard hook its proof with
+   `KAIZEN_LOG_REFUSALS=0`, or the proof lands in `KAIZEN.md` as friction.
+   Never add a check that only guards the harness.
    **A mechanism that changes how the operator works is his call.** That
    is one that changes when he is asked for something, when CI or a
    preview runs, or what a session waits for. Write its entry in
@@ -318,22 +287,10 @@ For each surviving subject:
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
 
-1. Pick a slug. First search the corpus for an entry on the same
-   tool or symptom (`grep -ril <tool> docs/knowledge/`); extending it
-   beats a second entry the hook would print beside the first.
-2. Write whatever helps the next reader. No fixed sections required;
-   keep it concrete and short.
-3. **Give it front matter with a `summary:` and `triggers:`**, as
-   described in `docs/knowledge/README.md`. The summary is the one
-   sentence a hook prints. The triggers are the moment the subject bit
-   in this task, read off the inventory row: the file being written
-   (`paths`), the command that was about to run (`commands`), or the
-   error text a tool printed (`output`). Prefer the narrowest one that
-   would have fired at that moment. If no path, command or output
-   recognises the moment, the entry would have no reader: fold the
-   lesson into an existing entry that has one, or into a hook, a gate
-   or a skill instead. `scripts/check-knowledge-triggers.sh` refuses an
-   entry without triggers.
+1. Extend an entry on the same tool or symptom
+   (`grep -ril <tool> docs/knowledge/`) before writing a second one.
+2. Follow [`docs/knowledge/README.md`](../../../docs/knowledge/README.md). Take
+   the `triggers:` from the inventory row, at the moment the subject bit.
 
 ### 4. Cross-link
 

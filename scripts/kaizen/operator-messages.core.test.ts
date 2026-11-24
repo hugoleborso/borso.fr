@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  listListedPages,
+  listLoggedLines,
   readSavedPage,
   selectOperatorMessages,
   stripHarnessWrappers,
@@ -131,5 +133,49 @@ describe('stripHarnessWrappers', () => {
         '<task-notification>a</task-notification>\nOui\n<system-reminder>b</system-reminder>',
       ),
     ).toBe('Oui');
+  });
+});
+
+function call(id: string, name: string) {
+  return JSON.stringify({ message: { content: [{ type: 'tool_use', id, name, input: {} }] } });
+}
+
+function result(id: string, content: unknown) {
+  return JSON.stringify({
+    message: { content: [{ type: 'tool_result', tool_use_id: id, content }] },
+  });
+}
+
+describe('listListedPages', () => {
+  const blocks = [{ type: 'text', text: '{"ccr":{"data":[]}}' }];
+
+  it('finds each list_events page, inline or spilled, and nothing else', () => {
+    expect(
+      listListedPages([
+        JSON.stringify({ type: 'summary' }),
+        call('a', 'mcp__claude-code-remote__list_events'),
+        result('a', blocks),
+        call('b', 'mcp__claude-code-remote__list_events'),
+        result('b', 'Error: too long. Output has been saved to /root/x/list_events-1.txt.\nFormat'),
+        call('c', 'mcp__claude-code-remote__get_session'),
+        result('c', blocks),
+        result('d', blocks),
+        call('e', 'mcp__claude-code-remote__list_events'),
+        result('e', 'Error: the session does not exist'),
+      ]),
+    ).toEqual([{ saved: JSON.stringify(blocks) }, { spilledTo: '/root/x/list_events-1.txt' }]);
+  });
+});
+
+describe('listLoggedLines', () => {
+  it('finds each friction line a tool printed, anywhere in a page', () => {
+    const logged = '\u001B[36m[kaizen]\u001B[0m logged as auditor: the hook fired twice';
+    const quoted = `  printf '[kaizen] logged as %s: %s' "$writer"`;
+    expect(
+      listLoggedLines({ data: [[`Output:\n${logged}`, quoted, 7, null, `${logged}`]] }),
+    ).toEqual([
+      'logged as auditor: the hook fired twice',
+      'logged as auditor: the hook fired twice',
+    ]);
   });
 });

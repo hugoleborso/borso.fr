@@ -42,11 +42,9 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
   'dist',
   'cdk.out',
   'coverage',
-  '.stryker-tmp',
   'migrations',
   'public',
 ]);
-const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js'];
 
 const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/;
 const BLUEPRINT_MARKER = 'Blueprint';
@@ -75,21 +73,12 @@ interface FollowerReference {
 }
 
 function listSourceFiles(directory: string): string[] {
-  const files: string[] = [];
-  function walk(currentDirectory: string): void {
-    for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
-      const fullPath = path.join(currentDirectory, entry.name);
-      if (entry.isDirectory()) {
-        if (!SKIPPED_DIRECTORY_NAMES.has(entry.name)) {
-          walk(fullPath);
-        }
-      } else if (SOURCE_EXTENSIONS.some((extension) => entry.name.endsWith(extension))) {
-        files.push(fullPath);
-      }
-    }
-  }
-  walk(directory);
-  return files;
+  return fs
+    .globSync('**/*.{ts,tsx,js}', {
+      cwd: directory,
+      exclude: (name) => SKIPPED_DIRECTORY_NAMES.has(path.basename(name)),
+    })
+    .map((file) => path.join(directory, file));
 }
 
 function readTagWithinBlock(

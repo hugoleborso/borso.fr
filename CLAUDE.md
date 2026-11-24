@@ -97,7 +97,7 @@ Log friction as it happens, the problem only, with `scripts/kaizen.sh "<one sent
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
 1. If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch `shared-deploy`.
-2. Run the kaizen where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen` and the lines logged after the archive, and nothing the skill already says.
+2. Run the kaizen where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen`, and nothing the skill already says.
 
 ## Checking a screen
 

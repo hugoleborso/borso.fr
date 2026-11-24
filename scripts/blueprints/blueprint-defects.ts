@@ -21,23 +21,18 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
   'dist',
   'cdk.out',
   'coverage',
-  '.stryker-tmp',
   'migrations',
   'public',
 ]);
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js']);
 const NON_DANTOTSU_FILES = new Set(['README.md', '_template.md']);
 
 function listSourceFiles(directory: string): string[] {
-  const found: string[] = [];
-  if (!fs.existsSync(directory)) return found;
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (SKIPPED_DIRECTORY_NAMES.has(entry.name)) continue;
-    const entryPath = path.join(directory, entry.name);
-    if (entry.isDirectory()) found.push(...listSourceFiles(entryPath));
-    else if (SOURCE_EXTENSIONS.has(path.extname(entry.name))) found.push(entryPath);
-  }
-  return found;
+  return fs
+    .globSync('**/*.{ts,tsx,js}', {
+      cwd: directory,
+      exclude: (name) => SKIPPED_DIRECTORY_NAMES.has(path.basename(name)),
+    })
+    .map((file) => path.join(directory, file));
 }
 
 function readAdoptions(): readonly BlueprintAdoption[] {

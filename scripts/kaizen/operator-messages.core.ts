@@ -107,3 +107,39 @@ export function readSavedPage(saved: string): unknown {
   const wrapped = wrappedPageSchema.safeParse(parsed);
   return wrapped.success ? wrapped.data.ccr : parsed;
 }
+
+const transcriptLineSchema = z.object({ message: z.object({ content: z.array(z.unknown()) }) });
+const toolUseSchema = z.object({ type: z.literal('tool_use'), id: z.string(), name: z.string() });
+const toolResultBlockSchema = z.object({
+  type: z.literal('tool_result'),
+  tool_use_id: z.string(),
+  content: z.unknown(),
+});
+const SPILLED_TO = /saved to (\/\S+\.txt)/u;
+
+export type ListedPage = { readonly spilledTo: string } | { readonly saved: string };
+
+export function listListedPages(transcriptLines: readonly string[]): ListedPage[] {
+  const listEventsCalls = new Set<string>();
+  return transcriptLines.flatMap((line) => {
+    const parsed = transcriptLineSchema.safeParse(JSON.parse(line));
+    if (!parsed.success) return [];
+    return parsed.data.message.content.flatMap((block): ListedPage[] => {
+      const call = toolUseSchema.safeParse(block);
+      if (call.success && call.data.name.endsWith('list_events')) listEventsCalls.add(call.data.id);
+      const result = toolResultBlockSchema.safeParse(block);
+      if (!result.success || !listEventsCalls.has(result.data.tool_use_id)) return [];
+      const { content } = result.data;
+      if (typeof content !== 'string') return [{ saved: JSON.stringify(content) }];
+      const spilledTo = SPILLED_TO.exec(content)?.[1];
+      return spilledTo === undefined ? [] : [{ spilledTo }];
+    });
+  });
+}
+
+const LOGGED_LINES = /(?<=^\S*\[kaizen\]\S* )logged as \S+: .+/gmu;
+
+export function listLoggedLines(value: unknown): string[] {
+  if (typeof value === 'string') return value.match(LOGGED_LINES) ?? [];
+  return value instanceof Object ? Object.values(value).flatMap(listLoggedLines) : [];
+}

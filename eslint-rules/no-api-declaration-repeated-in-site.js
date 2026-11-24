@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { isTestPath } from './impurity.js';
 import { isSiteFile, toPosixPath } from './site-paths.js';
@@ -19,7 +19,6 @@ const SCHEMA_CONSTANT_PATTERN = /^const\s+([A-Z][A-Z0-9_]*)\b/gm;
 const EXPORTED_FUNCTION_PATTERN = /^export\s+(?:async\s+)?function\s+([A-Za-z0-9_]+)/gm;
 const SCHEMA_FILE_PATTERN = /\.schema\.ts$/;
 const PURE_FILE_PATTERN = /\.(core|utils)\.ts$/;
-const TYPESCRIPT_SOURCE_PATTERN = /\.ts$/;
 const DECLARATION_ROOTS = ['api/src', 'domain'];
 const SKIPPED_FOLDERS = new Set(['node_modules', '__test']);
 
@@ -43,19 +42,10 @@ export function listContractDeclarations(relativePath, sourceText) {
 }
 
 function listSourceFiles(folder) {
-  let entries;
-  try {
-    entries = readdirSync(folder, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  return entries.flatMap((entry) => {
-    const entryPath = path.join(folder, entry.name);
-    if (entry.isDirectory()) {
-      return SKIPPED_FOLDERS.has(entry.name) ? [] : listSourceFiles(entryPath);
-    }
-    return TYPESCRIPT_SOURCE_PATTERN.test(entry.name) ? [entryPath] : [];
-  });
+  return globSync('**/*.ts', {
+    cwd: folder,
+    exclude: (name) => SKIPPED_FOLDERS.has(path.basename(name)),
+  }).map((file) => path.join(folder, file));
 }
 
 export function readDeclarationsFromDisk(applicationRoot) {
