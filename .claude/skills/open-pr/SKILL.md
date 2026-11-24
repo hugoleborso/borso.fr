@@ -101,8 +101,7 @@ The session that shipped the feature runs the kaizen sweep itself or hands it to
 2. **The kaizen task**, when it goes to a new conversation. Propose it in the merge reply, and start it only after the operator approves. Started before, it timed out after 60 s on PR #228. Use whatever tool this session holds for opening a new session or queueing a task: the set changes between sessions, so read your own tools rather than reaching for a name you remember. Whichever it is, it starts a new conversation. Its prompt stands alone and names:
    - the merged pull request, as `owner/repo#N` with its URL;
    - the archived friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`, which step 3b committed;
-   - the instruction to run `/after-task-kaizen` on that pull request;
-   - any line logged after the archive, pasted verbatim, since the local `KAIZEN.md` dies with this container.
+   - the instruction to run `/after-task-kaizen` on that pull request.
 
    Nothing else. The skill holds its own steps and reads every operator message from the transcript, so a step or a lesson restated here is a second copy the operator has to read twice.
 

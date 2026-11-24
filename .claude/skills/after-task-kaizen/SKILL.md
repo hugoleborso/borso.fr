@@ -63,29 +63,18 @@ Sources to walk in order, capturing each friction event as one row:
 - **The archived friction log (primary input).** `git fetch origin main`,
   then `scripts/kaizen.sh sweep-input <merge-sha>`. It names every archive
   the merge touched and, in each, the entry lines *this* merge added. Read
-  that, not the path the prompt names: the prompt is written by hand and gets
-  this wrong two ways. A task that archives into a slug an earlier pull
-  request already used merges its lines into that committed file, so the
-  prompt hands you lines an earlier sweep already eradicated (16 of the 19 in
-  PR #281's `meta/quality-dashboard`). And a task that archives into two
-  slugs gives the prompt's author two files to remember, who named one
-  (PR #281 also archived `meta/quality-dashboard-range-switch`). An archive
-  path the prompt names that the command does not is a line to check, not a
-  file to read. The archive is the merged session's `KAIZEN.md`, copied by
+  that, not the path the prompt names, for the reasons its `sweep-input`
+  comment gives. The archive is the merged session's `KAIZEN.md`, copied by
   `scripts/kaizen.sh archive` and appended to by the main session *and
   by every subagent that was told to*, one line per friction event,
-  problem-only. Lines the prompt pasted because they were logged after
-  the archive count the same. The local `KAIZEN.md` of this session is
+  problem-only. The local `KAIZEN.md` of this session is
   not the input: it was created empty at this session's start. Map
   every line to an inventory row. Many will resolve to
   `no-op: already eradicated by <existing entry>` once cross-checked
   against the corpus — that cross-check is the point.
 
-  A missing or empty archive is a finding, not an absence: it means the
-  task ran without logging or never archived, so the inventory has to be
-  rebuilt from the pull request's commits, review threads and any agent
-  journals — expensive, and lossy for whatever the subagents learned.
-  Add an inventory row saying so.
+  A missing or empty archive is a finding, not an absence: the task ran
+  without logging or never archived. Add an inventory row saying so.
 
 - **Every operator message of the shipping session (always).** The
   friction log holds only what the session chose to write down; the operator
@@ -94,11 +83,12 @@ Sources to walk in order, capturing each friction event as one row:
   commits (or the session link at the end of its body), then read its
   transcript with the remote-session tool that lists a session's events,
   filtered to user messages (`kinds: ["user"]`, paging back with `before_id`
-  until `has_more` is false). Save each page and run
-  `pnpm exec tsx scripts/kaizen/operator-messages.ts <page.json>...`: it keeps
-  the messages the operator typed and their answers to questions, and drops
-  tool results, hook output, reminders and agent hand-backs, which the
-  transcript also files as user events. Give each message it prints its own
+  until `has_more` is false). Then run
+  `pnpm exec tsx scripts/kaizen/operator-messages.ts`. It reads every page
+  this session listed, inline or spilled, from this session's own transcript.
+  It prints the messages the operator typed and their answers to questions,
+  then every friction line the listed session logged, those logged after its
+  archive included. Give each message and each such line its own
   inventory row,
   classified as a request the first brief could have carried, a correction of
   something shipped, a question the session should have asked first, or

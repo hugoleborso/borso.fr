@@ -1,24 +1,48 @@
 #!/usr/bin/env tsx
-import { readFileSync } from 'node:fs';
-import { readSavedPage, selectOperatorMessages } from './operator-messages.core';
+import { globSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import {
+  listListedPages,
+  listLoggedLines,
+  readSavedPage,
+  selectOperatorMessages,
+} from './operator-messages.core';
 
-const pages = process.argv.slice(2);
-if (pages.length === 0) {
+const sessionId = process.env.CLAUDE_CODE_SESSION_ID;
+if (sessionId === undefined) {
   process.stderr.write(
-    'usage: pnpm exec tsx scripts/kaizen/operator-messages.ts <events-page.json>...\n' +
-      'Each file is one page the remote-session event listing returned for kinds ["user"] (its JSON, or the saved tool result wrapping it in {"ccr": ...}).\n',
+    "operator-messages: CLAUDE_CODE_SESSION_ID is not set, so this session's transcript cannot be found.\n",
   );
   process.exit(1);
 }
 
-const seen = new Set<string>();
-for (const path of pages) {
-  for (const message of selectOperatorMessages(readSavedPage(readFileSync(path, 'utf8')))) {
-    const key = `${message.at}|${message.text}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    process.stdout.write(
-      `- [${message.at}]${message.isAnswer ? ' (answer)' : ''} ${message.text.replaceAll('\n', ' ')}\n`,
-    );
-  }
-}
+const projects = join(homedir(), '.claude', 'projects');
+const transcripts = globSync([`*/${sessionId}.jsonl`, `*/${sessionId}/**/*.jsonl`], {
+  cwd: projects,
+});
+const pages = transcripts.flatMap((transcript) =>
+  listListedPages(readFileSync(join(projects, transcript), 'utf8').split('\n').filter(Boolean)),
+);
+
+const listed = pages.map((page) =>
+  readSavedPage('saved' in page ? page.saved : readFileSync(page.spilledTo, 'utf8')),
+);
+const operatorLines = listed
+  .flatMap(selectOperatorMessages)
+  .map(
+    (message) =>
+      `- [${message.at}]${message.isAnswer ? ' (answer)' : ''} ${message.text.replaceAll('\n', ' ')}`,
+  );
+const kaizenLines = listed.flatMap(listLoggedLines).map((line) => `- ${line}`);
+const inline = pages.filter((page) => 'saved' in page).length;
+process.stdout.write(
+  [
+    `[operator-messages] ${pages.length} list_events page(s) read, ${inline} of them inline`,
+    'Typed by the operator:',
+    ...new Set(operatorLines),
+    'Friction the listed sessions logged, archived or not:',
+    ...new Set(kaizenLines),
+    '',
+  ].join('\n'),
+);
