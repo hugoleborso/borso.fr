@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAssistantServerUrl,
   buildClaudeCodeCommand,
+  buildCopilotCommand,
+  buildGeminiCommand,
   buildVibeConfiguration,
   listAssistantInstallations,
 } from './assistant-install.utils';
@@ -52,12 +54,26 @@ describe('assistant-install.utils', () => {
     );
   });
 
-  it('lists Claude Code, then Vibe', () => {
+  it('writes the VS Code command that registers the server with GitHub Copilot', () => {
+    expect(buildCopilotCommand(PRODUCTION_SERVER_URL)).toBe(
+      `code --add-mcp '{"name":"pragma","type":"http","url":"https://pragma.borso.fr/mcp"}'`,
+    );
+  });
+
+  it('writes the Gemini CLI command at user scope', () => {
+    expect(buildGeminiCommand(PRODUCTION_SERVER_URL)).toBe(
+      'gemini mcp add --transport http --scope user pragma https://pragma.borso.fr/mcp',
+    );
+  });
+
+  it('lists Claude Code, Vibe, GitHub Copilot, then Gemini', () => {
     expect(
       listAssistantInstallations({ apiBase: SAME_ORIGIN_API_BASE, pageOrigin: PRODUCTION_ORIGIN }),
     ).toEqual([
       { id: 'claude-code', snippet: buildClaudeCodeCommand(PRODUCTION_SERVER_URL) },
       { id: 'vibe', snippet: buildVibeConfiguration(PRODUCTION_SERVER_URL) },
+      { id: 'copilot', snippet: buildCopilotCommand(PRODUCTION_SERVER_URL) },
+      { id: 'gemini', snippet: buildGeminiCommand(PRODUCTION_SERVER_URL) },
     ]);
   });
 });

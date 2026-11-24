@@ -37,11 +37,13 @@ describe('AssistantConnections', () => {
     stub?.restore();
   });
 
-  it('shows Claude and Vibe with their marks and no command to read', () => {
+  it('shows every assistant with its mark and no command to read', () => {
     renderConnections();
     expect(screen.getByText('Claude Code')).toBeTruthy();
     expect(screen.getByText('Mistral Vibe')).toBeTruthy();
-    expect(document.querySelectorAll('svg path').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('GitHub Copilot')).toBeTruthy();
+    expect(screen.getByText('Gemini CLI')).toBeTruthy();
+    expect(document.querySelectorAll('svg path').length).toBeGreaterThanOrEqual(4);
     expect(document.querySelector('pre, code')).toBe(null);
   });
 
@@ -60,6 +62,24 @@ describe('AssistantConnections', () => {
     expect(await screen.findByText('Copied.')).toBeTruthy();
     expect(clipboard.didCopyTextToClipboard).toHaveBeenCalledWith(
       expect.stringContaining('[[mcp_servers]]'),
+    );
+  });
+
+  it('copies the GitHub Copilot command from its own button', async () => {
+    renderConnections();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy the command: GitHub Copilot' }));
+    expect(await screen.findByText('Copied.')).toBeTruthy();
+    expect(clipboard.didCopyTextToClipboard).toHaveBeenCalledWith(
+      expect.stringContaining('code --add-mcp'),
+    );
+  });
+
+  it('copies the Gemini CLI command from its own button', async () => {
+    renderConnections();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy the command: Gemini CLI' }));
+    expect(await screen.findByText('Copied.')).toBeTruthy();
+    expect(clipboard.didCopyTextToClipboard).toHaveBeenCalledWith(
+      expect.stringContaining('gemini mcp add'),
     );
   });
 });
