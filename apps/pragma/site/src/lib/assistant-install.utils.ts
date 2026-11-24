@@ -3,7 +3,7 @@
 const ASSISTANT_SERVER_PATH = '/mcp';
 const SERVER_NAME = 'pragma';
 
-export type AssistantInstallationId = 'claude-code' | 'vibe';
+export type AssistantInstallationId = 'claude-code' | 'vibe' | 'copilot' | 'gemini';
 
 export interface AssistantServerLocation {
   readonly apiBase: string;
@@ -37,6 +37,15 @@ export function buildVibeConfiguration(serverUrl: string): string {
   ].join('\n');
 }
 
+export function buildCopilotCommand(serverUrl: string): string {
+  const serverDefinition = JSON.stringify({ name: SERVER_NAME, type: 'http', url: serverUrl });
+  return `code --add-mcp '${serverDefinition}'`;
+}
+
+export function buildGeminiCommand(serverUrl: string): string {
+  return `gemini mcp add --transport http --scope user ${SERVER_NAME} ${serverUrl}`;
+}
+
 export function listAssistantInstallations(
   location: AssistantServerLocation,
 ): readonly AssistantInstallation[] {
@@ -44,5 +53,7 @@ export function listAssistantInstallations(
   return [
     { id: 'claude-code', snippet: buildClaudeCodeCommand(serverUrl) },
     { id: 'vibe', snippet: buildVibeConfiguration(serverUrl) },
+    { id: 'copilot', snippet: buildCopilotCommand(serverUrl) },
+    { id: 'gemini', snippet: buildGeminiCommand(serverUrl) },
   ];
 }

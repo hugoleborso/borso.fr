@@ -30,6 +30,8 @@ const INSTALLATION_PRESENTATION: Readonly<
 > = {
   'claude-code': { label: 'account.assistants.claudeCodeLabel', brand: 'claude' },
   vibe: { label: 'account.assistants.vibeLabel', brand: 'mistral' },
+  copilot: { label: 'account.assistants.copilotLabel', brand: 'copilot' },
+  gemini: { label: 'account.assistants.geminiLabel', brand: 'gemini' },
 };
 
 // @FollowsBlueprint organism-query-owning
