@@ -23,21 +23,9 @@ LLM-driven implementation has a confirmation-bias failure mode: the same agent t
 
 This is a structural mitigation, not a culture rule. The skill is required to use the dedicated `visual-validator` agent (defined in `.claude/agents/visual-validator.md`) — not `general-purpose`. The agent's frontmatter and brief are the carriers of the rule; a generic agent would dilute them.
 
-## Why this matters (Jidoka)
-
-Same lineage as `specification` and `technical-conception`: catch defects at the earliest place they can appear. For *visible* defects that, by definition, is the moment the feature renders in a real browser. Earlier than production smoke-test. Later than nothing.
-
-A visible defect that ships erodes trust faster than any other kind. The user sees it. They tell their friends. They don't open a Sentry ticket — they leave. Visual validation is the cheapest gate against that class of damage.
-
 ## Tooling: `agent-browser`
 
-The validator calls [`agent-browser`](https://github.com/vercel-labs/agent-browser), a Rust CLI that exposes browser control to LLM agents, directly. What it gives an agent:
-
-- **Reference-based snapshots.** `agent-browser snapshot -i --json` returns the accessibility tree with `@e1`, `@e2` refs. The agent acts on refs, not CSS selectors. This eliminates a category of selector-fragility that plagues Playwright in agent hands.
-- **Stateful daemon.** A persistent process holds the browser session; commands are individual shell calls. The agent's loop is "snapshot → reason → act → re-snapshot", which matches LLM affordances.
-- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting. They do not cover touch: `set device` leaves `matchMedia('(pointer: coarse)')` false, and a click is still a mouse press. An assertion about tap behaviour is answered with `scripts/phone.sh touch '<css selector>'`, which sends `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and fails unless a touch reached the element, or it is UNVERIFIABLE.
-
-Playwright would have worked for this skill, but agent-browser is *shaped* for LLMs. The validation reports are richer because the agent isn't fighting an imperative JS API.
+The validator drives [`agent-browser`](https://github.com/vercel-labs/agent-browser) and taps with `scripts/phone.sh`. Its commands and traps are in `.claude/agents/visual-validator.md`.
 
 ## What gets validated
 
@@ -103,11 +91,6 @@ The report is always committed. Its screenshots split by verdict, per
   screenshot is read once, by the reviewer of that pull request. The previews bucket expires
   its objects after 60 days, so the record is deliberately temporary.
 
-The third argument this section used to carry — that storage does not matter — was measured
-and was wrong. On `origin/main` at `3cdf324`, 791 PNGs under `docs/features/**` weighed 96.6 MB
-of a 118 MB `.git`: 82% of the repository, growing near 28 MB a month with nothing removing
-any of it.
-
 `.gitignore` at the repo root **must not** match `docs/features/**/validation/**`, because the
 FAIL set still lands there. The agent never writes outside its given `evidence_dir`, so which
 files survive is decided by the skill's publish step, not by an ignore pattern.
@@ -138,41 +121,11 @@ Silently dropping a PASS run's evidence because an upload failed would turn the 
 
 ## Pixel-content checks (every screenshot)
 
-Before declaring any row PASS, the validator runs the broken-image scan
-against the current page. A typical PWA / SPA defect is that an `<img src>`
-404s or 403s (third-party CDN block, CORS refusal, missing asset) and the
-browser falls back to rendering the `alt` text in place of the image. DOM
-assertions pass — the `<img>` is there, the parent component rendered, the
-layout is correct — but the user sees broken alt-text where pieces /
-icons / glyphs should be.
-
-The canonical check:
-
-```js
-Array.from(document.querySelectorAll('img'))
-  .filter((img) => img.complete && img.naturalWidth === 0)
-  .map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }));
-```
-
-Returns the set of `<img>` tags that completed loading their alt text
-instead of the actual image. Non-empty → FAIL the row that covered the
-screenshot and name the broken src(s) in the report. The validator runs
-this **for every screenshot it takes**, not just suspect ones; the cost is
-one `agent-browser eval` per shot.
-
-Sibling checks worth running per row when the asserted UI has them:
-
-- *"Does the rendered text match what the spec says?"* — `eval`
-  `document.querySelector(<selector>).textContent` and compare verbatim,
-  not just check existence.
-- *"Is the element positioned where the spec says it should be?"* —
-  `getBoundingClientRect()` against the related elements (e.g. "banner
-  above board" → `banner.top < board.top`).
-
-These three checks together turn the validator from a *DOM-presence
-inspector* into a *rendered-pixel-content inspector*. The gap closed
-here is the one where DOM assertions pass against an image that never
-actually rendered.
+DOM assertions pass on an image that never rendered. So after every
+screenshot the validator runs `scripts/browser/broken-images.sh` with the
+screenshot's `--session` flag. It covers `<img>` and SVG `<image>`, and a
+non-zero exit FAILs the row. Per row, it also compares asserted text verbatim
+with `textContent`, and asserted placement with `getBoundingClientRect()`.
 
 ## Common mistakes
 

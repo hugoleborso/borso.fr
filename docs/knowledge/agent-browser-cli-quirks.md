@@ -306,6 +306,15 @@ script the session opens with:
 performance.setResourceTimingBufferSize(5000);
 ```
 
+## An element screenshot stops at the border box, so a box-shadow ring is cut off
+
+_Measured 2026-11-23, agent-browser 0.41.2._ `agent-browser screenshot '#mark' out.png`
+captures the element's border box. A ring drawn with `box-shadow` lies outside
+it, so it is missing from the image: a 40 px box with an 8 px ring gave a
+40 by 40 shot, and its 12 px padded parent gave 64 by 64 with the ring. To show
+a ring, such as Skull King's highlighted porthole, screenshot a parent with
+room around the element, or the viewport.
+
 ## Related
 
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md)

@@ -22,6 +22,7 @@ const userEventSchema = z.object({
       .object({
         message: z.object({ content: z.unknown() }).loose(),
         isSynthetic: z.boolean().optional(),
+        agent_id: z.string().optional(),
       })
       .loose()
       .optional(),
@@ -71,7 +72,8 @@ export function selectOperatorMessages(page: unknown): OperatorMessage[] {
   if (!parsed.success) return [];
   return parsed.data.data.flatMap((raw): OperatorMessage[] => {
     const event = userEventSchema.safeParse(raw);
-    if (!event.success || event.data.user.internal_anthropic_catchall?.isSynthetic === true)
+    const catchall = event.success ? event.data.user.internal_anthropic_catchall : undefined;
+    if (!event.success || catchall?.isSynthetic === true || catchall?.agent_id !== undefined)
       return [];
     const message = event.data.user.message ?? event.data.user.internal_anthropic_catchall?.message;
     const content = message?.content;

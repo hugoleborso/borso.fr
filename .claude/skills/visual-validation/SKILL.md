@@ -61,7 +61,6 @@ Invoke when:
 Do **not** invoke when:
 - There is no spec at the expected path.
 - The feature is purely backend / infra (no visible result).
-- The dev server isn't running and the workspace has no `dev` script.
 
 ## How this phase works (skill, in the main session)
 
@@ -121,28 +120,16 @@ A reviewer reads the PR description without opening the report, so two things fr
 - **Every UNVERIFIABLE row, on a `PASS_EXCEPT_UNVERIFIABLE` verdict**: the row number, the assertion verbatim, the one-line reason from the report's Notes (a tool gap points at `docs/knowledge/`, a deferred row at the other validator's report), and the report path. A verdict that ships without this is a Dantotsu candidate against this skill: the gate exists so tool-side limits do not slip into main silently. A PASS needs only the report path.
 - **The screenshots, on any verdict.** A published screenshot reaches the reviewer through the *Screenshots* comment that `.github/workflows/screenshots.yml` posts once `/open-pr` has uploaded it, with the folder link in the body as the fallback. A committed one renders in the pull request's *Files changed* tab. Do not embed either as a markdown image in the body or in a comment you post: the GitHub MCP server defuses those without failing, and `pretool-github-pr-body.sh` refuses the call. See [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md).
 
-This section used to prescribe a `## Validation gaps` and a `## Visual evidence` section with inline images. The checker refuses both headings and the server strips the images, so following it produced a body that could not be posted; see [`docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md`](../../../docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md).
-
 ## Failure modes to avoid
 
 - **Optimism leak.** The skill must not pre-summarise the implementation for the agent ("the feature is mostly working, just check…"). Pass the spec path and the URL; nothing else. The whole point is unbiased eyes.
-- **Falling back to Playwright when agent-browser is missing.** The structural mitigation (LLM-shaped tool) goes away. Surface the install command and stop.
 - **Dispatching `general-purpose` instead of `visual-validator`.** A generic agent has none of the dedicated agent's structural rules — it can ask the user questions, drift into implementation reasoning, etc.
 - **Flaky-animation pseudo-failures.** Animations driving rAF produce different pixels every frame. The agent waits for `networkidle` plus a 600 ms settle before screenshotting; deterministic seeds (e.g. `?seed=DEADBEEF`) when the spec supports them.
 - **"Looks right" without evidence.** Every PASS must reference a captured screenshot or a deterministic check (selector found, attribute equal, URL matches). "Looks right" alone is not a PASS.
-- **PASS on DOM presence without checking rendered pixels.** The most insidious failure mode: the `<img>` tag is in the DOM, the parent component rendered, the layout is right — and the user sees broken alt-text where icons / sprites / glyphs should be (CDN 403, hotlink block, missing asset). The standard's *Pixel-content checks* section is mandatory per screenshot, not a recommendation. The brief template in `template.md` carries the canonical broken-image-scan `eval` so the agent runs it as a first-class step of every row that captured a screenshot.
+- **PASS on DOM presence without checking rendered pixels.** The user sees alt text where an icon should be while every DOM check passes. The standard's *Pixel-content checks* run on every screenshot.
 - **Validating against the implementation, not the spec.** The agent reads the spec to know what to check. If a feature exists in code but isn't claimed in the spec, it isn't validated. If a claim is in the spec but missing from the code, that's a FAIL — never "the implementer probably meant…".
 - **Skipping edge cases because they're hard.** The validator must resize, emulate dark mode, emulate touch device, emulate reduced motion. These are exactly the cases users hit; they're not optional.
 - **Treating UNVERIFIABLE as PASS.** PASS_EXCEPT_UNVERIFIABLE is its own verdict — same as PASS for mergeability if and only if the operator copies the UNVERIFIABLE rows into the PR description.
-- **Gitignoring the validation folder.** The evidence is part of the report. Commit both.
-
-## Repo-specific notes
-
-- Workspaces live under `apps/<app>/`. Dev server: `pnpm --filter @borso-app/<app> dev`.
-- Default dev port is 5173; check `apps/<app>/vite.config.ts` to override.
-- Reports + evidence go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/` and `plan/`).
-- The validator only writes inside `evidence_dir` and `report_path`. It does not modify code, the spec, or anything else.
-- When the verdict is FAIL, the user is shown the failing rows verbatim — they are not asked to interpret the report themselves.
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
 
