@@ -18,7 +18,6 @@ type GearChecklistResponse = InferResponseType<
   200
 >;
 export type GearItemRecord = GearChecklistResponse['items'][number];
-export type GearCopySourceRecord = NonNullable<GearChecklistResponse['copySource']>;
 
 export interface GearItemCreation {
   readonly sessionId: string;
