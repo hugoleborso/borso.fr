@@ -1,6 +1,5 @@
 # A week before a concert, members see which gear the band has, asks the venue for, or still has to find
 
-> ⚠️ Missing designer discussion
 > ⚠️ Missing tech discussion
 > ⚠️ Missing developer discussion
 
@@ -10,7 +9,7 @@
 - [x] **Product**: who holds an item (member, venue, nobody) answered on 2026-11-25; statuses (revised 2026-11-25: planned a week ahead, nothing tracked on the day), owner, replacement of the free-text field and reuse of the last concert answered on 2026-11-25.
 - [ ] **Tech-lead**: open.
 - [ ] **Developer**: open.
-- [ ] **Designer**: four variants on the canvas, pick pending.
+- [x] **Designer**: operator picked A + C on 2026-11-25, sections by status with C's filter chips and "Moi" toggle.
 
 ## Why
 
@@ -31,7 +30,7 @@ Design canvas, 375 px wide, with the real capture of today's Details tab and the
 - Statuses on the canvas: À trouver (empty circle), Demandé à la salle (building), J'ai (filled check, with the member's mark).
 - The add sheet asks one question, who has it: À trouver, the venue, or one member's mark.
 
-Variant picked: pending.
+Variant picked: **A + C** (operator, 2026-11-25), artboard "Retenue · A + C" on the canvas. Sections À trouver, Demandé à la salle, J'ai, in that order. Above them, filter chips Tout / À trouver / Salle / J'ai with counts, and a "Moi" chip that keeps only what the signed-in member has. A tap on an item's mark moves it À trouver → salle → J'ai (held by the member who taps) → À trouver. The member's mark replaces the check icon for J'ai.
 
 Audience: band members signed in to pragma, and assistants holding an assistant grant.
 
@@ -66,7 +65,7 @@ Error cases:
 | Filling a new concert | copy last concert · by hand · band inventory | Optional "Reprendre" of a previous concert (2026-11-25) |
 | Where the list lives | dedicated page · inside Details | Dedicated page opened from the concert (2026-11-25) |
 | Who creates items | page only · page and MCP tools | Page and MCP tools (2026-11-25) |
-| Page layout | A · B · C | pending |
+| Page layout | A · B · C | A + C: status sections plus C's filters and "Moi" (operator, 2026-11-25) |
 | Migrated Akanaboum lines: status | J'ai with the member named in the line · À trouver | open |
 
 Out of scope: tracking gear on the day (loaded, installed), a band-wide gear inventory, gear on practices, reminders or notifications before a concert, item quantities.
