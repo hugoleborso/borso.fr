@@ -29,6 +29,7 @@ export { isPracticeTodayRequested } from './test-seed.core';
 import { seedPresences } from './test-seed-presences.service';
 import { seedFormerMemberInspiration } from './test-seed-edge-cases.service';
 import { SEED_TASKS } from './test-seed-task-board.core';
+import { seedConcertGear } from './test-seed-gear.service';
 import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
   buildSeedCharts,
@@ -52,7 +53,6 @@ const MILLISECONDS_PER_DAY =
   HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 const CONCERT_CAPACITY = 120;
 const CONCERT_VENUE = 'Le Petit Bain';
-const CONCERT_GEAR = 'Backline fournie, deux retours';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
 const SEED_SETLIST_NAME = 'Set principal';
 const SEED_TOKEN_BYTES = 32;
@@ -198,7 +198,7 @@ function selectSeedActor(memberIdByName: ReadonlyMap<string, string>, now: Date)
   return { memberId, now };
 }
 
-async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor): Promise<void> {
+async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor): Promise<string> {
   const now = actor.now;
   const concertDate = new Date(now.getTime() + CONCERT_DAYS_FROM_NOW * MILLISECONDS_PER_DAY);
   const concert = await createSession(
@@ -207,7 +207,7 @@ async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor)
       date: concertDate.toISOString(),
       venue: CONCERT_VENUE,
       capacity: CONCERT_CAPACITY,
-      gear: CONCERT_GEAR,
+      gear: '',
       friendsCountPerMember: {},
     },
     actor,
@@ -230,6 +230,7 @@ async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor)
       actor,
     );
   }
+  return concert.id;
 }
 
 async function seedTransitionComment(songIds: readonly string[], actor: WriteActor): Promise<void> {
@@ -290,7 +291,7 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
   await seedTasks(memberIdByName, songIdByTitle, now);
   await seedPresences(memberIdByName, now);
   const seedActor = selectSeedActor(memberIdByName, now);
-  await seedConcertSetlist(songIds, seedActor);
+  await seedConcertGear(await seedConcertSetlist(songIds, seedActor), memberIdByName);
   await seedTransitionComment(songIds, seedActor);
   await seedFormerMemberInspiration(now);
   const calendarFeeds = await seedCalendarFeeds(memberIdByName, feedOrigin, now);

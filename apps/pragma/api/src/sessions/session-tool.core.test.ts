@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  attachConcertGear,
   matchSessionReference,
   projectSessionForTool,
   selectSessionsInWindow,
@@ -47,7 +48,17 @@ describe('summarizeSession', () => {
 });
 
 describe('projectSessionForTool', () => {
-  const details = { preparedConcertId: null, capacity: 120, gear: 'Two monitors' };
+  const details = { preparedConcertId: null, capacity: 120 };
+
+  it('leaves out the free-text gear a concert row may still carry', () => {
+    const rowWithFreeText = {
+      ...CONCERT,
+      ...details,
+      gear: 'Two monitors',
+      friendsCountPerMember: null,
+    };
+    expect(projectSessionForTool(rowWithFreeText, [])).not.toHaveProperty('gear');
+  });
 
   it('names the friends each member brings', () => {
     expect(
@@ -58,7 +69,6 @@ describe('projectSessionForTool', () => {
     ).toEqual({
       ...summarizeSession(CONCERT),
       capacity: 120,
-      gear: 'Two monitors',
       preparedConcertId: null,
       friendsCountPerMember: { Hugo: 3, 'member-gone': 1 },
     });
@@ -73,6 +83,15 @@ describe('projectSessionForTool', () => {
       projectSessionForTool({ ...NEXT_PRACTICE, ...details, friendsCountPerMember: 3 }, [])
         .friendsCountPerMember,
     ).toBeNull();
+  });
+});
+
+describe('attachConcertGear', () => {
+  const gear = [{ label: 'Sono', holder: 'venue' }];
+
+  it('adds the gear list to a concert, and leaves a practice without one', () => {
+    expect(attachConcertGear(CONCERT, gear)).toStrictEqual({ ...CONCERT, gear });
+    expect(attachConcertGear(NEXT_PRACTICE, gear)).toBe(NEXT_PRACTICE);
   });
 });
 

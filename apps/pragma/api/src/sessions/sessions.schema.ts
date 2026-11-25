@@ -95,7 +95,7 @@ export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema
 export const sessionIdParamSchema = z.object({ id: z.guid() });
 
 export const sessionSaveToolInputSchema = z.object({
-  ...z.object(concertFieldShape).partial().shape,
+  ...z.object(concertFieldShape).omit({ gear: true }).partial().shape,
   ...z.object(practiceFieldShape).partial().shape,
   session: referenceSchema.optional(),
   kind: z.enum(SESSION_KINDS).optional(),

@@ -11,7 +11,12 @@ import {
   type SessionRow,
   updateSession,
 } from './sessions.repository';
-export { didClaimSessionWithin, findSessionById } from './sessions.repository';
+export {
+  didClaimConcertWithin,
+  didClaimSessionWithin,
+  findSessionById,
+  listSessions,
+} from './sessions.repository';
 export {
   confirmUpdate,
   defineDeletion,

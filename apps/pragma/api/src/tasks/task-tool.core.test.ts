@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isSelfReference,
-  keepGivenLinks,
-  projectTasksForTool,
-  type ToolTask,
-} from './task-tool.core';
+import { keepGivenLinks, projectTasksForTool, type ToolTask } from './task-tool.core';
 
 const MEMBERS = [{ id: 'member-lea', name: 'Léa' }];
 const SONGS = [{ id: 'song-creep', name: 'Creep' }];
@@ -61,13 +56,6 @@ describe('projectTasksForTool', () => {
     expect(keep({ songId: 'song-creep' })).toEqual(['task-bridge']);
     expect(keep({ status: 'doing' })).toEqual(['task-bridge']);
     expect(keep({ status: 'done' })).toEqual([]);
-  });
-});
-
-describe('isSelfReference', () => {
-  it('reads `me` in any case and spacing as the member acting', () => {
-    expect(isSelfReference(' Me ')).toBe(true);
-    expect(isSelfReference('Mehdi')).toBe(false);
   });
 });
 

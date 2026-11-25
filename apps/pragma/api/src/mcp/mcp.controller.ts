@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { BAR_DELETION, BAR_TOOLS } from '../bars/bars-tools.controller';
 import { FREE_SLOT_TOOLS } from '../free-slots/free-slots-tools.controller';
+import { GEAR_ITEM_DELETION, GEAR_ITEM_TOOLS } from '../gear-items/gear-items-tools.controller';
 import {
   IMPROVEMENT_DELETION,
   IMPROVEMENT_TOOLS,
@@ -30,10 +31,11 @@ const ALLOWED_METHODS_HEADER = { Allow: 'POST' };
 const DELETION_TOOL = defineDeletionTool({
   name: 'delete',
   description:
-    'Delete one bar, improvement, session, setlist, song, take or task, by id (or name). Irreversible: confirm with the user first.',
-  kinds: ['bar', 'improvement', 'session', 'setlist', 'song', 'take', 'task'],
+    'Delete one bar, gear_item, improvement, session, setlist, song, take or task, by id (or name). Irreversible: confirm with the user first.',
+  kinds: ['bar', 'gear_item', 'improvement', 'session', 'setlist', 'song', 'take', 'task'],
   deletions: {
     bar: BAR_DELETION,
+    gear_item: GEAR_ITEM_DELETION,
     improvement: IMPROVEMENT_DELETION,
     session: SESSION_DELETION,
     setlist: SETLIST_DELETION,
@@ -53,6 +55,7 @@ export const ASSISTANT_TOOLS: readonly ToolDefinition[] = [
   ...BAR_TOOLS,
   ...IMPROVEMENT_TOOLS,
   ...TASK_TOOLS,
+  ...GEAR_ITEM_TOOLS,
   ...FREE_SLOT_TOOLS,
   ...ME_TOOLS,
   DELETION_TOOL,

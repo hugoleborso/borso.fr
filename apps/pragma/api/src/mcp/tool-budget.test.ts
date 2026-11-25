@@ -59,6 +59,7 @@ const TASK_BUDGETS: Readonly<Record<string, TaskBudget>> = {
   'list my tasks': { calls: 1, characters: 550 },
   "set a member's mastery on a song": { calls: 1, characters: 150 },
   'brief me on the next concert': { calls: 1, characters: 2_300 },
+  'say who brings what to the next concert': { calls: 1, characters: 2_300 },
 };
 
 const READ_BUDGETS: Readonly<Record<string, number>> = {
@@ -299,6 +300,9 @@ describe('assistant tool budget (back-e2e)', () => {
       });
     });
     await runTask('brief me on the next concert', async (log) => {
+      await log.call('get_session', { session: 'next-concert' });
+    });
+    await runTask('say who brings what to the next concert', async (log) => {
       await log.call('get_session', { session: 'next-concert' });
     });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   foldReferenceText,
   isIdentifierReference,
+  isSelfReference,
   matchReference,
   type ReferenceCandidate,
 } from './reference.core';
@@ -11,6 +12,13 @@ const SLOW_BURN_LIVE: ReferenceCandidate = { id: 'song-2', label: 'Slow Burn (li
 const RUNAWAY_SUN: ReferenceCandidate = { id: 'song-3', label: 'Runaway Sun' };
 const LEA: ReferenceCandidate = { id: 'member-1', label: 'Léa' };
 const CATALOGUE = [SLOW_BURN, SLOW_BURN_LIVE, RUNAWAY_SUN, LEA];
+
+describe('isSelfReference', () => {
+  it('reads `me` in any case and spacing as the member acting', () => {
+    expect(isSelfReference(' Me ')).toBe(true);
+    expect(isSelfReference('Mehdi')).toBe(false);
+  });
+});
 
 // @FollowsBlueprint test-pure-unit
 describe('isIdentifierReference', () => {

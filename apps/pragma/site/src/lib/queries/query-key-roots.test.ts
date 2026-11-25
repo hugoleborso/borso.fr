@@ -15,7 +15,7 @@ const API_READ = /api\.api(?:\.(\w+)|\['([\w-]+)'\])(?:\.\w+|\['[^']*'\])*\.\$ge
 const MODULE_NAME = /^\.\/(.+)\.queries\.ts$/;
 
 const UNCACHED_MODULES = new Set(['realtime']);
-const WRITTEN_ROOTS_NO_QUERY_READS: readonly string[] = [];
+const WRITTEN_ROOTS_NO_QUERY_READS: readonly string[] = ['gear-items'];
 
 interface QueryModule {
   readonly name: string;

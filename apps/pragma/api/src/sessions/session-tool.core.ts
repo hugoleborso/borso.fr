@@ -25,6 +25,7 @@ const NEXT_KIND_BY_REFERENCE: Readonly<Record<string, string | null>> = {
   'next-practice': 'practice',
 };
 const LAST_REFERENCE = 'last';
+const CONCERT_KIND = 'concert';
 const CALENDAR_DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MISSING: ReferenceMatch = { kind: 'missing' };
 
@@ -48,7 +49,6 @@ export function summarizeSession(session: DatedSession): SessionSummary {
 export interface SessionDetail extends DatedSession {
   readonly preparedConcertId: string | null;
   readonly capacity: number | null;
-  readonly gear: string | null;
   readonly friendsCountPerMember: unknown;
 }
 
@@ -74,10 +74,17 @@ export function projectSessionForTool(session: SessionDetail, members: readonly 
   return {
     ...summarizeSession(session),
     capacity: session.capacity,
-    gear: session.gear,
     preparedConcertId: session.preparedConcertId,
     friendsCountPerMember: nameFriendsCounts(session.friendsCountPerMember, members),
   };
+}
+
+export function attachConcertGear<View extends { readonly kind: string }, Gear>(
+  view: View,
+  gear: readonly Gear[],
+): View | (View & { readonly gear: readonly Gear[] }) {
+  if (view.kind !== CONCERT_KIND) return view;
+  return { ...view, gear };
 }
 
 // @FollowsBlueprint core-projection

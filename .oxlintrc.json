@@ -1028,6 +1028,7 @@
         "apps/last-loop-lepin/api/src/edition/edition.service.ts",
         "apps/last-loop-lepin/api/src/punch/punch.service.ts",
         "apps/last-loop-lepin/api/src/runner/runner.service.ts",
+        "apps/pragma/api/src/gear-items/gear-items.service.ts",
         "apps/pragma/api/src/members/members.repository.ts",
         "apps/pragma/api/src/members/members.service.ts",
         "apps/pragma/api/src/sessions/sessions.repository.ts",

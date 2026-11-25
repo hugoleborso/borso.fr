@@ -211,6 +211,30 @@ Invariants: `api/src/free-slots/INVARIANTS.md`
 Not to be confused with: a **practice**, which only exists once someone
 books the slot.
 
+## Gear item
+
+One thing the band needs at one concert, such as "Ampli basse", planned
+about a week ahead. It is held by exactly one of a member (`have`, "J'ai"),
+the venue (`asked_of_venue`, "Demandé à la salle") or nobody yet
+(`to_find`, "À trouver").
+
+Lives in: `api/src/gear-items/` (`gear_item`), with its rule in `domain/gear-status.core.ts`
+
+Invariants: `api/src/gear-items/INVARIANTS.md`
+
+Not to be confused with: a **task**, which may name a session but has no
+holder, nor the free-text `gear` field of a concert, which gear items
+replace.
+
+## Gear status
+
+Where a **gear item** stands: still to find, asked of the venue, or had by
+one member. The status and the member who has it are one choice.
+
+Lives in: `domain/gear-status.core.ts`
+
+Invariants: `domain/INVARIANTS.md`
+
 ## Home
 
 The start screen, at `/`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
