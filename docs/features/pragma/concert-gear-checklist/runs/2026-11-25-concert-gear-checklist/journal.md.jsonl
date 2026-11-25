@@ -1,0 +1,1 @@
+{"label":"technical-conception-01","status":"done","summary":"plan.md written in two slices (API and MCP; then site, card, i18n and session.gear removal). No ADR trigger, no blocking question. One default to confirm on the preview: a tap on an item label opens the sheet with edit and delete."}

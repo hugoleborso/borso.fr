@@ -4,7 +4,7 @@
 
 - [x] **Client / business**: the operator asked for a gear check-list per concert on 2026-11-25, and the free-text gear field shows the need (below).
 - [x] **Product**: who holds an item (member, venue, nobody) answered on 2026-11-25; statuses (revised 2026-11-25: planned a week ahead, nothing tracked on the day), owner, replacement of the free-text field and reuse of the last concert answered on 2026-11-25.
-- [x] **Tech-lead**: the session took this pass after the operator asked for the pipeline on 2026-11-25: one new table and module on the `api/src/tasks/` precedent, a new written root for live invalidation, no ADR trigger, `session.gear` kept in the database but no longer read or written.
+- [x] **Tech-lead**: the session took this pass after the operator asked for the pipeline on 2026-11-25: one new table and module on the `api/src/tasks/` precedent, a new written root for live invalidation, no ADR trigger, `session.gear` dropped.
 - [x] **Developer**: the session took this pass too: the status order and the holder rule are pure functions in `domain/`, every use case below is a controller test or a visual-validation row.
 - [x] **Designer**: operator picked A + C on 2026-11-25, sections by status with C's filter chips and "Moi" toggle.
 
@@ -56,14 +56,14 @@ Error cases:
 | --- | --- | --- |
 | Statuses | À prendre/Chargé/Installé · À prendre/Pris · Manquant/À prendre/Pris · À prendre/Prévu salle/Pris | J'ai, Demandé à la salle, À trouver. Gear is planned a week ahead; nothing is tracked on the day (operator, 2026-11-25, replacing his earlier À prendre/Prévu salle/Pris) |
 | Does "J'ai" carry the member who has it | J'ai sets the member, others have none · member independent of status | Yes. An item is held by exactly one of: a member, the venue, nobody yet. One choice on screen, not a status plus a member (operator, 2026-11-25) |
-| What "Reprendre" copies | statuses reset to À trouver · statuses kept | Statuses and holders kept. Default the session took when the operator did not pick, 2026-11-25; checked on the preview |
+| What "Reprendre" copies | statuses reset to À trouver · statuses kept | Statuses and holders kept (operator, 2026-11-25) |
 | Who brings it | optional member · label only | Optional member; none means the band (2026-11-25) |
 | Free-text `gear` field | replaced · kept beside | Replaced in the UI (2026-11-25) |
 | Filling a new concert | copy last concert · by hand · band inventory | Optional "Reprendre" of a previous concert (2026-11-25) |
 | Where the list lives | dedicated page · inside Details | Dedicated page opened from the concert (2026-11-25) |
 | Who creates items | page only · page and MCP tools | Page and MCP tools (2026-11-25) |
 | Page layout | A · B · C | A + C: status sections plus C's filters and "Moi" (operator, 2026-11-25) |
-| What happens to the existing `session.gear` text | migrate into items · leave it | Leave it. No data migration; the column stays in the database, unread and unwritten, and leaves the UI and the MCP tools (operator, 2026-11-25) |
+| What happens to the existing `session.gear` text | migrate into items · leave it · remove it | Remove it all: the field, its uses and the column; Akanaboum's text is not migrated (operator, 2026-11-25, replacing "leave it") |
 
 Out of scope: tracking gear on the day (loaded, installed), a band-wide gear inventory, gear on practices, reminders or notifications before a concert, item quantities.
 
@@ -98,7 +98,7 @@ CREATE TABLE gear_item (
   status text NOT NULL,
   position integer NOT NULL
 );
--- session.gear is left as it is: no data migration, no drop
+ALTER TABLE session DROP COLUMN gear; -- no data migration (operator, 2026-11-25)
 ```
 
 ### Records
