@@ -223,8 +223,22 @@ Lives in: `api/src/gear-items/` (`gear_item`), with its rule in `domain/gear-sta
 Invariants: `api/src/gear-items/INVARIANTS.md`
 
 Not to be confused with: a **task**, which may name a session but has no
-holder, nor the free-text `gear` field of a concert, which gear items
-replace.
+holder, nor the free-text `gear` column of a concert, which gear items
+replaced and no code reads.
+
+## Gear page
+
+The page of one concert's **gear items**, at `/sessions/:id/gear`, opened
+from the gear card of the concert's Details tab. Status sections, filter
+chips and a "Moi" chip; a tap on an item's mark moves it to the next
+**gear status**.
+
+Lives in: `site/src/routes/sessions/`
+
+Invariants: `site/src/routes/sessions/INVARIANTS.md`
+
+Not to be confused with: the gear card of the Details tab, which only sums
+the list up and opens this page.
 
 ## Gear status
 

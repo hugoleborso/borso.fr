@@ -28,7 +28,6 @@ export const SETLIST_BREAK_LABEL_MAX_LENGTH = 80;
 
 export const CONCERT_VENUE_MAX_LENGTH = 256;
 export const CONCERT_CAPACITY_MAX = 100_000;
-export const CONCERT_GEAR_MAX_LENGTH = 2_048;
 export const FRIENDS_PER_MEMBER_MAX = 1_000;
 
 export const TASK_TITLE_MAX_LENGTH = 256;

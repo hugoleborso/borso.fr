@@ -207,7 +207,6 @@ async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor)
       date: concertDate.toISOString(),
       venue: CONCERT_VENUE,
       capacity: CONCERT_CAPACITY,
-      gear: '',
       friendsCountPerMember: {},
     },
     actor,

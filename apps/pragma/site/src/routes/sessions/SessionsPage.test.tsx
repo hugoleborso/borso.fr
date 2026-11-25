@@ -21,7 +21,6 @@ function sessionAt(id: string, kind: string, daysFromNow: number, venue: string 
     venue,
     preparedConcertId: null,
     capacity: null,
-    gear: null,
     friendsCountPerMember: null,
   };
 }

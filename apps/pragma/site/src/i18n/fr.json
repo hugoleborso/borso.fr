@@ -511,6 +511,38 @@
       "openInGoogle": "Ouvrir dans Google Agenda"
     }
   },
+  "gear": {
+    "title": "Matériel",
+    "status": {
+      "to_find": "À trouver",
+      "asked_of_venue": "Demandé à la salle",
+      "have": "J’ai"
+    },
+    "mine": "Moi",
+    "mineLabel": "Seulement ce que j’ai",
+    "add": "Ajouter un item",
+    "editTitle": "Modifier l’item",
+    "item": "Item",
+    "holderLegend": "Qui l’a",
+    "memberHas": "{{name}} l’a",
+    "cycle": "Changer qui a {{label}}",
+    "edit": "Modifier {{label}}",
+    "copy": "Reprendre {{source}} · {{count}}",
+    "empty": "Aucun matériel prévu pour ce concert.",
+    "refusal": {
+      "empty": "Nomme l’item.",
+      "tooLong": "Ce nom est trop long."
+    },
+    "saveFailed": "L’item n’a pas pu être enregistré. Réessaie.",
+    "writeFailed": "Le changement n’a pas pu être enregistré. Réessaie.",
+    "summary": {
+      "open": "Ouvrir",
+      "empty": "Rien de prévu pour l’instant.",
+      "toFind": "{{count}} à trouver",
+      "have": "{{count}} on a",
+      "venue": "{{count}} salle"
+    }
+  },
   "sessions": {
     "addTask": "Ajouter une tâche",
     "capacity": "Jauge",

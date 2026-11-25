@@ -24,7 +24,6 @@ const SESSION = {
   preparedConcertId: null,
   venue: null,
   capacity: null,
-  gear: null,
   friendsCountPerMember: null,
 };
 const SETLIST = {

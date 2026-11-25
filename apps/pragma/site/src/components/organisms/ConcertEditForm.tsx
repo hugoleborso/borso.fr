@@ -1,10 +1,6 @@
 /** @Feature sessions */
 
-import {
-  CONCERT_GEAR_MAX_LENGTH,
-  CONCERT_VENUE_MAX_LENGTH,
-  FRIENDS_PER_MEMBER_MAX,
-} from '@domain/input-limits.core';
+import { CONCERT_VENUE_MAX_LENGTH, FRIENDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +9,6 @@ import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
-import { inputVariants } from '../atoms/input.variants';
 import { MemberChip } from '../molecules/MemberChip';
 
 export interface ConcertEditFormMember {
@@ -25,7 +20,6 @@ export interface ConcertEditFormMember {
 export interface ConcertEditFormPayload {
   readonly venue: string;
   readonly capacity: string;
-  readonly gear: string;
   readonly friends: Record<string, number>;
 }
 
@@ -41,7 +35,6 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 const concertFormSchema = z.object({
   venue: z.string().max(CONCERT_VENUE_MAX_LENGTH),
   capacity: z.string().regex(/^\d*$/u),
-  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
   friends: z.record(z.string(), z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX)),
 });
 
@@ -95,22 +88,6 @@ export function ConcertEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={LABEL_CLASS} htmlFor="session-gear">
-          {t('sessions.gear')}
-        </label>
-        <form.Field name="gear">
-          {(field) => (
-            <textarea
-              id="session-gear"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              className={composeClassName(inputVariants({ size: 'md' }), 'resize-y')}
-              rows={4}
-              maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </form.Field>

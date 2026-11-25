@@ -36,11 +36,12 @@ describe('friendsCountSchema', () => {
 });
 
 describe('concertCreateSchema', () => {
-  it('fills in the gear list and the guest counts', () => {
-    expect(concertCreateSchema.parse(concert())).toMatchObject({
-      gear: '',
-      friendsCountPerMember: {},
-    });
+  it('fills in the guest counts', () => {
+    expect(concertCreateSchema.parse(concert())).toMatchObject({ friendsCountPerMember: {} });
+  });
+
+  it('refuses the free-text gear the gear checklist replaced', () => {
+    expect(concertCreateSchema.safeParse(concert({ gear: 'Sono' })).success).toBe(false);
   });
 
   it('needs a venue that is really a venue', () => {

@@ -24,7 +24,6 @@ const PROJECTION = {
   preparedConcertId: sessionTable.preparedConcertId,
   venue: sessionTable.venue,
   capacity: sessionTable.capacity,
-  gear: sessionTable.gear,
   friendsCountPerMember: sessionTable.friendsCountPerMember,
 } as const;
 
@@ -42,7 +41,6 @@ function rowToSession(row: SessionRawRow): SessionRow {
     preparedConcertId: row.preparedConcertId,
     venue: row.venue,
     capacity: row.capacity,
-    gear: row.gear,
     friendsCountPerMember,
   };
 }
