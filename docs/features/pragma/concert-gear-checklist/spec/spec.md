@@ -7,7 +7,7 @@
 ## Perspectives confronted
 
 - [x] **Client / business**: the operator asked for a gear check-list per concert on 2026-11-25, and the free-text gear field shows the need (below).
-- [x] **Product**: statuses (revised 2026-11-25: planned a week ahead, nothing tracked on the day), owner, replacement of the free-text field and reuse of the last concert answered on 2026-11-25.
+- [x] **Product**: who holds an item (member, venue, nobody) answered on 2026-11-25; statuses (revised 2026-11-25: planned a week ahead, nothing tracked on the day), owner, replacement of the free-text field and reuse of the last concert answered on 2026-11-25.
 - [ ] **Tech-lead**: open.
 - [ ] **Developer**: open.
 - [ ] **Designer**: four variants on the canvas, pick pending.
@@ -29,6 +29,7 @@ Design canvas, 375 px wide, with the real capture of today's Details tab and the
 - C · one list with status filters and a "Moi" toggle.
 - D · empty list with "Reprendre <last concert>", and the add sheet (label, who, status).
 - Statuses on the canvas: À trouver (empty circle), Demandé à la salle (building), J'ai (filled check, with the member's mark).
+- The add sheet asks one question, who has it: À trouver, the venue, or one member's mark.
 
 Variant picked: pending.
 
@@ -39,13 +40,13 @@ Audience: band members signed in to pragma, and assistants holding an assistant 
 Happy path:
 1. A member opens a concert, then the gear card.
 2. On an empty list, they tap "Reprendre <previous concert>". Every item is copied with its label, its status and its member, to be adjusted.
-3. They add "Multiprise", status "À trouver".
-4. Borso sets "Ampli basse" to "J'ai", with his mark.
+3. They add "Multiprise", held by nobody yet, so "À trouver".
+4. Borso picks his own mark on "Ampli basse": it becomes "J'ai", held by Borso.
 5. "Sono" is set to "Demandé à la salle".
 
 Edge cases:
 - No previous concert holds items: the "Reprendre" button is absent.
-- An item's member is deleted: the item stays, shown as the band's.
+- An item's member is deleted: the item goes back to "À trouver".
 - A practice has no gear page. Only a concert does.
 - Two members change one item at once: the last write wins, and both screens converge through live invalidation.
 
@@ -58,7 +59,7 @@ Error cases:
 | Question | Options | Decision (date) |
 | --- | --- | --- |
 | Statuses | À prendre/Chargé/Installé · À prendre/Pris · Manquant/À prendre/Pris · À prendre/Prévu salle/Pris | J'ai, Demandé à la salle, À trouver. Gear is planned a week ahead; nothing is tracked on the day (operator, 2026-11-25, replacing his earlier À prendre/Prévu salle/Pris) |
-| Does "J'ai" carry the member who has it | J'ai sets the member, others have none · member independent of status | open |
+| Does "J'ai" carry the member who has it | J'ai sets the member, others have none · member independent of status | Yes. An item is held by exactly one of: a member, the venue, nobody yet. One choice on screen, not a status plus a member (operator, 2026-11-25) |
 | What "Reprendre" copies | statuses reset to À trouver · statuses kept | open |
 | Who brings it | optional member · label only | Optional member; none means the band (2026-11-25) |
 | Free-text `gear` field | replaced · kept beside | Replaced; existing lines migrate to items (2026-11-25) |
@@ -84,8 +85,8 @@ interface GearItem {
   id: string;
   sessionId: string;      // a concert
   label: string;          // 1..GEAR_LABEL_MAX_LENGTH
-  memberId: string | null; // who has it; open whether only 'have' carries one
-  status: GearStatus;     // default 'to_find'
+  status: GearStatus;      // default 'to_find'
+  memberId: string | null; // set if and only if status is 'have'
   position: number;
 }
 ```
