@@ -28,7 +28,6 @@ import {
 import {
   countGearItemsPerSession,
   deleteGearItem,
-  deleteGearOfDeletedSession,
   findGearItem,
   findGearItemWithin,
   type GearItemPersistedUpdate,
@@ -39,7 +38,6 @@ import {
   listGearItemsOfSessions,
   listGearItemsOfSessionWithin,
   nextGearPositionWithin,
-  releaseGearOfDeletedMember,
   runInOneGearItemTransaction,
   updateGearItemWithin,
 } from './gear-items.repository';
@@ -62,7 +60,8 @@ export type GearItemCreateOutcome =
   | { kind: 'ok'; item: GearItemRow }
   | { kind: 'not-a-concert' }
   | { kind: 'holding-invalid' }
-  | { kind: 'member-not-found' };
+  | { kind: 'member-not-found' }
+  | { kind: 'id-taken' };
 
 export type GearItemPatchOutcome =
   | { kind: 'ok'; item: GearItemRow }
@@ -111,7 +110,7 @@ async function findCopySource(target: {
 }
 
 // @FollowsBlueprint service-orchestration
-export async function getGearChecklist(sessionId: string): Promise<GearChecklistOutcome> {
+export async function readGearChecklist(sessionId: string): Promise<GearChecklistOutcome> {
   const [session, items] = await Promise.all([
     findSessionById(sessionId),
     listGearItemsOfSession(sessionId),
@@ -136,6 +135,7 @@ export async function createGearItem(
     const writtenItem = await findGearItemWithin(executor, input.id);
     if (writtenItem === null)
       throw new Error('the written gear item is not visible to its own transaction');
+    if (writtenItem.sessionId !== sessionId) return { kind: 'id-taken' };
     return { kind: 'ok', item: writtenItem };
   });
 }
@@ -199,20 +199,6 @@ export async function copyGearItems(
     });
     return { kind: 'ok', items: await insertGearItemsWithin(executor, copies) };
   });
-}
-
-export async function releaseGearOfMemberBeingDeleted(
-  transaction: DatabaseExecutor,
-  memberId: string,
-): Promise<void> {
-  await releaseGearOfDeletedMember(transaction, memberId);
-}
-
-export async function deleteGearOfSessionBeingDeleted(
-  transaction: DatabaseExecutor,
-  sessionId: string,
-): Promise<void> {
-  await deleteGearOfDeletedSession(transaction, sessionId);
 }
 
 export { confirmUpdate, defineDeletion, defineTool, parseToolFields } from '../mcp/mcp.service';

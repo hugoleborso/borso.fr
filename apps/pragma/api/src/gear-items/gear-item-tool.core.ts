@@ -1,6 +1,7 @@
 import type { GearHolding, GearStatus } from '@domain/gear-status.core';
 import { foldReferenceText, isSelfReference } from '../helpers/reference/reference.core';
 import { type NamedEntity, nameEntity } from '../instruments/lineup-names.core';
+import type { GearItemUpdateInput } from './gear-items.schema';
 
 export const VENUE_HOLDER = 'venue';
 
@@ -17,6 +18,7 @@ export interface GearItemToolView {
 
 function nameHolder(item: ToolGearItem, members: readonly NamedEntity[]): string | null {
   if (item.status === 'asked_of_venue') return VENUE_HOLDER;
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, since nameEntity answers the id it was given when no member matches, so a null id comes back as the same null.
   if (item.memberId === null) return null;
   return nameEntity(members, item.memberId);
 }
@@ -49,15 +51,9 @@ export function readGearHolderReference(
   return { kind: 'member', reference };
 }
 
-export interface GearToolUpdate {
-  readonly label?: string;
-  readonly status?: GearStatus;
-  readonly memberId?: string | null;
-}
-
 export function buildGearToolUpdate(
   label: string | undefined,
   holding: GearHolding | undefined,
-): GearToolUpdate {
+): GearItemUpdateInput {
   return { ...(label === undefined ? {} : { label }), ...holding };
 }

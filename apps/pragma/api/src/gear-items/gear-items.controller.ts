@@ -11,7 +11,7 @@ import {
 import {
   copyGearItems,
   createGearItem,
-  getGearChecklist,
+  readGearChecklist,
   patchGearItem,
   removeGearItem,
 } from './gear-items.service';
@@ -21,7 +21,7 @@ export function buildGearItemsRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/:sessionId', zValidator('param', gearSessionParamSchema), async (context) => {
-      const outcome = await getGearChecklist(context.req.valid('param').sessionId);
+      const outcome = await readGearChecklist(context.req.valid('param').sessionId);
       if (outcome.kind === 'not-a-concert') return context.json({ error: 'not-a-concert' }, 404);
       return context.json({ items: outcome.items, copySource: outcome.copySource });
     })
@@ -54,6 +54,7 @@ export function buildGearItemsRouter() {
           return context.json({ error: 'holding-invalid' }, 400);
         if (outcome.kind === 'member-not-found')
           return context.json({ error: 'member-not-found' }, 400);
+        if (outcome.kind === 'id-taken') return context.json({ error: 'id-taken' }, 409);
         return context.json({ item: outcome.item }, 201);
       },
     )

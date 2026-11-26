@@ -64,10 +64,7 @@ export function selectGearCopySource<Concert extends GearCopyCandidate>(
   target: { readonly id: string; readonly date: Date },
 ): Concert | null {
   const earlierWithItems = concerts.filter(
-    (concert) =>
-      concert.id !== target.id &&
-      concert.gearItemCount > 0 &&
-      concert.date.getTime() < target.date.getTime(),
+    (concert) => concert.gearItemCount > 0 && concert.date.getTime() < target.date.getTime(),
   );
   return earlierWithItems.toSorted(compareLatestFirst)[0] ?? null;
 }

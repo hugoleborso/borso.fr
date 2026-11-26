@@ -38,6 +38,7 @@ describe('gear status', () => {
     expect(isGearHoldingUpdateValid({ status: 'to_find', memberId: null })).toBe(true);
     expect(isGearHoldingUpdateValid({ status: 'have' })).toBe(false);
     expect(isGearHoldingUpdateValid({ memberId: BORSO })).toBe(false);
+    expect(isGearHoldingUpdateValid({ memberId: null })).toBe(false);
     expect(isGearHoldingUpdateValid({ status: 'asked_of_venue', memberId: BORSO })).toBe(false);
   });
 

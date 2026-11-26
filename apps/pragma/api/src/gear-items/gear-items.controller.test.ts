@@ -176,6 +176,20 @@ describe('gear items controller (back-e2e)', () => {
     expect((await readChecklist(app, cookieHeader, concertId)).items).toHaveLength(1);
   });
 
+  it('refuses a create whose id already names an item of another concert', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const firstConcertId = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);
+    const secondConcertId = await createConcert(app, cookieHeader, LATER_CONCERT_DATE);
+    const body = { id: randomUUID(), label: 'Sono' };
+    await addItem(app, cookieHeader, firstConcertId, body);
+
+    const reused = await addItem(app, cookieHeader, secondConcertId, body);
+
+    expect(reused.status).toBe(409);
+    expect(await readJson(reused, errorEnvelope)).toEqual({ error: 'id-taken' });
+    expect((await readChecklist(app, cookieHeader, secondConcertId)).items).toHaveLength(0);
+  });
+
   it('refuses have without a member, a member on to_find, and a status without its member', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const concertId = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);

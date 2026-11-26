@@ -5,10 +5,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
 ## Gear item
 
-- A gear item belongs to exactly one concert. Every route answers
-  `404 not-a-concert` when its session is a practice or does not exist, and a
-  write claims the concert in the same transaction as the item
-  (`didClaimConcertWithin`).
+- A gear item belongs to exactly one concert. Reading the list, creating an
+  item and copying answer `404 not-a-concert` when the session is a practice
+  or does not exist, and a create or a copy claims the concert in the same
+  transaction as the items (`didClaimConcertWithin`).
 - `status` is one of `to_find`, `asked_of_venue`, `have`
   (`GEAR_STATUSES` in `domain/gear-status.core.ts`).
 - An item is held by exactly one of a member, the venue or nobody:
@@ -22,7 +22,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   concert answers `404 not-found`.
 - Deleting a concert deletes its items in the same transaction.
 - The device chooses the id of an item it creates, so a retried create lands
-  on the same row.
+  on the same row. A create whose id names an item of another concert is
+  refused with `409 id-taken`.
 - "Reprendre" copies the label, the status and the holder of every item of
   another concert, and is refused with `gear-not-empty` when the concert
   already holds items. A holder whose member is gone is copied as `to_find`.
@@ -38,6 +39,7 @@ Held by: `api/src/gear-items/gear-items.controller.test.ts` › never leaves an 
 Held by: `api/src/gear-items/gear-items.controller.test.ts` › answers not-found for an item of another concert or an unknown id
 Held by: `api/src/gear-items/gear-items.controller.test.ts` › deletes the gear of a concert with the concert
 Held by: `api/src/gear-items/gear-items.controller.test.ts` › lands a retried create on the same row
+Held by: `api/src/gear-items/gear-items.controller.test.ts` › refuses a create whose id already names an item of another concert
 Held by: `api/src/gear-items/gear-items.controller.test.ts` › copies labels, statuses and holders from the latest earlier concert holding items
 Held by: `api/src/gear-items/gear-items.controller.test.ts` › refuses a copy into a concert that holds items
 Held by: `domain/gear-status.core.test.ts` › puts an item back to find when the member holding it is gone

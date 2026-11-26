@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { deleteGearOfSessionBeingDeleted } from '../gear-items/gear-items.service';
+import { deleteGearOfSessionBeingDeleted } from '../gear-items/gear-items-cascade.service';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { detachTasksOfSessionBeingDeleted } from '../tasks/tasks.service';
