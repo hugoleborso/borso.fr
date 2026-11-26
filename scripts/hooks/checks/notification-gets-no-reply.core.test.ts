@@ -24,7 +24,7 @@ describe('notificationGetsNoReply', () => {
       ),
     ).toEqual({
       kind: 'context',
-      text: '[notification-reply] Write nothing about this notification unless you push, merge or fix something, or CI turned red; a preview comment or CI running is not news. Once CI is green and the pull request waits only on the operator, unsubscribe from it (unsubscribe_pr_activity) instead of replying, because every later wake would force a reply he does not want.',
+      text: '[notification-reply] Write nothing about this notification unless you push, merge or fix something, or CI turned red; a preview comment or CI running is not news. Once CI is green on the head you last pushed and the pull request waits only on the operator, unsubscribe from it (unsubscribe_pr_activity) instead of replying, because every later wake would force a reply he does not want.',
     });
   });
 });
