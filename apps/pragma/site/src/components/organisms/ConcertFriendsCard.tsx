@@ -59,7 +59,7 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
     <Card>
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className={LABEL_CLASS}>{t('sessions.friendsCountPerMember')}</span>
-        <span className="font-mono text-meta text-ink-soft">
+        <span className="text-meta text-ink-soft">
           <b className="font-semibold text-ink">{tally.registeredTotal}</b>{' '}
           {t('sessions.friendsRegistered', { count: tally.registeredTotal })} ·{' '}
           {tally.expectedTotal} {t('sessions.friendsExpected', { count: tally.expectedTotal })}
@@ -73,12 +73,14 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
               <span className="truncate">{member.firstName}</span>
             </span>
             <div className={TRACK_CLASS} aria-hidden="true">
-              <MemberMark
-                color={member.color}
-                shape="ring"
-                className={composeClassName(BAR_CLASS, EXPECTED_BAR_CLASS)}
-                style={{ width: `${row.expectedPercent}%` }}
-              />
+              {row.isExpectedShown ? (
+                <MemberMark
+                  color={member.color}
+                  shape="ring"
+                  className={composeClassName(BAR_CLASS, EXPECTED_BAR_CLASS)}
+                  style={{ width: `${row.expectedPercent}%` }}
+                />
+              ) : null}
               <MemberMark
                 color={member.color}
                 shape="cell"
@@ -130,7 +132,7 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
       </div>
       {isVenueFillShown ? (
         <div className="mt-3.5 flex justify-between border-t border-rule pt-3.5 text-meta">
-          <span className="text-ink-soft">{t('sessions.capacity')}</span>
+          <span className="text-ink-soft">{t('sessions.friendsVenueFill')}</span>
           <span className="font-mono">
             {Math.round(computeSharePercent(tally.registeredTotal, capacity))}% ·{' '}
             {tally.registeredTotal}/{capacity}

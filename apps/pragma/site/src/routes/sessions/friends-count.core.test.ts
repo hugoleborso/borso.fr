@@ -65,13 +65,21 @@ describe('tallyFriends', () => {
       registrations: [...comingFor(MEMBER_ID, 6), ...comingFor(OTHER_MEMBER_ID, 4)],
     });
     expect(tally.rows).toEqual([
-      { member: MEMBER, registered: 6, expected: 8, registeredPercent: 75, expectedPercent: 100 },
+      {
+        member: MEMBER,
+        registered: 6,
+        expected: 8,
+        registeredPercent: 75,
+        expectedPercent: 100,
+        isExpectedShown: true,
+      },
       {
         member: OTHER_MEMBER,
         registered: 4,
         expected: 2,
         registeredPercent: 50,
         expectedPercent: 25,
+        isExpectedShown: true,
       },
     ]);
     expect(tally.registeredTotal).toBe(10);
@@ -103,7 +111,14 @@ describe('tallyFriends', () => {
   it('leaves every bar empty when nobody is expected and nobody registered', () => {
     const tally = tallyFriends({ members: [MEMBER], expectedCounts: {}, registrations: [] });
     expect(tally.rows).toEqual([
-      { member: MEMBER, registered: 0, expected: 0, registeredPercent: 0, expectedPercent: 0 },
+      {
+        member: MEMBER,
+        registered: 0,
+        expected: 0,
+        registeredPercent: 0,
+        expectedPercent: 0,
+        isExpectedShown: false,
+      },
     ]);
     expect(tally.expectedTotal).toBe(0);
     expect(tally.noPreferencePercent).toBe(0);

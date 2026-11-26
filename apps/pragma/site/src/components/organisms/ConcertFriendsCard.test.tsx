@@ -75,5 +75,21 @@ describe('ConcertFriendsCard', () => {
     expect(screen.getByText('No pref.').closest('div')?.textContent).toBe('No pref.2');
     expect(screen.getByText('registered')).toBeTruthy();
     expect(screen.getByText('expected')).toBeTruthy();
+    expect(screen.getByText('Venue fill')).toBeTruthy();
+  });
+
+  it('draws no expected outline for a member the band expects nobody for', async () => {
+    const { container } = render(
+      <QueryClientProvider client={createIsolatedQueryClient()}>
+        <ConcertFriendsCard
+          session={{ id: SESSION_ID, capacity: null, friendsCountPerMember: { [ARN.id]: 3 } }}
+          members={[ARN, GUI]}
+        />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText('Gui')).toBeTruthy();
+    const tracks = container.querySelectorAll('.flex-1[aria-hidden="true"]');
+    expect(tracks[0]?.querySelectorAll('.border-dashed')).toHaveLength(1);
+    expect(tracks[1]?.querySelectorAll('.border-dashed')).toHaveLength(0);
   });
 });

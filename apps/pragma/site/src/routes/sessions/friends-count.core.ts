@@ -39,6 +39,7 @@ export interface MemberFriendsRow<TMember extends FriendsMember> {
   readonly expected: number;
   readonly registeredPercent: number;
   readonly expectedPercent: number;
+  readonly isExpectedShown: boolean;
 }
 
 export interface FriendsTally<TMember extends FriendsMember> {
@@ -83,6 +84,7 @@ export function tallyFriends<TMember extends FriendsMember>(
       ...count,
       registeredPercent: computeSharePercent(count.registered, scaleMax),
       expectedPercent: computeSharePercent(count.expected, scaleMax),
+      isExpectedShown: count.expected > NO_FRIEND,
     })),
     noPreferenceCount,
     noPreferencePercent: computeSharePercent(noPreferenceCount, scaleMax),
