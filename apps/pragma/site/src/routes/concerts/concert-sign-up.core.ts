@@ -94,6 +94,12 @@ export function isRetryableSignUpFailure(error: unknown): boolean {
   return !(error instanceof ApiError) || error.status >= SERVER_FAILURE_STATUS;
 }
 
+const REGISTRATION_GONE_STATUS = 404;
+
+export function isRegistrationGone(status: number): boolean {
+  return status === REGISTRATION_GONE_STATUS;
+}
+
 export type SignUpStatus = 'idle' | 'pending' | 'error' | 'success';
 
 export interface SignUpScreenParams {

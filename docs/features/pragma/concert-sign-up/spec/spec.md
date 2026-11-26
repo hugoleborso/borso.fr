@@ -25,8 +25,10 @@ pragma.borso.fr becomes a public page where anyone signs up for the next pragma 
     - sets or clears the prize label, and picks its icon among beer (the default), gift, ticket and t-shirt (Lucide icons);
     - sets or clears the public message;
     - lists the registrations, each with its first name, its email, who it comes for and its wished song;
-    - presses "Tirer au sort 3 gagnants", which picks three registrations at random in the browser and saves nothing.
-13. The ERP home moves from `/` to `/app`. Every link and redirect to it follows, and the installed app opens on `/app`. Every other ERP route keeps its path.
+    - presses "Tirer au sort 3 gagnants", which picks three registrations at random in the browser and saves nothing;
+    - removes a registration with "Retirer" after confirming it. The registration leaves the list and the draw at once. Its wished song stays in the catalogue.
+13. A fan whose registration a member removed sees "Je serai là !" again on their next visit, and can sign up again with the same email. The browser checks the registration it remembers once per visit, with its edit token, and forgets it when the server no longer has it.
+14. The ERP home moves from `/` to `/app`. Every link and redirect to it follows, and the installed app opens on `/app`. Every other ERP route keeps its path.
 
 ## Rules
 

@@ -7,15 +7,12 @@ import { Button as PressableButton, FileTrigger } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import {
-  type ConcertRegistrationEntry,
   useConcertAnnouncement,
-  useConcertRegistrations,
   useSaveConcertAnnouncement,
 } from '../../lib/queries/concert-registrations.queries';
 import {
   findPosterFileRefusal,
   normaliseMessage,
-  pickDrawWinners,
   POSTER_FILE_TYPES,
   type PosterRefusalKey,
   PRIZE_LABEL_MAX_LENGTH,
@@ -31,13 +28,13 @@ import { Input } from '../atoms/Input';
 import { FIELD_LABEL_CLASS } from '../atoms/LabelledField';
 import { PreviewImage } from '../atoms/PreviewImage';
 import { PrizeIconChoice } from '../molecules/PrizeIconChoice';
+import { ConcertRegistrationsCard } from './ConcertRegistrationsCard';
 
 const MESSAGE_ROWS = 3;
 const POSTER_TRIGGER_CLASS =
   'inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-pill border-0 bg-sunk px-4 ' +
   'text-body text-ink hover:bg-hover disabled:cursor-not-allowed disabled:text-ink-soft ' +
   'data-focus-visible:outline-3 data-focus-visible:outline-focus';
-const SECTION_TITLE_CLASS = 'm-0 font-display text-heading text-ink';
 const PANEL_CARD_CLASS = 'flex flex-col gap-3.5 p-4';
 const announcementFormSchema = z.object({
   prizeLabel: z.string().max(PRIZE_LABEL_MAX_LENGTH),
@@ -132,42 +129,12 @@ function AnnouncementForm({ initialValues, isSaving, onSave }: AnnouncementFormP
   );
 }
 
-interface RegistrationRowProps {
-  readonly registration: ConcertRegistrationEntry;
-}
-
-function RegistrationRow({ registration }: RegistrationRowProps): JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <li className="flex flex-col gap-0.5 border-t border-rule py-2 first:border-t-0">
-      <span className="font-medium text-ink">{registration.firstName}</span>
-      <span className="break-all text-meta text-ink-soft">{registration.email}</span>
-      {registration.comingFor === null ? null : (
-        <span className="text-meta text-ink-soft">
-          {t('sessions.comingFor', { name: registration.comingFor.firstName })}
-        </span>
-      )}
-      {registration.wishedSong === null ? null : (
-        <span className="text-meta text-ink-soft">
-          {t('sessions.wishedSong', {
-            title: registration.wishedSong.title,
-            artist: registration.wishedSong.artist,
-          })}
-        </span>
-      )}
-    </li>
-  );
-}
-
 // @FollowsBlueprint organism-query-owning
 export function ConcertPublicPagePanel({ sessionId }: ConcertPublicPagePanelProps): JSX.Element {
   const { t } = useTranslation();
   const announcement = useConcertAnnouncement(sessionId);
-  const registrations = useConcertRegistrations(sessionId);
   const save = useSaveConcertAnnouncement();
   const [posterRefusal, setPosterRefusal] = useState<PosterRefusalKey | null>(null);
-  const [winners, setWinners] = useState<readonly ConcertRegistrationEntry[] | null>(null);
-  const registeredPeople = registrations.data?.registrations ?? [];
   const posterUrl = announcement.data?.posterUrl ?? null;
   const saveErrorKey = selectPublicPageSaveErrorKey(save.error);
 
@@ -192,10 +159,6 @@ export function ConcertPublicPagePanel({ sessionId }: ConcertPublicPagePanelProp
       prizeIcon: values.prizeIcon,
       message: normaliseMessage(values.message),
     });
-  };
-
-  const draw = (): void => {
-    setWinners(pickDrawWinners(registeredPeople, Math.random));
   };
 
   return (
@@ -257,47 +220,7 @@ export function ConcertPublicPagePanel({ sessionId }: ConcertPublicPagePanelProp
         )}
       </Card>
 
-      <Card className="flex flex-col gap-3 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className={SECTION_TITLE_CLASS}>
-            {t('sessions.registrationsTitle', { count: registeredPeople.length })}
-          </h3>
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-meta text-accent-strong underline-offset-4 hover:underline"
-          >
-            {t('sessions.publicPageOpen')}
-          </a>
-        </div>
-        <Button
-          icon="bolt"
-          variant="secondary"
-          className="self-start"
-          disabled={registeredPeople.length === 0}
-          onClick={draw}
-        >
-          {t('sessions.drawWinners')}
-        </Button>
-        {winners === null ? null : (
-          <div className="flex flex-col gap-1 rounded-md bg-accent-soft px-3 py-2" role="status">
-            <span className={FIELD_LABEL_CLASS}>{t('sessions.winnersTitle')}</span>
-            <span className="font-medium text-ink">
-              {winners.map((winner) => `${winner.firstName} (${winner.email})`).join(', ')}
-            </span>
-          </div>
-        )}
-        {registeredPeople.length === 0 ? (
-          <p className="m-0 text-meta text-ink-soft">{t('sessions.registrationsEmpty')}</p>
-        ) : (
-          <ul className="m-0 flex list-none flex-col p-0">
-            {registeredPeople.map((registration) => (
-              <RegistrationRow key={registration.id} registration={registration} />
-            ))}
-          </ul>
-        )}
-      </Card>
+      <ConcertRegistrationsCard sessionId={sessionId} />
     </div>
   );
 }

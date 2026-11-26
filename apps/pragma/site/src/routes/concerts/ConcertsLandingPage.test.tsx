@@ -43,12 +43,20 @@ function isRegistrationPost(request: Request): boolean {
   return request.method === 'POST' && request.url.includes('/registrations');
 }
 
+function isRegistrationCheck(request: Request): boolean {
+  return request.method === 'GET' && request.url.includes('/concert-registrations/registrations/');
+}
+
 function renderPage(
   answerSignUp: (request: Request) => Promise<Response>,
   upcoming: unknown = UPCOMING,
+  checkStatus = 200,
 ): FetchStub {
   const fetchStub = stubFetch(async (request) => {
     if (isRegistrationPost(request)) return await answerSignUp(request);
+    if (isRegistrationCheck(request)) {
+      return jsonResponse({ registrationId: A_REGISTRATION }, checkStatus);
+    }
     if (request.method === 'PATCH') {
       return jsonResponse({ registration: { comingForMemberId: A_MEMBER, wishedSong: null } });
     }
@@ -229,6 +237,32 @@ describe('the public concert sign-up page', () => {
     expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
+  });
+
+  it('offers the sign-up again when the band removed the registration this browser remembers', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const fetchStub = renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 404);
+    expect(await screen.findByRole('button', { name: "I'll be there!" })).toBeTruthy();
+    expect(screen.queryByText('Signed up')).toBeNull();
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBeNull();
+    const check = fetchStub.calls.find(isRegistrationCheck);
+    expect(check?.headers.get('x-registration-token')).toBe('token-1');
+  });
+
+  it('keeps a remembered registration signed up when its check is refused for another reason', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const fetchStub = renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 403);
+    await waitFor(() => {
+      expect(fetchStub.calls.some(isRegistrationCheck)).toBe(true);
+    });
+    expect(await screen.findByText('Signed up')).toBeTruthy();
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).not.toBeNull();
   });
 
   it('offers the sign-up for a next concert the browser never signed up for, once the remembered list refreshes', async () => {

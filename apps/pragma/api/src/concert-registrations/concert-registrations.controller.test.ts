@@ -16,7 +16,10 @@ import { CONFLICTED_WRITE_MAX_ATTEMPTS } from '../helpers/persistence/conflict-a
 import { sessionTable } from '../sessions/sessions.schema';
 import { songTable } from '../songs/songs.schema';
 import { concertRegistrationTable } from './concert-registrations.schema';
-import { CONCERT_REGISTRATION_WRITE_BUDGET } from './concert-registrations.types';
+import {
+  CONCERT_REGISTRATION_READ_BUDGET,
+  CONCERT_REGISTRATION_WRITE_BUDGET,
+} from './concert-registrations.types';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const UNAUTHORISED = 401;
@@ -128,6 +131,25 @@ async function amend(
   });
 }
 
+async function checkStored(app: Hono, registrationId: string, editToken: string) {
+  return await jsonRequest(app, `/api/concert-registrations/registrations/${registrationId}`, {
+    extraHeaders: { [TOKEN_HEADER]: editToken },
+  });
+}
+
+async function removeRegistrationOf(
+  app: Hono,
+  cookieHeader: string,
+  sessionId: string,
+  registrationId: string,
+) {
+  return await jsonRequest(
+    app,
+    `/api/concert-registrations/concerts/${sessionId}/registrations/${registrationId}`,
+    { method: 'DELETE', cookieHeader },
+  );
+}
+
 function statusesInOrder(responses: readonly Response[]): number[] {
   return responses.map((response) => response.status).toSorted((first, second) => first - second);
 }
@@ -184,6 +206,7 @@ describe('concert registrations controller (back-e2e)', () => {
       jsonRequest(app, '/api/concert-registrations/members'),
       registerFor(app, sessionId, 'Lou', 'lou@example.com'),
       amend(app, UNKNOWN_ID, 'nope', { comingForMemberId: null }),
+      checkStored(app, UNKNOWN_ID, 'nope'),
     ]);
     for (const response of publicResponses) {
       expect(response.status).not.toBe(UNAUTHORISED);
@@ -198,6 +221,7 @@ describe('concert registrations controller (back-e2e)', () => {
         body: { contentType: 'image/png', byteSize: 1 },
       }),
       jsonRequest(app, `${base}/registrations`),
+      jsonRequest(app, `${base}/registrations/${UNKNOWN_ID}`, { method: 'DELETE' }),
       jsonRequest(app, '/api/concert-registrations/fan-wishes'),
     ]);
     for (const response of gatedResponses) {
@@ -475,6 +499,74 @@ describe('concert registrations controller (back-e2e)', () => {
       registrationsEnvelope,
     );
     expect(listed.registrations[0]?.comingFor).toBeNull();
+  });
+
+  it('removes a registration of its concert only, keeps its wished song, and lets the mailbox sign up again', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const otherConcertId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+    stubDeezerTrack();
+    await amend(app, registrationId, editToken, { wishedTrackId: String(WISHED_TRACK.id) });
+
+    const elsewhere = await removeRegistrationOf(app, cookieHeader, otherConcertId, registrationId);
+    expect(elsewhere.status).toBe(404);
+    expect((await readJson(elsewhere, errorEnvelope)).error).toBe('unknown-registration');
+    expect(await storedRegistrationsOf(sessionId)).toHaveLength(1);
+
+    const removed = await removeRegistrationOf(app, cookieHeader, sessionId, registrationId);
+    expect(removed.status).toBe(204);
+    expect(await storedRegistrationsOf(sessionId)).toEqual([]);
+    expect(await testDatabase().select({ title: songTable.title }).from(songTable)).toEqual([
+      { title: 'Voodoo Child' },
+    ]);
+
+    const again = await removeRegistrationOf(app, cookieHeader, sessionId, registrationId);
+    expect(again.status).toBe(404);
+    expect((await registerFor(app, sessionId, 'Lou', 'l@e.fr')).status).toBe(201);
+  });
+
+  it('tells a browser whether its remembered registration still stands, and only with its token', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+
+    const kept = await checkStored(app, registrationId, editToken);
+    expect(kept.status).toBe(200);
+    expect(await readJson(kept, z.object({ registrationId: z.guid() }))).toEqual({
+      registrationId,
+    });
+    const wrong = await checkStored(app, registrationId, 'f'.repeat(48));
+    expect(wrong.status).toBe(403);
+    expect((await readJson(wrong, errorEnvelope)).error).toBe('invalid-registration-token');
+    const missing = await jsonRequest(
+      app,
+      `/api/concert-registrations/registrations/${registrationId}`,
+    );
+    expect(missing.status).toBe(403);
+
+    await removeRegistrationOf(app, cookieHeader, sessionId, registrationId);
+    const gone = await checkStored(app, registrationId, editToken);
+    expect(gone.status).toBe(404);
+    expect((await readJson(gone, errorEnvelope)).error).toBe('unknown-registration');
+  });
+
+  it('bars an address that hammers the check of a registration', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+    const fromOneAddress = async () =>
+      await jsonRequest(app, `/api/concert-registrations/registrations/${registrationId}`, {
+        extraHeaders: { [TOKEN_HEADER]: editToken },
+        clientAddress: '203.0.113.23',
+      });
+
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < CONCERT_REGISTRATION_READ_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(200);
+    expect((await fromOneAddress()).status).toBe(429);
   });
 
   it('records who a registration comes for and the song it wishes, imported as an idea', async () => {
