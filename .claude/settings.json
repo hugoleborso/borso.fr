@@ -216,6 +216,15 @@
             "statusMessage": "Matching the output against the knowledge triggers"
           }
         ]
+      },
+      {
+        "matcher": "ReadNotifications",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-notification-gets-no-reply.sh"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
