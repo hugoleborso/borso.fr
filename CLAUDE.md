@@ -47,7 +47,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 ## Hard rules
 
 - borso.fr is the operator's personal project, on personal time. The Notion, Slack, Gmail, Google Drive and Calendar connectors belong to their employer. Never write to them from this repo. Read one only when the operator names it, and keep what this repo produces inside this repo.
-- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel. One standing exception: merge a `kaizen` pull request yourself once CI is green, when `scripts/pr/deploy-fanout.ts` prints no application and it holds no question for the operator.
+- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel. One standing exception: merge a `kaizen` pull request yourself once CI is green, when `scripts/pr/deploy-fanout.ts` prints no application and it leaves the operator no decision.
 - Never run a deploy locally. Call reserved names through `run` (`pnpm --filter <pkg> run deploy`, same for `destroy`).
 - A full-stack app's `destroy` targets `<app>-pr-<N>` only. `--all` also deletes the shared `<app>-cluster` stack.
 - English in identifiers, schemas, comments, commits and specs. Visible text goes through i18n (`en.json`, `fr.json`). Translate the operator's French or slang before it reaches code.
@@ -86,7 +86,7 @@ They cover replies, documents, commits and PR bodies.
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `skull-king`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
 - Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, upper-case documents such as `README.md` or test configs. A merge skips the same changes, and a change to an app's test seed under `api/src/__test/` too.
-- On a watched pull request, act on CI results, the merge state and what `hugoleborso`, the operator's login, writes. A notification that needs no action gets no reply text, because each reply buries the open question.
+- On a watched pull request, act on CI results, the merge state and what `hugoleborso`, the operator's login, writes.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.
 - `infra/shared` deploys only when the operator dispatches `shared-deploy`. Do not propose a confirmation step.
@@ -98,7 +98,7 @@ Log friction as it happens, the problem only, with `scripts/kaizen.sh "<one sent
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
 1. If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch `shared-deploy`.
-2. Run the kaizen where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen`, and nothing the skill already says.
+2. Decide whether a kaizen is worth running, and run it where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen`, and nothing the skill already says.
 
 ## Checking a screen
 

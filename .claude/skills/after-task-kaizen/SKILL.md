@@ -11,6 +11,14 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## When to invoke
 
+**First, decide whether a sweep is worth running.** It is when the task left
+something to learn: a line in the archived friction log, an operator message
+that corrected or redirected the session, a CI run that went red, or a FAIL or
+UNVERIFIABLE row in a validation report. When none of these happened, run no
+sweep and open no pull request. The merge reply says "No kaizen" with that
+evidence. The operator asked for this on 2026-11-26, after the sweep of
+PR #407 offered a sweep of PR #408, which had none of them.
+
 **Where it runs depends on the shipping session's context.** After the merge,
 that session reads its own `get_session` `context_usage.used_tokens`.
 
@@ -80,12 +88,12 @@ Sources to walk in order, capturing each friction event as one row:
   friction log holds only what the session chose to write down; the operator
   reads each of their own messages as a correction to learn from. Find the
   shipping session from the `Claude-Session:` trailer of the pull request's
-  commits (or the session link at the end of its body), then read its
-  transcript with the remote-session tool that lists a session's events,
+  commits (or the session link at the end of its body), then have one
+  subagent list its transcript with the remote-session tool that lists a session's events,
   filtered to user messages (`kinds: ["user"]`, paging back with `before_id`
   until `has_more` is false). Then run
   `pnpm exec tsx scripts/kaizen/operator-messages.ts`. It reads every page
-  this session listed, inline or spilled, from this session's own transcript.
+  this session or its subagents listed, inline or spilled.
   It prints the messages the operator typed and their answers to questions,
   then every friction line the listed session logged, those logged after its
   archive included. Give each message and each such line its own
@@ -117,13 +125,9 @@ Sources to walk in order, capturing each friction event as one row:
   fix. The sweeps of PR #251 and PR #252 ran at once, both eradicated the
   same Prettier run, and the later one dropped its work after a merge
   conflict.
-- **The pull request's conversation and review threads.** This
-  session never saw the merged session's chat, so the PR is the record
-  of it. Read the threads with `mcp__github__pull_request_read`. Every
-  interrupt-and-redirect from the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
-  assume Z"*, *"that doesn't work, try …"*, *"there was a lot more
-  friction than what you said"*) is a row. Every silent
-  course-correction the user made is a row.
+- **The pull request's conversation and review threads**, read with
+  `mcp__github__pull_request_read`. Every comment that corrects or redirects
+  the session is a row, as an operator message is.
 - **Commit history**, especially:
   - `Revert "…"` commits (an approach tried, rejected, replaced).
   - `--amend`-noisy stretches (commitlint failures, missed scope, …).
@@ -337,17 +341,9 @@ If the call fails, tell the operator and do not merge.
 
 **Merge it yourself when it is tooling only.** Once CI is green, merge the
 kaizen pull request without asking when `pnpm exec tsx scripts/pr/deploy-fanout.ts
-origin/main HEAD` prints no application and the body holds no question for the
-operator. The operator granted this on 2026-11-14. A kaizen that changes an app's
+origin/main HEAD` prints no application and the sweep leaves the operator no
+decision, in its body or in an entry. The operator granted this on 2026-11-14. A kaizen that changes an app's
 code, which a root cause often calls for, waits for his merge like any other.
-
-### 6. Even if there are zero lessons
-
-Still open the PR with a CLAUDE.md-aligned commit:
-`docs: no setup changes from PR #<N>`. Body: one paragraph noting
-what the PR shipped and confirming no defect / surprise / pivot /
-operator-confusion came up worth capturing. The loop's *existence*,
-not its volume, is what keeps the system improving.
 
 ## Hard rules
 

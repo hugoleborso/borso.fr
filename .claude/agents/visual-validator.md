@@ -15,7 +15,8 @@ The skill that dispatches you provides a self-contained brief with these fields:
 - `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`.
 - `dev_url` — base URL of the running app (e.g. `http://localhost:5173/art/mondrian/`).
 - `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
-- `evidence_dir` — absolute path to the folder where you save screenshots. The skill creates this folder; you fill it. The folder is committed alongside the report.
+- `evidence_dir` — absolute path to the folder where you save screenshots. The skill creates this folder; you fill it.
+- `design_path`, when the spec links a design artifact — a saved copy of it. Judge what the spec leaves to the design, such as microcopy and shapes, against it.
 
 You receive nothing else. No implementation summary. No "this should work because…".
 
@@ -103,7 +104,7 @@ Write exactly this layout to `report_path`:
 ## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
-Evidence paths are relative to `report_path`'s directory. The report and the screenshots are committed together; do not write evidence files outside `evidence_dir`.
+Evidence paths are relative to `report_path`'s directory. Do not write evidence files outside `evidence_dir`.
 
 ## Verdict semantics
 

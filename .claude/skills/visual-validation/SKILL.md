@@ -72,35 +72,21 @@ Do **not** invoke when:
    timestamp        = <YYYY-MM-DD-HHmm>
    validation_dir   = docs/features/<app>/<slug>/validation
    report_path      = <validation_dir>/visual-validation-<timestamp>.md
-   evidence_dir     = <validation_dir>/visual-validation-<timestamp>/
+   evidence_dir     = <validation_dir>/.pending-upload/<timestamp>/
    ```
-   `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in.
-5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths, the dev URL and the seeded sign-in step 3 printed. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path. **Leave the served code alone until the report is back.** The dev server reloads on every save, so an edit made while the agent runs changes the app under rows it has already recorded, and the report then describes two builds at once.
+   `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in. It is gitignored, so a screenshot reaches git only when step 8 moves it out.
+5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths, the dev URL and the seeded sign-in step 3 printed. When the spec links a claude.ai design artifact, read it first with the Artifact tool's `read` action and pass the saved file's path too, because the agent has no Artifact tool: on PR #406 it could not open the picked artboard and left the chip labels UNVERIFIABLE. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path. **Leave the served code alone until the report is back.** The dev server reloads on every save, so an edit made while the agent runs changes the app under rows it has already recorded, and the report then describes two builds at once.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** with `scripts/dev-server.sh stop <app>`, with the same `--as` label as the start.
-8. **Split the evidence by verdict.** Per [ADR-2026-09-21T0819](../../../docs/adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
+8. **Keep only FAIL evidence in git.** Per [ADR-2026-09-21T0819](../../../docs/adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Move each file a FAIL row cites to `<validation_dir>/visual-validation-<timestamp>/` and leave the rest where they are. On PR #406 the evidence was written to a committed folder, the upload was skipped, and the operator had to ask for the screenshots.
 
-   ```bash
-   pending_dir="$validation_dir/.pending-upload/$timestamp"
-   mkdir -p "$pending_dir"
-   mv "$evidence_dir"<each-png-or-gif-no-FAIL-row-cites> "$pending_dir/"
-   rmdir "$evidence_dir" 2>/dev/null
-   ```
+   **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
 
-   `.pending-upload/` is gitignored, so a `git add` between here and the pull request cannot commit what is waiting to be published. **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
-
-   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal, and it stays literal: the report is a dated record that `scripts/check-dated-records-are-append-only.sh` refuses to see edited, so the pull request's *Screenshots* comment and its folder link are where the number is filled in. A file that stays in `evidence_dir` keeps its relative path.
-
-9. **Stage the report and the surviving evidence for commit.** They live under `docs/features/<app>/<slug>/validation/`, which is *not* gitignored. The report is always committed; the screenshots beside it are the ones a FAIL row references.
+   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal, and it stays literal: the report is a dated record that `scripts/check-dated-records-are-append-only.sh` refuses to see edited, so the pull request's *Screenshots* comment and its folder link are where the number is filled in. A file moved out keeps a path relative to the report.
 
 ## Deliverable
 
-Two artefacts at `docs/features/<app>/<slug>/validation/`:
-
-- `visual-validation-<timestamp>.md` — the markdown verdict report, always committed.
-- `visual-validation-<timestamp>/` — present only when a FAIL row references a screenshot, or when the upload was denied. Everything else lives at `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/` and expires after 60 days.
-
-Do not gitignore either path. A FAIL report gets contested without its screenshot, which is why that half stays permanent; see the standard's *Where evidence lives*.
+`docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md`, always committed, and the evidence split as step 8 and the standard's *Where evidence lives* say.
 
 The skill's textual return to the user is one of:
 - `Verdict: PASS — see <report_path>` — mergeable.
