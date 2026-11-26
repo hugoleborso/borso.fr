@@ -117,13 +117,9 @@ Sources to walk in order, capturing each friction event as one row:
   fix. The sweeps of PR #251 and PR #252 ran at once, both eradicated the
   same Prettier run, and the later one dropped its work after a merge
   conflict.
-- **The pull request's conversation and review threads.** This
-  session never saw the merged session's chat, so the PR is the record
-  of it. Read the threads with `mcp__github__pull_request_read`. Every
-  interrupt-and-redirect from the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
-  assume Z"*, *"that doesn't work, try …"*, *"there was a lot more
-  friction than what you said"*) is a row. Every silent
-  course-correction the user made is a row.
+- **The pull request's conversation and review threads**, read with
+  `mcp__github__pull_request_read`. Every comment that corrects or redirects
+  the session is a row, as an operator message is.
 - **Commit history**, especially:
   - `Revert "…"` commits (an approach tried, rejected, replaced).
   - `--amend`-noisy stretches (commitlint failures, missed scope, …).
