@@ -48,7 +48,7 @@ export function readUntrackedPaths(): ReadonlySet<string> {
 
 export function readPathsEverTracked(): ReadonlySet<string> {
   const paths = new Set(readTrackedPaths());
-  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=A', 'HEAD']).split(
+  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=AR', 'HEAD']).split(
     '\n',
   )) {
     if (path.length > 0) paths.add(path);
