@@ -73,10 +73,8 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 > the ADR numbers its plan must reference, and `/feature-pipeline`'s stage 1
 > reads it to decide whether a run can start at all.*
 >
-> *No such decision? Say so in one line and keep the heading. An absent
-> section reads as an unanswered question, and the pipeline was told to read
-> this table for months while this template had no such section — so a run
-> looking for it found nothing and could not tell "none" from "not asked".*
+> *No such decision? Say so in one line and keep the heading, because an
+> absent section cannot be told from an unanswered question.*
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
