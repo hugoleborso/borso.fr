@@ -1,8 +1,9 @@
 ---
-summary: 'Aurora DSQL is not Postgres: no jsonb, no foreign keys, one DDL per transaction, no partial indexes, no advisory locks, retries need `IF NOT EXISTS`.'
+summary: 'Aurora DSQL is not Postgres: no DROP COLUMN, no jsonb, no foreign keys, one DDL per transaction, no partial indexes, no advisory locks, retries need `IF NOT EXISTS`.'
 triggers:
   paths:
     - 'apps/*/api/src/database/migrations/*.sql'
+    - 'docs/features/*/*/plan/plan.md'
     - 'infra/cdk/src/internal/migration-runner/*.ts'
   output:
     - 'datatype \w+ not supported'

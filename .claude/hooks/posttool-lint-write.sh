@@ -37,7 +37,11 @@ cd "$ROOT" || exit 0
 
 FILE_DIRECTORY=$(cd -- "$(dirname -- "$FILE")" 2>/dev/null && pwd -P) || exit 0
 FILE_PATH="$FILE_DIRECTORY/$(basename -- "$FILE")"
+# A subagent worktree under .claude/worktrees/ is skipped: the path oxlint sees
+# from here no longer matches the config's override globs, so on PR #406 it
+# reported an import/no-cycle the override exempts on every write.
 case "$FILE_PATH" in
+  "$ROOT"/.claude/worktrees/*) exit 0 ;;
   "$ROOT"/*) ;;
   *) exit 0 ;;
 esac
