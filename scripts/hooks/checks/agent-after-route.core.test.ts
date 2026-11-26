@@ -54,6 +54,17 @@ describe('agentAfterRoute', () => {
     );
   });
 
+  it('refuses a general-purpose agent when the call carries no input at all', () => {
+    const verdict = agentAfterRoute.run(
+      { hook_event_name: 'PreToolUse', tool_name: 'Agent', transcript_path: '/t.jsonl' },
+      NOT_ROUTED,
+    );
+
+    expect(verdict.kind === 'refuse' && verdict.summary).toBe(
+      'a general-purpose agent was spawned before /route ran',
+    );
+  });
+
   it('names the agent type it refuses', () => {
     const verdict = agentAfterRoute.run(agentCall({}, { subagent_type: 'builder' }), NOT_ROUTED);
 
@@ -91,13 +102,17 @@ describe('agentAfterRoute', () => {
   });
 
   it('reads no transcript when its path is missing, empty or unreadable', () => {
-    const routed = fakeWorld({ transcript: '"skill":"route"' });
+    const routed: HookWorld = { ...NOT_ROUTED, readText: () => '"skill":"route"' };
 
     expect(agentAfterRoute.run(agentCall({ transcript_path: undefined }), routed).kind).toBe(
       'refuse',
     );
     expect(agentAfterRoute.run(agentCall({ transcript_path: '' }), routed).kind).toBe('refuse');
     expect(agentAfterRoute.run(agentCall({}), fakeWorld({})).kind).toBe('refuse');
+  });
+
+  it('does not read a blank diff as an added spec', () => {
+    expect(agentAfterRoute.run(agentCall({}), fakeWorld({ addedSpecs: '\n' })).kind).toBe('refuse');
   });
 
   it('passes on a branch that already adds a spec, even in a resumed session', () => {

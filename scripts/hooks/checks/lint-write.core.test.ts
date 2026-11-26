@@ -16,6 +16,7 @@ interface RecordedCall {
 interface WorldSetup {
   readonly texts?: Readonly<Record<string, string>>;
   readonly realpaths?: string;
+  readonly realpathStatus?: number;
   readonly hasOxlint?: boolean;
   readonly isConfigStale?: boolean;
   readonly mktempStatus?: number;
@@ -34,7 +35,7 @@ function result(status: number, stdout = ''): CommandResult {
 function fakeWorld(calls: RecordedCall[], setup: WorldSetup = {}): HookWorld {
   const texts = setup.texts ?? { [FILE]: 'code', '/repo/.oxlintrc.json': SOURCE_CONFIG };
   const answers: Readonly<Record<string, CommandResult>> = {
-    realpath: result(0, setup.realpaths ?? '/repo\n/repo/src\n'),
+    realpath: result(setup.realpathStatus ?? 0, setup.realpaths ?? '/repo\n/repo/src\n'),
     mktemp: result(setup.mktempStatus ?? 0, '/repo/.oxlintrc.write.abc123\n'),
     tee: result(setup.teeStatus ?? 0),
     '/repo/node_modules/.bin/oxlint': setup.lintResult ?? result(1, REPORT),
@@ -77,6 +78,7 @@ describe('deriveWriteConfig', () => {
   it('gives up on a config jq could not edit', () => {
     expect(deriveWriteConfig('not json')).toBeNull();
     expect(deriveWriteConfig('[1]')).toBeNull();
+    expect(deriveWriteConfig('null')).toBeNull();
     expect(deriveWriteConfig('{"options": false}')).toBeNull();
   });
 });
@@ -113,6 +115,10 @@ describe('resolveProjectFile', () => {
     ).toBeNull();
     expect(resolveProjectFile('/x/a.ts', fakeWorld([], { realpaths: '' }))).toBeNull();
   });
+
+  it('skips a folder realpath failed on, even when it printed both paths', () => {
+    expect(resolveProjectFile(FILE, fakeWorld([], { realpathStatus: 1 }))).toBeNull();
+  });
 });
 
 describe('lintWrite', () => {
@@ -136,8 +142,10 @@ describe('lintWrite', () => {
 
   it('rebuilds the write config through a staging file when the source config is newer', () => {
     const calls: RecordedCall[] = [];
-    lintWrite.run(writeCall(FILE), fakeWorld(calls, { isConfigStale: true }));
+    const verdict = lintWrite.run(writeCall(FILE), fakeWorld(calls, { isConfigStale: true }));
 
+    expect(verdict.kind).toBe('context');
+    expect(calls[1]).toEqual({ command: 'test', args: ['-x', '/repo/node_modules/.bin/oxlint'] });
     expect(calls.slice(3, 6)).toEqual([
       { command: 'mktemp', args: ['/repo/.oxlintrc.write.XXXXXX'] },
       {
@@ -171,6 +179,7 @@ describe('lintWrite', () => {
       lintWrite.run(writeCall(FILE), fakeWorld(calls, { isConfigStale: true, teeStatus: 1 })),
     ).toBe(PASS);
     expect(commandsOf(calls).slice(3)).toEqual(['mktemp', 'tee', 'rm']);
+    expect(calls.at(-1)).toEqual({ command: 'rm', args: ['-f', '/repo/.oxlintrc.write.abc123'] });
   });
 
   it('lints nothing when no staging file can be made or the source config cannot be edited', () => {
@@ -217,6 +226,8 @@ describe('lintWrite', () => {
     expect(lintWrite.run(writeCall('/repo/a.json'), world)).toBe(PASS);
     expect(lintWrite.run(writeCall('/repo/missing.ts'), world)).toBe(PASS);
     expect(lintWrite.run(writeCall(null), world)).toBe(PASS);
+    expect(lintWrite.run(writeCall([FILE]), world)).toBe(PASS);
+    expect(lintWrite.run({ hook_event_name: 'PostToolUse' }, world)).toBe(PASS);
     expect(calls).toEqual([]);
   });
 });

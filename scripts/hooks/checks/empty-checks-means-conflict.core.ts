@@ -1,7 +1,7 @@
 // @FollowsBlueprint utils-pure-module
-import { type Check, type HookInput, PASS, type Verdict } from '../check.core.ts';
+import { type Check, PASS, type Verdict } from '../check.core.ts';
 
-const CHECK_METHODS = new Set(['get_check_runs', 'get_status']);
+const CHECK_METHODS: ReadonlySet<unknown> = new Set(['get_check_runs', 'get_status']);
 const INTEGER = /^-?[0-9]+$/u;
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -16,7 +16,7 @@ function parseJson(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch {
-    return undefined;
+    return null;
   }
 }
 
@@ -33,12 +33,12 @@ function renderJqText(value: unknown): string {
 }
 
 function readTotal(parsed: unknown): string {
-  return isRecord(parsed) ? renderJqText(parsed['total_count']) : '';
+  return renderJqText(isRecord(parsed) ? parsed['total_count'] : undefined);
 }
 
 function readRunName(run: unknown): string {
-  const name = isRecord(run) ? run['name'] : null;
-  if (name === undefined || name === null) return '';
+  const name = isRecord(run) ? (run['name'] ?? null) : null;
+  if (name === null) return '';
   return typeof name === 'string' ? name : JSON.stringify(name);
 }
 
@@ -60,7 +60,7 @@ function describeUnfinishedRuns(parsed: unknown, total: string, pullRequest: str
   const runs: readonly unknown[] = parsed['check_runs'];
   const running = composeRunningNames(runs);
   const integerTotal = parseIntegerTotal(total);
-  const isPagePartial = integerTotal !== null && runs.length < integerTotal;
+  const isPagePartial = runs.length < (integerTotal ?? 0);
   if (running === '' && integerTotal !== null && !isPagePartial) return PASS;
   const lines = [
     `[unfinished-checks] get_check_runs for pull request ${pullRequest} is not a verdict yet.`,
@@ -95,8 +95,7 @@ come back. See https://github.com/hugoleborso/borso.fr/blob/main/docs/knowledge/
   };
 }
 
-function readPullRequest(input: HookInput): string {
-  const pullNumber = input.tool_input?.['pullNumber'];
+function readPullRequest(pullNumber: unknown): string {
   return isJqAbsent(pullNumber) ? 'the pull request' : renderJqText(pullNumber);
 }
 
@@ -104,14 +103,13 @@ export const emptyChecksMeansConflict: Check = {
   name: 'empty-checks-means-conflict',
   tools: /^mcp__github__pull_request_read$/u,
   run: (input) => {
-    const method = input.tool_input?.['method'];
-    if (typeof method !== 'string' || !CHECK_METHODS.has(method)) return PASS;
-    const response = input.tool_response;
-    if (isJqAbsent(response) || response === '') return PASS;
-    const parsed = parseChecksResponse(response);
+    const toolInput = input.tool_input ?? {};
+    const method = toolInput['method'];
+    if (!CHECK_METHODS.has(method)) return PASS;
+    const parsed = parseChecksResponse(input.tool_response);
     const total = readTotal(parsed);
-    const pullRequest = readPullRequest(input);
-    if (total === '0') return describeEmptyChecks(method, pullRequest);
+    const pullRequest = readPullRequest(toolInput['pullNumber']);
+    if (total === '0') return describeEmptyChecks(String(method), pullRequest);
     if (method !== 'get_check_runs') return PASS;
     return describeUnfinishedRuns(parsed, total, pullRequest);
   },

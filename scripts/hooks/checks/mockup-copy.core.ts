@@ -53,11 +53,9 @@ function isMockupPublish(input: HookInput): boolean {
   if (action !== false && action !== 'publish') return false;
   const filePath = input.tool_input?.['file_path'];
   const files = input.tool_input?.['files'];
-  const names = [
-    ...(typeof filePath === 'string' ? [filePath] : []),
-    ...(isRecord(files) ? Object.keys(files) : []),
-  ];
-  return names.some((name) => name.endsWith(MOCKUP_SUFFIX));
+  const isMockupPage = typeof filePath === 'string' && filePath.endsWith(MOCKUP_SUFFIX);
+  const fileNames = Object.keys(isRecord(files) ? files : {});
+  return isMockupPage || fileNames.some((name) => name.endsWith(MOCKUP_SUFFIX));
 }
 
 function resolveFrom(base: string, path: string): string {
@@ -65,7 +63,10 @@ function resolveFrom(base: string, path: string): string {
 }
 
 function readArtboards(sources: PublishedSources, world: HookWorld): ArtboardSource[] {
-  const root = resolveFrom(sources.workingDirectory, sources.root ?? '.');
+  const root =
+    sources.root === undefined
+      ? sources.workingDirectory
+      : resolveFrom(sources.workingDirectory, sources.root);
   return sources.paths.flatMap((source) => {
     const path = resolveFrom(root, source);
     const html = world.readText(path);

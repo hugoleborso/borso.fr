@@ -1,6 +1,6 @@
 // @FollowsBlueprint utils-pure-module
 import { basename, dirname } from 'node:path';
-import { type Check, type HookInput, type HookWorld, PASS } from '../check.core.ts';
+import { type Check, type HookWorld, PASS } from '../check.core.ts';
 
 const LINTABLE_FILE = /\.(ts|tsx|js|jsx|mjs|cjs)$/u;
 const TWO_PATHS = /^([^\n]+)\n([^\n]+)\n$/u;
@@ -16,25 +16,26 @@ interface ProjectFile {
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return (
+    typeof value === 'object' &&
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, no null reaches this guard with an outcome to change, because parseConfig answers null for a null config either way and a null options field becomes {} before it is checked.
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
-function readFilePath(input: HookInput): string {
-  const filePath = input.tool_input?.['file_path'];
-  return typeof filePath === 'string' ? filePath : '';
-}
-
-function parseJson(text: string): unknown {
+function parseConfig(text: string): Readonly<Record<string, unknown>> | null {
   try {
-    return JSON.parse(text);
+    const config: unknown = JSON.parse(text);
+    return isRecord(config) ? config : null;
   } catch {
-    return undefined;
+    return null;
   }
 }
 
 export function deriveWriteConfig(sourceConfig: string): string | null {
-  const config = parseJson(sourceConfig);
-  if (!isRecord(config)) return null;
+  const config = parseConfig(sourceConfig);
+  if (config === null) return null;
   const options = config['options'] ?? {};
   if (!isRecord(options)) return null;
   const writeOptions = { ...options, typeAware: false, reportUnusedDisableDirectives: 'off' };
@@ -107,8 +108,9 @@ export const lintWrite: Check = {
   name: 'lint-write',
   tools: /^(Edit|Write|MultiEdit)$/u,
   run: (input, world) => {
-    const file = readFilePath(input);
-    if (!LINTABLE_FILE.test(file) || world.readText(file) === null) return PASS;
+    const file = input.tool_input?.['file_path'];
+    if (typeof file !== 'string' || !LINTABLE_FILE.test(file)) return PASS;
+    if (world.readText(file) === null) return PASS;
     const report = lintProjectFile(file, world);
     if (report === '') return PASS;
     return {

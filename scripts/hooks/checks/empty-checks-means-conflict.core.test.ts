@@ -50,8 +50,8 @@ describe('parseChecksResponse', () => {
     expect(parseChecksResponse('{"total_count":0}')).toEqual({ total_count: 0 });
   });
 
-  it('reads text that is not JSON as nothing', () => {
-    expect(parseChecksResponse('not json')).toBeUndefined();
+  it('reads text that is not JSON as null', () => {
+    expect(parseChecksResponse('not json')).toBeNull();
   });
 
   it('parses a JSON string once more, and reads a failed second parse as an empty object', () => {
@@ -61,7 +61,7 @@ describe('parseChecksResponse', () => {
 });
 
 describe('composeRunningNames', () => {
-  it('joins the names of runs not completed, reading a null run or name as empty', () => {
+  it('joins the names of runs not completed, reading a null run or a missing name as empty', () => {
     expect(
       composeRunningNames([
         COMPLETED,
@@ -69,8 +69,10 @@ describe('composeRunningNames', () => {
         { name: 'e2e', status: 'in_progress' },
         null,
         { name: false, status: 'queued' },
+        { name: { id: 1 } },
+        { status: 'queued' },
       ]),
-    ).toBe('test, e2e, , false');
+    ).toBe('test, e2e, , false, {"id":1}, ');
   });
 
   it('reads nothing when a run is neither an object nor null, as jq failed on it', () => {
@@ -97,6 +99,18 @@ describe('emptyChecksMeansConflict', () => {
     expect(contextOf(checksRead('get_status', { total_count: 0 }, null))).toContain(
       'for pull request the pull request.',
     );
+    expect(contextOf(checksRead('get_status', { total_count: 0 }, false))).toContain(
+      'for pull request the pull request.',
+    );
+  });
+
+  it('renders a pull number that is not text the way jq prints it', () => {
+    expect(contextOf(checksRead('get_status', { total_count: 0 }, { id: 1 }))).toContain(
+      'for pull request {"id":1}.',
+    );
+    expect(contextOf(checksRead('get_status', { total_count: 0 }, true))).toContain(
+      'for pull request true.',
+    );
   });
 
   it('stays silent on other methods and on an empty or missing response', () => {
@@ -113,10 +127,15 @@ describe('emptyChecksMeansConflict', () => {
     );
   });
 
-  it('stays silent on a get_status with checks, which lists no runs', () => {
+  it('stays silent on a get_status with checks, and reads runs only from get_check_runs', () => {
+    const response = { total_count: 2, check_runs: [{ name: 'e2e', status: 'queued' }] };
+
     expect(
       emptyChecksMeansConflict.run(checksRead('get_status', { total_count: 2 }), UNUSED_WORLD),
     ).toBe(PASS);
+    expect(emptyChecksMeansConflict.run(checksRead('get_status', response), UNUSED_WORLD)).toBe(
+      PASS,
+    );
   });
 
   it('stays silent when every run on the page completed and the page holds them all', () => {

@@ -11,11 +11,6 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function readCommand(input: HookInput): string {
-  const command = input.tool_input?.['command'];
-  return typeof command === 'string' ? command : '';
-}
-
 export function isUncachedLintCommand(command: string): boolean {
   const isLint = command.includes('eslint') || command.includes(' lint');
   const clearsCache = command.includes('.eslintcache') || command.includes('.cache/eslint');
@@ -99,7 +94,8 @@ export const eslintCacheReplaysAFixedError: Check = {
   name: 'eslint-cache-replays-a-fixed-error',
   tools: /^Bash$/u,
   run: (input, world) => {
-    if (!isUncachedLintCommand(readCommand(input))) return PASS;
+    const command = input.tool_input?.['command'];
+    if (typeof command !== 'string' || !isUncachedLintCommand(command)) return PASS;
     const count = countTypeAwareErrors(readToolOutput(input));
     if (count === 0) return PASS;
     const root = readRepositoryRoot(input, world);

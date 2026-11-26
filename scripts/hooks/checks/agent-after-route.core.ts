@@ -24,8 +24,8 @@ function readAgentType(input: HookInput): string {
 
 function hasRunFramingSkill(input: HookInput, world: HookWorld): boolean {
   if (input.transcript_path === undefined || input.transcript_path === '') return false;
-  const transcript = world.readText(input.transcript_path);
-  return transcript !== null && FRAMING_SKILL_IN_TRANSCRIPT.test(transcript);
+  // Stryker disable next-line StringLiteral: equivalent mutant, an unreadable transcript stands in as text the framing pattern never matches, and Stryker's placeholder text matches it no more than the empty string does.
+  return FRAMING_SKILL_IN_TRANSCRIPT.test(world.readText(input.transcript_path) ?? '');
 }
 
 function hasBranchAddedSpec(world: HookWorld): boolean {

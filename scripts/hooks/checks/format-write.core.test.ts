@@ -10,6 +10,7 @@ interface RecordedCall {
 interface WorldSetup {
   readonly contents?: readonly (string | null)[];
   readonly realpaths?: string | null;
+  readonly realpathStatus?: number;
   readonly executables?: readonly string[];
 }
 
@@ -24,7 +25,8 @@ function fakeWorld(calls: RecordedCall[], setup: WorldSetup): HookWorld {
     run: (command, args) => {
       calls.push({ command, args });
       if (command === 'realpath') {
-        return { status: realpaths === null ? 1 : 0, stdout: realpaths ?? '', stderr: '' };
+        const status = setup.realpathStatus ?? (realpaths === null ? 1 : 0);
+        return { status, stdout: realpaths ?? '', stderr: '' };
       }
       if (command === 'test') {
         return { status: executables.has(args[1] ?? '') ? 0 : 1, stdout: '', stderr: '' };
@@ -65,6 +67,10 @@ describe('isInsideProject', () => {
     expect(isInsideProject('/x/a.ts', fakeWorld([], { realpaths: null }))).toBe(false);
     expect(isInsideProject('/x/a.ts', fakeWorld([], { realpaths: '' }))).toBe(false);
   });
+
+  it('rejects a folder realpath failed on, even when it printed both paths', () => {
+    expect(isInsideProject('/repo/src/a.ts', fakeWorld([], { realpathStatus: 1 }))).toBe(false);
+  });
 });
 
 describe('formatWrite', () => {
@@ -86,6 +92,9 @@ describe('formatWrite', () => {
     });
     expect(formatterCalls(calls)).toEqual([
       { command: '/repo/node_modules/.bin/oxfmt', args: ['/repo/src/a.ts'] },
+    ]);
+    expect(calls.filter(({ command }) => command === 'test')).toEqual([
+      { command: 'test', args: ['-x', '/repo/node_modules/.bin/oxfmt'] },
     ]);
   });
 
@@ -133,6 +142,7 @@ describe('formatWrite', () => {
     expect(formatWrite.run(writeCall('/repo/README.md'), world)).toBe(PASS);
     expect(formatWrite.run(writeCall('/repo/a.ts.bak'), world)).toBe(PASS);
     expect(formatWrite.run(writeCall(4), world)).toBe(PASS);
+    expect(formatWrite.run(writeCall(['/repo/src/a.ts']), world)).toBe(PASS);
     expect(formatWrite.run({ hook_event_name: 'PostToolUse' }, world)).toBe(PASS);
     expect(calls).toEqual([]);
   });

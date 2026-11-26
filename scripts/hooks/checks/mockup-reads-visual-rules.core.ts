@@ -15,16 +15,9 @@ A phone board is one screen, 375 x 812, sheets included. Only a list may run pas
 
 pragma: draw members and instruments with the app's own marks, never as words. \`pnpm --filter @borso-app/pragma run mockup-kit\` prints each instrument glyph as SVG and a member-mark example to paste.`;
 
-function readToolInputText(input: HookInput, field: string, fallback: string): string {
-  const value = input.tool_input?.[field];
-  return typeof value === 'string' ? value : fallback;
-}
-
 function isDesignQuickstart(input: HookInput): boolean {
-  return (
-    readToolInputText(input, 'action', 'publish') === 'quickstart' &&
-    readToolInputText(input, 'intent', '') === 'design'
-  );
+  const toolInput = input.tool_input ?? {};
+  return toolInput['action'] === 'quickstart' && toolInput['intent'] === 'design';
 }
 
 function sessionMarkerPath(input: HookInput, world: HookWorld): string {

@@ -16,17 +16,21 @@ interface RecordedCall {
 
 interface WorldSetup {
   readonly rootStatus?: number;
+  readonly rootOutput?: string;
   readonly found?: string;
 }
 
-function fakeWorld(calls: RecordedCall[], { rootStatus = 0, found = '' }: WorldSetup): HookWorld {
+function fakeWorld(
+  calls: RecordedCall[],
+  { rootStatus = 0, rootOutput = '/repo\n', found = '' }: WorldSetup,
+): HookWorld {
   return {
     projectDirectory: '/repo',
     readEnvironment: () => undefined,
     readText: () => null,
     run: (command, args) => {
       calls.push({ command, args });
-      if (command === 'git') return { status: rootStatus, stdout: '/repo\n', stderr: '' };
+      if (command === 'git') return { status: rootStatus, stdout: rootOutput, stderr: '' };
       return { status: 1, stdout: found, stderr: 'find: missing start point' };
     },
   };
@@ -69,6 +73,9 @@ describe('readToolOutput', () => {
 
   it('joins stdout, stderr and output of an object response, reading a missing one as empty', () => {
     expect(
+      readToolOutput(lintRun({ tool_response: { output: 'c', stderr: 'b', stdout: 'a' } })),
+    ).toBe('a\nb\nc');
+    expect(
       readToolOutput(lintRun({ tool_response: { stdout: 'a', output: 'c', stderr: 4 } })),
     ).toBe('a\n\nc');
   });
@@ -76,6 +83,7 @@ describe('readToolOutput', () => {
   it('reads nothing from a missing or non-object response', () => {
     expect(readToolOutput(lintRun({}))).toBe('');
     expect(readToolOutput(lintRun({ tool_response: ['a'] }))).toBe('');
+    expect(readToolOutput(lintRun({ tool_response: null }))).toBe('');
   });
 });
 
@@ -110,6 +118,16 @@ describe('selectCaches', () => {
         '/repo/node_modules/.cache/eslint\n/repo/.eslintcache-b\n/repo/.eslintcache\n/repo/eslint.config.js\n/repo/node_modules/.cache/.eslintcache\n',
       ),
     ).toEqual(['.eslintcache', '.eslintcache-b', 'node_modules/.cache/eslint']);
+  });
+
+  it('keeps a nested cache whose name only starts with eslint', () => {
+    expect(selectCaches('/repo', '/repo/node_modules/.cache/eslint-loader\n')).toEqual([
+      'node_modules/.cache/eslint-loader',
+    ]);
+  });
+
+  it('drops a path outside the root, even one whose tail reads as a cache', () => {
+    expect(selectCaches('/repo', '/rep0/.eslintcache\n')).toEqual([]);
   });
 });
 
@@ -156,7 +174,34 @@ describe('eslintCacheReplaysAFixedError', () => {
       command: 'git',
       args: ['-C', '/repo/apps/x', 'rev-parse', '--show-toplevel'],
     });
-    expect(calls[1]?.args.slice(0, 2)).toEqual(['/repo', '/repo/node_modules/.cache']);
+    expect(calls[1]).toEqual({
+      command: 'find',
+      args: [
+        '/repo',
+        '/repo/node_modules/.cache',
+        '-mindepth',
+        '1',
+        '-maxdepth',
+        '1',
+        '(',
+        '-name',
+        '.eslintcache*',
+        '-o',
+        '-name',
+        'eslint*',
+        ')',
+      ],
+    });
+  });
+
+  it('strips only the trailing newlines git prints after the root', () => {
+    const calls: RecordedCall[] = [];
+    eslintCacheReplaysAFixedError.run(
+      lintRun({ error: TYPE_AWARE_LINE }),
+      fakeWorld(calls, { rootOutput: '/my\nrepo\n\n' }),
+    );
+
+    expect(calls[1]?.args.slice(0, 2)).toEqual(['/my\nrepo', '/my\nrepo/node_modules/.cache']);
   });
 
   it('asks git from its own folder when the input names no session folder', () => {
@@ -180,13 +225,22 @@ describe('eslintCacheReplaysAFixedError', () => {
       PASS,
     );
     expect(eslintCacheReplaysAFixedError.run({ hook_event_name: 'PostToolUse' }, world)).toBe(PASS);
+    expect(
+      eslintCacheReplaysAFixedError.run(
+        { ...lintRun({ error: TYPE_AWARE_LINE }), tool_input: { command: 7 } },
+        world,
+      ),
+    ).toBe(PASS);
     expect(calls).toEqual([]);
   });
 
-  it('stays silent outside a git repository and when no cache exists', () => {
+  it('stays silent outside a git repository, looking for no cache, and when no cache exists', () => {
     const input = lintRun({ error: TYPE_AWARE_LINE });
+    const calls: RecordedCall[] = [];
+    const outside = fakeWorld(calls, { rootStatus: 128, found: '/repo/.eslintcache\n' });
 
-    expect(eslintCacheReplaysAFixedError.run(input, fakeWorld([], { rootStatus: 128 }))).toBe(PASS);
+    expect(eslintCacheReplaysAFixedError.run(input, outside)).toBe(PASS);
+    expect(calls.map((call) => call.command)).toEqual(['git']);
     expect(eslintCacheReplaysAFixedError.run(input, fakeWorld([], { found: '' }))).toBe(PASS);
   });
 });

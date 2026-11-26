@@ -76,6 +76,10 @@ describe('readPublishedSources', () => {
     expect(readPublishedSources(artifactCall({ files: null }))).toBeNull();
     expect(readPublishedSources(artifactCall({ files: { 'a.dc.html': { to: 'x' } } }))).toBeNull();
     expect(readPublishedSources(artifactCall({ files: { 'a.dc.html': 4 } }))).toBeNull();
+    expect(readPublishedSources(artifactCall({ files: { 'a.dc.html': { from: 3 } } }))).toBeNull();
+    expect(
+      readPublishedSources(artifactCall({ files: { 'a.dc.html': 'a.html', 'b.dc.html': 4 } })),
+    ).toBeNull();
   });
 });
 
@@ -120,6 +124,14 @@ describe('mockupCopy', () => {
 
     expect(mockupCopy.run(artifactCall({ file_path: 'page.dc.html' }), world)).toBe(PASS);
     expect(mockupCopy.run(artifactCall({ file_path: 'missing.dc.html' }), world)).toBe(PASS);
+  });
+
+  it('reads every source once any published file name is a mockup screen', () => {
+    const world = fakeWorld({ '/work/b.dc.html': WORDY });
+
+    expect(
+      contextOf(artifactCall({ files: { 'a.html': 'a.html', 'b.dc.html': 'b.dc.html' } }), world),
+    ).toContain('  /work/b.dc.html: 30 words');
   });
 
   it('counts a source only when its own path is a mockup screen', () => {
