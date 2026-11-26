@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { dehydrate, hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -12,6 +12,7 @@ import {
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
 import { concertRegistrationKeys } from '../../lib/queries/concert-registrations.queries';
+import { isQueryPersisted } from '../../lib/queries/persisted-query.core';
 import { ConcertsLandingPage } from './ConcertsLandingPage';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -43,12 +44,21 @@ function isRegistrationPost(request: Request): boolean {
   return request.method === 'POST' && request.url.includes('/registrations');
 }
 
+function isRegistrationCheck(request: Request): boolean {
+  return request.method === 'GET' && request.url.includes('/concert-registrations/registrations/');
+}
+
 function renderPage(
   answerSignUp: (request: Request) => Promise<Response>,
   upcoming: unknown = UPCOMING,
+  checkStatus = 200,
+  queryClient = createIsolatedQueryClient(),
 ): FetchStub {
   const fetchStub = stubFetch(async (request) => {
     if (isRegistrationPost(request)) return await answerSignUp(request);
+    if (isRegistrationCheck(request)) {
+      return jsonResponse({ registrationId: A_REGISTRATION }, checkStatus);
+    }
     if (request.method === 'PATCH') {
       return jsonResponse({ registration: { comingForMemberId: A_MEMBER, wishedSong: null } });
     }
@@ -58,7 +68,7 @@ function renderPage(
   });
   activeStubs.push(fetchStub);
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <ConcertsLandingPage />
       </MemoryRouter>
@@ -113,6 +123,22 @@ describe('the public concert sign-up page', () => {
       concerts: [{ ...NEXT_CONCERT, posterUrl: 'https://cdn.example/poster.png' }],
     });
     expect((await screen.findByText(/Entrée libre/)).className).toContain('max-md:order-last');
+  });
+
+  it('caps the poster on a phone to the screen the ticket and the button leave, tighter with a prize', async () => {
+    const posterUrl = 'https://cdn.example/poster.png';
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, posterUrl }],
+    });
+    const cappedWithPrize = (await screen.findByAltText(/Le Pop-Up du Label/)).className;
+    cleanup();
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, posterUrl, prize: null }],
+    });
+    const cappedWithoutPrize = (await screen.findByAltText(/Le Pop-Up du Label/)).className;
+    expect(cappedWithPrize).toContain('object-contain');
+    expect(cappedWithPrize).toContain('max-md:max-h-[calc(100dvh-365px-');
+    expect(cappedWithoutPrize).toContain('max-md:max-h-[calc(100dvh-275px-');
   });
 
   it('shows no prize coupon when the concert has none', async () => {
@@ -213,6 +239,62 @@ describe('the public concert sign-up page', () => {
     expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
+  });
+
+  it('offers the sign-up again when the band removed the registration this browser remembers', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const fetchStub = renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 404);
+    expect(await screen.findByRole('button', { name: "I'll be there!" })).toBeTruthy();
+    expect(screen.queryByText('Signed up')).toBeNull();
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBeNull();
+    const check = fetchStub.calls.find(isRegistrationCheck);
+    expect(check?.headers.get('x-registration-token')).toBe('token-1');
+  });
+
+  it('checks the remembered registration again on the next visit, after an earlier visit found it standing', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const firstVisit = createIsolatedQueryClient();
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 200, firstVisit);
+    await waitFor(() => {
+      expect(firstVisit.getQueryData(concertRegistrationKeys.remembered(A_REGISTRATION))).toEqual({
+        isStanding: true,
+      });
+    });
+    const savedOnThePhone = dehydrate(firstVisit, { shouldDehydrateQuery: isQueryPersisted });
+    cleanup();
+    for (const stub of activeStubs.splice(0)) stub.restore();
+
+    const nextVisit = createIsolatedQueryClient();
+    hydrate(nextVisit, savedOnThePhone);
+    const fetchStub = renderPage(
+      () => Promise.resolve(jsonResponse({}, 500)),
+      UPCOMING,
+      404,
+      nextVisit,
+    );
+
+    expect(await screen.findByRole('button', { name: "I'll be there!" })).toBeTruthy();
+    expect(fetchStub.calls.some(isRegistrationCheck)).toBe(true);
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBeNull();
+  });
+
+  it('keeps a remembered registration signed up when its check is refused for another reason', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const fetchStub = renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 403);
+    await waitFor(() => {
+      expect(fetchStub.calls.some(isRegistrationCheck)).toBe(true);
+    });
+    expect(await screen.findByText('Signed up')).toBeTruthy();
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).not.toBeNull();
   });
 
   it('offers the sign-up for a next concert the browser never signed up for, once the remembered list refreshes', async () => {

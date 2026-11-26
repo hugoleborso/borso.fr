@@ -10,7 +10,7 @@ pragma.borso.fr becomes a public page where anyone signs up for the next pragma 
 ## Use cases
 
 1. A visitor on `/` sees only the next concert, the first one dated today or later. The page has the pragma logo, the concert ticket and one "Je serai là !" button. There is no link to the members' area. With no concert ahead, the page shows an empty state.
-2. The ticket always shows the date and the hour large. With a poster, the whole poster shows above a dark band that holds "17", "DÉCEMBRE", "JEUDI" and a clock icon with "20 h". Without a poster, the dark band becomes the top of the ticket, with the day number very large. The poster is never cropped.
+2. The ticket always shows the date and the hour large. With a poster, the whole poster shows above a dark band that holds "17", "DÉCEMBRE", "JEUDI" and a clock icon with "20 h". Without a poster, the dark band becomes the top of the ticket, with the day number very large. The poster is never cropped. On a phone, the poster, the date band, the venue, the prize coupon and the "Je serai là !" button fit in one screen: the poster shrinks to the height left once those parts are counted. The message, which follows the coupon when there is a poster, may need a scroll.
 3. The venue is a link with a map-pin icon. It opens a Google Maps search for the venue text (`https://www.google.com/maps/search/?api=1&query=<venue>`).
 4. The concert message shows right under the venue when a member set one. One exception, on a phone when the concert has a poster: the message moves after the prize coupon, so the prize stays on screen.
 5. When a member set a prize, a yellow coupon below a dashed line shows the prize's icon and label, for example a beer and "3 bières à gagner". Without a prize there is no coupon.
@@ -25,8 +25,10 @@ pragma.borso.fr becomes a public page where anyone signs up for the next pragma 
     - sets or clears the prize label, and picks its icon among beer (the default), gift, ticket and t-shirt (Lucide icons);
     - sets or clears the public message;
     - lists the registrations, each with its first name, its email, who it comes for and its wished song;
-    - presses "Tirer au sort 3 gagnants", which picks three registrations at random in the browser and saves nothing.
-13. The ERP home moves from `/` to `/app`. Every link and redirect to it follows, and the installed app opens on `/app`. Every other ERP route keeps its path.
+    - presses "Tirer au sort 3 gagnants", which picks three registrations at random in the browser and saves nothing;
+    - removes a registration with "Retirer" after confirming it. The registration leaves the list, the draw and the winners already drawn at once. Its wished song stays in the catalogue, and leaves the "Proposées par les fans" filter unless another registration still wishes it.
+13. A fan whose registration a member removed sees "Je serai là !" again on their next visit, and can sign up again with the same email. The browser checks the registration it remembers once per visit, with its edit token, and forgets it when the server no longer has it.
+14. The ERP home moves from `/` to `/app`. Every link and redirect to it follows, and the installed app opens on `/app`. Every other ERP route keeps its path.
 
 ## Rules
 
