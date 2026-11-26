@@ -16,6 +16,7 @@ import {
   selectWishSearchLine,
   toggleChoice,
 } from '../../routes/concerts/concert-sign-up.core';
+import { AlbumCover } from '../atoms/AlbumCover';
 import { Avatar } from '../atoms/Avatar';
 import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
@@ -29,7 +30,7 @@ import { selectSuggestionOutcome } from './suggest-song.core';
 const DEBOUNCE_MS = 600;
 const SEARCH_INPUT_CLASS = composeClassName(inputVariants(), 'pl-9');
 const HIT_CLASS =
-  'flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-sm px-2 py-2 text-left text-meta ' +
+  'flex w-full min-h-11 cursor-pointer items-center gap-3 rounded-sm px-2 py-2 text-left text-meta ' +
   'text-ink hover:bg-hover data-focus-visible:outline-3 data-focus-visible:outline-focus';
 const QUESTION_CLASS = 'm-0 font-display text-title font-normal text-ink';
 const MEMBER_CHIP_CLASS =
@@ -40,6 +41,7 @@ interface WishedTrack {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly deezerAlbumId: string | null;
 }
 
 interface FollowUpValues {
@@ -107,6 +109,7 @@ export function RegistrationFollowUpSheet({
       id: hit.deezerTrackId,
       title: hit.title,
       artist: hit.artist,
+      deezerAlbumId: hit.deezerAlbumId,
     });
     setTypedQuery('');
     setSettledQuery('');
@@ -232,8 +235,11 @@ export function RegistrationFollowUpSheet({
                           textValue={hit.title}
                           className={HIT_CLASS}
                         >
-                          <span className="font-medium text-ink">{hit.title}</span>
-                          <span className="text-meta text-ink-soft">{hit.artist}</span>
+                          <AlbumCover title={hit.title} deezerAlbumId={hit.deezerAlbumId} />
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="truncate font-medium text-ink">{hit.title}</span>
+                            <span className="truncate text-meta text-ink-soft">{hit.artist}</span>
+                          </span>
                         </ListBoxItem>
                       )}
                     </ListBox>
@@ -241,7 +247,11 @@ export function RegistrationFollowUpSheet({
                 </Autocomplete>
               ) : (
                 <div className="flex items-center justify-between gap-3 rounded-md bg-accent-soft px-3 py-2">
-                  <span className="flex min-w-0 flex-col">
+                  <AlbumCover
+                    title={field.state.value.title}
+                    deezerAlbumId={field.state.value.deezerAlbumId}
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-medium text-ink">{field.state.value.title}</span>
                     <span className="truncate text-meta text-ink-soft">
                       {field.state.value.artist}
