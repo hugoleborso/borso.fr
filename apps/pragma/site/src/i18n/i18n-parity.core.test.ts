@@ -57,6 +57,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
   { key: 'compos.defaultTitle', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'concerts.email', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'home.totalHoursMinutes',
     readsTheSameBecause: 'a duration written with the h unit both languages share',

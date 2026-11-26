@@ -325,7 +325,7 @@ describe('sw.js, push notifications', () => {
       body: 'Something changed in the band.',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      data: { url: '/' },
+      data: { url: '/app' },
     });
   });
 
@@ -369,6 +369,6 @@ describe('sw.js, push notifications', () => {
     await worker.dispatch('notificationclick', {
       notification: { close: vi.fn(), data: { url: '/catalog/song-1' } },
     });
-    expect(worker.openedWindows).toEqual(['/', '/catalog/song-1']);
+    expect(worker.openedWindows).toEqual(['/app', '/catalog/song-1']);
   });
 });

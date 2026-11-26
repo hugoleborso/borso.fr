@@ -3,7 +3,7 @@
   "name": "pragma",
   "short_name": "pragma",
   "description": "Band ERP / CRM / PWA for the band's catalog, setlists, sessions and bars.",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -36,7 +36,7 @@
     {
       "name": "Accueil",
       "short_name": "Accueil",
-      "url": "/",
+      "url": "/app",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {

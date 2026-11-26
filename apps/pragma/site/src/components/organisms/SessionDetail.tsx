@@ -210,9 +210,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
       />
     ) : (
       <ConcertReadView
-        venue={session.venue}
-        capacity={session.capacity}
-        gear={session.gear}
+        session={session}
         friendsCounts={friendsCounts}
         members={members}
         friendsTotal={friendsTotal}

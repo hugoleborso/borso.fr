@@ -199,6 +199,18 @@ Lives in: `api/src/concert-registrations/` (`session.poster_s3_key`, `session.pu
 
 Invariants: `api/src/concert-registrations/INVARIANTS.md`
 
+## Concert sign-up page
+
+The public page at `/`, open to anyone signed in or not, where a visitor
+leaves a **concert registration** for an upcoming concert and may add a
+**fan wish**.
+
+Lives in: `site/src/routes/concerts/`
+
+Invariants: `site/src/routes/concerts/INVARIANTS.md`
+
+Not to be confused with: the **home**, the members' start screen at `/app`.
+
 ## Concert registration
 
 One person's sign-up, a first name and an email, for one concert.
@@ -256,7 +268,7 @@ books the slot.
 
 ## Home
 
-The start screen, at `/`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
+The start screen, at `/app`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
 
 Lives in: `site/src/routes/home/`
 

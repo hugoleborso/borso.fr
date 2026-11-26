@@ -242,7 +242,8 @@
     "emptyToLearn": "Rien à apprendre : tous les morceaux que tu joues sont prêts.",
     "addSong": "Ajouter un morceau",
     "addSongTitle": "Ajouter un morceau",
-    "noSongNotes": "Rien d’écrit pour ce morceau."
+    "noSongNotes": "Rien d’écrit pour ce morceau.",
+    "filterFans": "Proposées par les fans"
   },
   "common": {
     "actions": "Actions",
@@ -583,7 +584,22 @@
       "past": "Passées",
       "noUpcoming": "Aucune session à venir.",
       "noPast": "Aucune session passée."
-    }
+    },
+    "publicPageTitle": "Page publique",
+    "publicPageOpen": "Voir la page",
+    "poster": "Affiche",
+    "posterAdd": "Ajouter une affiche",
+    "posterChange": "Changer l'affiche",
+    "posterWrongType": "L'affiche doit être une image JPEG, PNG ou WebP.",
+    "posterTooLarge": "L'affiche dépasse 10 Mo.",
+    "publicMessage": "Message public",
+    "publicPageSaveFailed": "La page publique n'a pas pu être enregistrée.",
+    "registrationsTitle": "Inscrits ({{count}})",
+    "registrationsEmpty": "Personne n'est encore inscrit.",
+    "comingFor": "Vient pour {{name}}",
+    "wishedSong": "Aimerait entendre {{title}} · {{artist}}",
+    "drawWinners": "Tirer au sort 3 gagnants",
+    "winnersTitle": "Gagnants"
   },
   "setlist": {
     "addSongNoMatch": "Aucun morceau ne correspond.",
@@ -1060,5 +1076,34 @@
     "failed": "pragma n'a pas pu joindre les données du groupe.",
     "offline": "Vous êtes hors ligne.",
     "retry": "Réessayer"
+  },
+  "concerts": {
+    "pageTitle": "Nos prochains concerts",
+    "pageIntro": "Dis-nous que tu viens, on t'attend devant la scène.",
+    "empty": "Pas de concert prévu pour l'instant. Reviens bientôt !",
+    "loadFailed": "Les concerts n'ont pas pu se charger.",
+    "venueUnknown": "Lieu à venir",
+    "posterAlt": "Affiche du concert {{venue}}",
+    "firstName": "Prénom",
+    "email": "Email",
+    "signUp": "Je serai là !",
+    "alreadyRegistered": "Cet email est déjà inscrit à ce concert",
+    "disposableEmail": "Les adresses jetables ne participent pas au tirage, utilise ton vrai email.",
+    "notUpcoming": "Ce concert n'accepte plus d'inscriptions.",
+    "signUpFailed": "L'inscription n'est pas passée. Réessaie dans un instant.",
+    "registered": "Tu es inscrit·e. On t'attend !",
+    "thanks": "Merci ! À très vite devant la scène.",
+    "followUpTitle": "Encore deux questions",
+    "comingForQuestion": "Tu viens pour qui ?",
+    "wishQuestion": "Quelle musique tu adorerais entendre à un prochain concert ?",
+    "changeWish": "Changer",
+    "send": "Envoyer",
+    "skip": "Passer",
+    "followUpFailed": "Ta réponse n'est pas passée. Réessaie ou passe.",
+    "membersSpace": "Espace membres",
+    "rateLimited": "Trop d'essais d'un coup. Réessaie dans une minute.",
+    "followUpTokenRefused": "On n'a pas retrouvé ton inscription sur cet appareil. Tu peux passer.",
+    "followUpTrackRefused": "Ce morceau n'a pas pu être retenu. Choisis-en un autre.",
+    "followUpSearchUnavailable": "La recherche de morceaux est indisponible. Réessaie dans un instant ou passe."
   }
 }

@@ -19,7 +19,7 @@ describe('selectPostLoginPath', () => {
   });
 
   it('opens Home when the state carries no origin', () => {
-    expect(selectPostLoginPath({})).toBe('/');
+    expect(selectPostLoginPath({})).toBe('/app');
   });
 
   it('opens Home for an unusable state', () => {

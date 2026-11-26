@@ -8,6 +8,7 @@ import {
   selectSongsToLearn,
   isMatchingSearch,
   isMatchingStatusFilter,
+  selectFanWishedSongs,
   selectVisibleSongs,
   sortSongsByTitle,
   toSongCard,
@@ -259,5 +260,17 @@ describe('toSongCard', () => {
         'Volt',
       ).chartKind,
     ).toBeNull();
+  });
+});
+
+describe('selectFanWishedSongs', () => {
+  it('keeps the songs a fan wished for that match the search', () => {
+    const songs = [
+      { id: 'a', title: 'Nova', artist: 'Band', status: 'idea' },
+      { id: 'b', title: 'Riff', artist: 'Band', status: 'idea' },
+      { id: 'c', title: 'Nocturne', artist: 'Other', status: 'wip' },
+    ];
+    expect(selectFanWishedSongs(songs, ['a', 'c'], '').map((song) => song.id)).toEqual(['a', 'c']);
+    expect(selectFanWishedSongs(songs, ['a', 'c'], 'other').map((song) => song.id)).toEqual(['c']);
   });
 });

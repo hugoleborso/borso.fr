@@ -5,6 +5,7 @@ import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { MemberMark } from '../atoms/MemberMark';
 import { MemberChip } from '../molecules/MemberChip';
+import { ConcertPublicPagePanel } from './ConcertPublicPagePanel';
 import { computeSharePercent, isCapacityKnown } from '../../routes/sessions/friends-count.core';
 
 export interface ConcertReadViewMember {
@@ -13,10 +14,15 @@ export interface ConcertReadViewMember {
   readonly color: string;
 }
 
-export interface ConcertReadViewProps {
+export interface ConcertReadViewSession {
+  readonly id: string;
   readonly venue: string | null;
   readonly capacity: number | null;
   readonly gear: string | null;
+}
+
+export interface ConcertReadViewProps {
+  readonly session: ConcertReadViewSession;
   readonly friendsCounts: Readonly<Record<string, number>>;
   readonly members: readonly ConcertReadViewMember[];
   readonly friendsTotal: number;
@@ -26,14 +32,13 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 
 // @FollowsBlueprint organism-presentational
 export function ConcertReadView({
-  venue,
-  capacity,
-  gear,
+  session,
   friendsCounts,
   members,
   friendsTotal,
 }: ConcertReadViewProps): JSX.Element {
   const { t } = useTranslation();
+  const { venue, capacity, gear } = session;
   const isVenueFillShown = isCapacityKnown(capacity);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
@@ -92,6 +97,9 @@ export function ConcertReadView({
           <div className="font-display text-title text-ink leading-tight">{venue ?? '—'}</div>
         </Card>
       </aside>
+      <div className="lg:col-span-2">
+        <ConcertPublicPagePanel sessionId={session.id} />
+      </div>
     </div>
   );
 }

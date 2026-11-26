@@ -4,7 +4,8 @@ import { selectActiveTab, SHELL_TABS } from './navigation-active.core';
 // @FollowsBlueprint test-pure-unit
 describe('selectActiveTab', () => {
   it('lights Home up on the start screen only', () => {
-    expect(selectActiveTab('/')).toBe('home');
+    expect(selectActiveTab('/app')).toBe('home');
+    expect(selectActiveTab('/')).toBeNull();
     expect(selectActiveTab('/sessions')).toBe('sessions');
   });
 
@@ -39,7 +40,7 @@ describe('selectActiveTab', () => {
 
   it('declares the five tabs in order', () => {
     expect(SHELL_TABS.map((tab) => tab.to)).toEqual([
-      '/',
+      '/app',
       '/sessions',
       '/setlists',
       '/catalog',

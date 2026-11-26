@@ -7,6 +7,7 @@ import { BandPage } from './routes/band/BandPage';
 import { TasksPage } from './routes/band/TasksPage';
 import { HomePage } from './routes/home/HomePage';
 import { BarsPage } from './routes/bars/BarsPage';
+import { ConcertsLandingPage } from './routes/concerts/ConcertsLandingPage';
 import { AddSongPage } from './routes/catalog/AddSongPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
 import { CompositionsPage } from './routes/compos/CompositionsPage';
@@ -39,6 +40,7 @@ export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <TracedRoutes>
+        <Route path="/" element={<ConcertsLandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/recover" element={<RecoverPage />} />
         <Route path="/vote" element={<VotePage />} />
@@ -48,7 +50,7 @@ export function App(): JSX.Element {
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
           <Route element={<AppShell />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/app" element={<HomePage />} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/catalog/new" element={<SongEditPage />} />
             <Route path="/catalog/add" element={<AddSongPage />} />

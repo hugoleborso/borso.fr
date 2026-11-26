@@ -5,6 +5,11 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
 ## Home
 
+- Home lives at `/app`. The address `/` is the public concert sign-up
+  page for everyone, signed in or not, outside the session gate and the
+  shell.
+- Signing in with no page to return to, the Home tab, a notification
+  without its own address and the installed app all open `/app`.
 - The next session is the earliest one whose calendar day in Paris is
   today or later (`selectNextSession` in `domain/session-schedule.core.ts`),
   practice or concert alike.
@@ -15,3 +20,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 - The member's open tasks list the ones naming the next session first.
 Held by: `site/src/routes/home/home.core.test.ts` › lists the songs where the member plays, an override included, with the instruments
 Held by: `site/src/routes/home/HomePage.test.tsx` › shows an empty state with New session when no session is ahead
+Held by: `site/src/components/organisms/navigation-active.core.test.ts` › lights Home up on the start screen only
+Held by: `site/src/routes/login.core.test.ts` › opens Home when the state carries no origin
+Held by: `site/src/sw/service-worker.test.ts` › opens a new window when none is open, at home when the URL is missing
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows each upcoming concert with its venue and message, and a discreet way to the members area
