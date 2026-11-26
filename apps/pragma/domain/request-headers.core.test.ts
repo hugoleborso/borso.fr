@@ -9,6 +9,7 @@ describe('the request headers the site sends beyond the CORS-safelisted ones', (
     expect(PRAGMA_REQUEST_HEADER_NAMES).toStrictEqual([
       BALLOT_TOKEN_HEADER,
       REALTIME_CLIENT_HEADER,
+      'x-registration-token',
     ]);
   });
 });

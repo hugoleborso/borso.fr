@@ -9,6 +9,7 @@ const ALL_TABLES: readonly string[] = [
   'assistant_grant',
   'audience_suggestion',
   'audience_vote',
+  'concert_registration',
   'voting_round',
   'member_credential',
   'calendar_feed',

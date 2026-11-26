@@ -190,6 +190,37 @@ Invariants: `api/src/sessions/INVARIANTS.md`
 
 Not to be confused with: a practice, which is the other `kind` of session.
 
+## Concert announcement
+
+The poster and the public message members set on a concert, shown on the
+public sign-up page.
+
+Lives in: `api/src/concert-registrations/` (`session.poster_s3_key`, `session.public_message`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+## Concert registration
+
+One person's sign-up, a first name and an email, for one concert.
+
+Lives in: `api/src/concert-registrations/` (`concert_registration`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: a **ballot**, which votes during a concert and
+names nobody.
+
+## Registration edit token
+
+The secret a sign-up answers to the browser that made it, so only that
+browser can add who it comes for and the song it wishes.
+
+Lives in: `api/src/concert-registrations/` (`edit_token_hash`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: a **ballot** token, which votes during a concert.
+
 ## Energy
 
 How much the room lifts during a song, on a scale of 1 to 10.
@@ -198,6 +229,18 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
 (`energy` on an entry)
 
 Invariants: `api/src/songs/INVARIANTS.md`
+
+## Fan wish
+
+The song a **concert registration** asks the band to play at a later
+concert.
+
+Lives in: `api/src/concert-registrations/` (`concert_registration.wished_song_id`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: an **audience suggestion**, which enters tonight's
+voting pool.
 
 ## Free slot
 

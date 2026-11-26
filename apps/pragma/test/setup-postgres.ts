@@ -14,6 +14,7 @@ const TRACKED_TABLES = [
   'app_config',
   'audience_suggestion',
   'audience_vote',
+  'concert_registration',
   'voting_round',
   'calendar_feed',
   'member_calendar_feed',

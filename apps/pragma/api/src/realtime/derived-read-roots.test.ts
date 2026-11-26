@@ -14,6 +14,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   bars: ['bars'],
   'calendar-feeds': ['me'],
   compositions: ['compositions'],
+  'concert-registrations': ['concert-registrations'],
   'free-slots': ['free-slots'],
   improvements: ['improvements'],
   inspirations: ['inspirations'],
