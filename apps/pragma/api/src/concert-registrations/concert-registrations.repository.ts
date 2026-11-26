@@ -1,5 +1,5 @@
 import { and, asc, count, eq, gte, inArray, isNotNull } from 'drizzle-orm';
-import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { getDatabase } from '../database/client';
 import { sessionTable } from '../sessions/sessions.schema';
 import { concertRegistrationTable } from './concert-registrations.schema';
 
@@ -155,13 +155,4 @@ export async function listDistinctWishedSongIds(): Promise<string[]> {
     .from(concertRegistrationTable)
     .where(isNotNull(concertRegistrationTable.wishedSongId));
   return rows.flatMap((row) => (row.wishedSongId === null ? [] : [row.wishedSongId]));
-}
-
-export async function deleteRegistrationsOfSession(
-  transaction: DatabaseExecutor,
-  sessionId: string,
-): Promise<void> {
-  await transaction
-    .delete(concertRegistrationTable)
-    .where(eq(concertRegistrationTable.sessionId, sessionId));
 }

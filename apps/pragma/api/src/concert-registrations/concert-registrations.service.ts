@@ -1,7 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { canonicalizeEmail, isDisposableEmail } from '@domain/registration-email.core';
 import { PRAGMA_REQUEST_HEADERS } from '@domain/request-headers.core';
-import type { DatabaseExecutor } from '../database/client';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { findSongById, getSongs, resolveCatalogueSongForTrack } from '../songs/songs.service';
 import { mintChartGetUrl, mintObjectUpload } from '../uploads/uploads.service';
@@ -28,7 +27,6 @@ import {
   listDistinctWishedSongIds,
   listRegistrationsOfConcert,
   type RegistrationAnswerShape,
-  deleteRegistrationsOfSession,
   updateConcertAnnouncement,
   updateRegistrationAnswers,
 } from './concert-registrations.repository';
@@ -260,11 +258,4 @@ export async function listRegistrations(sessionId: string): Promise<Registration
 
 export async function listFanWishSongIds(): Promise<string[]> {
   return await listDistinctWishedSongIds();
-}
-
-export async function deleteRegistrationsOfSessionBeingDeleted(
-  transaction: DatabaseExecutor,
-  sessionId: string,
-): Promise<void> {
-  await deleteRegistrationsOfSession(transaction, sessionId);
 }

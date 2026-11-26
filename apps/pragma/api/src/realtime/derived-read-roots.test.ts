@@ -62,7 +62,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'streaks',
     'tasks',
   ],
-  sessions: ['setlists', 'takes', 'tasks'],
+  sessions: ['concert-registrations', 'setlists', 'takes', 'tasks'],
   songs: ['compositions', 'mastery', 'setlists', 'takes', 'tasks'],
 };
 

@@ -1,6 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { deleteRegistrationsOfSessionBeingDeleted } from '../concert-registrations/concert-registrations.service';
+import { concertRegistrationTable } from '../concert-registrations/concert-registrations.schema';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
@@ -126,7 +126,9 @@ export async function deleteSessionWithCascade(id: string): Promise<DeletionOutc
     await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
     await detachTakesOfDeletedSession(transaction, id);
     await detachTasksOfSessionBeingDeleted(transaction, id);
-    await deleteRegistrationsOfSessionBeingDeleted(transaction, id);
+    await transaction
+      .delete(concertRegistrationTable)
+      .where(eq(concertRegistrationTable.sessionId, id));
     return selectDeletionOutcome(deleted.length);
   });
 }
