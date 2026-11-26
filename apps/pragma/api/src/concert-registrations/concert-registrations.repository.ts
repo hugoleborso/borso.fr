@@ -138,6 +138,33 @@ export async function findRegistrationHoldingToken(
   return rows[0] ?? null;
 }
 
+export async function findRegistrationById(
+  registrationId: string,
+): Promise<ConcertRegistrationRow | null> {
+  const rows = await getDatabase()
+    .select(REGISTRATION_PROJECTION)
+    .from(concertRegistrationTable)
+    .where(eq(concertRegistrationTable.id, registrationId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function didDeleteRegistrationOfConcert(
+  sessionId: string,
+  registrationId: string,
+): Promise<boolean> {
+  const deleted = await getDatabase()
+    .delete(concertRegistrationTable)
+    .where(
+      and(
+        eq(concertRegistrationTable.id, registrationId),
+        eq(concertRegistrationTable.sessionId, sessionId),
+      ),
+    )
+    .returning({ id: concertRegistrationTable.id });
+  return deleted.length > 0;
+}
+
 export async function findRegistrationOfMailbox(
   sessionId: string,
   canonicalEmail: string,

@@ -233,12 +233,12 @@ export async function amendRegistration(
   if (comingFor.kind === 'refused') return comingFor;
   const wished = await readWishedTrack(params.wishedTrackId);
   if (wished.kind === 'refused') return wished;
-  const updated = await saveAnswersAfterLostImportRace(
+  const registration = await saveAnswersAfterLostImportRace(
     params.registrationId,
     comingFor.answers,
     wished.track,
   );
-  const registration = updated ?? holder;
+  if (registration === null) return refuse('unknown-registration');
   return {
     kind: 'ok',
     registration: {

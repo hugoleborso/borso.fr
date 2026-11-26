@@ -5,6 +5,7 @@ import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   announcementPatchSchema,
   concertParamSchema,
+  concertRegistrationParamSchema,
   posterUploadSchema,
   registrationCreateSchema,
   registrationParamSchema,
@@ -22,6 +23,8 @@ import {
   register,
   REGISTRATION_TOKEN_HEADER,
 } from './concert-registrations.service';
+import { checkRegistration } from './concert-registration-check.service';
+import { removeRegistration } from './concert-registration-removal.service';
 import {
   CONCERT_REGISTRATION_READ_BUDGET,
   CONCERT_REGISTRATION_WRITE_BUDGET,
@@ -34,6 +37,7 @@ const STATUS_BY_REFUSAL = {
   'already-registered': 409,
   'disposable-email': 422,
   'invalid-registration-token': 403,
+  'unknown-registration': 404,
   'unknown-member': 422,
   'unknown-track': 422,
   'foreign-poster-key': 422,
@@ -41,6 +45,7 @@ const STATUS_BY_REFUSAL = {
 } as const satisfies Record<ConcertRegistrationRefusal, number>;
 
 const ABSENT_TOKEN = '';
+const NO_CONTENT = 204;
 
 // @FollowsBlueprint controller-public-and-gated-routers
 export function buildConcertRegistrationsRouter() {
@@ -71,6 +76,22 @@ export function buildConcertRegistrationsRouter() {
           { registrationId: outcome.registrationId, editToken: outcome.editToken },
           201,
         );
+      },
+    )
+    .get(
+      '/registrations/:registrationId',
+      limitReads,
+      zValidator('param', registrationParamSchema),
+      async (context) => {
+        const { registrationId } = context.req.valid('param');
+        const outcome = await checkRegistration({
+          registrationId,
+          editToken: context.req.header(REGISTRATION_TOKEN_HEADER) ?? ABSENT_TOKEN,
+        });
+        if (outcome.kind === 'refused') {
+          return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);
+        }
+        return context.json({ registrationId });
       },
     )
     .patch(
@@ -151,6 +172,18 @@ export function buildConcertRegistrationsRouter() {
         const { sessionId } = context.req.valid('param');
         const registrations = await listRegistrations(sessionId);
         return context.json({ registrations });
+      },
+    )
+    .delete(
+      '/concerts/:sessionId/registrations/:registrationId',
+      requireMemberSession,
+      zValidator('param', concertRegistrationParamSchema),
+      async (context) => {
+        const outcome = await removeRegistration(context.req.valid('param'));
+        if (outcome.kind === 'refused') {
+          return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);
+        }
+        return context.body(null, NO_CONTENT);
       },
     )
     .get('/fan-wishes', requireMemberSession, async (context) => {

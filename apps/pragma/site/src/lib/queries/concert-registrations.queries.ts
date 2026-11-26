@@ -1,13 +1,17 @@
 /** @Feature concert-registrations */
 
 import { PRAGMA_REQUEST_HEADERS } from '@domain/request-headers.core';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { z } from 'zod';
 import { ApiError, api } from '../api.client';
 import { sendFileToPresignedUrl } from '../object-upload.adapter';
 import { writeKeepingStaleness } from './cache-write.queries';
-import { rememberFirstRegistration, type StoredRegistration } from '../registration-token.adapter';
+import {
+  forgetRegistration,
+  rememberFirstRegistration,
+  type StoredRegistration,
+} from '../registration-token.adapter';
 import type { ConcertPrizeIcon } from '@domain/concert-prize.core';
 import {
   checkPoster,
@@ -15,6 +19,7 @@ import {
   type PosterContentType,
   PosterRefusal,
 } from '../../routes/concerts/concert-public-page.core';
+import { isRegistrationGone } from '../../routes/concerts/concert-sign-up.core';
 import { renderPdfPosterAsPng } from '../pdf-poster.adapter';
 
 export const concertRegistrationKeys = {
@@ -26,11 +31,15 @@ export const concertRegistrationKeys = {
   registrations: (sessionId: string) =>
     [...concertRegistrationKeys.all, 'registrations', sessionId] as const,
   fanWishes: () => [...concertRegistrationKeys.all, 'fan-wishes'] as const,
+  remembered: (registrationId: string) =>
+    [...concertRegistrationKeys.all, 'remembered', registrationId] as const,
 };
 
 const concertRegistrationsApi = api.api['concert-registrations'];
 
 const STALE_ON_EVERY_VISIT_MS = 0;
+const CHECKED_ONCE_PER_VISIT = Infinity;
+const CONCERT_REGISTRATIONS_WRITE_SCOPE = { id: 'concert-registrations-writes' } as const;
 
 type UpcomingConcertsResponse = InferResponseType<typeof concertRegistrationsApi.upcoming.$get>;
 export type UpcomingConcert = UpcomingConcertsResponse['concerts'][number];
@@ -96,6 +105,38 @@ export function useRegisterForConcert() {
   });
 }
 
+export interface RememberedRegistrationCheck {
+  readonly isStanding: boolean;
+}
+
+const NOTHING_REMEMBERED: StoredRegistration = { registrationId: '', editToken: '' };
+
+export function useRememberedRegistrationCheck(
+  sessionId: string,
+  remembered: StoredRegistration | null,
+) {
+  const registration = remembered ?? NOTHING_REMEMBERED;
+  return useQuery({
+    queryKey: concertRegistrationKeys.remembered(registration.registrationId),
+    queryFn: async (): Promise<RememberedRegistrationCheck> => {
+      const response = await concertRegistrationsApi.registrations[':registrationId'].$get(
+        { param: { registrationId: registration.registrationId } },
+        { headers: { [PRAGMA_REQUEST_HEADERS.registrationToken]: registration.editToken } },
+      );
+      const isGone = isRegistrationGone(response.status);
+      if (isGone) {
+        forgetRegistration(sessionId);
+        return { isStanding: false };
+      }
+      if (!response.ok) throw new ApiError(response.status, `check ${response.status}`, null);
+      return { isStanding: true };
+    },
+    enabled: remembered !== null,
+    staleTime: CHECKED_ONCE_PER_VISIT,
+    retry: false,
+  });
+}
+
 interface AmendVariables {
   readonly registration: StoredRegistration;
   readonly comingForMemberId: string | null;
@@ -155,6 +196,56 @@ export function useConcertRegistrations(sessionId: string) {
       return response.json();
     },
     staleTime: STALE_ON_EVERY_VISIT_MS,
+  });
+}
+
+interface RemoveRegistrationVariables {
+  readonly sessionId: string;
+  readonly registrationId: string;
+}
+
+interface RegistrationsSnapshot {
+  readonly previousRegistrations: RegistrationsResponse | undefined;
+}
+
+function dropRegistrationFromList(queryClient: QueryClient, removed: RemoveRegistrationVariables) {
+  const isKept = (entry: ConcertRegistrationEntry) => entry.id !== removed.registrationId;
+  const key = concertRegistrationKeys.registrations(removed.sessionId);
+  writeKeepingStaleness<RegistrationsResponse>(queryClient, key, (old) =>
+    old === undefined ? old : { registrations: old.registrations.filter(isKept) },
+  );
+}
+
+// @FollowsBlueprint query-optimistic-mutation
+export function useRemoveConcertRegistration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    scope: CONCERT_REGISTRATIONS_WRITE_SCOPE,
+    mutationKey: concertRegistrationKeys.all,
+    mutationFn: async (variables: RemoveRegistrationVariables) => {
+      const response = await concertRegistrationsApi.concerts[':sessionId'].registrations[
+        ':registrationId'
+      ].$delete({ param: variables });
+      if (!response.ok) throw new ApiError(response.status, `remove ${response.status}`, null);
+    },
+    onMutate: async (variables): Promise<RegistrationsSnapshot> => {
+      const key = concertRegistrationKeys.registrations(variables.sessionId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousRegistrations = queryClient.getQueryData<RegistrationsResponse>(key);
+      dropRegistrationFromList(queryClient, variables);
+      return { previousRegistrations };
+    },
+    onSuccess: (_removed, variables) => {
+      dropRegistrationFromList(queryClient, variables);
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previousRegistrations === undefined) return;
+      writeKeepingStaleness(
+        queryClient,
+        concertRegistrationKeys.registrations(variables.sessionId),
+        context.previousRegistrations,
+      );
+    },
   });
 }
 

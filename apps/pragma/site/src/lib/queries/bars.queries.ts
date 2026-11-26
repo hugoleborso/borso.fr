@@ -1,6 +1,6 @@
 /** @Feature bars */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
@@ -142,11 +142,24 @@ export function useUpdateBar() {
       });
       return { previousList };
     },
+    onSuccess: ({ bar: savedBar }) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, barKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { bars: replaceEntityById(old.bars, savedBar.id, () => savedBar) };
+      });
+    },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         writeKeepingStaleness(queryClient, barKeys.list(), context.previousList);
       }
     },
+  });
+}
+
+function dropBarFromList(queryClient: QueryClient, barId: string): void {
+  writeKeepingStaleness<BarsListResponse>(queryClient, barKeys.list(), (old) => {
+    if (old === undefined) return old;
+    return { bars: old.bars.filter((bar) => bar.id !== barId) };
   });
 }
 
@@ -165,11 +178,11 @@ export function useDeleteBar() {
       const listKey = barKeys.list();
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<BarsListResponse>(listKey);
-      writeKeepingStaleness<BarsListResponse>(queryClient, listKey, (old) => {
-        if (old === undefined) return old;
-        return { bars: old.bars.filter((bar) => bar.id !== variables.id) };
-      });
+      dropBarFromList(queryClient, variables.id);
       return { previousList };
+    },
+    onSuccess: (_deleted, variables) => {
+      dropBarFromList(queryClient, variables.id);
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {

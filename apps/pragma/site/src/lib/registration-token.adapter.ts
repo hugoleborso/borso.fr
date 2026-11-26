@@ -39,3 +39,7 @@ export function rememberFirstRegistration(
   if (readStoredRegistration(sessionId) !== null) return;
   localStorage.setItem(registrationKeyOfConcert(sessionId), JSON.stringify(registration));
 }
+
+export function forgetRegistration(sessionId: string): void {
+  localStorage.removeItem(registrationKeyOfConcert(sessionId));
+}
