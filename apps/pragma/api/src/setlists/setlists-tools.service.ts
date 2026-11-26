@@ -13,6 +13,9 @@ import {
 import { describeInvalidFields } from '../mcp/tool-refusal.core';
 import { getTransitionComments } from '../transitions/transitions.service';
 import type { WriteActor } from '../notifications/notifications.service';
+import type { GearItemToolView } from '../gear-items/gear-item-tool.core';
+import { readGearItemsForTool } from '../gear-items/gear-items.service';
+import { attachConcertGear } from '../sessions/session-tool.core';
 import {
   readSessionForTool,
   resolveSessionId,
@@ -128,7 +131,9 @@ export function refuseCreationOnlyFields(fields: CreationOnlyFields): void {
 }
 
 export interface SessionPlanToolView {
-  readonly session: SessionToolView;
+  readonly session:
+    | SessionToolView
+    | (SessionToolView & { readonly gear: readonly GearItemToolView[] });
   readonly setlists: ReturnType<typeof projectSetlistsWithEntries>;
 }
 
@@ -137,16 +142,17 @@ export async function readSessionPlanForTool(
   now: Date,
 ): Promise<SessionPlanToolView | null> {
   const sessionId = await resolveSessionId(reference, now);
-  const [session, setlists, songs, names] = await Promise.all([
+  const [session, setlists, songs, names, gear] = await Promise.all([
     readSessionForTool(sessionId),
     listSetlistsOfSession(sessionId),
     getSongs(),
     readLineupNames(),
+    readGearItemsForTool(sessionId),
   ]);
   if (session === null) return null;
   const sessionEntries = await listEntriesOfSetlists(setlists.map((setlist) => setlist.id));
   return {
-    session,
+    session: attachConcertGear(session, gear),
     setlists: projectSetlistsWithEntries(setlists, sessionEntries, songs, names),
   };
 }

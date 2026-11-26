@@ -1,5 +1,6 @@
 /** @Feature sessions */
 
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -18,11 +19,11 @@ export interface ConcertReadViewSession {
   readonly id: string;
   readonly venue: string | null;
   readonly capacity: number | null;
-  readonly gear: string | null;
 }
 
 export interface ConcertReadViewProps {
   readonly session: ConcertReadViewSession;
+  readonly gearCard: ReactNode;
   readonly friendsCounts: Readonly<Record<string, number>>;
   readonly members: readonly ConcertReadViewMember[];
   readonly friendsTotal: number;
@@ -33,12 +34,13 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 // @FollowsBlueprint organism-presentational
 export function ConcertReadView({
   session,
+  gearCard,
   friendsCounts,
   members,
   friendsTotal,
 }: ConcertReadViewProps): JSX.Element {
   const { t } = useTranslation();
-  const { venue, capacity, gear } = session;
+  const { venue, capacity } = session;
   const isVenueFillShown = isCapacityKnown(capacity);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 items-start">
@@ -84,12 +86,7 @@ export function ConcertReadView({
             </div>
           ) : null}
         </Card>
-        <Card>
-          <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.gear')}</div>
-          <div className="font-display text-meta text-ink whitespace-pre-line italic">
-            {gear === null || gear.length === 0 ? '—' : gear}
-          </div>
-        </Card>
+        {gearCard}
       </div>
       <aside className="flex flex-col gap-4">
         <Card variant="sunk">

@@ -39,6 +39,7 @@ import { PracticeSongList } from './PracticeSongList';
 import { PracticeSongsSheet } from './PracticeSongsSheet';
 import { useOrderPracticeSongs, usePracticeSongs } from './practice-songs.hook';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
+import { ConcertGearCard } from './ConcertGearCard';
 import { ConcertReadView } from './ConcertReadView';
 import { SessionSetlistPreviews } from './SessionSetlistPreviews';
 import { SessionTakes } from './SessionTakes';
@@ -96,7 +97,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     () => ({
       venue: session.venue ?? '',
       capacity: session.capacity === null ? '' : String(session.capacity),
-      gear: session.gear ?? '',
       friends: friendsCounts,
     }),
     [session, friendsCounts],
@@ -155,7 +155,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         id: session.id,
         ...(trimmedVenue.length > 0 ? { venue: trimmedVenue } : {}),
         ...(trimmedCapacity.length > 0 ? { capacity: Number(trimmedCapacity) } : {}),
-        gear: payload.gear,
         friendsCountPerMember: payload.friends,
       },
       {
@@ -211,6 +210,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     ) : (
       <ConcertReadView
         session={session}
+        gearCard={<ConcertGearCard sessionId={session.id} />}
         friendsCounts={friendsCounts}
         members={members}
         friendsTotal={friendsTotal}

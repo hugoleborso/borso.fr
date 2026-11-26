@@ -70,6 +70,8 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
     'A signed audio address that expires within minutes, for the player of the song page; get_song names the Deezer track.',
   '* /api/outreach/*': NOT_FOR_ASSISTANTS,
   'POST /api/members': NOT_FOR_ASSISTANTS,
+  'POST /api/gear-items/:sessionId/copy':
+    "Reprendre is the gear page's one-tap shortcut; an assistant adds items with save_gear_item.",
   'PUT /api/members/:id': NOT_FOR_ASSISTANTS,
   'DELETE /api/members/:id': NOT_FOR_ASSISTANTS,
 });

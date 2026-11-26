@@ -72,5 +72,5 @@ pragma.borso.fr becomes a public page where anyone signs up for a concert with a
 - Spec: none, the scope was set in the session that wrote this record.
 - Plan: none.
 - Commit: stamped by /after-task-kaizen on merge.
-- Files: `apps/pragma/domain/registration-email.core.ts`, `apps/pragma/api/src/concert-registrations/concert-registrations.service.ts`, `apps/pragma/api/src/database/migrations/0032_concert_registration.sql`
+- Files: `apps/pragma/domain/registration-email.core.ts`, `apps/pragma/api/src/concert-registrations/concert-registrations.service.ts`, `apps/pragma/api/src/database/migrations/0034_concert_registration.sql`
 - Related ADRs: none.

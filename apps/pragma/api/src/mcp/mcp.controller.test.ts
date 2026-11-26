@@ -64,6 +64,7 @@ const SERVED_TOOLS = [
   'save_improvement',
   'list_tasks',
   'save_task',
+  'save_gear_item',
   'list_free_slots',
   'get_me',
   'update_me',

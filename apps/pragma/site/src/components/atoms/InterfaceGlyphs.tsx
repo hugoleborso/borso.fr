@@ -168,6 +168,8 @@ export const INTERFACE_GLYPHS = {
     </>
   ),
   check: <path d="M4 12l5 5L20 6" />,
+  pending: <circle cx="12" cy="12" r="9" />,
+  venue: <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />,
   copy: <path d="M9 9h11v11H9zM15 5V4H4v11h1" />,
   chart: <path d="M3 17l5-6 4 3 5-7 4 4M3 21h18" />,
   audience: (

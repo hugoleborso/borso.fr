@@ -16,6 +16,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   compositions: ['compositions'],
   'concert-registrations': ['concert-registrations'],
   'free-slots': ['free-slots'],
+  'gear-items': ['gear-items'],
   improvements: ['improvements'],
   inspirations: ['inspirations'],
   instruments: ['instruments'],
@@ -54,6 +55,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
   members: [
     'bars',
     'calendar-feeds',
+    'gear-items',
     'inspirations',
     'mastery',
     'oauth',
@@ -62,7 +64,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'streaks',
     'tasks',
   ],
-  sessions: ['concert-registrations', 'setlists', 'takes', 'tasks'],
+  sessions: ['concert-registrations', 'gear-items', 'setlists', 'takes', 'tasks'],
   songs: ['compositions', 'mastery', 'setlists', 'takes', 'tasks'],
 };
 
@@ -72,7 +74,7 @@ const CONTACT_ONLY_WRITES: Readonly<Record<string, readonly string[]>> = {
 
 const TOOL_ONLY_IMPORTS: Readonly<Record<string, readonly string[]>> = {
   me: ['streaks', 'studies'],
-  setlists: ['transitions'],
+  setlists: ['gear-items', 'transitions'],
 };
 
 interface SliceImport {

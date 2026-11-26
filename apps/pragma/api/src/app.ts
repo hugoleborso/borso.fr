@@ -35,6 +35,7 @@ import { buildStreaksRouter } from './streaks/streaks.controller';
 import { buildStudiesRouter } from './studies/studies.controller';
 import { buildTakesRouter } from './takes/takes.controller';
 import { buildTasksRouter } from './tasks/tasks.controller';
+import { buildGearItemsRouter } from './gear-items/gear-items.controller';
 import { buildTransitionCommentsRouter } from './transitions/transitions.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
 
@@ -91,6 +92,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/band-links', buildBandLinksRouter())
     .route('/api/outreach', buildOutreachRouter())
     .route('/api/tasks', buildTasksRouter())
+    .route('/api/gear-items', buildGearItemsRouter())
     .route('/api/studies', buildStudiesRouter())
     .route('/api/streaks', buildStreaksRouter())
     .route('/api/uploads', buildUploadsRouter())

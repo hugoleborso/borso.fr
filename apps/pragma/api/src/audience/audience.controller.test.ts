@@ -75,7 +75,6 @@ async function createConcert(app: Hono, cookieHeader: string): Promise<string> {
       date: new Date().toISOString(),
       venue: 'La Cave',
       capacity: 120,
-      gear: '',
     },
   });
   const body = await readJson(created, z.object({ session: z.object({ id: z.guid() }) }));

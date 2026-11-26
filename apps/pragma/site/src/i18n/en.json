@@ -512,6 +512,38 @@
       "openInGoogle": "Open in Google Calendar"
     }
   },
+  "gear": {
+    "title": "Gear",
+    "status": {
+      "to_find": "To find",
+      "asked_of_venue": "Asked of the venue",
+      "have": "I have it"
+    },
+    "mine": "Me",
+    "mineLabel": "Only what I have",
+    "add": "Add an item",
+    "editTitle": "Edit the item",
+    "item": "Item",
+    "holderLegend": "Who has it",
+    "memberHas": "{{name}} has it",
+    "cycle": "Change who has {{label}}",
+    "edit": "Edit {{label}}",
+    "copy": "Reuse {{source}} · {{count}}",
+    "empty": "No gear listed for this concert yet.",
+    "refusal": {
+      "empty": "Name the item.",
+      "tooLong": "This name is too long."
+    },
+    "saveFailed": "The item could not be saved. Try again.",
+    "writeFailed": "The change could not be saved. Try again.",
+    "summary": {
+      "open": "Open",
+      "empty": "Nothing listed yet.",
+      "toFind": "{{count}} to find",
+      "have": "{{count}} we have",
+      "venue": "{{count}} venue"
+    }
+  },
   "sessions": {
     "addTask": "Add a task",
     "capacity": "Capacity",

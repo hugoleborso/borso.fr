@@ -58,12 +58,6 @@ export function projectTasksForTool(
     }));
 }
 
-const SELF_REFERENCE = 'me';
-
-export function isSelfReference(reference: string): boolean {
-  return reference.trim().toLowerCase() === SELF_REFERENCE;
-}
-
 export interface TaskLinks {
   readonly assigneeId?: string | null;
   readonly songId?: string | null;

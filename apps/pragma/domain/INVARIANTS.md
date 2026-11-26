@@ -43,6 +43,19 @@ Held by: `domain/lineup.core.test.ts` › keeps default members not mentioned in
 Held by: `domain/lineup.core.test.ts` › answers one pair per instrument held
 Held by: `api/src/members/members.controller.test.ts` › scrubs the member from every song default lineup and setlist entry override on delete
 
+## Gear status
+
+- Exactly three values, in the order a concert's gear page draws them:
+  `to_find`, `asked_of_venue`, `have`. `to_find` is the default
+  (`DEFAULT_GEAR_STATUS`).
+- A holding pairs a status with a member: `memberId` is set if and only if
+  the status is `have` (`isGearHoldingValid`).
+- A tap on an item's mark moves it `to_find` → `asked_of_venue` → `have`,
+  held by the member who taps, → `to_find` (`nextGearHoldingAfterTap`).
+
+Held by: `domain/gear-status.core.test.ts` › holds a member only when the status is have
+Held by: `domain/gear-status.core.test.ts` › moves a tapped item from to find to the venue, to the tapper, then back to find
+
 ## Derived read root
 
 - A slice's row lists every slice its services and repositories import,

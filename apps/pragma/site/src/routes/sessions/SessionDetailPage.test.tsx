@@ -18,7 +18,6 @@ const CONCERT = {
   date: '2026-11-01T19:00:00.000Z',
   venue: 'Le Petit Bain',
   capacity: null,
-  gear: null,
   friendsCountPerMember: {},
   preparedConcertId: null,
 };
@@ -40,6 +39,19 @@ const OTHER_SETLIST = {
 
 const sessionSetlists: { current: readonly (typeof SESSION_SETLIST)[] } = { current: [] };
 
+const CONCERT_GEAR = [
+  { status: 'have', memberId: 'ffffffff-6666-4666-8666-666666666666' },
+  { status: 'asked_of_venue', memberId: null },
+  { status: 'to_find', memberId: null },
+  { status: 'to_find', memberId: null },
+].map((holding, position) => ({
+  ...holding,
+  id: `0000000${String(position)}-7777-4777-8777-777777777777`,
+  sessionId: CONCERT.id,
+  label: `Item ${String(position)}`,
+  position,
+}));
+
 function answerSessionApi(request: Request): Response {
   const { pathname } = new URL(request.url);
   if (pathname === `/api/sessions/${CONCERT.id}`) return jsonResponse({ session: CONCERT });
@@ -50,6 +62,9 @@ function answerSessionApi(request: Request): Response {
   }
   if (pathname === '/api/tasks') return jsonResponse({ tasks: [] });
   if (pathname === '/api/songs') return jsonResponse({ songs: [] });
+  if (pathname === `/api/gear-items/${CONCERT.id}`) {
+    return jsonResponse({ items: CONCERT_GEAR, copySource: null });
+  }
   if (pathname.includes('setlists')) return jsonResponse({ setlists: sessionSetlists.current });
   return new Response(null, { status: 404 });
 }
@@ -140,6 +155,17 @@ describe('the concert page', () => {
     expect(await screen.findByText(/^Sun, Nov 1, 2026 · 20:00/)).toBeTruthy();
   });
 
+  it('sums the gear up on the details and opens the gear page from it', async () => {
+    renderSessionPage();
+    fireEvent.click(await screen.findByRole('tab', { name: 'Details' }));
+    const card = await screen.findByRole('link', { name: /^Gear/ });
+    expect(await within(card).findByText('1 we have')).toBeTruthy();
+    expect(within(card).getAllByText(/2 to find/)).toHaveLength(2);
+    expect(card.getAttribute('href')).toBe(`/sessions/${CONCERT.id}/gear`);
+    expect(within(card).getByText('1 venue')).toBeTruthy();
+    expect(screen.queryByLabelText('Gear')).toBeNull();
+  });
+
   it('opens the details when Edit is tapped', async () => {
     renderSessionPage();
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
@@ -153,7 +179,6 @@ const PRACTICE = {
   date: '2099-01-10T18:00:00.000Z',
   venue: null,
   capacity: null,
-  gear: null,
   friendsCountPerMember: null,
   preparedConcertId: null,
 };
@@ -348,6 +373,16 @@ describe('the practice page', () => {
     const choose = await screen.findByRole('button', { name: 'Choose songs' });
     expect(choose.dataset.variant).toBe('primary');
     expect(screen.queryByRole('link', { name: 'Open the setlist' })).toBeNull();
+  });
+
+  it('asks for no gear, since only a concert holds a gear list', async () => {
+    renderPracticePage();
+    fireEvent.click(await screen.findByRole('tab', { name: 'Details' }));
+    await screen.findByText('Prepared concert');
+    const gearReads = (stub?.calls ?? []).filter((request) =>
+      new URL(request.url).pathname.startsWith('/api/gear-items'),
+    );
+    expect(gearReads).toStrictEqual([]);
   });
 
   it('pools the songs of the picked concerts and saves the ticked ones as its songs', async () => {

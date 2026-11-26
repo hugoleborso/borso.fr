@@ -42,6 +42,7 @@ describe('which roots an assistant tool tells the open tabs it wrote', () => {
   it('sends the roots of a writing tool’s own routes, never everything', () => {
     expect(selectToolWrittenRoots(getTool('reorder_setlist'))).toStrictEqual(['setlists']);
     expect(selectToolWrittenRoots(getTool('save_task'))).toStrictEqual(['tasks']);
+    expect(selectToolWrittenRoots(getTool('save_gear_item'))).toStrictEqual(['gear-items']);
     expect(selectToolWrittenRoots(getTool('set_song_mastery'))).not.toContain('all');
   });
 });

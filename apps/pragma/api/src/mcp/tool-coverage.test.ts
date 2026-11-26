@@ -6,7 +6,7 @@ import { compareRoutesWithTools, TOOL_EXCLUSIONS } from './tool-coverage.core';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const TEST_SEED_FLAG_ON = '1';
-const TOOL_COUNT = 36;
+const TOOL_COUNT = 37;
 const TOOL_NAME_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 function listPositionalItems(schema: unknown, path: string): string[] {

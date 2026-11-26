@@ -1,6 +1,5 @@
 import {
   CONCERT_CAPACITY_MAX,
-  CONCERT_GEAR_MAX_LENGTH,
   CONCERT_VENUE_MAX_LENGTH,
   FRIENDS_PER_MEMBER_MAX,
 } from '@domain/input-limits.core';
@@ -17,7 +16,6 @@ export const sessionTable = pgTable('session', {
   preparedConcertId: uuid('prepared_concert_id'),
   venue: text('venue'),
   capacity: integer('capacity'),
-  gear: text('gear'),
   friendsCountPerMember: text('friends_count_per_member'),
   origin: text('origin'),
   posterS3Key: text('poster_s3_key'),
@@ -37,7 +35,6 @@ const concertFieldShape = {
   date: z.iso.datetime(),
   venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
   capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
-  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
   friendsCountPerMember: friendsCountSchema,
 };
 
@@ -51,7 +48,6 @@ const practiceFieldShape = {
 export const concertCreateSchema = z
   .object({
     ...concertFieldShape,
-    gear: concertFieldShape.gear.default(''),
     friendsCountPerMember: concertFieldShape.friendsCountPerMember.default({}),
   })
   .strict();
@@ -86,7 +82,6 @@ export const sessionPersistedUpdateSchema = z
     date: z.date(),
     venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
     capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
-    gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
     friendsCountPerMember: friendsCountSchema,
     preparedConcertId: z.guid().nullable(),
   })
