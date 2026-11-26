@@ -44,6 +44,7 @@ describe('listSettingsHookCommands', () => {
       }),
     ).toEqual([]);
     expect(listSettingsHookCommands({ hooks: { Stop: 'x' } })).toEqual([]);
+    expect(listSettingsHookCommands('hooks')).toEqual([]);
   });
 });
 
@@ -87,5 +88,45 @@ describe('listToolsNoMatcherReaches, so a check never sits behind a matcher that
     };
 
     expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual([]);
+  });
+
+  it('skips a check on every tool even behind a narrow matcher, and reads a group with no matcher as every tool', () => {
+    const settings = {
+      hooks: {
+        PreToolUse: [{ matcher: 'Bash', hooks: [{ command: HOOK_COMMAND }] }],
+        PostToolUseFailure: [{ hooks: [{ command: HOOK_COMMAND }] }],
+      },
+    };
+    const checksByEvent = {
+      ...NO_CHECKS,
+      PreToolUse: [checkOn(null)],
+      PostToolUseFailure: [checkOn(/^Bash$/u)],
+    };
+
+    expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual([]);
+  });
+
+  it('reads a source that is not anchored as written', () => {
+    const settings = {
+      hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ command: HOOK_COMMAND }] }] },
+    };
+    const checksByEvent = { ...NO_CHECKS, PreToolUse: [checkOn(/a\^b/u), checkOn(/^(a\$b)$/u)] };
+
+    expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual([
+      'PreToolUse a\\^b',
+      'PreToolUse a\\$b',
+    ]);
+  });
+
+  it('counts only the matchers of the check event, read as unicode patterns', () => {
+    const settings = {
+      hooks: {
+        PreToolUse: [{ matcher: '\\p{Lu}kill', hooks: [{ command: HOOK_COMMAND }] }],
+        PostToolUse: [{ matcher: 'Bash', hooks: [{ command: HOOK_COMMAND }] }],
+      },
+    };
+    const checksByEvent = { ...NO_CHECKS, PreToolUse: [checkOn(/^(Bash|Skill)$/u)] };
+
+    expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual(['PreToolUse Bash']);
   });
 });

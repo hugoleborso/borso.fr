@@ -15,6 +15,7 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 function readArray(value: unknown): readonly unknown[] {
+  // Stryker disable next-line ArrayDeclaration: every caller reads only records from the list, and a placeholder string is not one, so no outcome can tell it from an empty list
   return Array.isArray(value) ? value : [];
 }
 
