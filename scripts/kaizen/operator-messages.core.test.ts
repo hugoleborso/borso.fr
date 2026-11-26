@@ -90,30 +90,18 @@ describe('selectOperatorMessages on what the harness files as user events', () =
     ).toEqual([{ at: AT, text: answer, isAnswer: true }]);
   });
 
-  it("drops the brief a subagent received, which carries the subagent's id", () => {
-    const brief = {
+  it.each([
+    ["the brief a subagent received, which carries the subagent's id", { agent_id: 'a26' }],
+    [
+      'a prompt another session seeded, which the harness marks as not typed',
+      { text_not_typed: true },
+    ],
+  ])('drops %s', (_, marker) => {
+    const event = {
       created_at: AT,
-      user: {
-        internal_anthropic_catchall: {
-          agent_id: 'a262a8e3d12f00868',
-          message: { content: 'You are validating a feature spec' },
-        },
-      },
+      user: { internal_anthropic_catchall: { ...marker, message: { content: 'Brief' } } },
     };
-    expect(selectOperatorMessages(page(brief))).toEqual([]);
-  });
-
-  it('drops the prompt another session seeded, which the harness marks as not typed', () => {
-    const seed = {
-      created_at: AT,
-      user: {
-        internal_anthropic_catchall: {
-          text_not_typed: true,
-          message: { content: 'Run `/after-task-kaizen` on #406' },
-        },
-      },
-    };
-    expect(selectOperatorMessages(page(seed))).toEqual([]);
+    expect(selectOperatorMessages(page(event))).toEqual([]);
   });
 });
 

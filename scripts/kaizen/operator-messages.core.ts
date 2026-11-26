@@ -74,13 +74,8 @@ export function selectOperatorMessages(page: unknown): OperatorMessage[] {
   return parsed.data.data.flatMap((raw): OperatorMessage[] => {
     const event = userEventSchema.safeParse(raw);
     const catchall = event.success ? event.data.user.internal_anthropic_catchall : undefined;
-    if (
-      !event.success ||
-      catchall?.isSynthetic === true ||
-      catchall?.text_not_typed === true ||
-      catchall?.agent_id !== undefined
-    )
-      return [];
+    const isNotTyped = catchall?.isSynthetic === true || catchall?.text_not_typed === true;
+    if (!event.success || isNotTyped || catchall?.agent_id !== undefined) return [];
     const message = event.data.user.message ?? event.data.user.internal_anthropic_catchall?.message;
     const content = message?.content;
     const typedRaw = readTyped(content);
