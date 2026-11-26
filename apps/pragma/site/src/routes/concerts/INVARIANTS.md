@@ -7,7 +7,9 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
 - The page shows the next concert only, the first one the API lists, as a
   ticket. With a poster, the whole poster shows uncropped above the date
-  band. Without one, the date band is the top of the ticket. The venue
+  band. On a phone the poster shrinks, never cropped, so the ticket down to
+  its prize coupon, or its venue without a prize, ends above "Je serai là !".
+  Without one, the date band is the top of the ticket. The venue
   links to a Google Maps search for it. The message sits right under the
   venue, except on a phone when the concert has a poster, where it moves
   after the prize coupon. The prize coupon shows only when the concert has
@@ -48,6 +50,7 @@ Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › says the em
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › asks for a real email under the field when the address is a throwaway one
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows only the next concert, its venue as a map search, its message and its prize, and no way to the members area
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › moves the message after the prize coupon on a phone only when the concert has a poster
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › caps the poster on a phone to the screen the ticket and the button leave, tighter with a prize
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows no prize coupon when the concert has none
 Held by: `site/src/routes/concerts/concert-ticket.core.test.ts` › opens a map search for the venue as typed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows a concert already signed up for in this browser as done
