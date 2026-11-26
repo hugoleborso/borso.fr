@@ -11,6 +11,14 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## When to invoke
 
+**First, decide whether a sweep is worth running.** It is when the task left
+something to learn: a line in the archived friction log, an operator message
+that corrected or redirected the session, a CI run that went red, or a FAIL or
+UNVERIFIABLE row in a validation report. When none of these happened, run no
+sweep and open no pull request. The merge reply says "No kaizen" with that
+evidence. The operator asked for this on 2026-11-26, after the sweep of
+PR #407 offered a sweep of PR #408, which had none of them.
+
 **Where it runs depends on the shipping session's context.** After the merge,
 that session reads its own `get_session` `context_usage.used_tokens`.
 
@@ -336,14 +344,6 @@ kaizen pull request without asking when `pnpm exec tsx scripts/pr/deploy-fanout.
 origin/main HEAD` prints no application and the sweep leaves the operator no
 decision, in its body or in an entry. The operator granted this on 2026-11-14. A kaizen that changes an app's
 code, which a root cause often calls for, waits for his merge like any other.
-
-### 6. Even if there are zero lessons
-
-Still open the PR with a CLAUDE.md-aligned commit:
-`docs: no setup changes from PR #<N>`. Body: one paragraph noting
-what the PR shipped and confirming no defect / surprise / pivot /
-operator-confusion came up worth capturing. The loop's *existence*,
-not its volume, is what keeps the system improving.
 
 ## Hard rules
 
