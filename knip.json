@@ -18,6 +18,7 @@
         "scripts/knip/*.ts",
         "scripts/mockup/*.ts",
         "scripts/kaizen/*.ts",
+        "scripts/hooks/hook.ts",
         "scripts/**/*.test.ts",
         "eslint-rules/js-plugins/*.js",
         "eslint-rules/**/*.test.js"
