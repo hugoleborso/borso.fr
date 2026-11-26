@@ -48,6 +48,11 @@ const ACTIONS_CLASS =
   'pb-[max(28px,env(safe-area-inset-bottom))] md:static md:mt-auto md:bg-none md:px-12 md:pt-9 md:pb-9';
 const COUPON_CLASS =
   'block p-2 bg-highlight text-on-highlight md:rounded-bl-none md:rounded-br-sheet-inset';
+const POSTER_IMAGE_CLASS = 'block h-auto w-full object-contain';
+const POSTER_FIT_CLASS = {
+  withPrize: 'max-md:max-h-[calc(100dvh-365px-max(28px,env(safe-area-inset-bottom)))]',
+  withoutPrize: 'max-md:max-h-[calc(100dvh-275px-max(28px,env(safe-area-inset-bottom)))]',
+} as const;
 const COUPON_STUB_CLASS =
   'flex items-center gap-3.5 rounded-stub border-[1.5px] border-dashed border-ink px-3 py-2 ' +
   'md:px-9.5 md:py-2.5';
@@ -226,7 +231,10 @@ export function ConcertTicket({ concert, actions }: ConcertTicketProps): JSX.Ele
           <PreviewImage
             source={concert.posterUrl}
             alternativeText={t('concerts.posterAlt', { venue: concert.venue ?? '' })}
-            className="block h-auto w-full object-contain"
+            className={composeClassName(
+              POSTER_IMAGE_CLASS,
+              POSTER_FIT_CLASS[concert.prize === null ? 'withoutPrize' : 'withPrize'],
+            )}
           />
         </div>
       )}

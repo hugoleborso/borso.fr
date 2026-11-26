@@ -115,6 +115,22 @@ describe('the public concert sign-up page', () => {
     expect((await screen.findByText(/Entrée libre/)).className).toContain('max-md:order-last');
   });
 
+  it('caps the poster on a phone to the screen the ticket and the button leave, tighter with a prize', async () => {
+    const posterUrl = 'https://cdn.example/poster.png';
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, posterUrl }],
+    });
+    const cappedWithPrize = (await screen.findByAltText(/Le Pop-Up du Label/)).className;
+    cleanup();
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, posterUrl, prize: null }],
+    });
+    const cappedWithoutPrize = (await screen.findByAltText(/Le Pop-Up du Label/)).className;
+    expect(cappedWithPrize).toContain('object-contain');
+    expect(cappedWithPrize).toContain('max-md:max-h-[calc(100dvh-365px-');
+    expect(cappedWithoutPrize).toContain('max-md:max-h-[calc(100dvh-275px-');
+  });
+
   it('shows no prize coupon when the concert has none', async () => {
     renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
       concerts: [{ ...NEXT_CONCERT, prize: null, message: null }],
