@@ -1,0 +1,67 @@
+# Friction inventory of PR #410
+
+PR #410 shipped pragma's concert sign-up page and moved the ERP to `/app`. Its
+session ended at 810,875 tokens of context, above the 150,000 threshold
+(measured, `get_session` `context_usage.used_tokens`), so this sweep ran in
+its own session.
+
+Inputs: the 26 lines the merge added to
+`docs/features/pragma/concert-sign-up/kaizen.md` (`scripts/kaizen.sh
+sweep-input cf9fb626a`), five lines logged after the archive, the operator's
+messages (`scripts/kaizen/operator-messages.ts` over 61 listed pages), the
+19 commits, both technical reports and the visual report. No kaizen pull
+request was open. The PR's two comments are bot posts.
+
+Writers of the archived and late lines: `main` 4, `api-agent` 2,
+`site-agent` 2, `fix-agent` 2, `build-agent` 3, `visual-validator` 2,
+`technical-validator` 3, `fix2-agent` 2, `perforation-agent` 3, `trim-agent`
+1, hooks 9. Every agent logged under its own label.
+
+| # | When | Friction | Sources / evidence | Cause | Elsewhere | Decision |
+| --- | --- | --- | --- | --- | --- | --- |
+| 01 | conception | The session built API and site before any mockup. The operator asked "J'ai pas vu les maquettes ?" | transcript 10:31; commits `597151d` 09:39, spec `209394a` 10:03 | No `/route` run, so no Tier 2 and no `/specification` mockup round | `.claude/skills/route/SKILL.md` is not enforced at the moment a build agent spawns | dantotsu: the-deadline-that-skipped-the-mockups |
+| 02 | conception | The operator asked why `/route` was skipped, and the session gave no cause | transcript 09:48, 09:50 | A why answered with "no good reason" | CLAUDE.md had no rule on answering a why | no-op: fixed in PR #410 by `77daf04` ("Answer a why with its cause") |
+| 03 | implementation | Two build agents wrote in the shared checkout | log `main` 09:35; transcript 09:35 "Normalement tu les lances en worktree isolé non ?" | CLAUDE.md described one shared checkout while `/route` asked for worktrees | After `77daf04`, `/route`'s *Parallel agents* still said "Tier 3 means several agents in one checkout", the reverse of CLAUDE.md | fixed: this sweep deletes that section, so CLAUDE.md holds the rule alone |
+| 04 | implementation | The Stop hook asked to commit and push while subagents were still writing | late log `main`; this sweep hit the same hook | The hook is the environment's (`/root/.claude/stop-hook-git-check.sh`), outside the repo | Agents writing in the shared checkout | no-op: worktree isolation from `77daf04` keeps agent files out of the shared checkout the hook reads |
+| 05 | implementation | A subagent ran a git command that writes the shared index | log `hook:subagent-no-staging` 09:44 | Shared checkout | Row 03 | merge into row 03 |
+| 06 | conception | The operator asked for a library to detect duplicate emails, and the session first went without one | transcript 09:24, 09:25 "Pourquoi sans ajouter de lib alors que je te l'ai demandé ?" | CLAUDE.md read as "a new dependency is a decision to surface", so the session avoided one (inferred) | `CLAUDE.md` *Before writing code* | fixed: CLAUDE.md now says the operator asking for a library is his decision, so write the ADR |
+| 07 | conception | The loading screen should be pragma's "on s'accorde" | transcript 09:25 | A product detail the first brief lacked | none, product direction | no-op: direction with no lesson |
+| 08 | conception | The ERP host question was asked and answered | transcript 09:21 (answer) | An open decision | none | no-op: asked as it should be |
+| 09 | conception | The public page went in an infinite scroll instead of a tab, "encore" | transcript 10:33 | The tab rule is in `docs/standards/05-frontend-architecture.md` and no mockup round applied it | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 10 | conception | The large screen, a prize design, and a form shown only after "Je serai là" were missing | transcript 10:33 | No mockup round | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 11 | conception | The operator found the mockup proposals unclear | transcript 12:42 | No mockup round before code | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 12 | conception | A layout without a poster must still look good | transcript 12:42 | Product direction | none | no-op: direction, shipped in `8144b86` |
+| 13 | conception | Date and hour must be very visible. Show only the next concert. No members link. Upload the poster | transcript 12:57 to 12:59 | Product direction the first brief lacked | none | no-op: direction, shipped in `8144b86` |
+| 14 | conception | The date overlapped on the mockup, twice, then "Problème de marges !" | transcript 13:00; comments 13:55, 13:58; log `main` 14:00 | Boards edited by regex were published without rendering | `pretool-mockup-copy.sh` counts words but renders nothing. A `.dc.html` uses template holes the Design type fills, so a local render check is unproven | merge into the-deadline-that-skipped-the-mockups, which says no removal is proven yet |
+| 15 | conception | "C'est noté, Camille ! / Facultatif / Tu viens pour qui ?" was unclear to a fan | transcript 13:00; log `main` 13:00 | A label and a question with no context | none: no gate judges clarity, and the operator removed the intro at 13:55 | no-op: fixed in `8144b86`. A clarity gate cannot be measured |
+| 16 | conception | Artifact comments asked for an icon choice, a few icons, no crop, venue to maps, remember the device, sign up a friend | comments 13:56 to 13:58 | Product direction | none | no-op: direction, shipped in `8144b86` |
+| 17 | implementation | Album covers in the wish search, Deezer confirmed | transcript 15:43, 15:44 | Direction | none | no-op: shipped in `4986e38` |
+| 18 | implementation | The dashed separators looked odd, and ticket variants followed | transcript 15:44 to 16:23 | Design iteration | none | no-op: direction, shipped in `12c154c` |
+| 19 | implementation | Screenshots showed a white border around the poster | transcript 16:43 | The PDF trim stopped at 245 | none | no-op: fixed in `c09c9bd` |
+| 20 | post-merge | Improvement idea and a video for members were asked | transcript 16:21, 16:24 | Direction | none | no-op: direction with no lesson |
+| 21 | implementation | The contract named a new header but not `domain/request-headers.core.ts` | log `api-agent` 09:35 | A brief that listed the header and not its registry | none: all three header constants derive from `PRAGMA_REQUEST_HEADERS` (`grep -rn "= PRAGMA_REQUEST_HEADERS\."`), and the writer caught it before commit | no-op: caught at write time by the registry the code already uses |
+| 22 | implementation | A new API slice must also be registered in three structural gates | log `api-agent` 09:35 | The gates exist to force that decision per slice | none: each test names the decision it asks for | no-op: the gates did their job before push |
+| 23 | implementation | The 5-minute stale time and the persisted cache hid a saved message and a wished song | log `site-agent` 09:47 | Public reads have no realtime invalidation | none | no-op: fixed in PR #410 (`STALE_ON_EVERY_VISIT_MS` in `concert-registrations.queries.ts`) |
+| 24 | implementation | One invariants file per vocabulary term, learned after writing three sections | logs `site-agent` 09:47, `fix-agent` 10:43 (two writers) | The rule lives only in `check-vocabulary-paths.sh` | none | knowledge: an-invariants-heading-is-a-vocabulary-term |
+| 25 | implementation | Exporting a shared constant from `domain/` flagged four untouched site files | log `fix-agent` 10:43 | The lint rule found the copies it exists to find | none | no-op: `no-api-declaration-repeated-in-site` did its job |
+| 26 | validation | The PR was opened without a technical, then a visual, report | logs `hook:api-validation` 10:02, `hook:visual-validation` 10:53 | The pipeline order was skipped | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 27 | validation | The spec had a third shape the validator does not describe, and the plan was absent | log `technical-validator` 10:07; reports A00 UNVERIFIABLE twice | A spec written after the code, no plan | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 28 | validation | Round 1 found seven gaps: reminder link to `/`, missing tests for skip, manifest, rate limits, a race on delete, a transaction, a form | `technical-validation-2026-11-26-1003.md` A20, D14, D27, D31, E02, B16, B19 | No plan mapped each use case to a test | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 29 | validation | Round 2 failed on a mutant and on untested PDF and answers paths | `technical-validation-2026-11-26-1444.md` C03, D21, D34 | Same | Row 01 | merge into the-deadline-that-skipped-the-mockups |
+| 30 | validation | Visual FAIL on French hours, message position and a remembered sign-up | `visual-validation-2026-11-26-1444.md` rows 08, 10, 26 | Product details settled after the code | none | no-op: fixed in `b816a40` |
+| 31 | validation | The visual validator named row 26's symptom, not its cause, a card seeded from `useState` without a key per concert | log `fix2-agent` 15:11 | `useState` initialisers run once per mount | none: one instance, fixed with `key={nextConcert.sessionId}` | no-op: fixed in `b816a40`. A cross-file rule on `key` is not checkable by one-file lint |
+| 32 | validation | Poster rows returned 500 under the local dev server | logs `build-agent` 14:34, `visual-validator` 14:51, late `perforation-agent` (three writers) | `dev:api` sets no `UPLOADS_BUCKET`, and a dummy name cannot sign without credentials (measured) | none | knowledge: pragma-local-dev-has-no-uploads-bucket |
+| 33 | validation | `network route` cannot mock a read inside pragma's read-batch | log `build-agent` 14:34 | Reads go through one POST | none | knowledge: agent-browser-cli-quirks (extended) |
+| 34 | validation | react-aria `RadioButton` ignored `aria-label` | log `build-agent` 14:34 | `RadioField` builds the input's props (read in source) | none | knowledge: react-aria-split-radio-reads-its-name-from-radiofield |
+| 35 | validation | `fill @ref ""` printed Done and left the input unchanged | log `visual-validator` 14:51 | agent-browser behaviour | none | knowledge: agent-browser-cli-quirks (extended) |
+| 36 | validation | A relative screenshot path wrote into another agent's folder | late log `perforation-agent` | The daemon resolves paths against its own cwd | none | knowledge: agent-browser-cli-quirks (extended) |
+| 37 | validation | A jsdom `File` as a `Request` body threw in `makeCompatBlob` | log `fix2-agent` 15:11 | jsdom and Node blob types differ (inferred) | none | knowledge: jsdom-file-as-request-body-throws-in-vitest |
+| 38 | validation | `vitest --changed` seemed to skip a test, then the line was retracted | logs `technical-validator` 14:54 twice | The validator misread its own log | none | no-op: retracted by its writer |
+| 39 | implementation | `pkill` or `killall` refused twice | logs `hook:no-broad-kill` 13:02, 14:40 | The hook refused as designed | none | no-op: the guard held |
+| 40 | implementation | Prettier refused | log `hook:no-prettier` 15:02 | The hook refused as designed | none | no-op: the guard held |
+| 41 | implementation | pre-push refused a branch that conflicted with `main` | log `hook:pre-push-conflict` 09:40; merge `3bff1c8` | `main` moved | none | no-op: the guard held, merge resolved |
+| 42 | implementation | `no-arbitrary-tailwind-value` banned `rounded-[…]`, so radius tokens were added | late log `perforation-agent` | The rule asks for a token | none | no-op: the rule did its job |
+| 43 | implementation | A brief pointed to `build-agent/notes.md`, which did not exist | late log `trim-agent` | A brief naming a file nobody wrote | none: one slip, the agent found `convert.js` | no-op: one brief slip, recovered by its reader |
+| 44 | post-merge | The reader of the operator's messages hand-parsed 61 pages | log `transcript-reader` this sweep | My brief did not name `scripts/kaizen/operator-messages.ts`, which reads them (measured) | none | no-op: retracted in this sweep's log, the script exists |
+| 45 | post-merge | This sweep's first commit carried the swept PR's session trailer | commitlint refusal this sweep | I copied the trailer from a commit | none | no-op: `claude-session-is-this-session` refused it |
+| 46 | post-merge | The email dedup ADR was still `proposed` | `docs/adr/2026-11-26T0937-…` | No step stamps it but this sweep | none | fixed: stamped `accepted` in this sweep |

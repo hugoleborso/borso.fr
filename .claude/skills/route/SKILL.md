@@ -48,7 +48,7 @@ Use a Workflow, not a chain. The shape that fits this repository:
 - one agent per application or per dimension, in parallel
 - a barrier only where a later stage genuinely needs every earlier result at once
 - an adversarial verify pass on anything the agents claim to have found
-Give each agent a **disjoint file ownership list** and tell it not to commit. See *Parallel agents* below, which is not optional advice here.
+Give each agent a **disjoint file ownership list**, and follow CLAUDE.md's *Parallel agents*.
 
 ## Escalate when you find out you were wrong
 
@@ -62,15 +62,6 @@ Sizing happens before the work, so it is sometimes wrong. These are the signals,
 A feature is one branch and one pull request at every tier. Slices are commits on that branch, never pull requests stacked on each other. The operator reviews a feature on one preview and merges it at once, and PR #216's seven stacked pull requests were rejected for that reason.
 
 De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add the field and render it" is a Tier 1; say so and drop the ceremony.
-
-## Parallel agents
-
-Tier 3 means several agents in one checkout, and that has two failure modes this repository has already hit:
-
-- **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself — and while any agent is still running, stage explicit paths rather than `git add -A`, or you will sweep its half-written files into a commit about something else. That is the same failure from the dispatcher's side and it is the easier one to hit, because `git add -A` is the reflex.
-- **Whole-repository generators.** `blueprint-indexing.ts` and `convention-drift.ts` read the entire tree and have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
-
-- **One app, half-built by others.** While several agents change one app, its typecheck and lint stay red on whoever is mid-change, so a whole-app run proves nothing about one agent's files. Tell each agent to check only its own: `scripts/lint-staged-files.sh <its files>` lints them with every rule, and the app's `pnpm typecheck` output filtered with `grep -F -e <file>` per file reads its type errors. Three of PR #354's agents rebuilt that filter by hand.
 
 ## Write the task list
 

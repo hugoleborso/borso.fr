@@ -42,7 +42,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 - Before a new file in `apps/`, run `scripts/reports.sh blueprints`, copy the blueprint for that layer from `.claude/skills/blueprint/blueprint-index.md`, and mark the code `// @FollowsBlueprint <id>`.
 - Read `apps/<app>/VOCABULARY.md` before naming a type, column, function or file, and the `INVARIANTS.md` of each folder you change before changing its rules. Repository terms are in `docs/VOCABULARY.md`.
 - A file name ends in its layer's suffix (`.service.ts`, `.core.ts`, `.queries.ts`, the rest in `docs/standards/01-naming.md`).
-- Reuse first. Look in this repo, then installed packages, then a maintained library. A new dependency is an ADR decision, so surface it.
+- Reuse first. Look in this repo, then installed packages, then a maintained library. A new dependency is an ADR decision. When the operator asks for a library, that is his decision, so write the ADR.
 
 ## Hard rules
 

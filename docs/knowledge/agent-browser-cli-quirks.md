@@ -315,6 +315,27 @@ it, so it is missing from the image: a 40 px box with an 8 px ring gave a
 a ring, such as Skull King's highlighted porthole, screenshot a parent with
 room around the element, or the viewport.
 
+## `fill @ref ""` prints `Done` and leaves a controlled input unchanged
+
+Logged by PR #410's `visual-validator`. Filling a React-controlled input with
+an empty string changed nothing, so a clear-and-save test read as a save that
+ignored empty fields. Read the field back with `get value <ref>` before
+judging the save. A select-all then `press Backspace` may clear it (not tested).
+
+## A screenshot with a relative path lands in the daemon's folder
+
+Logged by PR #410's `perforation-agent`. `agent-browser screenshot shot.png`
+resolves the path against the daemon's working directory. That was another
+agent's folder, because the daemon was started there. Pass an absolute path.
+
+## A routed read inside pragma's read-batch cannot be mocked alone
+
+Logged by PR #410's `build-agent`. pragma sends its reads in one
+`POST /api/read-batch`, so `network route` on `/api/concert-registrations/upcoming`
+never matches. Faking one answer took an init script that rewrites `fetch`,
+then a fresh session, because `--init-script` is ignored by a running daemon
+(see above).
+
 ## Related
 
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md)
