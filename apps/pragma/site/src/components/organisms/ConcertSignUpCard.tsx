@@ -6,6 +6,7 @@ import {
   type RegisterVariables,
   type UpcomingConcert,
   useRegisterForConcert,
+  useRememberedRegistrationCheck,
 } from '../../lib/queries/concert-registrations.queries';
 import { readStoredRegistration } from '../../lib/registration-token.adapter';
 import {
@@ -42,7 +43,8 @@ export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Elem
   const { t, i18n } = useTranslation();
   const isOnline = useIsOnline();
   const signUp = useRegisterForConcert();
-  const [isRemembered] = useState(() => readStoredRegistration(concert.sessionId) !== null);
+  const [storedRegistration] = useState(() => readStoredRegistration(concert.sessionId));
+  const rememberedCheck = useRememberedRegistrationCheck(concert.sessionId, storedRegistration);
   const [hasSignedUpHere, setHasSignedUpHere] = useState(false);
   const [isSignUpRequested, setIsSignUpRequested] = useState(false);
   const [draft, setDraft] = useState<SignUpFormValues>(EMPTY_SIGN_UP);
@@ -55,6 +57,7 @@ export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Elem
     hasOpened,
     hasLeft,
   });
+  const isRemembered = storedRegistration !== null && rememberedCheck.data?.isStanding !== false;
   const isRegistered = isRemembered || hasSignedUpHere;
   const isSheetShown = isSignUpSheetShown(isSignUpRequested, screen);
   const sheetTitle = t('concerts.signUpSheetTitle', {

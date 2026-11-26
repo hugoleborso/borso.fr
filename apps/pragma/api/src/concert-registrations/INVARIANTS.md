@@ -51,6 +51,16 @@ Held by: `api/src/concert-registrations/concert-registrations.core.test.ts` › 
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › shows the public only the id, first name and colour of each member
 Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address, a ballot token or a fan email
 
+- A member removes one registration of one concert
+  (`didDeleteRegistrationOfConcert`). It answers 204, or 404
+  `unknown-registration` when that concert holds no such registration, so
+  an id from another concert removes nothing. The wished song stays in the
+  catalogue, and leaves the fan wishes unless another registration still
+  wishes it. The mailbox can sign up again.
+
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › removes a registration of its concert only, keeps its wished song out of the fan wishes but in the catalogue, and lets the mailbox sign up again
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › answers every public route without a session cookie and gates every member route
+
 - Deleting a concert deletes its registrations in the same transaction
   (`deleteSessionWithCascade`), so no email outlives the concert it was given for.
 - A sign-up claims the concert's `session` row (`didClaimConcertWithin`)
@@ -78,16 +88,31 @@ Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts
 - Amending a registration needs that token in `x-registration-token`. A
   wrong or missing token answers 403 `invalid-registration-token` and
   changes nothing.
+- An amendment names at least one answer. An empty body answers 400 and
+  changes nothing (`registrationPatchSchema`). An amendment whose
+  registration a member removed after the token was checked answers 404
+  `unknown-registration`, because its update touched no row.
 - The token works only while the concert is upcoming
   (`isUpcomingConcert`). Afterwards an amendment answers 422
   `not-an-upcoming-concert`, so an old token cannot import songs into the
   catalogue.
+- The browser holding a token asks whether its registration still stands
+  (`checkRegistration`). The token is checked as the amendment checks it.
+  A match answers 200, a wrong or missing token 403
+  `invalid-registration-token`, and a removed registration 404
+  `unknown-registration`. The check spends the read budget,
+  `CONCERT_REGISTRATION_READ_BUDGET`, past which it answers 429.
 - The header is listed in `domain/request-headers.core.ts`, which is what
   lets CORS and CloudFront pass it through.
 
 Held by: `api/src/concert-registrations/concert-registrations.schema.test.ts` › stores a hash of the edit token, never the token itself
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses an answer carrying a wrong edit token or none, and changes nothing
+Held by: `api/src/concert-registrations/concert-registrations.schema.test.ts` › refuses an answer that names nothing to change
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses an answer that names nothing to change with 400, and changes nothing
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › answers 404 to an answer whose registration a member removed while it was being saved
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses the answers once the concert is past, so an old token imports no more songs
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › tells a browser whether its remembered registration still stands, and only with its token
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › bars an address that hammers the check of a registration
 
 ## Fan wish
 

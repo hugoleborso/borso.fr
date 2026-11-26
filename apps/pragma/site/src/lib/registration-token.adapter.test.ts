@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { readStoredRegistration, rememberFirstRegistration } from './registration-token.adapter';
+import {
+  forgetRegistration,
+  readStoredRegistration,
+  rememberFirstRegistration,
+} from './registration-token.adapter';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const ANOTHER_CONCERT = 'cccccccc-3333-4333-8333-333333333333';
@@ -22,6 +26,17 @@ describe('the registration the browser remembers per concert', () => {
     rememberFirstRegistration(A_CONCERT, A_REGISTRATION);
     rememberFirstRegistration(A_CONCERT, { registrationId: 'friend', editToken: 'token-2' });
     expect(readStoredRegistration(A_CONCERT)).toStrictEqual(A_REGISTRATION);
+  });
+
+  it('forgets the registration of one concert only, so the next sign-up is remembered again', () => {
+    rememberFirstRegistration(A_CONCERT, A_REGISTRATION);
+    rememberFirstRegistration(ANOTHER_CONCERT, A_REGISTRATION);
+    forgetRegistration(A_CONCERT);
+    expect(readStoredRegistration(A_CONCERT)).toBeNull();
+    expect(readStoredRegistration(ANOTHER_CONCERT)).toStrictEqual(A_REGISTRATION);
+    const again = { registrationId: 'registration-2', editToken: 'token-2' };
+    rememberFirstRegistration(A_CONCERT, again);
+    expect(readStoredRegistration(A_CONCERT)).toStrictEqual(again);
   });
 
   it.each([

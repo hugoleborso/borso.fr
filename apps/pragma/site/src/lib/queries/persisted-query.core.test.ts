@@ -1,12 +1,18 @@
 import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
 import { isQueryKeyPersisted, isQueryPersisted } from './persisted-query.core';
+import { concertRegistrationKeys } from './concert-registrations.queries';
 import { songKeys } from './songs.queries';
 
 // @FollowsBlueprint test-pure-unit
 describe('isQueryKeyPersisted', () => {
   it('keeps a song preview address off the phone, since it expires', () => {
     expect(isQueryKeyPersisted(songKeys.preview('song-1'))).toBe(false);
+  });
+
+  it('keeps the check of a remembered registration off the phone, so each visit asks again', () => {
+    expect(isQueryKeyPersisted(concertRegistrationKeys.remembered('registration-1'))).toBe(false);
+    expect(isQueryKeyPersisted(concertRegistrationKeys.upcoming())).toBe(true);
   });
 
   it('keeps every other song read', () => {

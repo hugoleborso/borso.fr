@@ -38,6 +38,10 @@ export const concertParamSchema = z.object({ sessionId: z.guid() });
 
 export const registrationParamSchema = z.object({ registrationId: z.guid() });
 
+export const concertRegistrationParamSchema = concertParamSchema.extend(
+  registrationParamSchema.shape,
+);
+
 export const registrationCreateSchema = z
   .object({
     firstName: z.string().trim().min(1).max(REGISTRATION_FIRST_NAME_MAX_LENGTH),
@@ -50,7 +54,11 @@ export const registrationPatchSchema = z
     comingForMemberId: z.guid().nullable().optional(),
     wishedTrackId: z.string().trim().min(1).max(TRACK_ID_MAX).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (answers) => answers.comingForMemberId !== undefined || answers.wishedTrackId !== undefined,
+    { message: 'nothing to update' },
+  );
 
 export const announcementPatchSchema = z
   .object({

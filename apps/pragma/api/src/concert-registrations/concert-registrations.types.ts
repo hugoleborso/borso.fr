@@ -11,6 +11,7 @@ export const CONCERT_REGISTRATION_REFUSALS = [
   'already-registered',
   'disposable-email',
   'invalid-registration-token',
+  'unknown-registration',
   'unknown-member',
   'unknown-track',
   'foreign-poster-key',

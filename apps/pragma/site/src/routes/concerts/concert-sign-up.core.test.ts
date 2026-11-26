@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../lib/api.client';
 import {
   buildSignUpPayload,
+  isRegistrationGone,
   isRetryableSignUpFailure,
   selectErrorKeyAt,
   selectFollowUpErrorKey,
@@ -43,6 +44,12 @@ describe('the concert sign-up rules', () => {
     expect(isRetryableSignUpFailure(new ApiError(500, 'down', null))).toBe(true);
     expect(isRetryableSignUpFailure(new ApiError(499, 'odd', null))).toBe(false);
     expect(isRetryableSignUpFailure(new ApiError(409, 'conflict', null))).toBe(false);
+  });
+
+  it('forgets a remembered registration only when the server no longer has it', () => {
+    expect(isRegistrationGone(404)).toBe(true);
+    expect(isRegistrationGone(403)).toBe(false);
+    expect(isRegistrationGone(200)).toBe(false);
   });
 
   it('shows the opening screen while the sign-up is in flight, and nothing at rest', () => {
