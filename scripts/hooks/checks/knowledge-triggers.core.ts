@@ -1,5 +1,5 @@
 // @FollowsBlueprint utils-pure-module
-import { type Check, type HookInput, type HookWorld, PASS } from '../check.core.ts';
+import { type Check, type HookInput, type HookWorld, PASS, type Verdict } from '../check.core.ts';
 import { stripStringBodies } from '../shell-command.core.ts';
 
 type TriggerKind = 'paths' | 'commands' | 'output';
@@ -251,21 +251,35 @@ export function renderKnowledgeContext(
   );
 }
 
-export const knowledgeTriggers: Check = {
+function runKnowledgeTriggers(input: HookInput, world: HookWorld): Verdict {
+  const moment = selectMoment(input);
+  if (moment === null) return PASS;
+  const lookup = readFreshLookup(world);
+  if (lookup === null) return PASS;
+  const subject = dropTrailingNewlines(moment.subject);
+  if (subject === '') return PASS;
+  const entries = parseLookup(lookup);
+  const matched = selectMatches(entries, { kind: moment.kind, subject });
+  if (matched.length === 0) return PASS;
+  const selected = selectFresh(matched, openSeenFile(input, world), world);
+  if (selected.length === 0) return PASS;
+  return { kind: 'context', text: renderKnowledgeContext(entries, selected, moment.kind) };
+}
+
+export const knowledgeTriggersBeforeTool: Check = {
   name: 'knowledge-triggers',
-  tools: /^(?:Write|Edit|MultiEdit|NotebookEdit|Bash|mcp__.*)$/u,
-  run(input, world) {
-    const moment = selectMoment(input);
-    if (moment === null) return PASS;
-    const lookup = readFreshLookup(world);
-    if (lookup === null) return PASS;
-    const subject = dropTrailingNewlines(moment.subject);
-    if (subject === '') return PASS;
-    const entries = parseLookup(lookup);
-    const matched = selectMatches(entries, { kind: moment.kind, subject });
-    if (matched.length === 0) return PASS;
-    const selected = selectFresh(matched, openSeenFile(input, world), world);
-    if (selected.length === 0) return PASS;
-    return { kind: 'context', text: renderKnowledgeContext(entries, selected, moment.kind) };
-  },
+  tools: /^(?:Write|Edit|MultiEdit|NotebookEdit|Bash)$/u,
+  run: runKnowledgeTriggers,
+};
+
+export const knowledgeTriggersAfterTool: Check = {
+  name: 'knowledge-triggers',
+  tools: /^(?:Bash|mcp__.*)$/u,
+  run: runKnowledgeTriggers,
+};
+
+export const knowledgeTriggersOnFailure: Check = {
+  name: 'knowledge-triggers',
+  tools: /^Bash$/u,
+  run: runKnowledgeTriggers,
 };

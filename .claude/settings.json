@@ -10,223 +10,29 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-env.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/kaizen.sh init"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "mcp__github__merge_pull_request",
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|Skill|Agent|Task|Artifact|mcp__github__merge_pull_request|mcp__github__create_pull_request|mcp__github__update_pull_request|mcp__claude-code-remote__send_message",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-merge-deploys-prod.sh",
-            "statusMessage": "Naming what this merge deploys"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-gh-pr-create.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-api-change-needs-validation.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-broad-kill.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-test-double-dash.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-prettier.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-swallowed-push.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-discarding-reset.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-shared-checkout-switch.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-subagent-no-staging.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-merge-deploys-prod.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__github__create_pull_request|mcp__github__update_pull_request",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-github-pr-body.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-validation-runs-as-its-agent.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/knowledge-triggers.sh",
-            "statusMessage": "Matching the call against the knowledge triggers"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-hand-drawn-art.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__github__merge_pull_request",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-merge-strands-no-work.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__github__create_pull_request",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-api-change-needs-validation.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-one-pull-request-per-session.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-agent-work-folder.sh"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-agent-after-route.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__claude-code-remote__send_message",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-no-relayed-merge-clearance.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Artifact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-mockup-reads-visual-rules.sh",
-            "statusMessage": "Naming the visual rules a mockup follows"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-mockup-copy.sh",
-            "statusMessage": "Counting the words on each mockup screen"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Edit|Write|MultiEdit|Bash|ReadNotifications|mcp__.*",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-format-write.sh",
-            "statusMessage": "Formatting the edited file"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-lint-write.sh",
-            "statusMessage": "Linting the edited file"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__github__pull_request_read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-empty-checks-means-conflict.sh",
-            "statusMessage": "Checking whether a checks list is empty, unfinished or partial"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
-            "statusMessage": "Checking whether a type-aware error is a cache replay"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|mcp__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/knowledge-triggers.sh",
-            "statusMessage": "Matching the output against the knowledge triggers"
-          }
-        ]
-      },
-      {
-        "matcher": "ReadNotifications",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-notification-gets-no-reply.sh"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -237,13 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
-            "statusMessage": "Checking whether a type-aware error is a cache replay"
-          },
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/knowledge-triggers.sh",
-            "statusMessage": "Matching the failure against the knowledge triggers"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -253,8 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-screens-shown-not-described.py",
-            "statusMessage": "Checking that compared screens were shown"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }

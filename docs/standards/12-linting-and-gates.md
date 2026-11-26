@@ -430,7 +430,7 @@ review.
   budget the `/open-pr` skill draws from: a title, a description, a flow, a
   decisions table, one before-merge block, validation evidence and notable
   facts, each bounded, counting letters and digits only. It holds the numbers so
-  the skill states none of them, and `pretool-gh-pr-create.sh` hands it the body
+  the skill states none of them, and `scripts/hooks/checks/gh-pr-create.core.ts` hands it the body
   rather than carrying limits of its own. A body is the one artefact a reviewer
   reads end to end and nothing else checks it, so it grew to ten kilobytes and
   carried a test count that had been wrong for three commits.
@@ -463,7 +463,7 @@ review.
 - `script:scripts/check-knowledge-triggers.sh` fails a knowledge entry with no
   `summary:` or no `triggers:` a hook can match, and a trigger pattern that
   compiles in Python and not in jq, which is what the hook matches with.
-  `knowledge-triggers.sh` prints an entry into the agent's context when a
+  `scripts/hooks/checks/knowledge-triggers.core.ts` prints an entry into the agent's context when a
   Write or Edit target, a command about to run, or a call's output matches it.
   Of 123 entries only the few a hook or a gate printed ever stopped a repeat,
   and nine dantotsus record an entry that existed and was not read

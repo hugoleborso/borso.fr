@@ -188,7 +188,7 @@ _2026-09-16, PR #100: hit again, on a `.md` target at about 180
 characters, which is why the list of forms further down says a `.md`
 link is untouched and this section is the one that governs — the rule is
 the length, and the extension only ever mattered for images. The
-threshold is now enforced by `.claude/hooks/pretool-github-pr-body.sh`
+threshold is now enforced by `scripts/hooks/checks/github-pr-body.core.ts`
 rather than left to the writer; see
 `docs/dantotsus/the-threshold-was-measured-and-left-unguarded.md`._
 
@@ -238,7 +238,7 @@ shortening or re-pinning the URL does not help.
 Files changed tab, which renders committed images inline; use `###` headings
 where the standard asks for `<details>`; then read the body back. Since
 2026-08-18 a PreToolUse hook refuses a body carrying any of the defused forms
-before the call is made — `.claude/hooks/pretool-github-pr-body.sh`, wired for
+before the call is made — `scripts/hooks/checks/github-pr-body.core.ts`, wired for
 `mcp__github__create_pull_request` and `mcp__github__update_pull_request`.
 
 A body posted through the claude.ai web UI or by `gh` is not affected; the
@@ -282,7 +282,7 @@ the bracket form for files in the repository, where nothing rewrites it.
 
 ## Every form, measured on PR #60
 
-Moved here from the header of `.claude/hooks/pretool-github-pr-body.sh`.
+Moved here from the header of `scripts/hooks/checks/github-pr-body.core.ts`.
 
 The server sanitizes the body before it is stored, and what it removes it
 removes silently: the call succeeds, the PR page renders, and the missing

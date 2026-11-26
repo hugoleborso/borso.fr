@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CommandResult, HookInput, HookWorld } from '../check.core.ts';
 import { PASS } from '../check.core.ts';
 import {
-  knowledgeTriggers,
+  knowledgeTriggersBeforeTool as knowledgeTriggers,
   parseLookup,
   renderKnowledgeContext,
   splitPathTokens,

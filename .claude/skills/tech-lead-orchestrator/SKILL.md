@@ -131,7 +131,7 @@ are computed post-hoc.
    `technical-validator` agent itself. After it passes, load
    `/visual-validation` once, which dispatches `visual-validator`. Never
    hand either skill to a subagent: a subagent has no Agent tool, and
-   `pretool-validation-runs-as-its-agent.sh` refuses the load. Each writes
+   `scripts/hooks/checks/validation-runs-as-its-agent.core.ts` refuses the load. Each writes
    its verdict YAML next to the implementation's.
    - If the feature has no UI surface, **skip silently** (decision
      Q-VIS-VAL): append a `visual_validation_skipped` event and proceed

@@ -80,7 +80,7 @@ flowchart LR
 
 Every lesson is turned into structure, so the next agent cannot repeat the mistake.
 
-The lesson lands in one of these places. `eslint-rules/` holds the custom lint rules and `.claude/hooks/` the agent hooks. `docs/adr/` holds the architecture decisions, `docs/dantotsus/` the root-cause analyses and `docs/knowledge/` the knowledge entries. Run `ls` on a folder to see what it holds today.
+The lesson lands in one of these places. `eslint-rules/` holds the custom lint rules and `scripts/hooks/` the agent hooks. `docs/adr/` holds the architecture decisions, `docs/dantotsus/` the root-cause analyses and `docs/knowledge/` the knowledge entries. Run `ls` on a folder to see what it holds today.
 
 The full story is in [How it is built](docs/how-it-is-built.md).
 

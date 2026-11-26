@@ -8,6 +8,7 @@ import { join, resolve } from 'node:path';
 import {
   type Check,
   type CommandResult,
+  type HookEvent,
   type HookInput,
   type HookOutcome,
   type HookWorld,
@@ -57,8 +58,9 @@ function logRefusals(outcome: HookOutcome): void {
   }
 }
 
-export function runHook(checks: readonly Check[]): void {
+export function runHook(checksByEvent: Readonly<Record<HookEvent, readonly Check[]>>): void {
   const input: HookInput = JSON.parse(readFileSync(0, 'utf8'));
+  const checks = checksByEvent[input.hook_event_name] ?? [];
   const verdicts = selectChecksFor(checks, input.tool_name).map((check) => runSafely(check, input));
   const outcome = renderOutcome(input.hook_event_name, verdicts);
   logRefusals(outcome);

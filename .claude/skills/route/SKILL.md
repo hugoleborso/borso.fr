@@ -5,7 +5,7 @@ description: Decide how much machinery a task deserves before starting it, and l
 
 # Route
 
-Pick the tier on evidence, before the work starts. An agent that writes code cannot start before this skill runs (`pretool-agent-after-route.sh`).
+Pick the tier on evidence, before the work starts. An agent that writes code cannot start before this skill runs (`scripts/hooks/checks/agent-after-route.core.ts`).
 
 ## Size it first
 

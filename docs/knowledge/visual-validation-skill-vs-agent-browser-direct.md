@@ -29,7 +29,7 @@ single CSS tweak landed.
 A pull request is different. Since 2026-11-14 the operator requires one
 `/visual-validation` report on every pull request that changes source under
 `apps/*/site/`, a one-line bug fix included, and
-`pretool-api-change-needs-validation.sh` refuses to open one without it. So
+`scripts/hooks/checks/api-change-needs-validation.core.ts` refuses to open one without it. So
 drive `agent-browser` directly while iterating, and run the skill once on
 the finished fix before `/open-pr`. A fix with no spec gets a short one
 under `docs/features/<app>/<slug>/spec/spec.md`, as PR #368 did.

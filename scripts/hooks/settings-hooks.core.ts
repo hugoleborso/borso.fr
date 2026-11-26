@@ -1,15 +1,12 @@
 // @FollowsBlueprint utils-pure-module
-const EVENT_ENTRY_FILES = {
-  PreToolUse: 'pre-tool-use.ts',
-  PostToolUse: 'post-tool-use.ts',
-  PostToolUseFailure: 'post-tool-use-failure.ts',
-  Stop: 'stop.ts',
-  SessionStart: 'session-start.ts',
-} as const satisfies Readonly<Record<string, string>>;
+import type { Check, HookEvent } from './check.core.ts';
+
+export const HOOK_COMMAND = 'node "$CLAUDE_PROJECT_DIR"/scripts/hooks/hook.ts';
 
 interface SettingsHookCommand {
   readonly event: string;
   readonly command: string;
+  readonly matcher: string;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -22,9 +19,10 @@ function readArray(value: unknown): readonly unknown[] {
 
 function readCommandsOfGroup(event: string, group: unknown): SettingsHookCommand[] {
   if (!isRecord(group)) return [];
+  const matcher = typeof group['matcher'] === 'string' ? group['matcher'] : '';
   return readArray(group['hooks']).flatMap((hook) =>
     isRecord(hook) && typeof hook['command'] === 'string'
-      ? [{ event, command: hook['command'] }]
+      ? [{ event, matcher, command: hook['command'] }]
       : [],
   );
 }
@@ -36,18 +34,36 @@ export function listSettingsHookCommands(settings: unknown): SettingsHookCommand
   );
 }
 
-function isKnownEvent(event: string): event is keyof typeof EVENT_ENTRY_FILES {
-  return Object.hasOwn(EVENT_ENTRY_FILES, event);
-}
-
-export function expectedEntryCommand(event: string): string | null {
-  if (!isKnownEvent(event)) return null;
-  const entryFile = EVENT_ENTRY_FILES[event];
-  return `node "$CLAUDE_PROJECT_DIR"/scripts/hooks/${entryFile}`;
-}
-
 export function selectForeignHookCommands(settings: unknown): SettingsHookCommand[] {
-  return listSettingsHookCommands(settings).filter(
-    ({ event, command }) => command !== expectedEntryCommand(event),
+  return listSettingsHookCommands(settings).filter(({ command }) => command !== HOOK_COMMAND);
+}
+
+function listToolsNamedBy(check: Check): string[] {
+  if (check.tools === null) return [];
+  return check.tools.source
+    .replace(/^\^\(?(?:\?:)?/u, '')
+    .replace(/\)?\$$/u, '')
+    .split('|');
+}
+
+function isMatchedBy(matcher: string, toolName: string): boolean {
+  return matcher === '' || matcher === '*' || new RegExp(`^(?:${matcher})$`, 'u').test(toolName);
+}
+
+export function listToolsNoMatcherReaches(
+  settings: unknown,
+  checksByEvent: Readonly<Record<HookEvent, readonly Check[]>>,
+): string[] {
+  const commands = listSettingsHookCommands(settings);
+  return Object.entries(checksByEvent).flatMap(([event, checks]) =>
+    checks
+      .flatMap(listToolsNamedBy)
+      .flatMap((toolName) =>
+        commands.some(
+          (command) => command.event === event && isMatchedBy(command.matcher, toolName),
+        )
+          ? []
+          : [`${event} ${toolName}`],
+      ),
   );
 }

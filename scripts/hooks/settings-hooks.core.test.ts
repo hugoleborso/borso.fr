@@ -1,25 +1,40 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { type Check, PASS } from './check.core.ts';
+import { CHECKS_BY_EVENT } from './hook-events.ts';
 import {
-  expectedEntryCommand,
+  HOOK_COMMAND,
   listSettingsHookCommands,
+  listToolsNoMatcherReaches,
   selectForeignHookCommands,
 } from './settings-hooks.core.ts';
 
-const ENTRY = 'node "$CLAUDE_PROJECT_DIR"/scripts/hooks/pre-tool-use.ts';
+const NO_CHECKS = {
+  PreToolUse: [],
+  PostToolUse: [],
+  PostToolUseFailure: [],
+  Stop: [],
+  SessionStart: [],
+};
+
+function checkOn(tools: RegExp | null): Check {
+  return { name: 'check', tools, run: () => PASS };
+}
 
 // @FollowsBlueprint test-pure-unit
 describe('listSettingsHookCommands', () => {
-  it('lists every command under every event and matcher group', () => {
+  it('lists every command with its event and matcher', () => {
     const settings = {
       hooks: {
-        PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: ENTRY }] }],
+        PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: HOOK_COMMAND }] }],
         Stop: [{ hooks: [{ type: 'command', command: 'x.sh' }] }],
       },
     };
 
     expect(listSettingsHookCommands(settings)).toEqual([
-      { event: 'PreToolUse', command: ENTRY },
-      { event: 'Stop', command: 'x.sh' },
+      { event: 'PreToolUse', matcher: 'Bash', command: HOOK_COMMAND },
+      { event: 'Stop', matcher: '', command: 'x.sh' },
     ]);
   });
 
@@ -35,31 +50,59 @@ describe('listSettingsHookCommands', () => {
   });
 });
 
-describe('expectedEntryCommand', () => {
-  it('names the node entry of a known event', () => {
-    expect(expectedEntryCommand('PreToolUse')).toBe(ENTRY);
-  });
-
-  it('names nothing for an event with no TypeScript entry', () => {
-    expect(expectedEntryCommand('Notification')).toBeNull();
-    expect(expectedEntryCommand('toString')).toBeNull();
-  });
-});
-
 describe('selectForeignHookCommands, so every hook is TypeScript the gates read', () => {
-  it('refuses a bash hook, a hook under the wrong event and an unknown event', () => {
+  it('refuses any command other than the one node entry', () => {
     const settings = {
       hooks: {
-        PreToolUse: [{ hooks: [{ command: ENTRY }, { command: '.claude/hooks/x.sh' }] }],
-        Stop: [{ hooks: [{ command: ENTRY }] }],
-        Notification: [{ hooks: [{ command: ENTRY }] }],
+        PreToolUse: [{ hooks: [{ command: HOOK_COMMAND }, { command: '.claude/hooks/x.sh' }] }],
       },
     };
 
     expect(selectForeignHookCommands(settings)).toEqual([
-      { event: 'PreToolUse', command: '.claude/hooks/x.sh' },
-      { event: 'Stop', command: ENTRY },
-      { event: 'Notification', command: ENTRY },
+      { event: 'PreToolUse', matcher: '', command: '.claude/hooks/x.sh' },
     ]);
+  });
+});
+
+describe('listToolsNoMatcherReaches, so a check never sits behind a matcher that skips it', () => {
+  it('names a tool a check reads when no matcher of its event lets it through', () => {
+    const settings = {
+      hooks: { PreToolUse: [{ matcher: 'Bash|Skill', hooks: [{ command: HOOK_COMMAND }] }] },
+    };
+    const checksByEvent = { ...NO_CHECKS, PreToolUse: [checkOn(/^(Bash|Artifact)$/u)] };
+
+    expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual(['PreToolUse Artifact']);
+  });
+
+  it('reads a single tool, a non-capturing group and a pattern, and skips a check on every tool', () => {
+    const settings = {
+      hooks: {
+        PostToolUse: [{ matcher: 'Bash|mcp__.*', hooks: [{ command: HOOK_COMMAND }] }],
+        Stop: [{ hooks: [{ command: HOOK_COMMAND }] }],
+        SessionStart: [{ matcher: '*', hooks: [{ command: HOOK_COMMAND }] }],
+      },
+    };
+    const checksByEvent = {
+      ...NO_CHECKS,
+      PostToolUse: [checkOn(/^Bash$/u), checkOn(/^(?:mcp__.*)$/u)],
+      Stop: [checkOn(null)],
+      SessionStart: [checkOn(/^Read$/u)],
+    };
+
+    expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual([]);
+  });
+});
+
+describe('the repository settings', () => {
+  const settings: unknown = JSON.parse(
+    readFileSync(resolve(import.meta.dirname, '../../.claude/settings.json'), 'utf8'),
+  );
+
+  it('run every hook through the one TypeScript entry', () => {
+    expect(selectForeignHookCommands(settings)).toEqual([]);
+  });
+
+  it('let every tool a check reads reach it', () => {
+    expect(listToolsNoMatcherReaches(settings, CHECKS_BY_EVENT)).toEqual([]);
   });
 });

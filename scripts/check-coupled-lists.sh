@@ -62,7 +62,7 @@ done
 # The formatter the repository tells you to run used to be checked here: the
 # agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier
 # is gone and oxfmt replaced it. A Prettier call is now refused before it runs,
-# by .claude/hooks/pretool-no-prettier.sh. See
+# by scripts/hooks/checks/no-prettier.core.ts. See
 # docs/adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
 
 # 4. The tables a migration creates, and the two lists the back-e2e harness
