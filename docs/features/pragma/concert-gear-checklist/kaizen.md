@@ -34,3 +34,4 @@ Session: 2ce07eef-67cd-5603-98a5-2f5f8f6a8f73
 - [2026-11-26 08:49] `visual-validator` The spec's design canvas is a claude.ai artifact a validator cannot open, so microcopy and chip-shape rows the artboard decides cannot be checked against it.
 - [2026-11-26 08:50] `hook:subagent-no-staging` a subagent ran a git command that writes the shared index
 - [2026-11-26 08:50] `ship` The ship-stage brief tells a subagent to commit and push, but the subagent-no-staging hook forbids git add and git commit from any subagent.
+- [2026-11-26 09:11] `main` The open-pr stage skipped step 5b and wrote that the screenshot upload was not tried, and the operator had to ask for the screenshots again; no gate refuses a PR whose validation PNGs were never published.
