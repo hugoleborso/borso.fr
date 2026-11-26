@@ -86,6 +86,11 @@ describe('stripStringBodies, so a regex over a command line misses what is only 
     );
   });
 
+  it('keeps a quote that never closes as written', () => {
+    expect(stripStringBodies('foo "unterminated')).toBe('foo "unterminated');
+    expect(stripStringBodies('echo "a" "b')).toBe('echo "" "b');
+  });
+
   it('drops a quoted body once, even when it nests a substitution with quotes', () => {
     expect(stripStringBodies('echo "a $(echo \'b\') c"')).toBe('echo ""');
   });
