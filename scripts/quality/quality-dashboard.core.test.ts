@@ -5,6 +5,7 @@ import {
   SECONDS_PER_WEEK,
   bucketOf,
   buildBugReportIndicators,
+  buildCiIndicators,
   buildGatewayIndicators,
   buildMetricQueries,
   buildSecurityIndicators,
@@ -13,15 +14,20 @@ import {
   isEverySourceUnavailable,
   judgeAgainstTarget,
   listBuckets,
+  listSlowestJobSamples,
+  listUnitSuiteSamples,
   listUnavailableSources,
   listWeekStarts,
   metricQueryId,
+  oldestBucketStart,
   placeBugReports,
   readAuditCounts,
   readMetricSeries,
   readSnapshot,
   readTargets,
   selectHttpApis,
+  type CiJob,
+  type CiRun,
   type HttpApi,
   type Indicator,
   type RangeSpec,
@@ -63,6 +69,45 @@ function speedIndicator(id: string, app: string, current: number | null): Indica
     points: [],
     status: { kind: 'ok' },
   };
+}
+
+function timed(name: string, startedAt: string, completedAt: string, conclusion = 'success') {
+  return { name, conclusion, startedAt, completedAt };
+}
+
+const ROOT_SUITE_STEP = timed(
+  'Run pnpm exec vitest run --coverage',
+  '2026-10-13T14:01:00Z',
+  '2026-10-13T14:01:13Z',
+);
+const BUILD_JOB: CiJob = {
+  ...timed('build', '2026-10-13T14:00:02Z', '2026-10-13T14:09:30Z'),
+  steps: [ROOT_SUITE_STEP],
+};
+const CI_RUN: CiRun = {
+  id: 45885519561,
+  createdAt: '2026-10-13T14:00:00Z',
+  event: 'pull_request',
+  jobs: [BUILD_JOB],
+};
+
+function pragmaJob(seconds: number, conclusion = 'success'): CiJob {
+  return {
+    ...timed('app-tests (pragma)', '2026-10-13T14:00:10Z', '2026-10-13T14:09:00Z'),
+    steps: [
+      timed('Run actions/checkout@v7', '2026-10-13T14:00:10Z', '2026-10-13T14:00:20Z'),
+      timed(
+        'Pure suites and the per-file coverage gate',
+        '2026-10-13T14:01:00Z',
+        new Date(Date.parse('2026-10-13T14:01:00Z') + seconds * 1000).toISOString(),
+        conclusion,
+      ),
+    ],
+  };
+}
+
+function pragmaRun(createdAt: string, seconds: number): CiRun {
+  return { id: 9, createdAt, event: 'pull_request', jobs: [pragmaJob(seconds)] };
 }
 
 describe('listWeekStarts', () => {
@@ -395,6 +440,186 @@ describe('ranges', () => {
   });
 });
 
+describe('CI timing', () => {
+  const clock = new Date('2026-10-13T14:37:42Z');
+  const hourRange = RANGES.find((range) => range.id === 'hour')!;
+  const skippedJob: CiJob = {
+    ...timed('kaizen-balance', '2026-10-13T14:00:01Z', '2026-10-13T14:00:00Z', 'skipped'),
+    steps: [],
+  };
+  const runs: readonly CiRun[] = [
+    { ...CI_RUN, jobs: [BUILD_JOB, pragmaJob(249), skippedJob] },
+    {
+      id: 2,
+      createdAt: '2026-10-06T09:00:00Z',
+      event: 'pull_request',
+      jobs: [pragmaJob(40.4), { ...pragmaJob(12), name: 'app-tests (pragma-e2e)' }],
+    },
+    { id: 3, createdAt: '2026-10-07T09:00:00Z', event: 'push', jobs: [pragmaJob(900)] },
+    { id: 4, createdAt: '2026-10-08T09:00:00Z', event: 'pull_request', jobs: [skippedJob] },
+    {
+      id: 5,
+      createdAt: '2026-10-09T09:00:00Z',
+      event: 'pull_request',
+      jobs: [pragmaJob(77, 'skipped')],
+    },
+  ];
+
+  it('times the unit suite step of an application, on pull requests only, to the second', () => {
+    expect(listUnitSuiteSamples(runs, 'pragma')).toEqual([
+      { at: '2026-10-13T14:00:00Z', seconds: 249 },
+      { at: '2026-10-06T09:00:00Z', seconds: 40 },
+    ]);
+    expect(listUnitSuiteSamples(runs, 'talos')).toEqual([]);
+  });
+
+  it('times the root suite of the build job for the repository row', () => {
+    expect(listUnitSuiteSamples(runs, 'repository')).toEqual([
+      { at: '2026-10-13T14:00:00Z', seconds: 13 },
+    ]);
+  });
+
+  it('keeps the slowest job of each run and ignores skipped jobs', () => {
+    expect(listSlowestJobSamples(runs)).toEqual([
+      { at: '2026-10-13T14:00:00Z', seconds: 568 },
+      { at: '2026-10-06T09:00:00Z', seconds: 530 },
+      { at: '2026-10-09T09:00:00Z', seconds: 530 },
+    ]);
+  });
+
+  it('builds one unit suite row per application plus the repository, and one CI row', () => {
+    const indicators = buildCiIndicators(
+      { kind: 'ok', value: runs },
+      ['pragma', 'talos'],
+      WEEK_RANGE,
+      WEEK_BUCKETS,
+      clock,
+    );
+    expect(indicators.map((indicator) => `${indicator.app}:${indicator.id}`)).toEqual([
+      'pragma:test-time',
+      'talos:test-time',
+      'repository:test-time',
+      'repository:ci-time',
+    ]);
+    expect(find(indicators, 'test-time', 'pragma')).toEqual({
+      id: 'test-time',
+      label: 'Unit suite time',
+      pillar: 'speed',
+      unit: 's',
+      app: 'pragma',
+      current: 249,
+      points: WEEKS.map((label) => ({
+        label,
+        value: { '2026-10-05': 40, '2026-10-12': 249 }[label] ?? null,
+      })),
+      status: { kind: 'ok' },
+    });
+    expect(find(indicators, 'test-time', 'talos')?.current).toBeNull();
+    expect(find(indicators, 'test-time', 'talos')?.points).toEqual(EMPTY_WEEKS);
+    expect(find(indicators, 'ci-time', 'repository')).toMatchObject({
+      label: 'CI time, slowest job',
+      pillar: 'speed',
+      unit: 's',
+      current: 568,
+    });
+  });
+
+  it('measures the rolling window from now, and leaves a bucket with no run empty', () => {
+    const indicators = buildCiIndicators(
+      { kind: 'ok', value: runs },
+      ['pragma'],
+      hourRange,
+      listBuckets(hourRange, clock),
+      clock,
+    );
+    const pragma = find(indicators, 'test-time', 'pragma');
+    expect(pragma?.current).toBe(249);
+    expect(pragma?.points.at(-1)).toEqual({ label: '14:00', value: 249 });
+    expect(pragma?.points.at(-2)).toEqual({ label: '13:00', value: null });
+    const later = new Date('2026-10-14T02:00:01Z');
+    expect(
+      find(
+        buildCiIndicators({ kind: 'ok', value: runs }, ['pragma'], hourRange, [], later),
+        'test-time',
+        'pragma',
+      )?.current,
+    ).toBeNull();
+    const edge = new Date(Date.parse(CI_RUN.createdAt) + hourRange.windowSeconds * 1000);
+    expect(
+      find(
+        buildCiIndicators({ kind: 'ok', value: runs }, ['pragma'], hourRange, [], edge),
+        'test-time',
+        'pragma',
+      )?.current,
+    ).toBe(249);
+  });
+
+  it('starts the history at the oldest bucket the range draws', () => {
+    expect(new Date(oldestBucketStart(WEEK_RANGE, clock)).toISOString()).toBe(
+      '2026-08-24T00:00:00.000Z',
+    );
+    expect(new Date(oldestBucketStart(hourRange, clock)).toISOString()).toBe(
+      '2026-10-13T03:00:00.000Z',
+    );
+    const friday = new Date('2026-10-16T10:00:00Z');
+    expect(new Date(oldestBucketStart(WEEK_RANGE, friday)).toISOString()).toBe(
+      '2026-08-24T00:00:00.000Z',
+    );
+  });
+
+  it('keeps a run from another day out of the hour it shares a clock label with', () => {
+    const points = find(
+      buildCiIndicators(
+        {
+          kind: 'ok',
+          value: [
+            pragmaRun('2026-10-12T14:10:00Z', 500),
+            pragmaRun('2026-10-13T03:00:00Z', 31),
+            pragmaRun('2026-10-13T02:59:59Z', 700),
+          ],
+        },
+        ['pragma'],
+        hourRange,
+        listBuckets(hourRange, clock),
+        clock,
+      ),
+      'test-time',
+      'pragma',
+    )?.points;
+    expect(points?.at(0)).toEqual({ label: '03:00', value: 31 });
+    expect(points?.at(-1)).toEqual({ label: '14:00', value: null });
+  });
+
+  it('draws a run from the oldest Monday, whatever weekday the board is refreshed on', () => {
+    const friday = new Date('2026-10-16T10:00:00Z');
+    const points = find(
+      buildCiIndicators(
+        {
+          kind: 'ok',
+          value: [{ ...CI_RUN, createdAt: '2026-08-24T08:00:00Z', jobs: [pragmaJob(45)] }],
+        },
+        ['pragma'],
+        WEEK_RANGE,
+        listBuckets(WEEK_RANGE, friday),
+        friday,
+      ),
+      'test-time',
+      'pragma',
+    )?.points;
+    expect(points?.at(0)).toEqual({ label: '2026-08-24', value: 45 });
+  });
+
+  it('passes an unavailable source through to every cell', () => {
+    const indicators = buildCiIndicators(UNAVAILABLE, ['pragma'], WEEK_RANGE, WEEK_BUCKETS, clock);
+    expect(indicators).toHaveLength(3);
+    for (const indicator of indicators) {
+      expect(indicator.status).toEqual(UNAVAILABLE);
+      expect(indicator.current).toBeNull();
+      expect(indicator.points).toEqual(EMPTY_WEEKS);
+    }
+  });
+});
+
 describe('Sentry', () => {
   const reading = {
     kind: 'ok',
@@ -599,7 +824,9 @@ describe('readSnapshot', () => {
       improvements: [improvement, { ...improvement, id: 'id-2', kind: 'idea' }],
       dependabot: { criticalOrHigh: 1, other: 0 },
       secretScanning: 0,
+      ci: { runs: [CI_RUN] },
     });
+    expect(snapshot.ci).toEqual({ kind: 'ok', value: [CI_RUN] });
     expect(snapshot.sentry).toEqual({
       kind: 'ok',
       value: {
@@ -636,6 +863,7 @@ describe('readSnapshot', () => {
         improvements: unavailable,
         dependabot: unavailable,
         secretScanning: unavailable,
+        ci: unavailable,
       }),
     ).toEqual({
       sentry: { kind: 'unavailable', reason: 'disabled on the repository' },
@@ -643,6 +871,7 @@ describe('readSnapshot', () => {
       bugReports: { kind: 'unavailable', reason: 'disabled on the repository' },
       dependabot: { kind: 'unavailable', reason: 'disabled on the repository' },
       secretScanning: { kind: 'unavailable', reason: 'disabled on the repository' },
+      ci: { kind: 'unavailable', reason: 'disabled on the repository' },
     });
   });
 
@@ -653,6 +882,7 @@ describe('readSnapshot', () => {
       improvements: [improvement],
       dependabot: { unavailable: 'x' },
       secretScanning: 0,
+      ci: { runs: [CI_RUN] },
     };
     expect(() => readSnapshot({ ...valid, secretScanning: -1 })).toThrow();
     expect(() => readSnapshot({ ...valid, sentry: { unavailable: '' } })).toThrow();
@@ -672,6 +902,30 @@ describe('readSnapshot', () => {
     expect(() =>
       readSnapshot({ ...valid, dependabot: { criticalOrHigh: 1.5, other: 0 } }),
     ).toThrow();
+    const { ci: _ci, ...withoutCi } = valid;
+    expect(() => readSnapshot(withoutCi)).toThrow();
+    expect(() => readSnapshot({ ...valid, ci: [CI_RUN] })).toThrow();
+    expect(() => readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, id: 0 }] } })).toThrow();
+    expect(() => readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, event: '' }] } })).toThrow();
+    expect(() =>
+      readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, createdAt: '2026-10-12' }] } }),
+    ).toThrow();
+    const brokenJob = { ...BUILD_JOB, completedAt: 'later' };
+    expect(() =>
+      readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, jobs: [brokenJob] }] } }),
+    ).toThrow();
+    const unnamedStep = { ...BUILD_JOB, steps: [{ ...ROOT_SUITE_STEP, name: '' }] };
+    expect(() =>
+      readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, jobs: [unnamedStep] }] } }),
+    ).toThrow();
+    const nullConclusion = { ...BUILD_JOB, conclusion: null };
+    expect(() =>
+      readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, jobs: [nullConclusion] }] } }),
+    ).not.toThrow();
+    const emptyConclusion = { ...BUILD_JOB, conclusion: '' };
+    expect(() =>
+      readSnapshot({ ...valid, ci: { runs: [{ ...CI_RUN, jobs: [emptyConclusion] }] } }),
+    ).toThrow();
   });
 
   it('starts empty, with every session source not collected', () => {
@@ -682,6 +936,7 @@ describe('readSnapshot', () => {
       bugReports: notCollected,
       dependabot: notCollected,
       secretScanning: notCollected,
+      ci: notCollected,
     });
   });
 });

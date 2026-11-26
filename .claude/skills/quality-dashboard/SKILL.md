@@ -41,6 +41,18 @@ Write `<scratchpad>/quality-dashboard/snapshot.json`. Each key holds its data, o
 - **`dependabot`**. Run `gh api repos/hugoleborso/borso.fr/dependabot/alerts?state=open --paginate` and count by `security_advisory.severity` into `{ "criticalOrHigh", "other" }`. A 403 saying the token lacks the permission is the reason to record.
 - **`secretScanning`**. Run `gh api repos/hugoleborso/borso.fr/secret-scanning/alerts?state=open` and record the count. The hosted-session proxy has refused this path since 2026-11-04.
 
+- **`ci`**. Every `ci.yml` run on a pull request in the last eight weeks, with its jobs and their steps, as `{ "runs": [{ "id", "createdAt", "event", "jobs": [{ "name", "conclusion", "startedAt", "completedAt", "steps": [{ "name", "conclusion", "startedAt", "completedAt" }] }] }] }`. It feeds the unit suite and CI time rows under Speed. Use `gh` rather than `mcp__github__actions_list`: one job list is tens of kilobytes and there are hundreds of runs, so the MCP replies would fill the context, while `--jq` writes the shape straight to a file. Run this from the scratchpad:
+
+  ```bash
+  dir=quality-dashboard/ci-runs; mkdir -p "$dir"
+  gh api --paginate "repos/hugoleborso/borso.fr/actions/workflows/ci.yml/runs?event=pull_request&status=completed&per_page=100&created=>=$(date -u -d '8 weeks ago' +%F)" \
+    --jq '.workflow_runs[] | "\(.id) \(.created_at) \(.event)"' |
+    DIR="$dir" xargs -P 8 -L 1 sh -c 'test -s "$DIR/$0.json" || gh api "repos/hugoleborso/borso.fr/actions/runs/$0/jobs?per_page=100" --jq "{id: $0, createdAt: \"$1\", event: \"$2\", jobs: [.jobs[] | {name, conclusion, startedAt: .started_at, completedAt: .completed_at, steps: [(.steps // [])[] | {name, conclusion, startedAt: .started_at, completedAt: .completed_at}]}]}" > "$DIR/$0.json" || rm -f "$DIR/$0.json"'
+  jq --slurpfile ci <(jq -s '{runs: .}' "$dir"/*.json) '.ci = $ci[0]' quality-dashboard/snapshot.json > snapshot.tmp && mv snapshot.tmp quality-dashboard/snapshot.json
+  ```
+
+  GitHub answers some job lists with a 502. The failed run's file is deleted, so run the `gh api` pipeline again until it exits 0; it fetches only the missing runs. If the run list itself fails, record its error as `unavailable`. The builder finds the unit suite by its job and step names in `ci.yml`, so renaming `Pure suites and the per-file coverage gate` empties those rows.
+
 CloudWatch latency, 5xx and throttling, and `pnpm audit`, are read by the builder itself with the session's AWS credentials. It asks CloudWatch twice per range, so a run makes six `get-metric-data` calls.
 
 ## 2. Build the datasets

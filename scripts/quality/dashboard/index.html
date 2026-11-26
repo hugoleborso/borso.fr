@@ -377,7 +377,7 @@
     MOST_TICKS: 12,
     TICK_ROOM: 56,
     count: d3.format(','),
-    unitOf: (unit) => (unit === 'ms' ? ' ms' : ''),
+    unitOf: (unit) => ({ ms: ' ms', s: ' s' })[unit] ?? '',
     amount(value, unit) {
       return value === null || value === undefined ? '—' : this.count(value) + this.unitOf(unit);
     },

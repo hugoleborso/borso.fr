@@ -1079,6 +1079,42 @@
       "ceiling": 250,
       "verdict": "ok",
       "note": "borsouvertures · Throttled requests, production · at or under the ceiling of 250"
+    },
+    {
+      "range": "week",
+      "pillar": "speed",
+      "indicator": "test-time",
+      "label": "Unit suite time",
+      "app": "pragma",
+      "unit": "s",
+      "value": 271,
+      "ceiling": 30,
+      "verdict": "ko",
+      "note": "pragma · Unit suite time · over the ceiling of 30"
+    },
+    {
+      "range": "week",
+      "pillar": "speed",
+      "indicator": "test-time",
+      "label": "Unit suite time",
+      "app": "repository",
+      "unit": "s",
+      "value": 17,
+      "ceiling": null,
+      "verdict": "unjudged",
+      "note": "repository · Unit suite time · no ceiling in docs/quality/targets.md, so neither ok nor ko"
+    },
+    {
+      "range": "week",
+      "pillar": "speed",
+      "indicator": "ci-time",
+      "label": "CI time, slowest job",
+      "app": "repository",
+      "unit": "s",
+      "value": 746,
+      "ceiling": 600,
+      "verdict": "ko",
+      "note": "repository · CI time, slowest job · over the ceiling of 600"
     }
   ],
   "buckets": [
@@ -17881,6 +17917,174 @@
       "app": "borsouvertures",
       "bucket": "09:59",
       "value": 410
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-10-05",
+      "value": 107
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-10-12",
+      "value": 121
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-10-19",
+      "value": 143
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-10-26",
+      "value": 208
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-11-02",
+      "value": 251
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-11-09",
+      "value": 261
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-11-16",
+      "value": 257
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "pragma",
+      "bucket": "2026-11-23",
+      "value": 271
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-10-05",
+      "value": null
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-10-12",
+      "value": null
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-10-19",
+      "value": null
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-10-26",
+      "value": 12
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-11-02",
+      "value": 13
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-11-09",
+      "value": 16
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-11-16",
+      "value": 17
+    },
+    {
+      "range": "week",
+      "indicator": "test-time",
+      "app": "repository",
+      "bucket": "2026-11-23",
+      "value": 17
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-10-05",
+      "value": 901
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-10-12",
+      "value": 614
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-10-19",
+      "value": 540
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-10-26",
+      "value": 1217
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-11-02",
+      "value": 366
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-11-09",
+      "value": 3155
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-11-16",
+      "value": 570
+    },
+    {
+      "range": "week",
+      "indicator": "ci-time",
+      "app": "repository",
+      "bucket": "2026-11-23",
+      "value": 746
     }
   ],
   "security": [
