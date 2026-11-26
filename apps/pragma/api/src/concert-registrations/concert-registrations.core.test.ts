@@ -9,6 +9,7 @@ import {
   projectRegistrationList,
   projectWishedSong,
   startOfParisDay,
+  toAnnouncementUpdate,
 } from './concert-registrations.core';
 
 const SESSION_ID = '11111111-1111-4111-8111-111111111111';
@@ -173,5 +174,22 @@ describe('projectRegistrationList', () => {
     );
     expect(entry?.comingFor).toBeNull();
     expect(entry?.wishedSong).toBeNull();
+  });
+
+  it('writes only the announcement fields a member changed, a null clearing one', () => {
+    expect(toAnnouncementUpdate({})).toStrictEqual({});
+    expect(
+      toAnnouncementUpdate({
+        message: null,
+        posterS3Key: 'poster/a/b.png',
+        prizeLabel: '3 bières',
+        prizeIcon: 'gift',
+      }),
+    ).toStrictEqual({
+      publicMessage: null,
+      posterS3Key: 'poster/a/b.png',
+      prizeLabel: '3 bières',
+      prizeIcon: 'gift',
+    });
   });
 });

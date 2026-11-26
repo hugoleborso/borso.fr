@@ -1,3 +1,4 @@
+import type { ConcertPrizeIcon } from '@domain/concert-prize.core';
 import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { mintBallotToken } from '../audience/ballot-token.utils';
 import { parisCalendarDayOf, parisInstantAt } from '../helpers/paris-time/paris-time.core';
@@ -112,4 +113,27 @@ export function projectRegistrationList(
       wishedSong: projectWishedSong(pickById(songs, registration.wishedSongId)),
     };
   });
+}
+
+export interface AnnouncementChanges {
+  readonly message?: string | null;
+  readonly posterS3Key?: string | null;
+  readonly prizeLabel?: string | null;
+  readonly prizeIcon?: ConcertPrizeIcon;
+}
+
+export interface AnnouncementColumns {
+  readonly publicMessage?: string | null;
+  readonly posterS3Key?: string | null;
+  readonly prizeLabel?: string | null;
+  readonly prizeIcon?: ConcertPrizeIcon;
+}
+
+export function toAnnouncementUpdate(changes: AnnouncementChanges): AnnouncementColumns {
+  return {
+    ...(changes.message === undefined ? {} : { publicMessage: changes.message }),
+    ...(changes.posterS3Key === undefined ? {} : { posterS3Key: changes.posterS3Key }),
+    ...(changes.prizeLabel === undefined ? {} : { prizeLabel: changes.prizeLabel }),
+    ...(changes.prizeIcon === undefined ? {} : { prizeIcon: changes.prizeIcon }),
+  };
 }

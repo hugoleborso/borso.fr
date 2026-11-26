@@ -1,6 +1,8 @@
 import { pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { CONCERT_PRIZE_ICONS } from '@domain/concert-prize.core';
 import {
+  CONCERT_PRIZE_LABEL_MAX_LENGTH,
   CONCERT_PUBLIC_MESSAGE_MAX_LENGTH,
   REGISTRATION_EMAIL_MAX_LENGTH,
   REGISTRATION_FIRST_NAME_MAX_LENGTH,
@@ -54,6 +56,8 @@ export const announcementPatchSchema = z
   .object({
     message: z.string().max(CONCERT_PUBLIC_MESSAGE_MAX_LENGTH).nullable().optional(),
     posterS3Key: z.string().min(1).max(POSTER_S3_KEY_MAX).nullable().optional(),
+    prizeLabel: z.string().trim().min(1).max(CONCERT_PRIZE_LABEL_MAX_LENGTH).nullable().optional(),
+    prizeIcon: z.enum(CONCERT_PRIZE_ICONS).optional(),
   })
   .strict();
 

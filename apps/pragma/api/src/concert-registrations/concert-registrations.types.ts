@@ -2,6 +2,7 @@ import {
   CONCERT_POSTER_CONTENT_TYPES,
   CONCERT_POSTER_MAX_MEBIBYTES,
 } from '@domain/input-limits.core';
+import type { ConcertPrize, ConcertPrizeIcon } from '@domain/concert-prize.core';
 import type { RateLimitBudget } from '../auth/rate-limit.utils';
 
 export const CONCERT_REGISTRATION_REFUSALS = [
@@ -50,13 +51,25 @@ export interface MemberNameView {
   readonly firstName: string;
 }
 
+export interface PublicMemberView extends MemberNameView {
+  readonly color: string;
+}
+
 export interface UpcomingConcertView {
   readonly sessionId: string;
   readonly date: string;
   readonly venue: string | null;
   readonly message: string | null;
   readonly posterUrl: string | null;
+  readonly prize: ConcertPrize | null;
   readonly registrationCount: number;
+}
+
+export interface AnnouncementView {
+  readonly message: string | null;
+  readonly posterUrl: string | null;
+  readonly prizeLabel: string | null;
+  readonly prizeIcon: ConcertPrizeIcon;
 }
 
 export interface RegistrationListEntry {

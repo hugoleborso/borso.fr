@@ -11,6 +11,7 @@ import {
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
+import { CONCERT_PRIZE_LABEL_MAX_LENGTH } from '@domain/input-limits.core';
 import { CONFLICTED_WRITE_MAX_ATTEMPTS } from '../helpers/persistence/conflict-abort.core';
 import { sessionTable } from '../sessions/sessions.schema';
 import { songTable } from '../songs/songs.schema';
@@ -46,12 +47,13 @@ const upcomingEnvelope = z.object({
       venue: z.string().nullable(),
       message: z.string().nullable(),
       posterUrl: z.string().nullable(),
+      prize: z.object({ label: z.string(), icon: z.string() }).nullable(),
       registrationCount: z.number(),
     }),
   ),
 });
 const membersEnvelope = z.object({
-  members: z.array(z.strictObject({ id: z.guid(), firstName: z.string() })),
+  members: z.array(z.strictObject({ id: z.guid(), firstName: z.string(), color: z.string() })),
 });
 const registrationsEnvelope = z.object({
   registrations: z.array(
@@ -68,6 +70,8 @@ const registrationsEnvelope = z.object({
 const announcementEnvelope = z.object({
   message: z.string().nullable(),
   posterUrl: z.string().nullable(),
+  prizeLabel: z.string().nullable(),
+  prizeIcon: z.string(),
 });
 const posterUploadEnvelope = z.object({ uploadUrl: z.url(), s3Key: z.string() });
 const fanWishesEnvelope = z.object({ songIds: z.array(z.guid()) });
@@ -438,13 +442,15 @@ describe('concert registrations controller (back-e2e)', () => {
     ]);
   });
 
-  it('shows the public only the id and first name of each member', async () => {
+  it('shows the public only the id, first name and colour of each member', async () => {
     const { app, memberId } = await buildAuthenticatedApp('Hugo');
     const listed = await readJson(
       await jsonRequest(app, '/api/concert-registrations/members'),
       membersEnvelope,
     );
-    expect(listed.members).toEqual([{ id: memberId, firstName: 'Hugo' }]);
+    expect(listed.members).toEqual([
+      { id: memberId, firstName: 'Hugo', color: expect.stringMatching(/^#[0-9a-f]{3,6}$/i) },
+    ]);
   });
 
   it('refuses an answer carrying a wrong edit token or none, and changes nothing', async () => {
@@ -597,7 +603,7 @@ describe('concert registrations controller (back-e2e)', () => {
     await jsonRequest(app, path, { method: 'PATCH', cookieHeader, body: { message: 'Come!' } });
     expect(
       await readJson(await jsonRequest(app, path, { cookieHeader }), announcementEnvelope),
-    ).toEqual({ message: 'Come!', posterUrl: null });
+    ).toEqual({ message: 'Come!', posterUrl: null, prizeLabel: null, prizeIcon: 'beer' });
     await jsonRequest(app, path, { method: 'PATCH', cookieHeader, body: { message: null } });
     expect(
       (await readJson(await jsonRequest(app, path, { cookieHeader }), announcementEnvelope))
@@ -611,6 +617,49 @@ describe('concert registrations controller (back-e2e)', () => {
     );
     expect(refused.status).toBe(422);
     expect((await readJson(refused, errorEnvelope)).error).toBe('not-a-concert');
+  });
+
+  it('sets a prize with its icon, shows it on the public list, clears it, and refuses an unknown icon', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const path = `/api/concert-registrations/concerts/${sessionId}/announcement`;
+
+    const set = await jsonRequest(app, path, {
+      method: 'PATCH',
+      cookieHeader,
+      body: { prizeLabel: ' 2 places ', prizeIcon: 'ticket' },
+    });
+    expect(await readJson(set, announcementEnvelope)).toEqual({
+      message: null,
+      posterUrl: null,
+      prizeLabel: '2 places',
+      prizeIcon: 'ticket',
+    });
+    const listed = await readJson(
+      await jsonRequest(app, '/api/concert-registrations/upcoming'),
+      upcomingEnvelope,
+    );
+    expect(listed.concerts[0]?.prize).toEqual({ label: '2 places', icon: 'ticket' });
+
+    await jsonRequest(app, path, { method: 'PATCH', cookieHeader, body: { prizeLabel: null } });
+    const cleared = await readJson(
+      await jsonRequest(app, '/api/concert-registrations/upcoming'),
+      upcomingEnvelope,
+    );
+    expect(cleared.concerts[0]?.prize).toBeNull();
+
+    const unknownIcon = await jsonRequest(app, path, {
+      method: 'PATCH',
+      cookieHeader,
+      body: { prizeIcon: 'trophy' },
+    });
+    expect(unknownIcon.status).toBe(400);
+    const tooLong = await jsonRequest(app, path, {
+      method: 'PATCH',
+      cookieHeader,
+      body: { prizeLabel: 'x'.repeat(CONCERT_PRIZE_LABEL_MAX_LENGTH + 1) },
+    });
+    expect(tooLong.status).toBe(400);
   });
 
   it('signs a poster upload under its concert and shows the poster once it is set', async () => {
@@ -640,6 +689,13 @@ describe('concert registrations controller (back-e2e)', () => {
       upcomingEnvelope,
     );
     expect(listed.concerts[0]?.posterUrl).toContain(signed.s3Key);
+
+    const removed = await jsonRequest(app, `${base}/announcement`, {
+      method: 'PATCH',
+      cookieHeader,
+      body: { posterS3Key: null },
+    });
+    expect((await readJson(removed, announcementEnvelope)).posterUrl).toBeNull();
   });
 
   it('refuses a poster key that belongs to another object, so the public page signs only posters', async () => {

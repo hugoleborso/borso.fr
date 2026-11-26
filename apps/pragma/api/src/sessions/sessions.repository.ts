@@ -12,7 +12,7 @@ import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from '.
 
 type SessionRawRow = Omit<
   typeof sessionTable.$inferSelect,
-  'origin' | 'posterS3Key' | 'publicMessage'
+  'origin' | 'posterS3Key' | 'publicMessage' | 'prizeLabel' | 'prizeIcon'
 >;
 
 export type SessionRow = Omit<SessionRawRow, 'friendsCountPerMember'> & {

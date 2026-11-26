@@ -16,11 +16,13 @@ import {
   selectWishSearchLine,
   toggleChoice,
 } from '../../routes/concerts/concert-sign-up.core';
+import { Avatar } from '../atoms/Avatar';
 import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
 import { Icon } from '../atoms/Icon';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
+import { memberInitial } from '../atoms/member-palette.utils';
 import { Sheet } from '../molecules/Sheet';
 import { selectSuggestionOutcome } from './suggest-song.core';
 
@@ -29,7 +31,10 @@ const SEARCH_INPUT_CLASS = composeClassName(inputVariants(), 'pl-9');
 const HIT_CLASS =
   'flex w-full min-h-11 cursor-pointer flex-col items-start gap-0.5 rounded-sm px-2 py-2 text-left text-meta ' +
   'text-ink hover:bg-hover data-focus-visible:outline-3 data-focus-visible:outline-focus';
-const QUESTION_CLASS = 'm-0 font-display text-heading text-ink';
+const QUESTION_CLASS = 'm-0 font-display text-title font-normal text-ink';
+const MEMBER_CHIP_CLASS =
+  'min-h-11 gap-2 border border-rule-strong bg-raised pr-3.5 pl-1.5 text-body font-normal ' +
+  'data-selected:border-2 data-selected:border-accent data-selected:bg-accent-soft data-selected:text-ink';
 
 interface WishedTrack {
   readonly id: string;
@@ -46,12 +51,14 @@ const NO_ANSWER: FollowUpValues = { comingForMemberId: null, wishedTrack: null }
 
 export interface RegistrationFollowUpSheetProps {
   readonly registration: StoredRegistration;
+  readonly firstName: string;
   readonly onDone: () => void;
 }
 
 // @FollowsBlueprint organism-query-owning
 export function RegistrationFollowUpSheet({
   registration,
+  firstName,
   onDone,
 }: RegistrationFollowUpSheetProps): JSX.Element {
   const { t } = useTranslation();
@@ -108,15 +115,30 @@ export function RegistrationFollowUpSheet({
   const send = (): void => {
     void form.handleSubmit();
   };
+  const title = t('concerts.followUpTitle', { firstName });
 
   return (
     <Sheet
-      title={t('concerts.followUpTitle')}
-      label={t('concerts.followUpTitle')}
+      title={
+        <span className="flex items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-pill bg-good-soft text-good">
+            <Icon name="check" size="md" />
+          </span>
+          <span className="font-semibold text-heading">{title}</span>
+        </span>
+      }
+      label={title}
+      isTitleARecordName
       onClose={onDone}
       footer={
-        <>
-          <Button icon="close" variant="quiet" onClick={onDone}>
+        <div className="flex w-full gap-2.5">
+          <Button
+            icon="close"
+            variant="quiet"
+            size="lg"
+            className="min-h-13 flex-auto border border-rule-strong"
+            onClick={onDone}
+          >
             {t('concerts.skip')}
           </Button>
           <form.Subscribe
@@ -128,6 +150,8 @@ export function RegistrationFollowUpSheet({
               <Button
                 icon="check"
                 variant="primary"
+                size="lg"
+                className="min-h-13 flex-[1.4]"
                 disabled={!hasAnswer || amend.isPending}
                 onClick={send}
               >
@@ -135,7 +159,7 @@ export function RegistrationFollowUpSheet({
               </Button>
             )}
           </form.Subscribe>
-        </>
+        </div>
       }
     >
       <div className="flex flex-col gap-6">
@@ -153,7 +177,14 @@ export function RegistrationFollowUpSheet({
                     key={member.id}
                     pressed={field.state.value === member.id}
                     onPress={() => field.handleChange(toggleChoice(field.state.value, member.id))}
+                    className={MEMBER_CHIP_CLASS}
                   >
+                    <Avatar
+                      initials={memberInitial(member.firstName)}
+                      color={member.color}
+                      size="md"
+                      aria-hidden="true"
+                    />
                     {member.firstName}
                   </Chip>
                 ))}

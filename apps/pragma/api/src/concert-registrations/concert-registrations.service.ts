@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
+import { projectConcertPrize, readConcertPrizeIcon } from '@domain/concert-prize.core';
 import { canonicalizeEmail, isDisposableEmail } from '@domain/registration-email.core';
 import { PRAGMA_REQUEST_HEADERS } from '@domain/request-headers.core';
 import { getMembersSortedByFirstName } from '../members/members.service';
@@ -14,8 +15,10 @@ import {
 } from '../songs/songs.service';
 import { mintChartGetUrl, mintObjectUpload } from '../uploads/uploads.service';
 import {
+  type AnnouncementChanges,
   buildPosterObjectKey,
   EDIT_TOKEN_BYTES,
+  toAnnouncementUpdate,
   encodeEditToken,
   hashEditToken,
   isConcert,
@@ -26,7 +29,6 @@ import {
   startOfParisDay,
 } from './concert-registrations.core';
 import {
-  type AnnouncementUpdateShape,
   type ConcertAnnouncementRow,
   type ConcertRegistrationRow,
   countRegistrationsOfConcerts,
@@ -45,7 +47,8 @@ import {
 } from './concert-registrations.repository';
 import {
   type AllowedPosterContentType,
-  type MemberNameView,
+  type AnnouncementView,
+  type PublicMemberView,
   refuse,
   type Refused,
   type RegistrationListEntry,
@@ -75,14 +78,15 @@ export async function listUpcomingConcerts(now: Date): Promise<UpcomingConcertVi
       venue: concert.venue,
       message: concert.publicMessage,
       posterUrl: await mintPosterUrl(concert.posterS3Key, now),
+      prize: projectConcertPrize(concert.prizeLabel, concert.prizeIcon),
       registrationCount: countBySessionId.get(concert.id) ?? NO_REGISTRATION,
     })),
   );
 }
 
-export async function listMemberNames(): Promise<MemberNameView[]> {
+export async function listMemberNames(): Promise<PublicMemberView[]> {
   const members = await getMembersSortedByFirstName();
-  return members.map((member) => ({ id: member.id, firstName: member.firstName }));
+  return members.map(({ id, firstName, color }) => ({ id, firstName, color }));
 }
 
 export interface RegisterParams {
@@ -244,11 +248,6 @@ export async function amendRegistration(
   };
 }
 
-export interface AnnouncementView {
-  readonly message: string | null;
-  readonly posterUrl: string | null;
-}
-
 export type AnnouncementOutcome = { kind: 'ok'; announcement: AnnouncementView } | Refused;
 
 async function projectAnnouncement(
@@ -258,6 +257,8 @@ async function projectAnnouncement(
   return {
     message: concert.publicMessage,
     posterUrl: await mintPosterUrl(concert.posterS3Key, now),
+    prizeLabel: concert.prizeLabel,
+    prizeIcon: readConcertPrizeIcon(concert.prizeIcon),
   };
 }
 
@@ -267,18 +268,9 @@ export async function readAnnouncement(sessionId: string, now: Date): Promise<An
   return { kind: 'ok', announcement: await projectAnnouncement(concert, now) };
 }
 
-export interface PatchAnnouncementParams {
+export interface PatchAnnouncementParams extends AnnouncementChanges {
   readonly sessionId: string;
-  readonly message?: string | null;
-  readonly posterS3Key?: string | null;
   readonly now: Date;
-}
-
-function toAnnouncementUpdate(params: PatchAnnouncementParams): AnnouncementUpdateShape {
-  return {
-    ...(params.message === undefined ? {} : { publicMessage: params.message }),
-    ...(params.posterS3Key === undefined ? {} : { posterS3Key: params.posterS3Key }),
-  };
 }
 
 // @FollowsBlueprint service-orchestration

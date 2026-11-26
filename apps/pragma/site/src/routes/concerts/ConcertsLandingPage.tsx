@@ -2,16 +2,13 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { PragmaMark } from '../../components/atoms/PragmaMark';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { ConcertSignUpCard } from '../../components/organisms/ConcertSignUpCard';
 import { useUpcomingConcerts } from '../../lib/queries/concert-registrations.queries';
 
-const MEMBERS_SPACE_PATH = '/app';
-
-function UpcomingConcerts(): JSX.Element {
+function NextConcert(): JSX.Element {
   const { t } = useTranslation();
   const upcoming = useUpcomingConcerts();
   if (upcoming.isPending) {
@@ -31,42 +28,24 @@ function UpcomingConcerts(): JSX.Element {
       </EmptyState>
     );
   }
-  if (upcoming.data.concerts.length === 0) {
+  const [nextConcert] = upcoming.data.concerts;
+  if (nextConcert === undefined) {
     return <EmptyState icon="calendar">{t('concerts.empty')}</EmptyState>;
   }
-  return (
-    <ul className="m-0 flex list-none flex-col gap-6 p-0">
-      {upcoming.data.concerts.map((concert) => (
-        <li key={concert.sessionId}>
-          <ConcertSignUpCard concert={concert} />
-        </li>
-      ))}
-    </ul>
-  );
+  return <ConcertSignUpCard concert={nextConcert} />;
 }
 
 // @FollowsBlueprint route-list-page
 export function ConcertsLandingPage(): JSX.Element {
   const { t } = useTranslation();
   return (
-    <main className="min-h-dvh bg-paper px-4 pt-8 pb-12 sm:px-8 sm:pt-12">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-        <header className="flex flex-col items-center gap-3 text-center">
-          <PragmaMark motion="still" className="w-20 sm:w-24" />
-          <h1 className="m-0 font-display text-display text-ink">{t('concerts.pageTitle')}</h1>
-          <p className="m-0 max-w-md text-body text-ink-soft text-balance">
-            {t('concerts.pageIntro')}
-          </p>
-        </header>
-        <UpcomingConcerts />
-        <footer className="flex justify-center pt-4">
-          <Link
-            to={MEMBERS_SPACE_PATH}
-            className="text-meta text-ink-faint underline-offset-4 hover:text-ink-soft hover:underline"
-          >
-            {t('concerts.membersSpace')}
-          </Link>
-        </footer>
+    <main className="flex min-h-dvh flex-col bg-paper px-4 pt-3.5 pb-28 md:px-12 md:pt-5 md:pb-12">
+      <header>
+        <PragmaMark motion="still" className="w-11 md:w-14.5" />
+        <h1 className="sr-only">{t('concerts.pageTitle')}</h1>
+      </header>
+      <div className="mt-4 flex flex-auto flex-col md:mt-8 md:items-center md:justify-center">
+        <NextConcert />
       </div>
     </main>
   );

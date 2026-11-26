@@ -32,6 +32,10 @@ export function readStoredRegistration(sessionId: string): StoredRegistration | 
   return parseStoredRegistration(localStorage.getItem(registrationKeyOfConcert(sessionId)));
 }
 
-export function writeRegistration(sessionId: string, registration: StoredRegistration): void {
+export function rememberFirstRegistration(
+  sessionId: string,
+  registration: StoredRegistration,
+): void {
+  if (readStoredRegistration(sessionId) !== null) return;
   localStorage.setItem(registrationKeyOfConcert(sessionId), JSON.stringify(registration));
 }

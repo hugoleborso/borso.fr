@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkPoster,
+  findPosterFileRefusal,
+  isPdfPoster,
   normaliseMessage,
   pickDrawWinners,
   POSTER_MAX_BYTES,
+  PosterRefusal,
+  selectPublicPageSaveErrorKey,
 } from './concert-public-page.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -23,6 +27,31 @@ describe('the public page of a concert', () => {
       contentType: null,
       refusalKey: 'sessions.posterTooLarge',
     });
+  });
+
+  it('takes a PDF poster to draw in the browser, and an image as it is, both up to the size limit', () => {
+    expect(isPdfPoster('application/pdf')).toBe(true);
+    expect(isPdfPoster('image/png')).toBe(false);
+    expect(findPosterFileRefusal('application/pdf', POSTER_MAX_BYTES)).toBeNull();
+    expect(findPosterFileRefusal('image/png', POSTER_MAX_BYTES)).toBeNull();
+    expect(findPosterFileRefusal('application/pdf', POSTER_MAX_BYTES + 1)).toBe(
+      'sessions.posterTooLarge',
+    );
+    expect(findPosterFileRefusal('image/png', POSTER_MAX_BYTES + 1)).toBe(
+      'sessions.posterTooLarge',
+    );
+    expect(findPosterFileRefusal('application/zip', 10)).toBe('sessions.posterWrongType');
+  });
+
+  it('names a refused poster by its reason and any other failed save as one', () => {
+    expect(selectPublicPageSaveErrorKey(null)).toBeNull();
+    const refusal = new PosterRefusal('sessions.posterTooLarge');
+    expect(refusal.name).toBe('PosterRefusal');
+    expect(refusal.message).toBe('sessions.posterTooLarge');
+    expect(selectPublicPageSaveErrorKey(refusal)).toBe('sessions.posterTooLarge');
+    expect(selectPublicPageSaveErrorKey(new Error('offline'))).toBe(
+      'sessions.publicPageSaveFailed',
+    );
   });
 
   it('draws three distinct winners from the registrations', () => {

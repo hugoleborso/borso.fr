@@ -20,6 +20,8 @@ export const sessionTable = pgTable('session', {
   origin: text('origin'),
   posterS3Key: text('poster_s3_key'),
   publicMessage: text('public_message'),
+  prizeLabel: text('prize_label'),
+  prizeIcon: text('prize_icon'),
 });
 
 export const SESSION_ORIGINS = ['free_slot'] as const;

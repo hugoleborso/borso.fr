@@ -158,10 +158,10 @@ describe('the concert page', () => {
 
   it('opens the public page of a concert in its own tab, from a link to it, and not under the details', async () => {
     renderSessionPage('?view=public');
-    expect(await screen.findByRole('heading', { level: 2, name: 'Public page' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Draw 3 winners' })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Details' }));
     expect(await screen.findByRole('link', { name: /^Gear/ })).toBeTruthy();
-    expect(screen.queryByRole('heading', { level: 2, name: 'Public page' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Draw 3 winners' })).toBeNull();
   });
 
   it('gives the session its start time on the band clock in Paris, under its title', async () => {

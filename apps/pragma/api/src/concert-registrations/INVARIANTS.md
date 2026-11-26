@@ -32,8 +32,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 - Only a concert whose date is on or after midnight of today in Paris
   takes a sign-up (`isUpcomingConcert`), so tonight's concert stays open
   all evening. Anything else answers 422 `not-an-upcoming-concert`.
-- The public sees each member's id and first name only, never an email,
-  a phone or an avatar key.
+- The public sees each member's id, first name and colour only, never an
+  email, a phone or an avatar key.
 - `concert_registration` is kept off every preview clone and off the
   schema reader, because it holds emails (`cdk/lib/stack.ts`).
 
@@ -48,7 +48,7 @@ Held by: `domain/registration-email.core.test.ts` › drops the +tag of the loca
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses a throwaway mailbox and writes nothing for it
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses a sign-up on a practice, a past concert and a session that does not exist
 Held by: `api/src/concert-registrations/concert-registrations.core.test.ts` › keeps a concert that started earlier today in Paris, so tonight stays open all evening
-Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › shows the public only the id and first name of each member
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › shows the public only the id, first name and colour of each member
 Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address, a ballot token or a fan email
 
 - Deleting a concert deletes its registrations in the same transaction
@@ -109,9 +109,16 @@ Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts
 
 ## Concert announcement
 
-- `session.public_message` and `session.poster_s3_key` stay nullable at
-  the database level forever, because DSQL takes no constraint on
-  `ADD COLUMN`.
+- `session.public_message`, `session.poster_s3_key`, `session.prize_label`
+  and `session.prize_icon` stay nullable at the database level forever,
+  because DSQL takes no constraint on `ADD COLUMN`.
+- A prize shows on the public list only when it has a label
+  (`projectConcertPrize`). Its icon is one of `CONCERT_PRIZE_ICONS` in
+  `domain/concert-prize.core.ts`. The announcement PATCH refuses any other
+  icon and a label longer than `CONCERT_PRIZE_LABEL_MAX_LENGTH`, and a
+  stored icon nobody knows reads as `beer`.
+- The poster upload takes images only. A PDF poster is drawn to a PNG in
+  the browser before it is uploaded.
 - Members edit the announcement in the "Public page" tab of a concert's
   session page, a view `listSessionViews` offers to a concert only. A
   practice never shows it, and `?view=public` on a practice falls back to
@@ -121,7 +128,7 @@ Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts
   it. Any other key answers 422 `foreign-poster-key`.
 - A preview clone nullifies `poster_s3_key`, since the preview cannot read
   the production bucket.
-- The poster types, the poster size, the message length and the sign-up's
+- The poster types, the poster size, the message length, the prize label length and the sign-up's
   first name and email lengths are declared once in
   `domain/input-limits.core.ts`. The API's schemas and the site's forms
   both import them, so the two sides cannot disagree.
@@ -131,5 +138,8 @@ Held by: `site/src/routes/sessions/SessionDetailPage.test.tsx` › opens the pub
 Held by: `api/src/concert-registrations/concert-registrations.core.test.ts` › refuses any other object, so the public page never signs a take or a chart
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses a poster key that belongs to another object, so the public page signs only posters
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › signs a poster upload under its concert and shows the poster once it is set
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › sets a prize with its icon, shows it on the public list, clears it, and refuses an unknown icon
+Held by: `domain/concert-prize.core.test.ts` › shows a prize only when a member wrote its label
+Held by: `domain/concert-prize.core.test.ts` › reads a stored icon, and falls back to the beer for none or an unknown one
 Held by: `api/src/concert-registrations/concert-registrations.schema.test.ts` › takes a photo up to ten mebibytes and refuses a document or a heavier file
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › accepts a JPEG, PNG or WebP poster up to the size limit

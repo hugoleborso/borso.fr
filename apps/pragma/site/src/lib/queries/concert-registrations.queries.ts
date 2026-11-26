@@ -7,8 +7,15 @@ import { z } from 'zod';
 import { ApiError, api } from '../api.client';
 import { sendFileToPresignedUrl } from '../object-upload.adapter';
 import { writeKeepingStaleness } from './cache-write.queries';
-import { type StoredRegistration, writeRegistration } from '../registration-token.adapter';
-import type { PosterContentType } from '../../routes/concerts/concert-public-page.core';
+import { rememberFirstRegistration, type StoredRegistration } from '../registration-token.adapter';
+import type { ConcertPrizeIcon } from '@domain/concert-prize.core';
+import {
+  checkPoster,
+  isPdfPoster,
+  type PosterContentType,
+  PosterRefusal,
+} from '../../routes/concerts/concert-public-page.core';
+import { renderPdfPosterAsPng } from '../pdf-poster.adapter';
 
 export const concertRegistrationKeys = {
   all: ['concert-registrations'] as const,
@@ -84,7 +91,7 @@ export function useRegisterForConcert() {
       return created.data;
     },
     onSuccess: (registration, variables) => {
-      writeRegistration(variables.sessionId, registration);
+      rememberFirstRegistration(variables.sessionId, registration);
     },
   });
 }
@@ -171,7 +178,9 @@ export interface PosterFile {
 interface AnnouncementVariables {
   readonly sessionId: string;
   readonly message?: string | null;
-  readonly poster?: PosterFile;
+  readonly prizeLabel?: string | null;
+  readonly prizeIcon?: ConcertPrizeIcon;
+  readonly poster?: File | null;
 }
 
 const UPLOAD_REFUSED_STATUS = 502;
@@ -188,19 +197,31 @@ async function uploadPoster(sessionId: string, poster: PosterFile): Promise<stri
   return s3Key;
 }
 
+async function preparePoster(file: File): Promise<PosterFile> {
+  const isPdf = isPdfPoster(file.type);
+  const image = isPdf ? await renderPdfPosterAsPng(file) : file;
+  const { contentType, refusalKey } = checkPoster(image.type, image.size);
+  if (contentType === null) throw new PosterRefusal(refusalKey ?? 'sessions.posterWrongType');
+  return { file: image, contentType };
+}
+
+async function savePoster(sessionId: string, poster: File | null | undefined) {
+  if (poster === undefined || poster === null) return poster;
+  return await uploadPoster(sessionId, await preparePoster(poster));
+}
+
 // @FollowsBlueprint query-pessimistic-mutation
 export function useSaveConcertAnnouncement() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (variables: AnnouncementVariables) => {
-      const posterS3Key =
-        variables.poster === undefined
-          ? undefined
-          : await uploadPoster(variables.sessionId, variables.poster);
+      const posterS3Key = await savePoster(variables.sessionId, variables.poster);
       const response = await concertRegistrationsApi.concerts[':sessionId'].announcement.$patch({
         param: { sessionId: variables.sessionId },
         json: {
           ...(variables.message === undefined ? {} : { message: variables.message }),
+          ...(variables.prizeLabel === undefined ? {} : { prizeLabel: variables.prizeLabel }),
+          ...(variables.prizeIcon === undefined ? {} : { prizeIcon: variables.prizeIcon }),
           ...(posterS3Key === undefined ? {} : { posterS3Key }),
         },
       });

@@ -5,7 +5,7 @@ import {
   isRetryableSignUpFailure,
   selectErrorKeyAt,
   selectFollowUpErrorKey,
-  selectSignUpCardView,
+  isSignUpSheetShown,
   selectSignUpError,
   selectSignUpScreen,
   selectWishSearchLine,
@@ -123,10 +123,17 @@ describe('the concert sign-up rules', () => {
     ).toStrictEqual({ messageKey: 'audience.searchUnavailable', isFailure: true });
   });
 
-  it('shows the form until the browser holds a registration, then thanks once answered', () => {
-    expect(selectSignUpCardView(false, false)).toBe('form');
-    expect(selectSignUpCardView(true, false)).toBe('registered');
-    expect(selectSignUpCardView(true, true)).toBe('thanked');
+  it('shows the sign-up sheet when asked, or to show a refusal, never over the opening screen', () => {
+    const settled = { overlay: null, error: null, isAnswerShown: true } as const;
+    const refused = {
+      ...settled,
+      error: { key: 'concerts.alreadyRegistered', place: 'email' },
+    } as const;
+    expect(isSignUpSheetShown(true, settled)).toBe(true);
+    expect(isSignUpSheetShown(false, settled)).toBe(false);
+    expect(isSignUpSheetShown(false, refused)).toBe(true);
+    expect(isSignUpSheetShown(true, { ...settled, overlay: 'opening' })).toBe(false);
+    expect(isSignUpSheetShown(false, { ...refused, overlay: 'leaving' })).toBe(false);
   });
 
   it('puts an email refusal under the email field and any other under the button', () => {

@@ -15,19 +15,23 @@ import { ConcertsLandingPage } from './ConcertsLandingPage';
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const A_MEMBER = 'bbbbbbbb-2222-4222-8222-222222222222';
 const A_REGISTRATION = 'cccccccc-3333-4333-8333-333333333333';
+const LATER_CONCERT = 'dddddddd-4444-4444-8444-444444444444';
+const NEXT_CONCERT = {
+  sessionId: A_CONCERT,
+  date: '2026-11-28T20:30:00.000Z',
+  venue: 'Le Pop-Up du Label',
+  message: 'Entrée libre\nVenez tôt',
+  posterUrl: null,
+  prize: { label: '3 beers to win', icon: 'beer' },
+  registrationCount: 4,
+};
 const UPCOMING = {
   concerts: [
-    {
-      sessionId: A_CONCERT,
-      date: '2026-11-28T20:30:00.000Z',
-      venue: 'Le Pop-Up du Label',
-      message: 'Entrée libre\nVenez tôt',
-      posterUrl: null,
-      registrationCount: 4,
-    },
+    NEXT_CONCERT,
+    { ...NEXT_CONCERT, sessionId: LATER_CONCERT, venue: 'Le Grand Mix', prize: null },
   ],
 };
-const MEMBERS = { members: [{ id: A_MEMBER, firstName: 'Hugo' }] };
+const MEMBERS = { members: [{ id: A_MEMBER, firstName: 'Hugo', color: '#3a9b9b' }] };
 
 const activeStubs: FetchStub[] = [];
 
@@ -35,18 +39,17 @@ function isRegistrationPost(request: Request): boolean {
   return request.method === 'POST' && request.url.includes('/registrations');
 }
 
-function answerReads(request: Request): Response {
-  if (request.url.includes('/members')) return jsonResponse(MEMBERS);
-  return jsonResponse(UPCOMING);
-}
-
-function renderPage(answerSignUp: (request: Request) => Promise<Response>): FetchStub {
+function renderPage(
+  answerSignUp: (request: Request) => Promise<Response>,
+  upcoming: unknown = UPCOMING,
+): FetchStub {
   const fetchStub = stubFetch(async (request) => {
     if (isRegistrationPost(request)) return await answerSignUp(request);
     if (request.method === 'PATCH') {
       return jsonResponse({ registration: { comingForMemberId: A_MEMBER, wishedSong: null } });
     }
-    return answerReads(request);
+    if (request.url.includes('/members')) return jsonResponse(MEMBERS);
+    return jsonResponse(upcoming);
   });
   activeStubs.push(fetchStub);
   render(
@@ -59,16 +62,18 @@ function renderPage(answerSignUp: (request: Request) => Promise<Response>): Fetc
   return fetchStub;
 }
 
-async function signUp(email = 'lea@example.com'): Promise<void> {
-  fireEvent.change(await screen.findByLabelText('First name'), { target: { value: 'Léa' } });
+async function fillAndConfirm(firstName: string, email: string): Promise<void> {
+  fireEvent.change(await screen.findByLabelText('First name'), { target: { value: firstName } });
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: email } });
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: "I'll be there!" })).toHaveProperty(
-      'disabled',
-      false,
-    );
+    expect(screen.getByRole('button', { name: 'Confirm' })).toHaveProperty('disabled', false);
   });
-  fireEvent.click(screen.getByRole('button', { name: "I'll be there!" }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+}
+
+async function signUp(email = 'lea@example.com'): Promise<void> {
+  fireEvent.click(await screen.findByRole('button', { name: "I'll be there!" }));
+  await fillAndConfirm('Léa', email);
 }
 
 // @FollowsBlueprint test-component-render
@@ -82,11 +87,27 @@ describe('the public concert sign-up page', () => {
     for (const stub of activeStubs.splice(0)) stub.restore();
   });
 
-  it('shows each upcoming concert with its venue and message, and a discreet way to the members area', async () => {
+  it('shows only the next concert, its venue as a map search, its message and its prize, and no way to the members area', async () => {
     renderPage(() => Promise.resolve(jsonResponse({}, 500)));
-    expect(await screen.findByText('Le Pop-Up du Label')).toBeTruthy();
+    const venue = await screen.findByRole('link', { name: 'Le Pop-Up du Label' });
+    expect(venue.getAttribute('href')).toBe(
+      'https://www.google.com/maps/search/?api=1&query=Le+Pop-Up+du+Label',
+    );
+    expect(screen.queryByText('Le Grand Mix')).toBeNull();
     expect(screen.getByText(/Entrée libre/).className).toContain('whitespace-pre-line');
-    expect(screen.getByRole('link', { name: 'Members area' }).getAttribute('href')).toBe('/app');
+    expect(screen.getByText('3 beers to win')).toBeTruthy();
+    expect(screen.getByText('28')).toBeTruthy();
+    expect(screen.getByText('November')).toBeTruthy();
+    expect(screen.getByText('Saturday')).toBeTruthy();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('shows no prize coupon when the concert has none', async () => {
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, prize: null, message: null }],
+    });
+    expect(await screen.findByRole('link', { name: 'Le Pop-Up du Label' })).toBeTruthy();
+    expect(screen.queryByText('3 beers to win')).toBeNull();
   });
 
   it('says so when no concert is ahead', async () => {
@@ -122,26 +143,30 @@ describe('the public concert sign-up page', () => {
       );
     });
     await signUp(' Lea@Example.com ');
-    expect(await screen.findByText('Who are you coming for?')).toBeTruthy();
+    expect(await screen.findByText('Who in the band are you coming to support?')).toBeTruthy();
+    expect(screen.getByText("You're signed up, Léa!")).toBeTruthy();
     expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toContain('token-1');
     const sent: unknown = await fetchStub.calls.find(isRegistrationPost)?.clone().json();
     expect(sent).toStrictEqual({ firstName: 'Léa', email: 'lea@example.com' });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Hugo' }));
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(await screen.findByText(/Thank you!/)).toBeTruthy();
+    expect(await screen.findByText('Signed up')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
     const patch = fetchStub.calls.find((call) => call.method === 'PATCH');
     expect(patch?.headers.get('x-registration-token')).toBe('token-1');
   });
 
-  it('skips both questions without sending anything, then thanks the fan', async () => {
+  it('skips both questions without sending anything, then shows the fan as signed up', async () => {
     const fetchStub = renderPage(() =>
       Promise.resolve(jsonResponse({ registrationId: A_REGISTRATION, editToken: 'token-1' }, 201)),
     );
     await signUp();
     fireEvent.click(await screen.findByRole('button', { name: 'Hugo' }));
     fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
-    expect(await screen.findByText(/Thank you!/)).toBeTruthy();
+    expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(fetchStub.calls.filter((call) => call.method === 'PATCH')).toEqual([]);
   });
 
@@ -149,7 +174,9 @@ describe('the public concert sign-up page', () => {
     renderPage(() => Promise.resolve(jsonResponse({ error: 'already-registered' }, 409)));
     await signUp();
     expect(await screen.findByText('This email is already signed up for this gig')).toBeTruthy();
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('dialog', { name: /Le Pop-Up du Label/ })).toBeTruthy();
+    expect(screen.getByLabelText<HTMLInputElement>('First name').value).toBe('Léa');
+    expect(screen.queryByText('Signed up')).toBeNull();
   });
 
   it('asks for a real email under the field when the address is a throwaway one', async () => {
@@ -165,7 +192,30 @@ describe('the public concert sign-up page', () => {
       JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
     );
     renderPage(() => Promise.resolve(jsonResponse({}, 500)));
-    expect(await screen.findByText(/You're signed up/)).toBeTruthy();
+    expect(await screen.findByText('Signed up')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
+  });
+
+  it('signs up a friend from the same browser, asks them the questions, and keeps the first sign-up remembered', async () => {
+    const stored = JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' });
+    localStorage.setItem(`pragma.registration.${A_CONCERT}`, stored);
+    renderPage(() =>
+      Promise.resolve(jsonResponse({ registrationId: A_MEMBER, editToken: 'token-2' }, 201)),
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign up a friend' }));
+    await fillAndConfirm('Max', 'max@example.com');
+    expect(await screen.findByText("You're signed up, Max!")).toBeTruthy();
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBe(stored);
+  });
+
+  it('closes the sign-up sheet without sending anything', async () => {
+    const fetchStub = renderPage(() => Promise.resolve(jsonResponse({}, 500)));
+    fireEvent.click(await screen.findByRole('button', { name: "I'll be there!" }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(fetchStub.calls.filter(isRegistrationPost)).toEqual([]);
   });
 });

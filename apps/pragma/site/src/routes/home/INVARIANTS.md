@@ -23,4 +23,4 @@ Held by: `site/src/routes/home/HomePage.test.tsx` › shows an empty state with 
 Held by: `site/src/components/organisms/navigation-active.core.test.ts` › lights Home up on the start screen only
 Held by: `site/src/routes/login.core.test.ts` › opens Home when the state carries no origin
 Held by: `site/src/sw/service-worker.test.ts` › opens a new window when none is open, at home when the URL is missing
-Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows each upcoming concert with its venue and message, and a discreet way to the members area
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows only the next concert, its venue as a map search, its message and its prize, and no way to the members area

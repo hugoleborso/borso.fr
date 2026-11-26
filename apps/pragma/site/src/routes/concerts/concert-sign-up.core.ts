@@ -148,14 +148,11 @@ export function selectWishSearchLine(outcome: SuggestionOutcome): SearchLine | n
   return { messageKey, isFailure };
 }
 
-export type SignUpCardView = 'form' | 'registered' | 'thanked';
+export const EMPTY_SIGN_UP: SignUpFormValues = { firstName: '', email: '' };
 
-export function selectSignUpCardView(
-  hasRegistration: boolean,
-  hasAnsweredFollowUp: boolean,
-): SignUpCardView {
-  if (!hasRegistration) return 'form';
-  return hasAnsweredFollowUp ? 'thanked' : 'registered';
+export function isSignUpSheetShown(isRequested: boolean, screen: SignUpScreen): boolean {
+  if (screen.overlay !== null) return false;
+  return isRequested || screen.error !== null;
 }
 
 export function selectErrorKeyAt(

@@ -192,10 +192,11 @@ Not to be confused with: a practice, which is the other `kind` of session.
 
 ## Concert announcement
 
-The poster and the public message members set on a concert, shown on the
-public sign-up page.
+The poster, the public message and the prize members set on a concert,
+shown on the public sign-up page. The prize is a label, such as "3 bières à
+gagner", and an icon among beer, gift, ticket and shirt.
 
-Lives in: `api/src/concert-registrations/` (`session.poster_s3_key`, `session.public_message`)
+Lives in: `api/src/concert-registrations/` (`session.poster_s3_key`, `session.public_message`, `session.prize_label`, `session.prize_icon`) and `domain/concert-prize.core.ts`
 
 Invariants: `api/src/concert-registrations/INVARIANTS.md`
 

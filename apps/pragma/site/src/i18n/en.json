@@ -618,12 +618,10 @@
       "noUpcoming": "No upcoming session.",
       "noPast": "No past session."
     },
-    "publicPageTitle": "Public page",
     "publicPageOpen": "Open the page",
     "poster": "Poster",
     "posterAdd": "Add a poster",
-    "posterChange": "Change the poster",
-    "posterWrongType": "The poster must be a JPEG, PNG or WebP image.",
+    "posterWrongType": "The poster must be a PDF or a JPEG, PNG or WebP image.",
     "posterTooLarge": "The poster is larger than 10 MB.",
     "publicMessage": "Public message",
     "publicPageSaveFailed": "The public page could not be saved.",
@@ -632,7 +630,18 @@
     "comingFor": "Coming for {{name}}",
     "wishedSong": "Would love to hear {{title}} · {{artist}}",
     "drawWinners": "Draw 3 winners",
-    "winnersTitle": "Winners"
+    "winnersTitle": "Winners",
+    "posterReplace": "Replace",
+    "posterRemove": "Remove",
+    "posterTypes": "PDF, JPEG, PNG or WebP",
+    "posterCurrent": "Current poster",
+    "prizeLabel": "Prize to win",
+    "prizeLabelPlaceholder": "3 beers",
+    "prizeIcon": "Prize icon",
+    "prizeIconBeer": "Beer",
+    "prizeIconGift": "Gift",
+    "prizeIconTicket": "Ticket",
+    "prizeIconShirt": "T-shirt"
   },
   "setlist": {
     "addSongNoMatch": "No song matches.",
@@ -1111,8 +1120,7 @@
     "retry": "Try again"
   },
   "concerts": {
-    "pageTitle": "Our next gigs",
-    "pageIntro": "Tell us you're coming, we'll see you by the stage.",
+    "pageTitle": "pragma's next gig",
     "empty": "No gig planned yet. Come back soon!",
     "loadFailed": "The gigs could not load.",
     "venueUnknown": "Venue to be announced",
@@ -1124,20 +1132,22 @@
     "disposableEmail": "Throwaway addresses can't enter the draw, use your real email.",
     "notUpcoming": "This gig no longer takes sign-ups.",
     "signUpFailed": "The sign-up did not go through. Try again in a moment.",
-    "registered": "You're signed up. See you there!",
-    "thanks": "Thank you! See you soon by the stage.",
-    "followUpTitle": "Two more questions",
-    "comingForQuestion": "Who are you coming for?",
-    "wishQuestion": "Which song would you love to hear at a next gig?",
+    "registered": "Signed up",
+    "followUpTitle": "You're signed up, {{firstName}}!",
+    "comingForQuestion": "Who in the band are you coming to support?",
+    "wishQuestion": "A song you dream of hearing us play?",
     "changeWish": "Change",
     "wishPlaceholder": "Search a song or an artist…",
     "send": "Send",
     "skip": "Skip",
     "followUpFailed": "Your answer did not go through. Try again or skip.",
-    "membersSpace": "Members area",
     "rateLimited": "Too many tries at once. Try again in a minute.",
     "followUpTokenRefused": "We could not find your sign-up on this device. You can skip.",
     "followUpTrackRefused": "This song could not be kept. Pick another one.",
-    "followUpSearchUnavailable": "Song search is unavailable. Try again in a moment or skip."
+    "followUpSearchUnavailable": "Song search is unavailable. Try again in a moment or skip.",
+    "validate": "Confirm",
+    "signUpSheetTitle": "{{venue}} · {{date}}",
+    "signUpFriend": "A friend",
+    "signUpFriendLabel": "Sign up a friend"
   }
 }

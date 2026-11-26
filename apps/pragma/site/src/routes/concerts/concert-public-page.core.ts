@@ -3,10 +3,17 @@
 import {
   CONCERT_POSTER_CONTENT_TYPES,
   CONCERT_POSTER_MAX_MEBIBYTES,
+  CONCERT_PRIZE_LABEL_MAX_LENGTH,
   CONCERT_PUBLIC_MESSAGE_MAX_LENGTH,
 } from '@domain/input-limits.core';
 
 export const POSTER_CONTENT_TYPES = CONCERT_POSTER_CONTENT_TYPES;
+
+export const PDF_CONTENT_TYPE = 'application/pdf';
+
+export const POSTER_FILE_TYPES = [...POSTER_CONTENT_TYPES, PDF_CONTENT_TYPE] as const;
+
+export const PRIZE_LABEL_MAX_LENGTH = CONCERT_PRIZE_LABEL_MAX_LENGTH;
 
 export type PosterContentType = (typeof POSTER_CONTENT_TYPES)[number];
 
@@ -33,6 +40,32 @@ export function checkPoster(type: string, byteSize: number): PosterCheck {
   if (byteSize > POSTER_MAX_BYTES)
     return { contentType: null, refusalKey: 'sessions.posterTooLarge' };
   return { contentType, refusalKey: null };
+}
+
+export function isPdfPoster(type: string): boolean {
+  return type === PDF_CONTENT_TYPE;
+}
+
+export function findPosterFileRefusal(type: string, byteSize: number): PosterRefusalKey | null {
+  if (!isPdfPoster(type)) return checkPoster(type, byteSize).refusalKey;
+  return byteSize > POSTER_MAX_BYTES ? 'sessions.posterTooLarge' : null;
+}
+
+export class PosterRefusal extends Error {
+  readonly refusalKey: PosterRefusalKey;
+
+  constructor(refusalKey: PosterRefusalKey) {
+    super(refusalKey);
+    this.name = 'PosterRefusal';
+    this.refusalKey = refusalKey;
+  }
+}
+
+export type PublicPageSaveErrorKey = PosterRefusalKey | 'sessions.publicPageSaveFailed';
+
+export function selectPublicPageSaveErrorKey(error: unknown): PublicPageSaveErrorKey | null {
+  if (error === null) return null;
+  return error instanceof PosterRefusal ? error.refusalKey : 'sessions.publicPageSaveFailed';
 }
 
 export function pickDrawWinners<Entry>(

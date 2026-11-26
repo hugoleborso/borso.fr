@@ -14,11 +14,11 @@ export type RegistrationAnswerShape = Partial<
 
 export type ConcertAnnouncementRow = Pick<
   typeof sessionTable.$inferSelect,
-  'id' | 'kind' | 'date' | 'venue' | 'publicMessage' | 'posterS3Key'
+  'id' | 'kind' | 'date' | 'venue' | 'publicMessage' | 'posterS3Key' | 'prizeLabel' | 'prizeIcon'
 >;
 
 export type AnnouncementUpdateShape = Partial<
-  Pick<ConcertAnnouncementRow, 'publicMessage' | 'posterS3Key'>
+  Pick<ConcertAnnouncementRow, 'publicMessage' | 'posterS3Key' | 'prizeLabel' | 'prizeIcon'>
 >;
 
 // @FollowsBlueprint repository-projection
@@ -29,6 +29,8 @@ const ANNOUNCEMENT_PROJECTION = {
   venue: sessionTable.venue,
   publicMessage: sessionTable.publicMessage,
   posterS3Key: sessionTable.posterS3Key,
+  prizeLabel: sessionTable.prizeLabel,
+  prizeIcon: sessionTable.prizeIcon,
 } as const;
 
 // @FollowsBlueprint repository-projection
