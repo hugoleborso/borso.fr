@@ -14,6 +14,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   venue, except on a phone when the concert has a poster, where it moves
   after the prize coupon. The prize coupon shows only when the concert has
   a prize. No link leads to the members' area.
+- The installed app never shows this page. Opened on `/` in standalone
+  display (`readInstallContext`), it redirects to `/app`, the ERP home.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.
 - While the sign-up is on its way the opening screen shows, and the sheet
