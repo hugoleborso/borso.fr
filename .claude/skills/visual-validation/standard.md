@@ -84,40 +84,16 @@ There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict, not a flav
 The report is always committed. Its screenshots split by verdict, per
 [ADR-2026-09-21T0819](../../../docs/adr/2026-09-21T0819-validation-screenshots-leave-git-for-the-previews-cdn.md):
 
-- **A screenshot a FAIL row references is committed**, beside the report, as before. A FAIL
-  report without the screenshot it references is unrebuttable, and that argument is the whole
-  reason this section exists.
-- **Every other screenshot is published to the previews CDN and never committed.** A PASS
-  screenshot is read once, by the reviewer of that pull request. The previews bucket expires
-  its objects after 60 days, so the record is deliberately temporary.
-
-`.gitignore` at the repo root **must not** match `docs/features/**/validation/**`, because the
-FAIL set still lands there. The agent never writes outside its given `evidence_dir`, so which
-files survive is decided by the skill's publish step, not by an ignore pattern.
-
-**The published URL is what the report cites.** A published screenshot is referenced as
-`https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png`, never as a local path —
-a relative link to a file that was never committed resolves nowhere. A committed one keeps its
-relative path.
-
-That per-file URL belongs in the report and **never in the pull request body**.
-`pretool-github-pr-body.sh` blocks a markdown image and a link whose extension is an image,
-so the body links the folder instead and `/open-pr` publishes an `index.html` gallery there.
-The images themselves reach the pull request through the *Screenshots* comment that
-`.github/workflows/screenshots.yml` writes with its own token, which the MCP server never
-touches. The report is read on a checkout or on github.com, where neither rule applies.
-
-**The upload runs in `/open-pr`, because the destination carries the pull request number.**
-Between the validation and the pull request, a publishable screenshot waits in
-`<validation_dir>/.pending-upload/<timestamp>/`, which is gitignored so that no intervening
-`git add` can commit it.
+- **A screenshot a FAIL row references is committed**, beside the report. A FAIL report
+  without the screenshot it references is unrebuttable.
+- **Every other screenshot waits in the gitignored `.pending-upload/`**, then `/open-pr`
+  publishes it to the previews CDN, which expires it after 60 days. The report cites it by its
+  published URL, never by a local path.
 
 **When the upload is denied, commit everything.** It needs `s3:PutObject` on the screenshots
-prefix, which [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) grants by hand and no
-test here can verify. A denial is not a failed validation: move the staged files back beside
-the report, commit them, rewrite the report's URLs as relative paths, and say so in one line.
-Silently dropping a PASS run's evidence because an upload failed would turn the report into
-"trust me", which is the failure this section has always guarded against.
+prefix, which [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) grants by hand. Move the
+staged files beside the report, commit them, rewrite the report's URLs as relative paths, and
+say so in one line. Dropping a PASS run's evidence would turn the report into "trust me".
 
 ## Pixel-content checks (every screenshot)
 
