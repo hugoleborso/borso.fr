@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#410'
-fix-commits: none (proposal under review)
-eradication-level: 5
-eradication-paths: []
+fix-commits: [self]
+eradication-level: 2
+eradication-paths: [.claude/hooks/pretool-agent-after-route.sh, .claude/settings.json]
 time-to-detect: hours
 tags: [pragma, process, agents, frontend, skill]
 zone: .claude/skills/route/SKILL.md
@@ -14,8 +14,6 @@ recurs: none (spec-skill-let-perspectives-be-skipped covers a spec walk that ran
 ---
 
 # The deadline that skipped the mockups
-
-Status: proposal. The operator picks the eradication with one closed question.
 
 ## User impact
 
@@ -83,16 +81,36 @@ Options for the eradication, as the operator would live with them:
 | A. A PreToolUse hook on `Agent` refuses the first build agent of a session whose transcript holds no `/route` call and whose branch adds no `spec.md` | a feature session shows him mockups or a spec before any code, every time | one hook. Tier 0 edits spawn no agent, so they pass |
 | B. No hook | sessions under a deadline may build first again | none now |
 
-Recommended: A, because the hooks that exist fire only after the code exists.
+The operator chose A on 2026-11-26.
 
 ## Eradication
 
-**Type:** knowledge (level 5), pending the operator's choice between A and B.
+**Type:** DevX check (level 2)
 
-**Reference:** none until he picks.
+**Reference:** the commit adding this file.
 
-**Proof it can fail:** to be pasted when A ships. Plant a session that spawns
-a writing agent with no `/route` call, and paste the hook's refusal.
+```diff
++      {
++        "type": "command",
++        "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-agent-after-route.sh"
++      }
+```
+
+The hook passes a subagent's call, a read-only agent type, a transcript that
+called `/route`, `/specification`, `/tech-lead-orchestrator`,
+`/feature-pipeline` or `/after-task-kaizen`, and a branch that adds a
+`spec.md`. It refuses every other agent.
+
+**Proof it can fail:** planted inputs, run with `KAIZEN_LOG_REFUSALS=0`.
+
+| Input | Exit |
+| --- | --- |
+| `general-purpose`, transcript with no `/route` | 2, "No /route this session and no spec.md on the branch, so a general-purpose agent cannot start." |
+| no type given, no `/route` | 2 |
+| `fork`, no `/route` | 2 |
+| `general-purpose`, transcript with a `route` Skill call | 0 |
+| `Explore` or `technical-validator`, no `/route` | 0 |
+| a subagent's call (`agent_id` set) | 0 |
 
 **Similar instances:** `grep -l "route" docs/features/meta/lessons-from-pr-*/inventory.md`
 lists earlier sweeps that mention `/route`. PR #410 is the first whose

@@ -5,11 +5,7 @@ description: Decide how much machinery a task deserves before starting it, and l
 
 # Route
 
-Two failures, and they cost about the same.
-
-Running `/specification` and `/feature-pipeline` on a one-line fix burns an hour and produces a spec nobody will read. Editing eleven files across three applications without a spec produces a change nobody can review and a decision nobody agreed to.
-
-This skill picks between them, on evidence, before the work starts.
+Pick the tier on evidence, before the work starts. An agent that writes code cannot start before this skill runs (`pretool-agent-after-route.sh`).
 
 ## Size it first
 
@@ -57,14 +53,9 @@ Sizing happens before the work, so it is sometimes wrong. These are the signals,
 - You are about to touch a fourth file you did not predict → Tier 0 becomes Tier 1.
 - You cannot write the code without deciding something the user has not decided → any tier becomes Tier 2. Ask; do not pick quietly.
 - A change that was one application turns out to need the same edit in another → Tier 3.
-- A gate fails for a reason unrelated to your change → that is its own task, at its own tier. CLAUDE.md forbids walking past it, and it does not belong inside the current one.
-
-A feature is one branch and one pull request at every tier. Slices are commits on that branch, never pull requests stacked on each other. The operator reviews a feature on one preview and merges it at once, and PR #216's seven stacked pull requests were rejected for that reason.
 
 De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add the field and render it" is a Tier 1; say so and drop the ceremony.
 
 ## Write the task list
 
 Whatever tier you pick, create the tasks for it before starting, and say which tier and why in one sentence. The tier is a claim about the work, and writing it down is what lets you notice later that it was wrong.
-
-For Tier 0, the task list is the exception: do not create one. A single task that says "make the change" is overhead pretending to be process.

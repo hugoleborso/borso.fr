@@ -3,7 +3,7 @@
 # notification is read.
 #
 # On PR #406 a session restated every notification although CLAUDE.md held
-# this rule. See docs/features/meta/lessons-from-pr-406/inventory.md row 18.
+# this rule, and on PR #411 after it. See lessons-from-pr-406 row 18, -410 row 47.
 
-printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"[notification-reply] Write nothing about a notification unless it brings something new the operator needs or one of your actions follows from it. Never restate it: each reply buries the open question."}}'
+printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"[notification-reply] End this turn with no text unless you push, merge or fix something, or CI turned red. CI running or green on a pull request that waits on the operator is not news to him: a reply buries his open question."}}'
 exit 0

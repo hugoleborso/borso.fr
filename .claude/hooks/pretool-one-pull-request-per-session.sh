@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook for `mcp__github__create_pull_request`.
 #
-# A feature is one branch and one pull request (`.claude/skills/route/SKILL.md`).
+# A feature is one branch and one pull request: PR #216's seven stacked ones were rejected.
 # The operator reviews it on one preview and merges it at once.
 # See docs/dantotsus/three-pull-requests-for-one-afternoon-of-talos.md.
 #
