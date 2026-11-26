@@ -52,8 +52,25 @@ site_url() {
     tail -1 | grep -oE 'http://localhost:[0-9]+/'
 }
 
+other_running_label() {
+  local file group
+  for file in "$STATE_DIR/$APP".*.pgid; do
+    [[ -f "$file" && "$file" != "$GROUP_FILE" ]] || continue
+    group="$(cat "$file")"
+    kill -0 -- "-$group" 2>/dev/null || continue
+    basename "$file" .pgid | cut -d. -f2-
+    return 0
+  done
+  return 1
+}
+
 case "$ACTION" in
   start)
+    if [[ -d "$REPO_ROOT/apps/$APP/api" ]] && other="$(other_running_label)"; then
+      echo "[dev-server] $APP already runs as $other, and a second one would share its API ports." >&2
+      echo "[dev-server] Use that one: scripts/dev-server.sh url $APP --as $other" >&2
+      exit 1
+    fi
     if running_group >/dev/null; then
       echo "[dev-server] $APP ($LABEL) already runs, log $LOG_FILE" >&2
     else
