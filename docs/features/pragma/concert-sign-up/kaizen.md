@@ -23,3 +23,22 @@ Session: 78a9cee8-6ad7-5552-b015-d73d4b1ef7ca
 - [2026-11-26 09:44] `hook:subagent-no-staging` a subagent ran a git command that writes the shared index
 - [2026-11-26 09:47] `site-agent` The default 5-minute query stale time plus the persisted cache hid a just-saved public message and a fan-wish song from the next page load, found only in the browser.
 - [2026-11-26 09:47] `site-agent` Only one Invariants file per vocabulary term, so a feature split across api and site folders needs a separate site-side term, learned from the vocabulary gate after writing three INVARIANTS sections.
+- [2026-11-26 10:02] `hook:api-validation` opened a pull request changing an API without a technical-validation report
+- [2026-11-26 10:07] `technical-validator` The concert-sign-up spec has a third shape (Use cases and Rules, no Behaviour, Test strategy or Changes) that neither the short-form nor the ADR procedure of the validator describes, so category D routing to /visual-validation had to be improvised.
+- [2026-11-26 10:43] `fix-agent` Exporting a shared constant from domain/ made the no-api-declaration-repeated-in-site rule flag four untouched site files, only discovered at lint time, because nothing lists where a constant is copied before you move it.
+- [2026-11-26 10:43] `fix-agent` check-vocabulary-paths refuses an INVARIANTS section whose heading is not a VOCABULARY term, which a rule about the rate limit of public writes needed, and the message arrives only after writing it.
+- [2026-11-26 10:53] `hook:visual-validation` opened a pull request changing a front end without a visual-validation report
+- [2026-11-26 13:00] `main` The follow-up sheet mockup read 'C'est noté, Camille ! / Facultatif / Tu viens pour qui ?': a bare 'Facultatif' label and a question with no context left the fan unsure what was asked and why.
+- [2026-11-26 13:02] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-26 14:00] `main` Mockup boards edited by regex were published without rendering them, so a broken desktop layout and an overlapping date reached the operator twice.
+- [2026-11-26 14:34] `build-agent` The local dev API answers 500 on /upcoming as soon as a concert has a poster key, because no bucket is configured to sign it, so the poster layout cannot be checked locally without patching fetch.
+- [2026-11-26 14:34] `build-agent` agent-browser network route cannot mock a read that pragma sends through the POST read-batch, so faking one answer needed an init script that rewrites fetch and a fresh browser session.
+- [2026-11-26 14:34] `build-agent` react-aria RadioButton silently ignores aria-label, so the four prize icon radios had no accessible name until a sr-only span was added.
+- [2026-11-26 14:40] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-11-26 14:51] `visual-validator` agent-browser fill @ref with an empty string printed Done but left a controlled input unchanged, so a clear-and-save test looked like a save that ignored empty fields.
+- [2026-11-26 14:51] `visual-validator` The poster upload returns 500 UPLOADS_BUCKET not set under the local dev server, so every poster row needs a routed response or a preview.
+- [2026-11-26 14:54] `technical-validator` vitest --changed did not select site/src/lib/design-tokens.utils.test.ts though tokens.css and class-name.utils.ts changed, so the validator ran it by name
+- [2026-11-26 14:54] `technical-validator` Retract the previous technical-validator line: design-tokens.utils.test.ts did run under --changed; the validator misread its own log before checking it
+- [2026-11-26 15:02] `hook:no-prettier` ran Prettier in a repository that formats with oxfmt
+- [2026-11-26 15:11] `fix2-agent` A jsdom File passed as a Request body in a pragma site test throws in vitest's makeCompatBlob, so a presigned PUT cannot go through stubFetch and the upload adapter has to be mocked instead.
+- [2026-11-26 15:11] `fix2-agent` The visual validator named row 26's symptom but not its cause; a ConcertSignUpCard seeded from useState at mount kept the persisted cache's previous concert state, which a key per concert would have caught at review.
