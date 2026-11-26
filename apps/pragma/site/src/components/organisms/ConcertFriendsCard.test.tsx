@@ -73,5 +73,7 @@ describe('ConcertFriendsCard', () => {
     expect(screen.getByText('Arn').closest('div')?.textContent).toBe('Arn2 / 5');
     expect(screen.getByText('Gui').closest('div')?.textContent).toBe('Gui1 / 4');
     expect(screen.getByText('No pref.').closest('div')?.textContent).toBe('No pref.2');
+    expect(screen.getByText('registered')).toBeTruthy();
+    expect(screen.getByText('expected')).toBeTruthy();
   });
 });

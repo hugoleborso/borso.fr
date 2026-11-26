@@ -49,7 +49,7 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
     () =>
       tallyFriends({
         members,
-        targets: parseFriendsCounts(session.friendsCountPerMember),
+        expectedCounts: parseFriendsCounts(session.friendsCountPerMember),
         registrations,
       }),
     [members, session, registrations],
@@ -61,8 +61,8 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
         <span className={LABEL_CLASS}>{t('sessions.friendsCountPerMember')}</span>
         <span className="font-mono text-meta text-ink-soft">
           <b className="font-semibold text-ink">{tally.registeredTotal}</b>{' '}
-          {t('sessions.friendsRegistered', { count: tally.registeredTotal })} · {tally.targetTotal}{' '}
-          {t('sessions.friendsExpected', { count: tally.targetTotal })}
+          {t('sessions.friendsRegistered', { count: tally.registeredTotal })} ·{' '}
+          {tally.expectedTotal} {t('sessions.friendsExpected', { count: tally.expectedTotal })}
         </span>
       </div>
       <div className="flex flex-col">
@@ -77,7 +77,7 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
                 color={member.color}
                 shape="ring"
                 className={composeClassName(BAR_CLASS, EXPECTED_BAR_CLASS)}
-                style={{ width: `${row.targetPercent}%` }}
+                style={{ width: `${row.expectedPercent}%` }}
               />
               <MemberMark
                 color={member.color}
@@ -88,7 +88,7 @@ export function ConcertFriendsCard({ session, members }: ConcertFriendsCardProps
             </div>
             <span className={COUNT_CLASS}>
               <b className="font-semibold text-ink">{row.registered}</b>
-              <span className="text-ink-soft"> / {row.target}</span>
+              <span className="text-ink-soft"> / {row.expected}</span>
             </span>
           </div>
         ))}

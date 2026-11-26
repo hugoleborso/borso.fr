@@ -36,9 +36,9 @@ export interface FriendsMember {
 export interface MemberFriendsRow<TMember extends FriendsMember> {
   readonly member: TMember;
   readonly registered: number;
-  readonly target: number;
+  readonly expected: number;
   readonly registeredPercent: number;
-  readonly targetPercent: number;
+  readonly expectedPercent: number;
 }
 
 export interface FriendsTally<TMember extends FriendsMember> {
@@ -46,12 +46,12 @@ export interface FriendsTally<TMember extends FriendsMember> {
   readonly noPreferenceCount: number;
   readonly noPreferencePercent: number;
   readonly registeredTotal: number;
-  readonly targetTotal: number;
+  readonly expectedTotal: number;
 }
 
 export interface FriendsTallyInput<TMember extends FriendsMember> {
   readonly members: readonly TMember[];
-  readonly targets: Readonly<Record<string, number>>;
+  readonly expectedCounts: Readonly<Record<string, number>>;
   readonly registrations: readonly FriendsRegistration[];
 }
 
@@ -70,23 +70,23 @@ export function tallyFriends<TMember extends FriendsMember>(
   const counts = input.members.map((member) => ({
     member,
     registered: countComingFor(member.id, input.registrations),
-    target: input.targets[member.id] ?? NO_FRIEND,
+    expected: input.expectedCounts[member.id] ?? NO_FRIEND,
   }));
   const noPreferenceCount =
     input.registrations.length - sumOf(counts.map((count) => count.registered));
   const scaleMax = Math.max(
     noPreferenceCount,
-    ...counts.flatMap((count) => [count.registered, count.target]),
+    ...counts.flatMap((count) => [count.registered, count.expected]),
   );
   return {
     rows: counts.map((count) => ({
       ...count,
       registeredPercent: computeSharePercent(count.registered, scaleMax),
-      targetPercent: computeSharePercent(count.target, scaleMax),
+      expectedPercent: computeSharePercent(count.expected, scaleMax),
     })),
     noPreferenceCount,
     noPreferencePercent: computeSharePercent(noPreferenceCount, scaleMax),
     registeredTotal: input.registrations.length,
-    targetTotal: sumOf(Object.values(input.targets)),
+    expectedTotal: sumOf(Object.values(input.expectedCounts)),
   };
 }

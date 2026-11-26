@@ -61,15 +61,21 @@ describe('tallyFriends', () => {
   it('draws every row on one scale, the largest of all registrations and expected counts', () => {
     const tally = tallyFriends({
       members: [MEMBER, OTHER_MEMBER],
-      targets: { [MEMBER_ID]: 8, [OTHER_MEMBER_ID]: 2 },
+      expectedCounts: { [MEMBER_ID]: 8, [OTHER_MEMBER_ID]: 2 },
       registrations: [...comingFor(MEMBER_ID, 6), ...comingFor(OTHER_MEMBER_ID, 4)],
     });
     expect(tally.rows).toEqual([
-      { member: MEMBER, registered: 6, target: 8, registeredPercent: 75, targetPercent: 100 },
-      { member: OTHER_MEMBER, registered: 4, target: 2, registeredPercent: 50, targetPercent: 25 },
+      { member: MEMBER, registered: 6, expected: 8, registeredPercent: 75, expectedPercent: 100 },
+      {
+        member: OTHER_MEMBER,
+        registered: 4,
+        expected: 2,
+        registeredPercent: 50,
+        expectedPercent: 25,
+      },
     ]);
     expect(tally.registeredTotal).toBe(10);
-    expect(tally.targetTotal).toBe(10);
+    expect(tally.expectedTotal).toBe(10);
     expect(tally.noPreferenceCount).toBe(0);
     expect(tally.noPreferencePercent).toBe(0);
   });
@@ -77,36 +83,36 @@ describe('tallyFriends', () => {
   it('lets a member past the expected count set the scale', () => {
     const tally = tallyFriends({
       members: [MEMBER],
-      targets: { [MEMBER_ID]: 2 },
+      expectedCounts: { [MEMBER_ID]: 2 },
       registrations: comingFor(MEMBER_ID, 4),
     });
-    expect(tally.rows[0]).toMatchObject({ registeredPercent: 100, targetPercent: 50 });
+    expect(tally.rows[0]).toMatchObject({ registeredPercent: 100, expectedPercent: 50 });
   });
 
   it('lets the registrations that chose nobody set the scale too', () => {
     const tally = tallyFriends({
       members: [MEMBER],
-      targets: { [MEMBER_ID]: 2 },
+      expectedCounts: { [MEMBER_ID]: 2 },
       registrations: [...comingFor(MEMBER_ID, 1), ...comingFor(null, 4)],
     });
-    expect(tally.rows[0]).toMatchObject({ registeredPercent: 25, targetPercent: 50 });
+    expect(tally.rows[0]).toMatchObject({ registeredPercent: 25, expectedPercent: 50 });
     expect(tally.noPreferenceCount).toBe(4);
     expect(tally.noPreferencePercent).toBe(100);
   });
 
   it('leaves every bar empty when nobody is expected and nobody registered', () => {
-    const tally = tallyFriends({ members: [MEMBER], targets: {}, registrations: [] });
+    const tally = tallyFriends({ members: [MEMBER], expectedCounts: {}, registrations: [] });
     expect(tally.rows).toEqual([
-      { member: MEMBER, registered: 0, target: 0, registeredPercent: 0, targetPercent: 0 },
+      { member: MEMBER, registered: 0, expected: 0, registeredPercent: 0, expectedPercent: 0 },
     ]);
-    expect(tally.targetTotal).toBe(0);
+    expect(tally.expectedTotal).toBe(0);
     expect(tally.noPreferencePercent).toBe(0);
   });
 
   it('puts a registration for a member no longer listed under no preference', () => {
     const tally = tallyFriends({
       members: [MEMBER],
-      targets: { [MEMBER_ID]: 3, [DEPARTED_MEMBER_ID]: 2 },
+      expectedCounts: { [MEMBER_ID]: 3, [DEPARTED_MEMBER_ID]: 2 },
       registrations: [
         ...comingFor(MEMBER_ID, 1),
         ...comingFor(null, 1),
@@ -115,6 +121,6 @@ describe('tallyFriends', () => {
     });
     expect(tally.noPreferenceCount).toBe(2);
     expect(tally.registeredTotal).toBe(3);
-    expect(tally.targetTotal).toBe(5);
+    expect(tally.expectedTotal).toBe(5);
   });
 });
