@@ -62,6 +62,22 @@ describe('renderOutcome', () => {
     ).toBe('{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"a\\n\\nb"}}');
   });
 
+  it('hands back the rewritten input of a repairing check beside every note', () => {
+    expect(
+      renderOutcome('PreToolUse', [
+        { kind: 'context', text: 'a' },
+        {
+          kind: 'rewrite',
+          updatedInput: { command: 'set -o pipefail; git push | tail' },
+          text: 'b',
+        },
+      ]).stdout,
+    ).toBe(
+      '{"hookSpecificOutput":{"hookEventName":"PreToolUse",' +
+        '"updatedInput":{"command":"set -o pipefail; git push | tail"},"additionalContext":"a\\n\\nb"}}',
+    );
+  });
+
   it('prints nothing when every check passes', () => {
     expect(renderOutcome('PreToolUse', [PASS])).toEqual({
       exitCode: 0,

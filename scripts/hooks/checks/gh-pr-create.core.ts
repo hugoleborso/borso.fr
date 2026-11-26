@@ -2,11 +2,10 @@
 import { resolve } from 'node:path';
 import { validateBody } from '../../pr/pr-body.core.ts';
 import { type Check, type HookWorld, PASS, refuse, type Verdict } from '../check.core.ts';
-import { listSimpleCommands } from '../shell-command.core.ts';
+import { listSimpleCommands, stripHeredocBodies } from '../shell-command.core.ts';
 
 const RULE = 'open-pr';
 const CHECKER = 'scripts/pr/check-pr-body.ts';
-const HEREDOC = /<<-?['"]?(?<tag>[A-Za-z_]\w*)['"]?(?<rest>[^\n]*)\n.*?\n\k<tag>(?:\n|$)/gsu;
 const TRAILING_NEWLINES = /\n+$/u;
 const HEAD_FLAG = /^.*--head[ =]([^ ]+).*$/su;
 const BODY_FILE_FLAG = /--body-file\b/u;
@@ -27,7 +26,7 @@ function trimTrailingNewlines(text: string): string {
 }
 
 export function stripHeredocs(command: string): string {
-  return trimTrailingNewlines(command.replace(HEREDOC, '$<rest>\n'));
+  return trimTrailingNewlines(stripHeredocBodies(command));
 }
 
 export function isRunningPullRequestCreate(command: string): boolean {

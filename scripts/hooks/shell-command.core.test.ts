@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listSimpleCommands, stripStringBodies } from './shell-command.core.ts';
+import { listSimpleCommands, stripHeredocBodies, stripStringBodies } from './shell-command.core.ts';
 
 // @FollowsBlueprint test-pure-unit
 describe('listSimpleCommands', () => {
@@ -93,5 +93,13 @@ describe('stripStringBodies, so a regex over a command line misses what is only 
 
   it('drops a quoted body once, even when it nests a substitution with quotes', () => {
     expect(stripStringBodies('echo "a $(echo \'b\') c"')).toBe('echo ""');
+  });
+});
+
+describe('stripHeredocBodies, for a hook that reads quoted flag values', () => {
+  it('drops a heredoc body and keeps every quoted argument', () => {
+    expect(stripHeredocBodies("gh pr create --body \"x\" <<'EOF'\nbody\nEOF\necho 'y'\n")).toBe(
+      'gh pr create --body "x" \necho \'y\'\n',
+    );
   });
 });

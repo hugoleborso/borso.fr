@@ -48,14 +48,14 @@ function selectQuotedEdit(start: number, end: number, command: string): TextEdit
   return { start: start + 1, end: end - 1 };
 }
 
-function collectEdits(command: string): TextEdit[] {
+function collectEdits(command: string, isStrippingQuotes: boolean): TextEdit[] {
   const edits: TextEdit[] = [];
   visitAll(parse(command), (node) => {
     if (node.type === 'HereDoc') {
       edits.push({ start: node.pos, end: node.end });
       edits.push(selectHereDocEdit(node, command));
     }
-    if (node.type === 'SingleQuoted' || node.type === 'DoubleQuoted') {
+    if (isStrippingQuotes && (node.type === 'SingleQuoted' || node.type === 'DoubleQuoted')) {
       const edit = selectQuotedEdit(node.pos, node.end, command);
       if (edit !== null) edits.push(edit);
     }
@@ -74,13 +74,20 @@ function dropNestedEdits(edits: readonly TextEdit[]): TextEdit[] {
   return kept;
 }
 
-export function stripStringBodies(command: string): string {
-  const edits = dropNestedEdits(collectEdits(command));
+function applyEdits(command: string, edits: readonly TextEdit[]): string {
   let result = '';
   let cursor = 0;
-  for (const edit of edits) {
+  for (const edit of dropNestedEdits(edits)) {
     result += command.slice(cursor, edit.start);
     cursor = edit.end;
   }
   return result + command.slice(cursor);
+}
+
+export function stripStringBodies(command: string): string {
+  return applyEdits(command, collectEdits(command, true));
+}
+
+export function stripHeredocBodies(command: string): string {
+  return applyEdits(command, collectEdits(command, false));
 }

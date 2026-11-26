@@ -1,9 +1,8 @@
 // @FollowsBlueprint utils-pure-module
 import { type Check, PASS, refuse, type Verdict } from '../check.core.ts';
+import { stripMarkdownCode } from '../markdown-code.core.ts';
 
 const RULE = 'pr-body';
-const FENCED_BLOCK = /^[ \t]*(`{3,}|~{3,}).*?^[ \t]*\1[ \t]*$/gmsu;
-const CODE_SPAN = /(`+)(.+?)\1/gsu;
 const MARKDOWN_IMAGE = /!\[[^\]\n]*\]\(/u;
 const IMG_TAG = /<img[^\S\n]/iu;
 const DETAILS_TAG = /<details>|<summary>/iu;
@@ -13,10 +12,6 @@ const PLACEHOLDER = /<[A-Za-z][A-Za-z0-9._/:-]*>/u;
 const LINK_WRAPPER_LENGTH = 3;
 const KNOWLEDGE_LINK =
   'See https://github.com/hugoleborso/borso.fr/blob/main/docs/knowledge/github-mcp-pr-body-sanitizer.md.';
-
-function stripMarkdownCode(document: string): string {
-  return document.replace(FENCED_BLOCK, '').replace(CODE_SPAN, ' ');
-}
 
 function refuseMarkup(reason: string): Verdict {
   return refuse(RULE, 'wrote a pull-request body carrying markup the server silently strips', [

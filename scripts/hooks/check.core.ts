@@ -41,6 +41,11 @@ export type Verdict =
       readonly summary: string;
     }
   | { readonly kind: 'context'; readonly text: string }
+  | {
+      readonly kind: 'rewrite';
+      readonly updatedInput: Readonly<Record<string, unknown>>;
+      readonly text: string;
+    }
   | { readonly kind: 'block'; readonly reason: string };
 
 export interface Check {
@@ -95,12 +100,18 @@ function renderBlocks(verdicts: readonly Verdict[]): HookOutcome | null {
 }
 
 function renderContexts(event: HookEvent, verdicts: readonly Verdict[]): HookOutcome {
-  const contexts = verdicts.filter((verdict) => verdict.kind === 'context');
-  if (contexts.length === 0) return { exitCode: 0, stdout: '', stderr: '', refusals: [] };
-  const additionalContext = contexts.map((context) => context.text).join('\n\n');
+  const notes = verdicts.filter(
+    (verdict) => verdict.kind === 'context' || verdict.kind === 'rewrite',
+  );
+  if (notes.length === 0) return { exitCode: 0, stdout: '', stderr: '', refusals: [] };
+  const rewrite = verdicts.find((verdict) => verdict.kind === 'rewrite');
+  const additionalContext = notes.map((note) => note.text).join('\n\n');
+  const updatedInput = rewrite === undefined ? {} : { updatedInput: rewrite.updatedInput };
   return {
     exitCode: 0,
-    stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext } }),
+    stdout: JSON.stringify({
+      hookSpecificOutput: { hookEventName: event, ...updatedInput, additionalContext },
+    }),
     stderr: '',
     refusals: [],
   };
