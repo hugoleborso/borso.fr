@@ -46,7 +46,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 ## Hard rules
 
 - borso.fr is the operator's personal project, on personal time. The Notion, Slack, Gmail, Google Drive and Calendar connectors belong to their employer. Never write to them from this repo. Read one only when the operator names it, and keep what this repo produces inside this repo.
-- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel. One standing exception: merge a `kaizen` pull request yourself once CI is green, when `scripts/pr/deploy-fanout.ts` prints no application and it holds no question for the operator.
+- Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel. One standing exception: merge a `kaizen` pull request yourself once CI is green, when `scripts/pr/deploy-fanout.ts` prints no application and it leaves the operator no decision.
 - Never run a deploy locally. Call reserved names through `run` (`pnpm --filter <pkg> run deploy`, same for `destroy`).
 - A full-stack app's `destroy` targets `<app>-pr-<N>` only. `--all` also deletes the shared `<app>-cluster` stack.
 - English in identifiers, schemas, comments, commits and specs. Visible text goes through i18n (`en.json`, `fr.json`). Translate the operator's French or slang before it reaches code.
