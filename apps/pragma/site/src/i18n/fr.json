@@ -242,7 +242,8 @@
     "emptyToLearn": "Rien à apprendre : tous les morceaux que tu joues sont prêts.",
     "addSong": "Ajouter un morceau",
     "addSongTitle": "Ajouter un morceau",
-    "noSongNotes": "Rien d’écrit pour ce morceau."
+    "noSongNotes": "Rien d’écrit pour ce morceau.",
+    "filterFans": "Proposées par les fans"
   },
   "common": {
     "actions": "Actions",
@@ -607,7 +608,8 @@
       "songs": "Morceaux",
       "tasks": "Tâches",
       "takes": "Prises",
-      "details": "Détails"
+      "details": "Détails",
+      "public": "Page publique"
     },
     "when": {
       "label": "Sessions à afficher",
@@ -615,7 +617,31 @@
       "past": "Passées",
       "noUpcoming": "Aucune session à venir.",
       "noPast": "Aucune session passée."
-    }
+    },
+    "publicPageOpen": "Voir la page",
+    "poster": "Affiche",
+    "posterAdd": "Ajouter une affiche",
+    "posterWrongType": "L'affiche doit être un PDF ou une image JPEG, PNG ou WebP.",
+    "posterTooLarge": "L'affiche dépasse 10 Mo.",
+    "publicMessage": "Message public",
+    "publicPageSaveFailed": "La page publique n'a pas pu être enregistrée.",
+    "registrationsTitle": "Inscrits ({{count}})",
+    "registrationsEmpty": "Personne n'est encore inscrit.",
+    "comingFor": "Vient pour {{name}}",
+    "wishedSong": "Aimerait entendre {{title}} · {{artist}}",
+    "drawWinners": "Tirer au sort 3 gagnants",
+    "winnersTitle": "Gagnants",
+    "posterReplace": "Remplacer",
+    "posterRemove": "Retirer",
+    "posterTypes": "PDF, JPEG, PNG ou WebP",
+    "posterCurrent": "Affiche actuelle",
+    "prizeLabel": "Lot à gagner",
+    "prizeLabelPlaceholder": "3 bières",
+    "prizeIcon": "Icône du lot",
+    "prizeIconBeer": "Bière",
+    "prizeIconGift": "Cadeau",
+    "prizeIconTicket": "Billet",
+    "prizeIconShirt": "T-shirt"
   },
   "setlist": {
     "addSongNoMatch": "Aucun morceau ne correspond.",
@@ -1092,5 +1118,36 @@
     "failed": "pragma n'a pas pu joindre les données du groupe.",
     "offline": "Vous êtes hors ligne.",
     "retry": "Réessayer"
+  },
+  "concerts": {
+    "pageTitle": "Le prochain concert de pragma",
+    "empty": "Pas de concert prévu pour l'instant. Reviens bientôt !",
+    "loadFailed": "Les concerts n'ont pas pu se charger.",
+    "venueUnknown": "Lieu à venir",
+    "posterAlt": "Affiche du concert {{venue}}",
+    "firstName": "Prénom",
+    "email": "Email",
+    "signUp": "Je serai là !",
+    "alreadyRegistered": "Cet email est déjà inscrit à ce concert",
+    "disposableEmail": "Les adresses jetables ne participent pas au tirage, utilise ton vrai email.",
+    "notUpcoming": "Ce concert n'accepte plus d'inscriptions.",
+    "signUpFailed": "L'inscription n'est pas passée. Réessaie dans un instant.",
+    "registered": "Inscrit·e",
+    "followUpTitle": "Tu es inscrit·e, {{firstName}} !",
+    "comingForQuestion": "Tu viens soutenir qui dans le groupe ?",
+    "wishQuestion": "Un morceau que tu rêves de nous entendre jouer ?",
+    "changeWish": "Changer",
+    "wishPlaceholder": "Cherche un morceau, un artiste…",
+    "send": "Envoyer",
+    "skip": "Passer",
+    "followUpFailed": "Ta réponse n'est pas passée. Réessaie ou passe.",
+    "rateLimited": "Trop d'essais d'un coup. Réessaie dans une minute.",
+    "followUpTokenRefused": "On n'a pas retrouvé ton inscription sur cet appareil. Tu peux passer.",
+    "followUpTrackRefused": "Ce morceau n'a pas pu être retenu. Choisis-en un autre.",
+    "followUpSearchUnavailable": "La recherche de morceaux est indisponible. Réessaie dans un instant ou passe.",
+    "validate": "Valider",
+    "signUpSheetTitle": "{{venue}} · {{date}}",
+    "signUpFriend": "Un·e ami·e",
+    "signUpFriendLabel": "Inscrire un·e ami·e"
   }
 }

@@ -1,5 +1,5 @@
 const NOTIFICATION_ICON = '/icons/icon-192.png';
-const DEFAULT_NOTIFICATION_URL = '/';
+const DEFAULT_NOTIFICATION_URL = '/app';
 const FRENCH_LANGUAGE_PREFIX = 'fr';
 const DEFAULT_DEVICE_LANGUAGE = 'en';
 const BAND_TIME_ZONE = 'Europe/Paris';

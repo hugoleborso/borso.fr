@@ -149,7 +149,7 @@ describe('buildStreakPayload', () => {
     expect(buildStreakPayload(reminder)).toEqual({
       messageKey: 'streak-at-risk',
       parameters: { days: '12', jokersAfter: '2' },
-      url: '/',
+      url: '/app',
       tag: 'streak:member-lea:2026-10-29',
     });
   });

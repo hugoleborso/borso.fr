@@ -198,20 +198,23 @@ export function isSessionPillRowCrowded(pills: SessionPills): boolean {
 }
 
 export const SESSION_VIEW_PARAM = 'view';
-export const SESSION_VIEWS = ['setlist', 'songs', 'tasks', 'takes', 'details'] as const;
+export const SESSION_VIEWS = ['setlist', 'songs', 'tasks', 'takes', 'details', 'public'] as const;
 export type SessionView = (typeof SESSION_VIEWS)[number];
 const DEFAULT_SESSION_VIEW: SessionView = 'setlist';
 
 export interface SessionViewsInput {
-  readonly hasDetails: boolean;
+  readonly isConcert: boolean;
   readonly isPractice: boolean;
+  readonly isPickerShown: boolean;
 }
 
 // @FollowsBlueprint core-decision
 export function listSessionViews(input: SessionViewsInput): readonly SessionView[] {
   const firstView: SessionView = input.isPractice ? 'songs' : 'setlist';
   const views: SessionView[] = [firstView, 'tasks', 'takes'];
-  return input.hasDetails ? [...views, 'details'] : views;
+  const hasDetails = input.isConcert || input.isPickerShown;
+  const withDetails: SessionView[] = hasDetails ? [...views, 'details'] : views;
+  return input.isConcert ? [...withDetails, 'public'] : withDetails;
 }
 
 // @FollowsBlueprint core-decision

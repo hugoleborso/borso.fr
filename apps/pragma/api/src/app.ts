@@ -6,6 +6,7 @@ import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.contro
 import { buildBandLinksRouter } from './band-links/band-links.controller';
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildCompositionsRouter } from './compositions/compositions.controller';
+import { buildConcertRegistrationsRouter } from './concert-registrations/concert-registrations.controller';
 import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
 import { reportTaggedFailure } from './helpers/observability/error-reporting.adapter';
 import { traceRequests } from './helpers/observability/request-tracing.middleware';
@@ -65,6 +66,7 @@ function readStaleBroadcastSettings(
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
   const audience = buildAudienceRouter();
+  const concertRegistrations = buildConcertRegistrationsRouter();
   const oauth = buildOAuthRouters(options.oauth ?? {});
   return new Hono()
     .use('*', traceRequests)
@@ -102,6 +104,8 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/realtime', buildRealtimeRouter())
     .route('/api/audience', audience.publicRouter)
     .route('/api/audience', audience.gatedRouter)
+    .route('/api/concert-registrations', concertRegistrations.publicRouter)
+    .route('/api/concert-registrations', concertRegistrations.gatedRouter)
     .route('/api/oauth', oauth.consentRouter)
     .route('/api/assistant-grants', oauth.grantsRouter)
     .route('/mcp', buildMcpRouter(options.mcp ?? {}))

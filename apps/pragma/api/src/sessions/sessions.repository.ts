@@ -1,5 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { concertRegistrationTable } from '../concert-registrations/concert-registrations.schema';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { deleteGearOfSessionBeingDeleted } from '../gear-items/gear-items-cascade.service';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
@@ -8,9 +10,10 @@ import { detachTasksOfSessionBeingDeleted } from '../tasks/tasks.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
-const CONCERT_KIND = 'concert';
-
-type SessionRawRow = Omit<typeof sessionTable.$inferSelect, 'origin'>;
+type SessionRawRow = Omit<
+  typeof sessionTable.$inferSelect,
+  'origin' | 'posterS3Key' | 'publicMessage' | 'prizeLabel' | 'prizeIcon'
+>;
 
 export type SessionRow = Omit<SessionRawRow, 'friendsCountPerMember'> & {
   friendsCountPerMember: unknown;
@@ -135,6 +138,9 @@ export async function deleteSessionWithCascade(id: string): Promise<DeletionOutc
     await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
     await detachTakesOfDeletedSession(transaction, id);
     await detachTasksOfSessionBeingDeleted(transaction, id);
+    await transaction
+      .delete(concertRegistrationTable)
+      .where(eq(concertRegistrationTable.sessionId, id));
     await deleteGearOfSessionBeingDeleted(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });

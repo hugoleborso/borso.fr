@@ -1,5 +1,7 @@
 /** @Feature sessions */
 
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
+
 export interface PickableConcert {
   readonly id: string;
   readonly kind: string;
@@ -37,7 +39,6 @@ export interface PracticeSongsSaveInput {
   readonly tickedSongIds: readonly string[];
 }
 
-const CONCERT_KIND = 'concert';
 const NO_ENTRIES: readonly PracticeSongsEntry[] = [];
 
 function normalizeForSearch(text: string): string {

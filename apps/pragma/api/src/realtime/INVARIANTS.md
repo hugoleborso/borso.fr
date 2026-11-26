@@ -14,8 +14,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   reader's reach.
 
 Held by: `api/src/realtime/realtime.controller.test.ts` › posts the root the write touched to every tab but the writer’s own
-Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address or a ballot token
-Held by: `cdk/test/stack.test.ts` › clones prod into a preview with its passwords and its takes, but no passkey, no avatar key, and no push subscription or key pair
+Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address, a ballot token or a fan email
+Held by: `cdk/test/stack.test.ts` › clones prod into a preview with its passwords and its takes, but no passkey, no avatar or poster key, no concert registration, and no push subscription or key pair
 Held by: `api/src/realtime/realtime.controller.test.ts` › refuses a forged ticket
 Held by: `api/src/realtime/realtime.controller.test.ts` › forgets a connection API Gateway reports gone
 

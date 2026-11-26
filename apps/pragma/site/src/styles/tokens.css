@@ -113,11 +113,43 @@
   --text-stage-meta: 12px;
   --text-stage-meta--line-height: 16px;
 
+  --text-ticket-day: 52px;
+  --text-ticket-day--line-height: 57px;
+  --text-ticket-day-hero: 88px;
+  --text-ticket-day-hero--line-height: 88px;
+  --text-ticket-day-wide: 96px;
+  --text-ticket-day-wide--line-height: 96px;
+  --text-ticket-day-giant: 180px;
+  --text-ticket-day-giant--line-height: 180px;
+  --text-ticket-hour: 34px;
+  --text-ticket-hour--line-height: 37px;
+  --text-ticket-hour-hero: 40px;
+  --text-ticket-hour-hero--line-height: 40px;
+  --text-ticket-hour-wide: 44px;
+  --text-ticket-hour-wide--line-height: 48px;
+  --text-ticket-hour-giant: 56px;
+  --text-ticket-hour-giant--line-height: 56px;
+  --text-ticket-venue: 24px;
+  --text-ticket-venue--line-height: 29px;
+  --text-ticket-venue-hero: 32px;
+  --text-ticket-venue-hero--line-height: 35px;
+  --text-ticket-venue-wide: 36px;
+  --text-ticket-venue-wide--line-height: 43px;
+  --text-ticket-venue-giant: 60px;
+  --text-ticket-venue-giant--line-height: 64px;
+  --text-ticket-prize: 21px;
+  --text-ticket-prize--line-height: 28px;
+  --text-ticket-message: 18px;
+  --text-ticket-message--line-height: 27px;
+
   --radius-cover: 3px;
   --radius-sm: 6px;
+  --radius-stub: 9px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-lg-inset: calc(var(--radius-lg) - 2px);
   --radius-sheet: 20px;
+  --radius-sheet-inset: calc(var(--radius-sheet) - 2px);
   --radius-pill: 999px;
 
   --shadow-leaf: 0 1px 0 light-dark(#e2dacb, #00000066), 0 1px 3px light-dark(#3c28100d, #00000040);

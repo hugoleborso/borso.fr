@@ -15,13 +15,16 @@ export const CATALOG_FILTERS = [
   'wip',
   'to_play',
   'idea',
+  'fans',
 ] as const;
 
 export type CatalogFilter = (typeof CATALOG_FILTERS)[number];
 
-export type CatalogStatusFilter = Exclude<CatalogFilter, 'learning'>;
+export type CatalogStatusFilter = Exclude<CatalogFilter, 'learning' | 'fans'>;
 
 export const TO_LEARN_FILTER = 'learning';
+
+export const FAN_WISHES_FILTER = 'fans';
 
 const DEFAULT_FILTER: CatalogFilter = 'all';
 const SCORE_AFTER_GLYPHS_PREFIX = '· ';
@@ -81,6 +84,15 @@ export function selectVisibleSongs<Song extends CatalogSong>(
   return songs.filter(
     (song) => isMatchingStatusFilter(song, status) && isMatchingSearch(song, query),
   );
+}
+
+export function selectFanWishedSongs<Song extends CatalogSong & { readonly id: string }>(
+  songs: readonly Song[],
+  fanWishedSongIds: readonly string[],
+  query: string,
+): Song[] {
+  const wished = new Set(fanWishedSongIds);
+  return songs.filter((song) => wished.has(song.id) && isMatchingSearch(song, query));
 }
 
 function lowerScore(current: number | null, next: number | null): number | null {

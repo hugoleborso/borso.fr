@@ -892,6 +892,9 @@ importers:
       ical.js:
         specifier: 2.2.1
         version: 2.2.1
+      mailchecker:
+        specifier: 6.0.21
+        version: 6.0.21
       pdfjs-dist:
         specifier: 6.5.438
         version: 6.5.438
@@ -922,6 +925,9 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
+      validator:
+        specifier: 13.15.35
+        version: 13.15.35
       web-push:
         specifier: 'catalog:'
         version: 3.6.7
@@ -956,6 +962,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
+      '@types/validator':
+        specifier: 13.15.10
+        version: 13.15.10
       '@types/web-push':
         specifier: 'catalog:'
         version: 3.6.4
@@ -4666,6 +4675,9 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
+  '@types/validator@13.15.10':
+    resolution: {integrity: sha512-T8L6i7wCuyoK8A/ZeLYt1+q0ty3Zb9+qbSSvrIVitzT3YjZqkTZ40IbRsPanlB4h1QB3JVL1SYCdR6ngtFYcuA==}
+
   '@types/web-push@3.6.4':
     resolution: {integrity: sha512-GnJmSr40H3RAnj0s34FNTcJi1hmWFV5KXugE0mYWnYhgTAHLJ/dJKAwDmvPJYMke0RplY2XE9LnM4hqSqKIjhQ==}
 
@@ -6680,6 +6692,10 @@ packages:
   magicast@0.5.4:
     resolution: {integrity: sha512-llBEhWm1SacoRwgHUoQJYtwp4PBLF4faQi5TCpIGyGs9n4y5+juI0tDgyKIfpqxckRHaHzouUEph3THklWh03w==}
 
+  mailchecker@6.0.21:
+    resolution: {integrity: sha512-Zd2Lgj4RMnC0IBbbSjnF76Wbd+kkgKMRONgV9yOMKJhj6hcKIAQtj9MrmiGnT2Db+Dy6MsMQoG2HEhPk2YPuGA==}
+    engines: {node: '>=0.10'}
+
   make-asynchronous@1.1.0:
     resolution: {integrity: sha512-ayF7iT+44LXdxJLTrTd3TLQpFDDvPCBxXxbv+pMUSuHA5Q8zyAfwkRP6aHHwNVFBUFWtxAHqwNJxF8vMZLAbVg==}
     engines: {node: '>=18'}
@@ -7678,6 +7694,10 @@ packages:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  validator@13.15.35:
+    resolution: {integrity: sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==}
+    engines: {node: '>= 0.10'}
 
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
@@ -11014,6 +11034,8 @@ snapshots:
 
   '@types/trusted-types@2.0.7': {}
 
+  '@types/validator@13.15.10': {}
+
   '@types/web-push@3.6.4':
     dependencies:
       '@types/node': 24.19.2
@@ -13088,6 +13110,8 @@ snapshots:
       '@babel/types': 7.29.8
       source-map-js: 1.2.2
 
+  mailchecker@6.0.21: {}
+
   make-asynchronous@1.1.0:
     dependencies:
       p-event: 6.0.1
@@ -14191,6 +14215,8 @@ snapshots:
   use-sync-external-store@1.6.0(react@19.3.1):
     dependencies:
       react: 19.3.1
+
+  validator@13.15.35: {}
 
   vary@1.1.2: {}
 

@@ -13,8 +13,32 @@ export const TEXT_ROLES = [
   'stage-title',
   'stage-body',
   'stage-meta',
+  'ticket-day',
+  'ticket-day-hero',
+  'ticket-day-wide',
+  'ticket-day-giant',
+  'ticket-hour',
+  'ticket-hour-hero',
+  'ticket-hour-wide',
+  'ticket-hour-giant',
+  'ticket-venue',
+  'ticket-venue-hero',
+  'ticket-venue-wide',
+  'ticket-venue-giant',
+  'ticket-prize',
+  'ticket-message',
 ] as const;
-export const RADIUS_TOKENS = ['cover', 'sm', 'md', 'lg', 'sheet', 'pill'] as const;
+export const RADIUS_TOKENS = [
+  'cover',
+  'sm',
+  'stub',
+  'md',
+  'lg',
+  'lg-inset',
+  'sheet',
+  'sheet-inset',
+  'pill',
+] as const;
 export const SHADOW_TOKENS = ['leaf', 'raised', 'overlay', 'cover'] as const;
 
 const mergeTokenClassNames = extendTailwindMerge({

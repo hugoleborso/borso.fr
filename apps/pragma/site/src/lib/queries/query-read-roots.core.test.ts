@@ -61,4 +61,8 @@ describe('selectQueryRootsDerivedFrom', () => {
     expect(selectQueryRootsDerivedFrom('members', 'members')).toContain('inspirations');
     expect(selectQueryRootsDerivedFrom('members', 'members')).not.toContain('members');
   });
+
+  it('makes the songs list stale after a fan wish, since a wish can add an idea song', () => {
+    expect(selectStaleQueryRoots(['concert-registrations'])).toContain('songs');
+  });
 });

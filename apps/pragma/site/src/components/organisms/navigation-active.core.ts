@@ -13,7 +13,7 @@ export interface ShellTab {
 }
 
 export const SHELL_TABS: readonly ShellTab[] = [
-  { id: 'home', to: '/', labelKey: 'nav.home', icon: 'home' },
+  { id: 'home', to: '/app', labelKey: 'nav.home', icon: 'home' },
   { id: 'sessions', to: '/sessions', labelKey: 'nav.sessions', icon: 'sessions' },
   { id: 'setlists', to: '/setlists', labelKey: 'nav.setlists', icon: 'setlist' },
   { id: 'songs', to: '/catalog', labelKey: 'nav.songs', icon: 'song' },
@@ -22,7 +22,7 @@ export const SHELL_TABS: readonly ShellTab[] = [
 
 export const RETURN_PATH_PARAM = 'back';
 
-const HOME_PATH = '/';
+const HOME_PATH = '/app';
 const PATH_SEPARATOR = '/';
 
 const DESTINATIONS_BY_TAB: readonly (readonly [ShellTabId, readonly string[]])[] = [

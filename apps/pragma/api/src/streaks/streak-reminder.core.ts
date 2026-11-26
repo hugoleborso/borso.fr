@@ -14,7 +14,7 @@ export const AT_RISK_MIN_DAYS = 3;
 export const REMINDER_HOUR = 20;
 export const STREAK_CATEGORY: NotificationCategory = 'streak';
 
-const STREAK_REMINDER_URL = '/';
+const STREAK_REMINDER_URL = '/app';
 const SINGLE_MEMBER = 1;
 const NO_JOKER_LEFT = 0;
 const JOKER_SPENT_TONIGHT = 1;

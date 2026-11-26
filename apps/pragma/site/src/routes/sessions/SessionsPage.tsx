@@ -1,5 +1,6 @@
 /** @Feature sessions */
 
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { selectComingSessions, selectPastSessions } from '@domain/session-schedule.core';
 import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,6 @@ import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.qu
 
 const NO_ROWS: readonly never[] = [];
 const KIND_PARAM = 'kind';
-const CONCERT_KIND = 'concert';
 const WHEN_PARAM = 'when';
 const PAST_WHEN = 'past';
 const UPCOMING_WHEN = 'upcoming';

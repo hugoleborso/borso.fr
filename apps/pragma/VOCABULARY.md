@@ -190,6 +190,50 @@ Invariants: `api/src/sessions/INVARIANTS.md`
 
 Not to be confused with: a practice, which is the other `kind` of session.
 
+## Concert announcement
+
+The poster, the public message and the prize members set on a concert,
+shown on the public sign-up page. The prize is a label, such as "3 bières à
+gagner", and an icon among beer, gift, ticket and shirt.
+
+Lives in: `api/src/concert-registrations/` (`session.poster_s3_key`, `session.public_message`, `session.prize_label`, `session.prize_icon`) and `domain/concert-prize.core.ts`
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+## Concert sign-up page
+
+The public page at `/`, open to anyone signed in or not, where a visitor
+leaves a **concert registration** for an upcoming concert and may add a
+**fan wish**.
+
+Lives in: `site/src/routes/concerts/`
+
+Invariants: `site/src/routes/concerts/INVARIANTS.md`
+
+Not to be confused with: the **home**, the members' start screen at `/app`.
+
+## Concert registration
+
+One person's sign-up, a first name and an email, for one concert.
+
+Lives in: `api/src/concert-registrations/` (`concert_registration`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: a **ballot**, which votes during a concert and
+names nobody.
+
+## Registration edit token
+
+The secret a sign-up answers to the browser that made it, so only that
+browser can add who it comes for and the song it wishes.
+
+Lives in: `api/src/concert-registrations/` (`edit_token_hash`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: a **ballot** token, which votes during a concert.
+
 ## Energy
 
 How much the room lifts during a song, on a scale of 1 to 10.
@@ -198,6 +242,18 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
 (`energy` on an entry)
 
 Invariants: `api/src/songs/INVARIANTS.md`
+
+## Fan wish
+
+The song a **concert registration** asks the band to play at a later
+concert.
+
+Lives in: `api/src/concert-registrations/` (`concert_registration.wished_song_id`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: an **audience suggestion**, which enters tonight's
+voting pool.
 
 ## Free slot
 
@@ -251,7 +307,7 @@ Invariants: `domain/INVARIANTS.md`
 
 ## Home
 
-The start screen, at `/`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
+The start screen, at `/app`: the next session, then the instruments the signed-in member holds in its setlist, or their open tasks, one at a time, chosen from two tabs.
 
 Lives in: `site/src/routes/home/`
 

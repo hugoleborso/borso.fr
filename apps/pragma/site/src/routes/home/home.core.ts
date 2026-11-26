@@ -1,5 +1,6 @@
 /** @Feature home */
 
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { type ScheduledSession, selectNextSession } from '@domain/session-schedule.core';
 import { isTaskOpen } from '@domain/task-status.core';
 import type { SetlistEditorSong } from '../../components/organisms/setlist-editor.utils';
@@ -166,8 +167,6 @@ export function readHomeSection(
 export interface KindedSession extends ScheduledSession {
   readonly kind: string;
 }
-
-const CONCERT_KIND = 'concert';
 
 // @FollowsBlueprint core-decision
 export function selectNextConcertBesideSession<TSession extends KindedSession>(

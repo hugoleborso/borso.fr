@@ -258,8 +258,8 @@ export async function searchAudienceSongs(
 
 const SUGGESTED_SONG_STATUS = 'idea';
 
-async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOutcome> {
-  return await insertSongWithoutNotice({
+function suggestedSongInput(track: ExternalSongHit): SongCreateInput {
+  return {
     title: track.title,
     artist: track.artist,
     status: SUGGESTED_SONG_STATUS,
@@ -280,7 +280,11 @@ async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOu
     structureNotes: '',
     gimmickNotes: '',
     notes: '',
-  });
+  };
+}
+
+async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOutcome> {
+  return await insertSongWithoutNotice(suggestedSongInput(track));
 }
 
 async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
@@ -299,6 +303,19 @@ export type TrackResolution =
   | { kind: 'ok'; song: SongRow }
   | { kind: 'unknown' }
   | { kind: 'unavailable' };
+
+export { readDeezerTrack } from './deezer.adapter';
+export type { ExternalSongHit } from './deezer.core';
+
+export async function findOrImportSuggestedSongWithin(
+  executor: DatabaseExecutor,
+  track: ExternalSongHit,
+): Promise<SongRow> {
+  const known = findCatalogueMatch(await getSongs(), track);
+  if (known !== null) return known;
+  const input = await withResolvedSpotifyTrack(suggestedSongInput(track), {});
+  return await insertSongWithin(executor, valuesFromCreate(input));
+}
 
 // @FollowsBlueprint service-orchestration
 export async function resolveCatalogueSongForTrack(trackId: string): Promise<TrackResolution> {

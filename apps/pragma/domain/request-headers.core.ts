@@ -2,6 +2,7 @@
 export const PRAGMA_REQUEST_HEADERS = {
   ballotToken: 'x-ballot-token',
   realtimeClient: 'x-pragma-client',
+  registrationToken: 'x-registration-token',
 } as const;
 
 export type PragmaRequestHeader =

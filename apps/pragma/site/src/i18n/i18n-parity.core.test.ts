@@ -57,6 +57,8 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
   { key: 'compos.defaultTitle', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'concerts.email', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'concerts.signUpSheetTitle', readsTheSameBecause: 'two placeholders and a dot, no word' },
   { key: 'gear.item', readsTheSameBecause: '"item" is the word the band uses for a gear line' },
   {
     key: 'home.totalHoursMinutes',
@@ -91,6 +93,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'sessions.practiceSongs.setlists',
     readsTheSameBecause: 'same word, and French pluralises it the same way',
   },
+  { key: 'sessions.prizeIconShirt', readsTheSameBecause: 'French says T-shirt too' },
   { key: 'sessions.setlist', readsTheSameBecause: '"setlist" is the word French musicians use' },
   {
     key: 'sessions.setlists',

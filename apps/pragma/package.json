@@ -63,6 +63,7 @@
     "hono": "catalog:",
     "i18next": "catalog:",
     "ical.js": "2.2.1",
+    "mailchecker": "6.0.21",
     "pdfjs-dist": "6.5.438",
     "postgres": "catalog:",
     "react": "catalog:",
@@ -73,6 +74,7 @@
     "react-router-dom": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
+    "validator": "13.15.35",
     "web-push": "catalog:",
     "zod": "catalog:zod4"
   },
@@ -86,6 +88,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/validator": "13.15.10",
     "@types/web-push": "catalog:",
     "@types/ws": "catalog:",
     "@vitejs/plugin-react": "catalog:",

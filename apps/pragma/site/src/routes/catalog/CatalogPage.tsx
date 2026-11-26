@@ -13,6 +13,7 @@ import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogList } from '../../components/organisms/CatalogList';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
+import { useFanWishSongIds } from '../../lib/queries/concert-registrations.queries';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useSongsList, useSongThatLostItsLastWrite } from '../../lib/queries/songs.queries';
 import { useStudiesOverview } from '../../lib/queries/studies.queries';
@@ -27,6 +28,8 @@ import {
   selectSongsToLearn,
   selectVisibleSongs,
   sortSongsByTitle,
+  FAN_WISHES_FILTER,
+  selectFanWishedSongs,
   TO_LEARN_FILTER,
   toSongCard,
 } from './catalog-page.core';
@@ -42,6 +45,7 @@ const FILTER_LABEL_KEY = {
   wip: 'catalog.filterWip',
   to_play: 'catalog.filterToPlay',
   idea: 'catalog.filterIdea',
+  fans: 'catalog.filterFans',
 } as const satisfies Readonly<Record<CatalogFilter, string>>;
 
 /**
@@ -59,6 +63,9 @@ export function CatalogPage(): JSX.Element {
   const [search, setSearch] = useState('');
   const filter = parseCatalogFilter(searchParams.get(CATALOG_FILTER_PARAMETER));
   const isToLearn = filter === TO_LEARN_FILTER;
+  const isFanWishes = filter === FAN_WISHES_FILTER;
+  const fanWishesQuery = useFanWishSongIds(isFanWishes);
+  const fanWishedSongIds = fanWishesQuery.data?.songIds ?? NO_ROWS;
 
   const firstError = songsQuery.error ?? instrumentsQuery.error;
   const errorMessage =
@@ -88,10 +95,15 @@ export function CatalogPage(): JSX.Element {
         return toSongCard(entry.song, learned.detail, learned.instruments);
       });
     }
+    if (isFanWishes) {
+      return selectFanWishedSongs(sortSongsByTitle(songs), fanWishedSongIds, search).map((song) =>
+        toSongCard(song, song.artist),
+      );
+    }
     return selectVisibleSongs(sortSongsByTitle(songs), filter, search).map((song) =>
       toSongCard(song, song.artist),
     );
-  }, [isToLearn, songs, queue, search, instrumentsById, filter]);
+  }, [isToLearn, isFanWishes, songs, queue, search, instrumentsById, filter, fanWishedSongIds]);
 
   const chooseFilter = (next: CatalogFilter): void => {
     setSearchParams(buildCatalogFilterSearch(next), { replace: true });

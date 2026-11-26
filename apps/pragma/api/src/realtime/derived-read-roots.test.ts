@@ -14,6 +14,7 @@ const SLICE_API_ROOTS: Readonly<Record<string, readonly [ApiRoot, ...ApiRoot[]]>
   bars: ['bars'],
   'calendar-feeds': ['me'],
   compositions: ['compositions'],
+  'concert-registrations': ['concert-registrations'],
   'free-slots': ['free-slots'],
   'gear-items': ['gear-items'],
   improvements: ['improvements'],
@@ -63,7 +64,7 @@ const WRITES_INTO: Readonly<Record<string, readonly string[]>> = {
     'streaks',
     'tasks',
   ],
-  sessions: ['gear-items', 'setlists', 'takes', 'tasks'],
+  sessions: ['concert-registrations', 'gear-items', 'setlists', 'takes', 'tasks'],
   songs: ['compositions', 'mastery', 'setlists', 'takes', 'tasks'],
 };
 

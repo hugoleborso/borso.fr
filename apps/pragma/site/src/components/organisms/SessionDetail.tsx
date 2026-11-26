@@ -40,6 +40,7 @@ import { PracticeSongsSheet } from './PracticeSongsSheet';
 import { useOrderPracticeSongs, usePracticeSongs } from './practice-songs.hook';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertGearCard } from './ConcertGearCard';
+import { ConcertPublicPagePanel } from './ConcertPublicPagePanel';
 import { ConcertReadView } from './ConcertReadView';
 import { SessionSetlistPreviews } from './SessionSetlistPreviews';
 import { SessionTakes } from './SessionTakes';
@@ -121,7 +122,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   });
 
   const isConcert = session.kind === 'concert';
-  const views = listSessionViews({ hasDetails: isConcert || isPickerShown, isPractice });
+  const views = listSessionViews({ isConcert, isPractice, isPickerShown });
   const view = readSessionView(searchParams.get(SESSION_VIEW_PARAM), views);
   const showView = (nextView: SessionView): void => {
     setSearchParams({ [SESSION_VIEW_PARAM]: nextView }, { replace: true });
@@ -209,8 +210,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
       />
     ) : (
       <ConcertReadView
-        venue={session.venue}
-        capacity={session.capacity}
+        session={session}
         gearCard={<ConcertGearCard sessionId={session.id} />}
         friendsCounts={friendsCounts}
         members={members}
@@ -245,6 +245,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     tasks: <SessionTasks sessionId={session.id} />,
     takes: <SessionTakes sessionId={session.id} />,
     details: detailsPanel,
+    public: isConcert ? <ConcertPublicPagePanel sessionId={session.id} /> : null,
   };
 
   return (

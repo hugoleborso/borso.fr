@@ -69,10 +69,10 @@ function answerSessionApi(request: Request): Response {
   return new Response(null, { status: 404 });
 }
 
-function renderSessionPage(): void {
+function renderSessionPage(search = ''): void {
   render(
     <QueryClientProvider client={createIsolatedQueryClient()}>
-      <MemoryRouter initialEntries={[`/sessions/${CONCERT.id}`]}>
+      <MemoryRouter initialEntries={[`/sessions/${CONCERT.id}${search}`]}>
         <Routes>
           <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
         </Routes>
@@ -142,12 +142,26 @@ describe('the concert page', () => {
       '/sessions',
     );
     const tabs = within(header).getAllByRole('tab');
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['Setlist', 'Tasks', 'Takes', 'Details']);
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Setlist',
+      'Tasks',
+      'Takes',
+      'Details',
+      'Public page',
+    ]);
     expect(screen.queryByRole('heading', { name: 'Who does what' })).toBeNull();
 
     fireEvent.click(within(header).getByRole('tab', { name: 'Tasks' }));
     expect(await screen.findByRole('heading', { name: 'Who does what' })).toBeTruthy();
     expect(screen.queryByText(/No setlist on this session yet/)).toBeNull();
+  });
+
+  it('opens the public page of a concert in its own tab, from a link to it, and not under the details', async () => {
+    renderSessionPage('?view=public');
+    expect(await screen.findByRole('button', { name: 'Draw 3 winners' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Details' }));
+    expect(await screen.findByRole('link', { name: /^Gear/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Draw 3 winners' })).toBeNull();
   });
 
   it('gives the session its start time on the band clock in Paris, under its title', async () => {

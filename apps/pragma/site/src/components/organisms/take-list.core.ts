@@ -1,5 +1,6 @@
 /** @Feature takes */
 
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { compareTakesNewestFirst, type OrderedTake } from '../../lib/queries/takes.utils';
 import type { QueuedTake } from '../../lib/take-queue.core';
 
@@ -64,8 +65,6 @@ export interface TakeSessionLabel {
   readonly key: TakeSessionKey;
   readonly venue: string | null;
 }
-
-const CONCERT_KIND = 'concert';
 
 // @FollowsBlueprint core-decision
 export function describeTakeSession(

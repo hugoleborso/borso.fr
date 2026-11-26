@@ -39,22 +39,36 @@ const SONGS_BY_ID: Readonly<Record<string, PreviewSong>> = {
 
 // @FollowsBlueprint test-pure-unit
 describe('listSessionViews', () => {
-  it('offers the details view only when the session has details to show', () => {
-    expect(listSessionViews({ hasDetails: true, isPractice: false })).toEqual([
+  it('offers the details view to a concert or to a practice with a concert to prepare', () => {
+    expect(listSessionViews({ isConcert: false, isPractice: false, isPickerShown: true })).toEqual([
       'setlist',
       'tasks',
       'takes',
       'details',
     ]);
-    expect(listSessionViews({ hasDetails: false, isPractice: false })).toEqual([
+    expect(listSessionViews({ isConcert: false, isPractice: false, isPickerShown: false })).toEqual(
+      ['setlist', 'tasks', 'takes'],
+    );
+  });
+
+  it('adds the public page view to a concert only, after its details', () => {
+    expect(listSessionViews({ isConcert: true, isPractice: false, isPickerShown: false })).toEqual([
       'setlist',
       'tasks',
       'takes',
+      'details',
+      'public',
     ]);
+    expect(
+      readSessionView(
+        'public',
+        listSessionViews({ isConcert: false, isPractice: true, isPickerShown: true }),
+      ),
+    ).toBe('songs');
   });
 
   it('opens a practice on its songs instead of a setlist', () => {
-    expect(listSessionViews({ hasDetails: true, isPractice: true })).toEqual([
+    expect(listSessionViews({ isConcert: false, isPractice: true, isPickerShown: true })).toEqual([
       'songs',
       'tasks',
       'takes',
@@ -66,29 +80,47 @@ describe('listSessionViews', () => {
 describe('readSessionView', () => {
   it('reads an offered view from the address', () => {
     expect(
-      readSessionView('takes', listSessionViews({ hasDetails: false, isPractice: false })),
+      readSessionView(
+        'takes',
+        listSessionViews({ isConcert: false, isPractice: false, isPickerShown: false }),
+      ),
     ).toBe('takes');
     expect(
-      readSessionView('details', listSessionViews({ hasDetails: true, isPractice: false })),
+      readSessionView(
+        'details',
+        listSessionViews({ isConcert: false, isPractice: false, isPickerShown: true }),
+      ),
     ).toBe('details');
   });
 
   it('falls back to the setlist for a view not offered, unknown or absent', () => {
     expect(
-      readSessionView('details', listSessionViews({ hasDetails: false, isPractice: false })),
+      readSessionView(
+        'details',
+        listSessionViews({ isConcert: false, isPractice: false, isPickerShown: false }),
+      ),
     ).toBe('setlist');
     expect(
-      readSessionView('lineup', listSessionViews({ hasDetails: true, isPractice: false })),
+      readSessionView(
+        'lineup',
+        listSessionViews({ isConcert: false, isPractice: false, isPickerShown: true }),
+      ),
     ).toBe('setlist');
-    expect(readSessionView(null, listSessionViews({ hasDetails: true, isPractice: false }))).toBe(
-      'setlist',
-    );
+    expect(
+      readSessionView(
+        null,
+        listSessionViews({ isConcert: false, isPractice: false, isPickerShown: true }),
+      ),
+    ).toBe('setlist');
   });
 
   it('falls back to the first view offered, and to the setlist when none is', () => {
-    expect(readSessionView(null, listSessionViews({ hasDetails: false, isPractice: true }))).toBe(
-      'songs',
-    );
+    expect(
+      readSessionView(
+        null,
+        listSessionViews({ isConcert: false, isPractice: true, isPickerShown: false }),
+      ),
+    ).toBe('songs');
     expect(readSessionView('setlist', [])).toBe('setlist');
   });
 });

@@ -7,6 +7,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 - **Restate the goal first.** Your first message, every subagent brief and every PR's Why state the goal and the smallest change that meets it. If the evidence rules out the requested change, show the evidence and stop.
 - **Never block on the human.** Do reversible work, then present it. Settle a question whose answer can be observed with a prototype or a command. Ask only for product calls and irreversible actions (merge, delete, force-push, an external message). Removing, narrowing or adding anything a user sees beyond the ask is a product call, even when it follows from the change asked. List each one in the question.
 - **Log what you lack the rights for.** A task that needs AWS write, IAM, repository settings, a secret, an operator dispatch or a third-party console goes in its own file under `docs/operator-backlog/`, in the pull request that found it.
+- **Answer a why with its cause.** The operator's whys never blame. They look for the cause so it can be fixed. "No good reason" is never an answer. Name the belief, the misread cost or the instruction that led to the choice.
 - **Attack the premise.** When two fixes that rest on one premise fail the same gate, write the premise down and test it before a third fix.
 - **Encode lessons in structure, subtract first.** A lesson a hook, a type or a gate can hold ships as that alone. The written instruction is the symptom. A kaizen removes something before it adds anything.
 - **Verify before asserting.** Read the file, run the command or call `aws ... get-...` this session before you describe it. Your branch may be behind `main`, so fetch.
@@ -76,7 +77,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Parallel agents
 
-- Agents share one git index. Subagents never commit, and while one runs you stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
+- Two or more agents that write code at the same time each run with `isolation: "worktree"`, so none sees another's half-written files. Subagents never commit. While an agent writes in the shared checkout, stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
 - Run `scripts/reports.sh` once, after every agent has finished.
 - Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> "<the problem, one sentence>"`. Put that line in every brief.
 

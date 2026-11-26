@@ -154,7 +154,7 @@ describe('pragma read-only agent access (ADR-2026-10-25T0054)', () => {
     );
   });
 
-  it('keeps the reader off every table holding a credential, a key, a secret address or a ballot token', () => {
+  it('keeps the reader off every table holding a credential, a key, a secret address, a ballot token or a fan email', () => {
     expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
       'app_config',
       'member_credential',
@@ -163,6 +163,7 @@ describe('pragma read-only agent access (ADR-2026-10-25T0054)', () => {
       'assistant_grant',
       'auth_attempt',
       'calendar_feed',
+      'concert_registration',
       'member_calendar_feed',
       'member_passkey',
       'push_subscription',
@@ -189,7 +190,7 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview with its passwords and its takes, but no passkey, no avatar key, and no push subscription or key pair', () => {
+  it('clones prod into a preview with its passwords and its takes, but no passkey, no avatar or poster key, no concert registration, and no push subscription or key pair', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
@@ -198,6 +199,7 @@ describe('pragma preview schema cloning', () => {
         'assistant_grant',
         'auth_attempt',
         'calendar_feed',
+        'concert_registration',
         'member_calendar_feed',
         'member_passkey',
         'push_subscription',
@@ -206,7 +208,7 @@ describe('pragma preview schema cloning', () => {
         'webauthn_challenge',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
-      columnsToNullify: { member: ['avatar_s3_key'] },
+      columnsToNullify: { member: ['avatar_s3_key'], session: ['poster_s3_key'] },
     });
   });
 });
