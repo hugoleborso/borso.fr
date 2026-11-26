@@ -72,8 +72,6 @@ Tier 3 means several agents in one checkout, and that has two failure modes this
 
 - **One app, half-built by others.** While several agents change one app, its typecheck and lint stay red on whoever is mid-change, so a whole-app run proves nothing about one agent's files. Tell each agent to check only its own: `scripts/lint-staged-files.sh <its files>` lints them with every rule, and the app's `pnpm typecheck` output filtered with `grep -F -e <file>` per file reads its type errors. Three of PR #354's agents rebuilt that filter by hand.
 
-When agents genuinely need to build in parallel without seeing each other, give them `isolation: "worktree"` instead of a shared checkout.
-
 ## Write the task list
 
 Whatever tier you pick, create the tasks for it before starting, and say which tier and why in one sentence. The tier is a claim about the work, and writing it down is what lets you notice later that it was wrong.
