@@ -13,8 +13,7 @@ const MESSAGE =
   'answer in a named const here (`const isLocked = isLockedPage(state)`) that the condition ' +
   'reads: calling the function inside the condition is still a decision. A decision in impure code cannot be tested without standing up whatever the ' +
   'surrounding code touches. A presence test, a guard clause (an `if` whose only statement is a ' +
-  '`return` or a `throw`), a test that reads an already ' +
-  'named result such as `isConcert` or `props.hasOverride`, and a choice between two plain ' +
+  '`return` or a `throw`), a test that reads a named result such as `isConcert`, and a choice between two plain ' +
   'values are all exempt. See docs/standards/02-purity-and-core-files.md.';
 
 function isInsideJsx(node) {

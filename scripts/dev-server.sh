@@ -3,7 +3,6 @@
 #
 #   scripts/dev-server.sh start <app> [--as <label>]   prints the site URL once it answers
 #   scripts/dev-server.sh stop  <app> [--as <label>]   stops that server and every child it started
-#   scripts/dev-server.sh url   <app> [--as <label>]   prints the URL of a running one
 #
 # Agents share this machine. A server started with `pnpm dev &` shares the
 # caller's process group, so the only way left to stop it was a name pattern,
@@ -21,7 +20,7 @@ STATE_DIR="${TMPDIR:-/tmp}/borso-dev-servers"
 START_TIMEOUT_SECONDS=180
 
 usage() {
-  echo "usage: scripts/dev-server.sh start|stop|url <app> [--as <label>]" >&2
+  echo "usage: scripts/dev-server.sh start|stop <app> [--as <label>]" >&2
   exit 2
 }
 
@@ -48,29 +47,17 @@ running_group() {
 }
 
 site_url() {
-  grep -oE 'Local:[[:space:]]+http://localhost:[0-9]+/' "$LOG_FILE" 2>/dev/null |
+  grep -oE 'Local:[[:space:]]+http://localhost:[0-9]+/' "${1:-$LOG_FILE}" 2>/dev/null |
     tail -1 | grep -oE 'http://localhost:[0-9]+/'
-}
-
-other_running_label() {
-  local file group
-  for file in "$STATE_DIR/$APP".*.pgid; do
-    [[ -f "$file" && "$file" != "$GROUP_FILE" ]] || continue
-    group="$(cat "$file")"
-    kill -0 -- "-$group" 2>/dev/null || continue
-    basename "$file" .pgid | cut -d. -f2-
-    return 0
-  done
-  return 1
 }
 
 case "$ACTION" in
   start)
-    if [[ -d "$REPO_ROOT/apps/$APP/api" ]] && other="$(other_running_label)"; then
-      echo "[dev-server] $APP already runs as $other, and a second one would share its API ports." >&2
-      echo "[dev-server] Use that one: scripts/dev-server.sh url $APP --as $other" >&2
+    for other in "$STATE_DIR/$APP".*.pgid; do
+      [[ -d "$REPO_ROOT/apps/$APP/api" && "$other" != "$GROUP_FILE" ]] && GROUP_FILE="$other" running_group >/dev/null || continue
+      echo "[dev-server] $APP already runs, and a second one would share its API ports. Use it: $(site_url "${other%.pgid}.log")" >&2
       exit 1
-    fi
+    done
     if running_group >/dev/null; then
       echo "[dev-server] $APP ($LABEL) already runs, log $LOG_FILE" >&2
     else
@@ -94,13 +81,6 @@ case "$ACTION" in
       echo "[dev-server] $APP printed no URL within ${START_TIMEOUT_SECONDS}s, log $LOG_FILE" >&2
       exit 1
     }
-    ;;
-  url)
-    running_group >/dev/null || {
-      echo "[dev-server] $APP ($LABEL) is not running" >&2
-      exit 1
-    }
-    site_url
     ;;
   stop)
     if group="$(running_group)"; then
