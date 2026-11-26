@@ -39,6 +39,7 @@ import { PracticeSongList } from './PracticeSongList';
 import { PracticeSongsSheet } from './PracticeSongsSheet';
 import { useOrderPracticeSongs, usePracticeSongs } from './practice-songs.hook';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
+import { ConcertFriendsCard } from './ConcertFriendsCard';
 import { ConcertGearCard } from './ConcertGearCard';
 import { ConcertPublicPagePanel } from './ConcertPublicPagePanel';
 import { ConcertReadView } from './ConcertReadView';
@@ -211,10 +212,8 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     ) : (
       <ConcertReadView
         session={session}
+        friendsCard={<ConcertFriendsCard session={session} members={members} />}
         gearCard={<ConcertGearCard sessionId={session.id} />}
-        friendsCounts={friendsCounts}
-        members={members}
-        friendsTotal={friendsTotal}
       />
     )
   ) : isPickerShown ? (
