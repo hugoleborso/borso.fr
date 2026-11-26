@@ -28,7 +28,17 @@ export const TEXT_ROLES = [
   'ticket-prize',
   'ticket-message',
 ] as const;
-export const RADIUS_TOKENS = ['cover', 'sm', 'md', 'lg', 'sheet', 'pill'] as const;
+export const RADIUS_TOKENS = [
+  'cover',
+  'sm',
+  'stub',
+  'md',
+  'lg',
+  'lg-inset',
+  'sheet',
+  'sheet-inset',
+  'pill',
+] as const;
 export const SHADOW_TOKENS = ['leaf', 'raised', 'overlay', 'cover'] as const;
 
 const mergeTokenClassNames = extendTailwindMerge({
