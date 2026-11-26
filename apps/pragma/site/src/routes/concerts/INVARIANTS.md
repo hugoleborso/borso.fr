@@ -53,6 +53,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   confirmed. It leaves the list, the draw and the winners already drawn at
   once, and comes back if the server refuses.
 
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › sends the installed app to the members area, where it opened before the ERP moved to /app
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › sends a trimmed first name and a trimmed lower-case email
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › offers a retry only when the server could not be reached or failed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows the tuning screen while the sign-up is on its way
