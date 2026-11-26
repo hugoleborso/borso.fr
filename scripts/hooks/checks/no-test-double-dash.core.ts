@@ -8,7 +8,10 @@ const TEST_SCRIPT = /^test(:[a-z0-9-]+)?$/u;
 function isPassingDoubleDashToTest(args: readonly string[]): boolean {
   return args.some(
     (word, index) =>
-      word === 'run' && TEST_SCRIPT.test(args[index + 1] ?? '') && args[index + 2] === '--',
+      word === 'run' &&
+      // Stryker disable next-line StringLiteral: equivalent mutant, the fallback stands in only past the last word, where any text but a test script name answers false alike
+      TEST_SCRIPT.test(args[index + 1] ?? '') &&
+      args[index + 2] === '--',
   );
 }
 
@@ -17,7 +20,7 @@ export const noTestDoubleDash: Check = {
   tools: /^Bash$/u,
   run(input) {
     const command = input.tool_input?.['command'];
-    if (typeof command !== 'string' || command === '') return PASS;
+    if (typeof command !== 'string') return PASS;
     const isAnyCommandPassingDoubleDash = listSimpleCommands(command).some(
       ({ name, args }) => name === 'pnpm' && isPassingDoubleDashToTest(args),
     );

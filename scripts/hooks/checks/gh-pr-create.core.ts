@@ -46,11 +46,6 @@ export function readHeadBranch(commandToRun: string): string {
   return readMatchingLines(commandToRun, HEAD_FLAG);
 }
 
-function readBodyFilePath(commandToRun: string): string {
-  const lines = commandToRun.split('\n').map((line) => line.replace(BODY_FILE_VALUE, '$1'));
-  return trimTrailingNewlines(lines.join('\n'));
-}
-
 function refuseOpenPr(reason: string): Verdict {
   return refuse(RULE, `refused gh pr create: ${reason}`, [
     reason,
@@ -80,8 +75,9 @@ function readBodyFile(bodyPath: string, directory: string, world: HookWorld): Bo
 }
 
 function readBody(commandToRun: string, directory: string, world: HookWorld): BodyReading | null {
-  if (BODY_FILE_FLAG.test(commandToRun)) {
-    return readBodyFile(readBodyFilePath(commandToRun), directory, world);
+  const bodyFileLine = commandToRun.split('\n').find((line) => BODY_FILE_FLAG.test(line));
+  if (bodyFileLine !== undefined) {
+    return readBodyFile(bodyFileLine.replace(BODY_FILE_VALUE, '$1'), directory, world);
   }
   if (!BODY_FLAG.test(commandToRun)) {
     return {
@@ -132,8 +128,9 @@ export const ghPrCreate: Check = {
   tools: /^Bash$/u,
   run(input, world) {
     const requested = input.tool_input?.['command'];
-    const command = typeof requested === 'string' ? trimTrailingNewlines(requested) : '';
-    if (command === '' || !isRunningPullRequestCreate(command)) return PASS;
+    if (typeof requested !== 'string') return PASS;
+    const command = trimTrailingNewlines(requested);
+    if (!isRunningPullRequestCreate(command)) return PASS;
     const commandToRun = stripHeredocs(command);
     const reading = readBody(commandToRun, input.cwd ?? world.projectDirectory, world);
     if (reading === null) return PASS;

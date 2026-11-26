@@ -140,4 +140,12 @@ describe('apiChangeNeedsValidation', () => {
     expect(apiChangeNeedsValidation.run(buildBashInput(command), world)).toBe(PASS);
     expect(world.calls).toEqual([]);
   });
+
+  it('passes a call with no input without reading git', () => {
+    const world = buildWorld(API_FILES);
+    const input: HookInput = { hook_event_name: 'PreToolUse', tool_name: 'Bash' };
+
+    expect(apiChangeNeedsValidation.run(input, world)).toBe(PASS);
+    expect(world.calls).toEqual([]);
+  });
 });

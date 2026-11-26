@@ -67,6 +67,11 @@ describe('isRunningPullRequestCreate', () => {
     expect(isRunningPullRequestCreate('git push && gh pr create --fill')).toBe(true);
     expect(isRunningPullRequestCreate('gh pr view 12')).toBe(false);
   });
+
+  it('reads neither another gh command that creates nor another binary with a pr create verb', () => {
+    expect(isRunningPullRequestCreate('gh repo create demo')).toBe(false);
+    expect(isRunningPullRequestCreate('hub pr create')).toBe(false);
+  });
 });
 
 describe('readHeadBranch', () => {
@@ -89,6 +94,12 @@ describe('ghPrCreate', () => {
     ['a body read from stdin, which the hook cannot inspect', 'gh pr create --body-file -'],
   ])('passes %s', (_shape, command) => {
     expect(ghPrCreate.run(buildInput(command), buildWorld())).toBe(PASS);
+  });
+
+  it('passes a call with no input', () => {
+    expect(ghPrCreate.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, buildWorld())).toBe(
+      PASS,
+    );
   });
 
   it('refuses a pull request without a body flag', () => {
@@ -125,6 +136,22 @@ describe('ghPrCreate', () => {
       PASS,
     );
     expect(ghPrCreate.run(buildInput('gh pr create --body-file body.md'), fromProject)).toBe(PASS);
+  });
+
+  it('reads the --body-file of a command spread over several lines from its own line', () => {
+    const world = buildWorld({ files: { '/repository/body.md': SHORT_BODY } });
+
+    expect(ghPrCreate.run(buildInput('git push &&\ngh pr create --body-file body.md'), world)).toBe(
+      PASS,
+    );
+  });
+
+  it('refuses a --body-file whose content is outside the budget', () => {
+    const world = buildWorld({ files: { '/work/body.md': LONG_BODY } });
+
+    const [first] = readLines('gh pr create --body-file body.md', world);
+
+    expect(first).toMatch(/^\[open-pr\] the body is outside the budget: /u);
   });
 
   it('refuses a body outside the budget with the checker report', () => {

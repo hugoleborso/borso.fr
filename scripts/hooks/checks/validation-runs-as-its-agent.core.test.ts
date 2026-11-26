@@ -58,4 +58,13 @@ describe('validationRunsAsItsAgent', () => {
   ])('lets %s through', (_shape, skill, agentId) => {
     expect(validationRunsAsItsAgent.run(buildInput(skill, agentId), WORLD)).toBe(PASS);
   });
+
+  it('lets a call with no input through', () => {
+    expect(
+      validationRunsAsItsAgent.run(
+        { hook_event_name: 'PreToolUse', tool_name: 'Skill', agent_id: 'agent-1' },
+        WORLD,
+      ),
+    ).toBe(PASS);
+  });
 });

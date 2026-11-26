@@ -169,6 +169,10 @@ describe('a song that arrived after this member went through the deck', () => {
     expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: EARLIER }, LATER, 0)).toBe(false);
   });
 
+  it('is not new when it was created at the moment of the last score', () => {
+    expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: EARLIER }, EARLIER, 0)).toBe(false);
+  });
+
   it('is not new once this member has scored it', () => {
     expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: LATER }, EARLIER, 2)).toBe(false);
   });

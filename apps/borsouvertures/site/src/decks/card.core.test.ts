@@ -112,6 +112,8 @@ describe('isExpectedMove', () => {
     expect(isExpectedMove('e7e8q', 'e7e8')).toBe(true);
     expect(isExpectedMove('e5d3', 'e5c4')).toBe(false);
     expect(isExpectedMove('e5d3', 'e5d3q')).toBe(false);
+    expect(isExpectedMove('f2g1n', 'f2g1n')).toBe(true);
+    expect(isExpectedMove('f2g1q', 'f2g1n')).toBe(false);
   });
 });
 

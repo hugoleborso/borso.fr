@@ -46,9 +46,8 @@ export const githubPrBody: Check = {
   name: RULE,
   tools: /^(mcp__github__create_pull_request|mcp__github__update_pull_request)$/u,
   run(input) {
-    const requested = input.tool_input?.['body'];
-    const body = typeof requested === 'string' ? requested.replace(/\n+$/u, '') : '';
-    if (body === '') return PASS;
+    const body = input.tool_input?.['body'];
+    if (typeof body !== 'string') return PASS;
     const markupReason = findMarkupReason(stripMarkdownCode(body));
     if (markupReason !== null) return refuseMarkup(markupReason);
     const placeholder = PLACEHOLDER.exec(body)?.[0];

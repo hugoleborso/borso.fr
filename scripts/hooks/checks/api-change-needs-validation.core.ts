@@ -17,8 +17,8 @@ function readString(value: unknown): string {
 function readHeadToCompare(input: HookInput): string | null {
   const head = readString(input.tool_input?.['head']);
   if (head !== '') return head;
-  const command = readString(input.tool_input?.['command']).replace(/\n+$/u, '');
-  if (command === '' || !isRunningPullRequestCreate(command)) return null;
+  const command = readString(input.tool_input?.['command']);
+  if (!isRunningPullRequestCreate(command)) return null;
   return readHeadBranch(stripHeredocs(command));
 }
 

@@ -24,7 +24,7 @@ export const noBroadKill: Check = {
   tools: /^Bash$/u,
   run(input) {
     const command = input.tool_input?.['command'];
-    if (typeof command !== 'string' || command === '') return PASS;
+    if (typeof command !== 'string') return PASS;
     const commandToRun = stripStringBodies(command);
     if (NAME_KILL.test(commandToRun)) {
       return refuseNameKill(

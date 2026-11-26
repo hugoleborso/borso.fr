@@ -2,20 +2,20 @@
 import { type Check, PASS, refuse } from '../check.core.ts';
 
 const RULE = 'validation-runs-as-its-agent';
-const VALIDATOR_BY_SKILL = new Map([
-  ['technical-validation', 'technical-validator'],
-  ['visual-validation', 'visual-validator'],
-]);
+const VALIDATIONS = [
+  { skill: 'technical-validation', validator: 'technical-validator' },
+  { skill: 'visual-validation', validator: 'visual-validator' },
+];
 
 export const validationRunsAsItsAgent: Check = {
   name: RULE,
   tools: /^Skill$/u,
   run(input) {
     const requested = input.tool_input?.['skill'];
-    const skill = typeof requested === 'string' ? requested : '';
-    const validator = VALIDATOR_BY_SKILL.get(skill);
+    const validation = VALIDATIONS.find(({ skill }) => skill === requested);
     const isSubagent = input.agent_id !== undefined && input.agent_id !== '';
-    if (validator === undefined || !isSubagent) return PASS;
+    if (validation === undefined || !isSubagent) return PASS;
+    const { skill, validator } = validation;
     return refuse(
       RULE,
       `a subagent loaded /${skill}, which needs the Agent tool it does not have`,

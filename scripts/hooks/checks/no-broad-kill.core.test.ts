@@ -93,5 +93,6 @@ describe('noBroadKill', () => {
   it('passes a call with no command or a command that is not text', () => {
     expect(noBroadKill.run(buildInput(''), WORLD)).toBe(PASS);
     expect(noBroadKill.run(buildInput(null), WORLD)).toBe(PASS);
+    expect(noBroadKill.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, WORLD)).toBe(PASS);
   });
 });

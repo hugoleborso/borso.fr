@@ -50,6 +50,7 @@ describe('noTestDoubleDash', () => {
     ['a flag that starts with --', 'pnpm run test --coverage'],
     ['a script that is not a test', 'pnpm run build -- --watch'],
     ['run as the last word', 'pnpm run'],
+    ['a binary named test run through exec', 'pnpm exec test -- a.test.ts'],
     ['another runner', 'npm run test -- a.test.ts'],
     ['a quoted mention', 'echo "pnpm run test -- x"'],
   ])('lets %s through', (_shape, command) => {
@@ -59,5 +60,8 @@ describe('noTestDoubleDash', () => {
   it('passes a call with no command or a command that is not text', () => {
     expect(noTestDoubleDash.run(buildInput(''), WORLD)).toBe(PASS);
     expect(noTestDoubleDash.run(buildInput(undefined), WORLD)).toBe(PASS);
+    expect(noTestDoubleDash.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, WORLD)).toBe(
+      PASS,
+    );
   });
 });

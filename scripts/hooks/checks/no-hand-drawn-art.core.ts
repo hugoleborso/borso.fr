@@ -12,6 +12,7 @@ function readString(value: unknown): string | null {
 }
 
 function readEditTexts(edits: unknown): (string | null)[] {
+  // Stryker disable next-line ArrayDeclaration: equivalent mutant, the texts are only joined and searched, and the placeholder carries neither path data nor @AssetSource
   if (!Array.isArray(edits)) return [];
   return edits.map((edit: unknown) =>
     typeof edit === 'object' && edit !== null && 'new_string' in edit
@@ -25,9 +26,7 @@ function readWrittenText(toolInput: Readonly<Record<string, unknown>>): string {
     readString(toolInput['content']),
     readString(toolInput['new_string']),
     ...readEditTexts(toolInput['edits']),
-  ]
-    .filter((text) => text !== null)
-    .join('\n');
+  ].join('\n');
 }
 
 export const noHandDrawnArt: Check = {
@@ -35,8 +34,8 @@ export const noHandDrawnArt: Check = {
   tools: /^(Write|Edit|MultiEdit|NotebookEdit|Bash)$/u,
   run(input, world) {
     const toolInput = input.tool_input ?? {};
-    const file = readString(toolInput['file_path']) ?? '';
-    if (!SITE_SOURCE.test(file) || TEST_FILE.test(file)) return PASS;
+    const file = toolInput['file_path'];
+    if (typeof file !== 'string' || !SITE_SOURCE.test(file) || TEST_FILE.test(file)) return PASS;
     const written = readWrittenText(toolInput);
     if (!PATH_DATA.test(written) || written.includes(ASSET_SOURCE)) return PASS;
     if (world.readText(file)?.includes(ASSET_SOURCE) === true) return PASS;

@@ -24,7 +24,7 @@ export const noPrettier: Check = {
   tools: /^Bash$/u,
   run(input, world) {
     const command = input.tool_input?.['command'];
-    if (typeof command !== 'string' || command === '') return PASS;
+    if (typeof command !== 'string') return PASS;
     if (world.readText(OXFMT_BINARY) === null) return PASS;
     const isAnyCommandPrettier = listSimpleCommands(command).some(({ name, args }) =>
       isRunningPrettier([name, ...args]),

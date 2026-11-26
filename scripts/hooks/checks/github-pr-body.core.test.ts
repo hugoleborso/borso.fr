@@ -108,5 +108,11 @@ describe('githubPrBody', () => {
   it('passes a call with no body or a body that is not text', () => {
     expect(githubPrBody.run(buildInput(''), WORLD)).toBe(PASS);
     expect(githubPrBody.run(buildInput(undefined), WORLD)).toBe(PASS);
+    expect(
+      githubPrBody.run(
+        { hook_event_name: 'PreToolUse', tool_name: 'mcp__github__create_pull_request' },
+        WORLD,
+      ),
+    ).toBe(PASS);
   });
 });

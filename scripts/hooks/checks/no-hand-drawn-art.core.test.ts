@@ -53,7 +53,7 @@ describe('noHandDrawnArt', () => {
       'MultiEdit',
       {
         file_path: SITE_FILE.replace('.tsx', '.svg'),
-        edits: [{ old_string: 'a' }, 'not an edit', { new_string: `d={\`${PATH_DATA}\`}` }],
+        edits: [{ old_string: 'a' }, 'not an edit', null, { new_string: `d={\`${PATH_DATA}\`}` }],
       },
     ],
   ])('refuses path data written through %s', (_shape, tool, toolInput) => {
@@ -86,6 +86,12 @@ describe('noHandDrawnArt', () => {
       { file_path: SITE_FILE, content: '<path d="M10\n10 L 20 20 L 30 30 L 40 40 Z" />' },
     ],
     ['edits that are not a list', { file_path: SITE_FILE, edits: 'none' }],
+    ['content that is not text', { file_path: SITE_FILE, content: [`d="${PATH_DATA}"`] }],
+    ['a file path that is not text', { file_path: [SITE_FILE], content: `d="${PATH_DATA}"` }],
+    [
+      'path data split across two edits, since no single edit writes it',
+      { file_path: SITE_FILE, edits: [{ new_string: 'd="M' }, { new_string: PATH_DATA }] },
+    ],
   ])('lets %s through', (_shape, toolInput) => {
     expect(noHandDrawnArt.run(buildInput(toolInput), WORLD)).toBe(PASS);
   });
