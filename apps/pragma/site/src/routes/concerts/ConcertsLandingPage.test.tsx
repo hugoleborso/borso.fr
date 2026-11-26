@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -10,6 +11,7 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { concertRegistrationKeys } from '../../lib/queries/concert-registrations.queries';
 import { ConcertsLandingPage } from './ConcertsLandingPage';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -32,6 +34,8 @@ const UPCOMING = {
   ],
 };
 const MEMBERS = { members: [{ id: A_MEMBER, firstName: 'Hugo', color: '#3a9b9b' }] };
+const A_TRACK = { deezerTrackId: 'dz-7923756', title: 'Valerie', artist: 'Mark Ronson' };
+const SETTLED_SEARCH = { timeout: 3000 } as const;
 
 const activeStubs: FetchStub[] = [];
 
@@ -49,6 +53,7 @@ function renderPage(
       return jsonResponse({ registration: { comingForMemberId: A_MEMBER, wishedSong: null } });
     }
     if (request.url.includes('/members')) return jsonResponse(MEMBERS);
+    if (request.url.includes('/audience/search')) return jsonResponse({ hits: [A_TRACK] });
     return jsonResponse(upcoming);
   });
   activeStubs.push(fetchStub);
@@ -95,11 +100,19 @@ describe('the public concert sign-up page', () => {
     );
     expect(screen.queryByText('Le Grand Mix')).toBeNull();
     expect(screen.getByText(/Entrée libre/).className).toContain('whitespace-pre-line');
+    expect(screen.getByText(/Entrée libre/).className).not.toContain('order-last');
     expect(screen.getByText('3 beers to win')).toBeTruthy();
     expect(screen.getByText('28')).toBeTruthy();
     expect(screen.getByText('November')).toBeTruthy();
     expect(screen.getByText('Saturday')).toBeTruthy();
     expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('moves the message after the prize coupon on a phone only when the concert has a poster', async () => {
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), {
+      concerts: [{ ...NEXT_CONCERT, posterUrl: 'https://cdn.example/poster.png' }],
+    });
+    expect((await screen.findByText(/Entrée libre/)).className).toContain('max-md:order-last');
   });
 
   it('shows no prize coupon when the concert has none', async () => {
@@ -149,14 +162,19 @@ describe('the public concert sign-up page', () => {
     const sent: unknown = await fetchStub.calls.find(isRegistrationPost)?.clone().json();
     expect(sent).toStrictEqual({ firstName: 'Léa', email: 'lea@example.com' });
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Hugo' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Hugo' }));
+    await user.type(screen.getByRole('searchbox'), 'valerie');
+    await user.click(await screen.findByRole('option', { name: /Valerie/ }, SETTLED_SEARCH));
+    await user.click(screen.getByRole('button', { name: 'Send' }));
     expect(await screen.findByText('Signed up')).toBeTruthy();
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
     const patch = fetchStub.calls.find((call) => call.method === 'PATCH');
     expect(patch?.headers.get('x-registration-token')).toBe('token-1');
+    const answers: unknown = await patch?.clone().json();
+    expect(answers).toStrictEqual({ comingForMemberId: A_MEMBER, wishedTrackId: 'dz-7923756' });
   });
 
   it('skips both questions without sending anything, then shows the fan as signed up', async () => {
@@ -195,6 +213,30 @@ describe('the public concert sign-up page', () => {
     expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
+  });
+
+  it('offers the sign-up for a next concert the browser never signed up for, once the remembered list refreshes', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const laterConcertOnly = {
+      concerts: [{ ...NEXT_CONCERT, sessionId: LATER_CONCERT, venue: 'Le Grand Mix' }],
+    };
+    activeStubs.push(stubFetch(() => Promise.resolve(jsonResponse(laterConcertOnly))));
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(concertRegistrationKeys.upcoming(), UPCOMING);
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ConcertsLandingPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText('Signed up')).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Le Grand Mix' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: "I'll be there!" })).toBeTruthy();
+    expect(screen.queryByText('Signed up')).toBeNull();
   });
 
   it('signs up a friend from the same browser, asks them the questions, and keeps the first sign-up remembered', async () => {

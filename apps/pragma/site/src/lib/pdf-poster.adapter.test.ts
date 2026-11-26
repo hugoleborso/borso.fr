@@ -1,35 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderPdfPosterAsPng } from './pdf-poster.adapter';
 
-const destroyLoadingTask = vi.fn(async () => undefined);
-const renderedWith = vi.hoisted((): unknown[] => []);
-const openedDocuments = vi.hoisted((): unknown[] => []);
+const ONLY_PAGE = vi.hoisted(() => 1);
 
-vi.mock('pdfjs-dist', () => ({
-  GlobalWorkerOptions: { workerSrc: '' },
-  getDocument: (source: unknown) => {
-    openedDocuments.push(source);
-    return {
-      promise: Promise.resolve({
-        getPage: async () => ({
-          getViewport: ({ scale }: { scale: number }) => ({
-            width: 2_000 * scale,
-            height: 1_500 * scale,
-          }),
-          render: (parameters: unknown) => {
-            renderedWith.push(parameters);
-            return { promise: Promise.resolve() };
-          },
-        }),
-      }),
-      destroy: destroyLoadingTask,
-    };
-  },
-}));
-
-vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: '/assets/pdf.worker.js' }));
+interface PaintSize {
+  readonly width: number;
+  readonly height: number;
+}
 
 interface FakeContext {
+  readonly paint: (size: PaintSize) => void;
   readonly getImageData: (
     x: number,
     y: number,
@@ -39,19 +19,63 @@ interface FakeContext {
   readonly drawImage: ReturnType<typeof vi.fn>;
 }
 
-function pagePixels(
-  _x: number,
-  _y: number,
-  width: number,
-  height: number,
-): { data: Uint8ClampedArray } {
-  const pixels = new Uint8ClampedArray(width * height * 4).fill(255);
-  pixels.set([0, 0, 0, 255], (1 * width + 2) * 4);
-  pixels.set([0, 0, 0, 255], (40 * width + 30) * 4);
-  return { data: pixels };
+interface FakeRenderParameters {
+  readonly canvasContext: FakeContext;
+  readonly viewport: PaintSize;
 }
 
-const drawImage = vi.fn();
+const destroyLoadingTask = vi.fn(async () => undefined);
+const openedDocuments = vi.hoisted((): unknown[] => []);
+
+vi.mock('pdfjs-dist', () => ({
+  GlobalWorkerOptions: { workerSrc: '' },
+  getDocument: (source: unknown) => {
+    openedDocuments.push(source);
+    return {
+      promise: Promise.resolve({
+        getPage: async (pageNumber: number) => {
+          if (pageNumber !== ONLY_PAGE) throw new Error('Invalid page request.');
+          return {
+            getViewport: ({ scale }: { scale: number }) => ({
+              width: 2_000 * scale,
+              height: 1_500 * scale,
+            }),
+            render: ({ canvasContext, viewport }: FakeRenderParameters) => {
+              canvasContext.paint(viewport);
+              return { promise: Promise.resolve() };
+            },
+          };
+        },
+      }),
+      destroy: destroyLoadingTask,
+    };
+  },
+}));
+
+vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: '/assets/pdf.worker.js' }));
+
+function whitePixels(width: number, height: number): Uint8ClampedArray {
+  return new Uint8ClampedArray(width * height * 4).fill(255);
+}
+
+function createFakeContext(): FakeContext {
+  let painted: PaintSize | null = null;
+  return {
+    paint: (size) => {
+      painted = size;
+    },
+    getImageData: (_x, _y, width, height) => {
+      const pixels = whitePixels(width, height);
+      if (painted?.width === width && painted.height === height) {
+        pixels.set([0, 0, 0, 255], (1 * width + 2) * 4);
+        pixels.set([0, 0, 0, 255], (40 * width + 30) * 4);
+      }
+      return { data: pixels };
+    },
+    drawImage: vi.fn(),
+  };
+}
+
 const canvases: HTMLCanvasElement[] = [];
 
 const realGetContext = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'getContext');
@@ -60,9 +84,9 @@ const realToBlob = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 
 function stubCanvas(context: FakeContext | null, blob: Blob | null): void {
   Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
     configurable: true,
-    value(this: HTMLCanvasElement) {
+    value(this: HTMLCanvasElement, contextType: string) {
       canvases.push(this);
-      return context;
+      return contextType === '2d' ? context : null;
     },
   });
   Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
@@ -80,13 +104,15 @@ function restoreCanvas(): void {
   }
 }
 
+function pdfFile(): File {
+  return new File(['%PDF'], 'affiche.pdf', { type: 'application/pdf' });
+}
+
 // @FollowsBlueprint test-pure-unit
 describe('renderPdfPosterAsPng', () => {
   beforeEach(() => {
-    renderedWith.length = 0;
     openedDocuments.length = 0;
     canvases.length = 0;
-    drawImage.mockClear();
     destroyLoadingTask.mockClear();
   });
 
@@ -95,10 +121,10 @@ describe('renderPdfPosterAsPng', () => {
   });
 
   it('draws the first page within the pixel budget, trims its white margins and answers a PNG', async () => {
-    stubCanvas({ getImageData: pagePixels, drawImage }, new Blob(['png'], { type: 'image/png' }));
-    const file = new File(['%PDF'], 'affiche.pdf', { type: 'application/pdf' });
+    const context = createFakeContext();
+    stubCanvas(context, new Blob(['png'], { type: 'image/png' }));
 
-    const poster = await renderPdfPosterAsPng(file);
+    const poster = await renderPdfPosterAsPng(pdfFile());
 
     expect(poster.name).toBe('poster.png');
     expect(poster.type).toBe('image/png');
@@ -107,23 +133,20 @@ describe('renderPdfPosterAsPng', () => {
       [2000, 1500],
       [29, 40],
     ]);
-    expect(renderedWith).toHaveLength(1);
-    expect(drawImage).toHaveBeenCalledWith(canvases[0], 2, 1, 29, 40, 0, 0, 29, 40);
+    expect(context.drawImage).toHaveBeenCalledWith(canvases[0], 2, 1, 29, 40, 0, 0, 29, 40);
     expect(destroyLoadingTask).toHaveBeenCalledOnce();
   });
 
   it('fails, and still lets the document go, when the browser has no 2d canvas', async () => {
     stubCanvas(null, null);
-    const file = new File(['%PDF'], 'affiche.pdf', { type: 'application/pdf' });
 
-    await expect(renderPdfPosterAsPng(file)).rejects.toThrow('no 2d canvas context');
+    await expect(renderPdfPosterAsPng(pdfFile())).rejects.toThrow('no 2d canvas context');
     expect(destroyLoadingTask).toHaveBeenCalledOnce();
   });
 
   it('fails when the canvas cannot be encoded', async () => {
-    stubCanvas({ getImageData: pagePixels, drawImage }, null);
-    const file = new File(['%PDF'], 'affiche.pdf', { type: 'application/pdf' });
+    stubCanvas(createFakeContext(), null);
 
-    await expect(renderPdfPosterAsPng(file)).rejects.toThrow('could not be encoded');
+    await expect(renderPdfPosterAsPng(pdfFile())).rejects.toThrow('could not be encoded');
   });
 });

@@ -15,7 +15,7 @@ function createCanvas(width: number, height: number): HTMLCanvasElement {
 }
 
 function readContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
-  const context = canvas.getContext('2d', { willReadFrequently: true });
+  const context = canvas.getContext('2d');
   if (context === null) throw new Error('no 2d canvas context in this browser');
   return context;
 }

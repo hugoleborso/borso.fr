@@ -32,7 +32,7 @@ function NextConcert(): JSX.Element {
   if (nextConcert === undefined) {
     return <EmptyState icon="calendar">{t('concerts.empty')}</EmptyState>;
   }
-  return <ConcertSignUpCard concert={nextConcert} />;
+  return <ConcertSignUpCard key={nextConcert.sessionId} concert={nextConcert} />;
 }
 
 // @FollowsBlueprint route-list-page

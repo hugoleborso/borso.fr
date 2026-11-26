@@ -25,6 +25,17 @@ describe('the concert ticket', () => {
     });
   });
 
+  it('writes the hour in French as the mockups do, with no leading zero', () => {
+    expect(formatTicketDate('2026-12-17T07:00:00.000Z', 'fr').hour).toBe('8 h');
+    expect(formatTicketDate('2026-12-17T08:30:00.000Z', 'fr-FR').hour).toBe('9 h 30');
+    expect(formatTicketDate('2026-12-17T20:05:00.000Z', 'fr').hour).toBe('21 h 05');
+    expect(formatTicketDate('2026-12-17T23:00:00.000Z', 'fr').hour).toBe('0 h');
+  });
+
+  it('writes the hour in other languages as their locale does', () => {
+    expect(formatTicketDate('2026-12-17T19:00:00.000Z', 'en').hour).toBe('8 PM');
+  });
+
   it('opens a map search for the venue as typed', () => {
     expect(buildVenueMapUrl('Punk Paradise')).toBe(
       'https://www.google.com/maps/search/?api=1&query=Punk+Paradise',

@@ -58,7 +58,7 @@ const LOOK_BY_LAYOUT = {
     clock: 'size-6 text-stage-chord md:size-8 md:text-accent',
     venue:
       'px-4.5 py-3 text-ticket-venue text-ink md:px-12 md:pt-4.5 md:pb-0 md:text-ticket-venue-wide',
-    message: 'px-4.5 pb-4 md:px-12 md:pt-4.5 md:pb-0',
+    message: 'px-4.5 pb-4 max-md:order-last md:px-12 md:pt-4.5 md:pb-0',
   },
   date: {
     band:
@@ -171,7 +171,7 @@ export function ConcertTicket({ concert, actions }: ConcertTicketProps): JSX.Ele
         {concert.message === null ? null : (
           <p
             className={composeClassName(
-              'm-0 whitespace-pre-line text-body text-ink-soft max-md:order-last md:text-ticket-message',
+              'm-0 whitespace-pre-line text-body text-ink-soft md:text-ticket-message',
               look.message,
             )}
           >

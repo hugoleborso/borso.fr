@@ -8,8 +8,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 - The page shows the next concert only, the first one the API lists, as a
   ticket. With a poster, the whole poster shows uncropped above the date
   band. Without one, the date band is the top of the ticket. The venue
-  links to a Google Maps search for it. The prize coupon shows only when
-  the concert has a prize. No link leads to the members' area.
+  links to a Google Maps search for it. The message sits right under the
+  venue, except on a phone when the concert has a poster, where it moves
+  after the prize coupon. The prize coupon shows only when the concert has
+  a prize. No link leads to the members' area.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.
 - While the sign-up is on its way the opening screen shows, and the sheet
@@ -42,9 +44,11 @@ Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows the t
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › says the email is already signed up when the server refuses a second one
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › asks for a real email under the field when the address is a throwaway one
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows only the next concert, its venue as a map search, its message and its prize, and no way to the members area
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › moves the message after the prize coupon on a phone only when the concert has a poster
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows no prize coupon when the concert has none
 Held by: `site/src/routes/concerts/concert-ticket.core.test.ts` › opens a map search for the venue as typed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows a concert already signed up for in this browser as done
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › offers the sign-up for a next concert the browser never signed up for, once the remembered list refreshes
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › signs up a friend from the same browser, asks them the questions, and keeps the first sign-up remembered
 Held by: `site/src/lib/registration-token.adapter.test.ts` › keeps the first registration of a concert when a friend signs up from the same browser
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › signs up, remembers it in the browser, then asks who they come for
@@ -52,5 +56,6 @@ Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › accepts
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › takes a PDF poster to draw in the browser, and an image as it is, both up to the size limit
 Held by: `site/src/routes/concerts/poster-pdf.core.test.ts` › keeps the smallest box around every inked pixel
 Held by: `site/src/lib/pdf-poster.adapter.test.ts` › draws the first page within the pixel budget, trims its white margins and answers a PNG
+Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › draws a PDF poster to a PNG, then uploads that PNG and saves its key
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › draws three distinct winners from the registrations
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › clears a blank message and trims a written one

@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import {
   createIsolatedQueryClient,
@@ -8,7 +8,14 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { sendFileToPresignedUrl } from '../../lib/object-upload.adapter';
+import { renderPdfPosterAsPng } from '../../lib/pdf-poster.adapter';
 import { ConcertPublicPagePanel } from './ConcertPublicPagePanel';
+
+vi.mock('../../lib/pdf-poster.adapter', () => ({ renderPdfPosterAsPng: vi.fn() }));
+vi.mock('../../lib/object-upload.adapter', () => ({
+  sendFileToPresignedUrl: vi.fn(async () => ({ kind: 'sent' })),
+}));
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const ANNOUNCEMENT = {
@@ -18,6 +25,9 @@ const ANNOUNCEMENT = {
   prizeIcon: 'beer',
 };
 
+const UPLOAD_URL = 'https://uploads.example/poster-put';
+const POSTER_S3_KEY = 'concert-posters/poster.png';
+
 const activeStubs: FetchStub[] = [];
 
 function renderPanel(): FetchStub {
@@ -25,6 +35,9 @@ function renderPanel(): FetchStub {
     if (request.method === 'PATCH') {
       const changes: unknown = await request.clone().json();
       return jsonResponse({ ...ANNOUNCEMENT, ...Object(changes), posterUrl: null });
+    }
+    if (request.url.includes('/poster-upload')) {
+      return jsonResponse({ uploadUrl: UPLOAD_URL, s3Key: POSTER_S3_KEY });
     }
     if (request.url.includes('/registrations')) return jsonResponse({ registrations: [] });
     return jsonResponse(ANNOUNCEMENT);
@@ -67,6 +80,29 @@ describe('the public page tab of a concert', () => {
         { message: null, prizeLabel: '2 tickets', prizeIcon: 'ticket' },
       ]);
     });
+  });
+
+  it('draws a PDF poster to a PNG, then uploads that PNG and saves its key', async () => {
+    const drawnPoster = new File(['png'], 'poster.png', { type: 'image/png' });
+    vi.mocked(renderPdfPosterAsPng).mockResolvedValueOnce(drawnPoster);
+    const pdf = new File(['%PDF'], 'affiche.pdf', { type: 'application/pdf' });
+    const fetchStub = renderPanel();
+    await screen.findByRole('button', { name: 'Remove' });
+    const picker = document.body.querySelector('input[type="file"]');
+    if (picker === null) throw new Error('the poster file picker is missing');
+
+    fireEvent.change(picker, { target: { files: [pdf] } });
+
+    await waitFor(async () => {
+      expect(await sentPatches(fetchStub)).toEqual([{ posterS3Key: POSTER_S3_KEY }]);
+    });
+    expect(renderPdfPosterAsPng).toHaveBeenCalledWith(pdf);
+    const minted = fetchStub.calls.find((call) => call.url.includes('/poster-upload'));
+    expect(minted === undefined ? null : await readBody(minted)).toEqual({
+      contentType: 'image/png',
+      byteSize: drawnPoster.size,
+    });
+    expect(sendFileToPresignedUrl).toHaveBeenCalledWith(UPLOAD_URL, drawnPoster);
   });
 
   it('removes the poster', async () => {

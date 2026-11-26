@@ -1,4 +1,4 @@
-import type { ConcertPrizeIcon } from '@domain/concert-prize.core';
+import type { z } from 'zod';
 import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { mintBallotToken } from '../audience/ballot-token.utils';
 import { parisCalendarDayOf, parisInstantAt } from '../helpers/paris-time/paris-time.core';
@@ -10,6 +10,8 @@ import {
   type RegistrationListEntry,
   type WishedSongView,
 } from './concert-registrations.types';
+import type { AnnouncementUpdateShape } from './concert-registrations.repository';
+import type { announcementPatchSchema } from './concert-registrations.schema';
 
 const MIDNIGHT_HOUR = 0;
 
@@ -115,25 +117,14 @@ export function projectRegistrationList(
   });
 }
 
-export interface AnnouncementChanges {
-  readonly message?: string | null;
-  readonly posterS3Key?: string | null;
-  readonly prizeLabel?: string | null;
-  readonly prizeIcon?: ConcertPrizeIcon;
-}
+export type AnnouncementChanges = Readonly<z.infer<typeof announcementPatchSchema>>;
 
-export interface AnnouncementColumns {
-  readonly publicMessage?: string | null;
-  readonly posterS3Key?: string | null;
-  readonly prizeLabel?: string | null;
-  readonly prizeIcon?: ConcertPrizeIcon;
-}
-
-export function toAnnouncementUpdate(changes: AnnouncementChanges): AnnouncementColumns {
+export function toAnnouncementUpdate({
+  message,
+  ...columnsNamedAlike
+}: AnnouncementChanges): AnnouncementUpdateShape {
   return {
-    ...(changes.message === undefined ? {} : { publicMessage: changes.message }),
-    ...(changes.posterS3Key === undefined ? {} : { posterS3Key: changes.posterS3Key }),
-    ...(changes.prizeLabel === undefined ? {} : { prizeLabel: changes.prizeLabel }),
-    ...(changes.prizeIcon === undefined ? {} : { prizeIcon: changes.prizeIcon }),
+    ...columnsNamedAlike,
+    ...(message === undefined ? {} : { publicMessage: message }),
   };
 }
