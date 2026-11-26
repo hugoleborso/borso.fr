@@ -1,6 +1,6 @@
 # ADR-2026-11-26T0937: Deduplicate concert registrations with validator and mailchecker
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-26
 - **Deciders:** hugoleborso
 - **Tags:** concert-registration, data, pragma
