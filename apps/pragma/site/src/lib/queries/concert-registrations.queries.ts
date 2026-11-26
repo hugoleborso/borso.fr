@@ -1,7 +1,7 @@
 /** @Feature concert-registrations */
 
 import { PRAGMA_REQUEST_HEADERS } from '@domain/request-headers.core';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { z } from 'zod';
 import { ApiError, api } from '../api.client';
@@ -208,6 +208,14 @@ interface RegistrationsSnapshot {
   readonly previousRegistrations: RegistrationsResponse | undefined;
 }
 
+function dropRegistrationFromList(queryClient: QueryClient, removed: RemoveRegistrationVariables) {
+  const isKept = (entry: ConcertRegistrationEntry) => entry.id !== removed.registrationId;
+  const key = concertRegistrationKeys.registrations(removed.sessionId);
+  writeKeepingStaleness<RegistrationsResponse>(queryClient, key, (old) =>
+    old === undefined ? old : { registrations: old.registrations.filter(isKept) },
+  );
+}
+
 // @FollowsBlueprint query-optimistic-mutation
 export function useRemoveConcertRegistration() {
   const queryClient = useQueryClient();
@@ -224,15 +232,11 @@ export function useRemoveConcertRegistration() {
       const key = concertRegistrationKeys.registrations(variables.sessionId);
       await queryClient.cancelQueries({ queryKey: key });
       const previousRegistrations = queryClient.getQueryData<RegistrationsResponse>(key);
-      writeKeepingStaleness<RegistrationsResponse>(queryClient, key, (old) => {
-        if (old === undefined) return old;
-        return {
-          registrations: old.registrations.filter(
-            (registration) => registration.id !== variables.registrationId,
-          ),
-        };
-      });
+      dropRegistrationFromList(queryClient, variables);
       return { previousRegistrations };
+    },
+    onSuccess: (_removed, variables) => {
+      dropRegistrationFromList(queryClient, variables);
     },
     onError: (_error, variables, context) => {
       if (context?.previousRegistrations === undefined) return;

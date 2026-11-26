@@ -141,4 +141,33 @@ describe('bars mutations — optimistic updates', () => {
     expect(queryClient.getQueryData<OptimisticListShape>(barKeys.list())?.bars).toHaveLength(1);
     tree.unmount();
   });
+
+  it('useDeleteBar keeps a deleted bar out when an earlier deletion failed and put its snapshot back', async () => {
+    const queryClient = createIsolatedQueryClient();
+    const secondBar = { ...SEED.bars[0], id: 'bar-b', name: 'Beta Bar' };
+    queryClient.setQueryData(barKeys.list(), { bars: [...SEED.bars, secondBar] });
+    const firstAnswer = deferred<Response>();
+    const secondAnswer = deferred<Response>();
+    stub = stubFetch(
+      async (request) =>
+        await (request.url.endsWith('bar-a') ? firstAnswer.promise : secondAnswer.promise),
+    );
+
+    const slot = createMutateSlot<ReturnType<typeof useDeleteBar>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
+    const send = slot.read();
+
+    send({ id: 'bar-a' }).catch(() => undefined);
+    const second = send({ id: 'bar-b' });
+    await flushMicrotasks();
+    firstAnswer.resolve(jsonResponse({ error: 'boom' }, 500));
+    await flushMicrotasks();
+    secondAnswer.resolve(jsonResponse({ ok: true }));
+    await second;
+    const ids = queryClient
+      .getQueryData<OptimisticListShape>(barKeys.list())
+      ?.bars.map((bar) => bar.id);
+    expect(ids).toEqual(['bar-a']);
+    tree.unmount();
+  });
 });

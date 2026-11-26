@@ -81,8 +81,10 @@ export function ConcertRegistrationsCard({
   const [registrationToRemove, setRegistrationToRemove] = useState<ConcertRegistrationEntry | null>(
     null,
   );
-  const [winners, setWinners] = useState<readonly ConcertRegistrationEntry[] | null>(null);
+  const [winners, setWinners] = useState<readonly ConcertRegistrationEntry[]>([]);
   const registeredPeople = registrations.data?.registrations ?? [];
+  const listedIds = new Set(registeredPeople.map((registration) => registration.id));
+  const listedWinners = winners.filter((winner) => listedIds.has(winner.id));
 
   const confirmRemoval = (registration: ConcertRegistrationEntry): void => {
     remove.mutate({ sessionId, registrationId: registration.id });
@@ -118,11 +120,11 @@ export function ConcertRegistrationsCard({
         >
           {t('sessions.drawWinners')}
         </Button>
-        {winners === null ? null : (
+        {listedWinners.length === 0 ? null : (
           <div className="flex flex-col gap-1 rounded-md bg-accent-soft px-3 py-2" role="status">
             <span className={FIELD_LABEL_CLASS}>{t('sessions.winnersTitle')}</span>
             <span className="font-medium text-ink">
-              {winners.map((winner) => `${winner.firstName} (${winner.email})`).join(', ')}
+              {listedWinners.map((winner) => `${winner.firstName} (${winner.email})`).join(', ')}
             </span>
           </div>
         )}

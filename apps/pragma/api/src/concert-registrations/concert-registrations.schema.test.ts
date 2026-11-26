@@ -72,6 +72,10 @@ describe('registrationPatchSchema', () => {
     expect(registrationPatchSchema.safeParse({ wishedTrackId: '3135556' }).success).toBe(true);
     expect(registrationPatchSchema.safeParse({ wishedSongTitle: 'Riff' }).success).toBe(false);
   });
+
+  it('refuses an answer that names nothing to change', () => {
+    expect(registrationPatchSchema.safeParse({}).success).toBe(false);
+  });
 });
 
 describe('announcementPatchSchema', () => {

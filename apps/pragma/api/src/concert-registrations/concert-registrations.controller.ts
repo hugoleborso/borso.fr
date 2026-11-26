@@ -23,7 +23,8 @@ import {
   register,
   REGISTRATION_TOKEN_HEADER,
 } from './concert-registrations.service';
-import { checkRegistration, removeRegistration } from './concert-registration-removal.service';
+import { checkRegistration } from './concert-registration-check.service';
+import { removeRegistration } from './concert-registration-removal.service';
 import {
   CONCERT_REGISTRATION_READ_BUDGET,
   CONCERT_REGISTRATION_WRITE_BUDGET,

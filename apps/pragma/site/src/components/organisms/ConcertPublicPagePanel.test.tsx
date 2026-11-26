@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import {
   createIsolatedQueryClient,
+  deferred,
   type FetchStub,
   jsonResponse,
   stubFetch,
@@ -45,9 +46,16 @@ const MAX = {
   email: 'max@example.com',
 };
 
-function renderPanel(registrations: readonly unknown[] = [], removalStatus = 204): FetchStub {
+function answerRemovalWith(status: number): (request: Request) => Promise<Response> {
+  return () => Promise.resolve(new Response(null, { status }));
+}
+
+function renderPanel(
+  registrations: readonly unknown[] = [],
+  answerRemoval = answerRemovalWith(204),
+): FetchStub {
   const fetchStub = stubFetch(async (request) => {
-    if (request.method === 'DELETE') return new Response(null, { status: removalStatus });
+    if (request.method === 'DELETE') return await answerRemoval(request);
     if (request.method === 'PATCH') {
       const changes: unknown = await request.clone().json();
       return jsonResponse({ ...ANNOUNCEMENT, ...Object(changes), posterUrl: null });
@@ -75,6 +83,11 @@ async function readBody(call: Request): Promise<unknown> {
 async function sentPatches(fetchStub: FetchStub): Promise<unknown[]> {
   const patches = fetchStub.calls.filter((call) => call.method === 'PATCH');
   return await Promise.all(patches.map(readBody));
+}
+
+async function confirmRemovalOf(firstName: string): Promise<void> {
+  fireEvent.click(await screen.findByRole('button', { name: `Remove ${firstName}` }));
+  fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
 }
 
 // @FollowsBlueprint test-component-render
@@ -108,13 +121,48 @@ describe('the public page tab of a concert', () => {
   });
 
   it('puts a registration back and says so when the removal fails', async () => {
-    renderPanel([LEA], 500);
+    renderPanel([LEA], answerRemovalWith(500));
     fireEvent.click(await screen.findByRole('button', { name: 'Remove Léa' }));
     fireEvent.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
     );
     expect(await screen.findByText(/The registration was not removed/)).toBeTruthy();
     expect(screen.getByText('lea@example.com')).toBeTruthy();
+  });
+
+  it('keeps a registration out of the list when its removal succeeds after an earlier one failed', async () => {
+    const leaRemoval = deferred<Response>();
+    const maxRemoval = deferred<Response>();
+    renderPanel(
+      [LEA, MAX],
+      async (request) =>
+        await (request.url.endsWith(LEA.id) ? leaRemoval.promise : maxRemoval.promise),
+    );
+    await confirmRemovalOf('Léa');
+    await confirmRemovalOf('Max');
+    leaRemoval.resolve(new Response(null, { status: 500 }));
+    expect(await screen.findByText('lea@example.com')).toBeTruthy();
+    maxRemoval.resolve(new Response(null, { status: 204 }));
+    await waitFor(() => {
+      expect(screen.queryByText('max@example.com')).toBeNull();
+    });
+    expect(screen.getByText('lea@example.com')).toBeTruthy();
+  });
+
+  it('takes a removed registration off the winners already drawn, and hides them once none is left', async () => {
+    renderPanel([LEA, MAX]);
+    await screen.findByText('max@example.com');
+    fireEvent.click(screen.getByRole('button', { name: 'Draw 3 winners' }));
+    expect(screen.getByRole('status').textContent).toContain('Léa (lea@example.com)');
+    await confirmRemovalOf('Léa');
+    await waitFor(() => {
+      expect(screen.getByRole('status').textContent).not.toContain('Léa');
+    });
+    expect(screen.getByRole('status').textContent).toContain('Max (max@example.com)');
+    await confirmRemovalOf('Max');
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).toBeNull();
+    });
   });
 
   it('saves the prize with the icon picked, and clears a blank message', async () => {

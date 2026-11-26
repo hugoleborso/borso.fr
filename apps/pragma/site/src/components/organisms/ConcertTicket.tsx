@@ -66,7 +66,7 @@ const LOOK_BY_LAYOUT = {
     day: 'text-ticket-day md:text-ticket-day-wide',
     month: 'text-meta text-stage-chord md:text-body md:text-accent',
     weekday: 'text-meta text-stage-ink-dim md:text-body md:text-ink-soft',
-    hour: 'ml-auto gap-2 text-ticket-hour md:ml-0 md:gap-2.5 md:text-ticket-hour-wide',
+    hour: 'ml-auto gap-2 text-ticket-hour max-[374px]:text-ticket-prize md:ml-0 md:gap-2.5 md:text-ticket-hour-wide',
     clock: 'size-6 text-stage-chord md:size-8 md:text-accent',
     venue:
       'px-4.5 py-3 text-ticket-venue text-ink md:px-12 md:pt-4.5 md:pb-0 md:text-ticket-venue-wide',

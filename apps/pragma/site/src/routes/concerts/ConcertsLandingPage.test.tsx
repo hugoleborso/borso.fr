@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { dehydrate, hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -12,6 +12,7 @@ import {
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
 import { concertRegistrationKeys } from '../../lib/queries/concert-registrations.queries';
+import { isQueryPersisted } from '../../lib/queries/persisted-query.core';
 import { ConcertsLandingPage } from './ConcertsLandingPage';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
@@ -51,6 +52,7 @@ function renderPage(
   answerSignUp: (request: Request) => Promise<Response>,
   upcoming: unknown = UPCOMING,
   checkStatus = 200,
+  queryClient = createIsolatedQueryClient(),
 ): FetchStub {
   const fetchStub = stubFetch(async (request) => {
     if (isRegistrationPost(request)) return await answerSignUp(request);
@@ -66,7 +68,7 @@ function renderPage(
   });
   activeStubs.push(fetchStub);
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <ConcertsLandingPage />
       </MemoryRouter>
@@ -250,6 +252,36 @@ describe('the public concert sign-up page', () => {
     expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBeNull();
     const check = fetchStub.calls.find(isRegistrationCheck);
     expect(check?.headers.get('x-registration-token')).toBe('token-1');
+  });
+
+  it('checks the remembered registration again on the next visit, after an earlier visit found it standing', async () => {
+    localStorage.setItem(
+      `pragma.registration.${A_CONCERT}`,
+      JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' }),
+    );
+    const firstVisit = createIsolatedQueryClient();
+    renderPage(() => Promise.resolve(jsonResponse({}, 500)), UPCOMING, 200, firstVisit);
+    await waitFor(() => {
+      expect(firstVisit.getQueryData(concertRegistrationKeys.remembered(A_REGISTRATION))).toEqual({
+        isStanding: true,
+      });
+    });
+    const savedOnThePhone = dehydrate(firstVisit, { shouldDehydrateQuery: isQueryPersisted });
+    cleanup();
+    for (const stub of activeStubs.splice(0)) stub.restore();
+
+    const nextVisit = createIsolatedQueryClient();
+    hydrate(nextVisit, savedOnThePhone);
+    const fetchStub = renderPage(
+      () => Promise.resolve(jsonResponse({}, 500)),
+      UPCOMING,
+      404,
+      nextVisit,
+    );
+
+    expect(await screen.findByRole('button', { name: "I'll be there!" })).toBeTruthy();
+    expect(fetchStub.calls.some(isRegistrationCheck)).toBe(true);
+    expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBeNull();
   });
 
   it('keeps a remembered registration signed up when its check is refused for another reason', async () => {

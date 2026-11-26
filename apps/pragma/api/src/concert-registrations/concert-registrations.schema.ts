@@ -54,7 +54,11 @@ export const registrationPatchSchema = z
     comingForMemberId: z.guid().nullable().optional(),
     wishedTrackId: z.string().trim().min(1).max(TRACK_ID_MAX).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (answers) => answers.comingForMemberId !== undefined || answers.wishedTrackId !== undefined,
+    { message: 'nothing to update' },
+  );
 
 export const announcementPatchSchema = z
   .object({

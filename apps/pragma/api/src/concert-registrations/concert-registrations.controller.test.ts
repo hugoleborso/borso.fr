@@ -501,7 +501,7 @@ describe('concert registrations controller (back-e2e)', () => {
     expect(listed.registrations[0]?.comingFor).toBeNull();
   });
 
-  it('removes a registration of its concert only, keeps its wished song, and lets the mailbox sign up again', async () => {
+  it('removes a registration of its concert only, keeps its wished song out of the fan wishes but in the catalogue, and lets the mailbox sign up again', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
     const otherConcertId = await createConcert(app, cookieHeader);
@@ -520,6 +520,11 @@ describe('concert registrations controller (back-e2e)', () => {
     expect(await testDatabase().select({ title: songTable.title }).from(songTable)).toEqual([
       { title: 'Voodoo Child' },
     ]);
+    const wishes = await readJson(
+      await jsonRequest(app, '/api/concert-registrations/fan-wishes', { cookieHeader }),
+      fanWishesEnvelope,
+    );
+    expect(wishes.songIds).toEqual([]);
 
     const again = await removeRegistrationOf(app, cookieHeader, sessionId, registrationId);
     expect(again.status).toBe(404);
@@ -567,6 +572,38 @@ describe('concert registrations controller (back-e2e)', () => {
     }
     expect(lastStatus).toBe(200);
     expect((await fromOneAddress()).status).toBe(429);
+  });
+
+  it('refuses an answer that names nothing to change with 400, and changes nothing', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+
+    const empty = await amend(app, registrationId, editToken, {});
+
+    expect(empty.status).toBe(400);
+    expect(await storedRegistrationsOf(sessionId)).toEqual([{ id: registrationId }]);
+  });
+
+  it('answers 404 to an answer whose registration a member removed while it was being saved', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+    vi.stubGlobal('fetch', async () => {
+      await removeRegistrationOf(app, cookieHeader, sessionId, registrationId);
+      return new Response(JSON.stringify(WISHED_TRACK), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const amended = await amend(app, registrationId, editToken, {
+      wishedTrackId: String(WISHED_TRACK.id),
+    });
+
+    expect(amended.status).toBe(404);
+    expect((await readJson(amended, errorEnvelope)).error).toBe('unknown-registration');
+    expect(await storedRegistrationsOf(sessionId)).toEqual([]);
   });
 
   it('records who a registration comes for and the song it wishes, imported as an idea', async () => {

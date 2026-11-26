@@ -29,7 +29,9 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   signed up. "Un·e ami·e" signs someone else up from the same browser,
   and that sign-up never replaces the remembered one.
 - Each visit checks the remembered registration once, with its edit token
-  (`useRememberedRegistrationCheck`). When the server no longer has it
+  (`useRememberedRegistrationCheck`). The answer stays in memory and is
+  never saved with the cached reads (`isQueryKeyPersisted`), so the next
+  visit asks again. When the server no longer has it
   (`isRegistrationGone`), the browser forgets it and offers "Je serai là !"
   again. Any other answer keeps it.
 - After each sign-up, an optional sheet greets the person by first name
@@ -46,8 +48,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   holds the same 10 MB limit. A blank message or prize label
   clears it. The draw picks up to three distinct registrations at random,
   in the browser, and keeps nothing. "Retirer" removes a registration once
-  confirmed. It leaves the list and the draw at once, and comes back if the
-  server refuses.
+  confirmed. It leaves the list, the draw and the winners already drawn at
+  once, and comes back if the server refuses.
 
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › sends a trimmed first name and a trimmed lower-case email
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › offers a retry only when the server could not be reached or failed
@@ -74,7 +76,11 @@ Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › dra
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › draws three distinct winners from the registrations
 Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › removes a registration once confirmed, so it leaves the list and the draw
 Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › puts a registration back and says so when the removal fails
+Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › keeps a registration out of the list when its removal succeeds after an earlier one failed
+Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › takes a removed registration off the winners already drawn, and hides them once none is left
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › offers the sign-up again when the band removed the registration this browser remembers
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › checks the remembered registration again on the next visit, after an earlier visit found it standing
+Held by: `site/src/lib/queries/persisted-query.core.test.ts` › keeps the check of a remembered registration off the phone, so each visit asks again
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › keeps a remembered registration signed up when its check is refused for another reason
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › forgets a remembered registration only when the server no longer has it
 Held by: `site/src/lib/registration-token.adapter.test.ts` › forgets the registration of one concert only, so the next sign-up is remembered again
