@@ -340,7 +340,7 @@ run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-trigge
 # Each table a spec creates carries the operator's dated answer on what the
 # record is and where it is created from. See
 # docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md.
-run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh
+run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$|^apps/[^/]+/api/src/database/migrations/[^/]+\.sql$' scripts/check-spec-records.sh
 
 # An ADR, a spec or a plan is written in English, whatever its session's prompt
 # asked. See docs/dantotsus/the-prompt-that-outranked-claude-md.md.

@@ -7,6 +7,7 @@ triggers:
     - 'scripts/phone\.sh'
     - 'agent-browser install'
     - 'agent-browser\s+network\s+route'
+    - 'agent-browser\s+(\S+\s+)*upload\b'
   output:
     - 'ERR_CONNECTION_RESET'
 ---
@@ -140,6 +141,16 @@ on `/api/streaks` never matches, because no `GET /api/streaks` leaves the page
 (measured on PR #395). Seed the state instead. If you must mock a read, wrap
 `fetch` in an init script and answer the batch entry, then clear
 `pragma.query-cache` so the restored answer does not hide it.
+
+**An uploaded file must be readable by every user.** `agent-browser upload`
+of a mode-600 file made the page's `File` read fail with `NotReadableError`,
+which the ERP showed only as its generic save error (measured on PR #413).
+Run `chmod 644` on the file first.
+
+**The seeded concert has no poster, prize or message.** `POST
+/api/__test/seed` does not restore them, and no bucket runs locally to hold a
+poster (measured on PR #413). A row that removes them needs a preview, or a
+note that the local run cannot put them back.
 
 **`screenshot --full` captures the window, not a scrolled container.** Where a
 page scrolls an inner element, scroll it into view or screenshot the element,
