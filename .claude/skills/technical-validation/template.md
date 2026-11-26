@@ -1,6 +1,6 @@
 # Technical-validation templates
 
-Two templates live here. The skill uses both.
+The dispatch brief lives here, and a pointer to the report layout.
 
 1. **Dispatch-brief template** — the self-contained prompt the skill passes to the `technical-validator` agent via the `Agent` tool. Substitute placeholders.
 2. **Report template** — the markdown layout the agent writes to `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`.
@@ -50,69 +50,4 @@ The brief is intentionally short. The agent's standard, procedure, and report fo
 
 ## 2. Report template
 
-The agent writes this at `docs/features/<app>/<slug>/validation/technical-validation-<YYYY-MM-DD-HHmm>.md`:
-
-```markdown
-# Technical validation — <feature title>
-
-- Spec: [`../spec/spec.md`](../spec/spec.md)
-- Plan: [`../plan/plan.md`](../plan/plan.md)
-- Branch: <current branch>
-- Base: <base_ref>
-- Run at: <ISO 8601 timestamp>
-- Round: <1 | 2>
-- Reviewed: <full SHA of HEAD when the review started>
-- Touched workspaces: <list>
-
-## A. Correctness vs spec
-
-| # | Spec ref | Claim | Code (file:line) | Evidence (quoted) | Verdict |
-|---|---|---|---|---|---|
-| A01 | Q5 | <verbatim claim> | apps/.../X.tsx:NN | `…` | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
-
-## B. Code cleanliness
-
-| # | Rule | Check | Evidence | Verdict |
-|---|---|---|---|---|
-| B01 | <rule> | <how checked> | <result> | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
-
-## C. Tests pass
-
-| # | Workspace | Command | Exit | Verdict |
-|---|---|---|---|---|
-| C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> exec vitest run --project core --changed <base>`, then `run test:e2e --changed <base>` | 0 / N | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
-
-## D. Test coverage of spec
-
-| # | Use case | Covering test | Verdict |
-|---|---|---|---|
-| D01 | <use case> | `<describe/it text>` at <file:line> | PASS / FAIL |
-
-## E. Scale
-
-| # | Write path or state | Question | Failing case, or the key or test that holds it | Verdict |
-|---|---|---|---|---|
-| E01 | <service function → write> | Check-then-write / per-process state / concurrent proof | <two requests → wrong result, or the key and the test> | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
-
-## Blocking findings
-
-- <row #> — <one line>
-
-## Non-blocking findings
-
-- <row #> — <one line>
-
-## Notes
-
-> *One bullet per UNVERIFIABLE row, plus any concern with no failing case yet, phrased as a question.*
-
--
-
-## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
-```
-
-### Path conventions
-
-- The report links to its sibling spec via `../spec/spec.md` and plan via `../plan/plan.md`.
-- All evidence is inline (quoted code, command output, test descriptions). No external evidence folder is needed for technical-validation, unlike visual-validation's screenshot folder.
-- The agent never modifies any file outside `report_path`.
+The report layout is the *Report format* section of [`../../agents/technical-validator.md`](../../agents/technical-validator.md), which the agent reads. It links its sibling spec and plan as `../spec/spec.md` and `../plan/plan.md`, and all evidence is inline.

@@ -1,122 +1,97 @@
 ---
 name: technical-validation
-description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce the branch's one code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules and the standards reviewer checklist, test pass status, and whether tests cover what the spec asks. Two rounds at most; only blocking findings fail it. Use when the user says "/technical-validation", "review the code", "code review against the spec", "review this against the standards", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/technical-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce the branch's one code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules and the standards reviewer checklist, test pass status, and whether tests cover what the spec asks. Two rounds at most; only blocking findings fail it. Use when the user says "/technical-validation", "review the code", "code review against the spec", "review this against the standards", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation, so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 ---
 
 # Technical-validation skill
 
-A spec is a contract. A plan is the engineering projection of the contract onto the codebase. A technical validation **reads the diff and asks five questions**:
-
-1. **Correctness** — does the code do what the spec says?
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`), and every `reviewer` bullet of the `## Enforced by` sections in `docs/standards/`, which no tool can check?
-3. **Tests pass** — does the fast suite pass on every touched workspace, with the back-e2e files the branch affects?
-4. **Coverage** — does each use case in the spec have a test that exercises it?
-5. **Scale** — does every rule still hold when the same request arrives twice at once, or runs on two processes? Required on any diff that writes or keeps state.
-
-Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one is a question in the report's Notes, not a finding. Every finding is typed `blocking` or `non-blocking`, and only blocking ones fail the verdict.
-
-It is the engineering counterpart of `/visual-validation`. Same standalone-agent posture; same evidence-required discipline; same no-rounding-up verdict semantics — applied to source code rather than rendered pixels.
-
-The canonical standard this skill enforces lives at [`standard.md`](./standard.md).
+The validator reads the diff and asks five questions: correctness against the
+spec, cleanliness against the repo's rules, tests passing, tests covering the
+spec, and scale under concurrent requests. Its categories, finding rules and
+report format live in its definition,
+[`.claude/agents/technical-validator.md`](../../agents/technical-validator.md).
+Why it exists and what it leaves out are in [`standard.md`](./standard.md).
 
 ## The standalone-agent rule
 
-The validator runs in **a fresh `Agent` invocation** with no chat context. Non-negotiable, same reason as visual-validation: the implementer (the main session) has already convinced themselves the code is fine, and inheriting that bias defeats the gate.
+Dispatch the dedicated `technical-validator` agent in a fresh `Agent` call,
+never `general-purpose`, whose context lacks the agent's rules. The
+implementer has already convinced itself the code is fine, and inheriting that
+bias defeats the gate. Pass the brief from [`template.md`](./template.md) and
+nothing else: no summary of the implementation.
 
-Use the dedicated `technical-validator` agent at `.claude/agents/technical-validator.md`. Do **not** dispatch `general-purpose` for this — the dedicated agent's frontmatter and brief carry the structural rules.
-
-```
-Agent({
-  subagent_type: "technical-validator",
-  description: "Technical validation against spec + plan",
-  prompt: <self-contained brief — see template.md>,
-})
-```
-
-## When to invoke
-
-Invoke when:
-- A feature has shipped to a branch and a spec exists at `docs/features/<app>/<slug>/spec/spec.md`.
-- The user asks for `/technical-validation`, "review the code", "code review against the spec".
-- The `/technical-conception` plan reaches gate 7.
-
-Do **not** invoke when:
-- There is no spec and no ADR stands in for one. When the operator asked for the change directly and an ADR records it, pass the ADR as `spec_path`; the validator has a procedure for it.
-- The branch hasn't diverged from base (no diff to review).
-- The work is purely documentation with no code changes (skip the gate; CLAUDE.md and the spec speak for themselves).
+Skip the gate when there is no spec and no ADR stands in for one, when the
+branch has no diff, or when the change is documentation only.
 
 ## How this phase works (skill, in the main session)
 
-1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path.
-2. **Locate the plan.** `plan_path = docs/features/<app>/<slug>/plan/plan.md`. If missing, surface that to the user and continue — the validator will tag plan-dependent rows UNVERIFIABLE.
-   A kaizen sweep (`claude/lessons-from-pr-<N>`) has no spec and no plan. Pass `docs/features/meta/lessons-from-pr-<N>/inventory.md` as `spec_path`, whose `fixed:` and `dantotsu:` decisions are the claims category A checks, and no `plan_path`. The sweep of PR #295 passed its parent feature's spec, and its validator built rows from the inventory anyway and marked the absent plan UNVERIFIABLE.
-3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"` for app workspaces; `@borso/infra` for `<app> = infra`. Check `apps/<app>/package.json` exists and whether it has `test:core` (full-stack) or not, which picks the scoped test command.
-4. **Resolve the base ref to a SHA, once.** `base_ref=$(git merge-base origin/main HEAD)`, or `BASE_REF` when the user provides one. Pass the 40-character SHA, never `origin/main`: that ref moves when another pull request merges, and on PR #339 it moved mid-review, so a `--changed` base read later ran the tests of #333.
-5. **Build the run paths.**
-   ```
-   timestamp        = <YYYY-MM-DD-HHmm>
-   validation_dir   = docs/features/<app>/<slug>/validation
-   report_path      = <validation_dir>/technical-validation-<timestamp>.md
-   ```
-   `mkdir -p` the validation directory.
-6. **Pick the round.** Round 1 when no earlier `technical-validation-*.md` report of this branch sits in `validation_dir`; round 2 otherwise, with `previous_report` set to it. There is no round 3. A revision after a passing report, such as a spec change, is a new round 1 with `base_ref` set to that report's `Reviewed:` SHA, and gets its own round 2. PR #327's revision was briefed as round 1 with the round-2 scope.
-7. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and `previous_report` on round 2. Round 1 reviews the whole branch; round 2 reviews only the commits after round 1's `Reviewed:` SHA, plus each round-1 blocking finding.
-8. **Read the report's verdict and its two finding lists**, not the tables, once the agent has handed back. A file at `report_path` before that is a draft: on PR #298 one was committed with a placeholder cell. On **FAIL**, triage the blocking findings below; do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, carry the UNVERIFIABLE rows to the PR description per the disclosure rule.
+1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`.
+   When the operator asked for the change directly and an ADR records it, pass
+   the ADR. A kaizen sweep (`claude/lessons-from-pr-<N>`) passes
+   `docs/features/meta/lessons-from-pr-<N>/inventory.md` and no plan.
+2. **Locate the plan.** `plan_path = docs/features/<app>/<slug>/plan/plan.md`.
+   If missing, tell the user and continue.
+3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"`, or
+   `@borso/infra` for `<app> = infra`.
+4. **Resolve the base ref to a SHA, once.**
+   `base_ref=$(git merge-base origin/main HEAD)`, or `BASE_REF` when the user
+   provides one. Pass the 40-character SHA, never `origin/main`, which moves
+   when another pull request merges mid-review.
+5. **Build the run paths.** `report_path =
+   docs/features/<app>/<slug>/validation/technical-validation-<YYYY-MM-DD-HHmm>.md`,
+   and `mkdir -p` its folder.
+6. **Pick the round.** Round 1 when no earlier `technical-validation-*.md`
+   report of this branch sits in that folder; round 2 otherwise, with
+   `previous_report` set to it. There is no round 3. A revision after a
+   passing report, such as a spec change, is a new round 1 with `base_ref` set
+   to that report's `Reviewed:` SHA, and gets its own round 2.
+7. **Dispatch the `technical-validator` agent** with `spec_path`,
+   `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and
+   `previous_report` on round 2.
+8. **Read the report's verdict and its two finding lists** once the agent has
+   handed back, not before: a file at `report_path` earlier is a draft. On
+   **FAIL**, triage the blocking findings below and do not ship.
 
 ## Findings and rounds
 
-The implementer takes each finding, blocking or not, and does one of three things:
+The implementer takes each finding, blocking or not, and does one of three
+things:
 
 - **fix** it;
-- **dismiss** it with a concrete reason, written in a commit message, where round 2 reads it, because the pull request opens after validation (`B07 dismissed: the name is the one VOCABULARY.md uses`). The reason names the file that holds it. A reason only another repository or a running agent could confirm is a question, not a dismissal;
-- **ask the operator**, when it is a product call or rests on what this repository cannot show.
+- **dismiss** it with a concrete reason in a commit message, where round 2
+  reads it, because the pull request opens after validation
+  (`B07 dismissed: the name is the one VOCABULARY.md uses`). The reason names
+  the file that holds it. A reason only another repository or a running agent
+  could confirm is a question, not a dismissal;
+- **ask the operator**, when it is a product call or rests on what this
+  repository cannot show.
 
-Be skeptical: a reviewer that read the diff cold is often wrong about intent. Non-blocking findings never start a round; list them in the pull request.
+Be skeptical: a reviewer that read the diff cold is often wrong about intent.
 
-After round 1 with blocking findings, fix them and run round 2. After round 2, any blocking finding still open goes to the operator with the report. Never run a third round: each round rereads code nobody changed. PR #193 ran nine standards rounds and four technical ones, and 12 of its 92 commits did nothing but re-seal.
-
-## Deliverable
-
-A single markdown file at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`. No sibling evidence folder needed (unlike visual-validation, the evidence here is quoted code lines and command output, both inline in the report).
-
-The skill's textual return is one of:
-- `Verdict: PASS — see <report_path>` — mergeable.
-- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure.
-- `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix and re-run.
+After round 1 with blocking findings, fix them and run round 2. After round 2,
+any blocking finding still open goes to the operator with the report. Never
+run a third round, because each round rereads code nobody changed.
 
 ## Verdict acceptance + PR disclosure
 
-Same rule as `/visual-validation`:
+The skill returns `Verdict: <PASS | PASS_EXCEPT_UNVERIFIABLE (N unverifiable)
+| FAIL (N failing)> — see <report_path>`.
 
-- **FAIL is never accepted.** A blocking finding is a real defect. Fix it and run round 2, or, after round 2, hand it to the operator. There is no "disclose-and-merge" path.
-- **Non-blocking findings** never block. Each is fixed, dismissed with a reason, or listed in the PR description.
-- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is genuinely outside this validator's reach (e.g. a tooling limit, or a row legitimately deferred to `/visual-validation`). The PR description must surface those rows (row number, assertion text verbatim, one-line reason, report-path link), placed where `/open-pr`'s *Validation* step puts them.
+- **FAIL is never accepted.** There is no disclose-and-merge path.
+- **Non-blocking findings** never block. Each is fixed, dismissed with a
+  reason, or listed in the PR description.
+- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is
+  genuinely outside this validator's reach. The PR description carries those
+  rows (row number, assertion text verbatim, one-line reason, report link)
+  where `/open-pr`'s *Validation* step puts them.
 - **PASS is mergeable** with no further disclosure.
-
-## Failure modes to avoid
-
-- **Optimism leak.** The skill must not pre-summarise the implementation for the agent. Pass the four paths; nothing else.
-- **Dispatching `general-purpose`.** A generic agent has none of the dedicated agent's structural rules.
-- **Skipping tests because they're slow.** The validator runs the fast suite and the back-e2e files the branch affects. The whole back-e2e suite (367 s on pragma) stays in CI. If a workspace has no test script and the spec implies test coverage, the row is UNVERIFIABLE — not "fine because no tests exist".
-- **A third round.** Two rounds, then the operator.
-- **Quoting evidence without line numbers.** Every code citation in the report needs a `file:line` reference; otherwise reviewers can't audit the verdict.
-- **Skipping the scale pass.** Every test runs one request at a time, so a check-then-write race passes categories A to D. Category E is required, not optional.
-- **A FAIL with no failing case.** A row saying "might race" without the two requests and the wrong result is a question, and belongs in Notes.
-- **Treating "tests pass" as "tests exist".** Categories C (tests pass) and D (test coverage of spec) are separate columns. A workspace with one trivial smoke test passes C but fails D for every uncovered use case.
-- **Validating against the implementation, not the spec.** Same anti-pattern as visual-validation: if a feature exists in code but isn't in the spec, the validator does not validate it (and notes that the spec is incomplete).
-- **Missing plan → silent UNVERIFIABLE everywhere.** When the plan is missing, the report's first finding should call it out and recommend running `/technical-conception`. UNVERIFIABLE rows that all stem from the same root cause should be summarised.
-
-## Repo-specific notes
-
-- Workspaces: `@borso-app/<app>` for `apps/*`; `@borso/infra` for `infra/cdk`; `@borso/shared-infra` for `infra/shared`.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated. CI collects coverage. Pre-push and the validator run only the changed tests.
-- Default base is `git merge-base origin/main HEAD`, resolved once. Feature branches are typically `claude/<slug>` per CLAUDE.md.
-- Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
-- Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
 
-When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/technical-validator-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from the validator's PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter:
+When `docs/features/<app>/<slug>/runs/<run-id>/state.json` has
+`"pilotedByTechLead": true`, also write
+`runs/<run-id>/agents/technical-validation-<step>.md` per
+[`sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md):
 
 | Validator verdict | `status` | `next.kind` |
 |---|---|---|
@@ -127,4 +102,5 @@ When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"piloted
 | FAIL (spec gap) | `failed` | `escalate` with `reason: 'spec-gap-<short>'` |
 | FAIL (validator crash) | `failed` | `escalate` with `reason: 'validator-crash-<short>'` |
 
-`summary:` is the report's headline (≤ 200 words). `artifacts:` is the path to the full verdict report under `validation/`. The standard report file is still produced — the verdict file is an additional artefact, not a replacement.
+`summary:` is the report's headline (≤ 200 words), and `artifacts:` the
+report's path. The report is still produced.
