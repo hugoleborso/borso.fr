@@ -1,3 +1,4 @@
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { mintBallotToken } from '../audience/ballot-token.utils';
 import { parisCalendarDayOf, parisInstantAt } from '../helpers/paris-time/paris-time.core';
 import { hashToken } from '../oauth/token.core';
@@ -9,7 +10,6 @@ import {
   type WishedSongView,
 } from './concert-registrations.types';
 
-const CONCERT_SESSION_KIND = 'concert';
 const MIDNIGHT_HOUR = 0;
 
 const EXTENSION_BY_POSTER_CONTENT_TYPE = {
@@ -40,14 +40,14 @@ export interface ConcertCandidate {
 
 export function isUpcomingConcert(session: ConcertCandidate | null, now: Date): boolean {
   if (session === null) return false;
-  if (session.kind !== CONCERT_SESSION_KIND) return false;
+  if (session.kind !== CONCERT_KIND) return false;
   return session.date.getTime() >= startOfParisDay(now).getTime();
 }
 
 export function isConcert<Session extends ConcertCandidate>(
   session: Session | null,
 ): session is Session {
-  return session?.kind === CONCERT_SESSION_KIND;
+  return session?.kind === CONCERT_KIND;
 }
 
 export interface BuildPosterObjectKeyParams {

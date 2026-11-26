@@ -134,6 +134,17 @@ describe('the public concert sign-up page', () => {
     expect(patch?.headers.get('x-registration-token')).toBe('token-1');
   });
 
+  it('skips both questions without sending anything, then thanks the fan', async () => {
+    const fetchStub = renderPage(() =>
+      Promise.resolve(jsonResponse({ registrationId: A_REGISTRATION, editToken: 'token-1' }, 201)),
+    );
+    await signUp();
+    fireEvent.click(await screen.findByRole('button', { name: 'Hugo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(await screen.findByText(/Thank you!/)).toBeTruthy();
+    expect(fetchStub.calls.filter((call) => call.method === 'PATCH')).toEqual([]);
+  });
+
   it('says the email is already signed up when the server refuses a second one', async () => {
     renderPage(() => Promise.resolve(jsonResponse({ error: 'already-registered' }, 409)));
     await signUp();

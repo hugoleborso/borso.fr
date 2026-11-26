@@ -19,9 +19,8 @@ function registrationKeyOfConcert(sessionId: string): string {
 }
 
 function parseStoredRegistration(raw: string | null): StoredRegistration | null {
-  if (raw === null) return null;
   try {
-    const checked = storedRegistrationSchema.safeParse(JSON.parse(raw));
+    const checked = storedRegistrationSchema.safeParse(JSON.parse(String(raw)));
     return checked.success ? checked.data : null;
   } catch {
     return null;

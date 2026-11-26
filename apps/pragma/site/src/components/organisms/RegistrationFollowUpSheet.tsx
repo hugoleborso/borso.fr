@@ -1,5 +1,6 @@
 /** @Feature concert-registrations */
 
+import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo, useState } from 'react';
 import { Autocomplete, Input, ListBox, ListBoxItem, SearchField } from 'react-aria-components';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +37,13 @@ interface WishedTrack {
   readonly artist: string;
 }
 
+interface FollowUpValues {
+  readonly comingForMemberId: string | null;
+  readonly wishedTrack: WishedTrack | null;
+}
+
+const NO_ANSWER: FollowUpValues = { comingForMemberId: null, wishedTrack: null };
+
 export interface RegistrationFollowUpSheetProps {
   readonly registration: StoredRegistration;
   readonly onDone: () => void;
@@ -49,8 +57,19 @@ export function RegistrationFollowUpSheet({
   const { t } = useTranslation();
   const members = useConcertMemberNames(true);
   const amend = useAmendRegistration();
-  const [comingForMemberId, setComingForMemberId] = useState<string | null>(null);
-  const [wishedTrack, setWishedTrack] = useState<WishedTrack | null>(null);
+  const form = useForm({
+    defaultValues: NO_ANSWER,
+    onSubmit: ({ value }) => {
+      amend.mutate(
+        {
+          registration,
+          comingForMemberId: value.comingForMemberId,
+          wishedTrackId: value.wishedTrack?.id ?? null,
+        },
+        { onSuccess: onDone },
+      );
+    },
+  });
   const [typedQuery, setTypedQuery] = useState('');
   const [settledQuery, setSettledQuery] = useState('');
   const publishSettledQuery = useMemo(
@@ -68,7 +87,6 @@ export function RegistrationFollowUpSheet({
   });
   const searchLine = selectWishSearchLine(outcome);
   const followUpErrorKey = selectFollowUpErrorKey(amend.error);
-  const hasAnswer = comingForMemberId !== null || wishedTrack !== null;
 
   const changeQuery = (nextQuery: string): void => {
     setTypedQuery(nextQuery);
@@ -78,16 +96,17 @@ export function RegistrationFollowUpSheet({
   const pickTrack = (trackId: string): void => {
     const hit = hits.find((candidate) => candidate.deezerTrackId === trackId);
     if (hit === undefined) return;
-    setWishedTrack({ id: hit.deezerTrackId, title: hit.title, artist: hit.artist });
+    form.setFieldValue('wishedTrack', {
+      id: hit.deezerTrackId,
+      title: hit.title,
+      artist: hit.artist,
+    });
     setTypedQuery('');
     setSettledQuery('');
   };
 
   const send = (): void => {
-    amend.mutate(
-      { registration, comingForMemberId, wishedTrackId: wishedTrack?.id ?? null },
-      { onSuccess: onDone },
-    );
+    void form.handleSubmit();
   };
 
   return (
@@ -100,84 +119,115 @@ export function RegistrationFollowUpSheet({
           <Button icon="close" variant="quiet" onClick={onDone}>
             {t('concerts.skip')}
           </Button>
-          <Button
-            icon="check"
-            variant="primary"
-            disabled={!hasAnswer || amend.isPending}
-            onClick={send}
+          <form.Subscribe
+            selector={(state) =>
+              state.values.comingForMemberId !== null || state.values.wishedTrack !== null
+            }
           >
-            {t('concerts.send')}
-          </Button>
+            {(hasAnswer) => (
+              <Button
+                icon="check"
+                variant="primary"
+                disabled={!hasAnswer || amend.isPending}
+                onClick={send}
+              >
+                {t('concerts.send')}
+              </Button>
+            )}
+          </form.Subscribe>
         </>
       }
     >
       <div className="flex flex-col gap-6">
         <section className="flex flex-col gap-3">
           <h3 className={QUESTION_CLASS}>{t('concerts.comingForQuestion')}</h3>
-          <div
-            className="flex flex-wrap gap-2"
-            role="group"
-            aria-label={t('concerts.comingForQuestion')}
-          >
-            {(members.data?.members ?? []).map((member) => (
-              <Chip
-                key={member.id}
-                pressed={comingForMemberId === member.id}
-                onPress={() => setComingForMemberId(toggleChoice(comingForMemberId, member.id))}
+          <form.Field name="comingForMemberId">
+            {(field) => (
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label={t('concerts.comingForQuestion')}
               >
-                {member.firstName}
-              </Chip>
-            ))}
-          </div>
+                {(members.data?.members ?? []).map((member) => (
+                  <Chip
+                    key={member.id}
+                    pressed={field.state.value === member.id}
+                    onPress={() => field.handleChange(toggleChoice(field.state.value, member.id))}
+                  >
+                    {member.firstName}
+                  </Chip>
+                ))}
+              </div>
+            )}
+          </form.Field>
         </section>
         <section className="flex flex-col gap-3">
           <h3 className={QUESTION_CLASS}>{t('concerts.wishQuestion')}</h3>
-          {wishedTrack === null ? (
-            <Autocomplete inputValue={typedQuery} onInputChange={changeQuery} disableAutoFocusFirst>
-              <SearchField aria-label={t('concerts.wishQuestion')} className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
-                  <Icon name="search" />
-                </span>
-                <Input
-                  placeholder={t('audience.suggestPlaceholder')}
-                  className={SEARCH_INPUT_CLASS}
-                />
-              </SearchField>
-              {searchLine === null ? null : (
-                <p
-                  className="m-0 text-meta text-ink-soft italic"
-                  role={searchLine.isFailure ? 'alert' : undefined}
+          <form.Field name="wishedTrack">
+            {(field) =>
+              field.state.value === null ? (
+                <Autocomplete
+                  inputValue={typedQuery}
+                  onInputChange={changeQuery}
+                  disableAutoFocusFirst
                 >
-                  {t(searchLine.messageKey)}
-                </p>
-              )}
-              {search.data === undefined ? null : (
-                <ListBox
-                  aria-label={t('concerts.wishQuestion')}
-                  items={hits}
-                  onAction={(trackId) => pickTrack(String(trackId))}
-                  className="m-0 flex list-none flex-col gap-1 rounded-md border border-rule bg-leaf p-1"
-                >
-                  {(hit) => (
-                    <ListBoxItem id={hit.deezerTrackId} textValue={hit.title} className={HIT_CLASS}>
-                      <span className="font-medium text-ink">{hit.title}</span>
-                      <span className="text-meta text-ink-soft">{hit.artist}</span>
-                    </ListBoxItem>
+                  <SearchField aria-label={t('concerts.wishQuestion')} className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
+                      <Icon name="search" />
+                    </span>
+                    <Input
+                      placeholder={t('concerts.wishPlaceholder')}
+                      className={SEARCH_INPUT_CLASS}
+                    />
+                  </SearchField>
+                  {searchLine === null ? null : (
+                    <p
+                      className="m-0 text-meta text-ink-soft italic"
+                      role={searchLine.isFailure ? 'alert' : undefined}
+                    >
+                      {t(searchLine.messageKey)}
+                    </p>
                   )}
-                </ListBox>
-              )}
-            </Autocomplete>
-          ) : (
-            <div className="flex items-center justify-between gap-3 rounded-md bg-accent-soft px-3 py-2">
-              <span className="flex min-w-0 flex-col">
-                <span className="truncate font-medium text-ink">{wishedTrack.title}</span>
-                <span className="truncate text-meta text-ink-soft">{wishedTrack.artist}</span>
-              </span>
-              <Button icon="swap" size="sm" variant="quiet" onClick={() => setWishedTrack(null)}>
-                {t('concerts.changeWish')}
-              </Button>
-            </div>
-          )}
+                  {search.data === undefined ? null : (
+                    <ListBox
+                      aria-label={t('concerts.wishQuestion')}
+                      items={hits}
+                      onAction={(trackId) => pickTrack(String(trackId))}
+                      className="m-0 flex list-none flex-col gap-1 rounded-md border border-rule bg-leaf p-1"
+                    >
+                      {(hit) => (
+                        <ListBoxItem
+                          id={hit.deezerTrackId}
+                          textValue={hit.title}
+                          className={HIT_CLASS}
+                        >
+                          <span className="font-medium text-ink">{hit.title}</span>
+                          <span className="text-meta text-ink-soft">{hit.artist}</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
+                  )}
+                </Autocomplete>
+              ) : (
+                <div className="flex items-center justify-between gap-3 rounded-md bg-accent-soft px-3 py-2">
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium text-ink">{field.state.value.title}</span>
+                    <span className="truncate text-meta text-ink-soft">
+                      {field.state.value.artist}
+                    </span>
+                  </span>
+                  <Button
+                    icon="swap"
+                    size="sm"
+                    variant="quiet"
+                    onClick={() => field.handleChange(null)}
+                  >
+                    {t('concerts.changeWish')}
+                  </Button>
+                </div>
+              )
+            }
+          </form.Field>
         </section>
         {followUpErrorKey === null ? null : (
           <p className="m-0 text-meta text-danger" role="alert">

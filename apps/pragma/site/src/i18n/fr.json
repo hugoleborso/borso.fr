@@ -608,7 +608,8 @@
       "songs": "Morceaux",
       "tasks": "Tâches",
       "takes": "Prises",
-      "details": "Détails"
+      "details": "Détails",
+      "public": "Page publique"
     },
     "when": {
       "label": "Sessions à afficher",
@@ -1129,6 +1130,7 @@
     "comingForQuestion": "Tu viens pour qui ?",
     "wishQuestion": "Quelle musique tu adorerais entendre à un prochain concert ?",
     "changeWish": "Changer",
+    "wishPlaceholder": "Cherche un morceau, un artiste…",
     "send": "Envoyer",
     "skip": "Passer",
     "followUpFailed": "Ta réponse n'est pas passée. Réessaie ou passe.",

@@ -1,9 +1,8 @@
 import { and, asc, count, eq, gte, inArray, isNotNull } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { sessionTable } from '../sessions/sessions.schema';
 import { concertRegistrationTable } from './concert-registrations.schema';
-
-const CONCERT_SESSION_KIND = 'concert';
 
 export type ConcertRegistrationRow = typeof concertRegistrationTable.$inferSelect;
 
@@ -13,14 +12,10 @@ export type RegistrationAnswerShape = Partial<
   Pick<ConcertRegistrationRow, 'comingForMemberId' | 'wishedSongId'>
 >;
 
-export interface ConcertAnnouncementRow {
-  readonly id: string;
-  readonly kind: string;
-  readonly date: Date;
-  readonly venue: string | null;
-  readonly publicMessage: string | null;
-  readonly posterS3Key: string | null;
-}
+export type ConcertAnnouncementRow = Pick<
+  typeof sessionTable.$inferSelect,
+  'id' | 'kind' | 'date' | 'venue' | 'publicMessage' | 'posterS3Key'
+>;
 
 export type AnnouncementUpdateShape = Partial<
   Pick<ConcertAnnouncementRow, 'publicMessage' | 'posterS3Key'>
@@ -49,19 +44,32 @@ const REGISTRATION_PROJECTION = {
   registeredAt: concertRegistrationTable.registeredAt,
 } as const;
 
+export async function runInOneRegistrationTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
+}
+
 // @FollowsBlueprint repository-query
 export async function listConcertsFrom(from: Date): Promise<ConcertAnnouncementRow[]> {
   return await getDatabase()
     .select(ANNOUNCEMENT_PROJECTION)
     .from(sessionTable)
-    .where(and(eq(sessionTable.kind, CONCERT_SESSION_KIND), gte(sessionTable.date, from)))
+    .where(and(eq(sessionTable.kind, CONCERT_KIND), gte(sessionTable.date, from)))
     .orderBy(asc(sessionTable.date));
 }
 
 export async function findConcertAnnouncement(
   sessionId: string,
 ): Promise<ConcertAnnouncementRow | null> {
-  const rows = await getDatabase()
+  return await findConcertAnnouncementWithin(getDatabase(), sessionId);
+}
+
+export async function findConcertAnnouncementWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<ConcertAnnouncementRow | null> {
+  const rows = await executor
     .select(ANNOUNCEMENT_PROJECTION)
     .from(sessionTable)
     .where(eq(sessionTable.id, sessionId))
@@ -99,10 +107,11 @@ export async function countRegistrationsOfConcerts(
     .groupBy(concertRegistrationTable.sessionId);
 }
 
-export async function insertRegistration(
+export async function insertRegistrationWithin(
+  executor: DatabaseExecutor,
   values: RegistrationInsertShape,
 ): Promise<ConcertRegistrationRow | null> {
-  const [row] = await getDatabase()
+  const [row] = await executor
     .insert(concertRegistrationTable)
     .values(values)
     .onConflictDoNothing()
@@ -127,11 +136,29 @@ export async function findRegistrationHoldingToken(
   return rows[0] ?? null;
 }
 
-export async function updateRegistrationAnswers(
+export async function findRegistrationOfMailbox(
+  sessionId: string,
+  canonicalEmail: string,
+): Promise<ConcertRegistrationRow | null> {
+  const rows = await getDatabase()
+    .select(REGISTRATION_PROJECTION)
+    .from(concertRegistrationTable)
+    .where(
+      and(
+        eq(concertRegistrationTable.sessionId, sessionId),
+        eq(concertRegistrationTable.canonicalEmail, canonicalEmail),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function updateRegistrationAnswersWithin(
+  executor: DatabaseExecutor,
   registrationId: string,
   values: RegistrationAnswerShape,
 ): Promise<ConcertRegistrationRow | null> {
-  const [row] = await getDatabase()
+  const [row] = await executor
     .update(concertRegistrationTable)
     .set(values)
     .where(eq(concertRegistrationTable.id, registrationId))

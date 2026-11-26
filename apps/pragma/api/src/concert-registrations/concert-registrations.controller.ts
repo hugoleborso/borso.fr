@@ -85,6 +85,7 @@ export function buildConcertRegistrationsRouter() {
           registrationId,
           editToken: context.req.header(REGISTRATION_TOKEN_HEADER) ?? ABSENT_TOKEN,
           ...answers,
+          now: new Date(),
         });
         if (outcome.kind === 'refused') {
           return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);

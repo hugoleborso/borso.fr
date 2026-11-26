@@ -6,7 +6,6 @@ import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { MemberMark } from '../atoms/MemberMark';
 import { MemberChip } from '../molecules/MemberChip';
-import { ConcertPublicPagePanel } from './ConcertPublicPagePanel';
 import { computeSharePercent, isCapacityKnown } from '../../routes/sessions/friends-count.core';
 
 export interface ConcertReadViewMember {
@@ -94,9 +93,6 @@ export function ConcertReadView({
           <div className="font-display text-title text-ink leading-tight">{venue ?? '—'}</div>
         </Card>
       </aside>
-      <div className="lg:col-span-2">
-        <ConcertPublicPagePanel sessionId={session.id} />
-      </div>
     </div>
   );
 }

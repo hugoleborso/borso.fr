@@ -1,4 +1,5 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
+import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { concertRegistrationTable } from '../concert-registrations/concert-registrations.schema';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
@@ -8,8 +9,6 @@ import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { detachTasksOfSessionBeingDeleted } from '../tasks/tasks.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
-
-const CONCERT_KIND = 'concert';
 
 type SessionRawRow = Omit<
   typeof sessionTable.$inferSelect,

@@ -2,7 +2,16 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { canonicalizeEmail, isDisposableEmail } from '@domain/registration-email.core';
 import { PRAGMA_REQUEST_HEADERS } from '@domain/request-headers.core';
 import { getMembersSortedByFirstName } from '../members/members.service';
-import { findSongById, getSongs, resolveCatalogueSongForTrack } from '../songs/songs.service';
+import { isLostInsertRace, isUniqueViolation } from '../helpers/persistence/conflict-abort.core';
+import type { DatabaseExecutor } from '../database/client';
+import { didClaimConcertWithin } from '../sessions/sessions.service';
+import {
+  type ExternalSongHit,
+  findOrImportSuggestedSongWithin,
+  findSongById,
+  getSongs,
+  readDeezerTrack,
+} from '../songs/songs.service';
 import { mintChartGetUrl, mintObjectUpload } from '../uploads/uploads.service';
 import {
   buildPosterObjectKey,
@@ -19,16 +28,20 @@ import {
 import {
   type AnnouncementUpdateShape,
   type ConcertAnnouncementRow,
+  type ConcertRegistrationRow,
   countRegistrationsOfConcerts,
   findConcertAnnouncement,
+  findConcertAnnouncementWithin,
   findRegistrationHoldingToken,
-  insertRegistration,
+  findRegistrationOfMailbox,
+  insertRegistrationWithin,
   listConcertsFrom,
   listDistinctWishedSongIds,
   listRegistrationsOfConcert,
   type RegistrationAnswerShape,
+  runInOneRegistrationTransaction,
   updateConcertAnnouncement,
-  updateRegistrationAnswers,
+  updateRegistrationAnswersWithin,
 } from './concert-registrations.repository';
 import {
   type AllowedPosterContentType,
@@ -81,17 +94,23 @@ export interface RegisterParams {
 
 export type RegisterOutcome = { kind: 'ok'; registrationId: string; editToken: string } | Refused;
 
-// @FollowsBlueprint service-orchestration
-export async function register(params: RegisterParams): Promise<RegisterOutcome> {
-  const concert = await findConcertAnnouncement(params.sessionId);
+async function registerWithin(
+  executor: DatabaseExecutor,
+  params: RegisterParams,
+  canonicalEmail: string,
+): Promise<RegisterOutcome> {
+  const isConcertClaimed = await didClaimConcertWithin(executor, params.sessionId);
+  const concert = isConcertClaimed
+    ? await findConcertAnnouncementWithin(executor, params.sessionId)
+    : null;
   if (!isUpcomingConcert(concert, params.now)) return refuse('not-an-upcoming-concert');
   if (isDisposableEmail(params.email)) return refuse('disposable-email');
   const editToken = encodeEditToken(randomBytes(EDIT_TOKEN_BYTES));
-  const inserted = await insertRegistration({
+  const inserted = await insertRegistrationWithin(executor, {
     sessionId: params.sessionId,
     firstName: params.firstName,
     email: params.email,
-    canonicalEmail: canonicalizeEmail(params.email),
+    canonicalEmail,
     editTokenHash: hashEditToken(editToken),
     comingForMemberId: null,
     wishedSongId: null,
@@ -101,11 +120,27 @@ export async function register(params: RegisterParams): Promise<RegisterOutcome>
   return { kind: 'ok', registrationId: inserted.id, editToken };
 }
 
+// @FollowsBlueprint service-orchestration
+export async function register(params: RegisterParams): Promise<RegisterOutcome> {
+  const canonicalEmail = canonicalizeEmail(params.email);
+  try {
+    return await runInOneRegistrationTransaction(
+      async (executor) => await registerWithin(executor, params, canonicalEmail),
+    );
+  } catch (error) {
+    if (!isLostInsertRace(error)) throw error;
+    const winner = await findRegistrationOfMailbox(params.sessionId, canonicalEmail);
+    if (winner === null) throw error;
+    return refuse('already-registered');
+  }
+}
+
 export interface AmendRegistrationParams {
   readonly registrationId: string;
   readonly editToken: string;
   readonly comingForMemberId?: string | null;
   readonly wishedTrackId?: string;
+  readonly now: Date;
 }
 
 export interface RegistrationAnswersView {
@@ -128,17 +163,55 @@ async function readComingFor(memberId: string | null | undefined): Promise<Answe
   return { kind: 'ok', answers: { comingForMemberId: memberId } };
 }
 
-async function readWishedSong(trackId: string | undefined): Promise<AnswerRead> {
-  if (trackId === undefined) return { kind: 'ok', answers: {} };
-  const resolution = await resolveCatalogueSongForTrack(trackId);
-  if (resolution.kind === 'unavailable') return refuse('external-search-unavailable');
-  if (resolution.kind === 'unknown') return refuse('unknown-track');
-  return { kind: 'ok', answers: { wishedSongId: resolution.song.id } };
+type WishedTrackRead = { kind: 'ok'; track: ExternalSongHit | null } | Refused;
+
+async function readWishedTrack(trackId: string | undefined): Promise<WishedTrackRead> {
+  if (trackId === undefined) return { kind: 'ok', track: null };
+  const read = await readDeezerTrack(trackId);
+  if (read.kind === 'unavailable') return refuse('external-search-unavailable');
+  if (read.kind === 'unknown') return refuse('unknown-track');
+  return { kind: 'ok', track: read.track };
+}
+
+async function resolveOrImportWishedSongWithin(
+  executor: DatabaseExecutor,
+  track: ExternalSongHit | null,
+): Promise<RegistrationAnswerShape> {
+  if (track === null) return {};
+  const song = await findOrImportSuggestedSongWithin(executor, track);
+  return { wishedSongId: song.id };
 }
 
 async function readWishedSongView(songId: string | null): Promise<WishedSongView | null> {
   if (songId === null) return null;
   return projectWishedSong(await findSongById(songId));
+}
+
+async function saveAnswers(
+  registrationId: string,
+  comingFor: RegistrationAnswerShape,
+  track: ExternalSongHit | null,
+): Promise<ConcertRegistrationRow | null> {
+  return await runInOneRegistrationTransaction(async (executor) => {
+    const wishedSong = await resolveOrImportWishedSongWithin(executor, track);
+    return await updateRegistrationAnswersWithin(executor, registrationId, {
+      ...comingFor,
+      ...wishedSong,
+    });
+  });
+}
+
+async function saveAnswersAfterLostImportRace(
+  registrationId: string,
+  comingFor: RegistrationAnswerShape,
+  track: ExternalSongHit | null,
+): Promise<ConcertRegistrationRow | null> {
+  try {
+    return await saveAnswers(registrationId, comingFor, track);
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    return await saveAnswers(registrationId, comingFor, track);
+  }
 }
 
 // @FollowsBlueprint service-orchestration
@@ -150,14 +223,17 @@ export async function amendRegistration(
     hashEditToken(params.editToken),
   );
   if (holder === null) return refuse('invalid-registration-token');
+  const concert = await findConcertAnnouncement(holder.sessionId);
+  if (!isUpcomingConcert(concert, params.now)) return refuse('not-an-upcoming-concert');
   const comingFor = await readComingFor(params.comingForMemberId);
   if (comingFor.kind === 'refused') return comingFor;
-  const wishedSong = await readWishedSong(params.wishedTrackId);
-  if (wishedSong.kind === 'refused') return wishedSong;
-  const updated = await updateRegistrationAnswers(params.registrationId, {
-    ...comingFor.answers,
-    ...wishedSong.answers,
-  });
+  const wished = await readWishedTrack(params.wishedTrackId);
+  if (wished.kind === 'refused') return wished;
+  const updated = await saveAnswersAfterLostImportRace(
+    params.registrationId,
+    comingFor.answers,
+    wished.track,
+  );
   const registration = updated ?? holder;
   return {
     kind: 'ok',

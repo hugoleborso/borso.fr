@@ -3,8 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  holdWritesToTable,
+  runSecondWhileFirstWaitsOnHold,
+  runWithWritesToTableHeld,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { CONFLICTED_WRITE_MAX_ATTEMPTS } from '../helpers/persistence/conflict-abort.core';
+import { sessionTable } from '../sessions/sessions.schema';
+import { songTable } from '../songs/songs.schema';
 import { concertRegistrationTable } from './concert-registrations.schema';
+import { CONCERT_REGISTRATION_WRITE_BUDGET } from './concert-registrations.types';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const UNAUTHORISED = 401;
@@ -80,10 +91,17 @@ async function createConcert(app: Hono, cookieHeader: string, date = new Date())
   });
 }
 
-async function registerFor(app: Hono, sessionId: string, firstName: string, email: string) {
+async function registerFor(
+  app: Hono,
+  sessionId: string,
+  firstName: string,
+  email: string,
+  clientAddress?: string,
+) {
   return await jsonRequest(app, `/api/concert-registrations/concerts/${sessionId}/registrations`, {
     method: 'POST',
     body: { firstName, email },
+    ...(clientAddress === undefined ? {} : { clientAddress }),
   });
 }
 
@@ -96,12 +114,25 @@ async function amend(
   registrationId: string,
   editToken: string,
   body: Readonly<Record<string, unknown>>,
+  clientAddress?: string,
 ) {
   return await jsonRequest(app, `/api/concert-registrations/registrations/${registrationId}`, {
     method: 'PATCH',
     body,
     extraHeaders: { [TOKEN_HEADER]: editToken },
+    ...(clientAddress === undefined ? {} : { clientAddress }),
   });
+}
+
+function statusesInOrder(responses: readonly Response[]): number[] {
+  return responses.map((response) => response.status).toSorted((first, second) => first - second);
+}
+
+async function storedRegistrationsOf(sessionId: string) {
+  return await testDatabase()
+    .select({ id: concertRegistrationTable.id })
+    .from(concertRegistrationTable)
+    .where(eq(concertRegistrationTable.sessionId, sessionId));
 }
 
 const WISHED_TRACK = {
@@ -254,6 +285,93 @@ describe('concert registrations controller (back-e2e)', () => {
     expect(remaining).toEqual([]);
   });
 
+  it('answers one 201 and one 409 when one mailbox signs up twice at the same moment, and keeps one row', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    const answers = await runWithWritesToTableHeld(
+      'session',
+      2,
+      async () =>
+        await Promise.all([
+          registerFor(app, sessionId, 'Lou', 'lou@example.com'),
+          registerFor(app, sessionId, 'Lou', 'lou+gig@example.com'),
+        ]),
+    );
+
+    expect(statusesInOrder(answers)).toEqual([201, 409]);
+    expect(await storedRegistrationsOf(sessionId)).toHaveLength(1);
+  });
+
+  it('keeps no sign-up for a concert deleted while the sign-up was being written', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    const [deletion, signUp] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('concert_registration'),
+      async () =>
+        await jsonRequest(app, `/api/sessions/${sessionId}`, { method: 'DELETE', cookieHeader }),
+      async () => await registerFor(app, sessionId, 'Lou', 'lou@example.com'),
+    );
+
+    expect(deletion.status).toBe(200);
+    expect(signUp.status).toBe(422);
+    expect((await readJson(signUp, errorEnvelope)).error).toBe('not-an-upcoming-concert');
+    expect(await storedRegistrationsOf(sessionId)).toEqual([]);
+  });
+
+  it('answers 409 to a mailbox already signed up when every retry of its commit conflicts, and fails loudly for a new one', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    await registerOk(app, sessionId, 'Lou', 'lou@example.com');
+
+    const removeSimulatedConflict = await abortCommitsWritingTable(
+      'session',
+      2 * CONFLICTED_WRITE_MAX_ATTEMPTS,
+    );
+    try {
+      const again = await registerFor(app, sessionId, 'Lou', 'lou@example.com');
+      expect(again.status).toBe(409);
+      expect((await readJson(again, errorEnvelope)).error).toBe('already-registered');
+      const stranger = await registerFor(app, sessionId, 'Max', 'max@example.com');
+      expect(stranger.status).toBe(500);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    expect(await storedRegistrationsOf(sessionId)).toHaveLength(1);
+  });
+
+  it('bars an address that hammers the sign-up', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const fromOneAddress = async (attempt: number) =>
+      await registerFor(app, sessionId, 'Fan', `fan${String(attempt)}@example.com`, '203.0.113.21');
+
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < CONCERT_REGISTRATION_WRITE_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress(attempt)).status;
+    }
+    expect(lastStatus).toBe(201);
+    const barred = await fromOneAddress(CONCERT_REGISTRATION_WRITE_BUDGET.maxAttempts);
+    expect(barred.status).toBe(429);
+    expect((await registerFor(app, sessionId, 'Fan', 'other@example.com')).status).toBe(201);
+  });
+
+  it('bars an address that hammers the answers of a registration', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+    const fromOneAddress = async () =>
+      await amend(app, registrationId, editToken, { comingForMemberId: null }, '203.0.113.22');
+
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < CONCERT_REGISTRATION_WRITE_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(200);
+    expect((await fromOneAddress()).status).toBe(429);
+  });
+
   it('lets the same email sign up for a second concert', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const first = await createConcert(app, cookieHeader);
@@ -403,6 +521,51 @@ describe('concert registrations controller (back-e2e)', () => {
     const unknownTrack = await amend(app, registrationId, editToken, { wishedTrackId: '1' });
     expect(unknownTrack.status).toBe(422);
     expect((await readJson(unknownTrack, errorEnvelope)).error).toBe('unknown-track');
+  });
+
+  it('refuses the answers once the concert is past, so an old token imports no more songs', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const { registrationId, editToken } = await registerOk(app, sessionId, 'Lou', 'l@e.fr');
+    await testDatabase()
+      .update(sessionTable)
+      .set({ date: new Date(Date.now() - 2 * MILLISECONDS_PER_DAY) })
+      .where(eq(sessionTable.id, sessionId));
+    stubDeezerTrack();
+
+    const refused = await amend(app, registrationId, editToken, {
+      wishedTrackId: String(WISHED_TRACK.id),
+    });
+    expect(refused.status).toBe(422);
+    expect((await readJson(refused, errorEnvelope)).error).toBe('not-an-upcoming-concert');
+    expect(await testDatabase().select({ id: songTable.id }).from(songTable)).toEqual([]);
+  });
+
+  it('imports one song when two registrations wish the same unknown track at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const first = await registerOk(app, sessionId, 'Lou', 'a@e.fr');
+    const second = await registerOk(app, sessionId, 'Max', 'b@e.fr');
+    stubDeezerTrack();
+    const wish = { wishedTrackId: String(WISHED_TRACK.id) };
+
+    const answers = await runWithWritesToTableHeld(
+      'song',
+      2,
+      async () =>
+        await Promise.all([
+          amend(app, first.registrationId, first.editToken, wish),
+          amend(app, second.registrationId, second.editToken, wish),
+        ]),
+    );
+
+    expect(statusesInOrder(answers)).toEqual([200, 200]);
+    expect(await testDatabase().select({ id: songTable.id }).from(songTable)).toHaveLength(1);
+    const wishes = await readJson(
+      await jsonRequest(app, '/api/concert-registrations/fan-wishes', { cookieHeader }),
+      fanWishesEnvelope,
+    );
+    expect(wishes.songIds).toHaveLength(1);
   });
 
   it('lists each wished song once, however many registrations wish it', async () => {

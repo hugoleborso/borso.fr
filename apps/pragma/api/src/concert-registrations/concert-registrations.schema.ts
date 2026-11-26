@@ -1,8 +1,13 @@
 import { pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import {
+  CONCERT_PUBLIC_MESSAGE_MAX_LENGTH,
+  REGISTRATION_EMAIL_MAX_LENGTH,
+  REGISTRATION_FIRST_NAME_MAX_LENGTH,
+} from '@domain/input-limits.core';
 import { ALLOWED_POSTER_CONTENT_TYPES, MAX_POSTER_BYTES } from './concert-registrations.types';
 
-// @FollowsBlueprint schema-dsql-constraints
+// @FollowsBlueprint schema-table-and-input
 export const concertRegistrationTable = pgTable(
   'concert_registration',
   {
@@ -24,10 +29,7 @@ export const concertRegistrationTable = pgTable(
   ],
 );
 
-const FIRST_NAME_MAX = 60;
-const EMAIL_MAX = 254;
 const TRACK_ID_MAX = 64;
-const PUBLIC_MESSAGE_MAX = 1_000;
 const POSTER_S3_KEY_MAX = 512;
 
 export const concertParamSchema = z.object({ sessionId: z.guid() });
@@ -36,8 +38,8 @@ export const registrationParamSchema = z.object({ registrationId: z.guid() });
 
 export const registrationCreateSchema = z
   .object({
-    firstName: z.string().trim().min(1).max(FIRST_NAME_MAX),
-    email: z.string().trim().toLowerCase().max(EMAIL_MAX).pipe(z.email()),
+    firstName: z.string().trim().min(1).max(REGISTRATION_FIRST_NAME_MAX_LENGTH),
+    email: z.string().trim().toLowerCase().max(REGISTRATION_EMAIL_MAX_LENGTH).pipe(z.email()),
   })
   .strict();
 
@@ -50,7 +52,7 @@ export const registrationPatchSchema = z
 
 export const announcementPatchSchema = z
   .object({
-    message: z.string().max(PUBLIC_MESSAGE_MAX).nullable().optional(),
+    message: z.string().max(CONCERT_PUBLIC_MESSAGE_MAX_LENGTH).nullable().optional(),
     posterS3Key: z.string().min(1).max(POSTER_S3_KEY_MAX).nullable().optional(),
   })
   .strict();

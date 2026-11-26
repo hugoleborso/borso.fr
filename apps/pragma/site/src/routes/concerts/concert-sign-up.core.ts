@@ -6,17 +6,18 @@ import type {
   SuggestionOutcome,
 } from '../../components/organisms/suggest-song.core';
 import type { OpeningOverlay } from '../../components/organisms/session-gate.core';
+import {
+  REGISTRATION_EMAIL_MAX_LENGTH,
+  REGISTRATION_FIRST_NAME_MAX_LENGTH,
+} from '@domain/input-limits.core';
 import { ApiError } from '../../lib/api.client';
 
-const FIRST_NAME_MAX_LENGTH = 60;
-const EMAIL_MAX_LENGTH = 254;
-
-export const FIRST_NAME_INPUT_MAX_LENGTH = FIRST_NAME_MAX_LENGTH;
-export const EMAIL_INPUT_MAX_LENGTH = EMAIL_MAX_LENGTH;
+export const FIRST_NAME_INPUT_MAX_LENGTH = REGISTRATION_FIRST_NAME_MAX_LENGTH;
+export const EMAIL_INPUT_MAX_LENGTH = REGISTRATION_EMAIL_MAX_LENGTH;
 
 export const signUpFormSchema = z.object({
-  firstName: z.string().trim().min(1).max(FIRST_NAME_MAX_LENGTH),
-  email: z.string().trim().max(EMAIL_MAX_LENGTH).pipe(z.email()),
+  firstName: z.string().trim().min(1).max(REGISTRATION_FIRST_NAME_MAX_LENGTH),
+  email: z.string().trim().max(REGISTRATION_EMAIL_MAX_LENGTH).pipe(z.email()),
 });
 
 export type SignUpFormValues = z.input<typeof signUpFormSchema>;
@@ -46,15 +47,20 @@ const SIGN_UP_FAILED: SignUpError = { key: 'concerts.signUpFailed', place: 'form
 
 const refusalBodySchema = z.object({ error: z.string() });
 
-function readRefusalReason(error: ApiError): string {
-  const checked = refusalBodySchema.safeParse(error.body);
-  return checked.success ? checked.data.error : '';
+function findByRefusalReason<Value>(
+  byReason: ReadonlyMap<string, Value>,
+  body: unknown,
+): Value | undefined {
+  const checked = refusalBodySchema.safeParse(body);
+  return checked.success ? byReason.get(checked.data.error) : undefined;
 }
 
 // @FollowsBlueprint core-label-key
 export function selectSignUpError(error: unknown): SignUpError {
   const known =
-    error instanceof ApiError ? SIGN_UP_ERROR_BY_REASON.get(readRefusalReason(error)) : undefined;
+    error instanceof ApiError
+      ? findByRefusalReason(SIGN_UP_ERROR_BY_REASON, error.body)
+      : undefined;
   return known ?? SIGN_UP_FAILED;
 }
 
@@ -77,7 +83,7 @@ export function selectFollowUpErrorKey(error: unknown): FollowUpErrorKey | null 
   if (error === null || error === undefined) return null;
   const known =
     error instanceof ApiError
-      ? FOLLOW_UP_ERROR_KEY_BY_REASON.get(readRefusalReason(error))
+      ? findByRefusalReason(FOLLOW_UP_ERROR_KEY_BY_REASON, error.body)
       : undefined;
   return known ?? 'concerts.followUpFailed';
 }

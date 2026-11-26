@@ -608,7 +608,8 @@
       "songs": "Songs",
       "tasks": "Tasks",
       "takes": "Takes",
-      "details": "Details"
+      "details": "Details",
+      "public": "Public page"
     },
     "when": {
       "label": "Sessions to show",
@@ -1129,6 +1130,7 @@
     "comingForQuestion": "Who are you coming for?",
     "wishQuestion": "Which song would you love to hear at a next gig?",
     "changeWish": "Change",
+    "wishPlaceholder": "Search a song or an artist…",
     "send": "Send",
     "skip": "Skip",
     "followUpFailed": "Your answer did not go through. Try again or skip.",

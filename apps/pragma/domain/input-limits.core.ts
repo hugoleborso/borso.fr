@@ -54,3 +54,9 @@ export const SKETCH_LANE_NAME_MAX_LENGTH = 40;
 
 export const BAND_LINK_LABEL_MAX_LENGTH = 80;
 export const BAND_LINK_URL_MAX_LENGTH = 2_048;
+
+export const REGISTRATION_FIRST_NAME_MAX_LENGTH = 60;
+export const REGISTRATION_EMAIL_MAX_LENGTH = 254;
+export const CONCERT_PUBLIC_MESSAGE_MAX_LENGTH = 1_000;
+export const CONCERT_POSTER_MAX_MEBIBYTES = 10;
+export const CONCERT_POSTER_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;

@@ -1,16 +1,21 @@
 /** @Feature concert-registrations */
 
-export const POSTER_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+import {
+  CONCERT_POSTER_CONTENT_TYPES,
+  CONCERT_POSTER_MAX_MEBIBYTES,
+  CONCERT_PUBLIC_MESSAGE_MAX_LENGTH,
+} from '@domain/input-limits.core';
+
+export const POSTER_CONTENT_TYPES = CONCERT_POSTER_CONTENT_TYPES;
 
 export type PosterContentType = (typeof POSTER_CONTENT_TYPES)[number];
 
 const BYTES_PER_MEBIBYTE = 1_048_576;
-const POSTER_MAX_MEBIBYTES = 10;
-export const POSTER_MAX_BYTES = POSTER_MAX_MEBIBYTES * BYTES_PER_MEBIBYTE;
+export const POSTER_MAX_BYTES = CONCERT_POSTER_MAX_MEBIBYTES * BYTES_PER_MEBIBYTE;
 
 export const DRAW_WINNER_COUNT = 3;
 
-export const PUBLIC_MESSAGE_MAX_LENGTH = 1_000;
+export const PUBLIC_MESSAGE_MAX_LENGTH = CONCERT_PUBLIC_MESSAGE_MAX_LENGTH;
 
 export type PosterRefusalKey = 'sessions.posterWrongType' | 'sessions.posterTooLarge';
 

@@ -18,6 +18,7 @@ const SESSION_VIEW_LABEL_KEY = {
   tasks: 'sessions.view.tasks',
   takes: 'sessions.view.takes',
   details: 'sessions.view.details',
+  public: 'sessions.view.public',
 } as const satisfies Readonly<Record<SessionView, string>>;
 const SESSION_VIEW_ICON = {
   setlist: 'setlist',
@@ -25,6 +26,7 @@ const SESSION_VIEW_ICON = {
   tasks: 'tasks',
   takes: 'mic',
   details: 'edit',
+  public: 'eye',
 } as const satisfies Readonly<Record<SessionView, IconName>>;
 
 // @FollowsBlueprint molecule-presentational

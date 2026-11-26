@@ -3,7 +3,7 @@ export interface DatedSession {
   readonly date: string | Date;
 }
 
-const CONCERT_KIND = 'concert';
+export const CONCERT_KIND = 'concert';
 
 // @FollowsBlueprint core-view-projection
 export function selectUpcomingConcerts<TSession extends DatedSession>(

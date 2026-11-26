@@ -9,10 +9,12 @@ import {
 // @FollowsBlueprint test-pure-unit
 describe('the public page of a concert', () => {
   it('accepts a JPEG, PNG or WebP poster up to the size limit', () => {
-    expect(checkPoster('image/png', POSTER_MAX_BYTES)).toStrictEqual({
-      contentType: 'image/png',
-      refusalKey: null,
-    });
+    for (const type of ['image/jpeg', 'image/png', 'image/webp']) {
+      expect(checkPoster(type, POSTER_MAX_BYTES)).toStrictEqual({
+        contentType: type,
+        refusalKey: null,
+      });
+    }
     expect(checkPoster('image/gif', 10)).toStrictEqual({
       contentType: null,
       refusalKey: 'sessions.posterWrongType',

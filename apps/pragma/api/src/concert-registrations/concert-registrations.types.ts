@@ -1,3 +1,7 @@
+import {
+  CONCERT_POSTER_CONTENT_TYPES,
+  CONCERT_POSTER_MAX_MEBIBYTES,
+} from '@domain/input-limits.core';
 import type { RateLimitBudget } from '../auth/rate-limit.utils';
 
 export const CONCERT_REGISTRATION_REFUSALS = [
@@ -24,14 +28,14 @@ export function refuse(reason: ConcertRegistrationRefusal): Refused {
   return { kind: 'refused', reason };
 }
 
-export const ALLOWED_POSTER_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const ALLOWED_POSTER_CONTENT_TYPES = CONCERT_POSTER_CONTENT_TYPES;
 
 export type AllowedPosterContentType = (typeof ALLOWED_POSTER_CONTENT_TYPES)[number];
 
 const BYTES_PER_KIBIBYTE = 1_024;
-const POSTER_MAX_MEBIBYTES = 10;
 
-export const MAX_POSTER_BYTES = POSTER_MAX_MEBIBYTES * BYTES_PER_KIBIBYTE * BYTES_PER_KIBIBYTE;
+export const MAX_POSTER_BYTES =
+  CONCERT_POSTER_MAX_MEBIBYTES * BYTES_PER_KIBIBYTE * BYTES_PER_KIBIBYTE;
 
 export const POSTER_OBJECT_PREFIX = 'poster';
 
