@@ -142,6 +142,12 @@ export function useUpdateBar() {
       });
       return { previousList };
     },
+    onSuccess: ({ bar: savedBar }) => {
+      writeKeepingStaleness<BarsListResponse>(queryClient, barKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { bars: replaceEntityById(old.bars, savedBar.id, () => savedBar) };
+      });
+    },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         writeKeepingStaleness(queryClient, barKeys.list(), context.previousList);
