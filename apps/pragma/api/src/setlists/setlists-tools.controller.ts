@@ -81,8 +81,12 @@ export const SETLIST_TOOLS = [
   defineTool({
     name: 'get_session',
     description:
-      'Read one session with its setlists, their songs in order and who plays what. `session`: id, `next`, `next-concert`, `next-practice`, `last`, or a day YYYY-MM-DD.',
-    routes: ['GET /api/sessions/:id', 'GET /api/setlists/by-session/:sessionId'],
+      'Read one session with its setlists, their songs in order, who plays what, and the gear of a concert with who has it. `session`: id, `next`, `next-concert`, `next-practice`, `last`, or a day YYYY-MM-DD.',
+    routes: [
+      'GET /api/sessions/:id',
+      'GET /api/setlists/by-session/:sessionId',
+      'GET /api/gear-items/:sessionId',
+    ],
     inputSchema: setlistSessionToolInputSchema,
     run: async ({ session }, actor) => {
       const plan = await readSessionPlanForTool(session, actor.now);

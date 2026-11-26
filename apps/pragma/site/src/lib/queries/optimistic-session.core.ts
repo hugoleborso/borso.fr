@@ -19,7 +19,6 @@ export function buildOptimisticSession(id: string, variables: SessionCreateVaria
       preparedConcertId: null,
       venue: variables.venue,
       capacity: variables.capacity,
-      gear: variables.gear ?? null,
       friendsCountPerMember: variables.friendsCountPerMember ?? NO_FRIENDS_COUNTS,
     };
   }
@@ -30,7 +29,6 @@ export function buildOptimisticSession(id: string, variables: SessionCreateVaria
     preparedConcertId: variables.preparedConcertId ?? null,
     venue: null,
     capacity: null,
-    gear: null,
     friendsCountPerMember: null,
   };
 }

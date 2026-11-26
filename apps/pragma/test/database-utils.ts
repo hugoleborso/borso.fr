@@ -34,6 +34,7 @@ const ALL_TABLES: readonly string[] = [
   'notification_dispatch',
   'vapid_key_pair',
   'task',
+  'gear_item',
   'transition_comment',
   'setlist_break',
   'setlist_entry',

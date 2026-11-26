@@ -14,7 +14,6 @@ describe('buildSessionInsertShape', () => {
         date: '2026-05-01T20:00:00.000Z',
         venue: 'Le Sonic',
         capacity: 180,
-        gear: 'full backline',
         friendsCountPerMember: { '11111111-1111-1111-1111-111111111111': 3 },
       }),
     ).toStrictEqual({
@@ -22,7 +21,6 @@ describe('buildSessionInsertShape', () => {
       date: new Date('2026-05-01T20:00:00.000Z'),
       venue: 'Le Sonic',
       capacity: 180,
-      gear: 'full backline',
       friendsCountPerMember: { '11111111-1111-1111-1111-111111111111': 3 },
     });
   });
@@ -52,7 +50,6 @@ describe('encodeSessionInsert', () => {
         date: new Date('2026-05-01T20:00:00.000Z'),
         venue: 'Le Sonic',
         capacity: 180,
-        gear: 'full backline',
         friendsCountPerMember: { '11111111-1111-1111-1111-111111111111': 3 },
       }),
     ).toStrictEqual({
@@ -60,7 +57,6 @@ describe('encodeSessionInsert', () => {
       date: new Date('2026-05-01T20:00:00.000Z'),
       venue: 'Le Sonic',
       capacity: 180,
-      gear: 'full backline',
       friendsCountPerMember: '{"11111111-1111-1111-1111-111111111111":3}',
     });
   });
@@ -71,7 +67,6 @@ describe('encodeSessionInsert', () => {
       date: new Date('2026-05-01T20:00:00.000Z'),
       venue: 'Le Sonic',
       capacity: 180,
-      gear: '',
       friendsCountPerMember: {},
     };
 

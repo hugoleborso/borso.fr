@@ -1,11 +1,14 @@
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { deleteGearOfSessionBeingDeleted } from '../gear-items/gear-items-cascade.service';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { detachTasksOfSessionBeingDeleted } from '../tasks/tasks.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
+
+const CONCERT_KIND = 'concert';
 
 type SessionRawRow = Omit<typeof sessionTable.$inferSelect, 'origin'>;
 
@@ -21,7 +24,6 @@ const PROJECTION = {
   preparedConcertId: sessionTable.preparedConcertId,
   venue: sessionTable.venue,
   capacity: sessionTable.capacity,
-  gear: sessionTable.gear,
   friendsCountPerMember: sessionTable.friendsCountPerMember,
 } as const;
 
@@ -39,7 +41,6 @@ function rowToSession(row: SessionRawRow): SessionRow {
     preparedConcertId: row.preparedConcertId,
     venue: row.venue,
     capacity: row.capacity,
-    gear: row.gear,
     friendsCountPerMember,
   };
 }
@@ -113,6 +114,18 @@ export async function didClaimSessionWithin(
   return claimed.length > 0;
 }
 
+export async function didClaimConcertWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(sessionTable)
+    .set({ kind: sql`${sessionTable.kind}` })
+    .where(and(eq(sessionTable.id, sessionId), eq(sessionTable.kind, CONCERT_KIND)))
+    .returning({ id: sessionTable.id });
+  return claimed.length > 0;
+}
+
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
   return await runInOneSessionTransaction(async (transaction) => {
     const deleted = await transaction
@@ -122,6 +135,7 @@ export async function deleteSessionWithCascade(id: string): Promise<DeletionOutc
     await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
     await detachTakesOfDeletedSession(transaction, id);
     await detachTasksOfSessionBeingDeleted(transaction, id);
+    await deleteGearOfSessionBeingDeleted(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }

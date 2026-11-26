@@ -11,7 +11,12 @@ import {
   type SessionRow,
   updateSession,
 } from './sessions.repository';
-export { didClaimSessionWithin, findSessionById } from './sessions.repository';
+export {
+  didClaimConcertWithin,
+  didClaimSessionWithin,
+  findSessionById,
+  listSessions,
+} from './sessions.repository';
 export {
   confirmUpdate,
   defineDeletion,
@@ -44,7 +49,6 @@ function valuesFromUpdate(input: SessionUpdateInput): SessionPersistedUpdate {
   if (input.date !== undefined) updates.date = new Date(input.date);
   if ('venue' in input && input.venue !== undefined) updates.venue = input.venue;
   if ('capacity' in input && input.capacity !== undefined) updates.capacity = input.capacity;
-  if ('gear' in input && input.gear !== undefined) updates.gear = input.gear;
   if ('friendsCountPerMember' in input && input.friendsCountPerMember !== undefined) {
     updates.friendsCountPerMember = input.friendsCountPerMember;
   }

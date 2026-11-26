@@ -1,5 +1,6 @@
 /** @Feature sessions */
 
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -16,7 +17,7 @@ export interface ConcertReadViewMember {
 export interface ConcertReadViewProps {
   readonly venue: string | null;
   readonly capacity: number | null;
-  readonly gear: string | null;
+  readonly gearCard: ReactNode;
   readonly friendsCounts: Readonly<Record<string, number>>;
   readonly members: readonly ConcertReadViewMember[];
   readonly friendsTotal: number;
@@ -28,7 +29,7 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 export function ConcertReadView({
   venue,
   capacity,
-  gear,
+  gearCard,
   friendsCounts,
   members,
   friendsTotal,
@@ -79,12 +80,7 @@ export function ConcertReadView({
             </div>
           ) : null}
         </Card>
-        <Card>
-          <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.gear')}</div>
-          <div className="font-display text-meta text-ink whitespace-pre-line italic">
-            {gear === null || gear.length === 0 ? '—' : gear}
-          </div>
-        </Card>
+        {gearCard}
       </div>
       <aside className="flex flex-col gap-4">
         <Card variant="sunk">

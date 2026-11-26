@@ -9,7 +9,6 @@ export interface ConcertInsertShape {
   date: Date;
   venue: string;
   capacity: number;
-  gear: string;
   friendsCountPerMember: Record<string, number>;
 }
 
@@ -30,7 +29,6 @@ export function buildSessionInsertShape(input: SessionCreateInput): SessionInser
       date: new Date(input.date),
       venue: input.venue,
       capacity: input.capacity,
-      gear: input.gear,
       friendsCountPerMember: input.friendsCountPerMember,
     };
   }
@@ -49,7 +47,6 @@ export function encodeSessionInsert(values: SessionInsertShape): SessionInsertEn
       date: values.date,
       venue: values.venue,
       capacity: values.capacity,
-      gear: values.gear,
       friendsCountPerMember: JSON.stringify(values.friendsCountPerMember),
     };
   }

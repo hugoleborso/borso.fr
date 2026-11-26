@@ -15,6 +15,7 @@ import { didClaimInstrumentsWithin } from '../instruments/instruments.service';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
+import { releaseGearOfMemberBeingDeleted } from '../gear-items/gear-items-cascade.service';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
 import {
   type InstrumentFamily,
@@ -128,6 +129,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteCalendarFeedOfMember(transaction, id);
     await deleteVotesOfDeletedMember(transaction, id);
     await unassignTasksOfMemberBeingDeleted(transaction, id);
+    await releaseGearOfMemberBeingDeleted(transaction, id);
     await deleteScoreHistoryOfDeletedMember(transaction, id);
     await deletePresencesOfDeletedMember(transaction, id);
     await deletePushStateOfDeletedMember(transaction, id);

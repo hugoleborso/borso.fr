@@ -13,6 +13,7 @@ export {
 export { bandLinkTable } from '../band-links/band-links.schema';
 export { barTable } from '../bars/bars.schema';
 export { compositionTable } from '../compositions/compositions.schema';
+export { gearItemTable } from '../gear-items/gear-items.schema';
 export { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 export { improvementTable, improvementVoteTable } from '../improvements/improvements.schema';
 export { inspirationTable } from '../inspirations/inspirations.schema';

@@ -15,7 +15,6 @@ describe('buildOptimisticSession', () => {
         date: CONCERT_DATE,
         venue: 'Le Klub',
         capacity: 120,
-        gear: 'two amps',
         friendsCountPerMember: { [MEMBER_ID]: 3 },
       }),
     ).toStrictEqual({
@@ -25,12 +24,11 @@ describe('buildOptimisticSession', () => {
       preparedConcertId: null,
       venue: 'Le Klub',
       capacity: 120,
-      gear: 'two amps',
       friendsCountPerMember: { [MEMBER_ID]: 3 },
     });
   });
 
-  it('falls back to the defaults the API applies for an omitted gear and friend count', () => {
+  it('falls back to the defaults the API applies for an omitted friend count', () => {
     expect(
       buildOptimisticSession('optimistic-id', {
         kind: 'concert',
@@ -45,7 +43,6 @@ describe('buildOptimisticSession', () => {
       preparedConcertId: null,
       venue: 'La Cave',
       capacity: 40,
-      gear: null,
       friendsCountPerMember: {},
     });
   });
@@ -64,7 +61,6 @@ describe('buildOptimisticSession', () => {
       preparedConcertId: CONCERT_ID,
       venue: null,
       capacity: null,
-      gear: null,
       friendsCountPerMember: null,
     });
   });

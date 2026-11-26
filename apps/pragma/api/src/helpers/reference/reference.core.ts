@@ -13,9 +13,14 @@ const IDENTIFIER_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 const DIACRITIC_PATTERN = /\p{Diacritic}/gu;
 const SPACE_RUN_PATTERN = /\s+/g;
 const MISSING: ReferenceMatch = { kind: 'missing' };
+const SELF_REFERENCE = 'me';
 
 export function isIdentifierReference(reference: string): boolean {
   return IDENTIFIER_PATTERN.test(reference);
+}
+
+export function isSelfReference(reference: string): boolean {
+  return reference.trim().toLowerCase() === SELF_REFERENCE;
 }
 
 export function foldReferenceText(text: string): string {

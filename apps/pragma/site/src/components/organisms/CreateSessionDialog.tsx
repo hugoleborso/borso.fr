@@ -1,10 +1,6 @@
 /** @Feature sessions */
 
-import {
-  CONCERT_CAPACITY_MAX,
-  CONCERT_GEAR_MAX_LENGTH,
-  CONCERT_VENUE_MAX_LENGTH,
-} from '@domain/input-limits.core';
+import { CONCERT_CAPACITY_MAX, CONCERT_VENUE_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +8,6 @@ import { z } from 'zod';
 import { ApiError } from '../../lib/api.client';
 import { useCreateSession } from '../../lib/queries/sessions.queries';
 import { Button } from '../atoms/Button';
-import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import { Sheet } from '../molecules/Sheet';
@@ -43,7 +38,6 @@ const concertFormSchema = z.object({
   dateLocal: z.string().min(1),
   venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
   capacity: z.string().regex(/^\d*$/u),
-  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
 });
 
 const practiceFormSchema = z.object({
@@ -73,7 +67,7 @@ export function CreateSessionDialog({
   );
 
   const concertForm = useForm({
-    defaultValues: { dateLocal: initialDateLocal, venue: '', capacity: '0', gear: '' },
+    defaultValues: { dateLocal: initialDateLocal, venue: '', capacity: '0' },
     validators: { onChange: concertFormSchema },
     onSubmit: async ({ value }) => {
       const iso = dateTimeLocalToIso(value.dateLocal);
@@ -84,7 +78,6 @@ export function CreateSessionDialog({
         venue: value.venue.trim(),
         capacity:
           value.capacity === '' ? 0 : Math.min(CONCERT_CAPACITY_MAX, Number(value.capacity)),
-        gear: value.gear,
         friendsCountPerMember: {},
       });
       onCreated(created.session.id);
@@ -169,22 +162,6 @@ export function CreateSessionDialog({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-            />
-          )}
-        </concertForm.Field>
-        <label className={LABEL_CLASS} htmlFor="create-session-gear">
-          {t('sessions.gear')}
-        </label>
-        <concertForm.Field name="gear">
-          {(field) => (
-            <textarea
-              id="create-session-gear"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              className={composeClassName(inputVariants({ size: 'md' }), 'resize-y')}
-              rows={3}
-              maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </concertForm.Field>

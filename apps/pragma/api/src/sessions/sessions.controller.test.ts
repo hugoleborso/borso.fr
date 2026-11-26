@@ -10,7 +10,6 @@ const sessionSchema = z.object({
   preparedConcertId: z.guid().nullable(),
   venue: z.string().nullable(),
   capacity: z.number().nullable(),
-  gear: z.string().nullable(),
   friendsCountPerMember: z.unknown(),
 });
 const singleEnvelope = z.object({ session: sessionSchema });
@@ -43,7 +42,6 @@ describe('sessions controller (back-e2e)', () => {
         date: '2099-05-01T18:30:00Z',
         venue: 'Les Disquaires',
         capacity: 80,
-        gear: 'Sono maison',
         friendsCountPerMember: {},
       },
       cookieHeader,
@@ -109,7 +107,7 @@ describe('sessions controller (back-e2e)', () => {
     expect(updated.session.capacity).toBe(120);
   });
 
-  it('updates the date, the venue, the gear and the friend count in one patch', async () => {
+  it('updates the date, the venue and the friend count in one patch', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const memberId = crypto.randomUUID();
     const created = await readJson(
@@ -120,7 +118,6 @@ describe('sessions controller (back-e2e)', () => {
           date: '2025-09-13T18:30:00Z',
           venue: 'Place A',
           capacity: 80,
-          gear: 'Sono maison',
           friendsCountPerMember: {},
         },
         cookieHeader,
@@ -132,7 +129,6 @@ describe('sessions controller (back-e2e)', () => {
       body: {
         date: '2025-10-01T20:00:00Z',
         venue: 'Place B',
-        gear: 'Backline fournie',
         friendsCountPerMember: { [memberId]: 4 },
       },
       cookieHeader,
@@ -141,7 +137,7 @@ describe('sessions controller (back-e2e)', () => {
     const updated = await readJson(update, singleEnvelope);
     expect(new Date(updated.session.date).toISOString()).toBe('2025-10-01T20:00:00.000Z');
     expect(updated.session.venue).toBe('Place B');
-    expect(updated.session.gear).toBe('Backline fournie');
+    expect(updated.session).not.toHaveProperty('gear');
     expect(updated.session.friendsCountPerMember).toEqual({ [memberId]: 4 });
   });
 

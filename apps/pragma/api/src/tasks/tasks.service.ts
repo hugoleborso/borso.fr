@@ -6,8 +6,8 @@ import { didClaimSessionWithin } from '../sessions/sessions.service';
 import { didClaimSongWithin, getSongs, resolveSongId } from '../songs/songs.service';
 import { readLineupNames, resolveMemberId } from '../instruments/instruments.service';
 import { resolveReference } from '../mcp/mcp.service';
+import { isSelfReference } from '../helpers/reference/reference.core';
 import {
-  isSelfReference,
   keepGivenLinks,
   projectTasksForTool,
   type TaskFilter,
