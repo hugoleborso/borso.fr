@@ -10,7 +10,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   `friendsCountPerMember`, a map from member id to a count between 0 and
   1 000. Its gear is a list of gear items under `api/src/gear-items/`. The
   `gear` text column stays in the table, because DSQL refuses `DROP
-  COLUMN`, and no code reads or writes it.
+  COLUMN`. Migration `0033_erase_session_gear.sql` empties it, and no
+  code reads or writes it.
 - `concertCreateSchema` is `.strict()`, so a body carrying a practice-only
   key is rejected at the controller.
 - A concert is upcoming when its date is strictly after now
