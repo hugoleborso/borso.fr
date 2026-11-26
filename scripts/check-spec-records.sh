@@ -2,8 +2,7 @@
 # Pre-commit gate: every table a spec creates has a row in its Records table,
 # answered by the operator.
 #
-# Why: docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md and
-# docs/dantotsus/the-sign-ups-that-never-reached-the-friends-count.md.
+# Why: the-operator-redrew-the-feature-on-the-preview and the-sign-ups-that-never-reached-the-friends-count in docs/dantotsus/.
 #
 # The rule: a table a new spec.md names, or a migration the branch adds to its
 # app creates, has, under
