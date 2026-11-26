@@ -42,3 +42,4 @@ Session: 352ccd19-b1ac-5456-853e-39e089eb6511
 - [2026-11-26 20:57] `skills-prune` check-doc-links skips every #anchor, so three links into renamed headings (adr Mode B, dantotsu ladder and Output section) were broken with the gate green.
 - [2026-11-26 20:57] `skills-prune` technical-validation SKILL named the piloted verdict file technical-validator-<step>.md while sub-agent-contract.md says technical-validation-<step>.md, and no gate compares them.
 - [2026-11-26 20:58] `dashboard-refresh` Sentry search_errors with query 'all errors' and period 7d silently dropped the app field from the result, so the skill should name a query (event.type:error held) rather than leave it free.
+- [2026-11-26 21:02] `skills-prune` The visual-validator agent never reads visual-validation/standard.md, yet the design-bundle, one-row-per-artefact and write-reachability row rules lived only there.
