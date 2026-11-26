@@ -34,7 +34,10 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   public message and its registrations. A poster is a PDF, JPEG, PNG or
   WebP of at most 10 MB, checked before any upload. A PDF's first page is
   drawn to a PNG and its near-white margins are trimmed before the upload,
-  which then holds the same 10 MB limit. A blank message or prize label
+  then up to two lines a side of the grey fringe the page leaves around
+  the poster. A fringe line is one mostly lighter than the line just
+  inside it, so a poster whose own edge is light keeps it. The upload then
+  holds the same 10 MB limit. A blank message or prize label
   clears it. The draw picks up to three distinct registrations at random,
   in the browser, and keeps nothing.
 
@@ -55,6 +58,8 @@ Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › signs up, r
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › accepts a JPEG, PNG or WebP poster up to the size limit
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › takes a PDF poster to draw in the browser, and an image as it is, both up to the size limit
 Held by: `site/src/routes/concerts/poster-pdf.core.test.ts` › keeps the smallest box around every inked pixel
+Held by: `site/src/routes/concerts/poster-pdf.core.test.ts` › drops a one or two pixel grey fringe left of the poster
+Held by: `site/src/routes/concerts/poster-pdf.core.test.ts` › keeps a poster whose own edge is light, as long as the inside is as light
 Held by: `site/src/lib/pdf-poster.adapter.test.ts` › draws the first page within the pixel budget, trims its white margins and answers a PNG
 Held by: `site/src/components/organisms/ConcertPublicPagePanel.test.tsx` › draws a PDF poster to a PNG, then uploads that PNG and saves its key
 Held by: `site/src/routes/concerts/concert-public-page.core.test.ts` › draws three distinct winners from the registrations

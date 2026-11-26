@@ -1,6 +1,10 @@
 /** @Feature concert-registrations */
 
-import { findContentBounds, selectRenderScale } from '../routes/concerts/poster-pdf.core';
+import {
+  findContentBounds,
+  selectRenderScale,
+  trimAntialiasedFringe,
+} from '../routes/concerts/poster-pdf.core';
 
 const FIRST_PAGE = 1;
 const POSTER_FILE_NAME = 'poster.png';
@@ -47,7 +51,11 @@ export async function renderPdfPosterAsPng(file: File): Promise<File> {
     const drawnContext = readContext(drawn);
     await page.render({ canvas: drawn, canvasContext: drawnContext, viewport }).promise;
     const pixels = drawnContext.getImageData(0, 0, drawn.width, drawn.height);
-    const bounds = findContentBounds(pixels.data, drawn.width, drawn.height);
+    const bounds = trimAntialiasedFringe(
+      pixels.data,
+      drawn.width,
+      findContentBounds(pixels.data, drawn.width, drawn.height),
+    );
     const trimmed = createCanvas(bounds.width, bounds.height);
     readContext(trimmed).drawImage(
       drawn,
