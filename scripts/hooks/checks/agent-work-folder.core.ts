@@ -2,7 +2,7 @@
 import { type Check, type HookInput, PASS } from '../check.core.ts';
 
 const SCRATCHPAD_WORK_FOLDER =
-  /\/tmp\/claude-[0-9]+\/[^/ \t\n\v\f\r]+\/[^/ \t\n\v\f\r]+\/scratchpad\/[A-Za-z0-9_][A-Za-z0-9._-]*/gu;
+  /\/tmp\/claude-[0-9]+\/[^/\s]+\/[^/\s]+\/scratchpad\/[A-Za-z0-9_][A-Za-z0-9._-]*/gu;
 
 function readPrompt(input: HookInput): string {
   const prompt = input.tool_input?.['prompt'];

@@ -2,7 +2,7 @@
 import { type Check, type HookInput, type HookWorld, PASS } from '../check.core.ts';
 
 const TYPE_AWARE_ERROR_LINE =
-  /^[ \t\n\r\f\v]*[0-9]+:[0-9]+[ \t\n\r\f\v]+error[ \t\n\r\f\v][\s\S]*@typescript-eslint\/(no-unsafe-argument|no-unsafe-assignment|no-unsafe-call|no-unsafe-member-access|no-unsafe-return|no-deprecated|no-floating-promises|no-misused-promises|restrict-template-expressions|no-unnecessary-condition)[ \t\n\r\f\v]*$/u;
+  /^\s*[0-9]+:[0-9]+\s+error\s[\s\S]*@typescript-eslint\/(no-unsafe-argument|no-unsafe-assignment|no-unsafe-call|no-unsafe-member-access|no-unsafe-return|no-deprecated|no-floating-promises|no-misused-promises|restrict-template-expressions|no-unnecessary-condition)\s*$/u;
 
 const ROOT_CACHE_PREFIX = '.eslintcache';
 const NESTED_CACHE_PREFIX = 'node_modules/.cache/eslint';
