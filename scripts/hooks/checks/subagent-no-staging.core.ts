@@ -1,13 +1,6 @@
 // @FollowsBlueprint utils-pure-module
 import { posix } from 'node:path';
-import {
-  type Check,
-  type HookInput,
-  type HookWorld,
-  PASS,
-  refuse,
-  type Verdict,
-} from '../check.core.ts';
+import { type Check, type HookWorld, PASS, refuse, type Verdict } from '../check.core.ts';
 import { stripStringBodies } from '../shell-command.core.ts';
 
 const RULE = 'subagent-no-staging';
@@ -16,11 +9,6 @@ const HELP_INVOCATION = /git\s+(-C\s+\S+\s+)?(add|mv|rm|commit)\s+(-h|--help)(\s
 const STAGING = /(^|[;&|(]|\bthen\b|\bdo\b)\s*git\s+(-C\s+\S+\s+)?(add|mv|rm|commit)(\s|$)/u;
 const CHANGE_DIRECTORY = /(^|[;&|(]|\bthen\b|\bdo\b)\s*cd\s+([^\s;&|)]+)/gu;
 const EXPLICIT_DIRECTORY = /.*git\s+-C\s+(\S+)/u;
-
-function readCommand(input: HookInput): string {
-  const command = input.tool_input?.['command'];
-  return typeof command === 'string' ? command : '';
-}
 
 function findStaging(lines: readonly string[]): string | null {
   for (const line of lines) {
@@ -63,8 +51,8 @@ export const subagentNoStaging: Check = {
   tools: /^Bash$/u,
   run(input, world): Verdict {
     if (!input.agent_id) return PASS;
-    const command = readCommand(input);
-    if (command === '') return PASS;
+    const command = input.tool_input?.['command'];
+    if (typeof command !== 'string') return PASS;
     const lines = stripStringBodies(command)
       .split('\n')
       .map((line) => line.replace(HELP_INVOCATION, 'true$5'));

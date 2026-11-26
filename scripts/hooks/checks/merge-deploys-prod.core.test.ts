@@ -133,7 +133,7 @@ describe('mergeDeploysProd', () => {
   });
 
   it('compares the checkout HEAD for a merge of the current branch', () => {
-    const { world } = createWorld({
+    const { world, calls } = createWorld({
       ...HAPPY,
       'git diff --name-only origin/main...HEAD': ok('apps/talos/a.ts\n'),
       '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD':
@@ -147,7 +147,22 @@ describe('mergeDeploysProd', () => {
         HEAD_UNREADABLE,
       ),
     );
+    expect(calls).toEqual([
+      'sh -c command -v gh',
+      'git fetch -q origin main',
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD',
+      'git diff --name-only origin/main...HEAD',
+    ]);
   });
+
+  it.each(['hub pr merge 5', 'gh x merge 5', 'gh pr view 5'])(
+    'lets %s through, because only gh pr merge merges',
+    (command) => {
+      const { world, calls } = createWorld(HAPPY);
+      expect(mergeDeploysProd.run(bash(command), world)).toEqual({ kind: 'pass' });
+      expect(calls).toEqual([]);
+    },
+  );
 
   it.each(['echo "gh pr merge 5"', 'cat <<EOF\ngh pr merge 5\nEOF', 'gh pr view 5', 'gh', ''])(
     'lets %j through silently, because it merges nothing',
@@ -161,12 +176,19 @@ describe('mergeDeploysProd', () => {
   it('lets a call with neither a pull number nor a command through', () => {
     const { world } = createWorld(HAPPY);
     expect(mergeDeploysProd.run(mergeCall({ pullNumber: '' }), world).kind).toBe('pass');
+    expect(
+      mergeDeploysProd.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, world),
+    ).toEqual({ kind: 'pass' });
   });
 
   it('says unknown, never none, when the pull request head cannot be read', () => {
-    const { world } = createWorld({
+    const { world, calls } = createWorld({
       ...HAPPY,
-      'gh api repos/hugoleborso/borso.fr/pulls/412 --jq .head.sha': FAILED,
+      'gh api repos/hugoleborso/borso.fr/pulls/412 --jq .head.sha': {
+        ...FAILED,
+        stdout: `${SHA}\n`,
+      },
+      'git fetch -q origin pull/412/head': ok(),
     });
     expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
       writeNotice(
@@ -176,6 +198,11 @@ describe('mergeDeploysProd', () => {
         HEAD_UNREADABLE,
       ),
     );
+    expect(calls).toEqual([
+      'sh -c command -v gh',
+      'git fetch -q origin main',
+      'gh api repos/hugoleborso/borso.fr/pulls/412 --jq .head.sha',
+    ]);
   });
 
   it('fetches the pull request head when the checkout does not have it', () => {
@@ -195,13 +222,29 @@ describe('mergeDeploysProd', () => {
   });
 
   it('compares HEAD when gh is not installed, as the old hook did', () => {
-    const { world } = createWorld({
+    const { world, calls } = createWorld({
       'git diff --name-only origin/main...HEAD': ok(`${SNAPSHOT}\n`),
       '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD':
         ok(''),
     });
     expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
       writeNotice('412', '', SHARED_OWED, HEAD_UNREADABLE),
+    );
+    expect(calls).toEqual([
+      'sh -c command -v gh',
+      'git fetch -q origin main',
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD',
+      'git diff --name-only origin/main...HEAD',
+    ]);
+  });
+
+  it('says the shared-deploy question is unknown when the diff names no file', () => {
+    const { world } = createWorld({
+      ...HAPPY,
+      [`git diff --name-only origin/main...${SHA}`]: ok(''),
+    });
+    expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
+      writeNotice('412', 'pragma', 'unknown from this checkout', 'green'),
     );
   });
 
@@ -259,6 +302,18 @@ describe('mergeDeploysProd', () => {
     const { world } = createWorld({ ...HAPPY, [`${CHECK_RUNS} ${CHECK_RUNS_JQ}`]: ok('lint\n') });
     const verdict = mergeDeploysProd.run(mergeCall(), world);
     expect(verdict.kind === 'refuse' ? verdict.lines[1] : '').toBe('    lint: ');
+  });
+
+  it('refuses a completed run with no conclusion and a green conclusion on a run not completed', () => {
+    const { world } = createWorld({
+      ...HAPPY,
+      [`${CHECK_RUNS} ${CHECK_RUNS_JQ}`]: ok('lint\tcompleted\ne2e\tqueued\tneutral\n'),
+    });
+    const verdict = mergeDeploysProd.run(mergeCall(), world);
+    expect(verdict.kind === 'refuse' ? verdict.lines.slice(1, 3) : []).toEqual([
+      '    lint: ',
+      '    e2e: queued',
+    ]);
   });
 
   it('lets the merge through with unknown checks when the check runs cannot be read', () => {
@@ -339,10 +394,43 @@ own CI run, which is the first test of the combination.`,
     );
   });
 
-  it('adds nothing when the CI start cannot be read', () => {
-    const { world } = createWorld({ ...MOVED, [`${CHECK_RUNS} ${CI_START_JQ}`]: FAILED });
+  it.each([
+    ['fails', { ...FAILED, stdout: '2026-11-26T10:00:00Z\n' }],
+    ['prints nothing', ok('\n')],
+  ])('adds nothing and reads no base commit when the CI start query %s', (_case, ciStart) => {
+    const { world, calls } = createWorld({ ...MOVED, [`${CHECK_RUNS} ${CI_START_JQ}`]: ciStart });
     expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
       writeNotice('412', 'pragma', SHARED_OWED, 'green'),
+    );
+    expect(calls.filter((call) => call.startsWith('git log'))).toEqual([]);
+  });
+
+  it('drops every trailing newline that git, gh and the fan-out print', () => {
+    const { world } = createWorld({
+      ...MOVED,
+      [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA}`]:
+        ok('pragma\ntalos\n\n'),
+      [`git diff --name-only origin/main...${SHA}`]: ok('apps/pragma/a.ts\n\n'),
+      [`${CHECK_RUNS} ${CHECK_RUNS_JQ}`]: ok('build\tcompleted\tsuccess\n\n'),
+      'git log --first-parent --since=2026-11-26T10:00:00Z --format=%H origin/main': ok('new1\n\n'),
+      'git log --no-walk=unsorted --format=    %h %s new1': ok('    new1 feat: other (#411)\n\n'),
+      'git diff-tree --no-commit-id --name-only -r -m --first-parent new1':
+        ok('apps/talos/b.ts\n\n'),
+    });
+    expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
+      writeNotice(
+        '412',
+        'pragma\ntalos',
+        'no — the committed borso-shared template is unchanged in this diff',
+        'green',
+        `
+[merge-on-moved-base] main moved after this pull request's CI started (2026-11-26T10:00:00Z).
+These merged since, and no run tested them beside this branch:
+    new1 feat: other (#411)
+No file changed on both sides, so the merge was let through. It has already
+run by the time you read this. Tell the operator once, and read main's
+own CI run, which is the first test of the combination.`,
+      ),
     );
   });
 });

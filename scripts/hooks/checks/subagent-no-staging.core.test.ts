@@ -58,7 +58,8 @@ describe('subagentNoStaging', () => {
   });
 
   it('refuses a subagent writing the shared index, because the main session commits whatever is staged', () => {
-    expect(subagentNoStaging.run(bash('git mv a b'), SHARED.world)).toEqual({
+    const { world, calls } = createWorld(['/repository'], { '/repository': SHARED_GIT_DIRECTORY });
+    expect(subagentNoStaging.run(bash('git mv a b'), world)).toEqual({
       kind: 'refuse',
       rule: 'subagent-no-staging',
       summary: 'a subagent ran a git command that writes the shared index',
@@ -68,6 +69,11 @@ describe('subagentNoStaging', () => {
         '[subagent-no-staging]   git mv a b  ->  mv a b       git rm a  ->  rm a       git add, git commit  ->  nothing',
       ],
     });
+    expect(calls).toEqual([
+      'git -C /repository rev-parse --path-format=absolute --git-common-dir',
+      'test -d /repository',
+      'git -C /repository rev-parse --path-format=absolute --git-dir',
+    ]);
   });
 
   it.each([
@@ -77,6 +83,9 @@ describe('subagentNoStaging', () => {
     '(git add .)',
     'cd apps && git add x',
     'git -C /repository add x',
+    'echo git add -h; git add x',
+    'git add x && cd /w',
+    'cd /repository\ngit add x',
   ])('refuses %j in the shared checkout', (command) => {
     expect(judge(command)).toBe('refuse');
   });
@@ -98,14 +107,18 @@ describe('subagentNoStaging', () => {
 
   it('lets a call with no command through', () => {
     expect(judge(undefined)).toBe('pass');
+    const input: HookInput = { hook_event_name: 'PreToolUse', tool_name: 'Bash', agent_id: 'a' };
+    expect(subagentNoStaging.run(input, SHARED.world).kind).toBe('pass');
   });
 
-  it.each(['cd /w && git add x', 'git -C /w add x', 'cd /w; cd sub-not-there && git add x'])(
-    'lets %j through, because a linked worktree has its own index',
-    (command) => {
-      expect(judge(command)).toBe('pass');
-    },
-  );
+  it.each([
+    'cd /w && git add x',
+    'cd  /w && git add x',
+    'git -C /w add x',
+    'cd /w; cd sub-not-there && git add x',
+  ])('lets %j through, because a linked worktree has its own index', (command) => {
+    expect(judge(command)).toBe('pass');
+  });
 
   it('walks up from a directory the command creates to its nearest existing ancestor', () => {
     const { world, calls } = createWorld(['/w'], { '/w': '/repository/.git/worktrees/w' });
@@ -121,6 +134,26 @@ describe('subagentNoStaging', () => {
     const { world, calls } = createWorld([], {});
     expect(subagentNoStaging.run(bash('cd /gone && git add x'), world).kind).toBe('pass');
     expect(calls.at(-1)).toBe('git -C / rev-parse --path-format=absolute --git-dir');
+  });
+
+  it('compares the two git directories without their trailing newline', () => {
+    const world: HookWorld = {
+      ...SHARED.world,
+      run: (_command, args) => ({
+        status: 0,
+        stdout: args.at(-1) === '--git-dir' ? `${SHARED_GIT_DIRECTORY}\n` : SHARED_GIT_DIRECTORY,
+        stderr: '',
+      }),
+    };
+    expect(subagentNoStaging.run(bash('git add x'), world).kind).toBe('refuse');
+  });
+
+  it('ignores what a failing git prints, even when both answers match', () => {
+    const world: HookWorld = {
+      ...SHARED.world,
+      run: (command) => ({ status: command === 'test' ? 0 : 128, stdout: 'fatal\n', stderr: '' }),
+    };
+    expect(subagentNoStaging.run(bash('git add x'), world).kind).toBe('pass');
   });
 
   it('starts from the project directory when the input carries no cwd', () => {

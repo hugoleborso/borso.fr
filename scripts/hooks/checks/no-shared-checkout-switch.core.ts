@@ -16,11 +16,6 @@ const PATH_RESTORE = /\s(--|-p|--patch)(\s|$)/u;
 const LEADING_CD = /^\s*cd\s+([^\s;&|]+)/u;
 const EXPLICIT_DIRECTORY = /.*git\s+-C\s+(\S+)/u;
 
-function readCommand(input: HookInput): string {
-  const command = input.tool_input?.['command'];
-  return typeof command === 'string' ? command : '';
-}
-
 function findFirstMatch(lines: readonly string[], pattern: RegExp): RegExpExecArray | null {
   for (const line of lines) {
     const match = pattern.exec(line);
@@ -62,8 +57,8 @@ export const noSharedCheckoutSwitch: Check = {
   tools: /^Bash$/u,
   run(input, world): Verdict {
     if (world.readEnvironment('CLAUDE_CODE_REMOTE') === 'true') return PASS;
-    const command = readCommand(input);
-    if (command === '') return PASS;
+    const command = input.tool_input?.['command'];
+    if (typeof command !== 'string') return PASS;
     const lines = stripStringBodies(command).split('\n');
     const switchText = findFirstMatch(lines, SWITCH)?.[0];
     if (switchText === undefined || PATH_RESTORE.test(switchText)) return PASS;

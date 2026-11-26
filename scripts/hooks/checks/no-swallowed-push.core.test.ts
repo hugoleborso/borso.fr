@@ -96,5 +96,8 @@ describe('noSwallowedPush', () => {
 
   it('lets a call with no command through', () => {
     expect(judge(undefined).kind).toBe('pass');
+    expect(
+      noSwallowedPush.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, WORLD).kind,
+    ).toBe('pass');
   });
 });

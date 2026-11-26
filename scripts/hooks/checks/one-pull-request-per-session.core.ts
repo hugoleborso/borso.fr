@@ -4,6 +4,7 @@ import { type Check, type HookInput, type HookWorld, PASS, type Verdict } from '
 const RULE = 'one-pull-request-per-session';
 const TAG = '[one-pull-request]';
 const SESSION_PREFIX = 'cse_';
+const INDEPENDENCE_DECLARATION = /Independent of #(\d+)\b/gu;
 
 function readField(input: HookInput, field: string): string {
   const value = input.tool_input?.[field];
@@ -35,11 +36,14 @@ function listOpenPullRequests(
   return result.stdout.split('\n').filter((line) => line !== '');
 }
 
-function describeUndeclared(openLine: string, body: string): string | null {
+function describeUndeclared(
+  openLine: string,
+  declared: ReadonlySet<string | undefined>,
+): string | null {
   const tabIndex = openLine.indexOf('\t');
   const number = tabIndex === -1 ? openLine : openLine.slice(0, tabIndex);
   const branch = tabIndex === -1 ? '' : openLine.slice(tabIndex + 1);
-  if (new RegExp(`Independent of #${number}\\b`, 'u').test(body)) return null;
+  if (declared.has(number)) return null;
   return `  #${number} on \`${branch}\``;
 }
 
@@ -63,9 +67,11 @@ export const onePullRequestPerSession: Check = {
     }
     const sessionId = readSessionId(world);
     if (sessionId === '') return PASS;
-    const body = readField(input, 'body');
+    const declared = new Set(
+      Array.from(readField(input, 'body').matchAll(INDEPENDENCE_DECLARATION), (match) => match[1]),
+    );
     const undeclared = listOpenPullRequests(world, owner, repository, sessionId)
-      .map((line) => describeUndeclared(line, body))
+      .map((line) => describeUndeclared(line, declared))
       .filter(isUndeclared);
     if (undeclared.length === 0) return PASS;
     return refuseAsOnePullRequest(

@@ -108,6 +108,38 @@ describe('noSharedCheckoutSwitch', () => {
   it('lets a call with no command through', () => {
     const { world } = createWorld({ '/repository': MAIN });
     expect(noSharedCheckoutSwitch.run(bash(undefined), world).kind).toBe('pass');
+    expect(
+      noSharedCheckoutSwitch.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, world).kind,
+    ).toBe('pass');
+  });
+
+  it('finds a switch and a cd on a later line of the command', () => {
+    const { world } = createWorld({ '/repository': MAIN, '/w': WORKTREE });
+    expect(noSharedCheckoutSwitch.run(bash('git status\ngit switch b'), world).kind).toBe('refuse');
+    expect(
+      noSharedCheckoutSwitch.run(bash('git status\ncd /repository && git switch b', '/w'), world)
+        .kind,
+    ).toBe('refuse');
+  });
+
+  it('compares the two git directories without their trailing newline', () => {
+    const world: HookWorld = {
+      ...createWorld({}).world,
+      run: (_command, args) => ({
+        status: 0,
+        stdout: args.at(-1) === '--git-dir' ? '/repository/.git\n' : '/repository/.git',
+        stderr: '',
+      }),
+    };
+    expect(noSharedCheckoutSwitch.run(bash('git switch b'), world).kind).toBe('refuse');
+  });
+
+  it('ignores what a failing git prints, even when both answers match', () => {
+    const world: HookWorld = {
+      ...createWorld({}).world,
+      run: () => ({ status: 128, stdout: '/repository/.git\n', stderr: 'fatal' }),
+    };
+    expect(noSharedCheckoutSwitch.run(bash('git switch b'), world).kind).toBe('pass');
   });
 
   it('lets a switch through where the target is no git checkout', () => {

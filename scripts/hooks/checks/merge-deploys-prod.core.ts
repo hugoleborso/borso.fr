@@ -20,8 +20,10 @@ interface Merge {
   readonly hasGh: boolean;
 }
 
-function readString(input: HookInput, field: string, fallback: string): string {
-  const value = input.tool_input?.[field];
+type ToolInput = NonNullable<HookInput['tool_input']>;
+
+function readString(toolInput: ToolInput, field: string, fallback: string): string {
+  const value = toolInput[field];
   return typeof value === 'string' ? value : fallback;
 }
 
@@ -38,16 +40,16 @@ function findBashMerge(command: string): string | null {
     (simple) => simple.name === 'gh' && simple.args[0] === 'pr' && simple.args[1] === 'merge',
   );
   if (merges.length === 0) return null;
-  const numbers = merges.map((merge) => LEADING_NUMBER.exec(merge.args[2] ?? '')?.[0]);
+  const numbers = merges.map((merge) => merge.args[2]?.match(LEADING_NUMBER)?.[0]);
   return numbers.find((number) => number !== undefined) ?? CURRENT_BRANCH;
 }
 
-function readPullRequest(input: HookInput): string | null {
-  const pullNumber = input.tool_input?.['pullNumber'];
+function readPullRequest(toolInput: ToolInput): string | null {
+  const pullNumber = toolInput['pullNumber'];
   if (typeof pullNumber === 'number') return String(pullNumber);
   if (typeof pullNumber === 'string' && pullNumber !== '') return pullNumber;
-  const command = readString(input, 'command', '');
-  return command === '' ? null : findBashMerge(command);
+  const command = toolInput['command'];
+  return typeof command === 'string' ? findBashMerge(command) : null;
 }
 
 function readComparedHead(merge: Merge): string {
@@ -255,13 +257,14 @@ export const mergeDeploysProd: Check = {
   name: 'merge-deploys-prod',
   tools: /^(mcp__github__merge_pull_request|Bash)$/u,
   run(input, world): Verdict {
-    const pullRequest = readPullRequest(input);
+    const toolInput = input.tool_input ?? {};
+    const pullRequest = readPullRequest(toolInput);
     if (pullRequest === null) return PASS;
     const merge: Merge = {
       world,
       pullRequest,
-      owner: readString(input, 'owner', '{owner}'),
-      repository: readString(input, 'repo', '{repo}'),
+      owner: readString(toolInput, 'owner', '{owner}'),
+      repository: readString(toolInput, 'repo', '{repo}'),
       isNumbered: NUMBERED.test(pullRequest),
       hasGh: world.run('sh', ['-c', 'command -v gh']).status === 0,
     };

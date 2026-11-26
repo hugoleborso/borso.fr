@@ -1,5 +1,5 @@
 // @FollowsBlueprint utils-pure-module
-import { type Check, type HookInput, PASS, refuse, type Verdict } from '../check.core.ts';
+import { type Check, PASS, refuse, type Verdict } from '../check.core.ts';
 import { stripStringBodies } from '../shell-command.core.ts';
 
 const RULE = 'no-swallowed-push';
@@ -14,11 +14,6 @@ const GIT_INTO_PIPE = /(^|[|\s])git\s+(push|commit)(\s[^|]*)?\|/u;
 const PIPEFAIL_CONTEXT =
   '[no-swallowed-push] The command ran with set -o pipefail in front, so a failed git exits non-zero. A later stage can too on its own: grep exits 1 when nothing matches, after a push that succeeded. Before calling a push failed, read git ls-remote origin <branch>.';
 
-function readCommand(input: HookInput): string {
-  const command = input.tool_input?.['command'];
-  return typeof command === 'string' ? command : '';
-}
-
 function hasLineMatching(lines: readonly string[], pattern: RegExp): boolean {
   return lines.some((line) => pattern.test(line));
 }
@@ -27,8 +22,8 @@ export const noSwallowedPush: Check = {
   name: RULE,
   tools: /^Bash$/u,
   run(input): Verdict {
-    const command = readCommand(input);
-    if (command === '') return PASS;
+    const command = input.tool_input?.['command'];
+    if (typeof command !== 'string') return PASS;
     const commandToRun = stripStringBodies(command);
     const pipelines = commandToRun.replaceAll(/&&|;/gu, '\n').split('\n');
     if (hasLineMatching(pipelines, MUTATION_INTO_HEAD)) {

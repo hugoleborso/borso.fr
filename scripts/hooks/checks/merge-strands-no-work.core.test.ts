@@ -75,6 +75,26 @@ describe('mergeStrandsNoWork', () => {
     expect(mergeStrandsNoWork.run(MERGE, world).kind).toBe('refuse');
   });
 
+  it('refuses on tracked changes alone, and drops every trailing newline git prints', () => {
+    const { world } = createWorld({
+      ...CLEAN,
+      'git -C /checkout status --porcelain --untracked-files=no': answer(' M a.ts\n\n'),
+    });
+    const verdict = mergeStrandsNoWork.run(MERGE, world);
+    expect(verdict.kind === 'refuse' && verdict.lines.slice(1, 3)).toEqual([
+      '[merge-strands-no-work]   changed:  M a.ts',
+      "[merge-strands-no-work] If it belongs to this pull request, commit it and push it to the pull request's branch.",
+    ]);
+  });
+
+  it('trims only the trailing newlines of the checkout path', () => {
+    const { world, calls } = createWorld({
+      'git -C /session rev-parse --show-toplevel': answer('/check\nout\n\n'),
+    });
+    mergeStrandsNoWork.run(MERGE, world);
+    expect(calls[1]).toBe('git -C /check\nout status --porcelain --untracked-files=no');
+  });
+
   it('lets a merge from a clean checkout through, untracked files not counted', () => {
     const { world } = createWorld(CLEAN);
     expect(mergeStrandsNoWork.run(MERGE, world).kind).toBe('pass');

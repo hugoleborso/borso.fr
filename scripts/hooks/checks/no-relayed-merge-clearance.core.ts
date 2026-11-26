@@ -1,21 +1,18 @@
 // @FollowsBlueprint utils-pure-module
-import { type Check, type HookInput, PASS, refuse, type Verdict } from '../check.core.ts';
+import { type Check, PASS, refuse, type Verdict } from '../check.core.ts';
 
 const RULE = 'no-relayed-merge-clearance';
 
 const CLEARANCE =
   /(operator|hugo|hugoleborso|user|he|they)[^.]{0,40}\b(says?|said|asks?|asked|approves?|approved|cleared|wants?|ok(ay)?s?|green-?lights?)\b[^.]{0,60}\bmerg(e|ing)\b|\b(go ahead and|please|you (may|can|are cleared to)|cleared to|ok(ay)? to)\s+merge\b|\bmerge (it|this|the (pull request|pr)|#?[0-9]+)[^.]{0,20}\bnow\b/iu;
 
-function readMessage(input: HookInput): string {
-  const message = input.tool_input?.['message'];
-  return typeof message === 'string' ? message.replaceAll('\n', ' ') : '';
-}
-
 export const noRelayedMergeClearance: Check = {
   name: RULE,
   tools: /^mcp__claude-code-remote__send_message$/u,
   run(input): Verdict {
-    if (!CLEARANCE.test(readMessage(input))) return PASS;
+    const message = input.tool_input?.['message'];
+    if (typeof message !== 'string') return PASS;
+    if (!CLEARANCE.test(message.replaceAll('\n', ' '))) return PASS;
     return refuse(
       RULE,
       "relayed the operator's merge clearance to another session instead of merging",

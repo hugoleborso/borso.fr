@@ -63,6 +63,19 @@ describe('onePullRequestPerSession', () => {
     expect(calls).toEqual([]);
   });
 
+  it('fails open without an owner or a repository even when the session has one open', () => {
+    const { world, calls } = createWorld({ sessionId: 'abc', openPullRequests: TWO_OPEN });
+    expect(onePullRequestPerSession.run(createPullRequest({ owner: 7 }), world).kind).toBe('pass');
+    expect(onePullRequestPerSession.run(createPullRequest({ repo: '' }), world).kind).toBe('pass');
+    expect(
+      onePullRequestPerSession.run(
+        { hook_event_name: 'PreToolUse', tool_name: 'mcp__github__create_pull_request' },
+        world,
+      ).kind,
+    ).toBe('pass');
+    expect(calls).toEqual([]);
+  });
+
   it('reads the open pull requests whose body carries this session, with the cse_ prefix dropped', () => {
     const { world, calls } = createWorld({ sessionId: 'cse_abc' });
     expect(onePullRequestPerSession.run(createPullRequest({}), world).kind).toBe('pass');
@@ -124,6 +137,15 @@ describe('onePullRequestPerSession', () => {
       openPullRequests: { status: 0, stdout: '412\tclaude/hooks\n', stderr: '' },
     });
     const body = 'Independent of #4120: a.';
+    expect(onePullRequestPerSession.run(createPullRequest({ body }), world).kind).toBe('refuse');
+  });
+
+  it('does not read #412a as a declaration for #412', () => {
+    const { world } = createWorld({
+      sessionId: 'abc',
+      openPullRequests: { status: 0, stdout: '412\tclaude/hooks\n', stderr: '' },
+    });
+    const body = 'Independent of #412a: a.';
     expect(onePullRequestPerSession.run(createPullRequest({ body }), world).kind).toBe('refuse');
   });
 

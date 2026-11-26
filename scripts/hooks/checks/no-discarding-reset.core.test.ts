@@ -107,6 +107,40 @@ describe('noDiscardingReset', () => {
     ]);
   });
 
+  it('lists the changed paths with git diff --name-only', () => {
+    const { world, calls } = createWorld({ '.': { changed: ['a.ts'] } });
+    expect(judge('git restore a.ts', world).kind).toBe('refuse');
+    expect(calls.at(-1)).toBe('git -C /session -C . diff --name-only -- a.ts');
+  });
+
+  it('drops every trailing newline of the changed-path list', () => {
+    const world: HookWorld = {
+      ...DIRTY.world,
+      run: (_command, args) =>
+        answer(args.includes('--quiet') ? 1 : 0, args.includes('--name-only') ? 'a.ts\n\n' : ''),
+    };
+    const verdict = judge('git reset --hard', world);
+    expect(verdict.kind === 'refuse' ? verdict.lines.slice(1, 3) : []).toEqual([
+      '[no-discarding-reset]     a.ts',
+      '[no-discarding-reset] Commit them first — a commit is cheap and amendable:',
+    ]);
+  });
+
+  it.each([
+    ['git restore --worktree b.ts', 'b.ts'],
+    ['git restore b.ts && ls', 'b.ts'],
+    ['git restore  a.ts  b.ts', 'a.ts b.ts'],
+  ])('names in the stash advice only the paths %j restores', (command, paths) => {
+    const verdict = judge(command);
+    expect(verdict.kind === 'refuse' ? verdict.lines.at(-1) : '').toBe(
+      `[no-discarding-reset]   git stash push -m 'before the probe' -- ${paths}`,
+    );
+  });
+
+  it('judges every discarding segment, not only the first one', () => {
+    expect(judge('git -C /w reset --hard; git reset --hard').kind).toBe('refuse');
+  });
+
   it('runs git from the project directory when the input carries no cwd', () => {
     const { world, calls } = createWorld({ '.': { changed: [] } });
     noDiscardingReset.run({ ...bash('git reset --hard'), cwd: undefined }, world);
@@ -130,6 +164,7 @@ describe('noDiscardingReset', () => {
     ['git checkout -- a.ts', 'refuse'],
     ['git restore checkout c.ts', 'refuse'],
     ['git restore -s HEAD c.ts', 'pass'],
+    ['git restore -s a.ts c.ts', 'pass'],
     ['git restore -- -odd.ts', 'pass'],
     ['git checkout -- c.ts', 'pass'],
   ])('reads the named paths of %j, then judges it: %s', (command, kind) => {
@@ -185,7 +220,20 @@ describe('noDiscardingReset', () => {
 
   it('reads a bare cd with no HOME as unreadable', () => {
     const { world } = createWorld({ '.': { changed: [] } });
-    expect(judge('cd; git reset --hard', world).kind).toBe('refuse');
+    expect(judge('cd; git reset --hard', world)).toEqual(
+      unreadable(
+        '`git reset --hard` names its checkout through something only the shell can expand',
+      ),
+    );
+  });
+
+  it('keeps a directory unreadable once a cd has made it so', () => {
+    const { world } = createWorld({ '.': { changed: [] }, 'unreadable/apps': { changed: [] } });
+    expect(judge('cd "$D" && cd apps && git reset --hard', world)).toEqual(
+      unreadable(
+        '`git reset --hard` names its checkout through something only the shell can expand',
+      ),
+    );
   });
 
   it('refuses a discard in a directory that is no checkout it can read', () => {
@@ -219,6 +267,9 @@ describe('noDiscardingReset', () => {
 
   it('lets a call with no command through', () => {
     expect(judge(undefined).kind).toBe('pass');
+    expect(
+      noDiscardingReset.run({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, DIRTY.world).kind,
+    ).toBe('pass');
   });
 
   it('cuts the summary at 120 characters', () => {

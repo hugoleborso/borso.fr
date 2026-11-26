@@ -1,12 +1,5 @@
 // @FollowsBlueprint utils-pure-module
-import {
-  type Check,
-  type HookInput,
-  type HookWorld,
-  PASS,
-  refuse,
-  type Verdict,
-} from '../check.core.ts';
+import { type Check, type HookWorld, PASS, refuse, type Verdict } from '../check.core.ts';
 import { stripStringBodies } from '../shell-command.core.ts';
 
 const RULE = 'no-discarding-reset';
@@ -32,11 +25,6 @@ interface Walk {
   readonly world: HookWorld;
   readonly baseArgs: readonly string[];
   readonly home: string;
-}
-
-function readCommand(input: HookInput): string {
-  const command = input.tool_input?.['command'];
-  return typeof command === 'string' ? command : '';
 }
 
 function refuseUnreadableCheckout(reason: string): Verdict {
@@ -67,7 +55,7 @@ function listNamedPaths(segment: string): string[] {
   let isSubcommandSeen = false;
   let isAfterSeparator = false;
   let isSkippingValue = false;
-  for (const word of segment.split(/\s+/u).filter((part) => part !== '')) {
+  for (const word of segment.trim().split(/\s+/u)) {
     if (!isSubcommandSeen) {
       isSubcommandSeen = word === 'restore' || word === 'checkout';
     } else if (isSkippingValue) {
@@ -155,8 +143,8 @@ export const noDiscardingReset: Check = {
   name: RULE,
   tools: /^Bash$/u,
   run(input, world): Verdict {
-    const command = readCommand(input);
-    if (command === '') return PASS;
+    const command = input.tool_input?.['command'];
+    if (typeof command !== 'string') return PASS;
     const walk: Walk = {
       world,
       baseArgs: input.cwd ? ['-C', input.cwd] : [],
