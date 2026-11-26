@@ -5,11 +5,13 @@
 # published an Artifact, sent a file nor embedded an image, the stop is blocked
 # once. Quoted text and blockquotes are skipped. When the turn ran `git push`
 # over a range touching `apps/*/site/src/` on a branch already pushed, and
-# uploaded no screenshot, the stop is blocked once too.
+# uploaded no screenshot, the stop is blocked once too. So is a turn that
+# pushed or opened a pull request while screenshots wait in `.pending-upload/`.
 #
 # Best-effort by contract: any error lets the turn end.
 #
 # See docs/dantotsus/the-screens-described-instead-of-shown.md.
+import glob
 import json
 import re
 import subprocess
@@ -87,6 +89,18 @@ def pushed_a_screen_unshown(turn):
     return len(moves) == 2 and re.search(r"^apps/[^/]+/site/src/", git("diff", "--name-only", *moves[::-1]), re.MULTILINE)
 
 
+PENDING_SCREENSHOTS = "docs/features/*/*/validation/.pending-upload/*/*"
+PENDING_REASON = (
+    "[screens-shown] This turn pushed or opened a pull request while validation screenshots "
+    "still wait in .pending-upload/. Publish them as open-pr step 5b says, then delete the folder."
+)
+
+
+def left_screenshots_unpublished(turn, root):
+    inputs = json.dumps([row.get("message", {}).get("content") for row in turn if row.get("type") == "assistant"])
+    return bool(re.search(r"\bgit\s+push\b|create_pull_request", inputs)) and bool(glob.glob(PENDING_SCREENSHOTS, root_dir=root))
+
+
 def main():
     payload = json.load(sys.stdin)
     if payload.get("stop_hook_active"):
@@ -94,6 +108,8 @@ def main():
     turn = read_turn(payload["transcript_path"])
     if must_show(turn):
         print(json.dumps({"decision": "block", "reason": REASON}))
+    elif left_screenshots_unpublished(turn, payload.get("cwd", ".")):
+        print(json.dumps({"decision": "block", "reason": PENDING_REASON}))
     elif pushed_a_screen_unshown(turn):
         print(json.dumps({"decision": "block", "reason": PUSH_REASON}))
 
