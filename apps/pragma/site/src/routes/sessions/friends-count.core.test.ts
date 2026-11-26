@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { computeSharePercent, isCapacityKnown, parseFriendsCounts } from './friends-count.core';
+import {
+  computeSharePercent,
+  isCapacityKnown,
+  parseFriendsCounts,
+  tallyFriends,
+} from './friends-count.core';
 
 const MEMBER_ID = '00000000-0000-4000-8000-000000000000';
+const OTHER_MEMBER_ID = '11111111-1111-4111-8111-111111111111';
+const DEPARTED_MEMBER_ID = '22222222-2222-4222-8222-222222222222';
+const MEMBER = { id: MEMBER_ID };
+const OTHER_MEMBER = { id: OTHER_MEMBER_ID };
+
+function comingFor(memberId: string | null, times: number) {
+  return Array.from({ length: times }, () => ({
+    comingFor: memberId === null ? null : { id: memberId },
+  }));
+}
 
 // @FollowsBlueprint test-pure-unit
 describe('parseFriendsCounts', () => {
@@ -39,5 +54,67 @@ describe('isCapacityKnown', () => {
   it('rejects an unset capacity and the zero that stands for one', () => {
     expect(isCapacityKnown(null)).toBe(false);
     expect(isCapacityKnown(0)).toBe(false);
+  });
+});
+
+describe('tallyFriends', () => {
+  it('draws every row on one scale, the largest of all registrations and expected counts', () => {
+    const tally = tallyFriends({
+      members: [MEMBER, OTHER_MEMBER],
+      targets: { [MEMBER_ID]: 8, [OTHER_MEMBER_ID]: 2 },
+      registrations: [...comingFor(MEMBER_ID, 6), ...comingFor(OTHER_MEMBER_ID, 4)],
+    });
+    expect(tally.rows).toEqual([
+      { member: MEMBER, registered: 6, target: 8, registeredPercent: 75, targetPercent: 100 },
+      { member: OTHER_MEMBER, registered: 4, target: 2, registeredPercent: 50, targetPercent: 25 },
+    ]);
+    expect(tally.registeredTotal).toBe(10);
+    expect(tally.targetTotal).toBe(10);
+    expect(tally.noPreferenceCount).toBe(0);
+    expect(tally.noPreferencePercent).toBe(0);
+  });
+
+  it('lets a member past the expected count set the scale', () => {
+    const tally = tallyFriends({
+      members: [MEMBER],
+      targets: { [MEMBER_ID]: 2 },
+      registrations: comingFor(MEMBER_ID, 4),
+    });
+    expect(tally.rows[0]).toMatchObject({ registeredPercent: 100, targetPercent: 50 });
+  });
+
+  it('lets the registrations that chose nobody set the scale too', () => {
+    const tally = tallyFriends({
+      members: [MEMBER],
+      targets: { [MEMBER_ID]: 2 },
+      registrations: [...comingFor(MEMBER_ID, 1), ...comingFor(null, 4)],
+    });
+    expect(tally.rows[0]).toMatchObject({ registeredPercent: 25, targetPercent: 50 });
+    expect(tally.noPreferenceCount).toBe(4);
+    expect(tally.noPreferencePercent).toBe(100);
+  });
+
+  it('leaves every bar empty when nobody is expected and nobody registered', () => {
+    const tally = tallyFriends({ members: [MEMBER], targets: {}, registrations: [] });
+    expect(tally.rows).toEqual([
+      { member: MEMBER, registered: 0, target: 0, registeredPercent: 0, targetPercent: 0 },
+    ]);
+    expect(tally.targetTotal).toBe(0);
+    expect(tally.noPreferencePercent).toBe(0);
+  });
+
+  it('puts a registration for a member no longer listed under no preference', () => {
+    const tally = tallyFriends({
+      members: [MEMBER],
+      targets: { [MEMBER_ID]: 3, [DEPARTED_MEMBER_ID]: 2 },
+      registrations: [
+        ...comingFor(MEMBER_ID, 1),
+        ...comingFor(null, 1),
+        ...comingFor(DEPARTED_MEMBER_ID, 1),
+      ],
+    });
+    expect(tally.noPreferenceCount).toBe(2);
+    expect(tally.registeredTotal).toBe(3);
+    expect(tally.targetTotal).toBe(5);
   });
 });
