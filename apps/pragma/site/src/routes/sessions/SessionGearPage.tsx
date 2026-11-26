@@ -210,7 +210,7 @@ export function SessionGearPage(): JSX.Element {
             <span>{t(GEAR_STATUS_LABEL_KEY[section.status])}</span>
             <span className="ml-auto font-mono">{section.items.length}</span>
           </h2>
-          <ul className="m-0 list-none overflow-hidden rounded-lg border border-rule bg-surface p-0">
+          <ul className="m-0 list-none overflow-hidden rounded-lg border border-rule bg-leaf p-0">
             {section.items.map((item) => (
               <li
                 key={item.id}
