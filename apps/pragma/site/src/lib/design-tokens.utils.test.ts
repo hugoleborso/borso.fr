@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,16 +19,14 @@ import {
 } from './design-tokens.utils';
 import { ON_COLOR_DARK, ON_COLOR_LIGHT } from './member-color.utils';
 
-const SITE_SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const TEST_DIRECTORY = dirname(fileURLToPath(import.meta.url));
+const SITE_SOURCE_ROOT = resolve(TEST_DIRECTORY, '..');
 const STYLESHEET_PATH = join(SITE_SOURCE_ROOT, 'styles', 'tokens.css');
 const STYLESHEET = readFileSync(STYLESHEET_PATH, 'utf8');
 const TOKENS = readThemeTokens(STYLESHEET);
 const SCHEMES: readonly ColourScheme[] = ['light', 'dark'];
 const MINIMUM_TEXT_CONTRAST = 4.5;
 const MINIMUM_GRAPHIC_CONTRAST = 3;
-const SOURCE_FILE = /\.tsx?$/u;
-const TEST_FILE = /\.test\.tsx?$/u;
-const TOKEN_READER_FILE = 'design-tokens.utils.ts';
 const COLOUR_VARIABLE = /var\(--color-([a-z0-9-]+)\)/gu;
 const DECIMAL_PLACES = 2;
 const INDEX_PAGE = readFileSync(join(SITE_SOURCE_ROOT, '..', 'index.html'), 'utf8');
@@ -71,18 +69,6 @@ const PILL_LABELS: readonly (readonly [string, string])[] = [
   ['ink-soft', 'leaf'],
   ['ink-soft', 'raised'],
 ];
-
-function listSourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return listSourceFiles(path);
-    const isScanned =
-      SOURCE_FILE.test(entry.name) &&
-      !TEST_FILE.test(entry.name) &&
-      entry.name !== TOKEN_READER_FILE;
-    return isScanned ? [path] : [];
-  });
-}
 
 async function compileTokens(): Promise<{ build: (candidates: string[]) => string }> {
   const require = createRequire(import.meta.url);
@@ -274,15 +260,27 @@ describe('the stylesheet', () => {
   });
 });
 
+const SOURCE_MODULES = import.meta.glob([
+  '../**/*.{ts,tsx}',
+  '!../**/*.test.{ts,tsx}',
+  '!./design-tokens.utils.ts',
+]);
+
 describe('the source under site/src', () => {
-  const files = listSourceFiles(SITE_SOURCE_ROOT);
+  const files = Object.keys(SOURCE_MODULES).map((path) => {
+    const absolutePath = resolve(TEST_DIRECTORY, path);
+    return {
+      path: relative(SITE_SOURCE_ROOT, absolutePath),
+      content: readFileSync(absolutePath, 'utf8'),
+    };
+  });
 
   it('names only colour variables the stylesheet defines', () => {
     const unknown = files.flatMap((file) =>
-      [...readFileSync(file, 'utf8').matchAll(COLOUR_VARIABLE)]
+      [...file.content.matchAll(COLOUR_VARIABLE)]
         .map((match) => match[1] ?? '')
         .filter((name) => !TOKENS.colours.has(name))
-        .map((name) => `${relative(SITE_SOURCE_ROOT, file)}: --color-${name}`),
+        .map((name) => `${file.path}: --color-${name}`),
     );
     expect(unknown).toEqual([]);
   });
@@ -293,11 +291,11 @@ describe('the source under site/src', () => {
     const unknown: string[] = [];
     const generatedCandidates = new Set<string>();
     for (const file of files) {
-      for (const candidate of listTokenUtilityCandidates(readFileSync(file, 'utf8'))) {
+      for (const candidate of listTokenUtilityCandidates(file.content)) {
         if (generatedCandidates.has(candidate)) continue;
         const next = compiler.build([candidate]).length;
         if (next > generated) generatedCandidates.add(candidate);
-        if (next === generated) unknown.push(`${relative(SITE_SOURCE_ROOT, file)}: ${candidate}`);
+        if (next === generated) unknown.push(`${file.path}: ${candidate}`);
         generated = next;
       }
     }

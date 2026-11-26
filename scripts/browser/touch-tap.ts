@@ -101,5 +101,8 @@ if (options === null) {
   process.stderr.write(USAGE);
   process.exit(2);
 }
-const isRealTouch = await didTapArriveAsTouch(options);
+const isRealTouch = await didTapArriveAsTouch(options).catch((error: unknown) => {
+  process.stderr.write(`[touch-tap] ${error instanceof Error ? error.message : String(error)}\n`);
+  return false;
+});
 process.exit(isRealTouch ? 0 : 1);
