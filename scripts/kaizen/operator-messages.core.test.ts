@@ -102,6 +102,19 @@ describe('selectOperatorMessages on what the harness files as user events', () =
     };
     expect(selectOperatorMessages(page(brief))).toEqual([]);
   });
+
+  it('drops the prompt another session seeded, which the harness marks as not typed', () => {
+    const seed = {
+      created_at: AT,
+      user: {
+        internal_anthropic_catchall: {
+          text_not_typed: true,
+          message: { content: 'Run `/after-task-kaizen` on #406' },
+        },
+      },
+    };
+    expect(selectOperatorMessages(page(seed))).toEqual([]);
+  });
 });
 
 describe('readSavedPage', () => {
