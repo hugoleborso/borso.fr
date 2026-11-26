@@ -2,15 +2,11 @@
 # Pre-commit gate: every table a spec creates has a row in its Records table,
 # answered by the operator.
 #
-# PR #327's spec defined a composition as a song with `origin = original`,
-# because the existing screen read songs that way, and created inspirations
-# from the library page only. Nobody had asked the operator either question.
-# He redrew both on the preview, which cost six commits, two more validation
-# passes and a migration that recreated a table. See
-# docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md.
+# Why: docs/dantotsus/the-operator-redrew-the-feature-on-the-preview.md and
+# docs/dantotsus/the-sign-ups-that-never-reached-the-friends-count.md.
 #
-# The rule: a table a new spec.md names in `CREATE TABLE <name>`, or that a
-# migration added on the branch creates in that spec's app, has, under
+# The rule: a table a new spec.md names, or a migration the branch adds to its
+# app creates, has, under
 # `### Records`, a row `| <name> | <its own record, or part of what> |
 # <created from where> | <the operator's answer, dated YYYY-MM-DD> |`. The date
 # is the part a script can hold: it says the answer was asked, not assumed.
@@ -19,8 +15,6 @@
 # main into a branch, does not reopen questions a merged feature settled. The
 # check holds a spec while its branch writes it, which is when the operator is
 # asked.
-#
-# PR #410's short-form spec held no SQL, so its two new tables passed unasked.
 #
 # Usage: scripts/check-spec-records.sh <spec.md or migration .sql>...
 
@@ -50,7 +44,6 @@ for spec in $(tr ' ' '\n' <<<"$specs" | sort -u); do
   fi
 
   migrations="$(added_on_branch "apps/$(cut -d/ -f3 <<<"$spec")/*/migrations/*.sql")"
-  # shellcheck disable=SC2086 # one migration path per word
   tables="$( (grep -ohiE 'CREATE TABLE( IF NOT EXISTS)? "?[a-z_][a-z0-9_]*' "$spec" $migrations || true) | tr -d '"' | awk '{print tolower($NF)}' | sort -u)"
   [ -n "$tables" ] || continue
 

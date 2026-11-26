@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: production
 severity: high
 related-pr: '#410'
-fix-commits: [768998804, self]
+fix-commits: [768998804]
 eradication-level: 2
-eradication-paths: [apps/pragma/site/src/routes/concerts/ConcertsLandingPage.tsx, apps/pragma/site/src/sw/manifest.test.ts]
+eradication-paths: [apps/pragma/site/src/routes/concerts/ConcertsLandingPage.tsx, apps/pragma/site/src/routes/concerts/ConcertsLandingPage.test.tsx]
 time-to-detect: 4 hours
 tags: [pragma, pwa, conception]
 zone: apps/pragma/site/public/manifest.webmanifest
@@ -66,23 +66,23 @@ browser tab still shows the fan page. Nobody has to reinstall.
 
 **Type:** DevX check (level 2)
 
-**Reference:** commit [`7689988`](https://github.com/hugoleborso/borso.fr/commit/768998804499a5865865eb57ee2a1967bbc2084b)
-holds the redirect and the test that sends the installed app from `/` to the
-members area. The commit adding this file ties the manifest test to the same
-constant, and pins the install identity `/` that keeps old installs one app.
+**Reference:** commit [`7689988`](https://github.com/hugoleborso/borso.fr/commit/768998804499a5865865eb57ee2a1967bbc2084b),
+PR #415's redirect and its test.
 
 ```diff
--    expect(manifest.start_url).toBe('/app');
-+    expect(manifest.start_url).toBe(DEFAULT_POST_LOGIN_PATH);
-+  it('keeps the install identity /, so an app installed before the ERP moved stays one app and opens on /', () => {
-+    expect(manifest.id).toBe('/');
++  const isInstalledApp = readInstallContext().isStandalone;
++  if (isInstalledApp) return <Navigate to={DEFAULT_POST_LOGIN_PATH} replace />;
 ```
 
-Moving the ERP home again changes `DEFAULT_POST_LOGIN_PATH`. The redirect then
-follows it, and the manifest test fails until the manifest follows too.
+The redirect targets `DEFAULT_POST_LOGIN_PATH`, the constant sign-in already
+sends members to, so a later move of the ERP home moves it too. The test
+`sends the installed app to the members area, where it opened before the ERP
+moved to /app` renders `/` in standalone display and expects the members area.
+The manifest keeps `"id": "/"`, so an app installed before the move stays the
+same app.
 
-**Proof it can fail:** with `"start_url": "/"` planted in the manifest, the
-test fails with `expected '/' to be '/app'`.
+**Proof it can fail:** PR #415 reports the test failing without the redirect
+and passing with it (measured, its *Notable* section).
 
 **Similar instances:** `grep -l start_url apps/*/site/public/*.webmanifest`
 lists the installable apps. Only pragma has moved its start URL.
