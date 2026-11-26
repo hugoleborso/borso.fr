@@ -70,3 +70,6 @@ Session: 78a9cee8-6ad7-5552-b015-d73d4b1ef7ca
 - [2026-11-26 20:36] `fix-removal` vitest --coverage.include on a single site core file printed an empty coverage table, so per-file coverage could not be read directly
 - [2026-11-26 20:36] `fix-removal` concert-registrations.queries.ts and concert-registrations.service.ts both sit at the 300-line max-lines limit, so any fix there must first find lines to give back
 - [2026-11-26 20:46] `technical-validator` pnpm exec knip --workspace . run from apps/pragma exits 1 listing every devDependency as unused, while the same check from the repo root with --workspace apps/pragma exits 0
+- [2026-11-26 20:55] `friends-target` scripts/dev-server.sh start --as <label> gives the site its own port but not the API or socket port, so a second pragma server's API dies on EADDRINUSE 3004 and its site silently talks to the other server's API.
+- [2026-11-26 21:14] `visual-validator` The brief placed the ERP under /app, but /app/login renders a blank page and sign-in lives at /login, so the first drive found no form.
+- [2026-11-26 21:14] `visual-validator` A member deleted through the API stayed in the concert card after a reload, because the persisted pragma.query-cache in localStorage served the stale member list until it was cleared by hand.
