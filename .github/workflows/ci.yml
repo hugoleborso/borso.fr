@@ -119,6 +119,8 @@ jobs:
       # renamed by changes with no reason to open either file.
       - run: ./scripts/check-vocabulary-paths.sh
       - run: ./scripts/check-no-null-bytes.sh
+      # Every hook is the one TypeScript entry, and every tool a check reads reaches it.
+      - run: node scripts/hooks/check-settings.ts
       - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
       # A package every Lambda bundles resolves to one version in the
       # lockfile. Two resolutions put both copies in each bundle, and pragma's

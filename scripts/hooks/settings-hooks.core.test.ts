@@ -1,8 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { type Check, PASS } from './check.core.ts';
-import { CHECKS_BY_EVENT } from './hook-events.ts';
 import {
   HOOK_COMMAND,
   listSettingsHookCommands,
@@ -90,19 +87,5 @@ describe('listToolsNoMatcherReaches, so a check never sits behind a matcher that
     };
 
     expect(listToolsNoMatcherReaches(settings, checksByEvent)).toEqual([]);
-  });
-});
-
-describe('the repository settings', () => {
-  const settings: unknown = JSON.parse(
-    readFileSync(resolve(import.meta.dirname, '../../.claude/settings.json'), 'utf8'),
-  );
-
-  it('run every hook through the one TypeScript entry', () => {
-    expect(selectForeignHookCommands(settings)).toEqual([]);
-  });
-
-  it('let every tool a check reads reach it', () => {
-    expect(listToolsNoMatcherReaches(settings, CHECKS_BY_EVENT)).toEqual([]);
   });
 });

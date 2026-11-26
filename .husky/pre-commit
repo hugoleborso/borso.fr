@@ -309,7 +309,7 @@ run_check dated-records '^. docs/' scripts/check-dated-records-are-append-only.s
 # Every hook is the one TypeScript entry, anchored on $CLAUDE_PROJECT_DIR so a cd
 # cannot switch it off, and every tool a check reads reaches it.
 run_check hooks-are-typescript '^. (\.claude/settings\.json|scripts/hooks/)' \
-  pnpm exec vitest run scripts/hooks/settings-hooks.core.test.ts
+  node scripts/hooks/check-settings.ts
 
 # A NUL byte turns a source file into a binary as far as git is concerned.
 # Every staged file, and nothing else; ci.yml reads the whole tree.
