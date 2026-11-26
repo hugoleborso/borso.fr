@@ -86,12 +86,7 @@ Do **not** invoke when:
 
 ## Deliverable
 
-Two artefacts at `docs/features/<app>/<slug>/validation/`:
-
-- `visual-validation-<timestamp>.md` — the markdown verdict report, always committed.
-- `visual-validation-<timestamp>/` — present only when a FAIL row references a screenshot, or when the upload was denied. Everything else lives at `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/` and expires after 60 days.
-
-Do not gitignore either path. A FAIL report gets contested without its screenshot, which is why that half stays permanent; see the standard's *Where evidence lives*.
+`docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md`, always committed, and the evidence split as step 8 and the standard's *Where evidence lives* say.
 
 The skill's textual return to the user is one of:
 - `Verdict: PASS — see <report_path>` — mergeable.
