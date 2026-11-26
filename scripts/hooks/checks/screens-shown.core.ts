@@ -61,12 +61,11 @@ function readMessage(row: Row): Row {
 }
 
 function readBlocks(row: Row): readonly unknown[] {
-  const message = readMessage(row);
-  if (!('content' in message)) return [];
-  const content = message['content'];
-  if (typeof content === 'string' || isRecord(content)) return [];
-  if (!Array.isArray(content)) throw new NotATranscript();
-  return content;
+  const content = readMessage(row)['content'];
+  if (Array.isArray(content)) return content;
+  // Stryker disable next-line ArrayDeclaration: equivalent mutant, because the only caller skips every block that is not a dict, so a placeholder string block changes nothing.
+  if (content === undefined || typeof content === 'string' || isRecord(content)) return [];
+  throw new NotATranscript();
 }
 
 function isToolResult(block: unknown): boolean {
@@ -87,18 +86,18 @@ export function readTurn(transcript: string): Row[] {
     .filter((line) => line !== '')
     .map((line): unknown => JSON.parse(line));
   if (!rows.every(isRecord)) throw new NotATranscript();
-  const lastStart = rows.findLastIndex(isTurnStart);
-  return lastStart >= 0 ? rows.slice(lastStart + 1) : rows;
+  return rows.slice(rows.findLastIndex(isTurnStart) + 1);
 }
 
-function readText(block: Row): string {
-  const text = 'text' in block ? block['text'] : '';
-  if (typeof text !== 'string') throw new NotATranscript();
+function readText(block: Row): string | undefined {
+  const text = block['text'];
+  if (text !== undefined && typeof text !== 'string') throw new NotATranscript();
   return text;
 }
 
 export function shouldShowScreens(turn: readonly Row[]): boolean {
-  const textParts: string[] = [];
+  // Stryker disable next-line ArrayDeclaration: equivalent mutant, because the placeholder joins as a line of its own and holds no claim, quote, bracket or link, so no pattern below reads it.
+  const textParts: (string | undefined)[] = [];
   for (const row of turn) {
     if (row['type'] !== 'assistant' || isTruthy(row['isSidechain'])) continue;
     for (const block of readBlocks(row)) {
@@ -126,11 +125,10 @@ function hasPushedAScreenUnshown(inputs: string, world: HookWorld): boolean {
   if (!PUSH.test(inputs) || SCREENSHOTS_TAKEN.test(inputs)) return false;
   const moves = world
     .run('git', ['reflog', '--format=%H', '-n', '2', '@{upstream}'])
-    .stdout.split(/\s+/u)
+    .stdout.split(/\s/u)
     .filter((move) => move !== '');
-  const [newer, older] = moves;
-  if (newer === undefined || older === undefined || moves.length !== 2) return false;
-  return SITE_SOURCE.test(world.run('git', ['diff', '--name-only', older, newer]).stdout);
+  if (moves.length !== 2) return false;
+  return SITE_SOURCE.test(world.run('git', ['diff', '--name-only', ...moves.toReversed()]).stdout);
 }
 
 function hasLeftScreenshotsUnpublished(inputs: string, root: string, world: HookWorld): boolean {
@@ -143,6 +141,7 @@ function hasLeftScreenshotsUnpublished(inputs: string, root: string, world: Hook
 function judgeTurn(input: HookInput, world: HookWorld): Verdict {
   if (isTruthy(readStopHookActive(input)) || input.transcript_path === undefined) return PASS;
   const transcript = world.readText(input.transcript_path);
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, because readTurn(null) throws and run turns every throw into PASS; the guard stays for the type checker.
   if (transcript === null) return PASS;
   const turn = readTurn(transcript);
   if (shouldShowScreens(turn)) return { kind: 'block', reason: REASON };

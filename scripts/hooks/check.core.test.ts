@@ -13,6 +13,12 @@ describe('selectChecksFor', () => {
   it('drops a check whose matcher names another tool, and reads a missing tool as none', () => {
     expect(selectChecksFor([EVERY_TOOL, BASH_ONLY], undefined)).toEqual([EVERY_TOOL]);
   });
+
+  it('matches a missing tool as an empty name', () => {
+    const NO_TOOL: Check = { name: 'none', tools: /^$/u, run: () => PASS };
+
+    expect(selectChecksFor([NO_TOOL], undefined)).toEqual([NO_TOOL]);
+  });
 });
 
 describe('renderOutcome', () => {
@@ -58,8 +64,14 @@ describe('renderOutcome', () => {
         { kind: 'context', text: 'a' },
         PASS,
         { kind: 'context', text: 'b' },
-      ]).stdout,
-    ).toBe('{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"a\\n\\nb"}}');
+      ]),
+    ).toEqual({
+      exitCode: 0,
+      stdout:
+        '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"a\\n\\nb"}}',
+      stderr: '',
+      refusals: [],
+    });
   });
 
   it('hands back the rewritten input of a repairing check beside every note', () => {

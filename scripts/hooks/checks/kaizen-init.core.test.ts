@@ -28,11 +28,11 @@ describe('kaizenInit opens the friction log at session start, so it exists befor
     expect(calls).toEqual([['/repo/scripts/kaizen.sh', 'init']]);
   });
 
-  it('hands the line about a parked log to the session', () => {
+  it('hands the line about a parked log to the session, without the noise on stderr', () => {
     const parked = '[kaizen] 1 entries from session other were never archived\n';
 
     expect(
-      kaizenInit.run(INPUT, createWorld({ status: 0, stdout: parked, stderr: '' }).world),
+      kaizenInit.run(INPUT, createWorld({ status: 0, stdout: parked, stderr: 'noise\n' }).world),
     ).toEqual({ kind: 'context', text: parked });
   });
 

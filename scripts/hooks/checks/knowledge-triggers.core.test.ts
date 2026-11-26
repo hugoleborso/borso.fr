@@ -38,6 +38,20 @@ const ALSO_DAEMON = ['a', 'b', 'c'].map((name) => ({
   output: ['daemon'],
 }));
 const LOOKUP_TEXT = JSON.stringify({ entries: [BROKEN, BROWSER, INVARIANTS, UPLOADS] });
+const ANYTHING = {
+  ...NO_TRIGGERS,
+  path: 'docs/knowledge/anything.md',
+  summary: 'Matches any subject, the empty one included.',
+  commands: ['^'],
+  output: ['^'],
+};
+const ANY_PATH = { ...NO_TRIGGERS, path: 'docs/knowledge/any-path.md', summary: 'p', paths: ['.'] };
+const ALONE = {
+  ...NO_TRIGGERS,
+  path: 'docs/knowledge/alone.md',
+  summary: 'One stream alone.',
+  output: ['^\\nalone$', '^alone$'],
+};
 
 interface Call {
   readonly command: string;
@@ -49,6 +63,7 @@ interface FakeWorld {
   readonly world: HookWorld;
   readonly calls: Call[];
   readonly files: Map<string, string>;
+  readonly reads: unknown[];
 }
 
 const OK: CommandResult = { status: 0, stdout: '', stderr: '' };
@@ -64,10 +79,14 @@ function createWorld(
 ): FakeWorld {
   const files = new Map(Object.entries(options.files ?? { [LOOKUP]: LOOKUP_TEXT }));
   const calls: Call[] = [];
+  const reads: unknown[] = [];
   const world: HookWorld = {
     projectDirectory: '/repo',
     readEnvironment: (name) => options.environment?.[name],
-    readText: (path) => files.get(path) ?? null,
+    readText: (path) => {
+      reads.push(path);
+      return files.get(path) ?? null;
+    },
     run: (command, args, input) => {
       calls.push({ command, args, input });
       if (command === 'python3' && options.compiledLookup !== undefined) {
@@ -77,7 +96,11 @@ function createWorld(
       return options.results?.[command] ?? OK;
     },
   };
-  return { world, calls, files };
+  return { world, calls, files, reads };
+}
+
+function lookupOf(...entries: readonly object[]): FakeWorld {
+  return createWorld({ files: { [LOOKUP]: JSON.stringify({ entries }) } });
 }
 
 function bash(command: string, extra: Partial<HookInput> = {}): HookInput {
@@ -129,7 +152,14 @@ describe('toJavaScriptPattern reads a trigger as jq reads it', () => {
 describe('parseLookup', () => {
   it('reads every well-formed entry and defaults a missing trigger list to none', () => {
     const text = JSON.stringify({
-      entries: [{ path: 'p', summary: 's', paths: ['x', 3] }, { path: 1 }, 'junk'],
+      entries: [
+        null,
+        { path: 'p', summary: 's', paths: ['x', 3] },
+        { path: 1 },
+        { path: 'no summary' },
+        { summary: 'no path' },
+        'junk',
+      ],
     });
 
     expect(parseLookup(text)).toEqual([
@@ -140,6 +170,7 @@ describe('parseLookup', () => {
   it('reads a lookup that is not JSON, or has no entries, as empty', () => {
     expect(parseLookup('{')).toEqual([]);
     expect(parseLookup('{"entries":{}}')).toEqual([]);
+    expect(parseLookup(null)).toEqual([]);
   });
 });
 
@@ -150,6 +181,10 @@ describe('splitPathTokens splits as tr and jq -R did', () => {
 
   it('reads an empty command as no token', () => {
     expect(splitPathTokens('')).toEqual([]);
+  });
+
+  it('keeps a last token that is not empty', () => {
+    expect(splitPathTokens('a b')).toEqual(['a', 'b']);
   });
 });
 
@@ -188,6 +223,26 @@ describe('knowledgeTriggers, the moments it reads', () => {
     expect(contextOf(input)).toContain('invariants.md');
   });
 
+  it('skips a path that is false, as jq // did', () => {
+    const input: HookInput = {
+      hook_event_name: 'PreToolUse',
+      tool_name: 'NotebookEdit',
+      tool_input: { file_path: false, notebook_path: 'apps/x/INVARIANTS.md' },
+    };
+
+    expect(contextOf(input)).toContain('invariants.md');
+  });
+
+  it('reads a write only before it runs', () => {
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      tool_name: 'Write',
+      tool_input: { file_path: 'apps/x/INVARIANTS.md' },
+    };
+
+    expect(contextOf(input)).toBeNull();
+  });
+
   it('reads a path that is not a string as jq -r printed it', () => {
     const input: HookInput = {
       hook_event_name: 'PreToolUse',
@@ -218,11 +273,63 @@ describe('knowledgeTriggers, the moments it reads', () => {
     expect(contextOf({ hook_event_name: 'PreToolUse', tool_name: 'Bash' })).toBeNull();
   });
 
+  it('passes an empty subject before matching it, even against a pattern that matches anything', () => {
+    expect(
+      contextOf({ hook_event_name: 'PreToolUse', tool_name: 'Bash' }, lookupOf(ANYTHING)),
+    ).toBeNull();
+    expect(contextOf(bash('\n\n'), lookupOf(ANYTHING))).toBeNull();
+    expect(contextOf(printed({ stdout: 1 }), lookupOf(ANYTHING))).toBeNull();
+  });
+
+  it('reads a call with no response as printing null', () => {
+    expect(
+      contextOf({ hook_event_name: 'PostToolUse', tool_name: 'Bash' }, lookupOf(ANYTHING)),
+    ).toBe(renderKnowledgeContext([ANYTHING], [ANYTHING.path], 'output'));
+  });
+
+  it('matches a command only when what it runs, outside its strings, matches too', () => {
+    const quoted = {
+      ...NO_TRIGGERS,
+      path: 'docs/knowledge/q.md',
+      summary: 'q',
+      commands: ['a""b'],
+    };
+
+    expect(contextOf(bash('echo a"x"b'), lookupOf(quoted))).toBeNull();
+  });
+
+  it('reads the path tokens of a command only, never of what a call printed', () => {
+    expect(contextOf(printed('apps/a/INVARIANTS.md'))).toBeNull();
+    expect(contextOf(printed('hello'), lookupOf(ANY_PATH))).toBeNull();
+  });
+
+  it('drops every trailing line break of the subject, and only those', () => {
+    const entries = [
+      { ...NO_TRIGGERS, path: 'docs/knowledge/done.md', summary: 'd', output: ['^done$'] },
+      { ...NO_TRIGGERS, path: 'docs/knowledge/kept.md', summary: 'k', output: ['done\\n'] },
+      { ...NO_TRIGGERS, path: 'docs/knowledge/joined.md', summary: 'j', output: ['onetwo'] },
+    ];
+
+    expect(contextOf(printed('done\n\n'), lookupOf(...entries))).toBe(
+      renderKnowledgeContext(entries, ['docs/knowledge/done.md'], 'output'),
+    );
+    expect(contextOf(printed('one\ntwo\n'), lookupOf(...entries))).toBeNull();
+  });
+
   it('matches what a Bash call printed on either stream', () => {
     expect(contextOf(printed({ stdout: 'UPLOADS_BUCKET not set' }))).toContain(
       '[knowledge] What that call printed',
     );
     expect(contextOf(printed({ stderr: 'UPLOADS_BUCKET not set\n' }))).toContain('uploads.md');
+  });
+
+  it('reads a missing stream as empty', () => {
+    expect(contextOf(printed({ stderr: 'alone' }), lookupOf(ALONE))).toContain('alone.md');
+    expect(contextOf(printed({ stdout: 'alone' }), lookupOf(ALONE))).toContain('alone.md');
+  });
+
+  it('reads a response with neither stream as its JSON', () => {
+    expect(contextOf(printed({ text: 'UPLOADS_BUCKET not set' }))).toContain('uploads.md');
   });
 
   it('reads a response whose streams are not strings as nothing printed', () => {
@@ -251,6 +358,13 @@ describe('knowledgeTriggers, the moments it reads', () => {
     expect(contextOf({ ...mcp, hook_event_name: 'PostToolUseFailure' })).toBeNull();
   });
 
+  it('reads what no other tool printed, and no call without a tool name', () => {
+    const { tool_name: _toolName, ...nameless } = printed('UPLOADS_BUCKET not set');
+
+    expect(contextOf(printed('UPLOADS_BUCKET not set', { tool_name: 'Read' }))).toBeNull();
+    expect(contextOf(nameless)).toBeNull();
+  });
+
   it('skips output read from a markdown document, which only quotes the error', () => {
     const input = printed('UPLOADS_BUCKET not set', { tool_input: { command: 'cat a.md' } });
 
@@ -259,6 +373,22 @@ describe('knowledgeTriggers, the moments it reads', () => {
 
   it('reads a call with no tool input, and one with no response, as printing null', () => {
     expect(contextOf({ hook_event_name: 'PostToolUse', tool_name: 'Bash' })).toBeNull();
+  });
+
+  it('cuts an output only past forty thousand characters, joining its head and tail', () => {
+    const entries = [
+      { ...NO_TRIGGERS, path: 'docs/knowledge/whole.md', summary: 'w', output: ['XY', 'XMY'] },
+      { ...NO_TRIGGERS, path: 'docs/knowledge/cut.md', summary: 'c', output: ['X\\nY'] },
+    ];
+    const longest = `${'a'.repeat(19999)}XY${'b'.repeat(19999)}`;
+    const tooLong = `${'a'.repeat(19999)}XMY${'b'.repeat(19999)}`;
+
+    expect(contextOf(printed(longest), lookupOf(...entries))).toBe(
+      renderKnowledgeContext(entries, ['docs/knowledge/whole.md'], 'output'),
+    );
+    expect(contextOf(printed(tooLong), lookupOf(...entries))).toBe(
+      renderKnowledgeContext(entries, ['docs/knowledge/cut.md'], 'output'),
+    );
   });
 
   it('keeps the head and the tail of a very long output', () => {
@@ -284,7 +414,21 @@ describe('knowledgeTriggers, the lookup it reads', () => {
     const fake = createWorld({ files: {}, compiledLookup: LOOKUP_TEXT });
 
     expect(contextOf(bash('agent-browser open'), fake)).toContain('browser.md');
-    expect(fake.calls.map((call) => call.command)).toEqual(['test', 'python3']);
+    expect(fake.calls).toEqual([
+      { command: 'test', args: ['-d', 'docs/knowledge'], input: undefined },
+      {
+        command: 'python3',
+        args: ['scripts/knowledge-triggers.py', 'compile'],
+        input: undefined,
+      },
+    ]);
+  });
+
+  it('reads the lookup as it is when no entry is newer, without compiling it', () => {
+    const fake = createWorld({ compiledLookup: JSON.stringify({ entries: [UPLOADS] }) });
+
+    expect(contextOf(bash('agent-browser open'), fake)).toContain('browser.md');
+    expect(fake.calls.map((call) => call.command)).toEqual(['find']);
   });
 
   it('passes when there is no knowledge folder, or the compile fails', () => {
@@ -339,6 +483,30 @@ describe('knowledgeTriggers, once per session and agent', () => {
     expect(contextOf(input, fake)).toContain('browser.md');
     expect(fake.files.get('/t/knowledge-triggers-s1-abc.seen')).toBe('docs/knowledge/browser.md\n');
     expect(knowledgeTriggers.run(input, fake.world)).toBe(PASS);
+    expect(fake.files.get('/t/knowledge-triggers-s1-abc.seen')).toBe('docs/knowledge/browser.md\n');
+    expect(fake.calls.filter((call) => call.command !== 'find')).toEqual([
+      { command: 'touch', args: ['/t/knowledge-triggers-s1-abc.seen'], input: undefined },
+      {
+        command: 'tee',
+        args: ['-a', '/t/knowledge-triggers-s1-abc.seen'],
+        input: 'docs/knowledge/browser.md\n',
+      },
+      { command: 'touch', args: ['/t/knowledge-triggers-s1-abc.seen'], input: undefined },
+    ]);
+  });
+
+  it('names the file after the agent alone when the session id is empty', () => {
+    const fake = createWorld();
+    contextOf(bash('agent-browser', { session_id: '', agent_id: 'a' }), fake);
+
+    expect(fake.files.get('/tmp/knowledge-triggers-a.seen')).toBe('docs/knowledge/browser.md\n');
+  });
+
+  it('opens no memory file for a call that matches nothing', () => {
+    const fake = createWorld();
+    contextOf(bash('ls', { session_id: 's' }), fake);
+
+    expect(fake.calls.map((call) => call.command)).toEqual(['find']);
   });
 
   it('shows at most three entries and keeps the rest for the next match', () => {
@@ -364,5 +532,6 @@ describe('knowledgeTriggers, once per session and agent', () => {
     expect([...noSession.calls, ...cannotTouch.calls].map((call) => call.command)).not.toContain(
       'tee',
     );
+    expect(noSession.reads).toEqual([LOOKUP]);
   });
 });

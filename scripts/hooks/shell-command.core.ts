@@ -42,7 +42,7 @@ function selectHereDocEdit(hereDoc: HereDoc, command: string): TextEdit {
 }
 
 function selectQuotedEdit(start: number, end: number, command: string): TextEdit | null {
-  const isClosed = end - start >= 2 && command[end - 1] === command[start];
+  const isClosed = end - start > 1 && command[end - 1] === command[start];
   const body = command.slice(start + 1, end - 1);
   if (!isClosed || LONE_URL.test(body)) return null;
   return { start: start + 1, end: end - 1 };

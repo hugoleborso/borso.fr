@@ -70,6 +70,13 @@ describe('sessionStart', () => {
     });
   });
 
+  it('keeps a line break inside the browsers folder, and drops only the trailing ones', () => {
+    const { world, calls } = createWorld(INSTALLED, { CLAUDE_ENV_FILE: '/env' }, '/a\nb\n');
+    sessionStart.run(INPUT, world);
+
+    expect(calls.at(-1)?.input).toBe("export PLAYWRIGHT_BROWSERS_PATH=$'/a\\nb'\n");
+  });
+
   it('stops after a failed install and hands both streams to the session', () => {
     const failed: CommandResult = { status: 1, stdout: 'running\n', stderr: 'ERROR: no pnpm\n' };
     const { world, calls } = createWorld(failed, { CLAUDE_ENV_FILE: '/env' });

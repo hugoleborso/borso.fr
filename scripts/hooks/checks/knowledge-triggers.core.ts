@@ -84,9 +84,10 @@ function readEntry(value: unknown): KnowledgeEntry[] {
   ];
 }
 
-export function parseLookup(text: string): KnowledgeEntry[] {
+export function parseLookup(text: string | null): KnowledgeEntry[] {
   try {
-    const lookup: unknown = JSON.parse(text);
+    const lookup: unknown = JSON.parse(String(text));
+    // Stryker disable next-line ConditionalExpression,LogicalOperator: equivalent mutant, because a lookup without an entry list then throws inside this try, and the catch answers the same empty list.
     return isRecord(lookup) && Array.isArray(lookup['entries'])
       ? lookup['entries'].flatMap(readEntry)
       : [];
@@ -140,7 +141,6 @@ function readStreams(response: Readonly<Record<string, unknown>>): string | null
 }
 
 function readResponseText(response: unknown): string | null {
-  if (typeof response === 'string') return response;
   if (isRecord(response) && ('stdout' in response || 'stderr' in response)) {
     return readStreams(response);
   }
@@ -159,7 +159,7 @@ function isOutputTool(input: HookInput, tool: string): boolean {
 }
 
 function selectMoment(input: HookInput): Moment | null {
-  const tool = input.tool_name ?? '';
+  const tool = String(input.tool_name);
   const toolInput = input.tool_input ?? {};
   if (input.hook_event_name === 'PreToolUse' && WRITE_TOOLS.has(tool)) {
     return {
@@ -175,24 +175,17 @@ function selectMoment(input: HookInput): Moment | null {
   return { kind: 'output', subject: readOutput(input) };
 }
 
-function createMatcher(): (pattern: string, subject: string) => boolean {
-  const compiled = new Map<string, RegExp | null>();
-  return (pattern, subject) => {
-    if (!compiled.has(pattern)) {
-      try {
-        compiled.set(pattern, toJavaScriptPattern(pattern));
-      } catch {
-        compiled.set(pattern, null);
-      }
-    }
-    return compiled.get(pattern)?.test(subject) ?? false;
-  };
+function compileOrSkip(pattern: string): RegExp[] {
+  try {
+    return [toJavaScriptPattern(pattern)];
+  } catch {
+    return [];
+  }
 }
 
 export function splitPathTokens(command: string): string[] {
-  if (command === '') return [];
   const tokens = command.split(PATH_TOKEN_SEPARATORS);
-  return tokens.length > 1 && tokens.at(-1) === '' ? tokens.slice(0, -1) : tokens;
+  return tokens.at(-1) === '' ? tokens.slice(0, -1) : tokens;
 }
 
 function matchEntries(
@@ -200,12 +193,13 @@ function matchEntries(
   kind: TriggerKind,
   subject: string,
 ): string[] {
-  const matches = createMatcher();
   const isNamedByPattern = (entry: KnowledgeEntry): boolean =>
-    entry[kind].some((pattern) => matches(pattern, subject));
+    entry[kind].flatMap(compileOrSkip).some((pattern) => pattern.test(subject));
   const tokens = kind === 'commands' ? splitPathTokens(subject) : [];
   const isNamingAPath = (entry: KnowledgeEntry): boolean =>
-    entry.paths.some((pattern) => tokens.some((token) => matches(pattern, token)));
+    entry.paths
+      .flatMap(compileOrSkip)
+      .some((pattern) => tokens.some((token) => pattern.test(token)));
   const byPattern = entries.filter(isNamedByPattern).map((entry) => entry.path);
   const byPath = entries.filter(isNamingAPath).map((entry) => entry.path);
   return [...new Set([...byPattern, ...byPath])];
@@ -255,7 +249,6 @@ function runKnowledgeTriggers(input: HookInput, world: HookWorld): Verdict {
   const moment = selectMoment(input);
   if (moment === null) return PASS;
   const lookup = readFreshLookup(world);
-  if (lookup === null) return PASS;
   const subject = dropTrailingNewlines(moment.subject);
   if (subject === '') return PASS;
   const entries = parseLookup(lookup);

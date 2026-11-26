@@ -34,6 +34,16 @@ describe('sessionEnv gives the session shell a TMPDIR, so no $TMPDIR file lands 
     ]);
   });
 
+  it('exports the folder mktemp printed without its trailing line breaks only', () => {
+    const { world, calls } = createWorld(
+      { CLAUDE_ENV_FILE: '/env' },
+      { status: 0, stdout: '/tmp/a\nb\n\n', stderr: '' },
+    );
+    sessionEnv.run(INPUT, world);
+
+    expect(calls.at(-1)).toEqual(['tee', '-a', '/env', "export TMPDIR=$'/tmp/a\\nb'\n"]);
+  });
+
   it('does nothing without an env file, or when TMPDIR is already set', () => {
     const noFile = createWorld({ CLAUDE_ENV_FILE: '' });
     const alreadySet = createWorld({ CLAUDE_ENV_FILE: '/env', TMPDIR: '/t' });

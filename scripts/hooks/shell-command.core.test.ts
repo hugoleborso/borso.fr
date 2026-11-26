@@ -64,6 +64,18 @@ describe('stripStringBodies, so a regex over a command line misses what is only 
     expect(stripStringBodies('cat <<EOF\ngit push')).toBe('cat \n');
   });
 
+  it('keeps what follows a body that ends without a line break', () => {
+    expect(stripStringBodies('x=$(cat <<EOF\nhi\nEOF)\necho')).toBe('x=$(cat \nEOF)\necho');
+  });
+
+  it('drops both bodies of two heredocs on one line, the second starting where the first ends', () => {
+    expect(stripStringBodies('cat <<A <<B\na\nA\nb\nB\n')).toBe('cat  \n');
+  });
+
+  it('drops a quoted body written after a heredoc operator, before the heredoc body', () => {
+    expect(stripStringBodies('cat <<EOF "abc"\nbody\nEOF\n')).toBe('cat  ""\n');
+  });
+
   it('keeps a command that has no heredoc', () => {
     expect(stripStringBodies('git status --short\n')).toBe('git status --short\n');
   });
@@ -89,6 +101,7 @@ describe('stripStringBodies, so a regex over a command line misses what is only 
   it('keeps a quote that never closes as written', () => {
     expect(stripStringBodies('foo "unterminated')).toBe('foo "unterminated');
     expect(stripStringBodies('echo "a" "b')).toBe('echo "" "b');
+    expect(stripStringBodies('foo "')).toBe('foo "');
   });
 
   it('drops a quoted body once, even when it nests a substitution with quotes', () => {

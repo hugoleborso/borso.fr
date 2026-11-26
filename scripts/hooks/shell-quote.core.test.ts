@@ -25,5 +25,6 @@ describe("quoteForShell writes what bash's printf %q wrote", () => {
     );
     expect(quoteForShell('é x')).toBe("$'\\303\\251 x'");
     expect(quoteForShell('\u007f')).toBe("$'\\177'");
+    expect(quoteForShell('~é')).toBe("$'~\\303\\251'");
   });
 });

@@ -98,6 +98,12 @@ describe('readTurn keeps the rows after the last message the person typed', () =
     expect(rowsOf(...rows)).toHaveLength(3);
   });
 
+  it('reads a list that holds a tool result beside other blocks as no turn start', () => {
+    const mixed = user([text('b'), { type: 'tool_result', content: 'ok' }]);
+
+    expect(rowsOf(user('a'), said(text('one')), mixed, said(text('two')))).toHaveLength(3);
+  });
+
   it('keeps every row when no turn start is found, and splits any line break', () => {
     expect(readTurn(`${JSON.stringify(said())}\r\n\r${JSON.stringify(said())}\n  \n`)).toHaveLength(
       2,
@@ -120,6 +126,35 @@ describe('shouldShowScreens', () => {
 
   it('reads a claim only at word boundaries, letters with accents included', () => {
     expect(shouldShowScreens(rowsOf(said(text('épixel diff'))))).toBe(false);
+  });
+
+  it('reads a claim that ends right where a quoted span starts', () => {
+    expect(shouldShowScreens(rowsOf(said(text('screens match"x"'))))).toBe(true);
+  });
+
+  it('reads each text block as its own line, so no claim or quote spans two blocks', () => {
+    expect(shouldShowScreens(rowsOf(said(text('pixel'), text(' diff'))))).toBe(false);
+    expect(shouldShowScreens(rowsOf(said(text('"a'), text('screens match"'))))).toBe(true);
+  });
+
+  it('reads only the text blocks of what the assistant said', () => {
+    const tagged = { type: 'tool_result', text: 'Screens match.' };
+    const meta = user([text('Screens match.')], { isMeta: true });
+
+    expect(shouldShowScreens(rowsOf(said(tagged)))).toBe(false);
+    expect(shouldShowScreens(rowsOf(user('a'), meta))).toBe(false);
+  });
+
+  it('lets only a tool call that shows count as showing', () => {
+    const named = { type: 'server_tool_use', name: 'Artifact' };
+
+    expect(shouldShowScreens(rowsOf(said(named, text('Screens match.'))))).toBe(true);
+  });
+
+  it('skips a block that is not a dict, and a text block with no text, beside a claim', () => {
+    const rows = [said(null, { type: 'text' }, text('Screens match.')), { type: 'assistant' }];
+
+    expect(shouldShowScreens(rowsOf(...rows))).toBe(true);
   });
 
   it('lets a turn end that published an Artifact, sent a file or embedded an image', () => {
@@ -210,20 +245,25 @@ describe('screensShown', () => {
   });
 
   it('blocks a push whose last move upstream touched a site source', () => {
-    const options = { reflog: 'new\nold\n', diff: 'README.md\napps/pragma/site/src/a.tsx\n' };
+    const options = { reflog: 'new\n\nold\n', diff: 'README.md\napps/pragma/site/src/a.tsx\n' };
     const fake = createWorld({ ...options, transcript: lines(PUSHED) });
 
     expect(
       screensShown.run({ hook_event_name: 'Stop', transcript_path: TRANSCRIPT }, fake.world),
     ).toEqual({ kind: 'block', reason: PUSH_REASON });
-    expect(fake.runs.at(-1)).toEqual(['git', 'diff', '--name-only', 'old', 'new']);
+    expect(fake.runs.slice(1)).toEqual([
+      ['git', 'reflog', '--format=%H', '-n', '2', '@{upstream}'],
+      ['git', 'diff', '--name-only', 'old', 'new'],
+    ]);
   });
 
   it('lets a push end that touched no site source, or has not two upstream moves', () => {
+    const site = 'apps/a/site/src/x.ts';
+
     expect(judge(lines(PUSHED), { reflog: 'new old', diff: 'apps/a/api/src/x.ts' })).toBe(PASS);
-    expect(judge(lines(PUSHED), { reflog: '' })).toBe(PASS);
-    expect(judge(lines(PUSHED), { reflog: 'one' })).toBe(PASS);
-    expect(judge(lines(PUSHED), { reflog: 'a b c' })).toBe(PASS);
+    expect(judge(lines(PUSHED), { reflog: '', diff: site })).toBe(PASS);
+    expect(judge(lines(PUSHED), { reflog: 'one', diff: site })).toBe(PASS);
+    expect(judge(lines(PUSHED), { reflog: 'a b c', diff: site })).toBe(PASS);
   });
 
   it('lets a push end that posted screenshots, and a turn that pushed nothing', () => {
@@ -231,6 +271,12 @@ describe('screensShown', () => {
 
     expect(judge(lines(shown), { reflog: 'a b', diff: 'apps/a/site/src/x.ts' })).toBe(PASS);
     expect(judge(lines(said(text('done'))))).toBe(PASS);
+  });
+
+  it('looks for no pending screenshot in a turn that neither pushed nor opened a pull request', () => {
+    const found = '/repo/docs/features/a/b/validation/.pending-upload/r/s.png';
+
+    expect(judge(lines(said(text('done'))), { found })).toBe(PASS);
   });
 
   it('lets the turn end when the stop hook already blocked it once', () => {
@@ -244,11 +290,46 @@ describe('screensShown', () => {
     expect(judge(null)).toBe(PASS);
   });
 
+  it('reads no transcript when the input names none', () => {
+    const read: string[] = [];
+    const world: HookWorld = {
+      ...createWorld({}).world,
+      readText: (path) => {
+        read.push(path);
+        return lines(said(text('Screens match.')));
+      },
+    };
+
+    expect(screensShown.run({ hook_event_name: 'Stop' }, world)).toBe(PASS);
+    expect(read).toEqual([]);
+  });
+
   it('lets the turn end on any transcript it cannot parse, as the old hook did on any error', () => {
     expect(judge('{"type":')).toBe(PASS);
     expect(judge('[1]')).toBe(PASS);
     expect(judge(lines({ type: 'assistant', message: 'x' }))).toBe(PASS);
     expect(judge(lines({ type: 'assistant', message: { content: 3 } }))).toBe(PASS);
     expect(judge(lines(said(text(3))))).toBe(PASS);
+  });
+
+  it('lets the turn end on a malformed row even beside a claim', () => {
+    const claim = said(text('Screens match.'));
+
+    expect(judge(lines(claim))).toEqual({ kind: 'block', reason: REASON });
+    expect(judge(`${lines(claim)}\n1`)).toBe(PASS);
+    expect(judge(lines(user('a'), claim, { type: 'user', message: 'x' }))).toBe(PASS);
+    expect(judge(lines(claim, said(text(3))))).toBe(PASS);
+    expect(judge(lines(claim, { type: 'assistant', message: { content: 3 } }))).toBe(PASS);
+  });
+
+  it('reads an assistant message without content, or with a string or a dict, beside a claim', () => {
+    const claim = said(text('Screens match.'));
+    const block = { kind: 'block', reason: REASON };
+
+    expect(judge(lines(claim, { type: 'assistant', message: {} }))).toEqual(block);
+    expect(judge(lines(claim, { type: 'assistant', message: { content: 'x' } }))).toEqual(block);
+    expect(judge(lines(claim, { type: 'assistant', message: { content: { a: 1 } } }))).toEqual(
+      block,
+    );
   });
 });
