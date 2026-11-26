@@ -31,7 +31,7 @@ When the request does not say which, it is analysis.
 ## Before writing
 
 1. List the existing entries and find any this defect repeats:
-   `.claude/skills/dantotsu/scripts/list.sh` (add `--json`
+   `pnpm exec tsx .claude/skills/dantotsu/scripts/list.ts` (add `--json`
    for ndjson). Read every entry sharing two or more tags.
 2. Reproduce the defect, or gather its artefacts (logs, rows, traces,
    screenshots). Label every claim measured, inferred or guess, in the

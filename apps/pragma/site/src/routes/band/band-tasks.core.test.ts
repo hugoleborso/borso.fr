@@ -13,7 +13,6 @@ import {
   groupTasksByMember,
   type MemberShape,
   selectTasksOfSession,
-  selectTasksOfSong,
   type TaskShape,
   UNASSIGNED_COLUMN_COLOR,
   isOwnTasksView,
@@ -83,18 +82,6 @@ describe('groupTasksByMember', () => {
       memberColor: UNASSIGNED_COLUMN_COLOR,
       openCount: 1,
     });
-  });
-});
-
-describe('selectTasksOfSong', () => {
-  it('keeps the tasks pointing at that composition', () => {
-    const tasks = [
-      task({ id: 'a', songId: 'song-1' }),
-      task({ id: 'b', songId: 'song-2' }),
-      task({ id: 'c' }),
-    ];
-    expect(selectTasksOfSong(tasks, 'song-1').map((entry) => entry.id)).toEqual(['a']);
-    expect(selectTasksOfSong(tasks, 'song-3')).toEqual([]);
   });
 });
 

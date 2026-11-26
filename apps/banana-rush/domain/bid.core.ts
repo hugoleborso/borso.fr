@@ -10,7 +10,3 @@ export function refuseBid(amount: number): BidRefusal | null {
   if (amount > MAXIMUM_BID_BANANAS) return 'above-maximum';
   return null;
 }
-
-export function isBidAllowed(amount: number): boolean {
-  return refuseBid(amount) === null;
-}

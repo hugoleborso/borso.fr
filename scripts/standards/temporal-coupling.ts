@@ -12,29 +12,21 @@ import {
   type CouplingOptions,
   type GraphFile,
 } from './coupling.core';
+import {
+  COMMIT_HEADING_PATTERN,
+  REPOSITORY_ROOT,
+  SOURCE_PATH_PATTERN,
+  readCommitLog,
+  readCommitWindow,
+  readHeadRevision,
+} from './git-history.adapter';
 
-const REPOSITORY_ROOT = process.cwd();
 const REPORT_PATH = join(REPOSITORY_ROOT, 'docs', 'standards', 'temporal-coupling.md');
 const MODEL_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'architecture');
-const SOURCE_PATH_PATTERN = /^(apps|infra)\/.*\.(ts|tsx)$/;
-const DEFAULT_COMMIT_WINDOW = 400;
-const COMMIT_HEADING_PATTERN = /^[0-9a-f]{40}$/;
-const MAXIMUM_GIT_OUTPUT_BYTES = 64 * 1024 * 1024;
 const OPTIONS: CouplingOptions = { maximumCommitBreadth: 25, minimumSharedCommits: 4 };
 
-function readCommitWindow(): number {
-  const flagIndex = process.argv.indexOf('--commits');
-  if (flagIndex === -1) return DEFAULT_COMMIT_WINDOW;
-  const parsed = Number.parseInt(process.argv[flagIndex + 1] ?? '', 10);
-  return Number.isNaN(parsed) ? DEFAULT_COMMIT_WINDOW : parsed;
-}
-
 function readCommits(commitWindow: number): readonly Commit[] {
-  const log = execFileSync(
-    'git',
-    ['log', `-${String(commitWindow)}`, '--name-only', '--format=%H', '--no-merges'],
-    { cwd: REPOSITORY_ROOT, encoding: 'utf8', maxBuffer: MAXIMUM_GIT_OUTPUT_BYTES },
-  );
+  const log = readCommitLog(commitWindow);
   const commits: string[][] = [];
   let current: string[] = [];
   for (const line of log.split('\n')) {
@@ -73,13 +65,6 @@ function readGraphFiles(): readonly GraphFile[] {
       return [{ path: filePath, imports: imports.filter((each) => typeof each === 'string') }];
     });
   });
-}
-
-function readHeadRevision(): string {
-  return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
-    cwd: REPOSITORY_ROOT,
-    encoding: 'utf8',
-  }).trim();
 }
 
 const commitWindow = readCommitWindow();

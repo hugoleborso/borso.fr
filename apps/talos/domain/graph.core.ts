@@ -49,11 +49,6 @@ export function computeUpperBound(date: string): string {
   return bare;
 }
 
-export function isRelationTrueOn(relation: GraphRelation, date: string): boolean {
-  if (computeLowerBound(relation.since) > date) return false;
-  return relation.until === '' || computeUpperBound(relation.until) >= date;
-}
-
 export function hasRelationStartedBy(relation: GraphRelation, date: string): boolean {
   return computeLowerBound(relation.since) <= date;
 }

@@ -71,7 +71,6 @@ export interface LineStep extends MoveFacts {
 
 const PLIES_PER_FULL_MOVE = 2;
 const SQUARE_PAIR_LENGTH = 4;
-const OPPOSITE_SIDE: Record<Side, Side> = { white: 'black', black: 'white' };
 const SIDE_BY_TURN: Record<'w' | 'b', Side> = { w: 'white', b: 'black' };
 const MOVE_SEPARATOR = ' ';
 export const DECK_CARDS_PER_NAME_CARD = 4;
@@ -104,10 +103,6 @@ export function findIdea(deck: BuiltDeck, positionKey: string): Idea | null {
 export function isExpectedMove(expectedUci: string, uci: string): boolean {
   if (uci.length > SQUARE_PAIR_LENGTH) return uci === expectedUci;
   return uci.length === SQUARE_PAIR_LENGTH && expectedUci.startsWith(uci);
-}
-
-export function isBookMove(card: MoveCard, uci: string): boolean {
-  return isExpectedMove(card.bookMoveUci, uci);
 }
 
 export function formatMoveNotation(plyIndex: number, san: string): string {
@@ -304,8 +299,4 @@ export function readAnswerMoveFacts(reviewCard: ReviewCard): MoveFacts | null {
   const lastStep = reviewCard.steps.at(-1);
   if (lastStep === undefined) return null;
   return readMoveFacts(applyUciMove(new Chess(lastStep.fen), lastStep.moveUci));
-}
-
-export function selectOpponentSide(readerSide: Side): Side {
-  return OPPOSITE_SIDE[readerSide];
 }

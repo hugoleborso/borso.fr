@@ -167,15 +167,6 @@ export function replayPersonalLines(events: readonly DeckLineEvent[], now: Date)
   return lines;
 }
 
-export function findPersonalLine(
-  lines: readonly PersonalLine[],
-  side: Side,
-  movesUci: readonly string[],
-): PersonalLine | null {
-  const key = buildDeckLineKey(side, movesUci);
-  return lines.find((line) => line.key === key) ?? null;
-}
-
 function selectLineName(line: PersonalLine): string {
   return line.openingName ?? formatNumberedLine(line.movesSan);
 }

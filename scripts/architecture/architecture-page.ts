@@ -13,6 +13,7 @@ import type {
 } from './architecture-graph';
 import type { ArchitectureManifest } from './architecture-manifest';
 import type { DiffSummary } from './architecture-model-json';
+import { escapeHtml } from '../quality/quality-page.core';
 import { wrapInDocumentShell } from './document-shell.core';
 import {
   changeOfGraphs,
@@ -61,14 +62,6 @@ function renderDiffCounts(report: DiffReport | undefined): string {
     .join('');
   return `<ul class="diff-counts">${counted === '' ? '<li>no file added, renamed, edited or removed</li>' : counted}<li class="baseline">against <code>${escapeHtml(report.baseline)}</code></li></ul>
   ${report.notes.map((note) => `<p class="diff-note">${escapeHtml(note)}</p>`).join('')}`;
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 function toneOf(kind: string): string {

@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
+            "command": "NODE_COMPILE_CACHE=\"${TMPDIR:-/tmp}/borso-hook-compile-cache\" node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
+            "command": "NODE_COMPILE_CACHE=\"${TMPDIR:-/tmp}/borso-hook-compile-cache\" node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
+            "command": "NODE_COMPILE_CACHE=\"${TMPDIR:-/tmp}/borso-hook-compile-cache\" node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
+            "command": "NODE_COMPILE_CACHE=\"${TMPDIR:-/tmp}/borso-hook-compile-cache\" node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
+            "command": "NODE_COMPILE_CACHE=\"${TMPDIR:-/tmp}/borso-hook-compile-cache\" node \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/hook.ts"
           }
         ]
       }

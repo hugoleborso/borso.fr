@@ -1,7 +1,8 @@
 // @FollowsBlueprint utils-pure-module
 import type { Check, HookEvent } from './check.core.ts';
 
-export const HOOK_COMMAND = 'node "$CLAUDE_PROJECT_DIR"/scripts/hooks/hook.ts';
+export const HOOK_COMMAND =
+  'NODE_COMPILE_CACHE="${TMPDIR:-/tmp}/borso-hook-compile-cache" node "$CLAUDE_PROJECT_DIR"/scripts/hooks/hook.ts';
 
 interface SettingsHookCommand {
   readonly event: string;

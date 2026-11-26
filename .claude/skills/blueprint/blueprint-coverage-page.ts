@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../scripts/quality/quality-page.core.js';
+
 export interface CoverageBucket {
   readonly application: string;
   readonly layer: string;
@@ -26,14 +28,6 @@ function bandFor(percentage: number): string {
 
 function toPercentage(marked: number, total: number): number {
   return total === 0 ? PERCENTAGE_SCALE : Math.round((marked / total) * PERCENTAGE_SCALE);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 interface Cell {

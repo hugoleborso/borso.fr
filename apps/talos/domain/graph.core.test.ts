@@ -5,7 +5,6 @@ import {
   computeUpperBound,
   hasRelationStartedBy,
   isRelationClosedOn,
-  isRelationTrueOn,
   type GraphRelation,
 } from './graph.core';
 
@@ -36,12 +35,6 @@ const RELATIONS: GraphRelation[] = [
   },
 ];
 
-function neighboursOfOwner(date: string): string[] {
-  return RELATIONS.filter(
-    (relation) => relation.source === 'second-brain/moi' && isRelationTrueOn(relation, date),
-  ).map((relation) => relation.target);
-}
-
 describe('computeLowerBound and computeUpperBound, as scripts/graphe.py computes them', () => {
   it.each([
     ['2026', '2026-01-01', '2026-12-31'],
@@ -53,36 +46,6 @@ describe('computeLowerBound and computeUpperBound, as scripts/graphe.py computes
   ])('bounds %s between %s and %s', (date, lower, upper) => {
     expect(computeLowerBound(date)).toBe(lower);
     expect(computeUpperBound(date)).toBe(upper);
-  });
-});
-
-describe('isRelationTrueOn, ported from scripts/test_graphe.py', () => {
-  it('keeps only the relations true on a past date', () => {
-    expect(neighboursOfOwner('2026-03-15')).toEqual(['second-brain/projets/audit-initech']);
-  });
-
-  it('lets a partial end date cover the whole month', () => {
-    expect(neighboursOfOwner('2026-05-31')).toEqual(['second-brain/projets/audit-initech']);
-  });
-
-  it('drops a relation the day after its end', () => {
-    expect(neighboursOfOwner('2026-06-01')).toEqual([]);
-  });
-
-  it('keeps a relation from its first day', () => {
-    expect(neighboursOfOwner('2026-09-01')).toEqual([
-      'second-brain/projets/refonte-du-site-globex',
-    ]);
-  });
-
-  it('drops a relation the day before its start', () => {
-    expect(neighboursOfOwner('2025-12-31')).toEqual([]);
-  });
-
-  it('treats an approximate start as the start of its month', () => {
-    const client = RELATIONS[2]!;
-    expect(isRelationTrueOn(client, '2026-07-01')).toBe(true);
-    expect(isRelationTrueOn(client, '2026-06-30')).toBe(false);
   });
 });
 

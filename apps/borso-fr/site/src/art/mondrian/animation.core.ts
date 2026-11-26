@@ -4,12 +4,6 @@ export type AnimationMode = (typeof ANIMATION_MODES)[number];
 
 export const ANIMATION_MODE_LIST: readonly AnimationMode[] = ANIMATION_MODES;
 
-const ANIMATION_MODE_SET: ReadonlySet<string> = new Set(ANIMATION_MODES);
-
-export function isAnimationMode(value: string): value is AnimationMode {
-  return ANIMATION_MODE_SET.has(value);
-}
-
 export type CanvasTransform = 'none' | 'drift' | 'breathe';
 
 const TRANSFORM_BY_REDUCED_MOTION: Readonly<

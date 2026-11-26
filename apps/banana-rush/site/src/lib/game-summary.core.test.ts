@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { BroadcastGame } from './game-broadcast.core';
 import {
   buildRoundStories,
-  hasPaidATariff,
-  hasReceivedATariff,
-  haveAllPlayersBid,
   readStashDelta,
   selectStoryTone,
   sortByStashDescending,
@@ -24,8 +21,8 @@ function outcome(playerId: string, overrides: Record<string, number | boolean> =
   };
 }
 
-function player(id: string, nickname: string, stashBananas = 10, hasBid = false) {
-  return { id, nickname, avatar: 'chimp', stashBananas, isHost: false, hasBid };
+function player(id: string, nickname: string, stashBananas = 10) {
+  return { id, nickname, avatar: 'chimp', stashBananas, isHost: false, hasBid: false };
 }
 
 const game: BroadcastGame = {
@@ -81,54 +78,7 @@ describe('sortByStashDescending', () => {
   });
 });
 
-describe('haveAllPlayersBid', () => {
-  it('is true once every player has answered', () => {
-    const answered = [player('p1', 'Hugo', 10, true), player('p2', 'Zoe', 10, true)];
-    expect(haveAllPlayersBid({ ...game, players: answered })).toBe(true);
-  });
-
-  it('is false while one player has not answered', () => {
-    const half = [player('p1', 'Hugo', 10, true), player('p2', 'Zoe', 10, false)];
-    expect(haveAllPlayersBid({ ...game, players: half })).toBe(false);
-  });
-
-  it('is false at an empty table', () => {
-    expect(haveAllPlayersBid({ ...game, players: [] })).toBe(false);
-  });
-});
-
-describe('the tariff predicates and the row tone', () => {
-  const stories = buildRoundStories(game);
-  const story = stories[0] ?? {
-    playerId: 'p1',
-    nickname: 'Hugo',
-    avatar: 'chimp',
-    bid: 30,
-    stashBefore: 10,
-    stashAfter: 15,
-    crateWon: 10,
-    tariffPaid: 5,
-    tariffReceived: 0,
-    busted: false,
-    wonTheCrate: true,
-  };
-
-  it('knows a player who paid a tariff', () => {
-    expect(hasPaidATariff(story)).toBe(true);
-  });
-
-  it('knows a player who received nothing', () => {
-    expect(hasReceivedATariff({ ...story, tariffReceived: 0 })).toBe(false);
-  });
-
-  it('knows a player who received something', () => {
-    expect(hasReceivedATariff({ ...story, tariffReceived: 5 })).toBe(true);
-  });
-
-  it('knows a player who paid nothing', () => {
-    expect(hasPaidATariff({ ...story, tariffPaid: 0 })).toBe(false);
-  });
-
+describe('the row tone', () => {
   it('colours a busted row with the alarm tone, whoever it belongs to', () => {
     expect(selectStoryTone(true, false)).toBe('bg-coral-soft');
     expect(selectStoryTone(true, true)).toBe('bg-coral-soft');

@@ -40,7 +40,6 @@ ALLOWED_TEST_ONLY_PATTERN_REASON="test-only by design: asserts en/fr catalogue p
 
 declare -A ALLOWED_TEST_ONLY=(
   [apps/last-loop-lepin/api/src/runner/runner.core.ts]="deliberately dormant: validateRunnerDraft waits on the relay-format decision, see PR #46"
-  [apps/pragma/api/src/mastery/mastery.core.ts]="live counterpart: site/src/lib/mastery-aggregate.core.ts carries meanDefaultMasteryForSong on the front end"
   [apps/last-loop-lepin/site/src/lib/request-position.utils.ts]="never wired: the self-punch flow reads geolocation without it"
   [apps/pragma/api/src/mcp/tool-coverage.core.ts]="test-only by design: mcp/tool-coverage.test.ts asserts every mounted route has an MCP tool or a written exclusion"
 )

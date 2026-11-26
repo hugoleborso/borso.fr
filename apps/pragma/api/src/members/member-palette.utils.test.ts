@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MEMBER_PALETTE } from '@domain/member-palette.core';
-import { pickNextPaletteHex, pickPaletteHex } from './member-palette.utils';
+import { pickPaletteHex } from './member-palette.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('pickPaletteHex', () => {
@@ -25,19 +25,5 @@ describe('pickPaletteHex', () => {
   it('throws rather than returning a colourless member when the index is not a whole number', () => {
     expect(() => pickPaletteHex(1.5)).toThrow('pickPaletteHex expects a whole member index');
     expect(() => pickPaletteHex(Number.NaN)).toThrow('pickPaletteHex expects a whole member index');
-  });
-});
-
-describe('pickNextPaletteHex', () => {
-  it('picks the first slot for an empty member list', () => {
-    expect(pickNextPaletteHex(0)).toBe(MEMBER_PALETTE[0].hex);
-  });
-
-  it('picks the second slot when one member already exists', () => {
-    expect(pickNextPaletteHex(1)).toBe(MEMBER_PALETTE[1].hex);
-  });
-
-  it('wraps once five members are seated', () => {
-    expect(pickNextPaletteHex(5)).toBe(MEMBER_PALETTE[0].hex);
   });
 });

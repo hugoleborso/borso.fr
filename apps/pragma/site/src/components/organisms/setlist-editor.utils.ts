@@ -102,10 +102,6 @@ export function compactLineup(lineup: Lineup): Record<string, readonly string[]>
   return played;
 }
 
-interface NameableInstrument {
-  readonly name: string;
-}
-
 export function listOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<string>): string[] {
   const orphans: string[] = [];
   for (const memberId of Object.keys(lineup)) {
@@ -119,16 +115,6 @@ export function selectUnwarnedMemberIds(
   warnedMemberIds: ReadonlySet<string>,
 ): string[] {
   return orphanMemberIds.filter((memberId) => !warnedMemberIds.has(memberId));
-}
-
-export function instrumentNamesFor(
-  instrumentIds: readonly string[],
-  instrumentsById: Readonly<Record<string, NameableInstrument>>,
-): string[] {
-  return instrumentIds.flatMap((instrumentId) => {
-    const instrument = instrumentsById[instrumentId];
-    return instrument === undefined ? [] : [instrument.name];
-  });
 }
 
 export interface EntrySheetSongSource {

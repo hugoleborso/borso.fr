@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildItemRequest, toBatchedAnswer } from './read-batch.core';
+import { buildItemRequest } from './read-batch.core';
 
 const OUTER_URL = 'https://api.pragma.example/api/read-batch';
 
@@ -60,20 +60,5 @@ describe('a read taken out of a batch', () => {
 
     expect(outerHeaders.get('content-type')).toBe('application/json');
     expect(outerHeaders.has('x-ballot-token')).toBe(false);
-  });
-});
-
-describe('the answer of one read', () => {
-  it('keeps the status, the content type and the body, and nothing else', () => {
-    expect(toBatchedAnswer(204, null, '')).toStrictEqual({
-      status: 204,
-      contentType: null,
-      body: '',
-    });
-    expect(toBatchedAnswer(200, 'application/json', '{"songs":[]}')).toStrictEqual({
-      status: 200,
-      contentType: 'application/json',
-      body: '{"songs":[]}',
-    });
   });
 });

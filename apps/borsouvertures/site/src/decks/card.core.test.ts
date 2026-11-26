@@ -7,13 +7,11 @@ import {
   findOpponentMove,
   formatMoveNotation,
   formatNumberedLine,
-  isBookMove,
   isExpectedMove,
   listDeckCards,
   listLineSteps,
   listReviewCards,
   readAnswerMoveFacts,
-  selectOpponentSide,
 } from './card.core';
 import {
   buildExampleDeck,
@@ -108,24 +106,6 @@ describe('finding cards, decks and ideas', () => {
   });
 });
 
-describe('isBookMove', () => {
-  it('accepts the book move and refuses another', () => {
-    const card = getCard('e5');
-    expect(isBookMove(card, 'e7e5')).toBe(true);
-    expect(isBookMove(card, 'e7e6')).toBe(false);
-    expect(isBookMove(card, 'e7')).toBe(false);
-    expect(isBookMove(card, '')).toBe(false);
-  });
-
-  it('accepts a board drop on the two squares of a promotion, and only the book piece when one is named', () => {
-    const promotion = { ...getCard('e5'), bookMoveUci: 'f2g1n' };
-    expect(isBookMove(promotion, 'f2g1')).toBe(true);
-    expect(isBookMove(promotion, 'f2g1n')).toBe(true);
-    expect(isBookMove(promotion, 'f2g1q')).toBe(false);
-    expect(isBookMove(promotion, 'f2f1')).toBe(false);
-  });
-});
-
 describe('isExpectedMove', () => {
   it('accepts the expected move, its two squares, and nothing else', () => {
     expect(isExpectedMove('e5d3', 'e5d3')).toBe(true);
@@ -146,11 +126,6 @@ describe('notation', () => {
   it('numbers a whole line once per full move', () => {
     expect(formatNumberedLine(['d4', 'd5', 'c4', 'e5', 'dxe5'])).toBe('1. d4 d5 2. c4 e5 3. dxe5');
     expect(formatNumberedLine([])).toBe('');
-  });
-
-  it('names the other side', () => {
-    expect(selectOpponentSide('white')).toBe('black');
-    expect(selectOpponentSide('black')).toBe('white');
   });
 });
 

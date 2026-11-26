@@ -5,7 +5,6 @@ import {
   formatSetlistOrder,
   indexById,
   instrumentFamilyMap,
-  instrumentNamesFor,
   lineupOf,
   restrictToVerticalAxis,
   selectUnwarnedMemberIds,
@@ -93,18 +92,6 @@ describe('instrumentFamilyMap', () => {
       i1: { family: 'harmonic' },
       i2: { family: 'percussive' },
     });
-  });
-});
-
-describe('instrumentNamesFor', () => {
-  it('names every instrument it can resolve', () => {
-    expect(
-      instrumentNamesFor(['i1', 'i2'], { i1: { name: 'Guitar' }, i2: { name: 'Drums' } }),
-    ).toEqual(['Guitar', 'Drums']);
-  });
-
-  it('drops an instrument the map does not know', () => {
-    expect(instrumentNamesFor(['i1', 'gone'], { i1: { name: 'Guitar' } })).toEqual(['Guitar']);
   });
 });
 

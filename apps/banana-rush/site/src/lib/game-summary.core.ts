@@ -57,18 +57,6 @@ export function sortByStashDescending(players: BroadcastGame['players']): Broadc
   return players.toSorted((left, right) => right.stashBananas - left.stashBananas);
 }
 
-export function haveAllPlayersBid(game: BroadcastGame): boolean {
-  return game.players.length > 0 && game.players.every((player) => player.hasBid);
-}
-
-export function hasPaidATariff(story: RoundStory): boolean {
-  return story.tariffPaid > NOTHING;
-}
-
-export function hasReceivedATariff(story: RoundStory): boolean {
-  return story.tariffReceived > NOTHING;
-}
-
 export function readStashDelta(story: RoundStory): number {
   return story.stashAfter - story.stashBefore;
 }

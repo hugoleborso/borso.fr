@@ -2,7 +2,6 @@ import { matchesGlob } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   listActiveRules,
-  readConfiguredRuleName,
   readLiteralSuffix,
   readRulePlugin,
   skipImpossibleMatches,
@@ -106,44 +105,6 @@ describe('readRulePlugin', () => {
 
   it('reads a bare name as a core rule', () => {
     expect(readRulePlugin('no-magic-numbers')).toBe('eslint');
-  });
-});
-
-describe('readConfiguredRuleName', () => {
-  it('turns a plugin diagnostic code into the name the configuration uses', () => {
-    expect(readConfiguredRuleName('typescript(no-explicit-any)')).toBe(
-      'typescript/no-explicit-any',
-    );
-  });
-
-  it('keeps a scoped plugin name whole', () => {
-    expect(readConfiguredRuleName('@eslint-community/eslint-comments(require-description)')).toBe(
-      '@eslint-community/eslint-comments/require-description',
-    );
-  });
-
-  it('reads a React hooks rule under the plugin name the configuration uses', () => {
-    expect(readConfiguredRuleName('react-hooks(exhaustive-deps)')).toBe('react/exhaustive-deps');
-  });
-
-  it('reads a core rule without its prefix', () => {
-    expect(readConfiguredRuleName('eslint(no-magic-numbers)')).toBe('no-magic-numbers');
-  });
-
-  it('reads a plugin whose name is a single letter', () => {
-    expect(readConfiguredRuleName('x(rule)')).toBe('x/rule');
-  });
-
-  it('reads no rule from a code that is not in the plugin(rule) shape', () => {
-    expect(readConfiguredRuleName('parse error')).toBeNull();
-  });
-
-  it('reads no rule from a code with no plugin before the parenthesis', () => {
-    expect(readConfiguredRuleName('(no-magic-numbers)')).toBeNull();
-  });
-
-  it('reads no rule from a code whose parenthesis never closes', () => {
-    expect(readConfiguredRuleName('typescript(no-explicit-any')).toBeNull();
   });
 });
 

@@ -112,9 +112,6 @@
   "apps/banana-rush/domain/game-setup.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/banana-rush/domain/game-setup.core.ts": {
-    "refuseGameSetup": "domain-shared-selection"
-  },
   "apps/banana-rush/domain/join-code.core.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -125,7 +122,7 @@
     "describe": "test-pure-unit"
   },
   "apps/banana-rush/domain/monkey.core.ts": {
-    "isMonkeyAvatar": "domain-shared-selection"
+    "selectFreeAvatars": "domain-shared-selection"
   },
   "apps/banana-rush/domain/round-clock.core.test.ts": {
     "describe": "test-pure-unit"
@@ -2384,9 +2381,7 @@
   },
   "apps/pragma/site/src/components/atoms/energy-bar.utils.ts": {
     "buildEnergyLevels": "utils-pure-module",
-    "isDragIntent": "utils-pure-module",
-    "levelFromKey": "utils-pure-module",
-    "levelFromPointerRatio": "utils-pure-module"
+    "levelFromKey": "utils-pure-module"
   },
   "apps/pragma/site/src/components/atoms/energy-meter.utils.ts": {
     "barHeightRatio": "utils-pure-module",
@@ -2663,7 +2658,6 @@
   "apps/pragma/site/src/components/molecules/setlist-entry-energy.core.ts": {
     "isEnergyStored": "core-appearance",
     "resolveEnergyLevel": "core-projection",
-    "selectEnergyAppearance": "core-appearance",
     "selectEnergyMeterAppearance": "core-appearance"
   },
   "apps/pragma/site/src/components/molecules/sheet-swipe.hook.ts": {
@@ -3270,12 +3264,6 @@
   },
   "apps/pragma/site/src/lib/member-color.utils.test.ts": {
     "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/lib/next-concert.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/lib/next-concert.core.ts": {
-    "selectNextConcert": "core-view-projection"
   },
   "apps/pragma/site/src/lib/object-upload.adapter.ts": {
     "sendFileToPresignedUrl": "adapter-direct-upload"

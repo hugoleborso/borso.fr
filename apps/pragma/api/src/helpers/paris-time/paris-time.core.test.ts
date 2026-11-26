@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
 import {
   addCalendarDays,
   isKnownTimeZone,
   zonedWallTimeToInstant,
   parisCalendarDayOf,
   parisInstantAt,
-  parisOffsetMinutes,
+  zoneOffsetMinutes,
   parisWallTimeOf,
   parisWallTimeToInstant,
   weekdayOf,
@@ -14,19 +15,23 @@ import {
 const WINTER_OFFSET_MINUTES = 60;
 const SUMMER_OFFSET_MINUTES = 120;
 
-describe('parisOffsetMinutes', () => {
-  it('is one hour in winter and two in summer', () => {
-    expect(parisOffsetMinutes(new Date('2026-01-15T12:00:00Z'))).toBe(WINTER_OFFSET_MINUTES);
-    expect(parisOffsetMinutes(new Date('2026-07-15T12:00:00Z'))).toBe(SUMMER_OFFSET_MINUTES);
+function offsetInParis(isoInstant: string): number {
+  return zoneOffsetMinutes(new Date(isoInstant), BAND_TIME_ZONE);
+}
+
+describe('zoneOffsetMinutes', () => {
+  it('is one hour in winter and two in summer in Paris', () => {
+    expect(offsetInParis('2026-01-15T12:00:00Z')).toBe(WINTER_OFFSET_MINUTES);
+    expect(offsetInParis('2026-07-15T12:00:00Z')).toBe(SUMMER_OFFSET_MINUTES);
   });
 
   it('ignores the seconds of the instant', () => {
-    expect(parisOffsetMinutes(new Date('2026-07-15T12:00:42.500Z'))).toBe(SUMMER_OFFSET_MINUTES);
+    expect(offsetInParis('2026-07-15T12:00:42.500Z')).toBe(SUMMER_OFFSET_MINUTES);
   });
 
   it('switches at 01:00 UTC on the last Sunday of October', () => {
-    expect(parisOffsetMinutes(new Date('2026-10-25T00:59:00Z'))).toBe(SUMMER_OFFSET_MINUTES);
-    expect(parisOffsetMinutes(new Date('2026-10-25T01:00:00Z'))).toBe(WINTER_OFFSET_MINUTES);
+    expect(offsetInParis('2026-10-25T00:59:00Z')).toBe(SUMMER_OFFSET_MINUTES);
+    expect(offsetInParis('2026-10-25T01:00:00Z')).toBe(WINTER_OFFSET_MINUTES);
   });
 });
 

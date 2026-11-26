@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   judgeRelease,
-  countSongsNewSinceLastScore,
   isSongNewSinceLastScore,
   readGivenPoints,
   readIntentPoints,
@@ -16,7 +15,6 @@ import {
   hashDeckKey,
   isDeckMode,
   judgeStep,
-  selectOtherVoteMode,
   selectScoredSongs,
   selectShuffledDeck,
   selectSeenShare,
@@ -178,16 +176,6 @@ describe('a song that arrived after this member went through the deck', () => {
   it('is not new to a member who has scored nothing yet', () => {
     expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: LATER }, null, 0)).toBe(false);
   });
-
-  it('counts the ones worth telling the member about', () => {
-    const songs = [
-      { id: 'song-a', createdAt: LATER },
-      { id: 'song-b', createdAt: LATER },
-      { id: 'song-c', createdAt: EARLIER },
-    ];
-    expect(countSongsNewSinceLastScore(songs, EARLIER, { 'song-b': 1 })).toBe(1);
-    expect(countSongsNewSinceLastScore(songs, null, {})).toBe(0);
-  });
 });
 
 describe('a budget the member has overspent', () => {
@@ -311,11 +299,7 @@ describe('a step on a song in the catalogue', () => {
     expect(canStepDown(0)).toBe(false);
   });
 
-  it('names both modes, and which one is the deck', () => {
-    expect(selectOtherVoteMode('list')).toBe('deck');
-    expect(selectOtherVoteMode('deck')).toBe('list');
-    expect(isDeckMode('deck')).toBe(true);
-    expect(isDeckMode('list')).toBe(false);
+  it('names which mode is the deck', () => {
     expect(isDeckMode('deck')).toBe(true);
     expect(isDeckMode('list')).toBe(false);
   });

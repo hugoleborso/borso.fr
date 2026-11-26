@@ -11,7 +11,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   filled in on the account page and used to sign the outreach message.
 - A member created without a colour is given palette slot N of five
   (coral, teal, mustard, plum, sage), wrapping round
-  (`pickNextPaletteHex`). The five values live in
+  (`pickPaletteHex`). The five values live in
   `domain/member-palette.core.ts`, which the API and the member form both
   read. A stored colour is never rewritten: it is the member's identity on
   every lineup.

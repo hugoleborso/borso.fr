@@ -30,7 +30,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/borsouvertur
   drop names no promotion piece, so a move of four characters matches a
   promotion on its two squares.
 
-Held by: `site/src/decks/card.core.test.ts` › accepts a board drop on the two squares of a promotion, and only the book piece when one is named
+Held by: `site/src/decks/card.core.test.ts` › accepts the expected move, its two squares, and nothing else
 
 ## Idea
 

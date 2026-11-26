@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isSubmitDisabled, isSubmitDisabledWhilePending } from './form-submit.utils';
+import { isSubmitDisabled } from './form-submit.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('isSubmitDisabled', () => {
@@ -21,19 +21,5 @@ describe('isSubmitDisabled', () => {
 
   it('treats an absent submitting flag as not blocking', () => {
     expect(isSubmitDisabled(true, undefined)).toBe(false);
-  });
-});
-
-describe('isSubmitDisabledWhilePending', () => {
-  it('is enabled when the form is ready and no mutation is in flight', () => {
-    expect(isSubmitDisabledWhilePending(true, false, false)).toBe(false);
-  });
-
-  it('is disabled while a mutation is in flight', () => {
-    expect(isSubmitDisabledWhilePending(true, false, true)).toBe(true);
-  });
-
-  it('is disabled while the form itself is not ready', () => {
-    expect(isSubmitDisabledWhilePending(false, false, false)).toBe(true);
   });
 });

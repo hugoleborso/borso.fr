@@ -3,7 +3,6 @@ import {
   ENERGY_DEFAULT,
   isEnergyStored,
   resolveEnergyLevel,
-  selectEnergyAppearance,
   selectEnergyMeterAppearance,
 } from './setlist-entry-energy.core';
 
@@ -34,23 +33,6 @@ describe('resolveEnergyLevel', () => {
 
   it('falls back to the midpoint when neither is set', () => {
     expect(resolveEnergyLevel({ entryEnergy: null, songEnergy: null })).toBe(ENERGY_DEFAULT);
-  });
-});
-
-// @FollowsBlueprint test-pure-unit
-describe('selectEnergyAppearance', () => {
-  it('draws a stored energy in the accent palette', () => {
-    expect(selectEnergyAppearance(true)).toEqual({
-      filledClassName: 'bg-accent border-accent text-on-accent',
-      emptyClassName: 'bg-sunk border-rule-strong text-ink-soft',
-    });
-  });
-
-  it('mutes the filled segments while nothing is stored', () => {
-    expect(selectEnergyAppearance(false)).toEqual({
-      filledClassName: 'bg-ink-soft border-ink-soft text-leaf',
-      emptyClassName: 'bg-sunk border-rule-strong text-ink-soft',
-    });
   });
 });
 

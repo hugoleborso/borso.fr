@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isBidAllowed, MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS, refuseBid } from './bid.core';
+import { MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS, refuseBid } from './bid.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('refuseBid', () => {
@@ -21,15 +21,5 @@ describe('refuseBid', () => {
 
   it('refuses a bid above the maximum', () => {
     expect(refuseBid(MAXIMUM_BID_BANANAS + 1)).toBe('above-maximum');
-  });
-});
-
-describe('isBidAllowed', () => {
-  it('is true for a legal bid', () => {
-    expect(isBidAllowed(42)).toBe(true);
-  });
-
-  it('is false for an illegal bid', () => {
-    expect(isBidAllowed(0)).toBe(false);
   });
 });
