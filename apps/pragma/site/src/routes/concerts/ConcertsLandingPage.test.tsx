@@ -1,8 +1,8 @@
 import { dehydrate, hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import {
   createIsolatedQueryClient,
@@ -95,10 +95,12 @@ async function signUp(email = 'lea@example.com'): Promise<void> {
 describe('the public concert sign-up page', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: false, media: query }));
   });
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
     for (const stub of activeStubs.splice(0)) stub.restore();
   });
 
@@ -342,4 +344,25 @@ describe('the public concert sign-up page', () => {
     });
     expect(fetchStub.calls.filter(isRegistrationPost)).toEqual([]);
   });
+
+  it('sends the installed app to the members area, where it opened before the ERP moved to /app', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: true, media: query }));
+    renderInstalledAppAtHome();
+    expect(await screen.findByText('members area')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
+  });
 });
+
+function renderInstalledAppAtHome(): void {
+  activeStubs.push(stubFetch(() => Promise.resolve(jsonResponse(UPCOMING))));
+  render(
+    <QueryClientProvider client={createIsolatedQueryClient()}>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<ConcertsLandingPage />} />
+          <Route path="/app" element={<p>members area</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
