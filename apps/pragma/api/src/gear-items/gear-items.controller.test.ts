@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import {
+  holdWritesToTable,
   type LockHold,
   runSecondWhileFirstWaitsOnHold,
   testDatabase,
@@ -174,6 +175,26 @@ describe('gear items controller (back-e2e)', () => {
     expect(first.status).toBe(201);
     expect((await readJson(retried, itemEnvelope)).item.id).toBe(body.id);
     expect((await readChecklist(app, cookieHeader, concertId)).items).toHaveLength(1);
+  });
+
+  it('lands two simultaneous creates with one id on one row', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const concertId = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);
+    const body = { id: randomUUID(), label: 'Sono' };
+
+    const [first, second] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('gear_item'),
+      async () => await addItem(app, cookieHeader, concertId, body),
+      async () => await addItem(app, cookieHeader, concertId, body),
+    );
+
+    expect([first.status, second.status]).toEqual([201, 201]);
+    expect((await readJson(second, itemEnvelope)).item.id).toBe(body.id);
+    const stored = await testDatabase()
+      .select({ id: gearItemTable.id })
+      .from(gearItemTable)
+      .where(eq(gearItemTable.id, body.id));
+    expect(stored).toHaveLength(1);
   });
 
   it('refuses a create whose id already names an item of another concert', async () => {
@@ -360,6 +381,35 @@ describe('gear items controller (back-e2e)', () => {
     expect((await readChecklist(app, cookieHeader, later)).items).toHaveLength(1);
   });
 
+  it('copies once when two copies into one empty concert run at the same time', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const earlier = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);
+    const later = await createConcert(app, cookieHeader, LATER_CONCERT_DATE);
+    await addItem(app, cookieHeader, earlier, { label: 'Sono' });
+    await addItem(app, cookieHeader, earlier, { label: 'Multiprise' });
+    const copyInto = async (): Promise<Response> =>
+      await jsonRequest(app, `/api/gear-items/${later}/copy`, {
+        method: 'POST',
+        body: { fromSessionId: earlier },
+        cookieHeader,
+      });
+
+    const [first, second] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('gear_item'),
+      copyInto,
+      copyInto,
+    );
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(409);
+    expect(await readJson(second, errorEnvelope)).toEqual({ error: 'gear-not-empty' });
+    const copied = await testDatabase()
+      .select({ id: gearItemTable.id })
+      .from(gearItemTable)
+      .where(eq(gearItemTable.sessionId, later));
+    expect(copied).toHaveLength(2);
+  });
+
   it('answers no copy source when no earlier concert holds items', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const earlier = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);
@@ -434,5 +484,25 @@ describe('gear items controller (back-e2e)', () => {
     expect(removal.status).toBe(200);
     const stored = await testDatabase().select({ label: gearItemTable.label }).from(gearItemTable);
     expect(stored).toEqual([{ label: 'Pédalier' }]);
+  });
+
+  it('leaves no gear of a concert deleted while an item was being added', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const concertId = await createConcert(app, cookieHeader, EARLIER_CONCERT_DATE);
+
+    const [creation, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('gear_item'),
+      async () => await addItem(app, cookieHeader, concertId, { label: 'Sono' }),
+      async () =>
+        await jsonRequest(app, `/api/sessions/${concertId}`, { method: 'DELETE', cookieHeader }),
+    );
+
+    expect(creation.status).toBe(201);
+    expect(removal.status).toBe(200);
+    const stored = await testDatabase()
+      .select({ id: gearItemTable.id })
+      .from(gearItemTable)
+      .where(eq(gearItemTable.sessionId, concertId));
+    expect(stored).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 # Fix triage, technical validation round 1
 
-Both blocking findings are fixed. Five of the eight non-blocking findings are fixed too. The three left are dismissed below, each with its reason.
+Both blocking findings are fixed. Seven of the eight non-blocking findings are fixed too. B12 is dismissed for this round below, with its reason.
 
 ## Blocking
 
@@ -18,4 +18,4 @@ Both blocking findings are fixed. Five of the eight non-blocking findings are fi
 | B13, `getGearChecklist` never throws | Fixed | It is renamed `readGearChecklist` in the service and its controller. |
 | B14, `GearToolUpdate` restates `GearItemUpdateInput` | Fixed | The interface is deleted. `buildGearToolUpdate` returns `GearItemUpdateInput` through `import type`. |
 | E02, a create that reuses another concert's id answers that concert's item | Fixed | `createGearItem` answers `id-taken` when the row read back belongs to another concert, and the controller maps it to `409 {"error":"id-taken"}`. The back-e2e test "refuses a create whose id already names an item of another concert" holds it, and INVARIANTS names that test. |
-| E03, E05, E07, concurrent proofs | Dismissed | Each rule is held by a key or a row claim that the report itself grades PASS (E01, E04, and the claim behind E07). E06 already proves the same claim-then-write shape concurrently with `runSecondWhileFirstWaitsOnHold`. Three more tests would prove the same mechanism on the same row lock three more times. |
+| E03, E05, E07, concurrent proofs | Fixed: concurrent tests written | Round 2 (R06) showed the first dismissal was false. E06 holds a gear item row and races a member claim, so it never exercises the concert claim or the item primary key. Three back-e2e tests now race the two requests with `runSecondWhileFirstWaitsOnHold(holdWritesToTable('gear_item'), …)`. Each request has passed its concert claim before it blocks on the held table. "lands two simultaneous creates with one id on one row" holds `.onConflictDoNothing()` in `insertGearItemOnceWithin` (E03). Without it the second create answers 500 (measured). "copies once when two copies into one empty concert run at the same time" holds `didClaimConcertWithin(executor, targetSessionId)` in `copyGearItems` (E05). Replaced by a plain read, both copies answer 201 (measured). "leaves no gear of a concert deleted while an item was being added" holds `didClaimConcertWithin(executor, sessionId)` in `createGearItem` and the `deleteGearOfSessionBeingDeleted` step of `deleteSessionWithCascade` (E07). Without either guard, one `gear_item` row is left for the deleted concert (measured). |
