@@ -4,7 +4,7 @@
 
 - [x] **Client / business**: the operator asked for a gear check-list per concert on 2026-11-25, and the free-text gear field shows the need (below).
 - [x] **Product**: who holds an item (member, venue, nobody) answered on 2026-11-25; statuses (revised 2026-11-25: planned a week ahead, nothing tracked on the day), owner, replacement of the free-text field and reuse of the last concert answered on 2026-11-25.
-- [x] **Tech-lead**: the session took this pass after the operator asked for the pipeline on 2026-11-25: one new table and module on the `api/src/tasks/` precedent, a new written root for live invalidation, no ADR trigger, `session.gear` dropped.
+- [x] **Tech-lead**: the session took this pass after the operator asked for the pipeline on 2026-11-25: one new table and module on the `api/src/tasks/` precedent, a new written root for live invalidation, no ADR trigger, `session.gear` emptied and unused (DSQL refuses `DROP COLUMN`, docs/knowledge/dsql-postgres-compat-gaps.md §10).
 - [x] **Developer**: the session took this pass too: the status order and the holder rule are pure functions in `domain/`, every use case below is a controller test or a visual-validation row.
 - [x] **Designer**: operator picked A + C on 2026-11-25, sections by status with C's filter chips and "Moi" toggle.
 
@@ -63,7 +63,7 @@ Error cases:
 | Where the list lives | dedicated page · inside Details | Dedicated page opened from the concert (2026-11-25) |
 | Who creates items | page only · page and MCP tools | Page and MCP tools (2026-11-25) |
 | Page layout | A · B · C | A + C: status sections plus C's filters and "Moi" (operator, 2026-11-25) |
-| What happens to the existing `session.gear` text | migrate into items · leave it · remove it | Remove it all: the field, its uses and the column; Akanaboum's text is not migrated (operator, 2026-11-25, replacing "leave it") |
+| What happens to the existing `session.gear` text | migrate into items · leave it · remove it | Remove it all: the field and its uses; the column is emptied because DSQL refuses `DROP COLUMN`; Akanaboum's text is erased, not migrated (operator, 2026-11-25 and 2026-11-26) |
 
 Out of scope: tracking gear on the day (loaded, installed), a band-wide gear inventory, gear on practices, reminders or notifications before a concert, item quantities.
 
@@ -98,7 +98,7 @@ CREATE TABLE gear_item (
   status text NOT NULL,
   position integer NOT NULL
 );
-ALTER TABLE session DROP COLUMN gear; -- no data migration (operator, 2026-11-25)
+UPDATE session SET gear = NULL WHERE gear IS NOT NULL; -- DSQL refuses DROP COLUMN; the text is erased (operator, 2026-11-26)
 ```
 
 ### Records
