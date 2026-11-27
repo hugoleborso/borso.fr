@@ -3,6 +3,7 @@ import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth, resetAllRateLimits, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember, readCredentialOfMember } from '../auth/credentials.service';
 import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
+import { patchAnnouncement } from '../concert-registrations/concert-registrations.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import type { WriteActor } from '../notifications/notifications.service';
@@ -10,6 +11,11 @@ import { createSession } from '../sessions/sessions.service';
 import { appendEntry } from '../setlists/setlist-entry.service';
 import { createSetlist } from '../setlists/setlists.service';
 import { insertSongWithoutNotice } from '../songs/songs.service';
+import {
+  MILLISECONDS_PER_DAY,
+  MILLISECONDS_PER_SECOND,
+  SECONDS_PER_MINUTE,
+} from '../oauth/oauth.core';
 import { hashToken, selectTokenExpiries } from '../oauth/token.core';
 import { createTask } from '../tasks/tasks.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
@@ -24,7 +30,6 @@ import {
 import { countSavedFeeds, listFixtureFeedAttachments } from './calendar-feed-fixtures.core';
 
 export { answerFixtureFeedRequest } from './calendar-feed-fixtures.core';
-export { seedTodayPractice } from './test-seed-edge-cases.service';
 export { isPracticeTodayRequested } from './test-seed.core';
 import { seedPresences } from './test-seed-presences.service';
 import { seedFormerMemberInspiration } from './test-seed-edge-cases.service';
@@ -45,14 +50,9 @@ import {
 } from './test-seed.repository';
 
 const CONCERT_DAYS_FROM_NOW = 7;
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_HOUR = 60;
-const SECONDS_PER_MINUTE = 60;
-const MILLISECONDS_PER_SECOND = 1_000;
-const MILLISECONDS_PER_DAY =
-  HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 const CONCERT_CAPACITY = 120;
 const CONCERT_VENUE = 'Le Petit Bain';
+const CONCERT_PUBLIC_MESSAGE = 'Portes à 20 h, premier morceau à 20 h 30.';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
 const SEED_SETLIST_NAME = 'Set principal';
 const SEED_TOKEN_BYTES = 32;
@@ -214,6 +214,7 @@ async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor)
   const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id }, actor);
   if (created.kind === 'session-not-found')
     throw new Error('seeded concert vanished before its setlist was written');
+  await patchAnnouncement({ sessionId: concert.id, message: CONCERT_PUBLIC_MESSAGE, now });
   for (const [index, songId] of songIds.entries()) {
     const detail = SEED_SONGS[index]?.entry ?? BLANK_ENTRY_DETAIL;
     await appendEntry(

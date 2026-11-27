@@ -65,7 +65,10 @@ The report is always committed. Its screenshots split by verdict, per
   publishes it to the previews CDN, which expires it after 60 days. The report cites it by its
   published URL, never by a local path.
 
-**When the upload is denied, commit everything.** It needs `s3:PutObject` on the screenshots
+`.gitignore` names only `.pending-upload/`, never the validation folder, because the FAIL set
+lands there. Which files reach git is decided by the skill's step 7, not by an ignore pattern.
+
+**When the upload is denied, commit everything.** A denial is not a failed validation. It needs `s3:PutObject` on the screenshots
 prefix, which [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) grants by hand. Move the
 staged files beside the report, commit them, rewrite the report's URLs as relative paths, and
 say so in one line. Dropping a PASS run's evidence would turn the report into "trust me".

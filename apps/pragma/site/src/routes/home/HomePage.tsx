@@ -24,6 +24,7 @@ import { NextSessionCard } from '../../components/organisms/NextSessionCard';
 import { StreakSheet } from '../../components/organisms/StreakSheet';
 import { TaskList } from '../../components/organisms/TaskList';
 import { TaskSheetHost } from '../../components/organisms/TaskSheetHost';
+import { VisitorQrCodeAction } from '../../components/organisms/VisitorQrCodeAction';
 import { useTaskRowLabels, useTaskSheet } from '../../components/organisms/task-sheet.hook';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { formatSessionDate, formatSessionDateTime } from '../../lib/formatters.utils';
@@ -186,19 +187,22 @@ export function HomePage(): JSX.Element {
         title={t('home.title')}
         className="mb-0 sm:mb-0"
         actions={
-          streaks === undefined ? null : (
-            <FlameChip
-              mineDays={streaks.mine.days}
-              mineTone={selectFlameTone(streaks.mine)}
-              bandDays={streaks.band.days}
-              bandTone={selectFlameTone(streaks.band)}
-              label={t('streaks.chipLabel', {
-                mine: t('streaks.mineChip', { count: streaks.mine.days }),
-                band: t('streaks.bandChip', { count: streaks.band.days }),
-              })}
-              onPress={openStreakSheet}
-            />
-          )
+          <>
+            {streaks === undefined ? null : (
+              <FlameChip
+                mineDays={streaks.mine.days}
+                mineTone={selectFlameTone(streaks.mine)}
+                bandDays={streaks.band.days}
+                bandTone={selectFlameTone(streaks.band)}
+                label={t('streaks.chipLabel', {
+                  mine: t('streaks.mineChip', { count: streaks.mine.days }),
+                  band: t('streaks.bandChip', { count: streaks.band.days }),
+                })}
+                onPress={openStreakSheet}
+              />
+            )}
+            <VisitorQrCodeAction />
+          </>
         }
       />
       {sessionsQuery.isLoading ? (

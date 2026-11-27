@@ -89,6 +89,16 @@ innermost visible element whose `aria-label` or text is exactly that name.
 Two validators of PR #380 tagged elements with data attributes at runtime
 before this existed.
 
+## Every new session opens in English
+
+Each agent-browser session, the default one and `phone` alike, reports
+`navigator.language` as `en-US` (measured on 2026-11-27). pragma reads the
+language stored in `localStorage` under `pragma.locale` first, then
+`navigator.language`, and falls back to French last. So a session that never
+picked French, such as a fresh `scripts/phone.sh start`, shows English. Before a French check,
+run `agent-browser --session phone eval "localStorage.setItem('pragma.locale', 'fr')"`
+and reload. PR #417's validator redid an accessible-name check for this.
+
 ## Back-button checks need a tab with no earlier history
 
 A check that the browser's back button does not reopen a page reads the tab's

@@ -19,8 +19,8 @@ You are validating a feature implementation against its spec and plan, on the cu
 INPUTS:
 - spec_path:    {{spec_path}}        # e.g. docs/features/borso-fr/mondrian-atelier/spec/spec.md
 - plan_path:    {{plan_path}}        # e.g. docs/features/borso-fr/mondrian-atelier/plan/plan.md
-                                     # may be missing — note it as a finding if so
-- base_ref:     {{base_ref}}         # e.g. origin/main
+                                     # may be missing: one `plan absent` row; none on a kaizen sweep
+- base_ref:     {{base_ref}}         # the 40-character merge-base SHA, never origin/main
 - app_pkg:      {{app_pkg}}          # e.g. @borso-app/borso-fr
 - report_path:  {{report_path}}      # absolute path you must write to
 - round:        {{round}}            # 1 or 2

@@ -5,8 +5,8 @@ import {
   probeProductionBoundary,
   resetRateLimits,
   seedPreviewFixture,
-  seedTodayPractice,
 } from './test-seed.service';
+import { seedTodayPractice } from './test-seed-edge-cases.service';
 
 const PLAIN_TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 

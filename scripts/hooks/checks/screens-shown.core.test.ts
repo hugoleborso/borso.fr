@@ -28,6 +28,7 @@ const text = (value: unknown): object => ({ type: 'text', text: value });
 const tool = (name: string, input: object = {}): object => ({ type: 'tool_use', name, input });
 const toolResult = user([{ type: 'tool_result', content: 'ok' }]);
 const PUSHED = said(tool('Bash', { command: 'git push origin HEAD' }));
+const OPENED = said(tool('mcp__github__create_pull_request'));
 
 function lines(...rows: readonly object[]): string {
   return rows.map((row) => JSON.stringify(row)).join('\n');
@@ -38,6 +39,7 @@ interface WorldOptions {
   readonly reflog?: string;
   readonly diff?: string;
   readonly found?: string;
+  readonly shown?: Readonly<Record<string, string>>;
 }
 
 function createWorld(options: WorldOptions): { world: HookWorld; runs: string[][] } {
@@ -50,6 +52,10 @@ function createWorld(options: WorldOptions): { world: HookWorld; runs: string[][
       runs.push([command, ...args]);
       if (command === 'find') return { ...OK, stdout: options.found ?? '' };
       if (args[0] === 'reflog') return { ...OK, stdout: options.reflog ?? '' };
+      if (command === 'git' && args[0] === 'show') {
+        const shown = options.shown?.[args[1] ?? ''];
+        return { status: shown === undefined ? 128 : 0, stdout: shown ?? '', stderr: '' };
+      }
       return { ...OK, stdout: options.diff ?? '' };
     },
   };
@@ -210,20 +216,26 @@ describe('screensShown', () => {
     });
   });
 
-  it('blocks a push while screenshots wait in a pending upload folder', () => {
+  it('blocks a push to an open pull request while screenshots wait in a pending upload folder', () => {
     const found = [
       '/repo/docs/features/app/feat/validation/.pending-upload/.hidden/shot.png',
       '/repo/docs/features/app/feat/validation/.pending-upload/run/shot.png',
     ].join('\n');
 
-    expect(judge(lines(user('x'), PUSHED), { found })).toEqual({
+    expect(judge(lines(OPENED, user('x'), PUSHED), { found })).toEqual({
       kind: 'block',
       reason: PENDING_REASON,
     });
   });
 
+  it('lets a push end before any pull request exists, since the upload needs its number', () => {
+    const found = '/repo/docs/features/a/b/validation/.pending-upload/r/s.png';
+
+    expect(judge(lines(user('x'), PUSHED), { found })).toBe(PASS);
+  });
+
   it('looks for pending screenshots under the current folder when no cwd is given', () => {
-    const fake = createWorld({ transcript: lines(PUSHED) });
+    const fake = createWorld({ transcript: lines(OPENED, user('x'), PUSHED) });
     screensShown.run({ hook_event_name: 'Stop', transcript_path: TRANSCRIPT }, fake.world);
 
     expect(fake.runs[0]).toEqual([
@@ -237,8 +249,8 @@ describe('screensShown', () => {
     ]);
   });
 
-  it('reads a pull request opened through MCP as a push', () => {
-    const opened = said(tool('mcp__github__create_pull_request'));
+  it('blocks the turn that opens the pull request while screenshots wait', () => {
+    const opened = OPENED;
     const found = '/repo/docs/features/a/b/validation/.pending-upload/r/s.png';
 
     expect(judge(lines(opened), { found })).toEqual({ kind: 'block', reason: PENDING_REASON });
@@ -251,9 +263,11 @@ describe('screensShown', () => {
     expect(
       screensShown.run({ hook_event_name: 'Stop', transcript_path: TRANSCRIPT }, fake.world),
     ).toEqual({ kind: 'block', reason: PUSH_REASON });
-    expect(fake.runs.slice(1)).toEqual([
+    expect(fake.runs).toEqual([
       ['git', 'reflog', '--format=%H', '-n', '2', '@{upstream}'],
       ['git', 'diff', '--name-only', 'old', 'new'],
+      ['git', 'show', 'new:apps/pragma/site/src/a.tsx'],
+      ['git', 'show', 'old:apps/pragma/site/src/a.tsx'],
     ]);
   });
 
@@ -264,6 +278,23 @@ describe('screensShown', () => {
     expect(judge(lines(PUSHED), { reflog: '', diff: site })).toBe(PASS);
     expect(judge(lines(PUSHED), { reflog: 'one', diff: site })).toBe(PASS);
     expect(judge(lines(PUSHED), { reflog: 'a b c', diff: site })).toBe(PASS);
+  });
+
+  it('lets a push end whose site change rewords a comment and nothing else', () => {
+    const site = 'apps/pragma/site/src/a.tsx';
+    const shown = {
+      [`old:${site}`]: '// one\nexport const a = 1;\n',
+      [`new:${site}`]: '// two\nexport const a = 1;\n',
+    };
+
+    expect(judge(lines(PUSHED), { reflog: 'new old', diff: site, shown })).toBe(PASS);
+    expect(
+      judge(lines(PUSHED), {
+        reflog: 'new old',
+        diff: site,
+        shown: { ...shown, [`new:${site}`]: 'export const a = 2;\n' },
+      }),
+    ).toEqual({ kind: 'block', reason: PUSH_REASON });
   });
 
   it('lets a push end that posted screenshots, and a turn that pushed nothing', () => {

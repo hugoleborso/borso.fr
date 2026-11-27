@@ -37,8 +37,10 @@ request was still open and its archive was not on `main`.
 
 ## The procedure
 
-Spend a long time on the problem before any solution. Step 1 is the heart of
-the skill. Do it exhaustively, in writing, **before** classifying anything.
+Spend a long time on the problem before any solution. The instinct is to read
+the PR, name two or three lessons and write the dantotsus. That is
+solution-oriented thinking, the failure this skill exists to prevent. Step 1 is
+the heart of the skill. Do it exhaustively, in writing, **before** classifying anything.
 Fewer than about ten rows for a non-trivial PR means you are skimming, so
 restart.
 
@@ -49,17 +51,22 @@ Catalogue **every** moment of friction, one row each, from these sources:
 - **The archived friction log (primary input).** `git fetch origin main`,
   then `scripts/kaizen.sh sweep-input <merge-sha>`. It prints, per archive
   the merge touched, the entry lines *this* merge added. Read that, not the
-  path the prompt names. This session's own `KAIZEN.md` is not the input. Many
-  lines resolve to `no-op: already eradicated by <existing entry>` once
-  cross-checked against the corpus, and that cross-check is the point. A
-  missing or empty archive is itself a row.
+  path the prompt names. A path the prompt names that the command does not is
+  a row to check, not a file to read. This session's own `KAIZEN.md` is not
+  the input. Map every line to a row. Many lines resolve to
+  `no-op: already eradicated by <existing entry>` once cross-checked against
+  the corpus, and that cross-check is the point. A missing or empty archive is
+  itself a row. Then rebuild the inventory from the commits, the review threads
+  and any run journal under `docs/features/<app>/<slug>/runs/`.
 - **Every operator message of the shipping session.** The log holds only what
   the session chose to write down. Find the session from the `Claude-Session:`
-  trailer of the PR's commits, then have one subagent list its transcript with
-  the remote-session tool that lists a session's events, `kinds: ["user"]`,
-  paging back with `before_id` until `has_more` is false. Then run
-  `pnpm exec tsx scripts/kaizen/operator-messages.ts`, which prints the typed
-  messages, the answers to questions, and every friction line the session
+  trailer of the PR's commits, or the session link at the end of its body,
+  then have one subagent list its transcript with the remote-session tool that
+  lists a session's events, `kinds: ["user"]`, paging back with `before_id`
+  until `has_more` is false. Then run
+  `pnpm exec tsx scripts/kaizen/operator-messages.ts`. It reads the pages this
+  session and its subagents listed, from their transcripts, and prints the
+  typed messages, the answers to questions, and every friction line the session
   logged, late ones included. Give each its own row, classified as a request
   the first brief could have carried, a correction of something shipped, a
   question the session should have asked first, or direction with no lesson.
@@ -84,20 +91,23 @@ Catalogue **every** moment of friction, one row each, from these sources:
   the sweep to what they hit. Note it.
 - **The shipping session's own turns**, when the sweep runs there. Walk them
   one by one, hook refusals and harness notices included, before reading the
-  archive.
+  archive. A sweep that started from its three archive lines listed 12 rows
+  and missed 17.
 - **Open kaizen pull requests.** Read each open `kaizen`-labelled PR's
   `inventory.md`. A row another open sweep already eradicates is
   `merge into PR #<n>`, not a second fix.
 - **The PR's conversation and review threads.** Every comment that corrects
-  or redirects the session is a row.
+  or redirects the session is a row. So is every silent course-correction the
+  operator made.
 - **Commit history.** Reverts, `--amend`-noisy stretches, and refactors right
   after a feat or fix.
 - **CI runs** that went red, then green.
 - **Validation reports** under `docs/features/<app>/<slug>/validation/`. Every
   FAIL or UNVERIFIABLE row.
 - **Tooling, vendor and harness surprises.** Hook rejections, lint noise, AWS
-  errors, documentation contradicted by observation, a skill that did not
-  trigger, a path assumed instead of verified.
+  errors, build and dev-server crashes, documentation contradicted by
+  observation, a skill that did not trigger, a tool called with the wrong
+  shape, a path assumed instead of verified.
 
 Commit the table to `docs/features/meta/lessons-from-pr-<N>/inventory.md`.
 The PR body links it from *Inventory*, because the table cannot fit the body's
@@ -108,7 +118,10 @@ budget.
 | 01 | spec | … | <commit / report / chat snippet> | <what makes this friction possible at all> | <the problem in another place this friction is a symptom of, or `none` with why the cause is local> | dantotsu / knowledge / no-op (with one-line reason) |
 
 **Elsewhere.** Where a friction is felt is rarely where it is made. A
-validator that missed a bug may reveal a spec that never named the case. Name
+validator that missed a bug may reveal a spec that never named the case. An
+agent that guessed a path may reveal a skill that never says where the file
+lives. A test that broke on a rename may reveal two modules that know each
+other's internals. Name
 that other problem with the file, skill, step or design choice it lives in.
 When the cell names one, the decision targets it, not the friction.
 
@@ -116,8 +129,9 @@ When the cell names one, the decision targets it, not the friction.
 friction possible at all, such as a file every PR appends to, a step done by
 hand, or two places that hold one rule. A `fixed:` or `dantotsu:` decision
 removes it. A message or script that works around the friction leaves the
-cause and adds one more thing to maintain. A guard that verifies a property
-may ship beside the removal, never instead of it. If no removal is possible,
+cause and adds one more thing to maintain, so it is not an eradication. A
+guard that verifies a property may ship beside the removal, never instead of
+it, and a guard that measures the wrong thing gets fixed. If no removal is possible,
 say so in the cell and ask the operator.
 
 Conventions:
@@ -130,7 +144,7 @@ Conventions:
 - `Decision`: one of:
   - `dantotsu: <slug>`, for a real defect, or a design pivot (approach A
     abandoned for B), whose entry is about the misconception that made A look
-    right.
+    right and whose eradication makes A no longer expressible.
   - `knowledge: <slug>`, for a vendor surprise, a shell or CLI quirk, or a
     reusable insight with no defect.
   - `merge into <slug>`, covered by another row's entry.
@@ -157,18 +171,34 @@ lifecycle says. No other step does it.
 ### 2. Re-read the table top to bottom, only now classify
 
 Patterns show across rows. Three rows of "I assumed X without asking" call for
-one change to the spec skill, not three dantotsus. Fold overlaps with
-`merge into <slug>`. Three sharp entries beat ten thin ones.
+one change to the spec skill, not three dantotsus. Two rows where the
+validator missed a case the spec never named are one dantotsu on the spec
+template. Five rows of one tool erroring are one knowledge entry. Fold
+overlaps with `merge into <slug>`. Three sharp entries beat ten thin ones.
 
 ### 3. Write the entries
 
 **Real defects and design pivots.** Write each with
 [`/dantotsu`](../dantotsu/SKILL.md) in fix mode, and ship its eradication as
 code in this PR. Take a tag from `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
-when one fits. Feed a guard hook its proof with `KAIZEN_LOG_REFUSALS=0`, or
-the proof lands in `KAIZEN.md` as friction. Never add a check that only guards
-the harness.
+when one fits. Write the level's name beside its number in the entry's
+*Eradication* block, as in the PR's *Shipped* table. Feed a guard hook its
+proof with `KAIZEN_LOG_REFUSALS=0`, or the proof lands in `KAIZEN.md` as
+friction. Never add a check that only guards the harness.
 
+- **Look for a library before writing a check.** When a draft eradication is
+  a lint rule, a hook, a CI script or a helper of our own, first ask whether a
+  maintained library would delete the code that hosts the bug. That is level
+  1, structural impossibility, instead of level 2. Name the role of the code,
+  not the bug, such as "subscribe to an external store and dedupe", and look
+  in `node_modules/.modules.yaml`, then on npm. Weigh bundle weight, peer
+  dependencies, maintenance and fit. If you adopt, the migration is the
+  eradication. If you build, the *Eradication* block names the library you
+  rejected and why, or the next sweep finds it again. Three rows on one
+  architectural layer (data fetching, routing, form validation, i18n) are one
+  row, "we built our own where a library exists", with the migration as its
+  eradication. This rule is the kaizen-time eradication of
+  [`built-my-own-before-checking-the-library`](../../../docs/dantotsus/built-my-own-before-checking-the-library.md).
 - **A mechanism that changes how the operator works is his call.** That is one
   that changes when he is asked for something, when CI or a preview runs, or
   what a session waits for. Write its entry in analysis mode, ask him one
@@ -181,6 +211,7 @@ the harness.
 or symptom (`grep -ril <tool> docs/knowledge/`) before writing a second one.
 Follow [`docs/knowledge/README.md`](../../../docs/knowledge/README.md), and
 take the `triggers:` from the inventory row, at the moment the subject bit.
+Prefer the narrowest trigger that would have fired at that moment.
 
 Link each new entry to the existing ones its chain touches.
 
@@ -189,12 +220,12 @@ Link each new entry to the existing ones its chain touches.
 Branch `claude/lessons-from-pr-<N>`, title `docs: lessons from PR #<N>`,
 `docs:` commits plus whatever code the eradications need.
 
-**The sweep removes at least as much as it adds.** After the last commit, run
-`scripts/kaizen.sh balance` and paste its line under the body's description.
-When it refuses, remove what each addition replaces: fold an entry into one
-that exists, delete the check or text the new mechanism makes redundant. CI
-(`kaizen-balance`) and `pre-push` run the same command. A removal is the only
-answer to its refusal.
+**The sweep earns its code by deleting or simplifying code.** After the last
+commit, run `scripts/kaizen.sh balance` and paste its line under the body's
+description. It counts code only, so a skill, a doc or an entry is never cut to
+pass it. When it refuses, delete the code each addition replaces, or simplify
+code elsewhere. CI (`kaizen-balance`) and `pre-push` run the same command. Only
+the operator waives it, and his words go in the sweep's `balance-waiver.md`.
 
 Once the friction log is archived, `pnpm exec tsx
 scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines

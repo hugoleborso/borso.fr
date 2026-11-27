@@ -247,6 +247,8 @@ kinds and their extra fields:
 | `visual_validation_skipped` | `reason` |
 | `run_completed` | `finalStage` |
 
+The orchestrator only appends to the journal during a run and never reads it
+back. `state.json` is its state, and the metrics are computed after the run.
 Aggregation recipes live in
 [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md).
 

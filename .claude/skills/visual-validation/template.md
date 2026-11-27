@@ -18,10 +18,10 @@ You are validating a feature spec against a running implementation.
 
 INPUTS:
 - spec_path:    {{spec_path}}        # e.g. docs/features/borso-fr/mondrian-atelier/spec/spec.md
-- dev_url:      {{dev_url}}          # e.g. http://localhost:5173/art/mondrian/
-- app_pkg:      {{app_pkg}}          # e.g. @borso-app/borso-fr
+- dev_url:      {{dev_url}}          # e.g. http://localhost:5173/art/mondrian/, plus the seeded sign-in
 - report_path:  {{report_path}}      # absolute path you must write to
 - evidence_dir: {{evidence_dir}}     # absolute path; save all screenshots here
+- design_path:  {{design_path}}      # only when the spec links a design artifact; omit the line otherwise
 
 Read the spec, build the assertion list per your standard, drive agent-browser, capture evidence inside evidence_dir as absolute paths, and write the report at report_path. Return only the report path.
 

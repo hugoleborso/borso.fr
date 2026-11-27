@@ -67,7 +67,7 @@ jobs:
           all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
             | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
           # A key whose every change is a check-only script in package.json,
-          # a test, an upper-case document such as README.md, or a test config
+          # a test, a comment, an upper-case document such as README.md, or a test config
           # changes nothing a deploy runs. PR #155 redeployed all six apps for
           # a lint script, and PR #352 five apps for their READMEs. Such keys
           # are dropped here, by the rule preview.yml uses, and

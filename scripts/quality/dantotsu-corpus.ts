@@ -38,19 +38,14 @@ function readListedPaths(listArguments: readonly string[]): ReadonlySet<string> 
   return paths;
 }
 
-export function readTrackedPaths(): ReadonlySet<string> {
-  return readListedPaths([]);
-}
-
 export function readUntrackedPaths(): ReadonlySet<string> {
   return readListedPaths(['--others', '--exclude-standard']);
 }
 
-export function readPathsEverTracked(): ReadonlySet<string> {
-  const paths = new Set(readTrackedPaths());
-  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=AR', 'HEAD']).split(
-    '\n',
-  )) {
+export function readPathsEverTracked(historyReference = 'HEAD'): ReadonlySet<string> {
+  const paths = new Set(readListedPaths([]));
+  const log = ['log', '--format=', '--name-only', '--diff-filter=AR', historyReference];
+  for (const path of runGit(log).split('\n')) {
     if (path.length > 0) paths.add(path);
   }
   return paths;

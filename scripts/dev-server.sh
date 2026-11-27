@@ -47,7 +47,7 @@ running_group() {
 }
 
 site_url() {
-  grep -oE 'Local:[[:space:]]+http://localhost:[0-9]+/' "${1:-$LOG_FILE}" 2>/dev/null |
+  grep -aoE 'Local:[[:space:]]+http://localhost:[0-9]+/' "${1:-$LOG_FILE}" 2>/dev/null |
     tail -1 | grep -oE 'http://localhost:[0-9]+/'
 }
 
@@ -76,7 +76,7 @@ case "$ACTION" in
       }
       sleep 1
     done
-    grep -E '^\[dev:db\]' "$LOG_FILE" >&2 || true
+    grep -aE '^\[dev:db\]' "$LOG_FILE" >&2 || true
     site_url || {
       echo "[dev-server] $APP printed no URL within ${START_TIMEOUT_SECONDS}s, log $LOG_FILE" >&2
       exit 1

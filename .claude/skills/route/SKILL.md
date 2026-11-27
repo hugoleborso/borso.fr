@@ -5,7 +5,9 @@ description: Decide how much machinery a task deserves before starting it, and l
 
 # Route
 
-Pick the tier on evidence, before the work starts. An agent that writes code cannot start before this skill runs (`scripts/hooks/checks/agent-after-route.core.ts`).
+Two failures cost about the same. `/specification` and `/feature-pipeline` on a one-line fix produce a spec nobody reads. Eleven files across three applications without a spec produce a change nobody can review and a decision nobody agreed to.
+
+Pick the tier on evidence, before the work starts. No edit under `apps/`, by this session or its agents, can start before this skill runs (`scripts/hooks/checks/agent-after-route.core.ts`).
 
 ## Size it first
 
@@ -53,6 +55,9 @@ Sizing happens before the work, so it is sometimes wrong. These are the signals,
 - You are about to touch a fourth file you did not predict → Tier 0 becomes Tier 1.
 - You cannot write the code without deciding something the user has not decided → any tier becomes Tier 2. Ask; do not pick quietly.
 - A change that was one application turns out to need the same edit in another → Tier 3.
+- A gate fails for a reason unrelated to your change → it becomes its own task in the list, sized at its own tier. CLAUDE.md's *Fix the failures you find* forbids walking past it, and folding it into the current task hides it.
+
+A feature is one branch and one pull request at every tier. Slices are commits on that branch, never pull requests stacked on each other. The operator reviews a feature on one preview and merges it at once, and PR #216's seven stacked pull requests were rejected for that reason.
 
 De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add the field and render it" is a Tier 1; say so and drop the ceremony.
 

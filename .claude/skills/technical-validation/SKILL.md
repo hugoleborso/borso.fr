@@ -49,8 +49,9 @@ branch has no diff, or when the change is documentation only.
    `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and
    `previous_report` on round 2. It reviews the SHA it pins at its start, so
    keep working meanwhile in another worktree.
-8. **Read the report's verdict and its two finding lists** once the agent has
-   handed back, not before: a file at `report_path` earlier is a draft. On
+8. **Read the report's verdict and its two finding lists**, not the tables,
+   once the agent has handed back, not before: a file at `report_path`
+   earlier is a draft. On
    **FAIL**, triage the blocking findings below and do not ship.
 
 ## Findings and rounds
