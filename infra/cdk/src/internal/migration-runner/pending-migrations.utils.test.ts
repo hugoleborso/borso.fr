@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectPendingMigrations } from './pending-migrations.utils.js';
+import { selectAppliedMigrations, selectPendingMigrations } from './pending-migrations.utils.js';
 
 const MIGRATIONS = [
   { name: '0001_init', sql: 'CREATE TABLE a();' },
@@ -28,5 +28,21 @@ describe('selectPendingMigrations', () => {
 
   it('ignores a recorded name that no longer ships', () => {
     expect(selectPendingMigrations([], new Set(['0001_init']))).toStrictEqual([]);
+  });
+});
+
+describe('selectAppliedMigrations', () => {
+  it('keeps the migrations the source has recorded, in shipping order', () => {
+    expect(
+      selectAppliedMigrations(MIGRATIONS, new Set(['0003_punches', '0001_init'])),
+    ).toStrictEqual([MIGRATIONS[0], MIGRATIONS[2]]);
+  });
+
+  it('keeps nothing when the source recorded none, so the branch alone shapes the schema', () => {
+    expect(selectAppliedMigrations(MIGRATIONS, new Set())).toStrictEqual([]);
+  });
+
+  it('ignores a name the source recorded that this branch does not ship', () => {
+    expect(selectAppliedMigrations(MIGRATIONS, new Set(['0009_from_main']))).toStrictEqual([]);
   });
 });

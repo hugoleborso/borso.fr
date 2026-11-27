@@ -9,3 +9,10 @@ export function selectPendingMigrations<TMigration extends MigrationName>(
 ): TMigration[] {
   return migrations.filter((migration) => !appliedNames.has(migration.name));
 }
+
+export function selectAppliedMigrations<TMigration extends MigrationName>(
+  migrations: readonly TMigration[],
+  appliedNames: ReadonlySet<string>,
+): TMigration[] {
+  return migrations.filter((migration) => appliedNames.has(migration.name));
+}

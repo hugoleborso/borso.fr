@@ -12,17 +12,6 @@ function quote(identifier: string): string {
   return `"${identifier}"`;
 }
 
-export function buildCreateTableLikeSql(
-  sourceSchema: string,
-  targetSchema: string,
-  table: string,
-): string {
-  assertIdentifier(sourceSchema, 'schema');
-  assertIdentifier(targetSchema, 'schema');
-  assertIdentifier(table, 'table');
-  return `CREATE TABLE IF NOT EXISTS ${quote(targetSchema)}.${quote(table)} (LIKE ${quote(sourceSchema)}.${quote(table)} INCLUDING ALL)`;
-}
-
 // @FollowsBlueprint utils-pure-module
 export function buildCloneInsertSql(
   sourceSchema: string,
@@ -51,54 +40,12 @@ export function buildCloneInsertSql(
   );
 }
 
-export interface ColumnDefinition {
-  readonly name: string;
-  readonly type: string;
-}
-
-export interface CatalogueColumnRow {
-  readonly column_name: string;
-  readonly data_type: string;
-  readonly character_maximum_length: number | null;
-  readonly numeric_precision: number | null;
-  readonly numeric_scale: number | null;
-}
-
-export function formatColumnType(row: CatalogueColumnRow): ColumnDefinition {
-  if (row.character_maximum_length !== null) {
-    return { name: row.column_name, type: `${row.data_type}(${row.character_maximum_length})` };
-  }
-  if (row.data_type === 'numeric' && row.numeric_precision !== null) {
-    return {
-      name: row.column_name,
-      type: `numeric(${row.numeric_precision},${row.numeric_scale ?? 0})`,
-    };
-  }
-  return { name: row.column_name, type: row.data_type };
-}
-
-const CATALOGUE_TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9 ]*(\(\d+(, ?\d+)?\))?( with(out)? time zone)?$/;
-
-export function selectMissingColumns(
-  sourceColumns: readonly ColumnDefinition[],
-  targetColumnNames: readonly string[],
-): ColumnDefinition[] {
-  const present = new Set(targetColumnNames);
-  return sourceColumns.filter((column) => !present.has(column.name));
-}
-
-export function buildAddColumnSql(
-  targetSchema: string,
-  table: string,
-  column: ColumnDefinition,
-): string {
-  assertIdentifier(targetSchema, 'schema');
-  assertIdentifier(table, 'table');
-  assertIdentifier(column.name, 'column');
-  if (!CATALOGUE_TYPE_PATTERN.test(column.type)) {
-    throw new Error(`buildAddColumnSql: refusing to build with type "${column.type}".`);
-  }
-  return `ALTER TABLE ${quote(targetSchema)}.${quote(table)} ADD COLUMN IF NOT EXISTS ${quote(column.name)} ${column.type}`;
+export function selectCommonColumns(
+  sourceColumns: readonly string[],
+  targetColumns: readonly string[],
+): string[] {
+  const present = new Set(targetColumns);
+  return sourceColumns.filter((column) => present.has(column));
 }
 
 export function buildReplaceBeforeCloneSql(targetSchema: string, table: string): string {

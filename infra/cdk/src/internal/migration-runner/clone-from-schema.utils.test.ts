@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildAddColumnSql,
   buildCloneInsertSql,
-  formatColumnType,
-  buildCreateTableLikeSql,
   buildReplaceBeforeCloneSql,
   listTablesNoMigrationCreates,
   listUndecidedCredentialTables,
   isCloneableDataTable,
   isReplacedBeforeClone,
   selectCloneableDataTables,
-  selectMissingColumns,
+  selectCommonColumns,
 } from './clone-from-schema.utils.js';
 
 // @FollowsBlueprint test-pure-unit
@@ -111,46 +108,16 @@ describe('buildReplaceBeforeCloneSql', () => {
   });
 });
 
-describe('buildCreateTableLikeSql', () => {
-  it('emits CREATE TABLE IF NOT EXISTS … LIKE … INCLUDING ALL with quoted identifiers', () => {
-    expect(buildCreateTableLikeSql('prod', 'pr_27', 'editions')).toBe(
-      'CREATE TABLE IF NOT EXISTS "pr_27"."editions" (LIKE "prod"."editions" INCLUDING ALL)',
-    );
-  });
-
-  it('accepts underscore-prefixed names (e.g. `_migrations`)', () => {
-    expect(buildCreateTableLikeSql('prod', 'pr_27', '_migrations')).toContain(
-      '"pr_27"."_migrations"',
-    );
-  });
-
-  it.each([
-    ['source', 'pr-27', 'editions'],
-    ['', 'pr_27', 'editions'],
-    ['source', 'pr_27', '0starts_with_digit'],
-    ['source', 'pr_27', 'has space'],
-    ['source', 'pr_27', '" OR 1=1; --'],
-  ])(
-    'rejects identifiers that are not safe Postgres unquoted names (%s, %s, %s)',
-    (source, target, table) => {
-      expect(() => buildCreateTableLikeSql(source, target, table)).toThrow(/Invalid/);
-    },
-  );
-
+describe('buildCloneInsertSql', () => {
   it('names the argument it rejected', () => {
-    expect(() => buildCreateTableLikeSql('pr-27', 'pr_27', 'editions')).toThrow(
+    expect(() => buildCloneInsertSql('pr-27', 'pr_27', 'editions', ['slug'], [])).toThrow(
       /Invalid schema name: "pr-27"/,
     );
-    expect(() => buildCreateTableLikeSql('prod', 'pr-27', 'editions')).toThrow(
-      /Invalid schema name: "pr-27"/,
-    );
-    expect(() => buildCreateTableLikeSql('prod', 'pr_27', 'has space')).toThrow(
+    expect(() => buildCloneInsertSql('prod', 'pr_27', 'has space', ['slug'], [])).toThrow(
       /Invalid table name: "has space"/,
     );
   });
-});
 
-describe('buildCloneInsertSql', () => {
   it('builds an INSERT … SELECT with explicit column list and ON CONFLICT DO NOTHING', () => {
     expect(buildCloneInsertSql('prod', 'pr_27', 'editions', ['slug', 'display_name'], [])).toBe(
       'INSERT INTO "pr_27"."editions" ("slug", "display_name")' +
@@ -257,7 +224,7 @@ describe('selectCloneableDataTables', () => {
 });
 
 describe('isCloneableDataTable', () => {
-  it('treats `_migrations` as not cloneable as a data table — caller copies it out-of-band', () => {
+  it('never copies `_migrations`, so the target records only the migrations it ran', () => {
     expect(isCloneableDataTable('_migrations', [])).toBe(false);
   });
 
@@ -272,116 +239,14 @@ describe('isCloneableDataTable', () => {
   });
 });
 
-describe('selectMissingColumns', () => {
-  it('returns the source columns the target does not have', () => {
+describe('selectCommonColumns', () => {
+  it('keeps the source columns the target also has, in source order', () => {
     expect(
-      selectMissingColumns(
-        [
-          { name: 'id', type: 'text' },
-          { name: 'is_harmonic', type: 'boolean' },
-          { name: 'family', type: 'text' },
-        ],
-        ['id', 'is_harmonic'],
-      ),
-    ).toStrictEqual([{ name: 'family', type: 'text' }]);
+      selectCommonColumns(['id', 'is_harmonic', 'family'], ['family', 'id', 'position']),
+    ).toStrictEqual(['id', 'family']);
   });
 
-  it('returns nothing when the target already matches', () => {
-    expect(
-      selectMissingColumns([{ name: 'id', type: 'text' }], ['id', 'extra_column_only_here']),
-    ).toStrictEqual([]);
-  });
-
-  it('returns every column for a table the target has not created yet', () => {
-    const columns = [
-      { name: 'id', type: 'text' },
-      { name: 'name', type: 'text' },
-    ];
-    expect(selectMissingColumns(columns, [])).toStrictEqual(columns);
-  });
-});
-
-describe('buildAddColumnSql', () => {
-  it('builds a bare ADD COLUMN, which is the only shape Aurora DSQL accepts', () => {
-    expect(buildAddColumnSql('pr_49', 'instrument', { name: 'family', type: 'text' })).toBe(
-      'ALTER TABLE "pr_49"."instrument" ADD COLUMN IF NOT EXISTS "family" text',
-    );
-  });
-
-  it('keeps a length or a precision the catalogue reported', () => {
-    expect(
-      buildAddColumnSql('pr_49', 'song', { name: 'title', type: 'character varying(200)' }),
-    ).toBe('ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "title" character varying(200)');
-    expect(buildAddColumnSql('pr_49', 'song', { name: 'weight', type: 'numeric(10, 2)' })).toBe(
-      'ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "weight" numeric(10, 2)',
-    );
-    expect(
-      buildAddColumnSql('pr_49', 'song', { name: 'created_at', type: 'timestamp with time zone' }),
-    ).toBe(
-      'ALTER TABLE "pr_49"."song" ADD COLUMN IF NOT EXISTS "created_at" timestamp with time zone',
-    );
-  });
-
-  it('refuses a type that is not a plain type name', () => {
-    expect(() =>
-      buildAddColumnSql('pr_49', 'song', { name: 'title', type: 'text; DROP SCHEMA "pragma"' }),
-    ).toThrow('refusing to build with type');
-  });
-
-  it('refuses an identifier that is not a plain identifier', () => {
-    expect(() => buildAddColumnSql('pr_49', 'song', { name: 'a"b', type: 'text' })).toThrow(
-      'Invalid column name',
-    );
-    expect(() => buildAddColumnSql('pr-49', 'song', { name: 'title', type: 'text' })).toThrow(
-      'Invalid schema name',
-    );
-    expect(() => buildAddColumnSql('pr_49', 'so ng', { name: 'title', type: 'text' })).toThrow(
-      'Invalid table name',
-    );
-  });
-});
-
-describe('formatColumnType', () => {
-  const row = {
-    column_name: 'family',
-    data_type: 'text',
-    character_maximum_length: null,
-    numeric_precision: null,
-    numeric_scale: null,
-  };
-
-  it('takes the data type as-is when the catalogue reports no modifier', () => {
-    expect(formatColumnType(row)).toStrictEqual({ name: 'family', type: 'text' });
-  });
-
-  it('folds back the length the catalogue reports separately', () => {
-    expect(
-      formatColumnType({ ...row, data_type: 'character varying', character_maximum_length: 200 }),
-    ).toStrictEqual({ name: 'family', type: 'character varying(200)' });
-  });
-
-  it('folds back a numeric precision and scale', () => {
-    expect(
-      formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10, numeric_scale: 2 }),
-    ).toStrictEqual({ name: 'family', type: 'numeric(10,2)' });
-  });
-
-  it('defaults a numeric with no scale to zero, which is what Postgres means by it', () => {
-    expect(formatColumnType({ ...row, data_type: 'numeric', numeric_precision: 10 })).toStrictEqual(
-      { name: 'family', type: 'numeric(10,0)' },
-    );
-  });
-
-  it('keeps a numeric the catalogue reports no precision for as a bare numeric', () => {
-    expect(formatColumnType({ ...row, data_type: 'numeric' })).toStrictEqual({
-      name: 'family',
-      type: 'numeric',
-    });
-  });
-
-  it('leaves a non-numeric type alone even when a precision is reported', () => {
-    expect(formatColumnType({ ...row, data_type: 'integer', numeric_precision: 32 })).toStrictEqual(
-      { name: 'family', type: 'integer' },
-    );
+  it('keeps nothing for a table the target has not created', () => {
+    expect(selectCommonColumns(['id', 'family'], [])).toStrictEqual([]);
   });
 });

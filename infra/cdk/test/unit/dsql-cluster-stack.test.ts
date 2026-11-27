@@ -22,6 +22,14 @@ describe('DsqlClusterStack', () => {
     });
   });
 
+  it('makes CloudFormation refuse to delete the stack, whatever command asks', () => {
+    const app = new App();
+    const stack = new DsqlClusterStack(app, 'test-app-cluster', { env: ENV, app: 'test-app' });
+    expect(stack.terminationProtection).toBe(true);
+    const artifact = app.synth().getStackByName('test-app-cluster');
+    expect(artifact.terminationProtection).toBe(true);
+  });
+
   it('honours an explicit deletionProtection: false', () => {
     const app = new App();
     const stack = new DsqlClusterStack(app, 'test-app-cluster', {
