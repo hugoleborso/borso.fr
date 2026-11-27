@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gte, inArray, isNotNull } from 'drizzle-orm';
+import { and, asc, eq, gte, isNotNull } from 'drizzle-orm';
 import { CONCERT_KIND } from '@domain/upcoming-concerts.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { sessionTable } from '../sessions/sessions.schema';
@@ -89,24 +89,6 @@ export async function updateConcertAnnouncement(
     .where(eq(sessionTable.id, sessionId))
     .returning(ANNOUNCEMENT_PROJECTION);
   return row ?? null;
-}
-
-export interface RegistrationCount {
-  readonly sessionId: string;
-  readonly registrationCount: number;
-}
-
-export async function countRegistrationsOfConcerts(
-  sessionIds: readonly string[],
-): Promise<RegistrationCount[]> {
-  return await getDatabase()
-    .select({
-      sessionId: concertRegistrationTable.sessionId,
-      registrationCount: count(),
-    })
-    .from(concertRegistrationTable)
-    .where(inArray(concertRegistrationTable.sessionId, [...sessionIds]))
-    .groupBy(concertRegistrationTable.sessionId);
 }
 
 export async function insertRegistrationWithin(

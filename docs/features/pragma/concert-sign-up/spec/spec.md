@@ -37,6 +37,7 @@ pragma.borso.fr becomes a public page where anyone signs up for the next pragma 
 - No IP or device address is stored to detect duplicates: people at one venue share an IP.
 - Deleting a concert deletes its registrations.
 - The public API exposes only a member's id, first name and colour.
+- The public list of upcoming concerts carries no registration count. Only signed-in members see how many people signed up.
 - Every public write is rate limited.
 - Every visible string goes through `en.json` and `fr.json`. Every page works at 375 px.
 - The validated mockups are the reference for layout and copy.
