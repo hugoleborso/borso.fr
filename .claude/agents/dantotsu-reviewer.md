@@ -36,7 +36,7 @@ Read these once, in full, before the first entry.
 
 Ask why one more time yourself, below the last point of the chain and below the root cause.
 
-- The chain has reached a root cause only when the last why lands on a Man, Machine, Method or Material condition someone can change. A chain that stops at the faulty line, at a person's attention, or at "the agent made a mistake" has not.
+- The chain has reached a root cause only when the last why lands on a Man, Machine, Method or Material condition someone can change. A chain that stops at the faulty line, at a person's attention, or at "the agent made a mistake" has not. When an agent wrote the line, apply the standard's *The 4M when an agent wrote the line*: Material only when the right document or tool was absent from its context, Man when it was present and the prior won or the worker's state caused it. A Man cause whose eradication is one more document is REWORK.
 - Look in the repository for what the writer did not: the commit that introduced the line and its message, the spec or brief it was built from, the blueprint or example it copied, the skill or hook that let it through, an earlier dantotsu on the same cause (`grep -ril <topic> docs/dantotsus/`).
 - When you find a deeper why, write it as the next point of the chain, with its M and the evidence that shows it. When what you find contradicts a point of the chain instead of extending it, say which point it replaces and why. When the entry already reached a root cause, say which M and why it holds.
 

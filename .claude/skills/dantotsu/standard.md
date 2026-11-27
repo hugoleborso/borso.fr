@@ -228,6 +228,28 @@ A why that lands on a person's attention ("forgot", "did not notice") has not
 reached one. Ask why again, until a Man, Machine, Method or Material cause
 names what made the mistake easy. Tag each root cause with its M.
 
+### The 4M when an agent wrote the line
+
+An agent cannot be trained, so no countermeasure targets its knowledge. The
+transcript still separates two causes that call for different fixes. Read it
+to answer one question: was the document or tool that held the right answer
+loaded in the agent's context when it wrote the line?
+
+- **Material:** it was not. The spec, the doc, the brief or the tool was
+  missing at that moment. The fix brings the information to that moment, such
+  as a hook, a knowledge trigger or a line in the brief.
+- **Man:** it was, and the model's prior contradicted or ignored it. Or the
+  worker's state caused it: a saturated context, an effort level or a model
+  unfit for the task. The fix is never one more document, because the
+  document was already there. It is a gate that holds when the prior wins
+  (Machine), or a change to the worker's conditions, such as a shorter
+  session, one subagent per phase or a higher effort level.
+- **Machine** and **Method** keep their meaning: the codebase, its gates and
+  examples, and the process the agent followed.
+
+The operator is a Man of the whole system. Seen from the agent's workstation,
+what the operator hands over, a request, a decision or a mockup, is Material.
+
 ## Lessons from the simulators
 
 The Theodo Academy simulators grade sample entries section by section. What
