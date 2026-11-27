@@ -87,11 +87,14 @@ Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts
   `CONCERT_REGISTRATION_READ_BUDGET`. It answers one event as
   `text/calendar`: the concert's start, an end two hours later
   (`CONCERT_CALENDAR_EVENT_HOURS`, since a session stores no end), the
-  summary `pragma · <venue>`, the venue and the public message.
+  summary `pragma · <venue>`, the venue and the public message. A concert
+  with no venue is named `pragma` and has no location; one with no message
+  has no description.
 - A practice, a past concert or a session that does not exist answers 422
   `not-an-upcoming-concert`.
 
 Held by: `api/src/concert-registrations/concert-calendar.core.test.ts` › writes one event that starts at the concert, lasts two hours, and is named after the band and the venue
+Held by: `api/src/concert-registrations/concert-calendar.core.test.ts` › names the event after the band alone and leaves out the place and the note a concert lacks
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › hands anyone the next concert as a calendar file, and refuses a practice, a past concert and an unknown one
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › bars an address that hammers the calendar file of a concert
 
