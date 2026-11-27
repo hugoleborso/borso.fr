@@ -16,6 +16,13 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   a prize. No link leads to the members' area.
 - The installed app never shows this page. Opened on `/` in standalone
   display (`readInstallContext`), it redirects to `/app`, the ERP home.
+- Beside "Je serai là !", before and after the sign-up, a calendar button
+  opens the concert's calendar file in place
+  (`GET /api/concert-registrations/concerts/:sessionId/calendar`). From
+  1024 px it reads "Agenda" beside its icon; below, the icon alone. Its
+  tooltip is "Ajouter à mon calendrier". From 768 px the ticket's buttons
+  wrap to another row rather than leave it. The file's rules are in
+  `api/src/concert-registrations/INVARIANTS.md`.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.
 - While the sign-up is on its way the opening screen shows, and the sheet
@@ -54,6 +61,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   once, and comes back if the server refuses.
 
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › sends the installed app to the members area, where it opened before the ERP moved to /app
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › offers the concert as a calendar file, opened in place
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › sends a trimmed first name and a trimmed lower-case email
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › offers a retry only when the server could not be reached or failed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows the tuning screen while the sign-up is on its way

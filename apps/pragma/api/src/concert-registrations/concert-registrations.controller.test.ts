@@ -204,6 +204,7 @@ describe('concert registrations controller (back-e2e)', () => {
     const publicResponses = await Promise.all([
       jsonRequest(app, '/api/concert-registrations/upcoming'),
       jsonRequest(app, '/api/concert-registrations/members'),
+      jsonRequest(app, `/api/concert-registrations/concerts/${sessionId}/calendar`),
       registerFor(app, sessionId, 'Lou', 'lou@example.com'),
       amend(app, UNKNOWN_ID, 'nope', { comingForMemberId: null }),
       checkStored(app, UNKNOWN_ID, 'nope'),
@@ -466,6 +467,42 @@ describe('concert registrations controller (back-e2e)', () => {
     ]);
   });
 
+  it('hands anyone the next concert as a calendar file, and refuses a practice, a past concert and an unknown one', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const concert = await createConcert(app, cookieHeader);
+    const practice = await createSession(app, cookieHeader, {
+      kind: 'practice',
+      date: new Date().toISOString(),
+    });
+    const pastConcert = await createConcert(
+      app,
+      cookieHeader,
+      new Date(Date.now() - 2 * MILLISECONDS_PER_DAY),
+    );
+
+    const calendar = await jsonRequest(
+      app,
+      `/api/concert-registrations/concerts/${concert}/calendar`,
+    );
+    expect(calendar.status).toBe(200);
+    expect(calendar.headers.get('content-type')).toBe('text/calendar; charset=utf-8');
+    expect(calendar.headers.get('content-disposition')).toBe(
+      'attachment; filename="pragma-concert.ics"',
+    );
+    const body = await calendar.text();
+    expect(body).toContain(`UID:${concert}@pragma.borso.fr`);
+    expect(body).toContain('LOCATION:La Cave');
+
+    for (const sessionId of [practice, pastConcert, UNKNOWN_ID]) {
+      const refused = await jsonRequest(
+        app,
+        `/api/concert-registrations/concerts/${sessionId}/calendar`,
+      );
+      expect(refused.status).toBe(422);
+      expect((await readJson(refused, errorEnvelope)).error).toBe('not-an-upcoming-concert');
+    }
+  });
+
   it('shows the public only the id, first name and colour of each member', async () => {
     const { app, memberId } = await buildAuthenticatedApp('Hugo');
     const listed = await readJson(
@@ -564,6 +601,22 @@ describe('concert registrations controller (back-e2e)', () => {
       await jsonRequest(app, `/api/concert-registrations/registrations/${registrationId}`, {
         extraHeaders: { [TOKEN_HEADER]: editToken },
         clientAddress: '203.0.113.23',
+      });
+
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < CONCERT_REGISTRATION_READ_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(200);
+    expect((await fromOneAddress()).status).toBe(429);
+  });
+
+  it('bars an address that hammers the calendar file of a concert', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const fromOneAddress = async () =>
+      await jsonRequest(app, `/api/concert-registrations/concerts/${sessionId}/calendar`, {
+        clientAddress: '203.0.113.24',
       });
 
     let lastStatus = 0;

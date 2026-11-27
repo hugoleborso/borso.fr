@@ -1159,6 +1159,8 @@
     "followUpSearchUnavailable": "Song search is unavailable. Try again in a moment or skip.",
     "validate": "Confirm",
     "signUpSheetTitle": "{{venue}} · {{date}}",
+    "calendarShort": "Calendar",
+    "addToCalendar": "Add to my calendar",
     "signUpFriend": "A friend",
     "signUpFriendLabel": "Sign up a friend"
   }

@@ -56,6 +56,10 @@ export function buildVenueMapUrl(venue: string): string {
   return `${MAP_SEARCH_URL}?${query.toString()}`;
 }
 
+export function buildConcertCalendarUrl(apiBase: string, sessionId: string): string {
+  return `${apiBase}/api/concert-registrations/concerts/${encodeURIComponent(sessionId)}/calendar`;
+}
+
 export function selectTicketLayout(posterUrl: string | null): TicketLayout {
   return posterUrl === null ? 'date' : 'poster';
 }

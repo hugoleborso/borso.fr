@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildConcertCalendarUrl,
   buildVenueMapUrl,
   formatTicketDate,
   PRIZE_ICON_GLYPH,
@@ -57,5 +58,14 @@ describe('the concert ticket', () => {
       ticket: 'ticket',
       shirt: 'shirt',
     });
+  });
+
+  it('points the calendar file at the API, on its own origin in a preview and on the site in production', () => {
+    expect(buildConcertCalendarUrl('https://api.example.test', 'a/b')).toBe(
+      'https://api.example.test/api/concert-registrations/concerts/a%2Fb/calendar',
+    );
+    expect(buildConcertCalendarUrl('', 'abc')).toBe(
+      '/api/concert-registrations/concerts/abc/calendar',
+    );
   });
 });

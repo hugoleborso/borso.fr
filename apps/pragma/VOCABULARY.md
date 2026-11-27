@@ -212,6 +212,19 @@ Invariants: `site/src/routes/concerts/INVARIANTS.md`
 
 Not to be confused with: the **home**, the members' start screen at `/app`.
 
+## Concert calendar file
+
+The `.ics` file of one upcoming concert that a visitor of the **concert
+sign-up page** opens with "Ajouter à mon calendrier", to put the concert in
+their own calendar app.
+
+Lives in: `api/src/concert-registrations/` (`concert-calendar.core.ts`)
+
+Invariants: `api/src/concert-registrations/INVARIANTS.md`
+
+Not to be confused with: a **calendar feed**, which is a member's own
+calendar that pragma reads.
+
 ## Concert registration
 
 One person's sign-up, a first name and an email, for one concert.

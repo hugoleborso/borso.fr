@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#410'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-agent-after-route.sh, .claude/settings.json]
+eradication-paths: [scripts/hooks/checks/agent-after-route.core.ts, scripts/hooks/hook-events.ts]
 time-to-detect: hours
 tags: [pragma, process, agents, frontend, skill]
 zone: .claude/skills/route/SKILL.md

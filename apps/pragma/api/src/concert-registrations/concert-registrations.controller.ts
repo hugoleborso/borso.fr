@@ -23,6 +23,7 @@ import {
   register,
   REGISTRATION_TOKEN_HEADER,
 } from './concert-registrations.service';
+import { readConcertCalendar } from './concert-calendar.service';
 import { checkRegistration } from './concert-registration-check.service';
 import { removeRegistration } from './concert-registration-removal.service';
 import {
@@ -45,6 +46,7 @@ const STATUS_BY_REFUSAL = {
 } as const satisfies Record<ConcertRegistrationRefusal, number>;
 
 const ABSENT_TOKEN = '';
+const CALENDAR_CONTENT_TYPE = 'text/calendar; charset=utf-8';
 const NO_CONTENT = 204;
 
 // @FollowsBlueprint controller-public-and-gated-routers
@@ -60,6 +62,22 @@ export function buildConcertRegistrationsRouter() {
       const members = await listMemberNames();
       return context.json({ members });
     })
+    // @FollowsBlueprint controller-file-response
+    .get(
+      '/concerts/:sessionId/calendar',
+      limitReads,
+      zValidator('param', concertParamSchema),
+      async (context) => {
+        const { sessionId } = context.req.valid('param');
+        const outcome = await readConcertCalendar({ sessionId, now: new Date() });
+        if (outcome.kind === 'refused') {
+          return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);
+        }
+        context.header('content-type', CALENDAR_CONTENT_TYPE);
+        context.header('content-disposition', `attachment; filename="${outcome.fileName}"`);
+        return context.body(outcome.calendar);
+      },
+    )
     .post(
       '/concerts/:sessionId/registrations',
       limitWrites,
