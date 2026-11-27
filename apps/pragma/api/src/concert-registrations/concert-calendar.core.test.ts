@@ -30,6 +30,7 @@ describe('buildConcertCalendar', () => {
         'DESCRIPTION:Doors at 8.\\nFree entry.',
         'END:VEVENT',
         'END:VCALENDAR',
+        '',
       ].join('\r\n'),
     );
   });

@@ -9,6 +9,7 @@ const ICALENDAR_VERSION = '2.0';
 const UID_DOMAIN = 'pragma.borso.fr';
 const MILLISECONDS_PER_HOUR = 3_600_000;
 const IS_UTC = true;
+const LINE_END = '\r\n';
 
 export interface ConcertCalendarInput {
   readonly sessionId: string;
@@ -39,5 +40,5 @@ export function buildConcertCalendar(input: ConcertCalendarInput): string {
   if (input.venue !== null) event.location = input.venue;
   if (input.message !== null) event.description = input.message;
   calendar.addSubcomponent(event.component);
-  return calendar.toString();
+  return `${calendar.toString()}${LINE_END}`;
 }

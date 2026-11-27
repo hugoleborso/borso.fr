@@ -611,6 +611,22 @@ describe('concert registrations controller (back-e2e)', () => {
     expect((await fromOneAddress()).status).toBe(429);
   });
 
+  it('bars an address that hammers the calendar file of a concert', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const fromOneAddress = async () =>
+      await jsonRequest(app, `/api/concert-registrations/concerts/${sessionId}/calendar`, {
+        clientAddress: '203.0.113.24',
+      });
+
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < CONCERT_REGISTRATION_READ_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(200);
+    expect((await fromOneAddress()).status).toBe(429);
+  });
+
   it('refuses an answer that names nothing to change with 400, and changes nothing', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);

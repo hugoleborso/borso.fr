@@ -19,9 +19,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 - Beside "Je serai là !", before and after the sign-up, "Ajouter à mon
   calendrier" opens the concert's calendar file in place
   (`GET /api/concert-registrations/concerts/:sessionId/calendar`). On a
-  phone it shows its calendar icon only. The event is named
-  `pragma · <venue>`, lasts two hours (`CONCERT_CALENDAR_EVENT_HOURS`),
-  and carries the public message. A practice or a past concert has none.
+  phone it shows its calendar icon only. The file's rules are in
+  `api/src/concert-registrations/INVARIANTS.md`.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.
 - While the sign-up is on its way the opening screen shows, and the sheet
@@ -61,8 +60,6 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
 
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › sends the installed app to the members area, where it opened before the ERP moved to /app
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › offers the concert as a calendar file, opened in place
-Held by: `api/src/concert-registrations/concert-calendar.core.test.ts` › writes one event that starts at the concert, lasts two hours, and is named after the band and the venue
-Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › hands anyone the next concert as a calendar file, and refuses a practice, a past concert and an unknown one
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › sends a trimmed first name and a trimmed lower-case email
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › offers a retry only when the server could not be reached or failed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows the tuning screen while the sign-up is on its way

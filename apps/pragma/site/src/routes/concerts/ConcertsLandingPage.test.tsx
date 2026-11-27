@@ -250,6 +250,7 @@ describe('the public concert sign-up page', () => {
     expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Add to my calendar' })).toBeTruthy();
   });
 
   it('offers the sign-up again when the band removed the registration this browser remembers', async () => {
