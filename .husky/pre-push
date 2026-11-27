@@ -103,8 +103,8 @@ if git rev-parse --verify --quiet origin/main >/dev/null; then
     echo "  Merge main in, resolve, then push again:" >&2
     echo "    git merge origin/main" >&2
     echo "[hook] Nothing in this call ran. In a chained command, rerun the other steps on their own." >&2
-    [ -f KAIZEN.md ] && [ "${KAIZEN_LOG_REFUSALS:-1}" != 0 ] &&
-      scripts/kaizen.sh --from hook:pre-push-conflict --where .husky/pre-push "pre-push refused a branch that conflicts with origin/main" >/dev/null 2>&1
+    [ -n "${CLAUDECODE:-}" ] && [ "${KAIZEN_LOG_REFUSALS:-1}" != 0 ] &&
+      scripts/kaizen.sh log --from hook:pre-push-conflict --where .husky/pre-push "pre-push refused a branch that conflicts with origin/main" >/dev/null 2>&1
     exit 1
   fi
 fi

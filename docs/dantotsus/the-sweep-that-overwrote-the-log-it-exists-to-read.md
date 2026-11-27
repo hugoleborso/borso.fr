@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#105'
-fix-commits: [24eaf9b2d2]
+fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/kaizen.sh]
 time-to-detect: hours
@@ -96,6 +96,8 @@ thing losing it.
 ## Eradication (mandatory — code-level)
 
 **Type:** code diff (level 1 — structural impossibility)
+
+> **Superseded mechanism.** No step copies the log any more, so nothing can overwrite it. Every writer appends to the file the branch commits. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** PR #106 · commit `24eaf9b2` · `scripts/kaizen.sh`
 

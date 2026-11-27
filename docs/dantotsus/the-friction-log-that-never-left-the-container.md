@@ -5,8 +5,8 @@ detected-at: review
 severity: medium
 related-pr: '#199'
 fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-gh-pr-create.sh, .gitignore]
+eradication-level: 1
+eradication-paths: [scripts/kaizen.sh, scripts/kaizen.test.ts]
 time-to-detect: 2 days
 tags: [self-improvement-loop, harness, hooks, agents, meta]
 zone: .claude/hooks
@@ -67,7 +67,9 @@ log and the branch are provably in the same place is the pull request.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — the hook that already guards `gh pr create`)
+**Type:** structural impossibility (level 1), which replaced the level 2 check below
+
+> **Superseded mechanism.** The log is no longer gitignored, so it travels with the branch like the code. A new log is registered as intent-to-add, so `git status` shows it and the merge hook `merge-strands-no-work` refuses a merge that would leave its lines uncommitted. The `gh pr create` count this entry shipped is deleted. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** PR #202 · commit `self`
 

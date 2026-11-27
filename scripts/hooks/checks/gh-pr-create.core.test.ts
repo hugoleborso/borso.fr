@@ -10,24 +10,12 @@ import {
 const SHORT_BODY = 'Adds a page.';
 const LONG_BODY = 'word '.repeat(60).trim();
 
-interface WorldOptions {
-  readonly files?: Readonly<Record<string, string>>;
-  readonly changed?: string;
-}
-
-function buildWorld({ files = {}, changed = '' }: WorldOptions = {}): HookWorld & {
-  readonly calls: string[][];
-} {
-  const calls: string[][] = [];
+function buildWorld(files: Readonly<Record<string, string>> = {}): HookWorld {
   return {
-    calls,
     projectDirectory: '/repository',
     readEnvironment: () => undefined,
     readText: (path) => files[path] ?? null,
-    run: (command, args) => {
-      calls.push([command, ...args]);
-      return { status: 0, stdout: changed, stderr: '' };
-    },
+    run: () => ({ status: 0, stdout: '', stderr: '' }),
   };
 }
 
@@ -129,8 +117,8 @@ describe('ghPrCreate', () => {
   });
 
   it('reads a relative --body-file from the call directory, and from the project without one', () => {
-    const fromCall = buildWorld({ files: { '/work/body.md': `${SHORT_BODY}\n\n` } });
-    const fromProject = buildWorld({ files: { '/repository/body.md': SHORT_BODY } });
+    const fromCall = buildWorld({ '/work/body.md': `${SHORT_BODY}\n\n` });
+    const fromProject = buildWorld({ '/repository/body.md': SHORT_BODY });
 
     expect(ghPrCreate.run(buildInput('gh pr create --body-file=body.md', '/work'), fromCall)).toBe(
       PASS,
@@ -139,7 +127,7 @@ describe('ghPrCreate', () => {
   });
 
   it('reads the --body-file of a command spread over several lines from its own line', () => {
-    const world = buildWorld({ files: { '/repository/body.md': SHORT_BODY } });
+    const world = buildWorld({ '/repository/body.md': SHORT_BODY });
 
     expect(ghPrCreate.run(buildInput('git push &&\ngh pr create --body-file body.md'), world)).toBe(
       PASS,
@@ -147,7 +135,7 @@ describe('ghPrCreate', () => {
   });
 
   it('refuses a --body-file whose content is outside the budget', () => {
-    const world = buildWorld({ files: { '/work/body.md': LONG_BODY } });
+    const world = buildWorld({ '/work/body.md': LONG_BODY });
 
     const [first] = readLines('gh pr create --body-file body.md', world);
 
@@ -173,40 +161,5 @@ describe('ghPrCreate', () => {
     expect(ghPrCreate.run(buildInput(`gh pr create --body "${SHORT_BODY}"`), buildWorld())).toBe(
       PASS,
     );
-  });
-
-  it('refuses while the friction log has entries and the branch archives none, since the container is reclaimed', () => {
-    const world = buildWorld({ files: { 'KAIZEN.md': '# log\n- [x] one\n- [y] two\n' } });
-
-    expect(ghPrCreate.run(buildInput(`gh pr create --body "${SHORT_BODY}"`), world)).toEqual({
-      kind: 'refuse',
-      rule: 'open-pr',
-      summary: 'opened a pull request leaving the friction log where the sweep cannot read it',
-      lines: [
-        '[open-pr] the friction log holds 2 entr(y/ies) and this branch commits no archive of it.',
-        '[open-pr] A gitignored file does not reach the sweep, which may run on another machine.',
-        '[open-pr]   scripts/kaizen.sh archive <docs-slug>/<feature>   then commit it',
-      ],
-    });
-    expect(world.calls).toEqual([['git', 'diff', '--name-only', 'origin/main...HEAD']]);
-  });
-
-  it('reads the archive from the --head branch, because the shared checkout HEAD can be anyone', () => {
-    const world = buildWorld({
-      files: { 'KAIZEN.md': '- [x] one\n' },
-      changed: 'apps/x/a.ts\ndocs/features/pragma/sign-up/kaizen.md\n',
-    });
-
-    expect(
-      ghPrCreate.run(buildInput(`gh pr create --head topic --body "${SHORT_BODY}"`), world),
-    ).toBe(PASS);
-    expect(world.calls).toEqual([['git', 'diff', '--name-only', 'origin/main...origin/topic']]);
-  });
-
-  it('skips the archive check for an empty friction log', () => {
-    const world = buildWorld({ files: { 'KAIZEN.md': '' } });
-
-    expect(ghPrCreate.run(buildInput(`gh pr create --body "${SHORT_BODY}"`), world)).toBe(PASS);
-    expect(world.calls).toEqual([]);
   });
 });

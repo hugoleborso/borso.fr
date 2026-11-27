@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#218'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh, scripts/kaizen.test.ts]
 time-to-detect: 1 day
 tags: [meta, harness, kaizen, gates]
 zone: scripts
@@ -80,6 +80,8 @@ copy.
 ## Eradication (mandatory — code-level)
 
 **Type:** code diff (level 1 — structural impossibility)
+
+> **Superseded mechanism.** Each pull request's branch writes its own file, so a session that ships two pull requests writes two logs and no copy step can carry the first into the second. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** PR #220 · commit `self`
 

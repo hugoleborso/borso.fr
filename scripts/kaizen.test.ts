@@ -13,20 +13,22 @@ import { dirname, join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const KAIZEN_SCRIPT = resolve(import.meta.dirname, 'kaizen.sh');
-const ARCHIVE = 'docs/features/pragma/some-feature/kaizen.md';
-const EARLIER_LINE = '- [2026-11-01 10:00] `main` the gate cited ADR-0007 and ran nothing';
-const REWRITTEN_LINE =
-  '- [2026-11-01 10:00] `main` the gate cited ADR-2026-08-08T1538 and ran nothing';
-const NEW_LINE = '- [2026-11-11 12:00] `agent` the dev server died at start';
+const FRICTION_LOG = 'docs/kaizen/claude/some-feature.md';
 const ENTRY = 'scripts/an-entry.sh';
 const INVENTORY = 'docs/features/meta/lessons-from-pr-1/inventory.md';
 
 const repositories: string[] = [];
 
-function kaizenAfter(
-  commits: Record<string, string | null>[],
-  ...command: string[]
-): { status: number | null; stdout: string; directory: string } {
+interface Repository {
+  readonly directory: string;
+  readonly git: (...args: string[]) => string;
+  readonly kaizen: (
+    checkout: string,
+    ...command: string[]
+  ) => { status: number | null; stdout: string };
+}
+
+function createRepository(commits: Record<string, string | null>[]): Repository {
   const directory = mkdtempSync(join(tmpdir(), 'kaizen-'));
   repositories.push(directory);
   const { KAIZEN_AGENT: _inheritedWriter, ...inherited } = process.env;
@@ -39,58 +41,46 @@ function kaizenAfter(
     GIT_COMMITTER_NAME: 'sweep',
     GIT_COMMITTER_EMAIL: 'sweep@localhost',
   };
-  const runGit = (...args: string[]): void => {
-    execFileSync('git', args, { cwd: directory, env: environment });
-  };
+  const git = (...args: string[]): string =>
+    execFileSync('git', args, { cwd: directory, env: environment, encoding: 'utf8' });
 
   mkdirSync(join(directory, 'scripts'));
   copyFileSync(KAIZEN_SCRIPT, join(directory, 'scripts/kaizen.sh'));
-  runGit('init', '-q', '-b', 'main');
+  git('init', '-q', '-b', 'main');
   for (const files of commits) {
     for (const [path, content] of Object.entries(files)) {
       mkdirSync(join(directory, dirname(path)), { recursive: true });
       if (content === null) rmSync(join(directory, path));
       else writeFileSync(join(directory, path), content);
     }
-    runGit('add', '-A');
-    runGit('commit', '-q', '-m', 'step');
+    git('add', '-A');
+    git('commit', '-q', '-m', 'step');
   }
-  const { status, stdout } = spawnSync(join(directory, 'scripts/kaizen.sh'), command, {
-    cwd: directory,
-    env: environment,
-    encoding: 'utf8',
-  });
-  return { status, stdout, directory };
+  const kaizen = (checkout: string, ...command: string[]) => {
+    const { status, stdout } = spawnSync(join(checkout, 'scripts/kaizen.sh'), command, {
+      cwd: checkout,
+      env: environment,
+      encoding: 'utf8',
+    });
+    return { status, stdout };
+  };
+  return { directory, git, kaizen };
 }
 
-const archive = (lines: string[]): Record<string, string> => ({
-  [ARCHIVE]: `# Friction\n\n${lines.join('\n')}\n`,
-});
-const sweepInput = (before: string[], after: string[]): string =>
-  kaizenAfter([archive(before), archive(after)], 'sweep-input', 'HEAD').stdout;
+function kaizenAfter(
+  commits: Record<string, string | null>[],
+  ...command: string[]
+): { status: number | null; stdout: string } {
+  const repository = createRepository(commits);
+  return repository.kaizen(repository.directory, ...command);
+}
+
 const lines = (count: number): string => 'line\n'.repeat(count);
 
 afterEach(() => {
   for (const directory of repositories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
-});
-
-describe('kaizen.sh sweep-input', () => {
-  it('hands over a line the merge added', () => {
-    const output = sweepInput([EARLIER_LINE], [EARLIER_LINE, NEW_LINE]);
-
-    expect(output).toContain(NEW_LINE);
-    expect(output).toContain('1 line(s) to sweep');
-  });
-
-  it('leaves out a line the merge only rewrote, because an earlier sweep read it', () => {
-    const output = sweepInput([EARLIER_LINE], [REWRITTEN_LINE, NEW_LINE]);
-
-    expect(output).not.toContain(REWRITTEN_LINE);
-    expect(output).toContain(NEW_LINE);
-    expect(output).toContain('1 line(s) to sweep, across 1 archive(s)');
-  });
 });
 
 describe('kaizen.sh balance', () => {
@@ -130,7 +120,7 @@ describe('kaizen.sh balance', () => {
   it('passes a sweep that removes as much as it adds, and leaves out what a sweep does not count', () => {
     const sweep = {
       [INVENTORY]: lines(9),
-      [ARCHIVE]: lines(9),
+      [FRICTION_LOG]: lines(9),
       'docs/adr/a.md': lines(9),
       'docs/dantotsus/a.md': lines(9),
       'docs/operator-backlog/a.md': lines(9),
@@ -146,33 +136,80 @@ describe('kaizen.sh balance', () => {
   });
 });
 
-describe('kaizen.sh logging a friction line', () => {
+describe('kaizen.sh log', () => {
   const ONE_COMMIT = [{ 'README.md': 'repository\n' }];
+  const SEEN = ['--where', 'GET /api/upcoming', 'the list carries a count'];
 
-  it('logs what was seen together with where it was seen', () => {
-    const logged = kaizenAfter(
-      ONE_COMMIT,
-      '--where',
-      'GET /api/upcoming',
-      'the list carries a count',
-    );
-    expect(logged.status).toBe(0);
-    expect(readFileSync(join(logged.directory, 'KAIZEN.md'), 'utf8')).toMatch(
+  function onBranch(branch: string): Repository {
+    const repository = createRepository(ONE_COMMIT);
+    repository.git('switch', '-q', '-c', branch);
+    return repository;
+  }
+
+  it("appends what was seen and where to the branch's own log, which git tracks from its first line", () => {
+    const repository = onBranch('claude/some-feature');
+
+    expect(repository.kaizen(repository.directory, 'log', ...SEEN).status).toBe(0);
+    const log = readFileSync(join(repository.directory, FRICTION_LOG), 'utf8');
+    expect(log).toMatch(/^# Friction log of claude\/some-feature\n/);
+    expect(log).toMatch(
       /^- \[[^\]]+\] `main` the list carries a count \(where: GET \/api\/upcoming\)$/m,
+    );
+    expect(repository.git('status', '--porcelain', '--untracked-files=no')).toBe(
+      ` A ${FRICTION_LOG}\n`,
     );
   });
 
+  it('refuses on main, where no pull request would carry the line, and logs nothing', () => {
+    const repository = createRepository(ONE_COMMIT);
+
+    expect(repository.kaizen(repository.directory, 'log', ...SEEN).status).toBe(1);
+    expect(repository.git('status', '--porcelain')).toBe('');
+  });
+
   it('refuses a line that does not say where it was seen, and logs nothing', () => {
-    const refused = kaizenAfter(ONE_COMMIT, 'the list carries a count');
-    expect(refused.status).toBe(1);
-    expect(existsSync(join(refused.directory, 'KAIZEN.md'))).toBe(false);
+    const repository = onBranch('claude/some-feature');
+
+    expect(repository.kaizen(repository.directory, 'log', 'the list carries a count').status).toBe(
+      1,
+    );
+    expect(existsSync(join(repository.directory, FRICTION_LOG))).toBe(false);
+  });
+
+  it.each([['list'], ['--where', 'here', 'a sentence without the subcommand']])(
+    'refuses %s as a subcommand, so a typo never becomes a line',
+    (...command) => {
+      const repository = onBranch('claude/some-feature');
+
+      expect(repository.kaizen(repository.directory, ...command).status).toBe(1);
+      expect(repository.git('status', '--porcelain')).toBe('');
+    },
+  );
+
+  it("keeps a worktree agent's lines in its own file, so merging its branch back meets no conflict", () => {
+    const repository = onBranch('claude/some-feature');
+    const worktree = join(repository.directory, 'agent-worktree');
+    repository.git('worktree', 'add', '-q', '-b', 'worktree-agent-1', worktree);
+
+    repository.kaizen(repository.directory, 'log', '--where', 'main', 'the main session saw this');
+    repository.kaizen(worktree, 'log', '--from', 'agent', '--where', 'wt', 'the agent saw that');
+    repository.git('-C', worktree, 'commit', '-q', '-am', 'agent');
+    repository.git('commit', '-q', '-am', 'main');
+    repository.git('merge', '-q', '--no-edit', 'worktree-agent-1');
+
+    expect(repository.git('show', `HEAD:${FRICTION_LOG}`)).toContain('the main session saw this');
+    expect(repository.git('show', 'HEAD:docs/kaizen/worktree-agent-1.md')).toContain(
+      '`agent` the agent saw that',
+    );
   });
 });
 
 describe('the git hooks that log their own refusals', () => {
   it.each(['.husky/commit-msg', '.husky/pre-push'])('%s says where with --where', (hook) => {
     const source = readFileSync(resolve(import.meta.dirname, '..', hook), 'utf8');
-    const calls = source.split('\n').filter((line) => line.includes('scripts/kaizen.sh --from'));
+    const calls = source
+      .split('\n')
+      .filter((line) => line.includes('scripts/kaizen.sh log --from'));
     expect(calls.length).toBeGreaterThan(0);
     for (const call of calls) expect(call).toContain('--where');
   });
