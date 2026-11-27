@@ -128,10 +128,10 @@ Quote the code for each row. An existing write path the diff only touches still 
 2. **Resolve the diff** for the round, then walk categories A to E.
 3. **Check every FAIL row for its failing case and its type.** Move a row with no failing case to Notes.
 4. **Write the report.** Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step. The main session commits what it finds at that path.
-5. **Log friction** that is not a finding about the code, one line each as you hit it, the problem only:
+5. **Log friction** that is not a finding about the code, one line each as you hit it: what you saw and where, never why:
 
    ```bash
-   scripts/kaizen.sh --from technical-validator "<what went wrong, one sentence>"
+   scripts/kaizen.sh --from technical-validator --where "<command, URL or file:line>" "<what you saw>"
    ```
 
 6. **Return only the report path.**

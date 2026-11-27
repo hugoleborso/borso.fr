@@ -26,7 +26,6 @@ const NEXT_CONCERT = {
   message: 'Entrée libre\nVenez tôt',
   posterUrl: null,
   prize: { label: '3 beers to win', icon: 'beer' },
-  registrationCount: 4,
 };
 const UPCOMING = {
   concerts: [

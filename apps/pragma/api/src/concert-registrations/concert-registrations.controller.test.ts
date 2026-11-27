@@ -42,16 +42,15 @@ const amendedEnvelope = z.object({
     wishedSong: wishedSongSchema.nullable(),
   }),
 });
-const upcomingEnvelope = z.object({
+const upcomingEnvelope = z.strictObject({
   concerts: z.array(
-    z.object({
+    z.strictObject({
       sessionId: z.guid(),
       date: z.string(),
       venue: z.string().nullable(),
       message: z.string().nullable(),
       posterUrl: z.string().nullable(),
-      prize: z.object({ label: z.string(), icon: z.string() }).nullable(),
-      registrationCount: z.number(),
+      prize: z.strictObject({ label: z.string(), icon: z.string() }).nullable(),
     }),
   ),
 });
@@ -427,7 +426,7 @@ describe('concert registrations controller (back-e2e)', () => {
     }
   });
 
-  it('lists the upcoming concerts only, soonest first, with their message and sign-up count', async () => {
+  it('lists the upcoming concerts only, soonest first, with their message and no sign-up count', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const later = await createConcert(
       app,
@@ -450,20 +449,14 @@ describe('concert registrations controller (back-e2e)', () => {
       upcomingEnvelope,
     );
     expect(
-      listed.concerts.map(({ sessionId, message, posterUrl, registrationCount }) => ({
+      listed.concerts.map(({ sessionId, message, posterUrl }) => ({
         sessionId,
         message,
         posterUrl,
-        registrationCount,
       })),
     ).toEqual([
-      {
-        sessionId: tonight,
-        message: 'Doors at 8.\nFree entry.',
-        posterUrl: null,
-        registrationCount: 2,
-      },
-      { sessionId: later, message: null, posterUrl: null, registrationCount: 0 },
+      { sessionId: tonight, message: 'Doors at 8.\nFree entry.', posterUrl: null },
+      { sessionId: later, message: null, posterUrl: null },
     ]);
   });
 

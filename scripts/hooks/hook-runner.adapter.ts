@@ -12,6 +12,7 @@ import {
   type HookInput,
   type HookOutcome,
   type HookWorld,
+  describeRefusedCall,
   PASS,
   renderOutcome,
   selectChecksFor,
@@ -50,11 +51,17 @@ function runSafely(check: Check, input: HookInput): Verdict {
   }
 }
 
-function logRefusals(outcome: HookOutcome): void {
+function logRefusals(outcome: HookOutcome, input: HookInput): void {
   const isLoggingRefusals = process.env['KAIZEN_LOG_REFUSALS'] !== '0';
   if (!isLoggingRefusals || !existsSync(join(PROJECT_DIRECTORY, 'KAIZEN.md'))) return;
   for (const { rule, summary } of outcome.refusals) {
-    runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), ['--from', `hook:${rule}`, summary]);
+    runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), [
+      '--from',
+      `hook:${rule}`,
+      '--where',
+      describeRefusedCall(input),
+      summary,
+    ]);
   }
 }
 
@@ -63,7 +70,7 @@ export function runHook(checksByEvent: Readonly<Record<HookEvent, readonly Check
   const checks = checksByEvent[input.hook_event_name] ?? [];
   const verdicts = selectChecksFor(checks, input.tool_name).map((check) => runSafely(check, input));
   const outcome = renderOutcome(input.hook_event_name, verdicts);
-  logRefusals(outcome);
+  logRefusals(outcome, input);
   process.stdout.write(outcome.stdout);
   process.stderr.write(outcome.stderr);
   process.exitCode = outcome.exitCode;

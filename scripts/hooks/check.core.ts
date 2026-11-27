@@ -122,3 +122,14 @@ export function renderOutcome(event: HookEvent, verdicts: readonly Verdict[]): H
     renderRefusals(event, verdicts) ?? renderBlocks(verdicts) ?? renderContexts(event, verdicts)
   );
 }
+
+const REFUSED_CALL_MAX_LENGTH = 200;
+
+// @FollowsBlueprint core-projection
+export function describeRefusedCall(input: HookInput): string {
+  const toolName = input.tool_name ?? input.hook_event_name;
+  const toolInput = input.tool_input ?? {};
+  const target = toolInput['command'] ?? toolInput['file_path'] ?? toolInput['url'];
+  if (typeof target !== 'string') return toolName;
+  return `${toolName} ${target.replace(/\s+/gu, ' ').slice(0, REFUSED_CALL_MAX_LENGTH)}`;
+}

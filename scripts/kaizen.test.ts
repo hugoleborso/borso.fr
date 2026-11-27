@@ -1,5 +1,13 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -18,11 +26,12 @@ const repositories: string[] = [];
 function kaizenAfter(
   commits: Record<string, string | null>[],
   ...command: string[]
-): { status: number | null; stdout: string } {
+): { status: number | null; stdout: string; directory: string } {
   const directory = mkdtempSync(join(tmpdir(), 'kaizen-'));
   repositories.push(directory);
+  const { KAIZEN_AGENT: _inheritedWriter, ...inherited } = process.env;
   const environment = {
-    ...process.env,
+    ...inherited,
     GIT_CONFIG_GLOBAL: '/dev/null',
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_AUTHOR_NAME: 'sweep',
@@ -51,7 +60,7 @@ function kaizenAfter(
     env: environment,
     encoding: 'utf8',
   });
-  return { status, stdout };
+  return { status, stdout, directory };
 }
 
 const archive = (lines: string[]): Record<string, string> => ({
@@ -110,5 +119,37 @@ describe('kaizen.sh balance', () => {
 
     expect(stdout).toContain('Balance: added 3, removed 3 outside');
     expect(status).toBe(0);
+  });
+});
+
+describe('kaizen.sh logging a friction line', () => {
+  const ONE_COMMIT = [{ 'README.md': 'repository\n' }];
+
+  it('logs what was seen together with where it was seen', () => {
+    const logged = kaizenAfter(
+      ONE_COMMIT,
+      '--where',
+      'GET /api/upcoming',
+      'the list carries a count',
+    );
+    expect(logged.status).toBe(0);
+    expect(readFileSync(join(logged.directory, 'KAIZEN.md'), 'utf8')).toMatch(
+      /^- \[[^\]]+\] `main` the list carries a count \(where: GET \/api\/upcoming\)$/m,
+    );
+  });
+
+  it('refuses a line that does not say where it was seen, and logs nothing', () => {
+    const refused = kaizenAfter(ONE_COMMIT, 'the list carries a count');
+    expect(refused.status).toBe(1);
+    expect(existsSync(join(refused.directory, 'KAIZEN.md'))).toBe(false);
+  });
+});
+
+describe('the git hooks that log their own refusals', () => {
+  it.each(['.husky/commit-msg', '.husky/pre-push'])('%s says where with --where', (hook) => {
+    const source = readFileSync(resolve(import.meta.dirname, '..', hook), 'utf8');
+    const calls = source.split('\n').filter((line) => line.includes('scripts/kaizen.sh --from'));
+    expect(calls.length).toBeGreaterThan(0);
+    for (const call of calls) expect(call).toContain('--where');
   });
 });

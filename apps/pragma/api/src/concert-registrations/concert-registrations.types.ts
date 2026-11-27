@@ -63,7 +63,6 @@ export interface UpcomingConcertView {
   readonly message: string | null;
   readonly posterUrl: string | null;
   readonly prize: ConcertPrize | null;
-  readonly registrationCount: number;
 }
 
 export interface AnnouncementView {

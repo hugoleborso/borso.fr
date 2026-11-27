@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { type Check, PASS, refuse, renderOutcome, selectChecksFor } from './check.core.ts';
+import {
+  type Check,
+  describeRefusedCall,
+  PASS,
+  refuse,
+  renderOutcome,
+  selectChecksFor,
+} from './check.core.ts';
 
 const EVERY_TOOL: Check = { name: 'every', tools: null, run: () => PASS };
 const BASH_ONLY: Check = { name: 'bash', tools: /^Bash$/u, run: () => PASS };
@@ -97,5 +104,50 @@ describe('renderOutcome', () => {
       stderr: '',
       refusals: [],
     });
+  });
+});
+
+describe('describeRefusedCall', () => {
+  it('names the tool and the command it was refused', () => {
+    expect(
+      describeRefusedCall({
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Bash',
+        tool_input: { command: 'git push\n  --force' },
+      }),
+    ).toBe('Bash git push --force');
+  });
+
+  it('names the file an edit was refused on, and the URL of a fetch', () => {
+    expect(
+      describeRefusedCall({
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Edit',
+        tool_input: { file_path: 'CLAUDE.md' },
+      }),
+    ).toBe('Edit CLAUDE.md');
+    expect(
+      describeRefusedCall({
+        hook_event_name: 'PreToolUse',
+        tool_name: 'WebFetch',
+        tool_input: { url: 'https://example.com' },
+      }),
+    ).toBe('WebFetch https://example.com');
+  });
+
+  it('keeps the first 200 characters of a long command', () => {
+    const described = describeRefusedCall({
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Bash',
+      tool_input: { command: 'a'.repeat(300) },
+    });
+    expect(described).toBe(`Bash ${'a'.repeat(200)}`);
+  });
+
+  it('falls back to the tool name, then the event, when the call names no target', () => {
+    expect(
+      describeRefusedCall({ hook_event_name: 'PreToolUse', tool_name: 'Task', tool_input: {} }),
+    ).toBe('Task');
+    expect(describeRefusedCall({ hook_event_name: 'Stop' })).toBe('Stop');
   });
 });

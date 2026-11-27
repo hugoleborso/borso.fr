@@ -34,6 +34,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   all evening. Anything else answers 422 `not-an-upcoming-concert`.
 - The public sees each member's id, first name and colour only, never an
   email, a phone or an avatar key.
+- The public list of upcoming concerts carries no registration count. Each
+  concert holds its session id and what the ticket draws, nothing else.
 - `concert_registration` is kept off every preview clone and off the
   schema reader, because it holds emails (`cdk/lib/stack.ts`).
 
@@ -49,6 +51,7 @@ Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › refuses a sign-up on a practice, a past concert and a session that does not exist
 Held by: `api/src/concert-registrations/concert-registrations.core.test.ts` › keeps a concert that started earlier today in Paris, so tonight stays open all evening
 Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › shows the public only the id, first name and colour of each member
+Held by: `api/src/concert-registrations/concert-registrations.controller.test.ts` › lists the upcoming concerts only, soonest first, with their message and no sign-up count
 Held by: `cdk/test/stack.test.ts` › keeps the reader off every table holding a credential, a key, a secret address, a ballot token or a fan email
 
 - A member removes one registration of one concert

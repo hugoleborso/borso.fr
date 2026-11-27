@@ -31,7 +31,6 @@ import {
 import {
   type ConcertAnnouncementRow,
   type ConcertRegistrationRow,
-  countRegistrationsOfConcerts,
   findConcertAnnouncement,
   findConcertAnnouncementWithin,
   findRegistrationHoldingToken,
@@ -56,8 +55,6 @@ import {
   type WishedSongView,
 } from './concert-registrations.types';
 
-const NO_REGISTRATION = 0;
-
 export const REGISTRATION_TOKEN_HEADER = PRAGMA_REQUEST_HEADERS.registrationToken;
 
 async function mintPosterUrl(posterS3Key: string | null, now: Date): Promise<string | null> {
@@ -69,8 +66,6 @@ async function mintPosterUrl(posterS3Key: string | null, now: Date): Promise<str
 // @FollowsBlueprint service-read-model
 export async function listUpcomingConcerts(now: Date): Promise<UpcomingConcertView[]> {
   const concerts = await listConcertsFrom(startOfParisDay(now));
-  const counts = await countRegistrationsOfConcerts(concerts.map((concert) => concert.id));
-  const countBySessionId = new Map(counts.map((row) => [row.sessionId, row.registrationCount]));
   return await Promise.all(
     concerts.map(async (concert) => ({
       sessionId: concert.id,
@@ -79,7 +74,6 @@ export async function listUpcomingConcerts(now: Date): Promise<UpcomingConcertVi
       message: concert.publicMessage,
       posterUrl: await mintPosterUrl(concert.posterS3Key, now),
       prize: projectConcertPrize(concert.prizeLabel, concert.prizeIcon),
-      registrationCount: countBySessionId.get(concert.id) ?? NO_REGISTRATION,
     })),
   );
 }

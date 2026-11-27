@@ -9,6 +9,7 @@ export default defineConfig({
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
     include: ['eslint-rules/**/*.test.js', 'scripts/**/*.test.ts'],
     environment: 'node',
+    setupFiles: ['scripts/git-hook-variables-cleared.setup.ts'],
     coverage: {
       provider: 'v8',
       reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
