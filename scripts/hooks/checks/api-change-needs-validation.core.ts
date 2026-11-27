@@ -1,6 +1,6 @@
 // @FollowsBlueprint utils-pure-module
 import { type Check, type HookInput, type HookWorld, PASS, refuse } from '../check.core.ts';
-import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
+import { isCommentOnlyEdit } from './comment-only-change.core.ts';
 import { readHeadBranch, isRunningPullRequestCreate, stripHeredocs } from './gh-pr-create.core.ts';
 
 const API_FILE = /^apps\/[^/]+\/api\//u;

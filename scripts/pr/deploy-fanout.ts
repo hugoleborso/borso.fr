@@ -1,20 +1,26 @@
 import { execFileSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 
-import { isProductionInertChange, manifestPathOf } from '../dependencies/check-only-change.core';
-import { isCommentOnlyEdit } from '../dependencies/comment-only-change.core';
-import { decideDeployFanout, describeDeployFanout } from './deploy-fanout.core';
+import { listAppsWhoseOutputChanged } from '../deploy/synthesized-output';
+import {
+  decideDeployCandidates,
+  describeDeployFanout,
+  keepChangedOutput,
+} from './deploy-fanout.core';
 
 const DEFAULT_BASE = 'origin/main';
 const DEFAULT_HEAD = 'HEAD';
+const CANDIDATES_ONLY_FLAG = '--candidates-only';
 const UNREADABLE_EXIT_CODE = 1;
 
 function git(argumentsForGit: readonly string[]): string {
   return execFileSync('git', argumentsForGit, { encoding: 'utf8' }).trim();
 }
 
-const base = process.argv[2] ?? DEFAULT_BASE;
-const head = process.argv[3] ?? DEFAULT_HEAD;
+const operands = process.argv.slice(2).filter((argument) => argument !== CANDIDATES_ONLY_FLAG);
+const isCandidatesOnly = process.argv.includes(CANDIDATES_ONLY_FLAG);
+const base = operands[0] ?? DEFAULT_BASE;
+const head = operands[1] ?? DEFAULT_HEAD;
 
 let changedPaths: string[];
 try {
@@ -32,29 +38,17 @@ const applicationSlugs = readdirSync('apps', { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
-const mergeBase = git(['merge-base', base, head]);
+const candidates = decideDeployCandidates(changedPaths, applicationSlugs);
 
-function readFileAt(revision: string, path: string): string | null {
-  try {
-    return git(['show', `${revision}:${path}`]);
-  } catch {
-    return null;
-  }
-}
-
-function readManifestAt(revision: string, directory: string): unknown {
-  return JSON.parse(readFileAt(revision, manifestPathOf(directory)) ?? 'null');
-}
-
-function isProductionInert(directory: string, changedFiles: readonly string[]): boolean {
-  return isProductionInertChange(
-    directory,
-    changedFiles,
-    { before: readManifestAt(mergeBase, directory), after: readManifestAt(head, directory) },
-    (path) => isCommentOnlyEdit(path, readFileAt(mergeBase, path), readFileAt(head, path)),
+if (isCandidatesOnly || candidates.applications.length === 0) {
+  process.stdout.write(`${describeDeployFanout(candidates)}\n`);
+} else {
+  const mergeBase = git(['merge-base', base, head]);
+  const isThisCheckout = git(['rev-parse', head]) === git(['rev-parse', DEFAULT_HEAD]);
+  const changed = listAppsWhoseOutputChanged(
+    mergeBase,
+    isThisCheckout ? null : head,
+    candidates.applications,
   );
+  process.stdout.write(`${describeDeployFanout(keepChangedOutput(candidates, changed))}\n`);
 }
-
-process.stdout.write(
-  `${describeDeployFanout(decideDeployFanout(changedPaths, applicationSlugs, isProductionInert))}\n`,
-);

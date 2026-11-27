@@ -4,11 +4,11 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: '#151'
-fix-commits: [21a850ab]
-eradication-level: 2
+fix-commits: [21a850ab, self]
+eradication-level: 1
 time-to-detect: minutes
 tags: [ci, github-actions, pnpm, deploy]
-eradication-paths: [scripts/dependencies/dependency-closure.core.ts, scripts/dependencies/apps-with-changed-dependencies.ts]
+eradication-paths: [scripts/deploy/synthesized-output.core.ts, scripts/deploy/synthesized-output.ts, scripts/deploy/apps-whose-output-changed.ts, .github/workflows/deploy.yml, .github/workflows/preview.yml]
 zone: .github/path-filters.yml
 recurs: none (the earlier entry ran too few app suites on a bump; this one deployed every app on a change that touched none)
 ---
@@ -53,41 +53,53 @@ set of versions it resolves.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — a CI script decides the deploy set from the
-resolved graph)
+**Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `e4e34d2`
+**Reference:** PR #154 · commit `e4e34d2` digested each app's lockfile
+closure. It still deployed all six apps on an eslint bump, because the root
+importer is in every closure. The commit adding this paragraph replaced the
+closure with the deploy's own output.
 
-**The actual fix:**
+`deploy.yml` and `preview.yml` no longer classify changed files. `detect`
+takes the `dorny/paths-filter` keys as candidates only (every app when
+`infra` or `deps` matched), then runs
+`scripts/deploy/apps-whose-output-changed.ts`, which synthesizes each
+candidate with its own `synth` script at the base commit and at the head, and
+keeps the apps whose `*.template.json` or `*.assets.json` differ. The
+templates name every Lambda and site asset by its content hash, so a byte that
+reaches a bucket or a function changes the digest, and a byte that does not
+leaves it alone. The synthesis drops `GITHUB_SHA` and `SENTRY_AUTH_TOKEN`, so
+the release label every prod Lambda carries cannot make two commits differ.
+An app that fails to synthesize on either side counts as changed, and a
+failure of the script deploys every candidate, so the comparison can only
+remove work. `scripts/pr/deploy-fanout.ts` runs the same comparison, so the
+prediction and the merge agree.
 
-```diff
--          if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then
-+          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
- ...
-+          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
-+            mapfile -t candidates < <(jq -r '.[]' <<<"$all_apps")
-+            moved=$(pnpm exec tsx scripts/dependencies/apps-with-changed-dependencies.ts \
-+              changed "$BASE" "${candidates[@]}") || moved="$all_apps"
-```
+This deleted `check-only-change.core.ts`, `drop-check-only-changes.ts`,
+`dependency-closure.core.ts` and `apps-with-changed-dependencies.ts`, with
+their tests: 1,026 lines and three hand-kept lists (check-only script names,
+`TOOLING_FILE_PATTERN`, `PREVIEW_ONLY_FILE_PATTERN`). No new kind of harmless
+change needs a new exception.
 
-`dependency-closure.core.ts` (100% coverage and mutation score) parses the
-lockfile, walks each app's importer, the workspace packages it links and every
-snapshot reachable from them, and digests the result together with the root
-importer, the lockfile settings, `pnpm-workspace.yaml` without its catalogs and
-the root `packageManager`, `pnpm` and `engines` fields. An app deploys when its
-digest differs from the base. Anything the script cannot read falls back to
-every app.
+**Proof it can fail:** with a `lint` script rewrite, a README line, a test
+edit and a new dev dependency in `apps/pragma`, the script printed `[]` (base
+and head digest `33ae714f…`, measured 2026-11-27). Adding one changed
+translation string to `apps/pragma/site/src/i18n/en.json` on top made it print
+`["pragma"]` (head `3c2aeb6c…`). The pure half,
+`synthesized-output.core.ts`, is at 100% coverage and mutation score.
 
-Replayed over past merges: #151 deploys `pragma` only; the Spotify ISRC change
-`pragma` only; the aws-cdk bump four apps; an eslint bump still all six,
-because the root importer is in every digest — Node resolves upward into the
-root `node_modules`, so an app can use a root tool without declaring it.
+**Cost, measured locally on 2026-11-27:** `pnpm build` plus `cdk synth --all`
+took 10 s (borso-fr) to 21 s (pragma) per app and per commit, 110 s for all
+seven apps at one commit, on a 4-core sandbox. With other agents loading the
+same machine to about 20, one app at two commits took 142 s to 186 s and all
+seven 625 s. GitHub runner timings are unknown until the first run.
 
-**Library considered:** the `yaml` package parses the lockfile properly. It is
-only a transitive dependency here, and adding a direct one is an ADR trigger;
-`scripts/dependencies/check-dependency-catalog.ts` already reads
-`pnpm-workspace.yaml` line by line, so the parser follows that precedent.
-`pnpm ls --lockfile-only` does not exist in pnpm 10.0.0 (tried 2026-10-10).
+**Replayed on PR #411** (`458e886c4`), which added the root dev dependency
+`unbash` and deleted unused functions in five apps:
+`deploy-fanout.ts 458e886c4^1 458e886c4` printed banana-rush, borso-fr,
+pragma and talos, and dropped borsouvertures, last-loop-lepin and skull-king
+(measured, 384 s for both commits). The closure rule had every app's digest
+move, because the root importer is in each one.
 
 **Sibling defects swept:** `ci.yml` keeps the full fan-out on purpose: a
 dependency change should still run every suite.

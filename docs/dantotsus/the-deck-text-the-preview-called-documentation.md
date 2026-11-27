@@ -6,10 +6,10 @@ severity: medium
 related-pr: '#340'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/dependencies/check-only-change.core.ts, scripts/pr/deploy-fanout.core.ts, scripts/pr/deploy-fanout.ts, .github/workflows/deploy.yml]
+eradication-paths: [scripts/deploy/synthesized-output.core.ts, scripts/deploy/synthesized-output.ts, scripts/deploy/apps-whose-output-changed.ts, .github/workflows/deploy.yml, .github/workflows/preview.yml]
 time-to-detect: hours
 tags: [ci, github-actions, deploy, borsouvertures]
-zone: scripts/dependencies/check-only-change.core.ts
+zone: .github/workflows/preview.yml
 recurs: [a-lint-script-redeployed-every-app]
 ---
 
@@ -71,32 +71,19 @@ prediction agree.
 
 **Type:** structural impossibility (level 1)
 
-**Reference:** PR #356 · the commit adding this file
+**Reference:** PR #356 narrowed `TOOLING_FILE_PATTERN` to upper-case markdown.
+The commit adding this paragraph deleted the pattern: no file is classified by
+its name any more.
 
-```diff
- const TOOLING_FILE_PATTERN =
--  /(\.test\.tsx?|\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
-+  /(\.test\.tsx?|\/[A-Z][A-Z0-9_-]*\.md|\/stryker\.config\.js|\/vitest(\.[a-z]+)?\.config\.ts)$/;
-```
+The preview and the merge now keep an app when its synthesized output differs
+from the base, read by `scripts/deploy/apps-whose-output-changed.ts`.
+borsouvertures builds its decks from `ideas.en.md` during `pnpm build`
+(`scripts/decks/deck-folders.adapter.ts`), so a rewritten deck changes the
+site asset hash in the template and the app is kept, whatever the file is
+called (inferred from the build, not replayed). A README changes no asset and is dropped.
+The same comparison backs `scripts/pr/deploy-fanout.ts`.
 
-```diff
--          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
--            if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
--              "$BASE" "$CHANGES"); then
-+          if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-+            "$BASE" "$CHANGES" --tooling); then
-```
-
-`decideDeployFanout` takes the same `isToolingOnlyChange` predicate, and
-`pnpm exec tsx scripts/pr/deploy-fanout.ts 8230bce^ 8230bce` now prints
-`none — no application path changed.`
-
-**Proof it can fail:** on a scratch commit changing
-`apps/borsouvertures/content/decks/vienna-game/ideas.en.md` and
-`apps/pragma/README.md`, the old rule printed `[]` and the new one prints
-`["borsouvertures"]`. The test case for `ideas.en.md` fails against the old
-pattern.
-
-**Similar instances:** `git ls-files 'apps/**/*.md'` lists the deck ideas as
-the only lower-case markdown, and `grep -rn "\.md['\"]" apps` finds no other
-build reading markdown.
+**Proof it can fail:** a translation string changed in
+`apps/pragma/site/src/i18n/en.json` made the script print `["pragma"]`, and a
+README line, a test edit, a `lint` script and a dev dependency in the same app
+printed `[]` (measured 2026-11-27).

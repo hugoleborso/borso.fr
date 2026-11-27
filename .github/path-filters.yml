@@ -3,10 +3,10 @@
 #
 # Two kinds of keys:
 #   - One per app: `<slug>: 'apps/<slug>/**'`. When a PR touches paths
-#     matching this filter, only that app gets deployed.
+#     matching this filter, that app is a deploy candidate.
 #   - The special `infra` key, matching `infra/cdk/**`. When constructs
-#     change, every app's preview / prod gets redeployed because the
-#     constructs are the contract.
+#     change, every app is a candidate because the constructs are the
+#     contract.
 #
 # The `deps` key matches the files that decide every workspace's dependency
 # versions. It exists because a bump can change what all four applications
@@ -17,9 +17,11 @@
 # `ci.yml` this key fans out to every app rather than naming one.
 # See docs/dantotsus/a-dependency-bump-that-no-app-filter-could-see.md.
 #
-# `deploy.yml` and `preview.yml` narrow it instead: they ask
-# `scripts/dependencies/apps-with-changed-dependencies.ts` which apps resolve
-# something different, so a dev dependency one app adds deploys that app only.
+# In `deploy.yml` and `preview.yml` every key is only a candidate: those
+# workflows synthesize each candidate app at both commits with
+# `scripts/deploy/apps-whose-output-changed.ts` and deploy only the apps whose
+# templates or asset hashes differ, so a dev dependency, a lint script or a
+# README deploys nothing.
 # See docs/dantotsus/a-dev-dependency-that-redeployed-every-app.md.
 #
 # `infra/shared/**` is intentionally NOT a filter — its deploy flow is
