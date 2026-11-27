@@ -76,3 +76,4 @@ Session: 78a9cee8-6ad7-5552-b015-d73d4b1ef7ca
 - [2026-11-26 21:46] `visual-validator` CDP Emulation.setEmulatedMedia accepts display-mode standalone and returns ok but Chromium 158 ignores it, so an installed-app check needs a matchMedia stub instead
 - [2026-11-27 09:50] `main` The public upcoming-concerts API (GET /api/concert-registrations/upcoming) returned a registrationCount per concert that no screen displays; the operator found it, not the session
 - [2026-11-27 09:58] `main` the session said it would wait for the technical validator to finish reading the hide-count worktree before editing; the operator asked whether it was not in a worktree (where: this session, reply after the operator approved the kaizen.sh change)
+- [2026-11-27 10:21] `main` the new kaizen.test.ts cases failed under pre-push and wrote two test lines into the real KAIZEN.md of the main checkout (where: git push, .husky/pre-push running scripts/kaizen.test.ts)

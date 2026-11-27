@@ -5,7 +5,6 @@ import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const RANGE_SCRIPT = resolve(import.meta.dirname, 'pre-push-range.sh');
-const VARIABLES_A_HOOK_SETS = ['GIT_DIR', 'GIT_INDEX_FILE', 'GIT_WORK_TREE', 'GIT_PREFIX'];
 
 const repositories: string[] = [];
 
@@ -19,9 +18,6 @@ function isolatedEnvironment(): NodeJS.ProcessEnv {
     GIT_COMMITTER_NAME: 'range',
     GIT_COMMITTER_EMAIL: 'range@localhost',
   };
-  for (const variable of VARIABLES_A_HOOK_SETS) {
-    delete environment[variable];
-  }
   return environment;
 }
 
