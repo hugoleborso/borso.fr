@@ -79,7 +79,13 @@ control did not change; either one alone passes for the wrong reason.
 ## Overrides end with the CDP session that set them
 
 Measured 2026-10-25: after the client disconnected, `navigator.maxTouchPoints`
-was back to 0 and `(pointer: coarse)` false, while the 375 px viewport stayed.
+was back to 0 and `(pointer: coarse)` false. That run used argent's own
+Chromium. In the shared agent-browser session the 375 px viewport does not
+stay either. Measured 2026-11-14: `innerWidth` read 1280 after
+`touch-tap.ts` closed its connection, because the page keeps one set of device
+metrics. `scripts/phone.sh` re-applies the phone viewport on exit and fails if
+the page is not 375 px wide, see
+[`the-tap-that-left-the-phone-at-desktop-width`](../dantotsus/the-tap-that-left-the-phone-at-desktop-width.md).
 On 2026-10-29 `(pointer: coarse)` was again false after `scripts/phone.sh touch`
 returned. `Browser.grantPermissions` behaves the same: the
 grant is revoked when the granting client closes. So set, act and read back in

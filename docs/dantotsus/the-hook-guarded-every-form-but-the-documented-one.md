@@ -4,122 +4,129 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#83'
-fix-commits: [a7f4378899]
+fix-commits: [a7f4378899, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-github-pr-body.sh, scripts/check-hook-decisions.sh]
+eradication-paths: [scripts/hooks/checks/github-pr-body.core.ts, scripts/hooks/checks/github-pr-body.core.test.ts]
 time-to-detect: days
 tags: [hooks, github, harness, meta, self-improvement-loop]
-zone: .claude/hooks/pretool-github-pr-body.sh
+zone: scripts/hooks/checks/github-pr-body.core.ts
 weak-point: gate-measures-nothing
 recurs: [two-guard-hooks-that-never-guarded]
 ---
 
 # The hook guarded every form but the documented one
 
-## Symptom
+## User impact
 
-Opening PR #83, the body was refused twice by the pull-request-body hook for
-carrying collapsible sections, rewritten as headings, and accepted. Reading the
-stored body back afterwards, two sentences had quietly lost a word each: a
-placeholder written in angle brackets after `file:` was gone, and so was the
-line number after a colon. The sentences still parsed. They now said something
-else.
+The operator reads pull request bodies on GitHub. The stored body of PR #83
+said something other than what the agent wrote.
 
-The behaviour was not a discovery. It is written down three times over, from
-three different PRs, in the knowledge entry the hook's own error message points
-at.
+| | Seen | Expected |
+| --- | --- | --- |
+| A sentence naming a file | the angle-bracket placeholder after `file:` gone, the sentence still grammatical | the placeholder kept |
+| A sentence naming a line | the line number after a colon gone | the line number kept |
 
-## Root-cause chain
+The agent found both losses by reading the body back with `pull_request_read`
+(measured, on PR #83, 2026-08-21). The same loss was measured on PR #49 and
+PR #51 on 2026-08-15 and on PR #82 that morning, per the commit message of
+`a7f4378`.
 
-1. **Why?** The GitHub MCP server reads anything shaped like a tag as HTML and
-   removes it, and a placeholder in angle brackets is shaped like a tag.
-2. **Why did the hook not refuse the call?** Because the hook has four rules,
-   and none of them is this one.
-3. **Why not, when the entry it cites documents this form first?** Because the
-   hook was written on 2026-08-18 to solve the problem in front of its author
-   that day — a body carrying before-and-after screenshots of a phone screen
-   that arrived defused. It guarded the four forms that probe measured. The
-   placeholder had been measured three days earlier, on two other PRs, and was
-   not in front of anyone.
-4. **Why did the entry not stop it anyway?** Because the entry is read after
-   the failure, not before the call. That is what the hook is for, and the hook
-   is where the knowledge did not travel to.
-5. **Why did it bite twice in one session rather than once?** Because the first
-   loss was found by reading the body back, repaired, and the repair reused the
-   same convention in a different sentence.
+## Causal chain
 
-**Root cause:** thought the hook covers the sanitizer, actually the hook covers
-the probe its author ran that day — and the form with the most evidence behind
-it was the one form nobody had needed on the day the hook was written.
+- Two sentences of PR #83's stored body each lost a word.
+  - The GitHub MCP server read each angle-bracket placeholder as an HTML tag
+    and deleted it, inside backticks too, then returned 200.
+    - The agent wrote the placeholders in angle brackets, some inside a code
+      span.
+      - It wrote them in the repository's own convention. `CLAUDE.md` and
+        every skill write placeholders that way:
+        `grep -oE '<[A-Za-z][A-Za-z0-9 ._/:-]*>' .claude/skills/open-pr/SKILL.md | wc -l`
+        prints 25 today (measured).
+        - The fact that the sanitizer deletes them lived only in
+          `docs/knowledge/github-mcp-pr-body-sanitizer.md`, which says so
+          itself: "which is exactly how this repository writes placeholders
+          everywhere else, including in `CLAUDE.md` and every skill". That
+          entry was not in the agent's context when it wrote the body
+          (inferred: nothing loads it before a call).
+  - The repair of the first loss reused the same convention in another
+    sentence, and it lost a word too.
+
+## Root cause of occurrence
+
+*Thought a code span keeps an angle-bracket placeholder intact in a pull
+request body, actually the GitHub MCP server strips tag-shaped text before
+markdown fencing is considered.* (Material)
+
+The agent wrote the line with the repository's placeholder convention in its
+context and without the one document that contradicts it.
+`docs/knowledge/github-mcp-pr-body-sanitizer.md`, read this session: "Applies
+to any angle-bracket convention a description might use ... which is exactly
+how this repository writes placeholders everywhere else". Had the agent known
+it, it would have written `PATH` or a real example.
 
 ## Detection failure causes
 
-- **Typing / linter:** neither reads a string destined for an HTTP body.
-- **Functional validation locally:** the call succeeds. That is the whole
-  problem — the server stores the mutilated body and returns 200.
-- **CI:** `scripts/check-hook-decisions.sh` holds each hook to its contract,
-  but a contract is a table of cases and a case nobody wrote is a case that
-  passes.
-- **Code review:** the body a reviewer reads is the stored one, which is
-  grammatical.
-- **PO / QA validation:** the operator reads the rendered PR. A deleted
-  placeholder leaves a sentence that reads fine.
+- **Typing and lint:** neither reads a string sent as an MCP tool argument.
+- **Local:** the call succeeds. The server stores the shortened body and
+  returns 200.
+- **Agent hook:** `pretool-github-pr-body.sh`, written on 2026-08-18 in
+  `0f55859e9`, held four rules. They were the four forms its author's probe
+  measured that day, and the placeholder was not one of them.
+- **CI:** `scripts/check-hook-decisions.sh` held each hook to a table of
+  cases. A form with no row passed.
+- **Review:** the reviewer reads the stored body, which is grammatical.
 
 ## Countermeasure
 
-The two sentences were rewritten without brackets before the PR was opened —
-`PATH`, `PATH:118`, `PATH#SYMBOL`. That is a repair, not a fix; the next body
-would have done the same thing.
+The two sentences were rewritten without brackets before the PR was opened,
+as `PATH`, `PATH:118` and `PATH#SYMBOL`. That repairs this body, not the
+next one.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the hook now refuses the form before the call)
+**Type:** DevX check (level 2)
 
-Level 1 would be a body builder that escapes on the way out, which this harness
-has no seam for: the body is a string argument to an MCP tool the agent calls
-directly. Level 3 is a vendor patch to a server that is not ours.
+**Reference:** commit [`a7f4378`](https://github.com/hugoleborso/borso.fr/commit/a7f4378)
+added a fifth rule to the shell hook. Commit `458e886c4` (PR #411) replaced
+the shell hooks with TypeScript checks, and the rule now lives in
+`scripts/hooks/checks/github-pr-body.core.ts`. It reads the raw body, not the
+code-stripped copy, because a code span does not protect the placeholder.
 
-**Reference:** PR #86 · commit [`a7f4378`](https://github.com/hugoleborso/borso.fr/commit/a7f4378)
-
-**The actual fix:** a fifth rule in `.claude/hooks/pretool-github-pr-body.sh`,
-and it reads the raw body rather than the rendered one:
-
-```bash
-PLACEHOLDER="$(grep -oE '<[A-Za-z][A-Za-z0-9._/:-]*>' <<<"$BODY" | head -1 || true)"
-if [[ -n "$PLACEHOLDER" ]]; then
-  echo "[pr-body] the body carries $PLACEHOLDER, which the server reads as an HTML tag and deletes." >&2
+```ts
+const PLACEHOLDER = /<[A-Za-z][A-Za-z0-9._/:-]*>/u;
+// ...
+const placeholder = PLACEHOLDER.exec(body)?.[0];
+if (placeholder === undefined) return PASS;
+return refuse(RULE, 'wrote a pull-request body carrying an angle-bracket placeholder the server deletes', [
 ```
 
-The raw body is the interesting half. Every other rule in that file runs against
-a copy with code spans and fenced blocks stripped, because a hook that greps for
-markup has to tell a use from a mention and in prose the mention is quoted. For
-this form there is no mention: the sanitizer strips markup *before* markdown
-fencing is considered, so a body quoting a placeholder in backticks loses it
-exactly like a body using one. A rule written against the stripped copy would
-have been silent on precisely the occurrences that get deleted.
+`scripts/check-hook-decisions.sh`, which held the first version, was deleted
+in `c54e32da7` (PR #224). Today the rule is held by
+`github-pr-body.core.test.ts` under the per-file 100% coverage of
+`vitest.config.ts`.
 
-That has a consequence for the contract table, and it was already wrong there.
-`scripts/check-hook-decisions.sh` carried an allow case reading *"The server
-removes `<details>` and wraps an image link in backticks"* — a body that,
-posted, would have arrived without the word `<details>` in it. It now names the
-collapsible section in words, and five new cases pin the new rule: three bodies
-refused (a bare placeholder, one inside backticks, an autolinked URL) and two
-accepted (a real path, and the rule described without brackets). Eighteen
-decisions, all matching.
+**Proof it can fail:** the check fed to `tsx` this session (measured).
 
-**Sibling defects swept:** the audit of the other three rules found no second
-case of a rule reading the wrong copy — the image rules genuinely are about URL
-handling rather than tag stripping, and a quoted image link does survive.
+```text
+body "see <app>"              refuse
+body "see `<path/to.ts>`"     refuse
+body "see `<two words>`"      pass
+```
 
-## See also
+The third line is the gap. A placeholder with a space passes, and the server
+deletes it all the same (inferred from the sanitizer entry, which deletes any
+tag-shaped text).
 
-- [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) —
-  the catalogue, including the three observations of this form that predate the
-  hook. Its verification procedure is still the thing to run before adding a
-  claim.
-- [`docs/dantotsus/a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md) —
-  the same failure as a general rule: an entry that records a trap does not
-  stop the trap; only a gate reading the entry's conclusion does.
-- [`docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md`](./the-hook-that-refused-the-page-explaining-it.md) —
-  the mention-versus-use question this file's stripper exists to answer, and
-  why the answer is form-dependent.
+**Similar instances:** `grep -rn 'PLACEHOLDER = ' scripts` finds a second
+copy of the same fact in `scripts/pr/pr-body.core.ts:78`,
+`/<[A-Za-z][A-Za-z0-9 _-]*>/`. It catches `<two words>` and misses
+`<path/to.ts>`. The two copies disagree in both directions.
+
+**Proposed:** export one placeholder pattern, with the union of both
+character sets, from one module, and import it in
+`github-pr-body.core.ts` and `pr-body.core.ts`. A placeholder that one gate
+catches and the other misses then cannot exist. A second step would subtract
+the refusal: the `rewrite` verdict of `scripts/hooks/check.core.ts`, which
+`no-swallowed-push.core.ts` already uses, could escape each `<` as `&lt;`
+before the call. That needs a probe first, because whether the server keeps
+`&lt;` is unverified.

@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#60'
 fix-commits: [0f55859e99]
 eradication-level: 2
-eradication-paths: [.claude/hooks/strip-markdown-code.py, .claude/hooks/pretool-github-pr-body.sh]
+eradication-paths: [scripts/hooks/checks/github-pr-body.core.ts, scripts/hooks/markdown-code.core.ts]
 time-to-detect: 3 days
 tags: [github, harness, hooks, gates, meta, open-pr]
 zone: .claude/skills/open-pr
@@ -14,122 +14,108 @@ zone: .claude/skills/open-pr
 
 # A pull request body the server quietly emptied
 
-## Symptom
+## User impact
 
-The operator asked for screenshots in the pull request. The body was
-written with two `<img>` tags in a before-and-after table, the call
-succeeded, and the PR page showed two empty boxes. Reading the body back
-explained why:
+The operator asked for screenshots in PR #60. The body carried two `<img>` tags
+in a before-and-after table. The call answered 200, and the page showed two
+empty boxes. The stored body, read back:
 
 ```
 | Setlists index, phone | <img width="300"> | <img width="300"> |
 ```
 
-The `src` of each image was gone. Rewriting them as markdown images
-produced a second failure of a different shape — every URL came back
-wrapped in backticks, rendering as code — and the four `<details>`
-toggles had been removed as well, their contents flattened into the
-page.
+| | Seen | Expected |
+| --- | --- | --- |
+| Screenshots | two empty boxes, `src` gone | the two screenshots |
+| Markdown images, second try | each URL wrapped in backticks, rendered as code | the images |
+| The four `<details>` toggles | removed, their contents flattened into the page | collapsed sections |
 
-## Root-cause chain
+Five rewrites were needed, one form at a time (measured in the session that
+found it): `<img>`, markdown images, plain links to a `.png`, an angle-bracket
+autolink, then the toggles.
 
-1. **Why were the screenshots missing?** The server sanitizes a
-   pull-request body before storing it.
-2. **Why did the call not fail?** The sanitizer is not a validator. It
-   edits the body and stores the result; the API answers 200 either way.
-3. **Why was it discovered one form at a time?** Because each rewrite
-   was checked by reading the body back, and each read revealed only
-   the form that had just been used. Five rounds: `<img>`, then
-   markdown images, then plain links to a `.png`, then an angle-bracket
-   autolink, then the `<details>` toggles.
-4. **Why was the first attempt written with `<details>` at all?** The
-   open-pr standard requires at least three of them, and its hook
-   refuses a body carrying fewer. That gate runs on `gh pr create` — a
-   command this environment does not ship — so on the path that does
-   work, the repository's own standard asks for markup the server
-   removes.
-5. **Why did the existing knowledge entry not prevent it?**
-   `docs/knowledge/github-mcp-pr-body-sanitizer.md` records the
-   `<details>` half, observed on PR #49. Nothing recorded that images
-   are defused too, and nothing was positioned to be read at the moment
-   the body was written.
+## Causal chain
 
-**Root cause:** thought *"a pull-request body is stored as written"*,
-actually *"it is rewritten in transit, silently, and the repository's
-own body standard was written for a tool this environment does not
-have"*.
+- The PR page showed empty boxes and flattened sections.
+  - The GitHub MCP server sanitized the body before storing it, and answered 200.
+    - The body sent carried `<img>` tags, markdown images and four `<details>` toggles.
+      - The session wrote the toggles because the open-pr skill asked for them.
+        Its gate refused a `gh pr create` body with fewer than three:
+        `at least 3 <details> blocks` (`.claude/skills/open-pr/SKILL.md` at
+        `0f55859^`, line 130). This environment did not ship `gh` then, so the
+        body went through `mcp__github__update_pull_request` instead.
+      - The session wrote images because the only record of the sanitizer said
+        they survive. `docs/knowledge/github-mcp-pr-body-sanitizer.md` at
+        `0f55859^`: "PR #26 ... stored body contains `<details>` / `<summary>`
+        blocks and `![alt](url)` markdown images. Both render correctly on
+        GitHub." The same entry put an earlier missing `src` down to the writer:
+        "image tags emitted without `src` ... not a sanitiser rewrite".
+
+## Root cause of occurrence
+
+*Thought a body sent through the GitHub MCP tool is stored as written, actually
+the server rewrites it: an `<img>` loses its `src`, an image URL comes back in
+backticks, and `<details>` is removed.* **Material.** The knowledge entry, the
+one record of the sanitizer, stated that markdown images and toggles render, and
+blamed a lost `src` on its writer. The skill asked for toggles on a path this
+environment does not have. Whether the session had the knowledge entry loaded is
+not recorded (inferred: the skill linked it).
 
 ## Detection failure causes
 
-- **Typing:** the tool input is a string; every form is a valid string.
-- **Linter / static analysis:** nothing lints a pull-request body.
-- **Functional validation locally:** there is no local render of a
-  GitHub body; the only check is a read-back, which was done — after
-  the fact, five times.
+- **Typing:** the tool input is a string, and every form is a valid string.
+- **Linter:** no hook read a pull-request body sent through the MCP tool. The
+  only body gate ran on `gh pr create`, a command that fails here.
+- **Local validation:** nothing renders a GitHub body locally. A read-back is
+  the only check, and it reveals only the form just sent.
 - **CI:** CI reads the diff, not the description.
-- **Code review:** the reviewer is the one the body is written for, so
-  a body that arrives gutted is discovered by the person it failed.
-- **Knowledge:** the entry existed and covered a different form, which
-  is worse than none, because it reads as *the* known limitation.
+- **Review:** the reviewer is the reader the body was for, so a gutted body is
+  found by the person it failed.
 
 ## Countermeasure
 
-- **Code:** commit `0f55859` — a PreToolUse hook on the two MCP calls
-  that write a body refuses one carrying markup the sanitizer defuses,
-  and names the shape that survives.
-- **Operator action:** none.
+Commit `0f55859` added a PreToolUse hook on `mcp__github__create_pull_request`
+and `mcp__github__update_pull_request`. It refuses a body carrying markup the
+sanitizer defuses and names the shape that survives: commit the screenshots,
+link the Files changed tab, use headings for collapsed sections, then read the
+body back. The knowledge entry was corrected with a probe table, one call per
+form.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the body is refused before it is sent)
+**Type:** DevX check (level 2)
 
-**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`0f55859`](https://github.com/hugoleborso/borso.fr/commit/0f55859)
-
-**The actual fix:**
+**Reference:** commit [`0f55859`](https://github.com/hugoleborso/borso.fr/commit/0f55859e99)
+shipped the shell hook. Commit `458e886` (#411) ported every shell hook to
+TypeScript checks
+([ADR](../adr/2026-11-26T2000-hooks-are-typescript-one-process-per-event.md)). The rule now lives in
+`scripts/hooks/checks/github-pr-body.core.ts`. It reads the body through
+`stripMarkdownCode` from `scripts/hooks/markdown-code.core.ts`, so prose that
+quotes a tag in a code span is not refused.
 
 ```diff
-+if grep -qE '!\[[^]]*\]\(' <<<"$BODY"; then
-+  block "the body carries a markdown image; its URL comes back wrapped in backticks and renders as code."
-+fi
-+
-+if grep -qiE '<img[[:space:]]' <<<"$BODY"; then
-+  block "the body carries an <img> tag; its src attribute is removed and an empty tag is stored."
-+fi
-+
-+if grep -qiE '<details>|<summary>' <<<"$BODY"; then
-+  block "the body carries a <details> toggle; the tag is removed and its contents are flattened into the page."
-+fi
++const MARKDOWN_IMAGE = /!\[[^\]\n]*\]\(/u;
++const IMG_TAG = /<img[^\S\n]/iu;
++const DETAILS_TAG = /<details>|<summary>/iu;
++const IMAGE_FILE_LINK = /\]\([^)\n]+\.(png|jpe?g|gif|webp|svg)([?#][^)\n]*)?\)/u;
 ```
 
-wired in `.claude/settings.json` under
-`PreToolUse.mcp__github__create_pull_request|mcp__github__update_pull_request`.
-The refusal names the working shape: commit the screenshots and link the
-Files changed tab, which renders them inline; use headings for collapsed
-sections; then read the body back.
+**Proof it can fail:** the check, fed `| Setlists | <img width="300" src="a.png"> |`
+on `mcp__github__update_pull_request` this session:
 
-The probe table behind those rules — what survives and what does not,
-one call per form — is in the knowledge entry.
+```
+"kind": "refuse", "rule": "pr-body",
+"[pr-body] the body carries an <img> tag; its src attribute is removed and an empty tag is stored."
+```
 
-**Sibling defects swept:** the contradiction between the open-pr
-standard's `<details>` requirement and this path is now explicit in both
-places, so a body is written to the contract of the tool that will
-carry it.
+**Similar instances:** the check also refuses a link to an image file, a link
+target over about 150 characters and an angle-bracket placeholder, each probed
+on a real pull request and listed in the knowledge entry. The knowledge entry
+now carries `triggers:` on `.claude/skills/open-pr/SKILL.md` and `template.md`.
 
-The hook's first customer was the sweep that added it, and it refused
-that body for *describing* the markup rather than using it — the third
-instance of the same mention-versus-use confusion found in one sitting,
-after both guard hooks in
-[`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md).
-It now reads the body with its code spans and fenced blocks removed, via
-`.claude/hooks/strip-markdown-code.py`, because prose about a tag quotes
-the tag. Seven cases cover both directions. The pattern is worth naming
-for the next hook anyone writes here: **a text-matching gate needs to
-know which parts of its input are quoted**, and in this repository the
-quoting is a heredoc for a shell command and a backtick for a
-document.
-
-## See also
-
-- [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) — the probe table and the full list of forms.
-- [`orchestrator-shipped-with-stale-pr-description`](./orchestrator-shipped-with-stale-pr-description.md) — the other way a description stops matching the work.
-- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md) — a third path that produces a body the standard never saw.
+**Proposed:** subtract the toggle shape. `.claude/skills/open-pr/SKILL.md` step 3
+still says "only a body posted through an authenticated `gh` uses toggles", while
+step 4 records that `gh pr create` answers 403 here. `readDetailsBlocks` in
+`scripts/pr/pr-body.core.ts` still accepts a `<details>` before-merge block. With
+headings as the one block shape, the checker and the skill stop describing a body
+no working path can post, and the `<details>` branch of the hook guards nothing.

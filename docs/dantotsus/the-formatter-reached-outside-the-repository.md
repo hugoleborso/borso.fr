@@ -3,65 +3,109 @@ date: 2026-10-12
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: '#171'
-fix-commits: [self]
-eradication-level: 1
-eradication-paths: [.claude/hooks/posttool-format-write.sh]
-time-to-detect: minutes
+related-pr: '#45'
+fix-commits: [516b92c81, 458e886c4]
+eradication-level: 2
+eradication-paths: [scripts/hooks/checks/format-write.core.ts, scripts/hooks/checks/format-write.core.test.ts]
+time-to-detect: months (shipped 2026-08-10, seen on PR #171)
 tags: [hooks, harness, agents, tooling]
-zone: .claude/hooks/posttool-format-write.sh
+zone: scripts/hooks/checks/format-write.core.ts
 recurs: none (the-formatter-was-a-detector-with-no-writer added this hook; this is its scope, not a missing writer)
 ---
 
 # The formatter reached outside the repository
 
-## Symptom
+## User impact
 
-On PR #171 three agents each wrote one HTML mock-up sheet into the session scratchpad, under a brief that capped each file at about 900 lines. Two of them reported the same thing independently: the file they wrote at about 600 lines was 2,000 lines when they read it back. Both logged it to `KAIZEN.md` (`da-planche`, `da-bronze`), and one wrote a build script to compact its own output again.
+On PR #171, three agents each wrote one HTML mock-up sheet into the session
+scratchpad, under a brief that capped each file at about 900 lines. Two of
+them reported the same thing on their own: the file they wrote at about 600
+lines was 2,000 lines when they read it back. Both logged it (`da-planche`,
+`da-bronze`), and one wrote a build script to compact its own output again.
+Expected: a scratchpad file stays byte for byte what the agent wrote.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the files grow?** The `PostToolUse` hook `posttool-format-write.sh` ran Prettier on them after each Write.
-2. **Why did it run on a file outside the repository?** It filtered by extension only. Any `.html`, `.json` or `.ts` the agent wrote, anywhere on disk, was formatted with this repository's Prettier.
-3. **Why was that never noticed?** Until this task every Write an agent made was a repository file, where formatting is exactly what the hook is for. Mock-ups in the scratchpad were the first real files written elsewhere.
+- The mock-ups grew from about 600 to 2,000 lines after they were written.
+  - The `PostToolUse` hook `posttool-format-write.sh` ran Prettier on each
+    file after its Write.
+    - It filtered by extension only, so any `.html`, `.json` or `.ts` an agent
+      wrote, anywhere on disk, was formatted with this repository's Prettier:
 
-**Root cause:** thought every file an agent writes belongs to the repository, actually agents write working files in the scratchpad too, and the repository's formatting rules are not theirs.
+      ```sh
+      case "$FILE" in
+        *.ts | *.tsx | *.js | *.jsx | *.mjs | *.cjs | *.json | *.jsonc | *.css | *.html | *.yml | *.yaml) ;;  # ← ❌ no test of where the file lives
+        *) exit 0 ;;
+      esac
+      cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
+      pnpm exec prettier --write --ignore-unknown --cache "$FILE"
+      ```
+
+      - Commit `ebabfe765` (PR #45), written by an agent, added the hook. Its
+        header speaks only of repository files: "format the file that was
+        just written, so style drift never reaches the pre-commit gate". The
+        hook received an absolute path and never compared it with the
+        project root it `cd`-ed into one line later. The writer pictured
+        every Write as a repository Write. **Man** (inferred: the writing
+        session's transcript is not in the repository, so whether the
+        scratchpad was named in its context cannot be read).
+
+## Root cause of occurrence
+
+*Thought every file an agent writes belongs to the repository, actually
+agents write working files in the scratchpad too, and the repository's
+formatting rules are not theirs.* Man (inferred): the hook already held the
+project root, and the picture of "the file just written" as a repository file
+won.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** no gate reads a hook's scope.
-- **Functional validation locally:** the hook is best-effort and silent by contract, so a rewrite shows only when the writer reads its file again.
-- **Code review:** the hook's review asked whether it formats repository files correctly, which it does.
+- **Linter:** no gate reads a hook's scope.
+- **Local validation:** the hook was best-effort and silent by contract, so a
+  rewrite showed only when the writer read its file again.
+- **Code review:** the hook's review asked whether it formats repository
+  files correctly, which it did.
 
 ## Countermeasure
 
-- **Code:** this commit resolves the written file's real directory and returns before Prettier when it is not under the project root.
+Commit `516b92c81` (PR #175) resolved the written file's real directory and
+returned before Prettier when it was not under the project root. Fed the same
+unformatted JSON three ways, a scratchpad path stayed byte for byte, and an
+absolute and a relative repository path were both formatted.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** DevX check (level 2)
 
-**Reference:** commit adding this file.
+**Reference:** commit [`516b92c81`](https://github.com/hugoleborso/borso.fr/commit/516b92c81)
+added the scope test to the shell hook. Commit
+[`458e886c4`](https://github.com/hugoleborso/borso.fr/commit/458e886c4) deleted
+`.claude/hooks/posttool-format-write.sh` and ported it to
+`scripts/hooks/checks/format-write.core.ts`, which keeps the test:
 
-**The actual fix:**
-
-```diff
- cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
-+
-+PROJECT_ROOT=$(pwd -P)
-+FILE_DIRECTORY=$(cd -- "$(dirname -- "$FILE")" 2>/dev/null && pwd -P) || exit 0
-+FILE_PATH="$FILE_DIRECTORY/$(basename -- "$FILE")"
-+case "$FILE_PATH" in
-+  "$PROJECT_ROOT"/*) ;;
-+  *) exit 0 ;;
-+esac
+```ts
+export function isInsideProject(file: string, world: HookWorld): boolean {
+  const resolved = world.run('realpath', ['-e', '--', world.projectDirectory, dirname(file)]);
+  ...
+  return `${fileDirectory}/${basename(file)}`.startsWith(`${projectRoot}/`);
+}
 ```
 
-Checked by feeding the hook the same unformatted JSON three ways: a scratchpad path stays byte for byte, and an absolute and a relative repository path are both formatted. `cd` and `pwd -P` rather than `realpath -m`, which macOS lacks, because the hook ships in a plugin other machines install.
+The hook formats nothing outside the project root. This entry first said
+level 1. The test is a runtime check inside one hook, so a second writer hook
+could repeat the defect, and level 2 is what holds.
 
-**Sibling defects swept:** the other `PostToolUse` hooks read tool output, not files, and write nothing.
+**Proposed:** delete the edit-time writer. Since commit `9b8d380ed`,
+`.husky/pre-commit` formats exactly the staged files, which are always inside
+the repository, and it covers writes made with `sed` and heredocs too.
+Deleting `scripts/hooks/checks/format-write.core.ts` and its registration in
+`scripts/hooks/hook-events.ts` would make this scope defect impossible, and
+remove the hook's "read it again before an exact-text replace" notice.
 
-## See also
+**Proof it can fail:** `scripts/hooks/checks/format-write.core.test.ts` drives
+a path outside the project and expects no format.
 
-- [`the-formatter-was-a-detector-with-no-writer.md`](./the-formatter-was-a-detector-with-no-writer.md), which added the hook.
-- [`../knowledge/parallel-agents-share-one-scratchpad.md`](../knowledge/parallel-agents-share-one-scratchpad.md)
+**Similar instances:** `grep -l "realpath" scripts/hooks/checks/*.core.ts`
+lists the checks that act on the file just written. `lint-write.core.ts`
+carries the same project-root test and reports without rewriting. Only
+`format-write` rewrites the agent's file.

@@ -6,95 +6,116 @@ severity: medium
 related-pr: '#26'
 fix-commits: [0618e8b839]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [.claude/skills/tech-lead-orchestrator/standard.md]
 tags: [orchestrator, skill, adr, conception-pivot]
 zone: .claude/skills/tech-lead-orchestrator
 ---
 
-# The orchestrator swung from too-timid to deciding what was the human's to decide
+# The orchestrator swung from too timid to deciding what was the operator's
 
-## Symptom
+## User impact
 
-Two opposite failures in one run, both about *where the human/agent
-boundary sits*:
+The operator handed the orchestrator a ratified spec to drive overnight
+(run `2026-05-19-1937-pragma`). He got two opposite failures in one run, and
+one round of work reverted.
 
-1. **Too timid (early):** round 1 silently re-scoped the ratified spec
-   to a "foundation slice" without asking; round 3 surfaced an
-   `AskUserQuestion` to triage which FAIL rows to fix — a tech-lead
-   mechanic, not a product decision. Hugo: *"I wanted you to work on
-   this during the night, but now I have to manage concurrent Claude
-   sessions."*
-2. **Over-eager (later), after the "have agency" correction:** round 16
-   was dispatched entirely on the orchestrator's judgement to integrate
-   a third-party service (GetSongBPM), add a CDK env var, require a new
-   GitHub repo secret, and mandate a permanent attribution link in the
-   production UI — all inferred from Hugo's casual *"ce serait cool de
-   remplir autant d'info que possible"*. Hugo: *"Tu prends tellement de
-   décisions à ma place c'est pas du tout ce qui était convenu."* The
-   work was reverted.
+| | Seen | Expected |
+| --- | --- | --- |
+| Early rounds | Round 1 re-scoped the spec to a "foundation slice" without asking. Round 3 asked him which FAIL rows to fix | Fix ordering decided by the orchestrator, no question |
+| Round 16 | A third-party service (GetSongBPM), a CDK env var, a new GitHub repo secret and a permanent attribution link in the production UI, all decided alone | One question before any of the four |
 
-## Root-cause chain
+The operator, early: *"I wanted you to work on this during the night, but now
+I have to manage concurrent Claude sessions."* Later: *"Tu prends tellement de
+décisions à ma place c'est pas du tout ce qui était convenu."* Round 16 was
+reverted.
 
-1. **Why both directions?** The standard distinguished "surface to
-   human" from "decide yourself" only by tone, not by an enumerated
-   list — so the boundary moved with whichever correction was most
-   recent.
-2. **Why did round 16 cross it?** A wish ("would be cool") was read as
-   a ratification. The change tripped all four spec ADR triggers
-   (third-party dependency, security boundary via a new secret, a new
-   attribution obligation, an irreversible external signup) — every one
-   of which is a "stop and surface" signal — yet none fired because the
-   triggers weren't wired to the dispatch decision.
-3. **Why no guardrail?** The orchestrator standard's
-   *Decisions stay with the orchestrator* section listed what the
-   orchestrator *may* decide (fix ordering, retry vs escalate, scope of
-   a fix round) but had no symmetric **NOT-orchestrator** list.
+## Causal chain
 
-**Root cause:** thought "have agency" meant "decide product scope too",
-actually it meant "drive the *ratified* spec to done without
-checkpoints" — execution mechanics are the orchestrator's; product
-surface and ADR-triggering changes are the human's.
+- Round 16 shipped a third-party integration, a new secret and a UI obligation
+  the operator had not asked for.
+  - The orchestrator dispatched round 16 on the operator's chat line *"ce
+    serait cool de remplir autant d'info que possible"*, read as a ratified
+    scope.
+    - It had just received the operator's "have agency" correction, after
+      rounds 1 and 3 surfaced mechanics. It applied that correction to every
+      decision, product scope included.
+      - The correction reached the orchestrator as free text. Nothing in it,
+        or in the standard it was reading, said which actions it covered
+        (Material).
+- Rounds 1 and 3 surfaced mechanics and re-scoped silently, before the
+  correction.
+  - The standard's *Decisions stay with the orchestrator* section listed what
+    the orchestrator may decide. The boundary with the operator's decisions
+    was set by its tone, which the orchestrator read as "ask when unsure"
+    (Material).
+
+## Root cause of occurrence
+
+*Thought "have agency" meant "decide product scope too", actually it meant
+"drive the ratified spec to done without checkpoints", while product surface
+and anything that trips an ADR trigger stay the operator's.* (Material)
+
+The orchestrator is an agent. What the operator meant was absent from its
+context: the correction was one sentence of chat, and the standard of the time
+named only what the orchestrator may decide. The four ADR triggers sat in the
+spec template, read when writing an ADR, not when dispatching a round. Each
+part of round 16 was visible in the diff: a new dependency, a new
+`secrets.<NAME>` in a workflow, a new CDK env var and a new third-party host.
 
 ## Detection failure causes
 
-- **Code review:** the orchestrator was acting as its own product owner;
-  there was no second party to veto the scope expansion until Hugo saw
-  the shipped result.
-- **Spec / ADR gate:** the four ADR triggers existed in the spec
-  template but weren't consulted at dispatch time — they only gate
-  *writing an ADR*, not *deciding to add a dependency*.
+- **Review:** the orchestrator was its own product owner. No second party saw
+  the scope before the operator saw the shipped result.
+- **ADR triggers:** they gated writing an ADR, not adding a dependency. A
+  branch could add a package, a secret or a host with no ADR, and nothing
+  refused it.
+- **Gates:** `scripts/dependencies/check-dependency-catalog.ts` checks how a
+  dependency is declared, not whether anyone decided it.
 
 ## Countermeasure
 
-- **Code (process):** the orchestrator standard now carries an explicit
-  **NOT-orchestrator decisions** list and ties the four ADR triggers to
-  the dispatch decision: matching any of them is a mandatory
-  stop-and-surface, regardless of how confident the orchestrator is.
+Round 16 was reverted. Commit `0618e8b839` added a *Decision boundary* section
+to `.claude/skills/tech-lead-orchestrator/standard.md`. It names what the
+orchestrator decides (fix ordering, retry or escalate, scope of a fix round)
+and what it must surface: a new third-party dependency, secret management, a
+new obligation to a third party visible in prod, schema motivated by an
+external service, and scope beyond the ratified spec. Escalation became
+progress-based instead of a retry count of 3.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — enumerated decision boundary in the orchestrator standard)
+**Type:** knowledge (level 5). The boundary is a prose list in an agent
+standard. Nothing refuses a branch that crosses it.
 
-**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator decision-boundary + ADR-trigger stop list`
+**Reference:** commit [`0618e8b839`](https://github.com/hugoleborso/borso.fr/commit/0618e8b839).
+`.claude/skills/tech-lead-orchestrator/standard.md` still holds it today, under
+*Decision boundary*, as decisions the orchestrator must surface with
+`AskUserQuestion`:
 
-**The actual fix:** extended `.claude/skills/tech-lead-orchestrator/standard.md`'s
-*Decisions stay with the orchestrator* section with a **NOT
-orchestrator** counterpart naming: new third-party dependency,
-secret/credential management, UI obligations to a third party
-(attribution, telemetry), schema columns motivated by an external
-service, and any feature scope beyond the ratified spec. Each is a
-stop-and-surface. The same edit states the positive boundary: once the
-human ratifies the spec, the orchestrator drives to "PR opens with
-visual evidence" without per-FAIL-row checkpoints, and escalates on
-*lack of progress* (stuck loop / net-negative regression / genuine
-product ambiguity), not on a small retry count.
+```text
+- a new third-party dependency or external service;
+- secret / credential management (new repo secret, new env var holding a secret);
+```
 
-**Sibling defects swept:** the "retry cap of 3 → premature escalation"
-friction folds in here — escalation criteria are now progress-based,
-codified in the same section.
+The first version of this entry called it level 2. A list in a standard is
+level 5, and it is what the orchestrator overrode once already.
 
-## See also
+**Proposed:** a pre-push gate that refuses a branch adding a dependency to a
+`package.json` or a catalog in `pnpm-workspace.yaml`, a new `secrets.<NAME>` in
+`.github/workflows/`, or a new third-party host, unless the same diff carries
+an answer only the operator gives. Any added file under `docs/adr/` is not
+enough, because the orchestrator could write that file itself. Two shapes
+already exist. An added ADR must pass `scripts/check-adr-criteria.sh`, which
+refuses an ADR from 2026-11-03T1438 on with no criterion raised by the
+operator. Or the branch carries a dated operator answer, the shape
+`scripts/check-spec-records.sh` holds. `scripts/dependencies/catalog.core.ts`
+already parses the catalogs. Round 16 could then not reach a push before the
+operator had answered. `grep -rn -i adr scripts/dependencies/*.ts` shows no
+such gate today. Both shapes rest on a line an agent could still type, so the
+gate makes crossing the boundary a visible act, not an impossible one.
 
-- [`orchestrator-mined-adrs-from-the-plan.md`](./orchestrator-mined-adrs-from-the-plan.md)
-- [`orchestrator-skipped-validation-between-rounds.md`](./orchestrator-skipped-validation-between-rounds.md)
-- [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md)
+**Proof it can fail:** not tried. The proposal is not built.
+
+**Similar instances:** [`orchestrator-mined-adrs-from-the-plan.md`](./orchestrator-mined-adrs-from-the-plan.md)
+and [`orchestrator-skipped-validation-between-rounds.md`](./orchestrator-skipped-validation-between-rounds.md),
+from the same run, also rest on a boundary held only by the standard.

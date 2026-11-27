@@ -5,8 +5,10 @@ description: Dispatch the dedicated `technical-validator` agent to read the spec
 
 # Technical-validation skill
 
-The validator's categories, finding rules and report format live in its
-definition,
+The validator reads the diff and asks five questions: correctness against the
+spec, cleanliness against the repo's rules, tests passing, tests covering the
+spec, and scale under concurrent requests. Its categories, finding rules and
+report format live in its definition,
 [`.claude/agents/technical-validator.md`](../../agents/technical-validator.md).
 Why it exists and what it leaves out are in [`standard.md`](./standard.md).
 

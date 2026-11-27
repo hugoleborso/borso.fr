@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: linter
 severity: low
 related-pr: '#153'
-fix-commits: [24b9318e]
+fix-commits: [24b9318ef, 9dcf74547]
 eradication-level: 1
 time-to-detect: minutes
 tags: [eslint, cache, pnpm, deps, hooks, harness, pragma]
@@ -15,111 +15,97 @@ recurs: [a-cache-replayed-the-error-its-own-entry-described]
 
 # Two hundred and ninety-one errors for a package that was already installed
 
-## Symptom
+## User impact
 
-On PR #153, merging `main` into the branch brought in a new dependency,
-`playwright`, used by four new scripts in `apps/pragma/scripts/task-speed/`.
-`pnpm run lint` from `apps/pragma`, run before `pnpm install`, reported:
+On PR #153, merging `main` brought in a new dependency, `playwright`, used by
+four new scripts in `apps/pragma/scripts/task-speed/`. `pnpm run lint` from
+`apps/pragma`, run before `pnpm install`, reported 291 errors, which were real
+at that moment. After the install, typecheck went clean and lint did not.
 
-```
-✖ 291 problems (291 errors, 0 warnings)
-  Unsafe call of a type that could not be resolved  @typescript-eslint/no-unsafe-call
-  Unsafe member access .getByRole on a type that cannot be resolved
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `pnpm run lint` after `pnpm install` | `✖ 291 problems (291 errors, 0 warnings)`, `no-unsafe-call` on types that could not be resolved | 0 errors, as `pnpm run typecheck` reported |
 
-Those errors were real at that moment: the package was not installed. After
-`pnpm install`, `pnpm run typecheck` went clean and `pnpm run lint` printed the
-same 291 errors. Deleting `node_modules/.cache/eslint` by hand made them
-disappear.
+Measured by the PR #153 session. Deleting `node_modules/.cache/eslint` by hand
+made the errors disappear.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the errors survive the install?**
-   Every app's `lint` script ran `eslint --cache` with the cache at
-   `node_modules/.cache/eslint`. ESLint keys an entry on the linted file. The
-   four scripts did not change between the two runs, so each one was a cache
-   hit and replayed the result computed without the package.
+- Lint reported 291 errors after the package was installed.
+  - ESLint replayed the results it had computed before the install. The four
+    scripts had not changed, so each was a cache hit.
+    - Every app's `lint` script ran ESLint with a cache keyed on each file's
+      own content:
+      ```json
+      "lint": "cd ../.. && eslint apps/pragma --cache --cache-location node_modules/.cache/eslint"
+      ```
+      - A type-aware verdict depends on the types a file imports, installed
+        packages included, and nothing about `node_modules` is part of an
+        ESLint cache key. No ESLint option adds it.
+        - `314f24821` (2026-08-08) put the cache in front of the type-aware
+          rules when ESLint replaced Biome. A cold repository-wide lint had
+          gone from 3.5 s to 80.7 s
+          ([eslint-cache-useless-on-a-fresh-checkout](./eslint-cache-useless-on-a-fresh-checkout.md)),
+          and the cache was the answer to that cost. (Machine)
+  - The lint ran against a stale install. SessionStart installs once, and the
+    merge changed the lockfile without reinstalling.
 
-2. **Why can the cache not see an install?**
-   A type-aware rule's verdict depends on the types the file imports, including
-   installed packages, and nothing about `node_modules` is part of the key.
-   There is no ESLint option for that.
+## Root cause of occurrence
 
-3. **Why did the hook written for exactly this stay silent?**
-   PR #97 shipped `posttool-eslint-cache-replays-a-fixed-error.sh` after the
-   second occurrence. It checked `[ -f .eslintcache ]` in the working
-   directory. This run was from `apps/pragma`, and the app scripts wrote their
-   cache somewhere else. The repository writes ESLint caches in three places
-   (`.eslintcache` from pre-commit, `.eslintcache-<name>` from
-   `scripts/lint-repository.sh`, `node_modules/.cache/eslint` from the app
-   scripts) and the hook knew one.
+*Thought a lint cache goes stale only when the linted file changes, actually a
+type-aware result also goes stale when anything the file imports changes,
+installed packages included.* (Machine)
 
-4. **Why was linting run against a stale install at all?**
-   The SessionStart hook installs once. A merge that changes the lockfile
-   leaves `node_modules` behind until someone notices, and the first command to
-   notice here was the one that caches its findings.
-
-**Root cause:** thought a lint cache only goes stale when code changes, actually
-it also goes stale when the installed packages change, so a lint run made
-before an install keeps its errors after it.
+The deeper condition is the tool, not one belief. A content-keyed cache in
+front of type-aware rules can never see a change in what a file imports. This
+is the third occurrence of that one class. The first was recorded in
+[`eslint-content-cache-replays-a-stale-type-aware-error`](../knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md),
+the second in
+[a-cache-replayed-the-error-its-own-entry-described](./a-cache-replayed-the-error-its-own-entry-described.md).
+Each earlier fix kept the cache and added a guard beside it.
 
 ## Detection failure causes
 
-- **Typing:** `tsc` disagreed with ESLint after the install, which was the
-  tell, and the same disagreement was the tell on PR #95.
-- **Linter / static analysis:** the linter is where the stale result lived.
-- **Harness hook:** existed for this class and looked in the wrong place, see
-  step 3.
-- **CI:** cannot hit it. CI lints through `scripts/lint-repository.sh` with a
-  cache restored under a key that includes the hash of `pnpm-lock.yaml`.
+- **Typing:** `tsc` disagreed with ESLint after the install. That
+  disagreement was the tell here and on PR #95, and nothing compares the two.
+- **Harness hook:** `posttool-eslint-cache-replays-a-fixed-error.sh`, shipped
+  after the second occurrence, checked `[ -f .eslintcache ]` in the working
+  directory. The repository wrote ESLint caches in three places, and the app
+  scripts wrote theirs under `node_modules/.cache/eslint`, which the hook did
+  not look at.
+- **CI:** cannot hit it. CI restored its cache under a key that included the
+  hash of `pnpm-lock.yaml`.
 
 ## Countermeasure
 
-- **Code:** deleted the cache and re-ran: 0 errors.
+The cache was deleted and lint re-ran: 0 errors.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility by subtraction (level 1)
 
-**Reference:** [PR #155](https://github.com/hugoleborso/borso.fr/pull/155) · commit [`4bcf314c`](https://github.com/hugoleborso/borso.fr/commit/4bcf314c)
+**Reference:** commit [`9dcf74547`](https://github.com/hugoleborso/borso.fr/commit/9dcf74547) (#197, 2026-10-27)
 
-Every app and infra `lint` script now runs `scripts/lint-workspace.sh`, which
-makes the sequence above impossible in two ways. It refuses to lint while
-`pnpm-lock.yaml` differs from `node_modules/.pnpm/lock.yaml`, the copy pnpm
-writes of the lockfile it installed, so no result is ever computed against a
-stale install. And it names the cache file after the digest of that installed
-copy, so an install starts a fresh cache instead of inheriting the old one.
+The first eradication, `24b9318ef`, kept the cache. It refused to lint while
+`pnpm-lock.yaml` differed from `node_modules/.pnpm/lock.yaml`, and named the
+cache after the installed lockfile's digest. That added two guards around the
+cache and removed nothing.
 
-```diff
--    "lint": "cd ../.. && eslint apps/pragma --cache --cache-location node_modules/.cache/eslint",
-+    "lint": "../../scripts/lint-workspace.sh",
-```
+`9dcf74547` replaced ESLint with oxlint and deleted the cache. A run with no
+cache has nothing to replay, so a stale result cannot exist. Today's
+`scripts/lint-workspace.sh` says so in its header:
 
 ```bash
-if ! cmp -s "$root/pnpm-lock.yaml" "$installed"; then
-  echo "[lint-workspace] the installed dependencies do not match pnpm-lock.yaml." >&2
-  exit 1
-fi
-digest="$(sha256sum "$installed" | cut -c1-12)"
-exec pnpm exec eslint "$workspace" "$@" --cache \
-  --cache-location "$cache_directory/${cache_prefix}-${digest}"
+# There is no cache. ESLint's was keyed on each file's own bytes, so a
+# type-aware error replayed after the types it depended on were fixed, three
+# times in this repository …
+# oxlint lints a workspace in seconds, so a cache has nothing left to save.
 ```
 
-Checked by appending a line to `pnpm-lock.yaml`: `pnpm run lint` exits 1 with
-the message, and passes again once the file is restored.
+The lockfile refusal went with the cache. A stale install is now handled by
+`scripts/ensure-installed.sh lint`, which the same script calls before oxlint.
 
-The other half of the class, a fix in one file leaving a dependent file's
-cached error in place, has no structural answer, as the PR #97 entry explains.
-The hook from PR #97 now resolves the repository root and lists every cache
-it finds there, so it fires from an app folder as well, and the command it
-prints removes the caches that actually exist.
-
-**Sibling defects swept:** the eight app and infra scripts shared one cache
-file, so each run overwrote the others' entries. Each workspace now has its
-own file.
-
-## See also
-
-- [`a-cache-replayed-the-error-its-own-entry-described.md`](./a-cache-replayed-the-error-its-own-entry-described.md), the second occurrence and the hook this entry repairs.
-- [`eslint-content-cache-replays-a-stale-type-aware-error.md`](../knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md), the first.
-- [`eslint-cache-useless-on-a-fresh-checkout.md`](./eslint-cache-useless-on-a-fresh-checkout.md), why the cache is kept at all.
+**Similar instances:** `git grep -n -e '--cache\b' -e 'eslintcache' -- scripts .husky package.json 'apps/*/package.json' 'infra/*/package.json' .github`
+finds no lint cache, only the tests of the harness hook
+`scripts/hooks/checks/eslint-cache-replays-a-fixed-error.core.ts`. `9dcf74547`
+kept that hook on purpose, "for repositories still on ESLint".

@@ -5,8 +5,8 @@ detected-at: ci
 severity: medium
 related-pr: '#55'
 fix-commits: [24a70649df]
-eradication-level: 1
-eradication-paths: [tsconfig.json, .husky/pre-commit]
+eradication-level: 2
+eradication-paths: [tsconfig.json, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: days
 tags: [typescript, tooling, gates, ci, meta]
 zone: tsconfig.json
@@ -16,130 +16,130 @@ recurs: [two-guard-hooks-that-never-guarded]
 
 # Every gate in this repository was written in TypeScript that nothing type-checked
 
-## Symptom
+## User impact
 
-A generator's `--check` branch threw `ReferenceError: reason is not defined` in
-CI. The branch had never run locally, because it only executes when a generated
-file is stale, and locally it never was. ESLint passed on the file, the
-pre-commit hook passed, and `pnpm -r typecheck` passed.
+The operator saw CI fail on PR #55 with an error no local gate had shown. A
+generator's `--check` branch threw `ReferenceError: reason is not defined`.
+ESLint, the pre-commit hook and `pnpm -r typecheck` had all passed on the
+file (measured, from the CI log and the local runs).
 
-Separately, on the same branch, deleting a slice between two anchors took an
-unrelated function with it. Nothing said so. It surfaced later, from a call site
-in a different file.
+| | Seen | Expected |
+| --- | --- | --- |
+| A generator's `--check` on a stale file | `ReferenceError: reason is not defined` | the stale file named, exit 1 |
+| `pnpm -r typecheck` on the same tree | passes | fails on the undefined name |
 
-Both are the same absence, and this is the shape of it, live in `main` at the
-moment this was written:
+On the same branch, deleting a slice between two anchors took an unrelated
+function with it, and nothing said so until a call site in another file
+broke. A third instance was live on `main` when this was written:
 
 ```
 scripts/architecture/architecture-graph.ts(1620,51): error TS2304: Cannot find name 'DiffReport'.
 ```
 
-`buildDiffReport` is annotated as returning a type that the file never imports.
-It has been that way through every push, every green CI run and every review.
+Everyone who relied on a generator, a `check-*.ts` gate or the architecture
+map was relying on code no compiler had read.
 
-## Root-cause chain
+## Causal chain
 
-1. `pnpm -r typecheck` runs `tsc --noEmit` in each workspace. There are six:
-   four applications, `infra/cdk`, `infra/shared`.
-2. `scripts/`, `.claude/skills/` and `eslint-rules/` are not workspaces. They
-   are not in `pnpm-workspace.yaml` and they own no `package.json`, so `-r`
-   never visits them.
-3. There was no `tsconfig.json` at the repository root either — `eslint.config.js`
-   listed one in `TSCONFIG_PATHS` for its import resolver, and the file did not
-   exist.
-4. ESLint reaches those paths, but `UNPROJECTED_TYPESCRIPT_FILES` gives them
-   `projectService: false, project: false, program: null`, which is correct as
-   far as it goes: without a project there is no type information, so no
-   type-aware rule can run. `no-undef` is off under `typescript-eslint` by
-   design, because the compiler is supposed to be the thing that catches an
-   undefined name.
-5. Nothing was that compiler. So the layer holding every generator, every
-   `check-*.ts` gate, the enforcement ledger, the architecture map and the
-   blueprint index — the machinery this repository uses to check itself — was
-   the only TypeScript in the tree with no type checking at all.
-6. `tsx` strips types without reading them. A broken annotation costs nothing at
-   runtime, and an undefined *value* costs nothing either until control reaches
-   the line.
+- CI's `--check` branch threw `ReferenceError: reason is not defined`.
+  - The branch referenced a name it never declared, and ran for the first
+    time on CI, because it only executes when a generated file is stale.
+    - `tsx` ran the file. It strips types without reading them, so an
+      undefined name costs nothing until control reaches the line.
+    - The same shape had shipped before, in commit `7a4fe16fe`:
+      `function buildDiffReport(input: DiffReportInput): DiffReport {`, where
+      `DiffReport` is declared in `architecture-page.ts` and never imported.
+      - The writers annotated and referenced names as if a compiler would
+        refuse a missing one. `pnpm -r typecheck` passed.
+        - `pnpm -r typecheck` runs `tsc --noEmit` in each workspace.
+          `pnpm-workspace.yaml` lists `apps/*` and `infra/*`. `scripts/`,
+          `.claude/skills/` and `eslint-rules/` own no `package.json` and sit
+          outside that list, so `-r` never visits them.
+          - The repository grew its tooling outside the workspaces, and the
+            only type gate was defined per workspace. There was no root
+            `tsconfig.json` (Machine).
 
-The general form: **`pnpm -r <script>` is a claim about workspaces, not about
-the repository.** Any path that belongs to no workspace is outside every
-`-r` gate, and the more infrastructure a repository grows outside its
-workspaces, the more of it is unguarded.
+## Root cause of occurrence
+
+*Thought `pnpm -r typecheck` type-checks the repository, actually it
+type-checks the workspaces listed in `pnpm-workspace.yaml`, and the tooling
+sat in none of them.* (Machine)
+
+The layout made the belief natural. `ci.yml` showed a typecheck step, and
+every script was TypeScript. `eslint.config.js` even listed a root
+`tsconfig.json` in `TSCONFIG_PATHS` for its import resolver, and that file
+did not exist.
 
 ## Detection failure causes
 
-- **The gap is invisible from either end.** Reading `ci.yml` you see a
-  typecheck step. Reading a script you see TypeScript. Nothing on either side
-  says the two never meet.
-- **Every symptom points somewhere else.** A `ReferenceError` in a `--check`
-  branch reads as a logic bug in that branch. A function that vanished in a
-  delete reads as a bad edit.
-- **The error paths are the unchecked ones.** A generator's happy path runs on
-  every commit; its failure branch runs only when something is already wrong,
-  which is the worst moment to discover it also throws.
-- **`no-undef` being off is right, and was load-bearing in the wrong direction.**
-  Turning it on for these files would have caught the `DiffReport` case, and the
-  reason it is off — "the compiler does this better" — was true everywhere
-  except here.
+- **Typing:** `tsc` never ran on these paths, as above.
+- **Linter:** ESLint reached the paths, but `UNPROJECTED_TYPESCRIPT_FILES`
+  gave them `projectService: false, project: false, program: null`, so no
+  type-aware rule could run. `no-undef` is off under `typescript-eslint` by
+  design, because the compiler is meant to catch an undefined name.
+- **Local validation:** a generator's happy path runs on every commit. Its
+  failure branch runs only when something is already wrong.
+- **CI and review:** reading `ci.yml` shows a typecheck step, and reading a
+  script shows TypeScript. Nothing on either side says the two never meet.
+  A `ReferenceError` in a `--check` branch reads as a logic bug in that
+  branch.
 
 ## Countermeasure
 
 A `tsconfig.json` at the repository root covering `scripts/**/*.ts`,
-`.claude/skills/**/*.ts` and `eslint-rules/**/*.js`, with the same
-`strict` and `noUncheckedIndexedAccess` settings the applications use, and a
-root `typecheck` script that runs it.
+`.claude/skills/**/*.ts` and `eslint-rules/**/*.js`, with the same `strict`
+and `noUncheckedIndexedAccess` settings the applications use, and a root
+`typecheck` script that runs it.
 
-It found eleven errors on its first run. One was the undefined `DiffReport`
-above. The other ten were `noUncheckedIndexedAccess` violations — a regex
-capture group or an array index read as `string` where the type is
-`string | undefined` — in the blueprint indexer and the architecture model, i.e.
-in the code that decides what every generated page says. All eleven are fixed
-here, none by widening a type: each one reads the optional value and handles the
-absent case.
+It found eleven errors on its first run. One was the undefined `DiffReport`.
+The other ten were `noUncheckedIndexedAccess` violations in the blueprint
+indexer and the architecture model. All eleven were fixed by handling the
+absent case, none by widening a type. Every generator re-run gave
+byte-identical output, and 949 tests passed (measured).
 
 ## Eradication
 
-**Structural, level 1.** The compiler now reads these files, so an undefined
-name cannot survive a commit that touches them.
+**Type:** DevX check (level 2)
 
-Wired in two places:
+**Reference:** commit `24a70649df` (#55).
 
-- `.husky/pre-commit`, scoped to commits touching `scripts/`,
-  `.claude/skills/`, `eslint-rules/` or `tsconfig.json`, so an
-  application-only commit pays nothing.
-- `.github/workflows/ci.yml`, immediately after `pnpm -r typecheck`, which is
-  the line whose reach this corrects.
+The compiler reads the tooling at commit and in CI:
 
-Both cited from [`03. Typing`](../standards/03-typing.md) and
-[`12. Linting and gates`](../standards/12-linting-and-gates.md), and
-`gates.core.ts` now names the commit hook as a site for the `typecheck` gate, so
-the enforcement ledger fails if either site loses the step.
+- `.husky/pre-commit` launches `typecheck-tooling`, which runs
+  `tsc -p tsconfig.json --noEmit`.
+- `.github/workflows/ci.yml` runs `pnpm run typecheck` right after
+  `pnpm -r typecheck`.
 
-Verified both ways on the tree that produced it:
+**Proof it can fail:** with the `DiffReport` import removed again, the root
+type check failed with `architecture-graph.ts(1620,51): error TS2304`, exit 2
+(measured on the tree that produced this entry).
 
-| Scenario | Expected | Result |
-| --- | --- | --- |
-| The tree as fixed | passes | passes, 0 errors |
-| The `DiffReport` import removed again | fails, naming the file and line | fails: `architecture-graph.ts(1620,51): error TS2304`, exit 2 |
-| Every generator re-run after the eleven fixes | byte-identical output | identical; all seven `--check` gates green, 949 tests pass |
+The gate covers a list kept by hand. The root `tsconfig.json` reads
+`"include": ["scripts/**/*.ts", ".claude/skills/**/*.ts", "eslint-rules/**/*.js"]`.
+A new top-level folder of TypeScript is unguarded again, and the root
+`vitest.config.ts` already is (`git ls-files '*.ts'` outside `apps/`,
+`infra/` and the three folders prints `vitest.config.ts`, measured on
+2026-11-27).
 
-`knip` confirmed the wiring independently: `typecheck` had been sitting in
-`knip.json`'s `ignoreBinaries` because no root script defined it, and knip
-reported the entry as removable the moment one did. That line is gone.
+These files stay in `UNPROJECTED_TYPESCRIPT_FILES`, so ESLint's type-aware
+rules still do not run on them. Projecting them reported 54 errors, almost
+all `@typescript-eslint/no-unsafe-*` on vendor surfaces that return `any`
+(measured when the entry was written). That is a separate subject. The
+compiler closes the undefined-name defect.
 
-**What this deliberately does not do.** These files stay in
-`UNPROJECTED_TYPESCRIPT_FILES`, so ESLint's type-aware rules still do not run on
-them. Measured before deciding: projecting them reports **54 errors**, almost
-all `@typescript-eslint/no-unsafe-*` where ESLint's own `calculateConfigForFile`
-and `elkjs` return `any` into the enforcement ledger, the provenance report and
-the architecture page. Fixing those properly means parsing two vendor surfaces
-into real types, which is a change of its own size and its own risk. The
-compiler gate above is what closes the defect this entry is about — an undefined
-name — and it closes it completely; the `any` surface is a separate subject with
-a separate number attached to it, not a deferred half of this one.
+**Proposed:** make coverage the default. The root `tsconfig.json` would
+include `**/*.ts` and `**/*.js` and exclude `apps`, `infra` and
+`node_modules`, which `pnpm -r typecheck` already covers. Any new folder of
+tooling would then be type-checked without anyone adding it, and a file
+outside every type gate would need an explicit exclude.
 
-## See also
+**Similar instances:** the `git ls-files` search above found one, the root
+`vitest.config.ts`. `knip` confirmed the wiring: `typecheck` had sat in
+`knip.json`'s `ignoreBinaries` because no root script defined it, and that
+line was removed.
 
-- [`a-gate-that-reported-success-while-measuring-nothing`](./a-gate-that-reported-success-while-measuring-nothing.md) — the same shape one layer up: a gate that runs and covers nothing.
-- [`the-gate-that-was-never-pointed-at-the-code`](./the-gate-that-was-never-pointed-at-the-code.md) — a mutation gate that existed and reached no workspace.
-- [`three-green-gates-on-code-that-ran-nowhere`](./three-green-gates-on-code-that-ran-nowhere.md) — green measurements over code nothing exercised.
+**Related.**
+
+- [`a-gate-that-reported-success-while-measuring-nothing`](./a-gate-that-reported-success-while-measuring-nothing.md), the same shape one layer up: a gate that runs and covers nothing.
+- [`the-gate-that-was-never-pointed-at-the-code`](./the-gate-that-was-never-pointed-at-the-code.md), a mutation gate that existed and reached no workspace.
+- [`three-green-gates-on-code-that-ran-nowhere`](./three-green-gates-on-code-that-ran-nowhere.md), green measurements over code nothing exercised.

@@ -5,18 +5,28 @@ detected-at: ci
 severity: high
 related-pr: '#11'
 fix-commits: [c2eea65058, 374c8c9fe1]
-eradication-level: 1
-eradication-paths: [infra/cdk/src/constructs/static-site.ts]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [cdk, s3, bucket-deployment, lambda, preview, deploy]
 zone: infra/cdk/src/constructs/static-site.ts
 ---
 
-# CDK BucketDeployment Lambda OOMs on multi-MiB bundles with cryptic SSL EOFs
+# A preview deploy hung 15 minutes and died on an SSL error after 10 MiB of photos
 
-## Symptom
+## User impact
 
-PR #11 added ~10 MiB of media assets to `apps/borso-fr/site/public/media/12-travaux/`. The preview deploy hung in `UPDATE_IN_PROGRESS` for ~15 minutes, then failed. The custom resource backing CDK's `BucketDeployment` reported, in CloudWatch logs:
+The operator could not see PR #11's preview. PR #11 added about 10 MiB of photos under `apps/borso-fr/site/public/media/12-travaux/`.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| Preview deploy of PR #11 | Stack stuck in `UPDATE_IN_PROGRESS` for about 15 minutes, then rolled back. No preview URL. | The preview deploys in a few minutes and serves the new page. |
+| Next CI deploy | Failed in 42 seconds, because CloudFormation refuses changes during `UPDATE_ROLLBACK_IN_PROGRESS`. It looked like a code regression. | The retry deploys. |
+
+The Lambda log of the `BucketDeployment` custom resource, measured by CloudWatch:
+
+<details>
+<summary>CloudWatch log</summary>
 
 ```
 upload failed: ../../tmp/.../media/12-travaux/septembre-2025-triathlon-groupe.jpg
@@ -32,48 +42,57 @@ REPORT Duration: 879565.21 ms Billed Duration: 879566 ms
   Memory Size: 128 MB Max Memory Used: 126 MB
 ```
 
-CloudFormation rolled back. The next CI deploy job (started after the user stopped the rolling stack) failed in 42 seconds because CFN refused operations during `UPDATE_ROLLBACK_IN_PROGRESS` — looked like a code regression but was a state-machine block.
+</details>
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did `aws s3 sync` crash with an SSL EOF?**
-   The CDK `BucketDeployment` construct ships a Lambda backed by `python:3.11` + a bundled `awscli`. The Lambda was running at 126 / 128 MB — out of memory headroom. When Python is memory-pressured, the OpenSSL handshake state can be evicted mid-handshake; S3 closes the connection; `aws s3 sync` interprets the EOF as a transient error, retries until it exhausts its budget, then exits non-zero.
+- The PR #11 preview stack rolled back after about 15 minutes.
+  - The `BucketDeployment` Lambda's `aws s3 sync` exited non-zero after repeated `SSL: UNEXPECTED_EOF_WHILE_READING` uploads (measured, log above).
+    - The Lambda ran at 126 MB of its 128 MB (measured, the `REPORT` line). That memory pressure broke the TLS uploads is inferred. It was never reproduced.
+      - Branch 1, the payload. PR #11 put about 10 MiB of photos in `site/public/`, and every deploy copies that folder through this one Lambda.
+      - Branch 2, the memory. The construct's deployment set no `memoryLimit`, so it took the default of the installed `aws-cdk-lib@2.252.0`, 128 MiB.
 
-2. **Why was the Lambda only allocated 128 MB?**
-   `BucketDeployment`'s `memoryLimit` prop defaults to 128 MB. The construct's documented use case is "small static-site bundles" — the framing assumes a handful of HTML/JS/CSS files. Multi-megabyte image bundles are off-pattern but not rejected.
+        ```ts
+        new BucketDeployment(this, 'Deploy', {
+          sources: [Source.asset(path.resolve(props.assetsPath))],
+          destinationBucket: bucket,
+          distribution,
+          distributionPaths: ['/*'],
+        }); // ← no memoryLimit: 128 MiB in 2.252.0
+        ```
 
-3. **Why were we shipping 10 MiB of media into a static-site bundle?**
-   The `/12-travaux` feature retroactively documents Hugo's monthly challenges with photos and a video. The site is the right home for the assets (no CMS needed; everything stays version-controlled). The bundle is going to grow, not shrink.
+        - Commit `1aa979e74` (2026-05-01, an agent) wrote these lines. Its message says the constructs were ported "verbatim from upstream", from `hugoleborso/borso-platform`.
+          - The upstream construct was the input of that commit. It carried no `memoryLimit`, and the sites it served then held no media (inferred).
 
-4. **Why didn't anyone notice the 128 MB default during conception?**
-   The construct's defaults are right for the *original* static-site shape this repo deploys. No app had previously crossed a few MiB of assets. The default became a latent footgun the moment we landed image-heavy content.
+## Root cause of occurrence
 
-**Root cause:** thought `BucketDeployment`'s Lambda defaults were tuned for arbitrary static-site payloads; actually the 128 MB default OOMs on anything past a few MiB of total upload, and the failure mode is a misleading SSL error rather than an OOM kill.
+*Thought the `BucketDeployment` defaults fit any static site, actually its Lambda ran in 128 MiB in `aws-cdk-lib@2.252.0` and the prop's own doc asks for more as soon as the files are large.* (Material)
+
+The porting agent copied the construct verbatim. The docstring that held the answer sat in `node_modules`, outside the brief and the upstream code it worked from (inferred, the transcript is gone). The installed `aws-cdk-lib@2.276.0` still says, in `aws-s3-deployment/lib/bucket-deployment.d.ts`:
+
+> If you are deploying large files, you will need to increase this number accordingly.
 
 ## Detection failure causes
 
-- **Typing:** the CDK construct accepts the bundle without complaint at synth time; size is opaque to the type system.
-- **Linter / static analysis:** Biome doesn't audit CDK construct usage.
-- **Functional validation locally:** local dev never invokes the BucketDeployment Lambda. `pnpm dev` serves files directly from `site/public/`; the OOM is invisible until cloud deploy.
-- **CI (build):** the bundle builds successfully; `pnpm build` doesn't probe upload feasibility.
-- **Code review:** the construct call looks idiomatic; the missing `memoryLimit` is the absence of a prop, not the presence of a wrong one. Reviewers don't flag what isn't there.
-- **Staging monitoring:** preview *is* the staging environment for this app; the OOM only fires here.
+- **Typing:** the construct takes any asset folder. Its size is invisible at synth.
+- **Linter:** no rule reads CDK construct props.
+- **Local validation:** `pnpm dev` serves `site/public/` directly. The Lambda only runs in a cloud deploy.
+- **CI build:** `pnpm build` succeeds whatever the bundle size. Nothing compares the bundle to the Lambda's memory.
+- **Review:** a missing prop leaves no line to read in the diff.
+- **Monitoring:** the failure log names TLS, not memory. Only the `REPORT` line shows 126 of 128 MB.
 
 ## Countermeasure
 
-The eradication landed in the StaticSite construct (which both prod and preview deploys flow through), so every app inherits the bump without per-app changes.
+- Commit [`c2eea65`](https://github.com/hugoleborso/borso.fr/commit/c2eea65058a85f108302f4df505de017a85c2a6b) set `memoryLimit: 512` on the prod and preview deployments of `infra/cdk/src/constructs/static-site.ts`. The PR #11 preview then deployed.
+- Commit [`374c8c9`](https://github.com/hugoleborso/borso.fr/commit/374c8c965df168d3e08c10b1a3a06fefa9b4a2bf) recompressed the photos to 1600 px at quality 80, from 13 MiB to 9.3 MiB.
 
-- **Code:** commit [`c2eea65`](https://github.com/hugoleborso/borso.fr/commit/c2eea65058a85f108302f4df505de017a85c2a6b) — `BucketDeployment` `memoryLimit: 512` on both the prod and preview paths inside `infra/cdk/src/constructs/static-site.ts`, with a comment explaining the SSL-EOF symptom so the next reader doesn't roll the number back.
-- **Code:** commit [`374c8c9`](https://github.com/hugoleborso/borso.fr/commit/374c8c965df168d3e08c10b1a3a06fefa9b4a2bf) — recompressed the actual /12-travaux JPEGs to 1600 px / q80 (13 MiB → 9.3 MiB). Defence in depth: smaller bundles upload faster regardless of Lambda memory.
-- **Operator action:** during the original failure, the rollback Lambda itself re-uploads the *old* asset set — equally large. If you ever see a `UPDATE_ROLLBACK_IN_PROGRESS` that's been running close to the 15-minute Lambda timeout, it may be on the verge of `UPDATE_ROLLBACK_FAILED`. Wait it out or, if it fails, `aws cloudformation continue-update-rollback`.
+The value now lives in `BUCKET_DEPLOYMENT_MEMORY_MIB = 512`, at `infra/cdk/src/constructs/static-site.ts:44`, used by all three deployments.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility at the construct boundary)
+**Type:** knowledge (level 5). Nothing above it holds today.
 
-**Reference:** [PR #11](https://github.com/hugoleborso/borso.fr/pull/11) · commit [`c2eea65`](https://github.com/hugoleborso/borso.fr/commit/c2eea65058a85f108302f4df505de017a85c2a6b)
-
-**The actual fix:**
+**Reference:** commit [`c2eea65`](https://github.com/hugoleborso/borso.fr/commit/c2eea65058a85f108302f4df505de017a85c2a6b), the countermeasure.
 
 ```diff
      new BucketDeployment(this, 'Deploy', {
@@ -81,18 +100,14 @@ The eradication landed in the StaticSite construct (which both prod and preview 
        destinationBucket: bucket,
        distribution,
        distributionPaths: ['/*'],
-+      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
-+      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
 +      memoryLimit: 512,
      });
 ```
 
-The same change landed on the preview-path `BucketDeployment` a few lines down. Every static-site app now deploys through a Lambda with 4× the memory; the 128 MB OOM cannot recur via this construct.
+The pinned 512 is not a mechanism. It is a copy of a vendor number, and it has drifted. The installed `aws-cdk-lib@2.276.0` defaults to 1024 MiB (`memoryLimit??1024` in `bucket-deployment.js`, and its README: "The default memory limit for the deployment resource is 1024MiB"). So the pin now gives the Lambda half of what it would get without it. Nothing refuses a lower value, and nothing bounds the payload.
 
-**Sibling defects swept:** preview-path `BucketDeployment` in the same file (the construct keeps the two deployments structurally distinct because preview uses a shared bucket with a key prefix); both paths now set `memoryLimit: 512` and carry the same explanatory comment.
+**Proposed:** subtract the pin. Delete `memoryLimit` and `BUCKET_DEPLOYMENT_MEMORY_MIB` from `static-site.ts`, so the construct follows the library default. Add a synth assertion in `infra/cdk/test/unit/` that the deployment handler's `MemorySize` is not below that default. Then remove the payload: move media out of `site/public/` to the `PhotosCdn` construct (`infra/cdk/src/constructs/photos-cdn.ts`), so no photo goes through a Lambda `aws s3 sync`. `apps/borso-fr/site/public` measures 10 MB with `du` today. That would make a media-sized deploy payload impossible, not just survivable.
 
-## See also
+**Proof it can fail:** none. No check exists to plant against.
 
-- [`docs/knowledge/cfn-update-rollback-recovery.md`](../knowledge/cfn-update-rollback-recovery.md) — the secondary symptom (next CI deploy failing in 42 s) that made this defect look like a regression.
-- [`docs/dantotsus/bucketdeployment-prune-default.md`](./bucketdeployment-prune-default.md) — sibling default-footgun on the same construct (`prune: true` wipes co-tenant prefixes); precedent for adjusting CDK construct defaults at the wrapper boundary.
-- [`docs/dantotsus/bucketdeployment-cloudfront-invalidation.md`](./bucketdeployment-cloudfront-invalidation.md) — third reason the `BucketDeployment` construct's defaults need wrapping (invalidation scope).
+**Similar instances:** `grep -n "new BucketDeployment" infra/cdk/src/constructs/*.ts` finds three deployments, all in `static-site.ts`, all pinned to 512.

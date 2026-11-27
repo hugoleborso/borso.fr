@@ -5,8 +5,8 @@ detected-at: production
 severity: high
 related-pr: '#6'
 fix-commits: [d736fbb22d]
-eradication-level: 1
-eradication-paths: [infra/cdk/src/internal/cf-static-site-index-rewrite.code.js, infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts]
+eradication-level: 4
+eradication-paths: [infra/cdk/src/constructs/static-site.ts, infra/cdk/src/internal/cf-static-site-index-rewrite.code.js, infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts]
 time-to-detect: minutes
 tags: [cdk, cloudfront, s3, static-site]
 zone: infra/cdk/src/constructs/static-site.ts
@@ -14,93 +14,79 @@ zone: infra/cdk/src/constructs/static-site.ts
 
 # CloudFront's `defaultRootObject` only handles the apex `/`; nested directories need a viewer-request Function
 
-## Symptom
+## User impact
 
-After the prod deploy of `borso-fr-prod` succeeded (bucket created, dist uploaded, alias claimed):
+After the first prod deploy of `borso-fr-prod`, a visitor opening a painting page got a full-screen 404 image. Every directory-style URL below the apex was affected. The apex and URLs ending in a file name were not. Measured with `curl -I` right after the deploy:
 
-- `https://borso.fr/` → **HTTP/2 200** (the homepage)
-- `https://borso.fr/art/mondrian/` → **HTTP/2 404** with `content-type: image/jpeg, content-length: 729401` (the `404.jpeg` body, served by the `errorResponses` mapping)
-- `https://borso.fr/art/mondrian` → same 404
-- `https://borso.fr/art/mondrian/index.html` → **HTTP/2 200**
+| URL | Seen | Expected |
+| --- | --- | --- |
+| `https://borso.fr/` | HTTP/2 200, the homepage | the same |
+| `https://borso.fr/art/mondrian/` | HTTP/2 404, `content-type: image/jpeg`, `content-length: 729401` (the `404.jpeg` body) | HTTP/2 200, the painting page |
+| `https://borso.fr/art/mondrian` | the same 404 | HTTP/2 200, the painting page |
+| `https://borso.fr/art/mondrian/index.html` | HTTP/2 200 | the same |
 
-The file was in S3, the URL didn't get rewritten, the user landed on a giant 404 image instead of the painting.
+## Causal chain
 
-## Root-cause chain
+- The visitor saw the 404 image on `/art/mondrian/`.
+  - CloudFront's `errorResponses` replaced S3's `NoSuchKey` with `/404.jpeg`.
+    - CloudFront forwarded the URI unchanged, and S3 has no key `art/mondrian/`. The origin is `S3BucketOrigin.withOriginAccessControl(bucket)`, a REST origin with no index document.
+      - The prod distribution had no viewer-request function. It relied on this line of `infra/cdk/src/constructs/static-site.ts`:
 
-1. **Why** did `/art/mondrian/` 404 when `/art/mondrian/index.html` resolved fine?
-   CloudFront forwarded the URI to S3 unchanged. S3 has no key called `art/mondrian/` (S3 is a flat key store; trailing slashes are not directories), so it returned `NoSuchKey`. CloudFront's `errorResponses` mapping rewrote the response body to `404.jpeg`.
+        ```ts
+        defaultRootObject: 'index.html',  // ← applies to the apex `/` only
+        ```
 
-2. **Why** did the apex `/` work but `/art/mondrian/` not?
-   `defaultRootObject: 'index.html'` in the CDK construct. Reading the CDK / CloudFront docs carefully: this setting tells CloudFront to fetch `<origin>/index.html` when the requested URI is *exactly* `/`. It does **not** apply to nested directories — a request for `/art/mondrian/` is forwarded as `art/mondrian/` to S3 with no rewrite.
+        - `1aa979e74` ported the construct "verbatim from upstream" `borso-platform`, as the monorepo plan's §5 asked (commit message). The upstream prod branch had the same line and no rewrite (Material).
+          - Upstream resolved directories in only one of its two request paths. The preview path's `cf-host-routing-function`, ported in the same commit, appended `index.html` to directory URIs. The prod path did not (Machine).
 
-3. **Why** is this not handled by S3?
-   The new CDK setup uses `S3BucketOrigin.withOriginAccessControl(bucket)` — a regular S3 origin with OAC, *not* the legacy S3-website endpoint. The website endpoint *does* have a built-in directory-index feature (configurable IndexDocument), but it requires public bucket access and predates OAC. The OAC bucket origin is the modern, secure default; it just doesn't carry the website-endpoint conveniences with it.
+## Root cause of occurrence
 
-4. **Why** wasn't this caught in conception or implementation?
-   The spec's *Use cases* listed the routes the user would visit (`/art/mondrian/`, `/family/mom.html`, etc.) but assumed CloudFront would resolve directory-style URIs the way the *previous* (S3-website-endpoint) setup did. The CDK migration changed the origin shape; the spec didn't list "verify directory URI resolution under the new origin" as a use case. The previews distribution avoids the issue because it has its own viewer-request CloudFront Function (`cf-host-routing-function.code.js`) that already includes a directory-index rewrite branch — the prod distribution had no such function.
+*Thought `defaultRootObject: 'index.html'` makes CloudFront serve `index.html` for any directory-style URI. Actually it applies only when the request is exactly `/`, and a REST S3 origin resolves no index for nested paths.* (Material, with Machine behind it)
 
-5. **Why** wasn't this caught by any validator?
-   - `/visual-validation` ran against the dev server (`pnpm dev`), which proxies the `site/` folder directly and resolves directory-style URIs the same way as a website endpoint would. The prod-only failure mode never manifested.
-   - The dev server is a Vite-internal mechanism with its own URL handling; it does not exercise CloudFront's behaviour.
-   - There is no production-smoke automation. The first time CloudFront's behaviour matters is when the user opens the prod URL.
+The prod `curl` table above is the evidence: `/` answered 200 and `/art/mondrian/` 404 under the same distribution. The CloudFront developer guide's page on the default root object says the same (inferred from memory, not reread this session). The S3 website endpoint did resolve index documents, and the site used it before the CDK migration. Its index resolution did not survive the switch to an OAC origin.
 
-**Root cause:** *thought* `defaultRootObject: 'index.html'` made CloudFront serve `index.html` for any directory-style URI; *actually* it only handles the apex `/`. Nested directories need a viewer-request CloudFront Function that rewrites `/<dir>/` and `/<dir>` to `/<dir>/index.html`.
+The belief came in with the ported input. The port copied it, and a correct rewrite sat in the sibling preview function of the same commit. Two request paths each carried their own directory resolution, so one could lack it unnoticed.
 
 ## Detection failure causes
 
-- **Typing / linter / CI:** N/A — runtime CloudFront behaviour.
-- **`/technical-validation`:** Walks the diff against the spec; the spec listed routes but didn't assert they resolve correctly under the new origin shape. Validator had no way to know.
-- **`/visual-validation`:** Ran against the local dev server only. Vite serves `index.html` from a directory-style URI by virtue of its own dev middleware; the test passed locally even though the prod path would have failed.
-- **CI:** Preview deploys *also* exercise this path (`borso-fr-pr-N.preview.borso.fr/art/mondrian/`), and the preview *did* work — because the previews CloudFront has the host-routing function which includes the directory-index rewrite as a side effect. Prod has no such function. The asymmetry between prod and preview infra was invisible.
-- **Code review:** Reviewer would need to know the OAC-vs-website-endpoint distinction *and* that CDK's `defaultRootObject` is apex-only, *and* that the previews function was carrying the rewrite for prod via copy-paste lineage. Realistic but not robust.
-- **Production monitoring:** None for static-site 404s.
+- **Typing, linter, CI:** `defaultRootObject` is a valid prop. Synth cannot know the bucket's key layout.
+- **`/visual-validation`:** it ran against `pnpm dev`. Vite's dev middleware serves `index.html` for a directory URI, so the prod failure could not show.
+- **Preview deploy:** `borso-fr-pr-N.preview.borso.fr/art/mondrian/` worked, because the preview distribution rewrote directories in its host-routing function. A green preview proved nothing about prod, which ran a different request path.
+- **`/technical-validation`:** the spec listed the routes but not their resolution under the new origin, so the validator had nothing to check them against.
+- **Monitoring:** no alarm watched 404 rates on static sites. The operator found it by opening the URL.
 
 ## Countermeasure
 
-Wire a CloudFront Function (viewer-request) into the StaticSite default behaviour that rewrites directory-style URIs to `/<dir>/index.html`. Two cases:
+`d736fbb22d` adds a viewer-request CloudFront Function to the `StaticSite` default behaviour. It appends `index.html` when the URI is empty or ends in `/`, and `/index.html` when the last segment has no dot. `defaultRootObject` stays for the apex. Verified by the unit test below and by the prod URLs answering 200 after the redeploy.
 
-- `uri === '' || uri.endsWith('/')` → append `index.html` (handles apex and nested trailing-slash dirs).
-- The last path segment after the rightmost `/` contains no `.` → treat as a directory, append `/index.html` (handles `/art/mondrian` without trailing slash).
+## Eradication
 
-The function is the same shape as the directory-rewrite branch already living in the previews function, but without the host-routing prefix.
+**Type:** detection (level 4)
 
-- **Code:** PR #7 commit `<sha>` adds `infra/cdk/src/internal/cf-static-site-index-rewrite.code.js` (the JS source as a string at synth time), `infra/cdk/src/internal/cf-static-site-index-rewrite.ts` (the re-export), and wires it into `static-site.ts`'s `Distribution.defaultBehavior.functionAssociations` as a `FunctionEventType.VIEWER_REQUEST`.
-- **Operator action:** rerun the prod deploy after merge.
-
-## Eradication (mandatory — code-level)
-
-**Type:** Structural impossibility (level 1 — every `StaticSite` distribution gets the rewrite by construction)
-
-**Reference:** PR #7 · commit `d736fbb22d`
-
-**The actual fix:** the `StaticSite` construct ships a default `viewer-request` CloudFront Function that performs the directory-style rewrite. **Every consumer of the construct** (current: `borso-fr` prod, future: `borsouvertures` after its migration, the previewable-app) inherits the rewrite — there is no way to instantiate `StaticSite` without it. The misconception (*"`defaultRootObject` handles directory URIs"*) becomes structurally impossible to ship because the function is wired by the construct itself, not by each consumer.
+**Reference:** commit [`d736fbb`](https://github.com/hugoleborso/borso.fr/commit/d736fbb22d6893c49269d9440d89f08b5b3a06c4).
 
 ```diff
-+ const indexRewriteFunction = new CloudFrontFunction(this, 'IndexRewriteFunction', {
-+   runtime: FunctionRuntime.JS_2_0,
-+   code: FunctionCode.fromInline(STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE),
-+   comment: 'Rewrite directory-style URIs to /<dir>/index.html',
-+ });
-+
-  const distribution = new Distribution(this, 'Distribution', {
-    defaultBehavior: {
-      origin: S3BucketOrigin.withOriginAccessControl(bucket),
-      …
-+     functionAssociations: [
-+       { function: indexRewriteFunction, eventType: FunctionEventType.VIEWER_REQUEST },
-+     ],
-    },
-    defaultRootObject: 'index.html',  // kept as defence-in-depth for the apex
-    …
-  });
++    const indexRewriteFunction = new CloudFrontFunction(this, 'IndexRewriteFunction', {
++      runtime: FunctionRuntime.JS_2_0,
++      code: FunctionCode.fromInline(STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE),
++    });
+     const distribution = new Distribution(this, 'Distribution', {
+       defaultBehavior: {
+         origin: S3BucketOrigin.withOriginAccessControl(bucket),
++        functionAssociations: [
++          { function: indexRewriteFunction, eventType: FunctionEventType.VIEWER_REQUEST },
++        ],
+       },
 ```
 
-The function source is unit-tested at 100% coverage (`infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts`) covering: `/`, `/art/mondrian/`, `/art/mondrian` (no trailing slash), `/family` (single-segment dir), `/style.css`, `/img/photo.jpg`, `/assets/playfair-display-…woff2` (asset with dot in last segment), and the empty-URI edge case.
+The wiring still exists (read today, `static-site.ts:101-121`). The construct adds the function unconditionally, so every prod `StaticSite` gets it today. No test pins that wiring, so deleting the `functionAssociations` block passes every gate. What holds is detection on the handler alone. `infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts` covers `/`, `/art/mondrian/`, `/art/mondrian`, `/family`, `/style.css`, a dotted asset name and the empty URI.
 
-**Sibling defects swept:** the previews distribution's directory-index path was already covered by the host-routing function; this PR doesn't change that. Future apps consuming `StaticSite` (e.g. `borsouvertures` migration) inherit the fix automatically.
+The class that remains open is drift between the two request paths. Directory resolution exists twice today, in `cf-static-site-index-rewrite.code.js:5-15` and in `cf-host-routing-function.code.js:65-69` (measured). A change to one does not reach the other, and a passing preview still does not vouch for prod.
 
-## See also
+**Proposed:** keep one source of directory resolution. `cf-host-routing-function.ts` already reads its code with `readFileSync`. It can prepend the shared helper from `cf-static-site-index-rewrite.code.js` at synth time and call it on the prefixed URI. The edge runtime has no modules, but a concatenated string needs none (inferred from how both `.ts` wrappers load their code). Preview and prod would then resolve directories with the same lines, so a preview that passes vouches for prod.
 
-- [`docs/dantotsus/cloudfront-cname-must-be-released-before-redeploy.md`](./cloudfront-cname-must-be-released-before-redeploy.md) — same migration-cutover PR, same defect family (vendor surprise that surfaces only at prod deploy time).
-- [`docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md`](./cdk-failed-deploy-leaves-retained-buckets-orphaned.md) — sister entry on first-deploy partial success.
-- `infra/cdk/src/internal/cf-host-routing-function.code.js` — the previews function whose directory-rewrite branch is what *should* have lived in the prod distribution from day one.
+**Proposed:** pin the wiring in `infra/cdk/test/unit/static-site.test.ts` with a `hasResourceProperties('AWS::CloudFront::Distribution', ...)` assertion on `DistributionConfig.DefaultCacheBehavior.FunctionAssociations` containing `Match.objectLike({ EventType: 'viewer-request' })`, and on the function's code equal to `STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE`. Removing the association then fails the infra suite at commit, and the construct's shape becomes a guarantee rather than a fact of today's code.
+
+**Proof it can fail:** the handler's test fails when the rewrite is broken. Nothing fails when the `functionAssociations` block is removed from the construct. On `origin/main`, `static-site.test.ts` asserts viewer-request associations only on the `/api/*` behaviours (lines 161 and 191), and no snapshot holds `IndexRewriteFunction` (measured, `git show origin/main:infra/cdk/test/unit/static-site.test.ts | grep -n "DefaultCacheBehavior\|FunctionAssociations"`). That gap is why the level is 4, not 1.
+
+**Similar instances:** `grep -rn "hasNoExtensionOnLastSegment" infra/cdk/src` finds the two copies above and nothing else. `grep -rn "new StaticSite" infra/cdk/src` finds the one consumer, `previewable-app.ts`, which every app's prod stack goes through.

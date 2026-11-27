@@ -39,36 +39,39 @@ the PR's *Decisions* table).
 
 - The operator saw a compositions screen that listed "Avignon Nice", a song
   written outside pragma, and could not start a sketch without a catalogue
-  song.
-  - The spec defined a composition as a song with `origin = original`.
-    - The existing `/compos` screen already read songs with
-      `origin = original`, and the spec extended that reading instead of
-      asking what a composition is (inferred from the first spec,
-      `d3e444556`, whose *Gemba* section read the screen and asked no
-      question about the record).
-- The operator wanted to capture a passage while sketching.
+  song
+  - The first spec, `d3e444556`, defined a composition as a song with
+    `origin = original`
+    - Its *Gemba* section read the existing `/compos` screen, which lists
+      songs with `origin = original`, and wrote that reading down as the
+      definition (inferred, the section asks no question about the record)
+      - The knowledge hook printed
+        `docs/knowledge/a-spec-bullet-that-leans-on-what-the-code-already-does.md`
+        when `spec.md` was written, and the sentence stayed. Man
+- The operator wanted to capture a passage while sketching
   - The spec's happy path created inspirations on the library page and only
-    consumed them in the sketch.
-    - No question in the spec walked the journey from the screen the member
-      is on when the idea comes (inferred, the spec's question list before
-      `abee2077e` holds no row on where an inspiration is created).
+    consumed them in the sketch
+    - The spec's author wrote the creation path from the one screen its Gemba
+      opened, the library (inferred, the question list before `abee2077e`
+      places creation nowhere else)
 
 ## Root cause of occurrence
 
 *Thought the existing screen's data model was the operator's model of a
-composition; actually it was the shortcut an earlier feature took, and he
-had never been asked.*
+composition, actually it was the shortcut an earlier feature took, and he
+had never been asked.* **Man.**
 
 The second spec says it plainly. "The band's own song 'Avignon Nice' sits in
 the catalogue as `origin = cover`. The operator says it was written outside
 pragma and does not belong on the compositions screen. A song is created when
-a composition is finished, never before." (spec, *Gemba, second pass*). The
-first pass of Gemba looked at the screen and the table, not at the operator.
+a composition is finished, never before." (spec, *Gemba, second pass*).
 
-This is the belief `docs/knowledge/a-spec-bullet-that-leans-on-what-the-code-already-does.md`
-names for PR #300: a sentence about today ("the compositions screen lists
-original songs") taken as a product decision. That entry is level 5, and it
-fired on `spec.md` here too. It did not stop the second occurrence.
+The right answer was in the agent's context. The knowledge entry that names
+this belief for PR #300, a sentence about today taken as a product decision,
+printed on `spec.md` here. The prior won anyway. The condition that let it
+win is the skill's method: the first pass of Gemba looks at the screen and
+the table, not at the operator. A Man cause needs a gate, not one more
+document, and the eradication below is that gate.
 
 ## Detection failure causes
 
@@ -77,7 +80,8 @@ fired on `spec.md` here too. It did not stop the second occurrence.
   the new entity is, or where each entity is created from, so step 12's
   re-read had nothing to contradict.
 - **Knowledge hook:** printed on writing `spec.md`, where it reads as advice
-  among others. A summary is not a question the operator answers.
+  among others. A summary is not a question the operator answers. It is
+  level 5 and did not stop the second occurrence.
 - **Validation:** technical and visual validation check the code against the
   spec. A spec the operator would not ratify passes both, as it did twice
   (round 2 PASS at 22:59, visual PASS_EXCEPT_UNVERIFIABLE at 23:18).
@@ -101,13 +105,14 @@ question settles.
 
 ## Eradication
 
-**Type:** DevX check (level 2)
+**Type:** DevX check (level 2), with two gaps measured below.
 
 **Reference:** [PR #334](https://github.com/hugoleborso/borso.fr/pull/334), the commit adding this paragraph
 
 The spec template gains a `### Records` table, and the specification skill
 asks its two questions at step 7. `scripts/check-spec-records.sh` runs in
-pre-commit on every staged `spec.md` that is not on `main` yet:
+pre-commit on every staged `spec.md` that is not on `main` yet, and since
+then on every migration a branch adds (`.husky/pre-commit:343`):
 
 ```diff
 +run_check_on_files spec-records '^docs/features/.*/spec/spec\.md$' scripts/check-spec-records.sh
@@ -136,6 +141,20 @@ exit 1
 With three dated rows it exits 0. An answer with no date is refused
 (`the Records row for inspiration needs four cells, the last one the
 operator's dated answer`).
+
+**Gaps in what holds:** the check keys on a created table. A record
+redefined over an existing table, such as a composition written as a `song`
+with `origin = original` and no new table, still passes unasked. And the
+dated answer is typed by the agent writing the spec, so the date shows a
+format, not that the operator answered.
+
+**Proposed:** key the check on every entity the spec's *Changes* section
+adds or redefines, not only on `CREATE TABLE`, so a new meaning given to an
+existing table needs its own row. And take the answer from a step the
+operator performs himself, such as his own review comment on the pull
+request that the check reads, so an agent cannot fill the cell. Together
+they make it impossible to ratify a spec whose records the operator never
+answered.
 
 **Similar instances:** `grep -l 'on the preview' docs/features/*/*/spec/spec.md`
 lists only this spec today.

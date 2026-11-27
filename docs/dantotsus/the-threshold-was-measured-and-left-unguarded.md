@@ -4,111 +4,110 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#100'
-fix-commits: [948204d50a]
+fix-commits: [948204d50a, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-github-pr-body.sh]
+eradication-paths: [scripts/hooks/checks/github-pr-body.core.ts, scripts/hooks/checks/github-pr-body.core.test.ts]
 time-to-detect: minutes
 tags: [github, hooks, gates, meta, tooling]
-zone: .claude/hooks/pretool-github-pr-body.sh
+zone: scripts/hooks/checks/github-pr-body.core.ts
 weak-point: gate-measures-nothing
 recurs: [the-hook-guarded-every-form-but-the-documented-one]
 ---
 
 # The threshold was measured, written down, and guarded by nobody
 
-## Symptom
+## User impact
 
-A link in PR #100's body came back from the server like this:
+The operator read PR #100's body with one dead link. The server stored it
+like this (measured, read back from the PR):
 
 ```
 Its three FAIL rows were not defects, and the [resolution note](``https://github.com/…-resolution.md)``  says why
 ```
 
-The URL and the closing parenthesis are inside a code span, so the anchor is
-dead and the sentence around it still reads as if it worked.
+| | Seen | Expected |
+| --- | --- | --- |
+| The "resolution note" link | the URL and closing parenthesis inside a code span, no anchor | a clickable link to the note |
 
-## Root-cause chain
+The sentence around it still read as if it worked, so a reader had no sign
+that the evidence was missing.
 
-1. **Why did the link break?**
-   The GitHub MCP server wraps a markdown link's target in double backticks
-   once the target passes roughly 150 characters.
-2. **Why was that not avoided?**
-   It is documented. `docs/knowledge/github-mcp-pr-body-sanitizer.md` has held
-   the measurement since 2026-08-14 — six samples from PRs #46 and #48,
-   separating cleanly at about 150 — along with the mitigation: link through
-   `/blob/main/` instead of a branch name, which takes 38 characters off every
-   link.
-3. **Why did the documentation not help?**
-   Because it was read months ago by a different session. The body was written
-   in one pass and the link was assembled from the branch name that was in the
-   shell's `HEAD`, which is exactly the 42-character form the entry warns
-   about.
-4. **Why did the hook not catch it?**
-   `pretool-github-pr-body.sh` guards the shapes whose *form* gives them away:
-   an image extension, an `<img>`, a `<details>`, an autolink, an
-   angle-bracket placeholder. The length rule has no shape — a long link and a
-   short one differ only by a number — so it was left to the reader, and the
-   entry's own summary line in the knowledge index even records the
-   measurement that would have made the check trivial.
-5. **Why did nobody notice the gap between the entry and the hook?**
-   The hook's header comment lists what the server does to each form, and the
-   list it carries is the 2026-08-18 probe. The length behaviour is from the
-   2026-08-14 entry. The hook was written from the newer probe and never
-   reconciled with the older page.
+## Causal chain
 
-**Root cause:** thought a measured, written-down vendor behaviour was covered
-because the mitigation was documented, actually a threshold with no shape is
-precisely the kind of rule a reader forgets and a script never does.
+- The link in PR #100's body was dead.
+  - The GitHub MCP server wrapped the link's target in double backticks.
+    - The target was longer than about 150 characters, the length past
+      which the server wraps a markdown link's target.
+      - The session built the link from the branch name in the shell's
+        `HEAD`, the 42-character form, as
+        `https://github.com/hugoleborso/borso.fr/blob/<branch>/…-resolution.md`.
+        - It wrote the body in one pass, with no knowledge of the length
+          limit. The limit lived in
+          `docs/knowledge/github-mcp-pr-body-sanitizer.md`, measured on six
+          samples from PRs #46 and #48 on 2026-08-14. No hook printed it when
+          the body was written, and the session had not read it (Material).
+
+## Root cause of occurrence
+
+*Thought a markdown link of any length survives the GitHub MCP server,
+actually the server wraps a link's target in backticks once it passes about
+150 characters.* (Material)
+
+The writing session did not have the knowledge entry in its context. The
+fact was in the repository, but nothing brought it to the moment the link
+was assembled. The entry, measured 2026-08-14, separates its six samples
+cleanly at about 150 characters.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** nothing lints a PR body except this hook.
+- **Hook:** `.claude/hooks/pretool-github-pr-body.sh` refused the shapes
+  whose form gives them away: an image extension, an `<img>`, a
+  `<details>`, an autolink, an angle-bracket placeholder. Its header listed
+  the 2026-08-18 probe of PR #60, which says `[text](….md)` links come back
+  "untouched". The length behaviour came from the older 2026-08-14 entry,
+  and a long link differs from a short one only by a number, so the hook
+  was written without it.
 - **CI:** the body is not in the repository.
-- **Code review:** the broken link renders as a code span mid-sentence; the
-  paragraph still reads, which is the failure mode the entry itself calls the
-  worst shape.
-- **Knowledge:** the entry was complete, correct and load-bearing on somebody
-  remembering it at the right second.
+- **Review:** the broken link renders as a code span mid-sentence, and the
+  paragraph still reads.
 
 ## Countermeasure
 
-Read the body back after posting and repair it, which is what happened here —
-the link was replaced by a sentence naming the file in words.
+The body was read back after posting and the link was replaced by a sentence
+naming the file in words.
 
-- **Code:** commit on PR #100 replacing the link; the anchor is now prose.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** DevX check (level 2 — devx check)
+**Reference:** commit `948204d50a` (#102) added the length rule. Commit
+`458e886c4` (#411) moved it into
+`scripts/hooks/checks/github-pr-body.core.ts` with its message as it reads
+today. The shell hook `.claude/hooks/pretool-github-pr-body.sh` is gone.
 
-**Reference:** PR #102 · commit on this branch extending
-`.claude/hooks/pretool-github-pr-body.sh`
+The `pr-body` check runs before `mcp__github__create_pull_request` and
+`mcp__github__update_pull_request` and refuses a link whose target passes
+150 characters:
 
-**The actual fix:**
-
-```diff
-+LONG_LINK="$(grep -oE '\]\([^) ]{150,}\)' <<<"$BODY_AS_RENDERED" | head -1 || true)"
-+if [[ -n "$LONG_LINK" ]]; then
-+  block "the body carries a markdown link whose target is $(( ${#LONG_LINK} - 3 )) characters; past about 150 the URL comes back wrapped in backticks and the anchor is dead. Link through /blob/main/ rather than a branch name, or write the bare URL, which autolinks at any length."
-+fi
+```ts
+const LONG_LINK = /\]\([^) \n]{150,}\)/u;
+...
+return `the body carries a markdown link whose target is ${String(longLink.length - LINK_WRAPPER_LENGTH)} characters; past about 150 the URL comes back wrapped in backticks and the anchor is dead. Name a file the branch adds by its path in a code span, since a /blob/main/ link to it is a 404 until merge. Link through /blob/main/ only for a file already on main, or write the bare URL, which autolinks at any length.`;
 ```
 
-The message carries the mitigation the entry already worked out, so the agent
-that trips it does not have to go and read the page. Both halves of the
-contract are in `scripts/check-hook-decisions.sh`: the branch-name form of a
-link into the tree is refused, the `/blob/main/` form of the same file is not,
-and a body *describing* the threshold passes.
+The first version's advice, "link through `/blob/main/`", was wrong for a file
+the pull request adds. Such a link is a 404 until merge. The message now
+says so.
 
-**Sibling defects swept:** none of the other measured-but-unguarded shapes in
-that entry remain — every form in its probe table already had a rule, and this
-was the one that had a number instead of a shape.
+**Proof it can fail:** `scripts/hooks/checks/github-pr-body.core.test.ts`
+holds the case "refuses a link whose target passes 150 characters and says
+how long it is", and a passing case for a long target with a space in it.
 
-## See also
+**Similar instances:** every form in the knowledge entry's probe table had a
+rule already. This was the one that had a number instead of a shape.
 
-- [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md)
-  — the same lesson, which is itself the reason this one is a dantotsu rather
-  than another paragraph on the page.
-- [`a-pull-request-body-the-server-quietly-emptied.md`](./a-pull-request-body-the-server-quietly-emptied.md)
-  — the dantotsu that built the hook this one extends.
-- [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md)
-  — the measurement, the six samples, and the round-trip procedure.
+**Related.**
+
+- [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md), the same lesson, which is why this one is a dantotsu rather than another paragraph on the page.
+- [`a-pull-request-body-the-server-quietly-emptied.md`](./a-pull-request-body-the-server-quietly-emptied.md), the dantotsu that built the hook this one extends.
+- [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md), the measurement, the six samples and the round-trip procedure.

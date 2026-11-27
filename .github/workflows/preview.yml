@@ -520,9 +520,10 @@ jobs:
             exit 1
           fi
       # Mark each preview Deployment inactive so the PR sidebar reflects
-      # that the URL is gone. transient_environment + auto_inactive on the
-      # active status mean GitHub already hides it once the env is unused;
-      # we set state=inactive explicitly so the PR timeline reads cleanly.
+      # that the URL is gone. This does not remove the environment, and
+      # transient_environment does not make GitHub delete it either. The next
+      # step deletes it. See
+      # docs/dantotsus/three-hundred-and-ninety-eight-preview-environments.md.
       - if: always()
         uses: actions/github-script@v9
         env:

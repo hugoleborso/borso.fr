@@ -6,7 +6,7 @@ severity: low
 related-pr: '#298'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/cf-host-routing-function.test.ts, .claude/hooks/strip-quoted-strings.py]
+eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/cf-host-routing-function.test.ts, scripts/hooks/shell-command.core.ts]
 time-to-detect: minutes
 tags: [preview, cloudfront, pragma, agents, knowledge]
 zone: infra/cdk/src/internal/cf-host-routing-function.code.js
@@ -36,24 +36,40 @@ pull request body. This one was a `curl`.
 - A `curl` of `/api/*` on the site host printed 200 and a page of HTML.
   - The shared previews distribution sent the request to S3, which returned
     the app's `index.html`.
-    - Its viewer-request function rewrote the path to `index.html`.
-      - On a single-page app it rewrites every path whose last segment has no
-        extension, and `/api/me` has none:
+    - Its viewer-request function rewrote the path to `index.html`. On a
+      single-page app it rewrites every path whose last segment has no
+      extension, and `/api/me` has none. ← the faulty line
 
-```js
-if (isSinglePageApp(app)) {
-  if (uri === '' || uri === '/' || hasNoExtensionOnLastSegment(uri)) {
-    request.uri = keyPrefix + '/index.html';
-```
+      ```js
+      if (isSinglePageApp(app)) {
+        // /api/me has no extension, so it is served as a page of the app
+        if (uri === '' || uri === '/' || hasNoExtensionOnLastSegment(uri)) {
+          request.uri = keyPrefix + '/index.html';
+      ```
 
-- The knowledge entry that names the right host did not print.
-  - Its triggers were two file paths, and the session was writing no file.
+      - An agent wrote the rule in `76a231dee` (2026-05-22, "spa fallback in
+        the preview host-routing cloudfront function"), to send deep links
+        such as `/login` to the React router. Its message sorts paths into
+        two kinds only: "any non-asset URI" goes to `index.html`, "anything
+        with a "." in the last segment" passes through.
+        - The site host had no `/api` path to serve because nine days earlier,
+          `a1ab4047f` had moved each preview's API to its own host,
+          `<app>-pr-<n>-api.preview.borso.fr`.
+          - **Machine:** the previews run on two hosts per app.
+            [`preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md)
+            justifies the split: the shared distribution "is host-routed to S3
+            only — there is no per-app behavior surface where we could splice
+            an HTTP API origin in cleanly". This is the fourth entry on a
+            preview's two hosts (`recurs:`).
 
 ## Root cause of occurrence
 
 *Thought every path without an extension on a single-page app's host is a page
-of that app. Actually `/api/` is never a page: the site sends every API call to
+of that app, actually `/api/` is never a page: the site sends every API call to
 another host, so a request for it on the site host is always a mistake.*
+**Material** (inferred): the knowledge entry that says where the API lives
+triggered on `apps/*/site/src/api/client.ts` and `preview.yml`, not on the
+function the agent was editing, so it was not in its context.
 
 [`preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md) says
 where the API is: "each PR's frontend reaches its API via a dedicated
@@ -67,6 +83,8 @@ hostname". No route of any site starts with `/api`:
 - **The entry itself:** its symptom line said the site host answers an API path
   with 404 and a JPEG. It answers 200 and HTML (table above), so a reader who
   found the entry would not have recognised the symptom.
+- **Knowledge trigger, on a command:** the session that met the symptom was
+  writing no file, so the entry's two path triggers could not print it.
 - **The hook's quote stripper:** a command trigger is matched after quoted
   strings are removed, so `curl "https://…/api/me"` matched no host pattern
   (measured: 0 entries printed, against 1 for the unquoted form).
@@ -84,8 +102,10 @@ quoted body that is one address and nothing else.
 **Type:** structural impossibility (level 1)
 
 **Reference:** the commit that adds this file. The function lives in the
-`borso-shared` stack, so the 404 reaches the previews distribution when the
-operator dispatches `shared-deploy` (row in `docs/operator-backlog.md`).
+`borso-shared` stack and reached the previews distribution with a
+`shared-deploy`. Measured this session: `curl` of
+`https://pragma-pr-298.preview.borso.fr/api/me` answers `404`, and `/apiary`
+still answers `200 text/html`.
 
 ```diff
  var SINGLE_PAGE_APPS = ['banana-rush', 'last-loop-lepin', 'pragma'];
@@ -98,7 +118,24 @@ operator dispatches `shared-deploy` (row in `docs/operator-backlog.md`).
 ```
 
 A site host can no longer answer an API path with the app's page, whoever
-asks: a `curl`, a browser, or a site built without its API address.
+asks: a `curl`, a browser, or a site built without its API address. The quote
+stripper moved with the hooks to TypeScript in `458e886c4`. It lives in
+`stripStringBodies` of `scripts/hooks/shell-command.core.ts`, and
+`shell-command.core.test.ts` holds the case "keeps a quoted body that is one
+address and nothing else".
+
+The 404 answers the wrong host. It does not remove the second host, which is
+the condition behind all four entries.
+
+**Proposed:** test the premise the knowledge entry rests on. CloudFront
+Functions can, as far as the writer knows, change a request's origin from a
+viewer-request function (inferred from CloudFront's documentation, not tried
+here). If that holds, `cf-host-routing-function.code.js` can send `/api/*` on
+`<app>-pr-<n>.preview.borso.fr` to that PR's API origin instead of answering
+404. Previews would become same-origin, as the original plan in
+`preview-api-cross-origin.md` intended, and the `-api` host, the CORS
+allow-list in `LambdaApi` and the wrong-host class would go with it. Trying it
+needs a `shared-deploy`, which is the operator's dispatch.
 
 **Proof it can fail:** with the three added lines removed,
 `cf-host-routing-function.test.ts` fails on the new case:

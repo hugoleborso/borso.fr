@@ -14,76 +14,80 @@ zone: eslint-rules/no-comments.js
 
 # A rule that forbade its own escape hatch from wrapping
 
-## Symptom
+## User impact
 
-`borso/no-comments` accepts a comment only when every non-empty line is
-machine-read. A rule exception is machine-read, so this passes:
+`borso/no-comments` accepts a comment only when it is machine-read. A rule
+exception on one line passed. The same exception with its reason wrapped was
+refused.
 
-```js
-// eslint-disable-next-line borso/no-use-effect -- attaches Leaflet to a DOM node
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `// eslint-disable-next-line borso/no-use-effect -- attaches Leaflet to a DOM node` | accepted | accepted |
+| `/* eslint-disable no-magic-numbers -- the WGS84 constants`<br>`are the formula itself, not tunables */` | refused | accepted |
 
-But this — the same directive, with the reason wrapped — was rejected:
-
-```js
-/* eslint-disable no-magic-numbers -- the WGS84 constants
-   are the formula itself, not tunables */
-```
-
-Two agents hit it independently. `strip-lll-site`: *"every disable comment in
+Two agents hit it on their own. `strip-lll-site`: *"every disable comment in
 the repo has to be a single long line and nothing says so"*. `strip-scripts`:
-*"every multi-line disable in the repo has to be re-folded onto one line"* —
-they re-folded five Stryker directives in `ledger.core.ts` and `defects.core.ts`
-to get past the gate.
+*"every multi-line disable in the repo has to be re-folded onto one line"*.
+They re-folded five Stryker directives in `ledger.core.ts` and `defects.core.ts`
+to pass the gate.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the wrapped directive rejected?**
-   Its second line, `are the formula itself, not tunables`, matches no marker
-   pattern, and the rule demands that *every* line match.
-2. **Why does the rule demand that?**
-   To reject a block pairing one tag with a sentence of prose — the exact
-   shape that hides prose behind a `@Blueprint` tag.
-3. **Why is that demand wrong for a directive?**
-   A tag's grammar is closed: `@Feature <id>` and nothing else. A directive's
-   grammar is open by design — `eslint-comments/require-description` *requires*
-   a free-text reason after `--`, and free text is what prettier wraps.
-4. **Why did the rule treat both the same?**
-   Both were in one flat `MACHINE_READ_LINE_PATTERNS` list, so both inherited
-   the every-line test.
+- The rule refused a wrapped `eslint-disable` block.
+  - Its second line, `are the formula itself, not tunables`, matched no marker
+    pattern, and the rule required every non-empty line to match one.
+    - Commit `8621866` (2026-08-20, "remove every comment from the code, and
+      gate it") wrote the rule with one flat list, below. Tags and directives
+      shared it, so both got the every-line test.
+      - The same commit met two wrapped directives and re-folded each onto one
+        line of 258 characters, in both copies of `haversine.utils.ts`.
 
-**Root cause:** we thought "machine-read" was one category; actually it is two.
-A **tag** is machine-read on every line. A **directive** is machine-read on its
-first line and carries human prose after it, which the repository's own lint
-configuration mandates and its own formatter is free to wrap.
+```js
+const MACHINE_READ_LINE_PATTERNS = [
+  /^@FollowsBlueprint\s/,
+  /^@Feature\s/,
+  /^eslint-(disable|enable)/, // ← a directive tested like a tag, on every line
+  // ...
+];
+```
 
-The rule therefore made the escape hatch harder to write the longer its
-justification — pressure in exactly the wrong direction, since a long reason
-is a good reason.
+## Root cause of occurrence
+
+*Thought a machine-read comment is machine-read on every line, so a wrapped
+reason is a layout to fold, actually a directive is machine-read only on its
+first line and carries a free-text reason of any length.* **Man.** The facts
+were in the writer's context. `@eslint-community/eslint-comments/require-description`
+was configured in `eslint.config.js` at `8621866^`, and the commit's own message
+lists "an eslint directive with its -- reason". The commit then folded the two
+wrapped reasons it met to fit its rule. A single agent was carrying a sweep
+that removed 3489 comments across 782 files, and the goal of rejecting prose won over the reason a directive
+requires (inferred from the commit's size and its diff).
+
+Prettier did not wrap these comments. `.prettierrc.json` at `03e16d4^` sets
+`printWidth: 100` and nothing reflows a comment, so their writers wrapped them
+by hand.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the rule *was* the failure.
-- **CI:** every wrapped directive in the tree had already been re-folded onto
-  one line by the agents, by hand, to get the branch green. CI saw a clean
-  tree. The workaround erased the evidence.
-- **Code review:** a directive on one 120-character line reads as a style
-  choice, not as a constraint the gate imposed.
+- **Linter:** the rule was the failure.
+- **CI:** the agents had already re-folded every wrapped directive to get the
+  branch green, so CI saw a clean tree. The workaround erased the evidence.
+- **Review:** a directive on one 258-character line reads as a style choice,
+  not as a constraint the gate imposed.
 
 ## Countermeasure
 
-None at the time — the agents worked around it, which is why it reached `main`.
+None at the time. The agents worked around it, which is how it reached `main`.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Level 1 — structural impossibility.** The two categories are now two lists,
-and the test differs by category.
+**Type:** structural impossibility (level 1). Tags and directives are two lists,
+and each has its own test.
+
+**Reference:** commit [`03e16d4`](https://github.com/hugoleborso/borso.fr/commit/03e16d4d6d).
 
 ```js
-const DIRECTIVE_WITH_REASON_PATTERNS = [
-  /^eslint-(disable|enable)/,
-  /^Stryker (disable|restore)/,
-];
+const DIRECTIVE_WITH_REASON_PATTERNS = [/^eslint-(disable|enable)/, /^Stryker (disable|restore)/];
 
 if (isDirectiveLine(lines[0].text)) {
   return true;
@@ -91,17 +95,26 @@ if (isDirectiveLine(lines[0].text)) {
 return lines.every((line) => isTagLine(line.text));
 ```
 
-A block **headed** by a directive passes whole, because everything after the
-directive is its reason. Every other block still passes only when every line
-is a tag, so the shape this rule exists to reject is untouched — verified by
-the suite, which asserts a `@Feature` tag paired with a sentence is still
-rejected while both wrapped directive forms now pass.
+A block headed by a directive passes whole, because everything after the
+directive is its reason. Every other block passes only when every line is a tag,
+so a tag paired with prose is still refused.
 
-## Related
+**Proof it can fail:** `eslint-rules/no-comments.test.js` asserts that a
+`@Feature` tag paired with a sentence is refused and that both wrapped directive
+forms pass.
 
-- [`docs/standards/12-linting-and-gates.md`](../standards/12-linting-and-gates.md)
-  — *"a rule exception is written on the line it excuses"*, and why the reason
-  is mandatory.
-- [`how-a-mutation-survivor-hides.md`](../knowledge/how-a-mutation-survivor-hides.md)
-  — the other half of the Stryker directive story: a `Stryker disable` covering
-  one line of a multi-line statement.
+**Similar instances:** Stryker directives carry a reason the same way and are in
+the directive list. `@ts-(expect-error|ignore|nocheck)` is still in the tag
+list, yet the repository writes it with a reason, such as
+`// @ts-expect-error -- a Button without an icon is the type error this test pins`
+in `apps/pragma/site/src/components/atoms/button.types.test.ts`. A block comment
+whose reason wraps after it would be refused, as directives were before the fix
+(inferred from the rule's patterns, not measured).
+[`how-a-mutation-survivor-hides.md`](../knowledge/how-a-mutation-survivor-hides.md)
+covers a `Stryker disable` that covers one line of a multi-line statement.
+
+**Proposed:** move `@ts-(expect-error|ignore)` from `TAG_LINE_PATTERNS` into
+`DIRECTIVE_WITH_REASON_PATTERNS` in `eslint-rules/no-comments.js`, and add the
+wrapped form to `eslint-rules/no-comments.test.js`. Every comment that carries a
+reason after a machine-read head would then pass whole, and the class would be
+closed for every directive the repository writes.

@@ -34,26 +34,27 @@ Sentry recorded 15 events in four issues, measured on 2026-11-04: BORSOFR-1 (7),
       - Why? The deploy's migration ran DDL on the cluster while the warm Lambda's session still held the old catalog.
       - Why was the refusal not retried? The client every repository reads through sent each statement once.
 
-```ts
-// apps/pragma/api/src/database/client.ts, before
-cachedDatabase = drizzle(client, { schema }); // every statement runs once, read or write
-```
+        ```ts
+        // apps/pragma/api/src/database/client.ts, before
+        cachedDatabase = drizzle(client, { schema }); // every statement runs once, read or write
+        ```
 
-`retryingConflictAborts` existed (`conflict-abort.core.ts`, PR #193), but each repository opted in around chosen writes. No read was ever wrapped, and neither were the transactions in `voting.repository.ts` and `mastery.repository.ts`.
+        - Why? PR #193 (`d117a320b`) added the retry as a helper each repository wraps around chosen writes, named for writes: `CONFLICTED_WRITE_MAX_ATTEMPTS = 3`, matching `OC000` and `40001` only.
+          - Why? Its author built it from the write conflicts they had seen. The AWS page that lists OC001 for any statement was not in their context (Material, inferred from the helper's name and codes).
 
 ## Root cause of occurrence
 
-*Thought only two writers touching the same row can lose to DSQL, so only writes need a retry. Actually any statement can lose, a plain `SELECT` included, when its session cached the schema before a DDL that every deploy runs.*
+*Thought only two writers touching the same row can lose to DSQL, so only writes need a retry. Actually any statement can lose, a plain `SELECT` included, when its session cached the schema before a DDL that every deploy runs.* (Material)
 
 [AWS, Concurrency control in Aurora DSQL](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-concurrency-control.html), read this session:
 
 > **OC001 — Schema conflict.** The session's cached schema catalog is out of date. When Aurora DSQL detects that the catalog version has changed since the session loaded its cache, and the transaction can't safely rebase to the current version, the transaction receives the OC001 response. [...] Design your applications to implement retry logic to handle these responses.
 
-The belief is written down. `docs/dantotsus/a-merge-raced-its-own-preview-teardown.md` says pragma's retry "runs DML, which cannot meet OC001". This entry corrects that sentence.
+The belief is written down. `docs/dantotsus/a-merge-raced-its-own-preview-teardown.md` said pragma's retry "runs DML, which cannot meet OC001". That sentence now carries a correction pointing here.
 
 ## Detection failure causes
 
-- **Typing:** the retry was a function to call, not a property of the client. A repository that skipped it typechecked the same.
+- **Typing:** the retry was a function to call, not a property of the client. A repository that skipped it typechecked the same. No read was ever wrapped, and neither were the transactions in `voting.repository.ts` and `mastery.repository.ts`.
 - **Local and CI:** the e2e suites run on plain Postgres, which never answers OC001. No suite runs a migration while requests are in flight.
 - **Review:** the earlier dantotsu stated that DML cannot meet OC001. Nobody checked that against the AWS page.
 - **Monitoring:** Sentry captured every event from 2026-10-30, but no alert fired. The operator found the issues by asking for a review on 2026-11-04.
@@ -66,9 +67,9 @@ Verified on local Postgres with a function that raises the OC001 message and SQL
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** structural impossibility (level 1), in pragma only
 
-**Reference:** commit on branch `claude/fervent-galileo-sqcfvh`, pull request to follow
+**Reference:** the commit adding this file, `06abedfd9` (PR #261)
 
 ```diff
 -  cachedDatabase = drizzle(client, { schema });
@@ -93,4 +94,6 @@ A real race keeps its outcome. A retried conditional claim, such as the OAuth co
 for f in $(grep -rln "\.transaction(" apps/pragma/api/src --include=*.ts | grep -v test); do echo "$(grep -c '\.transaction(' $f) $(grep -c retryingConflictAborts $f) $f"; done
 ```
 
-`last-loop-lepin` and `banana-rush` also run on DSQL. Their clients were not checked in this change.
+The pragma client is the `database-client` blueprint (`@Blueprint database-client` in `apps/pragma/api/src/database/client.ts`). `grep -rn "drizzle(" apps/*/api/src/database/client.ts` shows five other apps still call `drizzle(client, { schema })` with no retry: banana-rush, borsouvertures, last-loop-lepin, skull-king and talos. Four of them mark the file `// @FollowsBlueprint database-client`. Every one of their CDK stack tests names DSQL. The eradication changed the blueprint and not the code that copies it, so the class stays open in five apps (Machine).
+
+**Proposed:** wrap the five clients with `retryingConflictAbortsOf` the same way, and add a check that refuses an `apps/*/api/src/database/client.ts` whose `drizzle(` call does not pass through `retryingConflictAbortsOf`. No app could then ship a DSQL client that sends an unretried statement, last-loop-lepin's unmarked copy included. A shared package holding the client would remove the copies outright, but the repository keeps each app standalone (`CLAUDE.md`, *Layout*), so that is an architecture decision for the operator.

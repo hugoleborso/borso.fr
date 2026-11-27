@@ -16,104 +16,69 @@ recurs: none (no key held the seat count, so concurrent joins overfilled it; the
 
 # Five monkeys at a three seat table
 
-## Symptom
+## User impact
 
-A host opens a `banana-rush` game for three players and reads the code out
-loud. The other people in the room type it at the same moment. Four of them
-join. The lobby now shows five monkeys at a three seat table, and two of them
-share a seat number. Two friends who both tap the lemur both get the lemur.
+A host opens a `banana-rush` game for three players and reads the code out loud. The others type it at the same moment.
 
-On `last-loop-lepin`, a runner taps *Punch* and the network is slow, so they
-tap again. Both requests are recorded, and the runner has two punches for the
-same loop.
+| | Seen | Expected |
+| --- | --- | --- |
+| Four players join a three-seat table with two seats free | The lobby shows five monkeys, and two share a seat number. Two friends who both tap the lemur both get it. | Two join, the other two are told the game is full |
+| A `last-loop-lepin` runner taps *Punch* twice on a slow network | Two punches recorded for the same loop | One punch |
 
-Both reproduce every time once the requests genuinely overlap:
+Both reproduce every time once the requests overlap (measured by the back-e2e cases written for the fix):
 
 ```
 FAIL  the refusals a player can hit > seats exactly as many players as the table holds when they all arrive at once
 AssertionError: expected [ 201, 201, 201, 201 ] to deeply equal [ 201, 201, 409, 409 ]
 
 FAIL  punch.service > keeps one punch when the same runner is punched twice at the same instant
-FAIL  punch.service > keeps one punch when a catch-up and a live punch land on the same loop at once
 AssertionError: expected [ { status: 'fulfilled', …(1) }, …(1) ] to have a length of 1 but got 2
 ```
 
-Found by a read-only third-party review. No user reported it, which on a game
-played by friends in one room says more about luck than about the code.
+Found by a read-only third-party review. No user reported it.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why were four players seated at a table with two free seats?** Each
-   `joinGame` read the players, counted two, asked `refuseJoin` whether there
-   was room, was told yes, and inserted with `seatOrder: players.length`.
-   All four reads happened before any insert.
-2. **Why did nothing refuse the extra inserts?** The `player` table's only key
-   is its surrogate `id`. No constraint knows about seats or monkeys.
-3. **Why was the limit only checked in code?** Because that is the shape the
-   repository teaches. The `service-orchestration` blueprint said *"Use for a
-   workflow that reads, decides, then writes"*, and its description read
-   *"Reads the edition and the runner's existing punches through the
-   repository, hands them to a pure decision function"*. Its own subject,
-   `registerPunch`, had the same race. `docs/standards/04-backend-architecture.md`
-   showed the same thing as its example of a good service. `joinGame` carries
-   no marker, but `createGame` and `startRematch` beside it follow that
-   blueprint.
-4. **Why did the blueprint teach it?** It was written about `registerPunch`
-   after the database had stopped holding the punch rule. The
-   `schema-dsql-constraints` blueprint said so outright: it *"leaves the rules
-   they would have held to the slice's own code, where `validatePunchTiming`
-   keeps one punch per runner and loop"*. The pattern that replaced a
-   constraint became the pattern for every new rule.
-5. **Why did review pass it?** `/technical-validation` asks whether the code
-   matches the spec, follows the rules, passes its tests, and is covered. A
-   check-then-write race does all four. Every test sends one request at a time.
+- Four players were seated at a table with two free seats.
+  - Each `joinGame` read the players, counted two, asked `refuseJoin` whether there was room, was told yes, and inserted. All four reads happened before any insert.
+    - The faulty line, from commit `9190e4e6c` (2026-09-19, the agent that wrote banana-rush):
 
-**Root cause:** we thought a decision made by a pure function over the rows a
-request had just read still held when that request wrote; actually two
-requests read the same rows, both pass, and both write, because the read and
-the write are separate moments and nothing between them belongs to one
-request. Only a key the write itself claims can say no to the second one.
+      ```ts
+      const player = await insertPlayer({ …, seatOrder: players.length, … });
+      ```
+
+    - The `player` table's only key was its surrogate `id`, so the database accepted every insert.
+      - The agent copied the shape the repository taught for a rule checked before a write. The `service-orchestration` blueprint, on `registerPunch` at the parent commit, said "Use for a workflow that reads, decides, then writes". `docs/standards/04-backend-architecture.md` showed the same shape as its good service. `createGame` and `startRematch` beside `joinGame` carry that marker.
+        - That blueprint was written about `registerPunch` after the database had stopped holding the punch rule. The `schema-dsql-constraints` blueprint said it "leaves the rules they would have held to the slice's own code, where `validatePunchTiming` keeps one punch per runner and loop". `registerPunch` had the same race.
+      - The same commit `9190e4e6c` added `repository-write-refused-by-the-primary-key` for bids, where a natural key `(game, round, player)` existed. A seat limit is a count, and no column held it, so the agent did not see it as a key.
+
+## Root cause of occurrence
+
+*Thought a capacity limit is a decision a pure function makes over the rows just read, unlike a uniqueness that a key holds, actually a limit of N seats is a uniqueness over seat numbers 0 to N-1, and only a key the write claims can refuse the second request.* (Machine)
+
+The blueprint the agent copied showed the racing shape as the canonical one, and it was in the agent's reach as the marked example. The agent knew key-refused writes, since it wrote one for bids in the same commit. What the codebase never showed was turning a count into a set of keys, as `seat_claim` now does.
 
 ## Detection failure causes
 
-- **Typing and linting:** a read followed by a write is ordinary code. The
-  defect is in the time between two correct lines.
-- **CI:** every back-e2e case sends one request and waits. A first attempt at
-  a concurrent punch test passed on the old code too. It failed on every run
-  once the test opened the pool's connections before firing, so the likely
-  reading is that the first request committed on a warm connection while the
-  second was still connecting. A concurrent test that does not open its
-  connections first can pass for the wrong reason.
-- **Code review:** `/technical-validation` had no question about two requests
-  at once.
-- **The blueprints:** the pattern a reviewer compares against was the defect.
-  `banana-rush` even had the right pattern, `repository-write-refused-by-the-primary-key`,
-  for bids, and nothing pointed `joinGame` at it.
+- **Typing and linting:** a read followed by a write is ordinary code. The defect is in the time between two correct lines.
+- **CI:** every back-e2e case sent one request and waited. A first concurrent punch test passed on the old code too. It failed on every run once the test opened the pool's connections before firing (inferred reading: the first request committed on a warm connection while the second was still connecting).
+- **Code review:** `/technical-validation` asked whether the code matches the spec, follows the rules, passes its tests and is covered. A check-then-write race does all four.
+- **Blueprints:** the pattern a reviewer compares against was the defect.
 
 ## Countermeasure
 
-Each rule now lives in a primary key the write claims inside its own
-transaction, with `onConflictDoNothing`, and losing the claim is the refusal.
+Each rule now lives in a primary key the write claims inside its own transaction, with `onConflictDoNothing`, and losing the claim is the refusal.
 
-- `last-loop-lepin`: `loop_punch_claims` keyed on
-  `(edition_slug, runner_slug, loop_index)`, claimed by every path that writes
-  a punch and released by the void.
-- `banana-rush`: `seat_claim` keyed on `(game_id, seat_order)` and
-  `avatar_claim` keyed on `(game_id, avatar)`. `seatPlayer` claims the monkey,
-  then the first open seat from `listOpenSeats`, then inserts the player, all
-  in one transaction. A loser is told which claim it lost, and `refuseLostSeating`
-  turns that into `avatar-taken` or `game-full`.
+- `last-loop-lepin`: `loop_punch_claims` keyed on `(edition_slug, runner_slug, loop_index)`, claimed by every path that writes a punch and released by the void.
+- `banana-rush`: `seat_claim` keyed on `(game_id, seat_order)` and `avatar_claim` keyed on `(game_id, avatar)`. `seatPlayer` claims the monkey, then the first open seat from `listOpenSeats`, then inserts the player, in one transaction. `refuseLostSeating` turns a lost claim into `avatar-taken` or `game-full`.
 
-The pure checks stay, so the ordinary case still gets its named reason
-without touching a key.
+The pure checks stay, so the ordinary case still gets its named reason without touching a key. Each new concurrent back-e2e case failed on the code before the fix.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1), for seats, monkeys and punches
 
-**Reference:** commits listed in the front matter.
-
-**The actual fix:**
+**Reference:** the commit adding this file, `5ea2a2dbc` (PR #161).
 
 ```diff
 +export const seatClaimTable = pgTable(
@@ -123,67 +88,18 @@ without touching a key.
 +);
 ```
 
-```diff
--  const player = await insertPlayer({ …, seatOrder: players.length, … });
-+  const seating = await seatPlayer({ … }, listOpenSeats(takenSeatOrders, game.maxPlayers));
-+  if (seating.kind === 'lost') throw new GameError(refuseLostSeating(seating.loss));
-```
+A sixth seat cannot be written for a game of five, because `listOpenSeats` never offers it and the key refuses a second claim on any seat that exists.
 
-A sixth seat cannot be written for a game of five, because `listOpenSeats`
-never offers it and the key refuses a second claim on any seat that exists.
+The same commit repaired what taught the race. `service-orchestration` says a rule depending on rows other requests can write is never decided from a read, and shows the claim. `schema-dsql-constraints` describes the claim table. `04-backend-architecture.md` adds *A rule about rows another request can write is held by a key*. `/technical-validation` gained a required **E. Scale** category (`.claude/agents/technical-validator.md`), which asks what two concurrent requests do to every write path in the diff. The concurrent back-e2e cases open their connections first, through `openConnectionsForConcurrentRequests` in `apps/banana-rush/test/database-utils.ts` and `apps/last-loop-lepin/test/database-utils.ts`.
 
-**Type:** detection (level 4)
+The class is not eradicated. Three siblings still race today (read on 2026-11-27):
 
-Back-e2e cases that fire the competing requests at once, after opening enough
-pool connections that they really overlap
-(`openConnectionsForConcurrentRequests` in each application's
-`test/database-utils.ts`), and assert both the refusal and what was written.
-Each one failed on the code before the fix.
+- `startRematch` (`apps/banana-rush/api/src/games/rematch.service.ts`) checks `game.rematchJoinCode !== null` and then inserts a game, so a host's double tap can create two rematch games.
+- `reserveJoinCode` (`games.service.ts`) reads `findGameByJoinCode` and returns a code no key protects. `join_code` is a plain `text` column, so two games created at once can draw the same code.
+- `joinGame` checks the status before seating, so a join that overlaps the host's start can seat a player in a started game.
 
-**Type:** the blueprints and the standard that taught it
+**Proposed:** hold each sibling in a key or a conditional write. Set `rematch_join_code` with an `UPDATE … WHERE id = $1 AND rematch_join_code IS NULL` that only one request can win, and create the rematch game only when that update changed a row. Claim each join code in a table keyed on the code, released when the game finishes, so `reserveJoinCode` loses the claim instead of reading. Then add a rule under `eslint-rules/` that flags a `.service.ts` function calling a repository `find*` or `list*` and then an `insert*` with no claim between them, so the next read-decide-write is refused at lint instead of at the E. Scale review.
 
-- `service-orchestration` now says that a rule depending on rows other
-  requests can write is never decided from a read, and shows the claim.
-- `schema-dsql-constraints` now describes the claim table instead of
-  *"leaves the rules … to the slice's own code"*.
-- `core-decision` now says what it deliberately does not decide.
-- `04-backend-architecture.md` replaces the racing example with the claim and
-  adds *A rule about rows another request can write is held by a key*, which
-  also covers state kept in a module variable on Lambda.
-- `11-database.md` says a uniqueness rule is held by a primary key, never by a
-  unique index or a check.
+**Similar instances:** `grep -rn 'FollowsBlueprint service-orchestration' apps/*/api/src` lists the 64 services marked with the shape (counted 2026-11-27). The three above are the ones found racing.
 
-**Type:** review (the gate the defect walked through)
-
-`/technical-validation` gains a required fifth category, **E. Scale**, in the
-skill, its standard, its template and the `technical-validator` agent's brief.
-It lists every write path in the diff, asks what two concurrent requests do to
-it, asks the same of any module-level state, and fails a rule held by a key
-that no concurrent test exercises. Every finding in every category must now
-also state a concrete failing case, an input and the wrong result it
-produces, or it goes in Notes as a question. Both rules came from the review
-that found this defect, and the operator approved them.
-
-**Sibling defects swept:**
-
-- `catchupPunch` read `findActivePunchForLoop` and then inserted, the same
-  race against a live punch. Fixed through the same claim.
-- `startRematch` checks `game.rematchJoinCode !== null` and then creates a
-  game, so a host's double tap can create two rematch games, the second one
-  orphaned. Only the host can call it. Not fixed in this change.
-- `joinGame` checks the status before seating, so a player whose join
-  overlaps the host's start can be seated in a game that has just started, and
-  the first round then waits for their bid or for the timer. Not fixed in this
-  change.
-- `reserveJoinCode` checks that a code is free and then inserts the game.
-  Two games created at the same instant can draw the same four letters; the
-  alphabet makes this rare, and the newer game wins the lookup. Not fixed in
-  this change.
-
-## See also
-
-- [`a-voided-punch-still-held-its-loop`](./a-voided-punch-still-held-its-loop.md),
-  the other property the dropped partial index used to carry.
-- [`optimistic-reorder-reverted-by-stale-dsql-read`](./optimistic-reorder-reverted-by-stale-dsql-read.md),
-  another place where a read and a write were assumed to be one moment.
-- [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §6 and §11.
+Related entries: [`a-voided-punch-still-held-its-loop`](./a-voided-punch-still-held-its-loop.md), the other property the dropped partial index carried, and [`optimistic-reorder-reverted-by-stale-dsql-read`](./optimistic-reorder-reverted-by-stale-dsql-read.md), another read and write assumed to be one moment. DSQL's limits are in [`dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §6 and §11.

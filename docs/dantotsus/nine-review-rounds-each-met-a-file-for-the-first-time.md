@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#193'
-fix-commits: [self]
+fix-commits: [a83f0a600, c54e32da7]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
 time-to-detect: hours
@@ -16,102 +16,112 @@ recurs: [ten-review-rounds-on-a-two-file-bug-fix]
 
 # Nine review rounds, each meeting a file for the first time
 
-## Symptom
+## User impact
 
-The takes branch (PR #193) went through nine standards reviews. Rounds one to
-six each returned findings; only the last three passed. Of the 41 findings, 22
-were older than the branch, and they did not arrive together: round three found
-four pre-existing findings and none of the branch's own, round four found four
-more in files rounds one to three had sealed, and `VOCABULARY.md` came back
-round after round with a few more false sentences until a commit audited every
-sentence of it. Five reviewer agents logged the same wall in `KAIZEN.md`
-(`standards-reviewer`, `standards-reviewer-2` to `-5`).
+The operator waited on nine standards reviews for one branch, the takes branch
+of PR #193. He should have waited on one or two.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Review rounds | 9, the first six each returning findings | 1, or 2 with the second on the fix only |
+| Findings | 41, of which 22 were older than the branch, arriving a few per round | Each file's findings reported in the round that first reads it |
 
-1. **Why did each round find something new?** Each fix round edited files to
-   close the last round's findings, and an edited file loses its seal, so the
-   next round read it whole, often for the first time.
-2. **Why was it the first time?** The first review's scope was the files the
-   branch had changed so far. The files a fix would reach (a caller, a type, a
-   vocabulary entry, a sibling repository) were not in it.
-3. **Why did a re-read file still produce findings on lines already read?**
-   The reviewer brief asked for each file "in full" but did not say that every
-   finding in it had to be reported in that round, and the fix agents fixed the
-   quoted line only. A second finding three lines below survived to the next
-   round, which then reopened the file again.
-4. **Why did the first seals also miss findings in files they did read?** They
-   were taken inline by the pipeline's ship agent (`open-pr-01`), which had no
-   Agent tool to dispatch the isolated reviewer. It sealed 68 files, several
-   carrying findings the isolated review found shortly after.
+Measured by the first version of this entry from the review reports. Five
+reviewer agents logged the same wall in `KAIZEN.md` (`standards-reviewer`,
+`standards-reviewer-2` to `-5`).
 
-**Root cause:** thought a review covers the branch by reading what the branch
-has changed, actually the branch's real scope is every file it will touch,
-and a file read partially, or fixed partially, comes back every round.
+## Causal chain
+
+- Each of rounds one to six returned new findings.
+  - Each round read whole files it had not read before. `VOCABULARY.md` came
+    back round after round with a few more false sentences.
+    - Each fix round edited files to close the last round's findings, and the
+      next round had to read every edited file in full again.
+      - An edited file lost its seal. `seal.core.ts` matched a file to the
+        ledger by the hash of its whole content:
+
+        ```ts
+        const matching = ledger.filter((entry) => entry.contentHash === file.contentHash);
+        if (matching.length === 0) {
+          // … reason: wasReviewedBefore ? 'edited-since-it-was-reviewed' : 'never-reviewed'
+        ```
+
+        A one-line fix unsealed the whole file (Machine).
+        - The seal was written in `a9c72cedd` (2026-08-15) to stop a standard
+          claiming enforcement it lacked. It treats a file as the unit of
+          review, so the review had no end other than a round with no edit.
+    - Fix agents fixed the quoted line only. A second finding three lines below
+      survived, and the next round reopened the file for it.
+  - Round one's scope was the files the branch had changed so far. The callers,
+    types and vocabulary entries a fix would reach were outside it.
+
+## Root cause of occurrence
+
+*Thought a seal per file content keeps review bounded, because each file is
+reviewed once, actually every fix edits a file, so every fix reopens a
+whole-file review and the rounds grow with the fixes.* (Machine)
+
+`seal.core.ts` at `a83f0a600^`, lines 90 to 98, unseals any file whose content
+hash matches no ledger entry, with the reason `edited-since-it-was-reviewed`.
+Nothing in the seal or the skill bounded the number of rounds.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the residue a reviewer checks is the part no
-  rule can see.
-- **CI:** `seal.ts verify` is not wired into CI, and it only says which
-  changed files are unsealed, not which files a fix will reach.
-- **Code review:** the earlier countermeasure for this class,
-  `Introduced` and `Fix size` on each finding, made the rounds legible but did
-  not shrink them: it labels a pre-existing finding after it surfaces.
+- **Linter:** a reviewer checks the residue no rule can see, so no rule could
+  flag the rounds.
+- **Round count:** nothing in the seal or the skill capped the rounds, so
+  nothing stopped round three, or round nine.
+- **CI:** `seal.ts verify` was not wired into CI. It said which changed files
+  were unsealed, not how many rounds the branch would take.
+- **Review labels:** `Introduced` and `Fix size` on each finding, from
+  [`ten-review-rounds-on-a-two-file-bug-fix.md`](./ten-review-rounds-on-a-two-file-bug-fix.md),
+  labelled a pre-existing finding after it surfaced. They made rounds legible
+  without shrinking them.
+- **First seals:** the pipeline's ship agent (`open-pr-01`) took them inline,
+  because it had no Agent tool to dispatch the isolated reviewer
+  ([`the-validator-opened-a-checkout-holding-only-the-plan.md`](./the-validator-opened-a-checkout-holding-only-the-plan.md)).
+  It sealed 68 files, several carrying findings the isolated review found
+  shortly after.
 
 ## Countermeasure
 
-- **Code:** `seal.ts scope --base <ref> --plan <plan.md>` prints the reviewable
-  files the branch changed plus every reviewable file the plan names, which is
-  the first review's scope.
-- **Process:** the standards-review skill says the first review on a branch
-  passes `plan_path` and reviews that scope; the reviewer brief requires every
-  finding in a file to be reported in the round that reads it, and the files a
-  finding's fix will reach to be read in the same round; `/implementation`
-  gains *Fix rounds*: read each file you edit in full against the ledger's
-  reviewer checklist and fix what you find.
+Commit `a83f0a600` added `seal.ts scope --base <ref> --plan <plan.md>`, which
+listed the changed files plus every file the plan names as round one's scope.
+The reviewer brief then required every finding in a file to be reported in the
+round that reads it. On the takes plan it listed 115 files against the 76
+round one had reviewed.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4) — the scope that used to be assembled from
-memory, after the fact, is now a command.
+**Type:** knowledge (level 5). The cause was subtracted, and what bounds the
+rounds today is an agent prompt.
 
-**Reference:** the commit that adds this file.
+**Reference:** commit [`c54e32da7`](https://github.com/hugoleborso/borso.fr/commit/c54e32da7)
+(2026-10-29) deleted the seal, `seal.ts scope` and the separate standards
+review. `ls scripts/standards | grep seal` is empty. The standards checklist
+moved into `/technical-validation`. The ledger that unsealed an edited file no
+longer exists, so a fix no longer reopens a whole file.
 
-**The actual fix:**
+`.claude/agents/technical-validator.md` holds the replacement:
 
-```diff
-+export function selectPlannedPaths(planText: string): readonly string[] {
-+  const named = Array.from(planText.matchAll(BACKTICKED_PATH), (match) => match[0].slice(1, -1));
-+  return [...new Set(named.filter(isReviewablePath))].sort(…);
-+}
-+export function mergeReviewScope(changedPaths, plannedPaths): readonly string[] { … }
+```text
+A branch gets two rounds at most. Before reading anything, record `git rev-parse HEAD` as `Reviewed: <sha>`, which the next round diffs from.
+- **Round 2** reviews only `git diff <reviewed-sha>..HEAD` …
 ```
 
-```diff
--1. `git merge-base <base_ref> HEAD`, then `git diff --name-only …`.
-+1. List your scope: `pnpm exec tsx scripts/standards/seal.ts scope --base <base_ref>`,
-+   adding `--plan <plan_path>` when the brief carries one.
-+3. Read each file in full, against every bullet, and report every finding in
-+   it in this round.
-+3a. For each finding, name every other file its fix will have to edit, and
-+   read those files in full in this same round.
-```
+`.claude/skills/technical-validation/SKILL.md` step 6 adds "There is no round
+3." Both are prompts. Nothing refuses a third round.
 
-Run on the takes plan, `seal.ts scope` lists 115 files for the first round,
-against the 76 round one reviewed.
+**Proposed:** a PreToolUse check on the `Agent` call with `subagent_type:
+technical-validator`, beside the checks in `scripts/hooks/checks/`. It reads
+the feature's `validation/` folder with git and refuses the dispatch when it
+already holds two `technical-validation-*.md` reports of the branch since its
+last passing one. A third round could then not start without the operator.
+`validation-runs-as-its-agent.core.ts` cannot hold it as it stands: it matches
+only the `Skill` tool and passes the main session.
 
-**Sibling defects swept:** the reviewer brief said a seal covers only `.ts` and
-`.tsx` files while `seal.core.ts` also seals `VOCABULARY.md`; the brief now
-says so. The skill and the pipeline contract now say a workflow spawns the
-reviewer with `agentType: 'standards-reviewer'`, so round one is not run by the
-author of the code.
+**Proof it can fail:** not tried. The proposal is not built.
 
-## See also
-
-- [`ten-review-rounds-on-a-two-file-bug-fix.md`](./ten-review-rounds-on-a-two-file-bug-fix.md) — the earlier entry on the same class, whose labels this one builds on.
-- [`the-validator-opened-a-checkout-holding-only-the-plan.md`](./the-validator-opened-a-checkout-holding-only-the-plan.md) — why the first seals were taken inline.
-
-## Superseded mechanism
-
-The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.
+**Similar instances:** `grep -ril 'round' docs/dantotsus/ | xargs grep -il 'review'`
+finds [`ten-review-rounds-on-a-two-file-bug-fix.md`](./ten-review-rounds-on-a-two-file-bug-fix.md),
+the earlier entry on the same class.

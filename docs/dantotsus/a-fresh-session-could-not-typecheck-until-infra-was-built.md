@@ -6,7 +6,7 @@ severity: low
 related-pr: '#36'
 fix-commits: [ebabfe7650]
 eradication-level: 2
-eradication-paths: [scripts/install-repo-deps.sh]
+eradication-paths: [scripts/install-repo-deps.sh, scripts/ensure-infra-built.sh]
 time-to-detect: minutes
 tags: [pnpm, ci, hooks, session-start, tooling, monorepo]
 zone: scripts/install-repo-deps.sh
@@ -14,71 +14,49 @@ zone: scripts/install-repo-deps.sh
 
 # A fresh session could not typecheck until infra was built
 
-## Symptom
+## User impact
 
-Running an app's typecheck in a fresh session fails on a module that has
-nothing to do with the change in hand:
+Every fresh remote session that ran an app's typecheck failed on a module unrelated to its change:
 
 ```
 cdk/bin/cdk.ts(24,8): error TS2307: Cannot find module '@borso/infra' or its corresponding type declarations.
 cdk/lib/stack.ts(19,63): error TS2307: Cannot find module '@borso/infra' or its corresponding type declarations.
 ```
 
-First written up in PR #37 (June 2026), against a change entirely under
-`apps/pragma/site/**`. The remedy is `pnpm --filter @borso/infra run
-build`, after which the same typecheck passes untouched.
+| | Seen | Expected |
+| --- | --- | --- |
+| App typecheck in a fresh session | TS2307 on every `cdk/` file | The typecheck passes, as it does after `pnpm --filter @borso/infra run build` with no other change |
 
-**It is still live.** Writing this very kaizen PR needed that build by
-hand, twice, before any infra test would run — a fresh remote session, a
-clean checkout, no `dist/`. PR #37 diagnosed it correctly and never
-merged, so the fix has been sitting in an open branch for two months while
-every session paid the toll.
+PR #37 (June 2026) first wrote it up, against a change entirely under `apps/pragma/site/**`, and never merged. The kaizen PR that wrote this entry needed the same build by hand twice (measured in that session).
 
-## Root-cause chain
+## Causal chain
 
-1. **Why does typecheck fail?** `@borso/infra` is consumed by package
-   entry, and its entry points at `dist/`. Every app's `cdk/` imports its
-   types.
-2. **Why is there no `dist/`?** `scripts/install-repo-deps.sh` ran
-   `pnpm install` and stopped. A remote session starts from a clean
-   checkout, where `dist/` has never existed.
-3. **Why does CI not hit it?** `ci.yml` runs
-   `pnpm --filter @borso/infra build` before `pnpm -r typecheck`, and
-   again in every `app-tests` job before the suites. The session bootstrap
-   mirrored neither.
+- An app typecheck failed with TS2307 on `@borso/infra`.
+  - `infra/cdk/dist/` did not exist. A remote session starts from a clean checkout, and `dist/` is gitignored.
+    - `scripts/install-repo-deps.sh` ran `pnpm install --frozen-lockfile` and stopped. It built nothing.
+      - The build step lived in each place that needed it, and the session bootstrap was not one of them. 6266f4d7b, "fix(ci): build @borso/infra before typecheck so consumers resolve", added the build to `ci.yml` alone. Its message says "matches the pattern already in deploy.yml".
+        - Every consumer needs a build because the package entry of `@borso/infra` is its build output, since its port in 1aa979e74 (Machine):
 
-**Root cause:** *thought `pnpm install` leaves the workspace ready to
-typecheck, actually `@borso/infra` is a build-output dependency — its
-consumers cannot resolve it until `dist/` exists, and only CI knew to
-build it first.*
+          ```json
+          "types": "./dist/index.d.ts",
+          "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } }
+          ```
+
+## Root cause of occurrence
+
+*Thought the TS2307 in CI was a step missing from one workflow, so the fix was to copy the build step there. Actually the package entry points at a build output, so every place that typechecks needs that step, and each copy left out is the same failure.* (Machine)
+
+The commit message of 6266f4d7b names the cause, "published as its dist/ output (main: ./dist/index.js)", and still fixes the call site, by copying the step from `deploy.yml`. The package shape made "add one more build step" the local fix each time.
 
 ## Detection failure causes
 
-- **Typing:** this *is* the typing layer, reporting correctly. The defect
-  was environmental, not in any diff.
-- **CI:** permanently green, because CI builds infra first. The divergence
-  between CI's bootstrap and the session's bootstrap is the blind spot,
-  and a CI that compensates for a missing step is a CI that hides it.
-- **Code review:** nothing in any diff was wrong.
-- **Harness:** the SessionStart banner reports what it installed and said
-  nothing about a build it never attempted. Absence of a step is not an
-  error anything reports.
+- **CI:** always green, because CI builds infra first. A CI that compensates for a missing step hides it from every other environment.
+- **Harness:** the SessionStart banner reports what it installed. It said nothing about a build it never attempted.
+- **Code review:** no diff was wrong. The defect lived in the difference between two bootstraps.
 
 ## Countermeasure
 
-- **Code:** commit `ebabfe7` — `scripts/install-repo-deps.sh` builds
-  `@borso/infra` right after `pnpm install`.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — the session environment is brought into
-line with CI, so an app typecheck resolves `@borso/infra` from a clean
-checkout)
-
-**Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
-commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7)
-
-**The actual fix:**
+Commit `ebabfe7` made `scripts/install-repo-deps.sh` build `@borso/infra` right after `pnpm install`, unconditionally, and report a failure through `note_missing` in the SessionStart banner.
 
 ```diff
  log "running pnpm install"
@@ -86,28 +64,21 @@ commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7)
 +
 +log "building @borso/infra (its dist is what app cdk typechecks resolve)"
 +pnpm --filter @borso/infra run build ||
-+  note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
++  note_missing '@borso/infra dist' "..."
 ```
 
-Two deliberate choices, both from dantotsus this repo already owns:
+## Eradication
 
-- **Unconditional, not guarded on `dist/` existing** — a *stale* dist is
-  its own hazard, and skipping the build when a directory happens to be
-  present is how that one starts.
-- **Reported through `note_missing`, not `|| true`** — a failure lands in
-  the SessionStart banner an agent actually reads, and does not abort the
-  rest of the bootstrap.
+**Type:** DevX check (level 2)
 
-**Sibling defects swept:** none — one missing bootstrap step.
+**Reference:** commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7) (PR #45), then e51cfdd5a (PR #173), which added `scripts/ensure-infra-built.sh`.
 
-## See also
+The bootstrap fix did not hold for the class. A subagent worktree never runs SessionStart, so it hit the same TS2307 (`the-worktree-that-could-not-see-its-own-infra`). What holds today is `scripts/ensure-infra-built.sh`, which every app's `typecheck` and `synth` script and `scripts/lint-workspace.sh` call first. It builds `@borso/infra` when `dist/` is missing or older than `src/`.
 
-- [`shared-deploy-stale-dist.md`](./shared-deploy-stale-dist.md) — the
-  inverse hazard, and why this build is unconditional.
-- [`one-failed-optional-install-silently-dropped-four-tools.md`](./one-failed-optional-install-silently-dropped-four-tools.md)
-  — why the failure path uses `note_missing` and prints to stdout.
-- [`preexisting-is-not-an-excuse.md`](./preexisting-is-not-an-excuse.md) —
-  why a build prerequisite belongs in the bootstrap rather than being
-  waved past as somebody else's red build.
-- [`pnpm-reserved-script-names.md`](./pnpm-reserved-script-names.md) — why
-  the fix says `run build`.
+The entry point that gates a typecheck repairs the missing build itself. A typecheck run through `pnpm typecheck` can no longer fail on a missing `dist/`. A bare `tsc` run outside those scripts still can.
+
+**Proof it can fail:** not rerun this session. `the-worktree-that-could-not-see-its-own-infra` records the before and after.
+
+**Proposed:** point the type entry of `@borso/infra` at its source, through a `types` condition on `./src/index.ts` or a custom condition set in the consuming tsconfigs. A typecheck would then read source and need no build at all. That deletes the build from every typecheck path (the bootstrap, `ci.yml`, `ensure-infra-built.sh` in each app's `typecheck`), and it removes the stale-dist hazard of `shared-deploy-stale-dist` for typechecking. Runtime is not covered. `build` copies `.code.js` and `.mjs` files into `dist/`, and a deploy reads them from there (inferred from the `build` script in `infra/cdk/package.json`).
+
+**Similar instances:** `git grep -l "filter @borso/infra\|ensure-infra-built" -- .github/workflows scripts 'apps/*/package.json'` lists every place that still builds infra before reading it. The worktree case and the stale dist (`shared-deploy-stale-dist`) share this cause.

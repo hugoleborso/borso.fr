@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-commits: [01e8a281d5]
-eradication-level: 2
-eradication-paths: [scripts/check-mutation-covers-gated-files.sh]
+fix-commits: [bd182d773, 01e8a281d5]
+eradication-level: 4
+eradication-paths: [scripts/mutate-changed.sh, infra/cdk/stryker.config.js]
 time-to-detect: months
 tags: [stryker, mutation, coverage, gates, infra, pre-push]
 zone: stryker.shared.js
@@ -16,108 +16,97 @@ recurs: [a-green-mutation-gate-is-not-a-green-coverage-gate]
 
 # The gate that was never pointed at the code, and the number that covered for it
 
-## Symptom
+## User impact
 
-`infra/cdk` is the construct library every application deploys through. It is
-gated at 100% coverage, the gate is real, and standard 02 said its `.utils.ts`
-files also survive Stryker with no surviving mutant.
-
-Nothing had ever run Stryker there. Pointing it at those five files once:
+`infra/cdk` is the construct library every application deploys through. It
+was gated at 100% coverage, and standard 02 said its `.utils.ts` files also
+survived Stryker with no surviving mutant. Nothing had ever run Stryker there.
+Pointing it at those five files once, on PR #49:
 
 ```
 All files                     |  75.33 |   76.13 |      287 |         0 |         90 |        4 |        0 |
  statement-rewrites.utils.ts  |  51.69 |   51.69 |       61 |         0 |         57 |        0 |        0 |
 ```
 
-**90 surviving mutants at 100% coverage.** Every line ran. For ninety changes to
-those lines, no assertion would have noticed.
+| | Seen | Expected |
+| --- | --- | --- |
+| `infra/cdk` `.utils.ts` files | 100% coverage, no mutation run, and a standard that said "zero surviving mutants" | a mutation score, which was 75.33 with 90 survivors |
 
-## Root-cause chain
+For ninety changes to lines the tests ran, no assertion would have noticed.
 
-1. The mutation gate is configured per workspace: each one ships a
-   `stryker.config.js` naming its own mutate globs.
-2. `infra/cdk` never got one. There is no `stryker.config.js` under `infra/` at
-   all.
-3. Both runners iterate `apps/`: `.husky/pre-push` derives its workspace list
-   from paths matching `^apps/`, and `full-suite.yml` matrixes over `apps/*`.
-4. So `infra/` was outside the loop *and* outside the configuration — two
-   independent reasons for the same silence, either of which alone would have
-   been enough.
-5. **A gate that is not pointed at code produces no output.** It does not report
-   zero; it reports nothing. Nothing looks identical to "not applicable".
-6. The coverage gate, which *was* pointed at those files, reported 100%. A
-   reader seeing one green number and no red one concludes the file is well
-   tested, which is exactly the inference mutation testing exists to refuse.
-7. The standard then wrote down the conclusion — "with zero surviving mutants
-   under Stryker" — and the claim aged for months with nothing able to contradict
-   it, because the thing that would have contradicted it was the gate that was
-   not running.
+## Causal chain
+
+- Five `infra/cdk` files carried 90 surviving mutants at 100% coverage for months.
+  - No run of Stryker ever mutated them.
+    - `.husky/pre-push` built its mutation list from changed paths under `apps/` only, and `full-suite.yml` looped over `apps/*`:
+
+```bash
+changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+for app in $changed_app_slugs; do   # infra/cdk never matches ^apps/
+```
+
+      - Commit `9fc3b9a40` scoped the push gate to changed files and kept that `^apps/` derivation from the version before it. An agent wrote it.
+    - Commit `39c7588cd` moved `infra/cdk`'s pure functions into `.utils.ts` files, the suffix the apps' mutation configs grade, including `statement-rewrites.utils.ts`. It gave them coverage tests and created no `stryker.config.js` beside them, while each of the four apps under `apps/` had one (`git ls-tree -r --name-only 39c7588cd | grep stryker`). An agent wrote it.
+
+## Root cause of occurrence
+
+*Thought every workspace a quality gate must cover lives under `apps/`,
+actually `infra/cdk` is a gated workspace outside it, matched by
+`infra/*` in `pnpm-workspace.yaml` beside `apps/*`.* (Machine)
+
+Every loop the agent could copy in the codebase was phrased over `apps/`, so
+the shared library fell outside each new one with no error. The runners
+derived their scope from a path prefix instead of from the workspace list,
+which is a property of the codebase, not of one writer.
 
 ## Detection failure causes
 
-- **Absence has no output.** Every other failure in this repository announces
-  itself with a red line. This one is the shape of a check that was never
-  invoked, and no dashboard has a row for a job that does not exist.
-- **The coverage number filled the gap.** 100% on a file is a strong-looking
-  signal, and the whole argument for mutation testing is that it is not one.
-  Having both gates on `apps/` and only one on `infra/` meant the weaker signal
-  stood alone precisely where it was least examined.
-- **The standard asserted it.** Once "survives Stryker" was written down, the
-  question stopped being asked. See
-  [an approval gate that only existed in a comment](./an-approval-gate-that-only-existed-in-a-comment.md)
-  for the same shape in a different domain.
-- **`infra/` is not an application**, and every convention in this repository is
-  phrased in terms of applications. The construct library falls out of loops
-  written that way, quietly, every time.
+- **The gate's output:** a gate that is not pointed at code prints nothing. It does not report zero, so its absence reads as "not applicable".
+- **The coverage gate:** it was pointed at the files and reported 100%. One green number with no red one beside it reads as well tested, which is the inference mutation testing exists to refuse.
+- **The standard:** once "survives Stryker" was written in standard 02, nothing ran that could contradict it.
+- **Conventions:** every convention in the repository is phrased per application, so `infra/` falls out of each loop written that way.
 
 ## Countermeasure
 
-`scripts/check-mutation-covers-gated-files.sh`, in pre-commit and in CI. For
-every workspace holding a `.core.ts`, `.utils.ts` or `.adapter.ts` it requires
-a `stryker.config.js` that mutates that suffix.
-
-The absence is now the thing that fails, which is the only way to gate a gate.
-
-`infra/cdk` sits in the script's allowlist, with the number and the reason
-written on the entry. That is this repository's existing shape for a gap that is
-real and not yet closed — `check-pure-modules-have-callers.sh` and
-`check-frontend-env-vars.sh` both carry one, and both require every entry to
-state why. An allowlist entry is a decision with a name on it; a missing gate is
-neither.
+Commit `bd182d773` added `infra/cdk/stryker.config.js` and a mutation run for
+`infra/cdk`. PR #49 closed 21 of the 90 survivors with real assertions
+(`61d2dad`). Every keyword separator in the DSQL rewrites is `\s+`, and every
+test had fed single-space SQL, so the tolerance was untested.
 
 ## Eradication
 
-**DevX check, level 2**, shipped in `01e8a28`. Verified against both ways the
-gap can appear:
+**Type:** detection (level 4)
 
-| Reintroduced | Result |
-| --- | --- |
-| a workspace's `stryker.config.js` removed | fails, naming the workspace and a gated file in it |
-| `*.adapter.ts` dropped from a config's mutate globs while adapters exist | fails, naming the suffix and the config |
+**Reference:** `scripts/mutate-changed.sh` holds three hand-written scopes
+today: the gated files of `apps/*`, the `.core` and `.utils` files of
+`scripts/`, and the `.utils` files of `infra/cdk`. `.github/workflows/ci.yml:439`
+runs it on every pull request. A changed gated file in those scopes is
+mutated, and a survivor fails the pull request.
 
-**What is deliberately not done here, and why the allowlist is honest rather
-than convenient.** Closing `infra/cdk`'s 90 requires a justified Stryker disable
-comment per mutant that is equivalent for every input its function can receive
-— the regex-quantifier mutants in `statement-rewrites.utils.ts` are most of
-them. Wiring the gate red before that work is done ships a gate nobody can make
-green, and a gate that cannot go green gets skipped, which is worse than the
-gap it was meant to close.
+```bash
+infra_files=$(echo "$changed" |
+  ...
+  sed -n 's|^infra/cdk/||p' |
+```
 
-PR #49 did close 21 of the 90 where the fix was a real assertion: every keyword
-separator in the DSQL statement rewrites is `\s+`, every test fed canonical
-single-space SQL, and the tolerance was therefore untested — the file could have
-been narrowed to exact spacing with a green suite (`61d2dad`).
+**What no longer holds:** commit `01e8a281d` added
+`scripts/check-mutation-covers-gated-files.sh`, which failed any workspace
+holding a gated file without a Stryker config that mutates its suffix. Commit
+`c54e32da7` (#224) deleted it, by operator decision, with the gates that only
+guarded the harness. Since then a gated file in a new workspace outside the
+three scopes is mutated by nothing, and nothing says so. Three scopes kept by
+hand are not an eradication.
 
-## The general shape
+**Proposed:** `scripts/mutate-changed.sh` selects every changed
+`.core`, `.utils` and `.adapter` file in the repository first, then routes each
+to its scope, and exits 1 on a file that matches none. That restores the
+refusal of the deleted check inside the selector CI already runs, with no
+second list and no separate gate. It makes a gated file outside every mutation
+scope impossible to merge.
 
-A gate reports on what it is pointed at. Ask of every quality number: *which
-files produced this, and which files could have and did not?* A convention
-phrased for one kind of workspace — "every application does X" — leaves every
-other kind outside it silently, and the shared library that everything depends
-on is usually the one that is not an application.
+**Proof it can fail:** not replanted this session.
 
-Cross-reads with
-[a green mutation gate is not a green coverage gate](./a-green-mutation-gate-is-not-a-green-coverage-gate.md),
-which is this defect's mirror: there, mutation was green and coverage was red on
-the same file. Together they say the two gates measure different things and
-neither substitutes for the other — including when one of them is silent.
+**Similar instances:** `git ls-files | grep -E '\.(core|utils|adapter)\.tsx?$' | grep -vE '^(apps/|scripts/|infra/cdk/)'`
+finds none today (measured 2026-11-27). The same lesson in its mirror form, a
+green mutation gate over a red coverage gate, is
+[a green mutation gate is not a green coverage gate](./a-green-mutation-gate-is-not-a-green-coverage-gate.md).

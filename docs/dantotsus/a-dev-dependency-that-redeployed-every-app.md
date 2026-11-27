@@ -15,50 +15,49 @@ recurs: none (the earlier entry ran too few app suites on a bump; this one deplo
 
 # A dev dependency that redeployed every app
 
-## Symptom
+## User impact
 
-PR #151 added Playwright as a dev dependency of `apps/pragma` only. Its
-preview run deployed `banana-rush` too, and its merge deployed all six apps to
-prod. The operator asked: « Why does a development dep launch a redeploy of all
-apps? »
+The operator was the user. PR #151 added Playwright as a dev dependency of `apps/pragma` only. Its preview run deployed `banana-rush` too, and its merge deployed all six apps to prod. No visitor saw a difference, because five of the six deploys shipped the same bytes. The operator asked: « Why does a development dep launch a redeploy of all apps? »
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Merge of PR #151 | Six prod deploys | One, `pragma`, or none, since a dev dependency ships nothing |
 
-1. **Why did every app deploy?** The change touched `pnpm-lock.yaml` and
-   `pnpm-workspace.yaml`, which match the `deps` key of
-   `.github/path-filters.yml`, and `deploy.yml` and `preview.yml` treated `deps`
-   as a fan-out to every app.
-2. **Why a fan-out?** `deps` was added after a React bump merged without any
-   app suite running ([the earlier dantotsu](./a-dependency-bump-that-no-app-filter-could-see.md)).
-   A catalog entry names no app, so "every app" was the only safe answer a path
-   filter could give.
-3. **Why could a path filter not do better?** It sees which files changed, and
-   the lockfile is one file that every app's versions live in. Which app a
-   change reaches is in the lockfile's graph, not in its path.
+## Causal chain
 
-**Root cause:** we thought a dependency file change could only be mapped to
-apps by its path, and actually the lockfile already records, per app, the full
-set of versions it resolves.
+- Merging a dev dependency of one app deployed all six apps.
+  - The change touched `pnpm-lock.yaml` and `pnpm-workspace.yaml`, which match the `deps` key of `.github/path-filters.yml`.
+    - `deploy.yml` and `preview.yml` treated `deps` as a fan-out to every app.
+
+      ```sh
+      # deploy.yml after 21ed4b0b4
+      if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then  # ❌ any lockfile change means every app
+      ```
+
+      - Commit `21ed4b0b4` (2026-08-20, written by an agent) added that fan-out as the fix of [`a-dependency-bump-that-no-app-filter-could-see.md`](./a-dependency-bump-that-no-app-filter-could-see.md), where a React bump had deployed nothing. The entry it shipped with predicted this cost: "a one-line catalog edit is now four deploys."
+        - The workflows decide what to deploy from which source files changed, not from what each app would ship. A lockfile is one file shared by every app, so a rule over changed files could only answer "none" or "all". (Method)
+
+## Root cause of occurrence
+
+*Thought the apps a dependency change reaches can only be read from the changed file's path, actually the lockfile records, per app, the full set of versions it resolves.*
+
+Method. The fix after it read that graph, and the input rules kept growing. `dependency-closure.core.ts` came with PR #154, `check-only-change.core.ts` with PR #168 for check-only scripts in a `package.json`, and `comment-only-change.core.ts` with PR #423 for comment-only edits (measured with `git log --diff-filter=A`). Each one teaches the deploy step one more kind of change that ships nothing. By the replay below, an eslint bump still deploys all six apps. The process asks "what changed in the inputs" each time, when the question is "what would ship".
 
 ## Detection failure causes
 
-- **CI:** an extra deploy is a success, so nothing fails; each run is green.
-- **Code review:** the fan-out was the reviewed fix for the opposite defect,
-  so it read as deliberate.
+- **CI:** an extra deploy is a success, so nothing fails and each run is green.
+- **Code review:** the fan-out was the reviewed fix for the opposite defect, so it read as deliberate.
 - **Operator:** saw it on the deploy list and asked.
 
 ## Countermeasure
 
-- **Code:** commit `e4e34d2` — the workflows ask the lockfile which apps moved.
+The workflows ask the lockfile which apps moved. `dependency-closure.core.ts` (100% coverage and mutation score) parses the lockfile, walks each app's importer, the workspace packages it links and every snapshot reachable from them. It digests the result with the root importer, the lockfile settings, `pnpm-workspace.yaml` without its catalogs and the root `packageManager`, `pnpm` and `engines` fields. An app deploys when its digest differs from the base. Anything the script cannot read falls back to every app.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — a CI script decides the deploy set from the
-resolved graph)
+**Type:** DevX check (level 2). A CI script decides the deploy set from the resolved graph.
 
-**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `e4e34d2`
-
-**The actual fix:**
+**Reference:** PR #154, squashed into commit [`21a850ab4`](https://github.com/hugoleborso/borso.fr/commit/21a850ab4).
 
 ```diff
 -          if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then
@@ -70,29 +69,10 @@ resolved graph)
 +              changed "$BASE" "${candidates[@]}") || moved="$all_apps"
 ```
 
-`dependency-closure.core.ts` (100% coverage and mutation score) parses the
-lockfile, walks each app's importer, the workspace packages it links and every
-snapshot reachable from them, and digests the result together with the root
-importer, the lockfile settings, `pnpm-workspace.yaml` without its catalogs and
-the root `packageManager`, `pnpm` and `engines` fields. An app deploys when its
-digest differs from the base. Anything the script cannot read falls back to
-every app.
+Replayed over past merges when it shipped: #151 deploys `pragma` only, the Spotify ISRC change `pragma` only, the aws-cdk bump four apps, and an eslint bump still all six. The root importer is in every digest, because Node resolves upward into the root `node_modules`, so an app can use a root tool without declaring it. `ci.yml` keeps the full fan-out on purpose, so a dependency change still runs every suite.
 
-Replayed over past merges: #151 deploys `pragma` only; the Spotify ISRC change
-`pragma` only; the aws-cdk bump four apps; an eslint bump still all six,
-because the root importer is in every digest — Node resolves upward into the
-root `node_modules`, so an app can use a root tool without declaring it.
+**Proposed:** decide the deploy set from outputs. `deploy.yml` and `preview.yml` would build each app's site bundle and synthesize its CDK assets at the base and at the head, and deploy an app only when one of its asset hashes differs. A change that alters no shipped byte, a dev dependency, an eslint bump or a comment, would then deploy nothing, without a rule for its kind. `dependency-closure.core.ts`, `check-only-change.core.ts` and `comment-only-change.core.ts` would go from the deploy path. The cost is a second build at the base, and its duration is unknown until measured.
 
-**Library considered:** the `yaml` package parses the lockfile properly. It is
-only a transitive dependency here, and adding a direct one is an ADR trigger;
-`scripts/dependencies/check-dependency-catalog.ts` already reads
-`pnpm-workspace.yaml` line by line, so the parser follows that precedent.
-`pnpm ls --lockfile-only` does not exist in pnpm 10.0.0 (tried 2026-10-10).
+**Proof it can fail:** the replay above. #151 before the change deploys six apps, after it deploys `pragma`.
 
-**Sibling defects swept:** `ci.yml` keeps the full fan-out on purpose: a
-dependency change should still run every suite.
-
-## See also
-
-- [`a-dependency-bump-that-no-app-filter-could-see.md`](./a-dependency-bump-that-no-app-filter-could-see.md)
-- [`paths-filter-base-head1-on-push.md`](./paths-filter-base-head1-on-push.md)
+**Similar instances:** `grep -n 'index("deps")' .github/workflows/*.yml` finds the narrowing in `deploy.yml` and `preview.yml`, and the deliberate fan-out in `ci.yml`. `pnpm ls --lockfile-only` does not exist in pnpm 10.0.0 (tried 2026-10-10), which is why the closure parses the lockfile itself.

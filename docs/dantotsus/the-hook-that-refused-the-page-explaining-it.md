@@ -4,146 +4,120 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#40'
-fix-commits: [239b78b6d1]
+fix-commits: [239b78b6d1, 458e886c4]
 eradication-level: 2
-eradication-paths: [scripts/check-hook-decisions.sh]
+eradication-paths: [scripts/hooks/checks/no-broad-kill.core.ts, scripts/hooks/checks/no-broad-kill.core.test.ts, scripts/hooks/shell-command.core.ts]
 time-to-detect: 12 days
 tags: [hooks, agent-harness, meta]
-zone: .claude/hooks
+zone: scripts/hooks/checks/no-broad-kill.core.ts
 ---
 
 # The hook that refused the page explaining it
 
-## Symptom
+## User impact
 
-Two commands in one session were refused by `pretool-no-broad-kill.sh`, and
-neither killed anything:
+Two commands in one agent session were refused by `pretool-no-broad-kill.sh`,
+and neither killed anything (measured, in that session).
 
 ```
 scripts/kaizen.sh "… the pattern-matching process killers are blocked by a hook …"
 echo "=== pkill dantotsu ==="; cat docs/dantotsus/broad-pkill-…md
 ```
 
-Every refusal printed the same advice — *kill a PID you own, not a name
-pattern* — to a caller that was appending a log line, listing a directory, or
-opening the very entry that explains the rule. The second one is worth reading
-twice: the agent was reaching for the dantotsu behind the hook, and the hook
-stopped it over the `echo` label announcing the file. The path itself was never
-the trigger — the old regex wants a shell separator before the word, and the
-hyphen in `broad-pkill-…` is not one — so the refusal came from the sentence
-introducing the entry rather than from the entry.
+| | Seen | Expected |
+| --- | --- | --- |
+| Appending a friction line | refused, with advice to kill a PID | the line appended |
+| Opening the entry behind the hook | refused over the `echo` label | the entry printed |
 
-## Root-cause chain
+Agents that run a kill are not affected. Agents that write or read about one
+are.
 
-1. **Why was a log line refused?**
-   Because the hook greps the whole command string for `pkill|killall`, and the
-   word was in it — inside a quoted argument to an unrelated script.
+## Causal chain
 
-2. **Why does grepping the whole string find mentions?**
-   Because the hook's regex asks only that the word be surrounded by whitespace
-   or a shell separator. `echo "=== pkill dantotsu ==="` satisfies that: the
-   space before the word is a space, whatever precedes it.
+- Both commands were refused.
+  - The hook matched the bare word anywhere in the command string, inside a
+    quoted argument too. The pattern, from `cac22f1e9`:
 
-3. **Why did the hook not already exclude quoted text?**
-   It excludes heredoc bodies, added when the commit *arming* the hook was
-   refused by it for describing the rule in its own message. The fix drew the
-   line at the shape that had just bitten, and a quoted argument is the same
-   shape with different punctuation.
+    ```bash
+    if grep -qE '(^|[;&|[:space:]])(pkill|killall|killall5)([[:space:]]|$)' <<<"$COMMAND"; then
+    ```
 
-4. **Why did the sibling hooks' identical fix not carry over?**
-   `pretool-github-pr-body.sh` had the same bug — it refused the body that
-   explained the sanitizer, for quoting the markup it forbids — and fixed it in
-   commit `0224b28` by stripping code spans. `pretool-no-swallowed-push.sh`
-   then met the same wall and answered it properly, with a reusable
-   `strip-quoted-strings.py`. Three hooks, three independent discoveries of one
-   rule: *drop the text being written before deciding whether something is
-   being run*. The third even left the tool behind — and this hook, sitting one
-   directory away from it, still did not use it, because nothing tested any of
-   them.
+    - Commit `cac22f1e9` (2026-08-08) wrote it over the raw text and kept
+      the mentions it would refuse. Its message: "A command whose prose
+      contains the word `pkill` is still blocked; at this frequency that
+      false positive is worth the certainty."
+      - The repository had no shell parser. `git log -S unbash -- package.json`
+        finds the parser only in `458e886c4`, on 2026-11-27. Telling a use
+        from a mention meant a hand-written stripper, and each hook grew its
+        own: `strip-heredocs.py`, then `strip-markdown-code.py` (`0224b28`),
+        then `strip-quoted-strings.py` (`50545c5bc`). (Machine)
 
-5. **Why does a false refusal matter, when the agent can just rephrase?**
-   Because the message it prints is advice for a problem the caller does not
-   have. An agent that is refused for reading a file learns that the hook is
-   noise, and a hook treated as noise is a hook that gets worked around on the
-   day it is right. This one guards another agent's twenty-minute measurement.
+## Root cause of occurrence
 
-**Root cause:** thought "the command contains the word" meant "the command runs
-it", actually a word inside a string literal cannot be the command word of the
-shell that quotes it, and the commands most likely to quote a dangerous word
-are the ones documenting why it is dangerous.
+*Thought a command that mentions `pkill` without running it would be rare,
+actually such commands cluster around the hook itself: the friction line about
+a refusal, the entry that explains it, a commit message describing the rule.*
+(Machine)
+
+The commit priced the false positive against the cost of excluding mentions,
+and with no parser in the codebase that cost was a new stripper. Commit
+`cac22f1e9`, read this session, states the trade in its message. Had its
+author known where mentions occur, the quoted-string stripper would have
+shipped with the hook.
 
 ## Detection failure causes
 
-- **Typing:** not applicable — shell and a regex.
-- **Linter / static analysis:** nothing lints a hook's decisions; a regex that
-  over-matches is valid in every sense a linter checks.
-- **Functional validation locally:** the hook was validated on the commands it
-  should refuse. Nobody ran the commands it should allow, so half the contract
-  was never exercised.
-- **CI (tests / build):** the hooks had no tests of any kind, which is the
-  general case for the shell gates here — see
-  [`the-shell-gates-are-only-ever-run-where-they-pass`](../knowledge/the-shell-gates-are-only-ever-run-where-they-pass.md),
-  written days before this and asking for exactly the harness below.
-- **Code review:** both halves of the regex read correctly; the missing case is
+- **Typing and lint:** a regex in a shell script. Nothing reads its matches.
+- **Local:** the commit checked five benign commands, including
+  `echo "the pkillers are coming"`. That case proves the word boundary, and
+  none of the five quoted the bare word.
+- **CI:** no hook had a test until `scripts/check-hook-decisions.sh` arrived
+  with this entry's fix.
+- **Review:** both halves of the pattern read correctly. The missing case is
   a command nobody wrote down.
-- **Staging / production monitoring:** not applicable.
 
 ## Countermeasure
 
 Quoted bodies are dropped before matching, the way heredoc bodies already
-were. No new code was needed: `strip-quoted-strings.py` already sat in the same
-directory, written for `pretool-no-swallowed-push.sh`, and applies here
-unchanged — it empties each quoted span and keeps the quotes, so nothing fuses
-into a word nobody wrote.
+were. `strip-quoted-strings.py`, written for `pretool-no-swallowed-push.sh`,
+was piped in front of the grep in commit `239b78b6d`.
 
-This deliberately does *not* try to catch `bash -c "pkill node"`, which the old
-regex missed too: a quote-aware parser that finds nested command words is a
-different program, and the shape that actually occurs here is prose.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** code diff · DevX check (level 2 — DevX check)
+**Reference:** commit `239b78b6d` added the quote stripper and a decision table
+run by pre-commit. The table, `scripts/check-hook-decisions.sh`, was deleted
+in `c54e32da7` (PR #224). Commit `458e886c4` (PR #411) replaced the shell
+hooks with TypeScript checks. What holds today is
+`scripts/hooks/checks/no-broad-kill.core.ts`, which matches the text left by
+`stripStringBodies` from `scripts/hooks/shell-command.core.ts`:
 
-**Reference:** [PR #74](https://github.com/hugoleborso/borso.fr/pull/74) · commit [`df47cd5`](https://github.com/hugoleborso/borso.fr/commit/df47cd5)
-
-**The actual fix:**
-
-```diff
--COMMAND_TO_RUN="$(printf '%s' "$COMMAND" | python3 "$(dirname "$0")/strip-heredocs.py")"
-+COMMAND_TO_RUN="$(printf '%s' "$COMMAND" |
-+  python3 "$(dirname "$0")/strip-heredocs.py" |
-+  python3 "$(dirname "$0")/strip-quoted-strings.py")"
+```ts
+const commandToRun = stripStringBodies(command);
+if (NAME_KILL.test(commandToRun)) {
 ```
 
-One line, and it had been available for days. That is the tell that the fix
-worth shipping is the one below.
+Its test file sits under the per-file 100% coverage of `vitest.config.ts`.
 
-The fix that matters more is the one that makes the *class* visible, because
-this bug's real cause is that a hook's decisions were never checked. Both halves
-of every hook's contract are now a table — a command it must refuse, and the
-mention of that command it must let through — run by `pre-commit`:
+**Proof it can fail:** the check fed to `tsx` this session (measured).
 
-```diff
-+echo "[pre-commit] checking the hooks decide what they promise"
-+scripts/check-hook-decisions.sh
+```text
+kill "echo \"=== pkill x ===\""        pass
+kill "pkill node"                      refuse
+kill "grep -rn pkill docs/dantotsus"   refuse
+kill "ls docs | grep killall"          refuse
 ```
 
-Verified against the pre-fix hook: with `pretool-no-broad-kill.sh` stashed to
-its previous version, `scripts/check-hook-decisions.sh` fails on exactly the
-`echo` case above and exits 1; with the fix in place, thirteen decisions match.
+The quoted mention passes. An unquoted mention in argument position is still
+refused, so the class stays open.
 
-**Sibling defects swept:** `pretool-github-pr-body.sh` — same class, already
-fixed in `0224b28`, and now covered by four rows of the same table so the fix
-cannot silently regress. `pretool-gh-pr-create.sh` and `rtk-rewrite.sh` were
-read for the same shape; neither decides on a word that appears in prose about
-it. `pretool-no-swallowed-push.sh`, `pretool-no-discarding-reset.sh` and
-`posttool-empty-checks-means-conflict.sh` arrived from `main` mid-branch and
-are the obvious next rows for the table.
+**Similar instances:** `git grep -ln listSimpleCommands -- 'scripts/hooks/checks/*.core.ts'`
+lists the checks that already match the command name from the parser. `no-broad-kill` and
+`no-swallowed-push` still match a regex over stripped text.
 
-## See also
-
-- [`broad-pkill-killed-another-agents-measurement.md`](./broad-pkill-killed-another-agents-measurement.md) — why the hook exists, and the entry this bug blocked an agent from reading.
-- [`a-pull-request-body-the-server-quietly-emptied.md`](./a-pull-request-body-the-server-quietly-emptied.md) — the sibling hook, and the first discovery of the same rule.
-- [`github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) — what that hook is defending against.
-- [`two-copies-that-had-to-agree-and-nothing-made-them.md`](./two-copies-that-had-to-agree-and-nothing-made-them.md) — the other shape of "one lesson, two files, nothing carrying it across".
-- [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md) — a written lesson that did not reach the next reader, which is what happened to the stripper sitting unused one directory away.
+**Proposed:** match the `name` of each command from `listSimpleCommands`
+instead of a regex over the text, and look through `sudo` and `xargs` to the
+command they run, which the existing test *refuses a name kill behind sudo*
+requires. A word in argument position then cannot match at all, quoted or
+not.

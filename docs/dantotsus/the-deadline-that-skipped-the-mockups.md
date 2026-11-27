@@ -34,84 +34,84 @@ The landing was redrawn after the code existed, then rebuilt in `8144b86`.
 
 ## Causal chain
 
-- The operator corrected layout, form order and tabs after the code was written.
-  - No mockup round came before the code.
-    - The spec was written at 10:03, after the code of 09:39 (`209394a` after
-      `597151d`). `/route` Tier 1 already warns that "a spec written after the
-      code describes the code".
-      - The session never ran `/route`. Asked why at 09:48, it gave no cause.
-        The operator named it at 09:50: a wrong idea of the session's
-        capacity and of the time `/route` takes.
-        - The deadline in the first message read as a reason to start
-          building at once.
+- The operator corrected layout, form order and tabs after the code was
+  written.
+  - The first mockups reached him after the code. The spec was written at
+    10:03, after the code of 09:39 (`209394a` after `597151d`).
+    - At 09:07 the session spawned a build agent straight from the operator's
+      message, and the agent committed code at 09:39.
+      - The session read the same-day deadline as a reason to build at once.
+        Asked why at 09:48, it gave no cause. The operator named it at 09:50:
+        a wrong idea of the session's capacity and of the time `/route`
+        takes (Man).
 
 ## Root cause of occurrence
 
 *Thought a same-day deadline makes `/route` and its mockup round a cost to
-skip, actually the corrections that followed cost more than the round would have.*
+skip, actually the corrections that followed cost more than the round would
+have.* (Man)
 
-CLAUDE.md says "Run `/route` on anything that is not obviously one file". A
-page crossing API and site is Tier 2, whose first step is `/specification`,
-which asks for "3 or 4 alternative mockups before the spec settles". Nothing
-refuses a session that skips all of it.
+The rule was in the session's context. CLAUDE.md says "Run `/route` on
+anything that is not obviously one file". A page crossing API and site is
+Tier 2, whose first step is `/specification`, which asks for "3 or 4
+alternative mockups before the spec settles". The prior about time won over
+the loaded rule, so under the agentic 4M this is Man, and the fix is a gate,
+not another line. CLAUDE.md's "Never block on the human. Do reversible work,
+then present it" may have pushed the same way, since code is reversible work
+(inferred).
 
 ## Detection failure causes
 
-- **Hooks:** `pretool-api-change-needs-validation.sh` and the visual-validation
-  hook refused the pull request until reports existed. No hook looks at
-  whether `/route` ran before the first build agent was spawned.
-- **Mockup hooks:** `pretool-mockup-reads-visual-rules.sh` fires on a design
-  quickstart, which came after the code. `pretool-mockup-copy.sh` counts words
-  and cannot see an overlap. Mockups edited by regex went out unrendered
-  twice, as `main` logged at 14:00.
-- **Validator:** it found the missing plan and the third spec shape, and
-  could only report them after the code existed.
+- **Hooks at the time:** the API-change and visual-validation hooks refused
+  the pull request until reports existed. No hook looked at whether `/route`
+  ran before the first build agent.
+- **Mockup hooks:** `mockup-reads-visual-rules` fires on a design quickstart,
+  which came after the code. `mockup-copy` counts words and cannot see an
+  overlap. Mockups edited by regex went out unrendered twice, as `main` logged
+  at 14:00.
+- **Validator:** it found the missing plan and the third spec shape, and could
+  only report them after the code existed.
 
 ## Countermeasure
 
-Already shipped in PR #410: the operator's why is answered with its cause
-(CLAUDE.md, `77daf04`). Shipped in this sweep: `/route` no longer says that
-parallel agents share one checkout. It contradicted CLAUDE.md, which the
-session followed.
+PR #410 shipped the operator's why answered with its cause (CLAUDE.md,
+`77daf04`). This sweep removed the line in `/route` that said parallel agents
+share one checkout. It contradicted CLAUDE.md, which the session followed.
 
-Options for the eradication, as the operator would live with them:
-
-| Option | What the operator sees | Cost |
-| --- | --- | --- |
-| A. A PreToolUse hook on `Agent` refuses the first build agent of a session whose transcript holds no `/route` call and whose branch adds no `spec.md` | a feature session shows him mockups or a spec before any code, every time | one hook. Tier 0 edits spawn no agent, so they pass |
-| B. No hook | sessions under a deadline may build first again | none now |
-
-The operator chose A on 2026-11-26.
+The operator chose, on 2026-11-26, a hook that refuses the first build agent
+of a session with no `/route` and no added `spec.md`, over no hook.
 
 ## Eradication
 
-**Type:** DevX check (level 2)
+**Type:** DevX check (level 2). A session cannot change a file under `apps/`
+before `/route` or a framing skill ran, or before its branch adds a
+`spec.md`.
 
-**Reference:** the commit adding this file.
+**Reference:** the commit adding this file shipped the check on `Agent` and
+`Task`. Commit `458e886c4` (#411) ported every hook to TypeScript under
+`scripts/hooks/checks/`, which removed the `.claude/hooks/*.sh` files.
+Commit `9e22f4d59` (#420) moved the check from the `Agent` call to the edit
+itself, after PR #417's session wrote code before `/route` without spawning
+any agent (`the-hook-that-watched-only-the-agents`).
 
 ```diff
-+      {
-+        "type": "command",
-+        "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretool-agent-after-route.sh"
-+      }
+ export const agentAfterRoute: Check = {
+   name: 'agent-after-route',
+-  tools: /^(Agent|Task)$/u,
++  tools: /^(Write|Edit|MultiEdit|NotebookEdit)$/u,
 ```
 
-The hook passes a subagent's call, a read-only agent type, a transcript that
-called `/route`, `/specification`, `/tech-lead-orchestrator`,
-`/feature-pipeline` or `/after-task-kaizen`, and a branch that adds a
-`spec.md`. It refuses every other agent.
+**Proof it can fail:** `scripts/hooks/checks/agent-after-route.core.test.ts`
+plants an edit under `apps/` with no framing skill in the transcript and no
+added spec, and expects the refusal "`<file>` was edited before /route ran".
 
-**Proof it can fail:** planted inputs, run with `KAIZEN_LOG_REFUSALS=0`.
+**Similar instances:** `grep -l agent-after-route docs/dantotsus/*.md` finds
+this entry and its recurrence from PR #417. Both are sessions that built
+before showing mockups.
 
-| Input | Exit |
-| --- | --- |
-| `general-purpose`, transcript with no `/route` | 2, "No /route this session and no spec.md on the branch, so a general-purpose agent cannot start." |
-| no type given, no `/route` | 2 |
-| `fork`, no `/route` | 2 |
-| `general-purpose`, transcript with a `route` Skill call | 0 |
-| `Explore` or `technical-validator`, no `/route` | 0 |
-| a subagent's call (`agent_id` set) | 0 |
-
-**Similar instances:** `grep -l "route" docs/features/meta/lessons-from-pr-*/inventory.md`
-lists earlier sweeps that mention `/route`. PR #410 is the first whose
-operator asked why it was skipped (measured from its transcript).
+**Proposed:** the check gates a proxy. It passes as soon as `/route` appears
+in the transcript, even if the session then skips the mockups. Gate the
+property instead: refuse an edit that adds a file under `apps/*/site/src` on a
+branch that adds no `spec.md`. Editing an existing site file stays open, so a
+Tier 0 fix passes. A new screen then cannot be built before its spec, and the
+spec carries the mockups.

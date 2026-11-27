@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: '#40'
-fix-commits: [1595450b14, 4e485c8f1a]
+fix-commits: [1595450b14, 4e485c8f1a, 458e886c4]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [scripts/hooks/checks/merge-deploys-prod.core.ts, .github/workflows/shared-deploy.yml]
 time-to-detect: months
 tags: [github-actions, deploy, claude-md, harness, self-improvement-loop]
 zone: CLAUDE.md
@@ -15,159 +15,140 @@ weak-point: prose-stands-in-for-a-check
 
 # An approval gate that only existed in a comment
 
-## Symptom
+## User impact
 
-Right after PR #40 merged, I told the operator that a shared-infra deploy
-was waiting on their approval, because CLAUDE.md says so:
+Right after PR #40 merged, the session told the operator that a shared-infra
+deploy was waiting on his approval. He replied: *"I see no shared deploy run
+waiting on me."*
 
-> **`infra/shared` changes are the exception:** they deploy through the
-> `prod-shared` environment, which still requires a reviewer.
+| | Seen | Expected |
+| --- | --- | --- |
+| After the merge of PR #40 | "A shared-infra deploy waits on your approval" | "Dispatch `shared-deploy`, nothing is queued" |
+| The operator's dispatch, run 7 | Created at 14:28:05, job started at 14:28:09, nothing approved | The same, since no reviewer rule exists |
 
-They replied: *"I see no shared deploy run waiting on me."*
+Nothing was queued: `shared-deploy.yml` is `workflow_dispatch` only, and
+`deploy.yml` has no shared job. The stack that owns the account's OIDC
+provider, all three deploy roles and the previews CDN had been described as
+reviewer-gated, in two places, for months. The operator was the only person
+affected, misled on what protected his account.
 
-They were right twice over.
+## Causal chain
 
-1. **Nothing was queued.** `shared-deploy.yml` is `workflow_dispatch`
-   only. A merge never enqueues it; `deploy.yml` has no shared job.
-2. **The reviewer rule does not exist.** When the operator dispatched the
-   workflow, the run was created at `14:28:05` and its job started at
-   `14:28:09` — four seconds, no pause, nothing approved. A required
-   reviewer holds the run in `waiting`.
+- The session reported a pending approval that did not exist.
+  - CLAUDE.md's post-merge rule told it to:
 
-So the stack that owns the account's OIDC provider, all three deploy
-roles and the previews CDN had been described as reviewer-gated, in two
-places, for months, and was not.
+    ```markdown
+    1. *Approve the pending shared-infra deploy* in GitHub Actions — **only when the
+       merged diff touched `infra/shared/**`** (that deploy waits in the `prod-shared`
+       queue until approved).   <!-- ❌ no such queue, no such approval -->
+    ```
 
-## Root-cause chain
+    - Commit `22298375f` (2026-06-06) wrote that rule. It copied the claim of
+      `shared-deploy.yml`'s header.
+      - Commit `2c6a1a12c` (2026-05-02) wrote that header:
 
-1. **Why did I report a pending approval?** CLAUDE.md stated one, and I
-   trusted it without opening the workflow.
-2. **Why did CLAUDE.md state one?** `shared-deploy.yml`'s header comment
-   states it too. The prose was consistent with itself and with nothing
-   else.
-3. **Why did the comment survive being false?** Nothing in the repository
-   can observe a GitHub environment's protection rules. There is no API
-   in the test suite's reach, no file to lint. The claim was unfalsifiable
-   from inside the repo, so it aged without resistance.
-4. **Why was it never noticed in practice?** Six prior dispatches all
-   succeeded. A gate that does not exist looks exactly like a gate the
-   operator approves promptly.
-5. **Why did PR #40 not catch it?** PR #40 corrected this *exact*
-   sentence for the `prod` environment — the role description now reads
-   "the merge to main is the gate, not a reviewer rule" — and left the
-   `prod-shared` half standing. The correction was applied to the instance
-   in front of me rather than to the claim.
+        ```yaml
+        # SharedInfraDeployRole. The `prod-shared` GitHub environment requires
+        # Hugo's manual approval before the deploy job actually runs.
+        ```
 
-**Root cause:** *thought a GitHub environment named in a workflow enforces
-the protections we described for it, actually an environment with no
-protection rule only scopes the OIDC subject the role trusts — and no
-test, lint, or type in this repository can read which it is, so the
-description was never checkable.*
+        - The same day, `857fc16ea` wrote `docs/aws-setup.md`, which asks the
+          operator to configure *"`prod-shared` — required reviewer:
+          yourself"*. The agent described that setup step as the state of the
+          environment. The environment's real settings were in no file and no
+          tool it had loaded (Material).
+  - PR #40 corrected the same sentence for the `prod` environment and left
+    the `prod-shared` half standing.
+
+## Root cause of occurrence
+
+*The agent thought a GitHub environment the setup guide says to protect
+carries that protection, actually the guide is a step the operator may never
+have taken, and an environment with no protection rule only scopes the OIDC
+subject the role trusts.* (Material)
+
+The agent's input was the setup guide, a to-do list for the operator. The fact
+it needed, the environment's protection rules, lives in GitHub's settings and
+was absent from its context. So the description was a plan written in the
+present tense. The current header of `shared-deploy.yml` states the fact:
+*"An environment with no protection rule only scopes the OIDC subject the role
+trusts"*.
 
 ## Detection failure causes
 
-- **Typing / linter:** nothing to type. `environment: prod-shared` is a
-  valid string whichever rules the environment carries.
-- **CI:** green forever. CI has no view of environment settings.
-- **Functional validation:** six successful dispatches, each of which
-  would look identical with or without an approval step.
-- **Code review:** the claim reads as a statement of fact about a settings
-  page a reviewer would have to leave the diff to check, and would then
-  find matching the comment only if they knew where to look.
-- **Harness:** the strongest layer here, and it fired backwards — the
-  CLAUDE.md rule *instructed* me to report a pending approval, so the
-  documentation actively produced the false statement instead of merely
-  permitting it.
+- **Typing and linter:** `environment: prod-shared` is a valid string whatever
+  rules the environment carries.
+- **CI:** no step read the environment. GitHub's REST API returns
+  `protection_rules` from `GET /repos/{owner}/{repo}/environments/{name}`
+  (inferred from the API reference, not called this session), so a check was
+  possible and none existed.
+- **Local validation:** six dispatches succeeded. A gate that does not exist
+  looks the same as one the operator approves promptly.
+- **Review:** the claim is about a settings page a reviewer would have to leave
+  the diff to read.
+- **Harness:** the CLAUDE.md rule instructed the session to report a pending
+  approval, so the documentation produced the false statement.
 
 ## Countermeasure
 
-- **Code:** commit `1595450`, amended by `4e485c8` — the false claims in
-  the workflow header, the IAM role description and CLAUDE.md are replaced
-  by what is actually true, and the post-merge reminder is re-keyed to an
-  artefact instead of a queue.
-- **Operator action:** none. Dispatch the workflow when the snapshot moved.
+Commit `1595450`, amended by `4e485c8`, replaced the false claims in the
+workflow header, the IAM role description and CLAUDE.md with what is true.
+`1595450` first made the claim true by adding a typed `confirm` input. The
+operator refused it: *"I do not want to have to confirm anything. This repo is
+my lab."* A confirmation cannot stop the one person allowed to deploy, so
+`4e485c8` removed it. The committed template snapshot,
+`infra/shared/test/unit/__snapshots__/borso-shared.template.json`, shows every
+change to the stack in the pull request that causes it, so the operator reads
+what a deploy will do before dispatching.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 2 — the reminder that produced the false
-statement is re-keyed to a file in the diff, so it can no longer fire on
-a belief)
+**Type:** none for the class (level 5). One path is held structurally: the
+post-merge reminder.
 
-**Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
-commits [`1595450`](https://github.com/hugoleborso/borso.fr/commit/1595450),
-[`4e485c8`](https://github.com/hugoleborso/borso.fr/commit/4e485c8)
+**Reference:** commits `1595450` and `4e485c8` ([PR #45](https://github.com/hugoleborso/borso.fr/pull/45))
+deleted the false claims. The post-merge reminder is no longer recalled from
+prose. Since `458e886c4` (#411) the merge check computes it from the diff at
+every merge, in `scripts/hooks/checks/merge-deploys-prod.core.ts`:
 
-### The eradication I first shipped, and why it was wrong
-
-`1595450` made the claim true by adding the gate: a typed `confirm` input
-required for `action=deploy`, with `action` defaulting to `diff`. The
-operator rejected it immediately and correctly:
-
-> I do not want to have to confirm anything. This repo is my lab. Any
-> friction makes it less likely to be so.
-
-The reasoning is worth keeping, because the mistake is easy to repeat.
-The defect was **a false description**, and I fixed it by making the
-description true — which is the lazy direction, and it silently changed
-the product to match the documentation rather than the reverse. In a
-one-person repository where the only dispatcher is the owner, a
-confirmation prompt has no threat model: it cannot stop the one person
-authorised to do the thing. It buys the *appearance* of safety at a cost
-paid on every deploy, forever.
-
-`4e485c8` removes it. `action` defaults to `deploy` again.
-
-**What replaces it — and it is strictly better than the prompt:** the
-committed template snapshot from
-[`a-comment-that-shipped-to-the-cloudfront-edge.md`](./a-comment-that-shipped-to-the-cloudfront-edge.md).
-Every change to `borso-shared` appears in the pull request that causes it,
-so the operator reads what a deploy will do *before* dispatching. A
-confirmation asks "are you sure?" of somebody who has no way to know; a
-snapshot tells them what they are confirming. **Prefer making the
-consequence visible over making the action harder** — now a `Don't` in
-CLAUDE.md.
-
-### The eradication that actually addresses the root cause
-
-Two changes, neither of which costs anything at deploy time:
-
-1. **The reminder is keyed to an artefact.** CLAUDE.md's post-merge rule
-   used to say *"approve the pending shared-infra deploy when the diff
-   touched `infra/shared/**`"* — a queue that does not exist, gated on a
-   condition that is neither necessary nor sufficient. It now says: the
-   committed snapshot moved, therefore dispatch. A file in the diff cannot
-   be misremembered.
-2. **A new `Don't`:** *don't describe a protection this repository cannot
-   observe as if it were enforced.* Environment reviewer rules, branch
-   protection and repository secrets are invisible to every test, lint and
-   type here, so claims about them age without resistance. State what the
-   repo can check; say "unverified from here" otherwise.
-
-```diff
--  1. *Approve the pending shared-infra deploy* … **only when the merged diff
--     touched `infra/shared/**`** (that deploy waits in the `prod-shared`
--     queue until approved).
-+  1. *Ask the operator to dispatch `shared-deploy`* — **whenever the merged diff
-+     changes the synthesized `borso-shared` template**, which is not the same
-+     thing as touching `infra/shared/**`. … **Check, don't infer:** the committed
-+     snapshot changes in the diff exactly when a deploy is owed. Nothing is ever
-+     queued or awaiting approval — say "dispatch it", never "approve it".
+```ts
+  return changed.some((path) => path.includes(SHARED_SNAPSHOT))
+    ? 'YES — the committed borso-shared template moved, so a shared-deploy dispatch is owed after this merge'
+    : 'no — the committed borso-shared template is unchanged in this diff';
 ```
 
-**Sibling defects swept:** the `prod` environment carried the same false
-claim and was corrected in PR #40 — this entry exists because that sweep
-stopped at the first instance. `SharedInfraDeployRole`'s IAM description
-carried it too, corrected in `2c7e27a` and again in `4e485c8`.
+A session can no longer report a queued approval from a belief: the line it
+relays names a file in the diff and says "dispatch". The written `Don't` this
+entry once added, *"say 'unverified from here' otherwise"*, is gone:
+`grep -rn "unverified from here" CLAUDE.md docs/standards` finds nothing.
 
-## See also
+**The gap that holds:** nothing reads a claim about an environment's
+protection rules. `docs/aws-setup.md` still says the end state has *"prod and
+prod-shared environments configured with you as required reviewer"* (line 5)
+and lists *"`prod-shared` — required reviewer: yourself"* (line 180). That is
+the same claim, live today.
 
-- [`the-nightly-sweeper-never-had-permission-to-run.md`](./the-nightly-sweeper-never-had-permission-to-run.md)
-  — found in the same sweep. Same shape, opposite direction: there a
-  safety net was described and could never run; here a gate was described
-  and never existed.
-- [`lectured-without-reading-the-code.md`](./lectured-without-reading-the-code.md)
-  — the failure I committed on top of the config's: asserting a queued run
-  from prose, without opening `shared-deploy.yml`.
-- [`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md)
-  — the rule whose wording produced the false report.
-- [`a-gate-that-reported-success-while-measuring-nothing.md`](./a-gate-that-reported-success-while-measuring-nothing.md)
+**Proposed:** first subtract. Rewrite those two lines of `docs/aws-setup.md`
+to say neither environment carries a reviewer, as `deploy.yml` and
+`shared-deploy.yml` already do. The coordinator of this sweep adds that rewrite
+in the pull request that carries this entry. Then add a CI step that, for each
+`environment:` named in `.github/workflows/*.yml`, calls
+`GET /repos/{owner}/{repo}/environments/{name}` and fails when its
+`protection_rules` disagree with the comment on that line, such as
+`deploy.yml:111`'s *"no reviewer gate"*. A claim about a reviewer would then be
+checked against GitHub on every pull request, so it could not age into a lie.
+
+**Why level 5:** the merge hook removes the false report on one path, the
+post-merge reminder. It detects nothing about the class, a claim about a
+protection the repository cannot see. No check reads an environment's rules, so
+the level is what holds for the class.
+
+**Proof it can fail:** none today, since no check reads the environments.
+
+**Similar instances:** `grep -rln -i "required reviewer\|requires a reviewer" CLAUDE.md docs .github`,
+outside `docs/dantotsus`, `docs/knowledge` and `docs/features`, finds only
+`docs/aws-setup.md`, with the two lines above. `grep -n "environment:" .github/workflows/*.yml`
+lists `prod` and `prod-shared`. Each workflow comment on them now says no
+reviewer gate. [`the-nightly-sweeper-never-had-permission-to-run`](./the-nightly-sweeper-never-had-permission-to-run.md)
+is the mirror case from the same sweep: a safety net described that could
+never run.

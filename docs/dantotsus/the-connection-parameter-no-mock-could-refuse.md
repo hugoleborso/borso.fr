@@ -5,7 +5,7 @@ detected-at: operator-deploy
 severity: medium
 related-pr: '#218'
 fix-commits: [self]
-eradication-level: 2
+eradication-level: 4
 eradication-paths: [scripts/database/smoke-agent-reader.ts, scripts/smoke-agent-reader.sh, .github/workflows/deploy.yml]
 time-to-detect: same day
 tags: [dsql, cdk, gates, infra, agents]
@@ -16,105 +16,93 @@ recurs: [the-blocklist-that-was-empty-because-nothing-was-deployed]
 
 # The connection parameter no mock could refuse
 
-## Symptom
+## User impact
 
-The first production read through the reader Lambda ADR-2026-10-28T2126 introduced, on the
-very first invocation after the deploy:
+The operator's first production read through the reader Lambda that
+ADR-2026-10-28T2126 introduced failed on its very first invocation after the
+deploy.
 
-```
-[db:read] pragma schema prod through pragma-prod-agent-reader, read only
-[db:read] the reader function failed with PostgresError: setting configuration
-          parameter "default_transaction_read_only" not supported
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `scripts/db-read.sh` on pragma prod | `the reader function failed with PostgresError: setting configuration parameter "default_transaction_read_only" not supported` | the rows of the `SELECT` |
 
-Everything around it worked. The IAM allow let the invoke through, the function
-ran, it signed a DSQL token, it reached the cluster. Aurora DSQL then refused
-one Postgres startup parameter and closed the connection.
+Measured from the session log of 2026-10-29. The IAM allow let the invoke
+through, the function signed a DSQL token and reached the cluster. Aurora DSQL
+then refused one Postgres startup parameter and closed the connection. Every
+agent read of production was blocked until the fix deployed.
 
-The parameter was mine, added as defence in depth beside `search_path`: a
-session-level read-only flag so the connection would be read-only even if
-`BEGIN READ ONLY` were ever dropped. `search_path` is proven — all four
-application API clients send it to DSQL in production.
-`default_transaction_read_only` had never been sent to a cluster by anything in
-this repository.
+## Causal chain
 
-## Root-cause chain
+- The reader failed on its first invocation.
+  - DSQL rejected `default_transaction_read_only` as a startup parameter and
+    closed the connection rather than ignoring it.
+    - The reader passed it beside `search_path`:
+      ```ts
+      connection: { search_path: schema, default_transaction_read_only: true },  // ← the faulty line
+      ```
+      - `60b6f4d5e` (#218) added it as defence in depth, so the connection
+        would stay read-only even if `BEGIN READ ONLY` were ever dropped. Its
+        writer took the parameter from Postgres. The repository's record of
+        DSQL's divergences, `docs/knowledge/dsql-postgres-compat-gaps.md`,
+        named `search_path` as the one connection setting and nothing about
+        refused startup parameters, then and now (`git show 60b6f4d5e^:…`
+        and `grep`, this session). The fact that held the right answer was in
+        no document the agent had. (Material)
 
-1. **Why did the read fail?**
-   DSQL rejects `default_transaction_read_only` as a startup parameter and
-   closes the connection rather than ignoring it.
-2. **Why did it reach production?**
-   Nothing between writing it and invoking it talks to DSQL.
-3. **Why did the unit tests pass?**
-   The handler's suite mocks `postgres`, following the `test-handler-mocked-sdk`
-   blueprint. The double is a function that takes an options object and records
-   it. **A mock accepts every option, including ones no real server would.** One
-   test even asserts the parameter is passed — it asserted the defect.
-4. **Why did the coverage and mutation gates pass?**
-   Both measure whether a line runs and whether changing it breaks a test. That
-   line ran, and changing it broke the test that asserted it. 100% on each,
-   measuring the wrong thing perfectly.
-5. **Why was the parameter added at all without proof?**
-   It reads as free: one more key in an object literal, obviously correct
-   Postgres. The repository already had the answer in four files — the app
-   clients send `search_path` and nothing else — and nothing made that list
-   visible at the moment of writing.
+## Root cause of occurrence
 
-**Root cause:** thought a connection parameter is part of the code, actually it
-is part of a contract with a server no test in this repository talks to, and
-every gate here runs on the side of the boundary that cannot refuse it.
+*Thought DSQL accepts the Postgres startup parameters, actually it refuses
+`default_transaction_read_only` and closes the connection.* (Material)
+
+Under the agentic 4M rule this is Material: the agent wrote correct Postgres,
+and nothing in its context said DSQL differs at the connection layer. Had it
+known the "actually" part, it would have kept `BEGIN READ ONLY`, which the
+handler already emitted, and sent `search_path` alone, as the six application
+clients do.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** `connection` is typed
-  `Partial<ConnectionParameters>` and that interface ends in
-  `[name: string]: string | number | boolean`, so every spelling type-checks.
-  TypeScript was never going to help.
-- **Unit tests:** the double records options; it has no notion of a server that
-  refuses one. This is inherent to mocking an SDK, not a gap in the suite.
-- **Coverage, mutation:** both at 100% on the file, and neither asks whether a
-  value is acceptable to anything outside the process.
-- **Preview deploys:** previews provision no reader, so the function is created
-  only in prod. Nothing exercised it before the production deploy.
-- **Code review:** the line reads as a correct Postgres setting, because it is
-  one. The defect is that the server is not Postgres.
+- **Typing:** `connection` is typed `Partial<ConnectionParameters>`, and that
+  interface ends in `[name: string]: string | number | boolean`, so every
+  spelling type-checks.
+- **Unit tests:** the handler's suite mocks `postgres`, following the
+  `test-handler-mocked-sdk` blueprint. A double records options and has no
+  notion of a server that refuses one. One test asserted the parameter was
+  passed, so it asserted the defect.
+- **Coverage, mutation:** both at 100% on the file. The line ran, and changing
+  it broke the test that asserted it. Neither asks whether a value is
+  acceptable to anything outside the process.
+- **Preview deploys:** previews provision no reader. Every app stack passes
+  `readerPrincipalArns` only when `isProduction`, so the function first exists
+  in production.
+- **Review:** the line reads as a correct Postgres setting, because it is one.
 
 ## Countermeasure
 
-- **Code:** the parameter is gone. `BEGIN READ ONLY` inside the handler, which
-  `buildReadOnlySessionCommands` already emitted, is the read-only guarantee,
-  and the statement assessment refuses writes before any connection opens.
-- **Operator action:** none.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — the deploy proves the function before it is
-anybody's to find)
-
-**Reference:** PR #219 · commit `self`
-
-**The actual fix:** one key removed.
+`2fff0fd67` removed the parameter. `BEGIN READ ONLY` inside the handler, which
+`buildReadOnlySessionCommands` already emitted, is the read-only guarantee, and
+the statement assessment refuses writes before any connection opens.
 
 ```diff
 -    connection: { search_path: schema, default_transaction_read_only: true },
 +    connection: { search_path: schema },
 ```
 
-**What stops the next one:** `scripts/smoke-agent-reader.sh`, run by
-`deploy.yml` on each application right after its production deploy. It invokes
-that application's reader with `SELECT 1` and fails the job unless one row
-comes back. An application whose stack publishes no `AgentReaderFunctionName`
-exits 0, which is the normal state for the three ADR-2026-10-28T2126 does not cover.
+## Eradication
 
-This is the **only thing in this repository that reaches a real DSQL cluster
-outside a migration**, which is why it is the eradication and a lint-shaped
-check is not. One `SELECT 1` exercises the startup parameters, the read-only
-transaction, the role mapping and every environment variable the construct set
-— the whole class of *only a cluster can refuse this*, not the one instance
-that happened to bite.
+**Type:** detection (level 4). A smoke invocation after the production deploy.
 
-Verified against production while the defect was still deployed, which is
-better evidence than a planted one:
+**Reference:** commit [`2fff0fd67`](https://github.com/hugoleborso/borso.fr/commit/2fff0fd67) (#219)
+
+`scripts/smoke-agent-reader.sh`, run by `.github/workflows/deploy.yml` right
+after each application's production deploy, invokes that application's reader
+with `SELECT 1` and fails the job unless one row comes back. An application
+whose stack publishes no `AgentReaderFunctionName` exits 0. One `SELECT 1`
+exercises the startup parameters, the read-only transaction, the role mapping
+and every environment variable the construct set, so it covers the class *only
+a cluster can refuse this*, not the one key.
+
+Verified against production while the defect was still deployed:
 
 ```
 [smoke-agent-reader] pragma: the reader function threw.
@@ -123,45 +111,39 @@ better evidence than a planted one:
 exit=1
 ```
 
-and the no-reader path, on the same run:
+The judgement half is proven by two vitest suites, not by a canary. When this
+entry shipped, `gate-canaries` planted a response with no rows and asserted the
+refusal. `c54e32da7` (#224) deleted `scripts/standards/gate-canaries.ts` and
+its registry the same day, and only a comment in `scripts/smoke-agent-reader.sh`
+still mentions the canary. What holds today, read this session:
+`scripts/database/smoke-verdict.core.test.ts` covers `decideSmokeVerdict` on
+one row, on no rows, on more rows, on a refusal and on a failure passed through
+verbatim, and `scripts/database/reader-invocation.utils.test.ts` covers how a
+thrown `PostgresError` payload is read. The entry point that wires them,
+`scripts/database/smoke-agent-reader.ts` with `--payload <file>` and its exit
+codes, has no test. The invocation itself cannot be proven without a real
+cluster.
 
-```
-[smoke-agent-reader] borso-fr prod publishes no AgentReaderFunctionName; nothing to smoke.
-exit=0
-```
+This is level 4, not 2. It runs after the production deploy, so it catches the
+next refused parameter in production, before an agent finds it, but after
+users of the reader could.
 
-**A first attempt was the wrong shape, and is worth recording.** It was a
-pre-commit script that grepped every `connection: { … }` and refused a key
-outside an allow-list. It worked, and it was the wrong trade: the guarded
-surface is five identical lines whose four application copies changed in 15
-commits ever, while the check would have run on every commit touching a `.ts`
-under `apps/` or `infra/` — 100 of the last 100. A permanent toll on every
-commit, with a hand-rolled parser nobody would maintain, against an accident
-that happens once. It also answered only the connection-parameter instance,
-while the smoke answers the class. Removed before merge.
+**Proposed:** first, a vitest suite beside
+`scripts/database/smoke-agent-reader.ts` that runs it with `--payload`
+fixtures for no rows, a thrown `PostgresError` and one row, and asserts exit 1,
+1 and 0. A broken wiring between the captured response and the job's exit
+status could then not pass silently. The stale canary comment in
+`scripts/smoke-agent-reader.sh` goes in the same change.
 
-**The gate has its own gate.** `gate-canaries` refused the first version of this
-eradication, correctly: a mechanism nothing can prove wrong is a mechanism
-nobody should trust. A deploy-time smoke cannot be canaried by planting a
-defect in production, so the judgement moved out of the AWS calls — the script
-takes `--payload <file>` and judges a response captured earlier, which is also
-how a failed invocation is replayed. The canary plants a response with no rows
-and asserts the refusal. Weaker than the others, because it proves the
-judgement rather than the invocation, and that is the strongest thing provable
-without breaking production.
+**Proposed:** then move the proof before merge. Provision the reader on previews,
+by dropping the `isProduction` condition around `readerPrincipalArns` in each
+app stack, and run `scripts/smoke-agent-reader.sh` in the preview deploy. A
+parameter, a transaction syntax or a role mapping the cluster refuses would
+then fail the pull request's preview, on a real cluster, before merge. What a
+preview reader may read is an access decision for the operator, since
+ADR-2026-10-28T2126 scoped the reader to production.
 
-That rewrite removed a duplication the first version introduced: the shell
-script judged the response in `jq`, a second writing of `readInvocationOutcome`
-in `scripts/database/reader-invocation.utils.ts`. ADR-2026-10-28T2126's own
-single-implementation criterion, broken within a day of being written.
-
-**Sibling defects swept:** the four application clients send `search_path` and
-nothing else; the migration runner sets its schema with a `SET search_path`
-statement rather than a startup parameter. No other site passes `connection`.
-
-## See also
-
-- [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) — the DDL and type divergences; this is the connection-layer one.
-- [`the-blocklist-that-was-empty-because-nothing-was-deployed.md`](./the-blocklist-that-was-empty-because-nothing-was-deployed.md) — the same shape: a gate ran and returned the safe-looking answer.
-- [`docs/adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
-- [`docs/quality/weak-points.md`](../quality/weak-points.md) — `gate-measures-nothing`.
+**Similar instances:** `git grep -n 'connection: {' -- apps infra scripts`
+finds six application clients and the reader, all sending `search_path` alone.
+The migration runner sets its schema with a `SET search_path` statement rather
+than a startup parameter.

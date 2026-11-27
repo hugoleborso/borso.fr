@@ -29,20 +29,36 @@ checking a screen, did not start on `main`.
 
 - `pnpm dev` died at start.
   - `dev-db.sh` expanded `$6` under `set -u`.
-    - The admin PIN's scrypt hash, which holds `$`, sat inside a JavaScript program inside a double-quoted bash string, so every `$` needed escaping for two parsers and one escape was wrong.
-      - last-loop-lepin seeded its dev database from bash, while pragma and banana-rush run `test/dev-database.setup.ts` with `tsx`.
+    - The admin PIN's scrypt hash, which holds `$`, sat inside a JavaScript
+      program inside a double-quoted bash string, so every `$` needed escaping
+      for two parsers. Commit `1951beb06` wrote it, and #290 (`2d59df1c1`) changed
+      `\\$` to `\$`:
+
+      ```bash
+      await sql.unsafe(\"INSERT INTO admin_credentials (id, scrypt_hash) VALUES (1, 'scrypt\\$6ccc66eb…\\$6019…') ON CONFLICT (id) DO NOTHING\");
+      # ← inside double quotes, \\$ is a backslash then $6, which bash expands
+      ```
+
+      - last-loop-lepin seeded its dev database from bash, while pragma and
+        banana-rush ran `test/dev-database.setup.ts` with `tsx` after
+        `pnpm-dev-served-an-empty-database`.
+        - Commit `40af66de9` made `scripts/check-app-registration.sh` accept a
+          `dev:db` that names "test/dev-database.setup.ts or dev-db.sh, the two
+          shapes that apply migrations". The bash shape stayed legal, so
+          nothing moved the third app (Machine).
 - Once it ran, it seeded the wrong database.
-  - It called `local-postgres.sh start last-loop-lepin` without `dev`, which the other two apps' `dev:db` lines pass.
+  - It called `local-postgres.sh start last-loop-lepin` without `dev`, which
+    the other two apps' `dev:db` lines pass. The shared shape had that fix and
+    the bash copy did not.
 
 ## Root cause of occurrence
 
 *Thought each app's dev seed could take its own shape, actually only the
-shared shape gets the fixes.*
+shared shape gets the fixes.* (Machine)
 
-`docs/dantotsus/pnpm-dev-served-an-empty-database.md` gave pragma and
-banana-rush `test/dev-database.setup.ts`, and `check-app-registration.sh`
-accepted `test/dev-database.setup.ts` or `dev-db.sh`, so nothing moved the
-third app onto the shared shape, and its copy got none of the shared fixes.
+The registration gate is the one place that says what a dev seed is. It named
+two shapes, so a fix made to one, such as the `dev` database name, never
+reached the other.
 
 ## Detection failure causes
 
@@ -61,8 +77,8 @@ back as `1|scrypt$6ccc66e` from the dev database (run 2026-11-11).
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). The JavaScript-in-bash seed is
-deleted. The PIN hash is now a query parameter in TypeScript, so no shell
+**Type:** structural impossibility (level 1) for last-loop-lepin. The
+JavaScript-in-bash seed is deleted. The PIN hash is now a query parameter in TypeScript, so no shell
 parses its `$`, and the database name sits in the `dev:db` line beside
 `dev:api`'s, as in the other two apps.
 
@@ -87,4 +103,13 @@ seed that dies at start is still found by the next person who runs it.
 **Proof it can fail:** not applicable, no new check. `pnpm dev:db` seeded the
 dev database on 2026-11-11, as the countermeasure records.
 
-**Similar instances:** `ls apps/*/dev-db.sh` finds none left.
+**Similar instances:** `ls apps/*/dev-db.sh` finds none left. But
+`scripts/check-app-registration.sh:51` still accepts `dev-db\.sh`, so the next
+app can write its seed in bash again. The level above holds for this app only.
+
+**Proposed:** delete `|dev-db\.sh` from that regex. The operator rejected
+tightening the names as a way to catch a broken seed, and it is not proposed
+for that. It removes the second shape the root cause names, at no cost, since
+no app uses it. A seed that dies at start would then be caught by a CI step
+that runs `pnpm dev:db` for a changed app against the Postgres the e2e job
+already starts.

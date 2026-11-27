@@ -15,68 +15,78 @@ recurs: none (the first entry where two readers of one record disagreed on what 
 
 # A deleted file broke the records that named it
 
-## Symptom
+## User impact
 
-On 2026-10-29 `scripts/reports.sh all` failed on `main` (friction log
-`docs/features/pragma/ux-redesign/kaizen.md`, `merge-main`, 08:23):
+The users were the sessions that build the reports and the operator who reads the weak-point map. On 2026-10-29 `scripts/reports.sh all` failed on `main` (friction log `docs/features/pragma/ux-redesign/kaizen.md`, `merge-main`, 08:23). PR #216 then made it pass by rewriting nine dantotsus' zones to files the defects never lived in, such as `scripts/phone.sh` and `.husky/pre-commit`. The map then placed nine past defects in the wrong place.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| `scripts/reports.sh all` after PR #224 | Fails: `zone scripts/argent.sh names no path in the repository`, and eight more | Builds the map, with each defect where it lived |
+| The map after PR #216 | Nine defects drawn on files they never touched | Nine defects drawn on the deleted files that held them |
+
+<details><summary>The failure</summary>
 
 ```text
   the-tap-that-was-a-mouse-press: zone scripts/argent.sh names no path in the repository
   the-wrapper-forgot-the-user-agent-between-calls: zone scripts/browser.sh names no path in the repository
 ```
 
-PR #224 had deleted `scripts/argent.sh`, `scripts/browser.sh` and four gate
-scripts. Nine dantotsus named one of them in `zone:`. PR #216 then rewrote the
-nine zones to files the defects never lived in, such as `scripts/phone.sh` and
-`.husky/pre-commit`, so the weak-point map now placed nine past defects in the
-wrong place.
+</details>
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did `reports.sh` fail?** `weak-points.ts` checked each zone against
-   `git ls-files`, the files present now.
-2. **Why was that wrong?** A zone records where a defect lived. A file that held
-   a defect is often deleted later, by the very fix the entry describes.
-3. **Why did the commit hook not see it?** `check-dantotsu-front-matter.ts`
-   resolved paths against every file the history ever added. Two readers of the
-   same field held two definitions of "a path in the repository", and the
-   commit only ran the lenient one.
-4. **Why did PR #216 rewrite the records instead of the reader?** The error said
-   "point the zone at the path where the defect lived", which the zones already
-   did. The only way to make it pass was to move them.
+- `scripts/reports.sh all` failed, and PR #216 moved nine zones to make it pass.
+  - `weak-points.ts` refused nine zones, because it checked each one against `git ls-files`, the files present now.
 
-**Root cause:** thought a record's path must exist now, actually it must have
-existed once.
+    ```ts
+    // scripts/quality/weak-points.ts, from 702c1b2d7 until this commit
+    const problems = selectUnresolvedReferences(dots, readTrackedPaths(), engaged); // ❌ "exists now"
+    ```
+
+    - PR #224 (`c54e32da7`, 2026-10-29) deleted `scripts/argent.sh`, `scripts/browser.sh` and four gate scripts. Nine dantotsus named one of them in `zone:`.
+      - The same PR taught the commit-time reader that a deleted path still counts. It added a private `readPathsEverTracked` inside `check-dantotsu-front-matter.ts`, and left `readTrackedPaths` in the shared `dantotsu-corpus.ts`, which `weak-points.ts` still called.
+
+        ```diff
+        +function readPathsEverTracked(): ReadonlySet<string> {
+        +  const paths = new Set(readTrackedPaths());
+        +  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=A', 'HEAD']).split(
+        ```
+
+        - The shared module offered one definition of "a path in the repository", and the fix for the new one was written beside its only caller in view. Two readers of one field now held two definitions. (Machine)
+  - The strict reader's message said "point the zone at the path where the defect lived", which the zones already did. Moving them was the only way to make it pass.
+
+## Root cause of occurrence
+
+*Thought the front-matter check was the one reader of a dantotsu's paths, actually `weak-points.ts` read the same `zone:` field through the shared `readTrackedPaths`, which still meant "exists now".*
+
+Machine. The writer of `c54e32da7` knew the right definition, since it wrote it. The codebase kept the path set in a shared module, and the new definition went into one caller instead of that module. `weak-points.ts` runs only in `pages.yml` after a merge and in `scripts/reports.sh`, so nothing the writer ran showed the second reader failing.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the commit hook ran the lenient reader, so the
-  strict one only ran when somebody built the reports.
-- **CI (tests / build):** `pages.yml` runs `weak-points.ts` after a merge, not on
-  a pull request, so #224 merged green.
-- **Code review:** the deletion and the nine records were in different folders.
+- **Commit hook:** it ran only the lenient reader, so the strict one ran when somebody built the reports.
+- **CI:** `pages.yml` runs `weak-points.ts` after a merge, not on a pull request, so PR #224 merged green.
+- **Code review:** the deletion, the private reader and the nine records were in different folders.
 
 ## Countermeasure
 
-- **Code:** this commit restores the nine original zones.
+This commit restores the nine original zones, `EnergyBar.tsx` and the three gates PR #224 deleted among them.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1)
 
-**Reference:** the kaizen pull request for #216 and #231 · this commit
+**Reference:** the commit adding this file, in the kaizen pull request for PRs #216 and #231.
 
-**The actual fix:** `readPathsEverTracked` moved into `dantotsu-corpus.ts`, and
-both readers call it, so there is one definition and a deletion cannot break a
-record.
+`readPathsEverTracked` moved into `dantotsu-corpus.ts`, and both readers call it. `readTrackedPaths` is gone, so there is one definition and a deletion cannot break a record.
 
 ```diff
 -  const problems = selectUnresolvedReferences(dots, readTrackedPaths(), engaged);
 +  const problems = selectUnresolvedReferences(dots, readPathsEverTracked(), engaged);
 ```
 
-Proved once on this branch. With the restored zones, the reader from `main`
-refused:
+Both `scripts/quality/weak-points.ts` and `scripts/quality/check-dantotsu-front-matter.ts` import it today, and no `readTrackedPaths` remains (measured with `grep -rn readTrackedPaths scripts/quality`).
+
+**Proof it can fail:** with the restored zones, the reader from `main` refused, and the shared reader wrote the map with 227 dots and exited 0 (recorded when this shipped). A zone that was never in the repository still fails both readers.
 
 ```text
   the-tap-that-was-a-mouse-press: zone scripts/argent.sh names no path in the repository
@@ -84,13 +94,4 @@ refused:
 exit 1
 ```
 
-The shared reader wrote the map with 227 dots and exited 0. A zone that was
-never in the repository still fails both readers.
-
-**Sibling defects swept:** the nine zones PR #216 rewrote are restored, including
-`EnergyBar.tsx` and the three gates #224 deleted.
-
-## See also
-
-- [`the-link-checker-skipped-the-folder-it-was-trusted-for.md`](./the-link-checker-skipped-the-folder-it-was-trusted-for.md)
-- [`the-runner-called-a-script-main-had-deleted.md`](./the-runner-called-a-script-main-had-deleted.md), the same deletion seen from a script
+**Similar instances:** `grep -rn "ls-files" scripts/quality/*.ts | grep -v test` finds `dantotsu-corpus.ts`, the shared reader, and `working-conditions.ts`, which lists feature folders that exist now on purpose. [`the-link-checker-skipped-the-folder-it-was-trusted-for.md`](./the-link-checker-skipped-the-folder-it-was-trusted-for.md) and [`the-runner-called-a-script-main-had-deleted.md`](./the-runner-called-a-script-main-had-deleted.md) are the same deletion seen from other readers.

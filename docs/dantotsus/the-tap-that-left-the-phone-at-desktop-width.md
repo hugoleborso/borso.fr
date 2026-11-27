@@ -5,11 +5,11 @@ detected-at: qa
 severity: medium
 related-pr: '#327'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 4
 eradication-paths: [scripts/phone.sh]
 time-to-detect: minutes
 tags: [visual-validation, agent-browser, touch, tooling, agents]
-zone: scripts/phone.sh
+zone: scripts/browser/cdp-session.ts
 recurs: none (the-touch-probe-that-left-with-the-page lost the record of a tap; here the tap was recorded and the session lost its viewport)
 ---
 
@@ -36,31 +36,60 @@ while the PNG header read `(375, 812)` (measured).
 
 - A width read after a tap is the desktop width.
   - The page lays out at the 1280 px browser window again.
-    - The phone metrics that `touch-tap.ts` set with
-      `Emulation.setDeviceMetricsOverride` lived on its own CDP connection,
-      and Chromium drops them when that connection closes at the end of the
-      script. That also drops the 375 px override agent-browser had set,
-      because both overrides act on the same page (inferred from the
-      measured width, which is 375 before the script closes and 1280 after).
-      - `phone.sh touch` returned without putting the viewport back.
+    - `touch-tap.ts` closed its CDP connection at the end of the script, and
+      Chromium dropped the device metrics that connection had set. The drop
+      also took the 375 px override agent-browser had set, because the page
+      keeps one set of metrics (inferred from the measured width, 375 before
+      the script closes and 1280 after).
+      - `touch-tap.ts` had set its own phone metrics through `emulatePhone`,
+        now in `scripts/browser/cdp-session.ts`, the faulty line:
+
+        ```ts
+        await send('Emulation.setDeviceMetricsOverride', {
+          width: viewport.width,
+          height: viewport.height,
+          deviceScaleFactor: PHONE_SCALE_FACTOR,
+          mobile: true,
+        });
+        ```
+
+        - Commit `a83f0a600` (#200) wrote that call for `scripts/argent.sh`,
+          whose Chromium ran in a 500 px window, so the script had to make
+          the phone viewport itself.
+          - Commit `c54e32da7` (#224) deleted argent and ran `touch-tap.ts`
+            inside the agent-browser session, which `phone.sh start` already
+            sizes to 375 px. It kept the script's own override.
+            - The same commit rewrote
+              `docs/knowledge/real-touch-gestures-over-cdp.md`, which said
+              "after the client disconnected, `navigator.maxTouchPoints` was
+              back to 0 ... while the 375 px viewport stayed". A second
+              override looked harmless (Material).
 - The screenshot still read 375 because agent-browser crops to the viewport
   it believes it set, so the two witnesses disagreed.
 
 ## Root cause of occurrence
 
-*Thought the tap script's emulation was a private layer over the session's,
-actually the page keeps one set of device metrics and closing the tap's
-connection clears it for everyone.*
+*Thought the tap script's device metrics were a private layer that outlived
+its connection harmlessly, as the knowledge entry measured, actually the page
+keeps one set of device metrics and closing the connection that set the last
+override clears it for every client.* (Material)
+
+The agent that wrote `c54e32da7` had the knowledge entry in its context, since
+the commit edits it. The entry held the wrong fact, measured on argent's
+separate Chromium on 2026-10-25, so the right answer was absent from the
+writer's input.
 
 Measured: after the tap, `agent-browser --session phone set viewport 375 812`
 brought `innerWidth` back to `375`.
 
 ## Detection failure causes
 
-- `touch-tap.ts` reads the page's width before it closes the connection, so
-  its own report said 375 (measured, in its `page` field).
-- Nothing read the width after the script had exited, which is the moment the
-  next command sees.
+- **Local:** `touch-tap.ts` reads the page's width before it closes the
+  connection, so its own report said 375 (measured, in its `page` field). It
+  reads at the one moment the override still holds.
+- **Local:** the knowledge entry's claim was measured on argent, where the
+  browser was not shared with a later client, so nothing re-measured it when
+  the script moved into a shared session.
 
 ## Countermeasure
 
@@ -69,12 +98,16 @@ friction.
 
 ## Eradication
 
-**Level 1, structural impossibility.**
+**Type:** detection (level 4)
 
-`scripts/phone.sh touch` now runs `restore_viewport` on exit, whether the tap
+**Reference:** the commit adding this file, `731066132`.
+
+`scripts/phone.sh touch` runs `restore_viewport` on exit, whether the tap
 passed or failed. It re-applies the phone viewport through agent-browser,
-reads `innerWidth`, and exits 1 if the page is not 375 px wide. No caller can
-see the session wider after a touch than before it.
+reads `innerWidth`, and exits 1 if the page is not 375 px wide. It repairs the
+session and checks the repair. It does not stop a driver from clearing the
+metrics. Commit `ae67892f9` (#379) had to add the same trap to `drag` and
+`swipe`, which shows the cause is still there for each new subcommand.
 
 ```diff
 +restore_viewport() {
@@ -97,18 +130,29 @@ After the change, measured on the same page:
 - `touch '#b'` exits 0 and `innerWidth` reads 375.
 - `touch '#nope'` exits 1 and `innerWidth` still reads 375.
 
-**The check can fail.** On a scratch copy with the `set viewport` line
-removed, `touch '#b'` refused with exit 1:
+**Proof it can fail:** on a scratch copy with the `set viewport` line removed,
+`touch '#b'` refused with exit 1:
 
 ```
 [phone] after the tap the page is 1280 px wide, not 375; measurements would be wrong
 ```
 
-**Sibling defects swept.**
-`grep -rn setDeviceMetricsOverride scripts apps .claude` finds the other
-callers in `apps/pragma/scripts/task-metrics/*.setup.ts`. Each drives a
-browser it launched itself and is not shared with an agent-browser session,
-so none hands a dropped override to a later command.
+**Proposed:** remove the second owner of the viewport. Drop
+`Emulation.setDeviceMetricsOverride` from `emulatePhone` in
+`scripts/browser/cdp-session.ts`, keep only `setTouchEmulationEnabled`, and
+let `phone.sh start`'s `set viewport` be the one source of the phone size.
+No driver could then clear the session's metrics, and both
+`trap restore_viewport` lines in `scripts/phone.sh` could go. Whether
+agent-browser's viewport alone gives `mobile: true` layout is unknown and
+must be measured first. The knowledge entry's "the 375 px viewport stayed"
+also needs correcting, since it teaches the belief this entry disproves.
+
+**Similar instances:** `grep -rn setDeviceMetricsOverride scripts apps .claude`
+finds `scripts/browser/cdp-session.ts`, used by `touch-tap.ts` and
+`touch-drag.ts`, and the callers in `apps/pragma/scripts/task-metrics/*.setup.ts`.
+Each of the pragma ones drives a browser it launched itself, not shared with
+an agent-browser session, so none hands a dropped override to a later
+command.
 
 **Related.**
 

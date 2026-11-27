@@ -15,48 +15,61 @@ recurs: none (paths-filter-base-head1-on-push is a CI checkout depth; this is th
 
 # A shallow clone reads every old fix as missing
 
-## Symptom
+## User impact
 
-An agent auditing the dantotsu record for PR #162 found fix commits that did
-not resolve on main, entry after entry, and started counting them as broken
-records. The session clone held 322 commits, all from the last ten days, so
-every fix commit older than that was absent. After `git fetch --unshallow`
-most of them resolved.
+An agent auditing the dantotsu record for PR #162 read
+`check-dantotsu-front-matter.ts`'s output and counted fix commits that did
+not resolve on main as broken records, entry after entry.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| The check in a hosted session | a list of fix commits "missing from main" | the records that are really wrong, or a refusal naming the shallow clone |
 
-1. **Why did old commits not resolve?** They were not in the clone.
-2. **Why?** The hosted session's clone was shallow, and nothing at session
-   start deepened it.
-3. **Why did the check not say so?** `check-dantotsu-front-matter.ts`
-   listed every unresolved commit first and mentioned shallow clones only in
-   its closing paragraph, after the reader had already started reading the
-   list as findings.
+The session clone held 322 commits, all from the last ten days. After
+`git fetch --unshallow` most of the listed commits resolved (measured in that
+session).
 
-**Root cause:** the check's author thought an unresolved commit means a
-wrong record, but in a shallow clone it means a missing history, and the two
-look identical in the output.
+## Causal chain
+
+- The agent counted valid records as broken.
+  - Branch 1: the commits did not resolve.
+    - They were not in the clone.
+      - The hosted session started from a shallow clone of 322 commits.
+        **Machine:** the container clones shallow, and SessionStart ran on
+        that clone as it was.
+  - Branch 2: the agent read the list as findings.
+    - The check printed every unresolved commit first, and the shallow case
+      last, in its closing paragraph:
+
+      ```ts
+      'A shallow clone resolves no old commit: run `git fetch --unshallow` first.\n',   // ← the faulty line
+      ```
+
+      - Commit 702c1b2d7 (PR #162) wrote the check. Its author knew a shallow
+        clone breaks the resolution, and wrote that knowledge as a sentence
+        after the list instead of testing for it.
+
+## Root cause of occurrence
+
+*Thought a closing note about shallow clones would keep a reader from
+misreading the list, actually the reader acts on the list it reads first, and
+a shallow clone is one git command away from being refused.* **Man:** the
+author had the fact in hand, since the same line states it, and chose a
+written reminder where a check was possible.
+
+`git rev-parse --is-shallow-repository` answers `true` or `false`, which is
+what the countermeasure now calls.
 
 ## Detection failure causes
 
 - **CI:** the CI job checks out with `fetch-depth: 0`, so CI never shows it.
-- **Functional validation locally:** a local clone is full; only hosted
-  sessions start shallow.
+- **Local validation:** a local clone is full. Only hosted sessions start
+  shallow, so the author's own runs never printed the misleading list.
 
 ## Countermeasure
 
-- The check refuses a shallow clone before resolving anything, with one line
-  naming the cause and the command.
-- SessionStart (`scripts/install-repo-deps.sh`) fetches the full history when
-  the clone is shallow, so a session does not start in one.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — devx check)
-
-**Reference:** [PR #173](https://github.com/hugoleborso/borso.fr/pull/173) · commit `self` (this entry ships with it)
-
-**The actual fix:**
+The check refuses a shallow clone before it resolves anything, with one line
+naming the cause and the command:
 
 ```diff
 +function refuseShallowClone(): void {
@@ -69,6 +82,16 @@ look identical in the output.
 +}
 ```
 
+## Eradication
+
+**Type:** DevX check (level 2)
+
+**Reference:** the commit adding this file, in PR #173 (e51cfdd5a on main).
+
+Two changes hold today. The check refuses a shallow clone
+(`check-dantotsu-front-matter.ts:18`). SessionStart removes the cause, so a
+session does not start shallow (`scripts/install-repo-deps.sh:78`):
+
 ```diff
 +if [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = true ]; then
 +  log "this clone is shallow; fetching the full history so old commits resolve"
@@ -77,10 +100,10 @@ look identical in the output.
 +fi
 ```
 
-**Sibling defects swept:** `scripts/quality/weak-points.ts` builds its map
-from the front matter alone and resolves no commit, so it is unaffected. The
-check above is the only tool that resolves fix commits.
+**Proof it can fail:** not pasted when the entry was written. The refusal
+runs before any resolution, on the one condition
+`--is-shallow-repository` reports.
 
-## See also
-
-- [`paths-filter-base-head1-on-push.md`](./paths-filter-base-head1-on-push.md), the CI form of a missing history.
+**Similar instances:** `scripts/quality/weak-points.ts` builds its map from
+the front matter alone and resolves no commit, so it is unaffected. The check
+above is the only tool that resolves fix commits.

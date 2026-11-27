@@ -5,136 +5,124 @@ detected-at: local
 severity: medium
 related-pr: '#100'
 fix-commits: [948204d50a, 4154b33a23]
-eradication-level: 2
-eradication-paths: [scripts/check-numbered-sequences.sh]
+eradication-level: 4
+eradication-paths: [scripts/check-numbered-sequences.sh, .github/workflows/ci.yml]
 time-to-detect: hours
 tags: [dsql, pragma, gates, pre-commit, ci, git]
 zone: apps/pragma/api/src/database/migrations
+recurs: none (first occurrence of a shared sequence number guessed from a local tree)
 ---
 
 # Two branches took the same migration number, and git had no objection
 
-## Symptom
+## User impact
 
-Merging `main` into the tasks-and-compos branch produced a migrations
-folder with two files numbered `0006`:
+No pragma user saw a failure. The defect is an order nobody chose between two
+schema changes, which decides the outcome the day both touch one table.
+Merging `main` into the tasks-and-compos branch on 2026-09-16 produced
+(listed in that session):
 
-```
-0005_song_release_id.sql
-0006_deezer_identifiers.sql        ← from main, PR #101
-0006_tasks_and_song_origin.sql     ← from this branch, PR #100
-0007_spotify_track_id.sql
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `apps/pragma/api/src/database/migrations` after the merge | `0006_deezer_identifiers.sql` (main, PR #101) and `0006_tasks_and_song_origin.sql` (this branch, PR #100) | one file per number |
+| What git said | a clean merge, no conflict | a signal that both branches claimed `0006` |
 
-Git reported no conflict. Both files were new, neither touched the
-other, and the merge was clean. The collision was visible only to
-somebody who listed the directory and read the numbers.
+## Causal chain
 
-## Root-cause chain
+- The migrations folder held two files numbered `0006`, and git merged them cleanly.
+  - Git conflicts only when both sides change the same path. Two new files with different names are two additions.
+    - PR #100 added `0006_tasks_and_song_origin.sql` while PR #101 added `0006_deezer_identifiers.sql`, both open at once.
+      - Each branch read its own tree, saw `0005_song_release_id.sql` as the highest, and named its file with the next number. ← the faulty line is the file name
+        - The repository's convention makes the number the order: the runner applies files in filename order and records each applied name. The number is a claim on a sequence every open branch shares, yet it is picked from one branch's tree (Machine).
+  - The runner then applied `0006_deezer_…` before `0006_tasks_…`, because `d` sorts before `t`. Both are additive, so this order happened to be harmless.
 
-1. **Why were there two `0006` files?**
-   Both branches were open at the same time. Each read the tree, saw
-   `0005` as the highest number, and took the next one.
-2. **Why did neither branch see the other's number?**
-   Because neither branch contained the other's commit. A migration
-   number is a claim on a shared sequence, but it is expressed as a
-   filename in a working tree that knows only its own side.
-3. **Why did git not flag it?**
-   Git detects a conflict when two sides change the same bytes. Two
-   files with different names are two additions, and additions merge.
-   The sequence lives in the names, and nothing reads the names.
-4. **Why is a shared number harmful?**
-   The runner applies migrations in filename order and records each
-   applied *name* in a table. Two files sharing a number both run, and
-   their relative order is decided by whatever character follows the
-   number. Here `0006_deezer_…` ran before `0006_tasks_…` because `d`
-   sorts before `t`. Nothing chose that; it is a coin toss that landed
-   the right way up.
-5. **Why is a coin toss dangerous when both migrations are additive?**
-   It is not, for these two. It is dangerous for the next pair, where
-   one adds a column the other backfills, and the order that was never
-   chosen is suddenly the order that matters.
+## Root cause of occurrence
 
-**Root cause:** thought the migration number was a property of the file
-being added, actually it is a claim on a sequence shared with every
-other open branch, and the only thing that could notice a double claim
-is something that reads the whole directory at once.
+*Thought the migration number was a property of the file being added, actually
+it is a claim on a sequence shared with every other open branch, and only
+something that reads the whole merged folder can see a double claim.*
+**Machine:** the numbering convention asks the writer to allocate a shared id
+from a local view. No tool allocates it.
+
+`scripts/check-numbered-sequences.sh:9-12`, read this session: "Two branches
+open at once each read the tree, each see the highest number, each take the
+next one. The files have different names, so git merges them cleanly and the
+duplicate reaches main without a conflict."
 
 ## Detection failure causes
 
-- **Typing:** a filename carries no type.
-- **Linter / static analysis:** ESLint does not lint SQL, and no rule
-  looks at sibling filenames.
-- **Functional validation locally:** the back-e2e suite drops and
-  re-applies every migration in filename order, so it exercised the
-  arbitrary order and passed under it. It would have passed under the
-  other order too — which is exactly why passing proved nothing.
-- **CI:** `check-migration-sql-dsql-compat.sh` reads each file's
-  statements and never compares two files.
-- **Code review:** the collision is two lines apart in a directory
-  listing that nobody has a reason to open during a feature review.
-- **Staging monitoring:** the preview database applied both, in the
-  lucky order, and reported success.
+- **Typing and linter:** a filename carries no type, and no rule looked at sibling filenames.
+- **Local validation:** the back-e2e suite drops and re-applies every migration in filename order. It passed under the arbitrary order, and would have passed under the other one.
+- **CI:** `check-migration-sql-dsql-compat.sh` reads each file's statements and never compares two files.
+- **Review:** each branch's diff held one new file with a plausible number.
+- **Staging:** the preview database applied both, in the lucky order, and reported success.
 
 ## Countermeasure
 
-The second migration was renumbered to `0008_tasks_and_song_origin.sql`
-in the merge commit, which is free while a migration has only ever run
-against a preview database: the runner keys its applied table on the
-filename, so the renamed file runs once more under its new name, and
-every statement in it is `IF NOT EXISTS` or `ADD COLUMN IF NOT EXISTS`.
-It stops being free the moment the number reaches prod's applied table
-under the other file's name.
+The branch's migration was renamed `0008_tasks_and_song_origin.sql` in merge
+commit `13f1a84`, whose message says why. The rename is free while a
+migration has only run on a preview database. The runner keys its applied
+table on the filename, so the renamed file runs once more, and every
+statement in it is `IF NOT EXISTS`.
 
-- **Code:** commit `13f1a84` — renamed the file and said why in the
-  merge message, so the next reader knows the rename was deliberate.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** detection (level 4)
 
-**Type:** DevX check (level 2 — devx check)
+**Reference:** PR #102 shipped `scripts/check-migration-numbering.sh`.
+Commit `4154b33a23` merged it with its sibling into
+`scripts/check-numbered-sequences.sh`
+(see [the-loop-shipped-the-same-gate-twice.md](./the-loop-shipped-the-same-gate-twice.md)).
+It runs in `.husky/pre-commit` (line 372, on a staged migration or ADR) and
+in `ci.yml` (line 86).
 
-> **Superseded mechanism.** The script this entry shipped was merged into
-> [`scripts/check-numbered-sequences.sh`](../../scripts/check-numbered-sequences.sh),
-> which covers every folder where the leading number is the order rather than
-> migrations alone. Two gates existed for this one subject for a day; see
-> [`the-loop-shipped-the-same-gate-twice.md`](./the-loop-shipped-the-same-gate-twice.md).
-
-**Reference:** PR #102 · commit on this branch adding
-`scripts/check-migration-numbering.sh`
-
-**The actual fix:**
-
-```diff
-+for migrations_dir in apps/*/api/src/database/migrations; do
-+  duplicates="$(
-+    find "$migrations_dir" -maxdepth 1 -name '*.sql' -printf '%f\n' |
-+      sed -n 's/^\([0-9][0-9]*\)_.*/\1/p' |
-+      sort | uniq -d
-+  )"
-+  for number in $duplicates; do
-+    failed=1
-+    echo "[check-migration-numbering] $migrations_dir: ${number} is taken twice:" >&2
+```bash
+duplicates="$(find "$migrations_dir" -maxdepth 1 -name '*.sql' -printf '%f\n' |
+  sed -n 's/^\([0-9][0-9]*\)_.*/\1/p' | sort | uniq -d)"
 ```
 
-Wired into `.husky/pre-commit` beside the DSQL-compat scan, on the same
-condition (a staged migration), and into `ci.yml` so a push made with
-hooks skipped still gets caught.
+**Proof it can fail:** on a scratch copy of today's migrations folder, a
+planted `0006_bar_owner.sql` beside `0006_deezer_identifiers.sql` exits 1:
 
-The commit hook alone would not have caught this one: neither branch
-committed a second `0006`, the merge did. CI is the half that matters
-here, because the merge commit is the first tree that holds both files
-— which is also the first moment the collision is fixable for free.
+```
+[check-numbered-sequences] apps/pragma/api/src/database/migrations: 0006 is claimed by more than one migration:
+  0006_bar_owner.sql
+  0006_deezer_identifiers.sql
+```
 
-**Sibling defects swept:** `apps/last-loop-lepin` has its own migrations
-folder and the check walks every `apps/*/api/src/database/migrations`,
-so it is covered without naming it.
+**Why level 4 and not 2:** the gate sees the duplicate only in a tree that
+holds both files.
 
-## See also
+- Neither branch commits a duplicate, so pre-commit never fires on either.
+- A clean `git merge` runs no `pre-commit` hook, and `.husky/` has no
+  `pre-merge-commit` (listed this session).
+- CI on `pull_request` tests the branch merged with `main` as it was when the
+  run started (`ci.yml:17-20`). Two pull requests that each passed CI before
+  the other merged both reach `main`.
+- `main` has no protection rule and no ruleset (`gh api
+  repos/hugoleborso/borso.fr/branches/main/protection` answers 404 and
+  `.../rules/branches/main` answers `[]`, both run this session).
+- So the class is caught before the merge only when someone merges `main`
+  into the branch first, and otherwise by `main`'s own CI run, after the
+  merge.
 
-- [`dsql-alter-table-only-add-column.md`](./dsql-alter-table-only-add-column.md)
-  — the other thing about a migration that only a script can see, and the
-  reason every statement here is re-runnable, which is what made the
-  rename free.
-- [`a-rebase-cannot-see-what-a-merge-decided.md`](../knowledge/a-rebase-cannot-see-what-a-merge-decided.md)
-  — the neighbouring case where the information a merge holds is lost
-  by replaying commits one at a time.
+**Proposed:** check the merged tree before the merge. The merge hook already
+finds the `main` commits no CI run tested beside the branch, and lets the
+merge through when no file changed on both sides
+(`scripts/hooks/checks/merge-deploys-prod.core.ts:209-217`). That is exactly
+the migration case. On that path, build the merged tree with `git merge-tree
+--write-tree origin/main <head>` (git 2.43 here) and run the sequence check on
+its file list (`git ls-tree -r --name-only <tree>`), refusing on a duplicate.
+That makes a duplicate number impossible to merge from a session (level 2).
+The level-1 fix needs repository settings: require branches to be up to date
+before merging, or a merge queue. That is an operator-backlog row, not yet
+written. A timestamp id, as the ADRs moved to, would not help: the order still
+matters, and a timestamp only swaps the alphabet's arbitrary order for an
+arbitrary time order.
+
+**Similar instances:** the gate walks every `apps/*/api/src/database/migrations`
+and `docs/adr/`, so `apps/last-loop-lepin` is covered. The same collision
+recurred the same day in
+[two-branches-that-both-claimed-migration-0006.md](./two-branches-that-both-claimed-migration-0006.md),
+and for an ADR number in
+[an-adr-number-goes-to-whoever-writes-it-first.md](./an-adr-number-goes-to-whoever-writes-it-first.md).

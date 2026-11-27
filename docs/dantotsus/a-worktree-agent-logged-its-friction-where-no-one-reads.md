@@ -32,9 +32,9 @@ The main session found the agents' lines by chance, in each worktree's own `KAIZ
 
 ## Root cause of occurrence
 
-*Thought one repository has one friction log, actually every git worktree has its own top level.*
+*Thought one repository has one friction log, actually every git worktree has its own top level.* (Machine)
 
-`harness-path.sh` says the root is "the git top level of the current directory". In a linked worktree that is the worktree, not the checkout the session archives from.
+`harness-path.sh` said the root is "the git top level of the current directory". In a linked worktree that is the worktree, not the checkout the session archives from. The tool the agents were told to call held the wrong path, so no brief could have steered them right.
 
 ## Detection failure causes
 
@@ -49,7 +49,7 @@ The two worktrees' lines were copied into the archive by hand on PR #263.
 
 **Type:** structural impossibility (level 1)
 
-**Reference:** the lessons-from-pr-263 kaizen pull request · commit `[self]`
+**Reference:** the commit adding this file. `harness-path.sh` was later deleted with the plugin, and the rule holds today in `scripts/kaizen.sh`, whose `KAIZEN_FILE` reads `"$(main_checkout)/KAIZEN.md"`.
 
 ```diff
 -KAIZEN_FILE="$REPO_ROOT/$("$HARNESS_PATH" kaizenFile)"
@@ -66,4 +66,4 @@ Every worktree shares one common git directory, and its parent is the main check
 
 **Proof it can fail:** from a scratch worktree, the old script wrote `old probe` into the worktree's own `KAIZEN.md` (1 line there, 0 in the main log). The new script raised the main log from 2 lines to 3 and created no file in the worktree.
 
-**Similar instances:** `grep -rn 'harness-path.sh" --root' plugins/borso-harness/scripts` finds no other script that writes a shared file under the root.
+**Similar instances:** `git grep -ln "show-toplevel\|REPO_ROOT=" -- scripts` lists the scripts that resolve a root. They read files or start servers inside the checkout they run from, which is correct in a worktree. `kaizen.sh` is the only one that appends to a file shared across checkouts.

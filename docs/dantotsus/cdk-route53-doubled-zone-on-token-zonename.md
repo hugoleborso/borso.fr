@@ -5,26 +5,25 @@ detected-at: production
 severity: high
 related-pr: '#12'
 fix-commits: [902c4b7215]
-eradication-level: 4
-eradication-paths: [infra/cdk/src/constructs/lambda-api.ts]
+eradication-level: 5
+eradication-paths: [docs/knowledge/cdk-route53-zone-token-pitfall.md]
 time-to-detect: ~30 minutes (preview API hostname resolved but served the wrong content; only DNS inspection caught the doubled suffix)
 tags: [cdk, route53, cloudformation, dns]
 zone: infra/cdk/src/constructs/lambda-api.ts
 ---
 
-# Route 53 record with `.borso.fr.borso.fr` after CDK appended the zone twice
+# The preview API answered from the wrong CloudFront, because its DNS name ended in .borso.fr twice
 
-## Symptom
+## User impact
 
-After the API custom-domain wiring landed, hitting
-`https://last-loop-lepin-pr-12-api.preview.borso.fr/api/...` did NOT
-reach API Gateway. Response headers showed `server: CloudFront`,
-`x-cache: FunctionGeneratedResponse from cloudfront` — the request was
-being served by the *shared previews* CloudFront distribution (the
-wildcard `*.preview.borso.fr` ALIAS), not by the API Gateway custom
-domain. CloudWatch's API log group stayed empty.
+The last-loop-lepin preview of PR #12 could not reach its API.
 
-Inspecting Route 53:
+| | Seen | Expected |
+| --- | --- | --- |
+| `https://last-loop-lepin-pr-12-api.preview.borso.fr/api/...` | `server: CloudFront`, `x-cache: FunctionGeneratedResponse from cloudfront`, from the shared previews distribution. The API's log group stayed empty. | The request reaches API Gateway and the Lambda. |
+
+<details>
+<summary>Route 53 listing</summary>
 
 ```
 $ aws route53 list-resource-record-sets --hosted-zone-id Z…
@@ -35,125 +34,60 @@ $ aws route53 list-resource-record-sets --hosted-zone-id Z…
 ]
 ```
 
-The record name had `.borso.fr` twice. Resolver never matched the
-intended hostname; the wildcard caught the lookup.
+</details>
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the record include `.borso.fr` twice?**
-   `ARecord` constructed with
-   `recordName: "last-loop-lepin-pr-12-api.preview.borso.fr"` plus a
-   `HostedZone` whose `zoneName` was a CFN token — CDK appended the
-   zoneName to recordName.
-2. **Why did CDK append?**
-   `aws-route53` calls `determineFullyQualifiedDomainName(name, zone)`
-   on every record. The function strips the trailing dot if present;
-   otherwise it checks whether `name` ends with `.${zoneName}` — if yes,
-   leave it alone; if no, append `.${zoneName}`.
-3. **Why did the suffix check fail?**
-   `zoneName` was a CFN intrinsic resolved at deploy-time (we read
-   `/borso/shared/hosted-zone-name` via
-   `StringParameter.valueForStringParameter`). At synth time `zoneName`
-   reads as `${Token[TOKEN.123]}`. The literal string
-   `"last-loop-lepin-pr-12-api.preview.borso.fr"` does not end with
-   `".${Token[TOKEN.123]}"` so CDK appended the unresolved token. At
-   deploy time CFN resolved the token → final name became
-   `last-loop-lepin-pr-12-api.preview.borso.fr.borso.fr`.
-4. **Why did we use a token zoneName?**
-   The shared infra puts the zone name in SSM so per-app stacks don't
-   re-declare it. Convention applied to every Route 53 caller in the
-   repo, including `StaticSite` — but `StaticSite` only got away with
-   it for existing prod records because those were created before this
-   pattern existed.
+- The API hostname was answered by the shared previews distribution.
+  - No record matched `last-loop-lepin-pr-12-api.preview.borso.fr`, so the wildcard `*.preview.borso.fr` caught the lookup.
+    - The A and AAAA records were named `last-loop-lepin-pr-12-api.preview.borso.fr.borso.fr.`.
+      - CDK's `determineFullyQualifiedDomainName` appended the zone name, because `recordName` neither ended with a dot nor with `.${zoneName}`.
+        - `zoneName` came from SSM through `StringParameter.valueForStringParameter`, so at synth it read `${Token[TOKEN.123]}`. The literal host could not end with that token, and the template asked CloudFormation to join host and zone.
+          - `LambdaApi` passed the bare host:
 
-**Root cause:** *I thought CDK's "endsWith zone" auto-FQDN logic
-worked on the resolved value at deploy time. Actually it runs at
-synth time on the literal token, fails the suffix check, and emits a
-template that asks CFN to concatenate token + already-FQDN name.* If
-I had known that, every `recordName` would have been a trailing-dot
-FQDN from day one.
+            ```ts
+            new ARecord(this, 'DomainAliasA', {
+              zone,
+              recordName: props.customDomain.hostname, // ← no trailing dot
+              target: aliasTarget,
+            });
+            ```
+
+            - Commit `a1ab4047f` (2026-05-13, an agent) wrote it while wiring a custom domain for preview APIs. `StaticSite` passed a bare name the same way at that time, so the codebase held no example with the dot.
+              - The shared stack publishes the zone name in SSM, and every construct reads it as a token. Each construct then builds its own record names by hand (Machine).
+
+## Root cause of occurrence
+
+*Thought CDK compares the record name with the resolved zone name at deploy time, actually it compares at synth time, against an unresolved token, and appends the zone whenever the name lacks a trailing dot.* (Man)
+
+The installed `aws-route53/lib/record-set.d.ts` says of `recordName`:
+
+> This should be relative to the zone root name. … You can also specify the fully qualified domain name which terminates with a ".". For example, "acme.example.com.".
 
 ## Detection failure causes
 
-- **Typing:** `recordName: string` accepts both bare-host and FQDN
-  forms; nothing in the type system catches the auto-append.
-- **Linter / static analysis:** repo has no rule about Route 53
-  record names.
-- **Functional validation locally:** the CFN template inspected at
-  synth time shows the Fn::Join intrinsic — `Name: { "Fn::Join": ["",
-  [ "last-loop-lepin-pr-12-api.preview.borso.fr.", { "Ref": "Ssm…" },
-  "." ]] }` — but I didn't read the synthesised template; the structure
-  is opaque without running it through CFN.
-- **CI (tests / build):** infra unit tests assert on `DomainName:
-  'last-loop-lepin-pr-12-api.preview.borso.fr'` at the APIGW level,
-  not on the Route 53 record's final assembled name. The token form is
-  the same regardless.
-- **Code review:** same session shipped both sides, didn't read the
-  synth template.
+- **Typing:** `recordName: string` takes a relative name and a full one alike.
+- **Linter:** no rule reads Route 53 record names.
+- **Local synth:** the template showed `Fn::Join` of the host, the SSM reference and a dot. Nobody read it.
+- **CI:** the tests asserted the API Gateway `DomainName` and the record count, not the record's `Name`.
+- **Review:** the same session wrote and reviewed the change.
 
 ## Countermeasure
 
-`infra/cdk/src/constructs/lambda-api.ts` — every `recordName` is now
-constructed as `\`${hostname}.\`` (trailing dot = FQDN sentinel) so
-`determineFullyQualifiedDomainName` short-circuits regardless of how
-`zoneName` resolves at synth.
+Commit [`902c4b7`](https://github.com/hugoleborso/borso.fr/commit/902c4b7215) appends a trailing dot to the API host in `infra/cdk/src/constructs/lambda-api.ts`, so CDK leaves the name alone. The record now resolves to the right host. Commit `3df59de` did the same in `StaticSite`, whose bare name had already doubled prod records (`r53-arecord-relative-recordname-doubles-zone.md`, which recurs this entry).
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff + assertion (level 4 — detection)
+**Type:** knowledge (level 5)
 
-The structural impossibility ladder (level 1) would require either a
-custom `route53Record` helper in `@borso/infra` that always appends the
-trailing dot, or a Biome plugin that rejects `recordName: <expr>` calls
-without a trailing-`.`. Both are heavier than the surface area justifies
-right now — we have two callers (`StaticSite`, `LambdaApi`). The
-detection layer below makes the misconfiguration visible during synth:
+**Reference:** `docs/knowledge/cdk-route53-zone-token-pitfall.md`, triggered on `lambda-api.ts`, `static-site.ts`, `photos-cdn.ts`, `shared-stack.ts`, and on output matching `\.borso\.fr\.borso\.fr`.
 
-1. The deployed `lambda-api.ts` writes the FQDN-with-trailing-dot
-   literal so the synthesised template's `Name` field is a bare string
-   (`"last-loop-lepin-pr-12-api.preview.borso.fr."`) — verifiable via
-   `cdk synth` output.
-2. A targeted unit test in `previewable-app.test.ts` asserts the API's
-   Route 53 records resolve to the un-doubled FQDN.
+The fix lives in three copies of `FULLY_QUALIFIED_DOMAIN_SUFFIX = '.'`, in `static-site.ts`, `lambda-api.ts` and `photos-cdn.ts`. `static-site.test.ts` and `photos-cdn.test.ts` assert the record `Name` with its trailing dot. Nothing asserts it for `LambdaApi`: `lambda-api.test.ts` and `previewable-app.test.ts` only count two `AWS::Route53::RecordSet`. The unit test this entry cited in `previewable-app.test.ts` never checked the name. A new construct that writes `new ARecord` with a bare host would repeat the defect.
 
-**Reference:** [PR #12](https://github.com/hugoleborso/borso.fr/pull/12) ·
-commit [`902c4b7`](https://github.com/hugoleborso/borso.fr/commit/902c4b7)
+The entry once rejected a shared helper because there were two callers. There are three now.
 
-**The actual fix:**
+**Proposed:** add one internal function in `infra/cdk/src/internal/` that creates the A and AAAA alias records for a host and appends the trailing dot itself, used by the three constructs. Refuse a direct `ARecord` or `AaaaRecord` outside it with a rule under `eslint-rules/`, enabled in `.oxlintrc.json`. A record name could then not reach CDK without its dot.
 
-```diff
--      new ARecord(this, 'DomainAliasA', {
--        zone,
--        recordName: props.customDomain.hostname,
--        target: aliasTarget,
--      });
--      new AaaaRecord(this, 'DomainAliasAAAA', {
--        zone,
--        recordName: props.customDomain.hostname,
--        target: aliasTarget,
--      });
-+      // Trailing dot tags the recordName as an FQDN so CDK's
-+      // `determineFullyQualifiedDomainName` short-circuits and does NOT
-+      // append the zone name. Without it, when `zoneName` is a CFN token
-+      // (from SSM, as it is here), CDK's suffix check fails and the
-+      // record ends up as `<hostname>.${zoneName}` → `last-loop-lepin-
-+      // pr-12-api.preview.borso.fr.borso.fr` in Route 53, which loses the
-+      // ALIAS race against the wildcard `*.preview.borso.fr` record on
-+      // the shared previews distribution.
-+      const fqdn = `${props.customDomain.hostname}.`;
-+      new ARecord(this, 'DomainAliasA', { zone, recordName: fqdn, target: aliasTarget });
-+      new AaaaRecord(this, 'DomainAliasAAAA', { zone, recordName: fqdn, target: aliasTarget });
-```
+**Proof it can fail:** none for `LambdaApi`. No check exists to plant against.
 
-**Sibling defects swept:** `StaticSite` has the same pattern with
-`recordName: props.domainName`. Prod records work today because they
-were created before SSM-tokenized zones; a re-deploy would re-emit with
-the doubled suffix. Captured as follow-up in
-[`docs/knowledge/cdk-route53-zone-token-pitfall.md`](../knowledge/cdk-route53-zone-token-pitfall.md)
-so the next StaticSite touch reuses the trailing-dot pattern.
-
-## See also
-
-- [`docs/knowledge/cdk-route53-zone-token-pitfall.md`](../knowledge/cdk-route53-zone-token-pitfall.md)
-- [`docs/knowledge/preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md)
-  — context for why the API record exists at all.
+**Similar instances:** `grep -rn "new ARecord\|new AaaaRecord" infra apps --include=*.ts` finds the three constructs and `infra/shared/lib/shared-stack.ts`.

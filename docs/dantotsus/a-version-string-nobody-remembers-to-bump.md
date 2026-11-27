@@ -37,6 +37,8 @@ The failing case was probed by the validator (measured, finding A12 of
 ## Root cause of occurrence
 
 *Thought a knowledge entry printed on the API's core files would remind whoever changes a response, actually a reminder still needs someone to act on it, and the response changed through a domain type the reminder did not name.*
+**Method:** PR #363's sweep chose a level 5 reminder for a step a build can
+do.
 
 `docs/knowledge/a-pragma-response-shape-change-needs-the-cache-buster.md` said
 "An added field is `undefined` in restored data until the refetch, so bump for

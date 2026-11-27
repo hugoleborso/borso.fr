@@ -3,114 +3,123 @@ date: 2026-10-15
 introduced-at: implementation
 detected-at: review
 severity: low
-related-pr: '#118'
-fix-commits: [self]
+related-pr: '#159'
+fix-commits: [4b883dfe4, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/knowledge-triggers.sh, plugins/borso-harness/scripts/check-hook-decisions.sh, scripts/check-numbered-sequences.sh]
+eradication-paths: [scripts/hooks/checks/knowledge-triggers.core.ts, scripts/hooks/checks/knowledge-triggers.core.test.ts, scripts/check-numbered-sequences.sh]
 time-to-detect: days
 tags: [hooks, harness, dsql, pragma]
-zone: .claude/hooks
+zone: scripts/hooks/checks/knowledge-triggers.core.ts
 recurs: [lectured-without-reading-the-code]
 ---
 
 # The file renamed where its entry could not see
 
-## Symptom
+## User impact
 
 Merging main into PR #118 gave pragma two migrations numbered `0015`. Main's
 had run in production, so #118's moved to `0016`. Before renaming it, the
-session decided the file was not safe to run twice and rewrote both statements
-with `IF NOT EXISTS`, explaining in the PR body that the preview "would have
-failed" otherwise. It logged the same claim to the friction log.
+session decided the file was not safe to run twice. It rewrote both
+statements with `IF NOT EXISTS` and wrote in the PR body that the preview
+"would have failed" otherwise. It logged the same claim to the friction log.
 
 The claim was false. The migration runner rewrites every `CREATE TABLE`,
 `CREATE INDEX` and `ADD COLUMN` to `IF NOT EXISTS` before running it
 (`makeIdempotent` in
-`infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts`), so the
-renamed file would have run as a no-op unchanged. The sequence check's own
-message had said so: *"every statement is re-runnable, so the file runs again
-as a no-op under its new name"*. The session doubted the message, because it
-named no mechanism, and checked the SQL file instead of the runner.
+`infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts`). The
+renamed file would have run unchanged as a no-op.
 
-The edit was harmless. The reasoning was not: a wrong belief about the runner
-went into a pull request description and into the archived friction log.
+| | Seen | Expected |
+| --- | --- | --- |
+| PR #118 body | "the preview would have failed" without the edit | The file renamed with no edit, and no claim about the runner |
 
-## Root-cause chain
+The edit was harmless. A wrong belief about the runner went into a pull
+request description and the archived friction log.
 
-1. **Why did the session believe the file could not run twice?** It read the
-   SQL file and saw no `IF NOT EXISTS`. It did not read the runner that
-   executes the file.
-2. **Why did it not know about the runner's rewrite?** The knowledge entry
-   that records it, `dsql-postgres-compat-gaps.md` §4, has a path trigger on
-   `apps/*/api/src/database/migrations/*.sql`, and that trigger never fired.
-3. **Why did the trigger not fire?** The hook matched `paths` only against
-   the target of a Write or an Edit. The session renamed the file with
-   `git mv` and edited it with `sed -i`. Neither is a Write or an Edit, and
-   the hook matched a Bash command only against `commands` triggers.
-4. **Why was the gate's message not enough?** It asserted "every statement is
-   re-runnable" without saying why. Read against a SQL file with no
-   `IF NOT EXISTS` in it, the claim looked wrong.
+## Causal chain
 
-**Root cause:** the session thought a path trigger fires whenever the file is
-touched, but it fired only for the two file tools. A Bash edit, which agents
-here use constantly, went past every path-keyed entry in the corpus.
+- The PR body claimed the renamed migration could not run twice.
+  - The session read the SQL file, saw no `IF NOT EXISTS`, and did not read
+    the runner.
+    - The knowledge entry that records the rewrite,
+      `dsql-postgres-compat-gaps.md` §4, has a path trigger on
+      `apps/*/api/src/database/migrations/*.sql`. It never fired.
+      - The session renamed the file with `git mv` and edited it with
+        `sed -i`. The hook matched `paths` triggers only against the target
+        of a Write or an Edit, and matched a Bash command only against
+        `commands` triggers.
+        - Commit `8a5828581` (PR #159) wrote that rule. Its ADR-0030 states it:
+          "The triggers are path globs matched against a Write or Edit
+          target, regular expressions matched against a Bash command". The
+          same commit put `Bash` in the hook's matcher, so every Bash command
+          already reached it. The writer read a Bash command as text to match,
+          never as a call that touches files. **Man** (inferred: the writing
+          session's transcript is not in the repository).
+    - The session also had the sequence check's message, "every statement is
+      re-runnable, so the file runs again as a no-op under its new name",
+      and doubted it.
+      - The message named no mechanism, and the file on disk looked
+        non-idempotent, because the runner adds `IF NOT EXISTS` at run time
+        and the SQL never shows it. **Machine.**
+
+## Root cause of occurrence
+
+*Thought an agent touches a file only through Write and Edit, actually
+agents here rename with `git mv` and edit with `sed -i` constantly.* Man, for
+the author of the hook's path rule (inferred): Bash calls already reached the
+hook, and the rule treated them as text.
 
 ## Detection failure causes
 
 - **Hook contract:** `check-hook-decisions.sh` covered a Write, an Edit and a
   Bash command, but no Bash command that names a path.
-- **Review:** the PR body's claim was plausible and nobody had reason to read
+- **Review:** the PR body's claim was plausible, and nobody had reason to read
   the runner.
 
 ## Countermeasure
 
-The knowledge hook now matches every path a Bash command names against the
-`paths` triggers, and the sequence check's message names the rewrite that
-makes renumbering safe.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — devx check)
-
-**Reference:** [PR #181](https://github.com/hugoleborso/borso.fr/pull/181) · commit [self]
-
-**The actual fix:**
-
-```diff
-+paths_named_by() {
-+  printf '%s' "$1" | tr -s " \t;|&<>()=" '\n' | jq -R . | jq -s . |
-+    jq -r --slurpfile lookup "$LOOKUP" '
-+      . as $tokens
-+      | $lookup[0].entries[]
-+      | select(any(.paths[]?; . as $pattern | any($tokens[]; test($pattern))))
-+      | .path
-+    ' 2>/dev/null
-+}
-```
-
-The tokens come from the command with heredocs and quoted strings removed,
-the same text `commands` triggers match against, so a commit message or a
-`kaizen.sh` line that only mentions a path stays silent. Three contract cases
-hold it: `git mv` and `sed -i` on a migration print the DSQL entry, and a
-quoted mention prints nothing. Against the previous hook, both `inform` cases
-fail.
+The knowledge hook matches every path a Bash command names against the
+`paths` triggers. The sequence check's message names the rewrite that makes
+renumbering safe:
 
 ```diff
 -  echo "  every statement is re-runnable, so the file runs again as a no-op under its new" >&2
--  echo "  name. ..." >&2
 +  echo "  the runner rewrites CREATE TABLE, CREATE INDEX and ADD COLUMN to IF NOT EXISTS" >&2
 +  echo "  before running them (makeIdempotent in" >&2
-+  echo "  infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts), so the file" >&2
-+  echo "  runs again as a no-op under its new name, and the SQL needs no edit." >&2
 ```
 
-**Sibling defects swept:** every path trigger in `docs/knowledge/` benefits
-from the same change; none needed editing.
+## Eradication
 
-## See also
+**Type:** DevX check (level 2)
 
-- [lectured-without-reading-the-code](./lectured-without-reading-the-code.md):
-  the same shape, a claim about code made without reading it.
-- [two-branches-took-the-same-migration-number](./two-branches-took-the-same-migration-number.md):
-  the collision that led here.
-- [`dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §4.
+**Reference:** commit [`4b883dfe4`](https://github.com/hugoleborso/borso.fr/commit/4b883dfe4) (PR #181)
+added Bash path matching to the shell hook. Commit
+[`458e886c4`](https://github.com/hugoleborso/borso.fr/commit/458e886c4) deleted
+`.claude/hooks/knowledge-triggers.sh` and ported it to
+`scripts/hooks/checks/knowledge-triggers.core.ts`. Commit `c54e32da7` deleted
+`plugins/borso-harness/scripts/check-hook-decisions.sh`. The contract cases now
+live in `scripts/hooks/checks/knowledge-triggers.core.test.ts`.
+
+The port keeps the rule. A Bash command is split into tokens, with quoted
+strings and heredocs removed, and each token is matched against `paths`:
+
+```ts
+it('matches a path a command names, because git mv rewrites a file with no Write', () => {
+  expect(contextOf(bash('git mv apps/a/INVARIANTS.md apps/a/B.md'))).toContain('invariants.md');
+});
+```
+
+Tokens catch only the paths a command names. A script, a `find -exec` or a
+tool that writes files it never names on the command line still passes.
+
+**Proposed:** match `paths` triggers on `PostToolUse(Bash)` against the files
+the call changed, read from `git status --porcelain` before and after. That
+covers every way a file is touched, named or not, and would let the token
+splitting be deleted.
+
+**Proof it can fail:** the shell hook before `4b883dfe4` fails the `git mv`
+and `sed -i` cases (measured when the fix shipped).
+
+**Similar instances:** every path trigger in `docs/knowledge/` gains from the
+same change. None needed editing. `grep -rl "paths:" docs/knowledge/` lists
+them.

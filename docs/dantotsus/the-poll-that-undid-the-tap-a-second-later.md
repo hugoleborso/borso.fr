@@ -5,8 +5,8 @@ detected-at: ci
 severity: medium
 related-pr: '#89'
 fix-commits: [a36b358d27]
-eradication-level: 1
-eradication-paths: [apps/pragma/site/src/lib/queries/audience.utils.ts]
+eradication-level: 4
+eradication-paths: [apps/pragma/site/src/lib/queries/audience.utils.ts, apps/pragma/site/src/lib/queries/audience.utils.test.ts]
 time-to-detect: hours
 tags: [pragma, react, tanstack-query, dsql, optimistic-updates, ci, flake]
 zone: apps/pragma/site/src/lib/queries/audience.queries.ts
@@ -17,143 +17,135 @@ blueprints: [query-optimistic-mutation]
 
 # The poll that undid the tap a second later
 
-## Symptom
+## User impact
 
 On the audience vote page, tapping a song a second time is how a visitor
-retracts their vote. The row's `aria-pressed` went back to `false` on the tap
-and then, about a second later, returned to `true` on its own.
+retracts their vote.
 
-From the visitor's side the application refused their tap. Nothing errored,
-nothing logged, the vote was in fact deleted on the server — the screen simply
-went back to showing it.
+| | Seen | Expected |
+| --- | --- | --- |
+| Second tap on a voted song, while a round is open | `aria-pressed` goes to `false`, then about a second later back to `true` on its own | The row stays unvoted |
 
-It failed a `VotePage` test on this machine roughly once in thirty runs. I saw
-it fail once, could not explain it, and called the suite stable. CI failed on
-it the first time the merged branch ran there.
+From the visitor's side the app refused their tap. Nothing errored and
+nothing logged. The vote was deleted on the server, and the screen went back
+to showing it. Every voter in an open round could hit it. It failed a
+`VotePage` test locally about once in thirty runs (the implementer's count), and CI failed
+on it the first time the merged branch ran there.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the row come back?**
-   A `GET` of the vote state landed after the delete and carried the vote,
-   overwriting the optimistic write.
+- The row showed the vote again a second after the tap
+  - A `GET` of the vote state landed after the delete, still carrying the
+    vote, and overwrote the optimistic write
+    - The state query polled every second while a round was open, and the
+      poll kept running through the write ← the faulty line, from
+      `b608cb567`
 
-2. **Why did a read land after the write?**
-   Both vote mutations call `cancelQueries` in `onMutate`. That cancels the
-   reads *in flight at that instant*. The state query also carries a
-   `refetchInterval` of one second while a round is open, and the interval is
-   not a query — cancelling a query does not stop the timer that starts the
-   next one. A fresh read begins a moment after the cancel and is subject to
-   nothing.
+      ```ts
+      refetchInterval: (query) => selectPollInterval(query.state.data?.state.round),
+      ```
 
-3. **Why did the server answer it with the vote still there?**
-   Aurora DSQL's read-after-write consistency is per connection. The read is
-   a second HTTP request, served by a different Lambda on a different
-   connection, and that connection's snapshot predates the delete. The answer
-   is not stale in any way the database considers wrong; it is a correct read
-   of an earlier snapshot.
+      - Both vote mutations call `cancelQueries` in `onMutate`. That cancels
+        the reads in flight at that instant. It does not stop the interval,
+        which starts a fresh read a moment later
+      - Aurora DSQL's read-after-write consistency is per connection. The
+        poll is another request, on another Lambda and connection, whose
+        snapshot can predate the delete
+      - Commit `b608cb567` (2026-08-26) wrote the mutations on the shape of
+        the `query-optimistic-mutation` blueprint, whose description opens
+        with "Cancels the in flight reads for every key it is about to
+        touch" (`songs.queries.ts:169`)
+        - The blueprint was written for a query that refetches on demand,
+          where no read starts during a write. It says nothing of a read a
+          timer starts. Machine
 
-4. **Why did `cancelQueries` look sufficient?**
-   Because it is the documented remedy, and the documentation is written
-   against a query that refetches on demand. It answers *"a read is in flight
-   when I write"*. It has no answer for *"a read starts while I write"*, which
-   is what an interval guarantees will happen eventually.
+## Root cause of occurrence
 
-5. **Why did it hide for so long?**
-   The race needs a poll to be in flight at the moment of the tap. At one
-   second of interval against a test that taps immediately, that is a narrow
-   window on a fast machine and a wide one on a loaded CI runner.
+*Thought `cancelQueries` protects an optimistic write from concurrent reads,
+actually it protects it only from reads already started, and a
+`refetchInterval` is a machine for starting new ones.* **Machine.**
 
-6. **Why did I not chase the one local failure?**
-   I had a green re-run and a large diff, and I treated a single unexplained
-   failure as noise. It was the defect, reporting itself once.
-
-**Root cause:** the author thought *`cancelQueries` protects an optimistic
-write from concurrent reads*, actually *it protects it from reads that have
-already started*, and a `refetchInterval` is a machine for starting new ones.
-
-The [`query-optimistic-mutation`](../../.claude/skills/blueprint/blueprint-index.md)
-blueprint is tagged in this entry's front matter for that reason: its shape
-opens with *"cancels the in flight reads for every key it is about to touch"*
-and says nothing about reads that have not started, because under an on-demand
-query there are none. Copying it is what made the protection look complete.
+The codebase's own example promised the protection. The
+`query-optimistic-mutation` blueprint describes `onMutate` as "cancels the
+in flight reads for every key it is about to touch", and the queries it was
+written beside refetched on demand (inferred), so it had no case where a read starts
+mid-write. Copying it made the protection look complete. This is why the
+entry lists the blueprint in its front matter.
 
 ## Detection failure causes
 
 - **Typing:** every type is correct. The bug is an ordering between two
   correct calls.
-- **Linter:** `borso/no-refetch-of-optimistically-written-query` exists
-  precisely for this family and checks `invalidateQueries` / `refetch` inside
-  a mutation carrying `onMutate`. A `refetchInterval` declared on an unrelated
-  `useQuery` in another file is outside anything a per-file rule can see.
-- **Functional validation locally:** the page worked. A one-in-thirty race
-  does not reproduce by tapping a button a few times by hand.
-- **CI:** caught it — on the merged branch, which is the last cheap moment.
-- **Code review:** the mutation reads correctly on its own (`onMutate`
-  cancels, writes optimistically, rolls back on error) and the query reads
-  correctly on its own (polls while the round is open). The defect exists only
-  in their composition, and they are in two different files.
+- **Linter:** `borso/no-refetch-of-optimistically-written-query` checks
+  `invalidateQueries` and `refetch` inside a mutation that has `onMutate`. A
+  `refetchInterval` on a `useQuery` in another place is outside what it
+  reads.
+- **Local validation:** a one-in-thirty race does not show by tapping a
+  button a few times by hand.
+- **Local test run:** the race needs a poll in flight at the tap, a narrow
+  window on a fast laptop. One local failure was read as noise after a green
+  re-run.
+- **CI:** caught it, on the merged branch, where a loaded runner widens the
+  window.
+- **Code review:** the mutation and the query each read correctly alone. The
+  defect lives only in their composition.
 
 ## Countermeasure
 
-- **Code:** commit `a36b358d` — `selectPollInterval` takes the count of
-  pending writes and returns `false` while any is in flight.
+Commit `a36b358d`: `selectPollInterval` takes the count of pending writes and
+returns `false` while any is in flight.
 
-  ```diff
-  -export function selectPollInterval(round: RoundView | null | undefined): number | false {
-  +export function selectPollInterval(
-  +  round: RoundView | null | undefined,
-  +  pendingWriteCount = 0,
-  +): number | false {
-     if (round === null || round === undefined) return false;
-     if (round.isSettled) return false;
-  +  if (pendingWriteCount > 0) return false;
-     return OPEN_ROUND_POLL_INTERVAL_MS;
-   }
-  ```
+```diff
+-export function selectPollInterval(round: RoundView | null | undefined): number | false {
++export function selectPollInterval(
++  round: RoundView | null | undefined,
++  pendingWriteCount = 0,
++): number | false {
+   if (round === null || round === undefined) return false;
+   if (round.isSettled) return false;
++  if (pendingWriteCount > 0) return false;
+   return OPEN_ROUND_POLL_INTERVAL_MS;
+ }
+```
 
-  with `const pendingWriteCount = useIsMutating();` in `useConcertVoteState`.
+with `const pendingWriteCount = useIsMutating();` in `useConcertVoteState`.
+Nothing is refetched by this change. The next scheduled read waits until the
+writes settle, which keeps it clear of
+`no-refetch-of-optimistically-written-query`.
 
-  **Pausing is not invalidating.** Nothing is refetched by this change; the
-  next scheduled read simply waits until the writes have settled. That
-  distinction is what keeps it on the right side of
-  `no-refetch-of-optimistically-written-query` rather than in tension with it.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** detection (level 4). A gated pure function, tested, decides
+whether a poll runs.
 
-**Type:** code diff (level 1 — structural impossibility, within this pattern)
-
-**Reference:** PR #89 · commit
+**Reference:** PR #89, commit
 [`a36b358d`](https://github.com/hugoleborso/borso.fr/commit/a36b358d)
 
-The decision moved into `selectPollInterval`, a `*.utils.ts` function gated at
-100% statement, branch, function and line coverage and at 100% mutation. The
-interval is no longer a constant a caller may read past a pending write: there
-is one function that answers *should a poll run now*, it is pure, it takes the
-write count, and every mutant of its new branch is killed by a test.
+`selectPollInterval` lives in `audience.utils.ts`, gated at 100% coverage
+and 100% mutation. `audience.utils.test.ts` asserts it holds the poll back
+while a vote is in flight. It is marked
+`@Blueprint utils-poll-that-yields-to-the-writer`
+(`audience.utils.ts:50`), so the next poll beside an optimistic mutation has
+a shape to copy.
 
-Expressed as [`utils-poll-that-yields-to-the-writer`](../../.claude/skills/blueprint/blueprint-index.md),
-so the next poll written beside an optimistic mutation copies a shape that
-already has the answer rather than rediscovering the race:
+**Gap in what holds:** the write count defaults to `0`, so a caller that
+omits it polls through writes, and `audience.utils.test.ts` pins that default
+("defaults to polling, so a caller that names no write count is
+unchanged"). The protection is opt-in. Other polls take no write count at
+all: `selectHistoryPollInterval` (`audience.queries.ts:300`),
+`BOARD_REFRESH_MS` in `apps/pragma/site/src/lib/queries/voting.queries.ts:29`
+and `POLL_INTERVAL_MS` in
+`apps/last-loop-lepin/site/src/lib/queries/standings.ts:27`. Whether an
+optimistic write touches their keys is unchecked.
 
-> Stops the interval while a write is pending, because cancelling in-flight
-> reads inside `onMutate` does not stop the interval from starting a new one a
-> moment later, and that read is answered from state the server has not
-> committed yet.
+**Proposed:** remove the default from `pendingWriteCount`, so TypeScript
+demands the count from every caller, and delete the test that pins the
+default. Then extend `borso/no-refetch-of-optimistically-written-query`, as
+`docs/quality/weak-points.md` already proposes for this weak point, to
+require that every `refetchInterval` is a function whose argument includes a
+pending-write count. That is a per-file check, so it needs no cross-file
+pairing of query and mutation. A poll that runs through a write could then
+not be written.
 
-**Why not a lint rule.** The two halves live in two files — a `refetchInterval`
-on a query and an `onMutate` on a mutation that writes the same key — and
-ESLint's per-file scope cannot see the pair. A rule that fired on every
-`refetchInterval` in a file that also holds a mutation would be noise; one
-that tried to resolve the query key across files is a type-aware analysis for
-a pattern with a handful of instances. The blueprint plus the gated function
-is the honest ceiling here, and it is a real one: the shape to copy exists and
-carries its own reasoning.
-
-**Sibling defects swept:** every other poll in `pragma` was checked. The
-setlist and catalogue queries do not poll, so this was the only site.
-
-## See also
-
-- [`optimistic-reorder-reverted-by-stale-dsql-read.md`](./optimistic-reorder-reverted-by-stale-dsql-read.md) — the same DSQL property, reached by an explicit refetch rather than an interval.
-- [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md) — when the pattern itself prescribed the read that undid the write.
-- [`dsql-strong-consistency-is-per-connection.md`](../knowledge/dsql-strong-consistency-is-per-connection.md) — why a second request can be served an older snapshot.
+**Similar instances:** `grep -rn 'refetchInterval' apps/*/site/src` lists the
+four polls named above.

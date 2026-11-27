@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#118, #163, #165, #166'
-fix-commits: [self]
+fix-commits: [self, c54e32da7]
 eradication-level: 1
-eradication-paths: [.husky/pre-push]
+eradication-paths: [.husky/pre-push, scripts/mutate-changed.sh]
 time-to-detect: hours
 tags: [husky, pre-push, mutation, stryker, vitest, agents, sandbox]
 zone: .husky/pre-push
@@ -15,98 +15,78 @@ recurs: [a-green-mutation-gate-is-not-a-green-coverage-gate]
 
 # The gates that timed each other out
 
-## Symptom
+## User impact
 
-Five of the twelve agents of one weekend had a push refused for tests that
-pass alone: infra-cdk synth tests past 30 s, talos `App.test.tsx` past its
-4 s `flushUntil`, eslint-rules suites, a pragma typecheck killed with exit
-137. One agent needed three attempts for one push. The load average reached
-40 on a four-core sandbox.
+Agents had pushes refused for tests that pass alone.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| One weekend, 12 agents | 5 had a push refused: infra-cdk synth tests past 30 s, talos `App.test.tsx` past its 4 s `flushUntil`, eslint-rules suites, a pragma typecheck killed with exit 137. One agent needed three attempts for one push. | each push refused only for a test that fails |
+| Machine | load average 40 on a four-core sandbox | a load the gates fit in |
 
-1. **Why did correct tests time out?** They were starved of CPU.
-2. **Why?** Pre-push started every gate at once: knip, coverage suites, a
-   typecheck per app, each app's tests and one Stryker run per app, each
-   Stryker run with its own workers.
-3. **Why was that thought safe?** The earlier fix divided Stryker's workers by
-   the number of runs, which bounds Stryker against itself but not against
-   the test gates, and a push that changed four apps still started everything
-   together.
-4. **Why did it get worse in a fan-out?** Each agent pushes from its own
-   worktree, and a limit inside one hook cannot see another hook running
-   beside it.
+Counts as recorded when this entry was first written, on 2026-10-12.
 
-**Root cause:** the hook was designed as if it owned the machine, but the
-gates compete with each other and, in a fan-out, with other agents' hooks,
-and a timeout reads as a failing test.
+## Causal chain
+
+- Correct tests timed out in pre-push.
+  - They were starved of CPU and memory.
+    - Pre-push started every gate at once: knip, coverage suites, a typecheck per app, each app's tests, and one Stryker run per app with its own workers.
+      - Stryker was the heaviest of them. It took 194 s of one 244 s push on PR #216 (`scripts/mutate-changed.sh` header).
+      - An earlier fix divided Stryker's workers by the number of Stryker runs. That bounded Stryker against itself, not against the test gates.
+      - Commit `9fc3b9a40` made the gates run in parallel, "each into its own log", to cut the push from about fifty minutes.
+    - In a fan-out, each agent pushed from its own worktree, so several hooks ran these gates at once on one machine.
+
+## Root cause of occurrence
+
+*Thought a hook owns the machine while it runs, so its gates can all start
+together, actually its gates compete with each other, the heaviest gate
+(Stryker) took most of the push on its own, and in a fan-out other agents'
+hooks share the same cores.* (Method)
+
+The hook was designed for one push on a quiet machine. A timeout under that
+load reads as a failing test, which hid the cause.
 
 ## Detection failure causes
 
-- **Functional validation locally:** a single push from a quiet machine
-  stays under every timeout.
-- **Code review:** the knowledge entry on timeouts recorded this shape three
-  times and told the reader to re-run alone, which treats the symptom.
+- **Local validation:** a single push from a quiet machine stays under every timeout.
+- **Knowledge:** `docs/knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md` recorded the shape three times and told the reader to re-run alone, which treats the symptom.
 
 ## Countermeasure
 
+PR #173 bounded the load:
+
 1. Gates run at most `nproc / 2` at a time (`BORSO_PRE_PUSH_JOBS` overrides).
-2. Mutation runs start only after every other gate has finished, one at a
-   time, each with the whole machine (`BORSO_MUTATION_RUNS_IN_FLIGHT=1`).
-3. A machine-wide `flock` lets only one checkout's pre-push run its gates at
-   a time; a second push says it is waiting and waits. The gates are started
-   with the lock's descriptor closed, so nothing they leave behind holds it.
+2. Mutation runs started only after every other gate finished, one at a time.
+3. A machine-wide `flock` lets only one checkout's pre-push run its gates at a time. A second push says it is waiting and waits.
 
-## Eradication (mandatory — code-level)
+It was exercised under `dash` with a limit of two and four fake gates. The
+third waited for the first, a failing gate was reported after the others, and
+the hook exited 1.
 
-**Type:** code diff (level 1 — structural impossibility)
+## Eradication
 
-**Reference:** [PR #173](https://github.com/hugoleborso/borso.fr/pull/173) · commit `self` (this entry ships with it)
+**Type:** structural impossibility (level 1), by subtraction
 
-**The actual fix:**
-
-```diff
- start_gate() {
-   gate_name="$1"
-   shift
-+  while [ "$(running_count)" -ge "$gate_limit" ]; do
-+    reap_oldest_gate
-+  done
-   echo "[pre-push] start: $gate_name"
--  ( "$@" ) >"$gate_log_dir/$gate_name.log" 2>&1 &
-+  ( "$@" ) 8>&- >"$gate_log_dir/$gate_name.log" 2>&1 &
-```
+**Reference:** commit `c54e32da7` (#224) took Stryker off the push. The
+heaviest load is gone from the hook, not queued inside it.
+`.husky/pre-push` now reads "Mutation testing runs in CI, on the pull request:
+scripts/mutate-changed.sh." and `.github/workflows/ci.yml:439` runs
+`scripts/mutate-changed.sh` on every pull request.
 
 ```diff
-+if command -v flock >/dev/null 2>&1; then
-+  exec 8>"${TMPDIR:-/tmp}/borso-pre-push.lock"
-+  if ! flock -n 8; then
-+    echo "[pre-push] another checkout's pre-push is running its gates on this machine; waiting for it rather than racing it"
-+    flock 8
-+  fi
-+fi
+-      pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
++# Mutation testing runs in CI, on the pull request: scripts/mutate-changed.sh.
 ```
 
-```diff
--BORSO_MUTATION_RUNS_IN_FLIGHT=$(( ${changed_app_count:-0} + 2 ))
-+wait_for_gates
-+gate_limit=1
-+BORSO_MUTATION_RUNS_IN_FLIGHT=1
-```
+The throttle of PR #173 stays as the fallback for the gates left on the push.
+`.husky/pre-push:138-140` sets `gate_limit` to half the cores, and
+`.husky/pre-push:212-216` takes the machine-wide `flock` (read 2026-11-27).
 
-The runner was exercised under `dash` with a limit of two and four fake
-gates: the third waited for the first, a failing gate was reported after the
-others, and the hook exited 1.
+**Proof it can fail:** not replanted this session.
 
-A push now pays its gates in sequence where it used to pay them in parallel,
-so a push touching several apps takes longer than before. It no longer fails
-for load, which is what made agents push two and three times.
+**What stays possible:** a gate added back to pre-push that is heavy on its
+own can still starve a test under the throttle. The throttle queues load. It
+does not remove it.
 
-**Sibling defects swept:** `wait_for_gates` used to be the single wait; it
-now runs twice, and the second still sits outside `SKIP_MUTATION_GATE` so
-every started gate is awaited.
-
-## See also
-
-- [`../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md`](../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md), which recorded the shape three times.
-- [`the-fetch-that-undid-the-narrowing.md`](./the-fetch-that-undid-the-narrowing.md), the range bug that fed the same wave 81 files.
+**Similar instances:** `grep -n 'start_gate' .husky/pre-push` lists the gates
+still on the push. None runs Stryker (measured 2026-11-27).

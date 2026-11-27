@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#24'
-fix-commits: [9199b11e70]
-eradication-level: 4
-eradication-paths: [.husky/pre-push]
+fix-commits: [9199b11e70, 9fd111029]
+eradication-level: 5
+eradication-paths: [.claude/skills/open-pr/SKILL.md, .husky/pre-push]
 time-to-detect: hours
 tags: [harness, github, hooks, pre-push, workflow]
 zone: CLAUDE.md
@@ -14,119 +14,93 @@ zone: CLAUDE.md
 
 # Pushed two commits to a PR branch without reading any review thread
 
-## Symptom
+## User impact
 
-The agent worked on a branch with an open PR (#24, eight review
-threads, three unresolved), and pushed two commits without ever
-calling `mcp__github__pull_request_read get_review_comments`. The
-user surfaced it explicitly:
+The operator reviewed PR #24 and left eight threads. Three were unresolved, and
+they gave direct guidance on the areas the agent was about to touch
+(library search, sanitiser claims, the custom-script justification). The agent
+pushed two commits that ignored all three. The operator had to ask:
 
-> *« Est-ce que tu avais correctement lu les commentaires sur la
-> PR au fait ? »*
+> *« Est-ce que tu avais correctement lu les commentaires sur la PR au fait ? »*
 
-The agent had to apologise and run the missing fetch *after* the
-push. The unread threads were exactly the input the agent needed
-to write commits — three of them were direct guidance for the
-exact areas the agent was about to touch (library-search,
-sanitiser claims, custom-script justification).
+| | Seen | Expected |
+| --- | --- | --- |
+| Next push on PR #24 | two commits on the SPA fallback, threads untouched | commits that answer the three unresolved threads |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why didn't the agent fetch review comments before pushing?**
-   No step in the agent's commit-and-push flow says *"if this
-   branch has an open PR, the unresolved review threads must be
-   fetched before adding new commits"*. The agent reasoned about
-   the local task (SPA fallback) and shipped it; the PR-side
-   review context was invisible.
-2. **Why isn't there such a step?**
-   The repo's *outbound* PR-creation flow has the
-   [`/open-pr`](../../.claude/skills/open-pr/SKILL.md) skill that
-   walks the body before posting. The *follow-up* flow — pushing
-   new commits to an *existing* PR — has no symmetric anchor.
-   The agent's mental model treated the second push as "more of
-   the same work", not as "an iteration that should integrate
-   reviewer feedback".
-3. **Why didn't the existing Husky `pre-push` hook catch this?**
-   It runs `pnpm exec knip` and that's it. It has no awareness
-   of GitHub state.
+- The agent pushed two commits that answered none of the three unresolved
+  threads.
+  - The agent wrote both commits from the local task, the SPA fallback.
+    - The review threads were not in the agent's context when it wrote them. It
+      never called `mcp__github__pull_request_read get_review_comments` before
+      the push (transcript of the session).
+      - In May 2026 a session learned of a review only by fetching it. The
+        channel that
+        pushes PR events into a session, `subscribe_pr_activity`, entered
+        `/open-pr` on 2026-09-16 (9fd111029).
 
-**Root cause:** *thought* the local task drives the next commit,
-*actually* on a branch with an open PR, the *reviewer's
-unresolved comments* drive the next commit. No procedural anchor
-in the harness binds *"push to a `claude/*` branch with an open
-PR"* → *"fetch the open review threads first"*.
+## Root cause of occurrence
+
+*Thought the local task drives the next commit, actually on a branch with an
+open PR the reviewer's unresolved threads drive it.* (Material)
+
+The writer was an agent. The document that held the right answer, the
+operator's review, was absent from its context at the moment it wrote the
+commits. No tool or channel brought it there. The agent fetched the threads
+only after the operator's question, and the follow-up commit
+[`2a4ecfc`](https://github.com/hugoleborso/borso.fr/commit/2a4ecfc) answered
+them.
 
 ## Detection failure causes
 
-- **Husky pre-push** — does not look at GitHub state.
-- **CI** — irrelevant; CI runs on the push, after the gap.
-- **Operator review** — caught it, but only after one more cycle
-  of "agent pushes again, user re-reads what landed". That's
-  exactly the wasted-attention pattern the *Self-improvement
-  loop* exists to prevent.
+- **Pre-push hook:** it ran `pnpm exec knip` only, and asked GitHub nothing
+  about the PR's threads.
+- **CI:** it runs on the push, after the gap.
+- **Review:** the operator caught it, one push cycle late.
 
 ## Countermeasure
 
-The agent fetched the threads (`mcp__github__pull_request_read
-get_review_comments`), classified the three unresolved ones,
-investigated, and shipped fixes in commit
-[`2a4ecfc`](https://github.com/hugoleborso/borso.fr/commit/2a4ecfc) —
-in the same PR, on the next push.
+The agent fetched the threads, classified the three unresolved ones, and shipped
+the fixes in [`2a4ecfc`](https://github.com/hugoleborso/borso.fr/commit/2a4ecfc),
+on the next push of the same PR.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection nudge (level 4) — the Husky `pre-push` hook
-prints a reminder when the branch being pushed matches
-`claude/*` (the convention for agent-authored branches with an
-open PR). The reminder lands in the agent's tool-output stream
-and the next response addresses it before the push narrative
-continues.
+**Type:** knowledge (level 5)
 
-Level 2 alternative considered (a hard gate that REJECTS the
-push unless the agent has called the MCP review-comments fetch
-this session): rejected. The hook can't see prior MCP calls in
-the session; the harness gives no telemetry surface to inspect
-"has the agent read the threads?". A hard gate would either
-block legitimate first-pushes (no PR exists yet) or rely on a
-heuristic the agent can game.
+**Reference:** commit 9199b11e70 ([PR #28](https://github.com/hugoleborso/borso.fr/pull/28))
+and commit 9fd111029.
 
-**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
-this kaizen PR.
+What holds today:
 
-**The actual fix:**
+- `/open-pr` step 7 calls `subscribe_pr_activity` once the PR opens. From then
+  on, every review comment arrives in the session as an event, so the threads
+  reach the agent's context without it having to think of fetching them. The
+  step is a written instruction in a skill, so it holds only when the skill is
+  followed.
+- `.husky/pre-push` prints a reminder on every `claude/*` push: "address any
+  unresolved review thread written by hugoleborso". It is a written instruction
+  printed at push time. It fires whether or not a thread exists.
 
-```diff
- # .husky/pre-push
- #!/usr/bin/env bash
- 
- set -euo pipefail
- 
- echo "[pre-push] running knip"
- pnpm exec knip
- 
-+# Detection nudge: on agent-authored branches (claude/*), the
-+# branch likely has an open PR with unresolved review threads.
-+# Print a reminder so the agent's next response addresses them
-+# before relying on the "push succeeded" signal.
-+# See docs/dantotsus/pushed-without-reading-pr-review-comments.md.
-+current_branch=$(git rev-parse --abbrev-ref HEAD)
-+if [[ "$current_branch" == claude/* ]]; then
-+  printf '\n⚠️  pre-push reminder: pushing on %s.\n' "$current_branch"
-+  printf '   If this branch has an open PR, fetch and address any\n'
-+  printf '   unresolved review threads BEFORE relying on this push.\n'
-+  printf '   Use: mcp__github__pull_request_read method:get_review_comments\n\n'
-+fi
-```
+The 2026-05-21 entry rejected a hard gate because "the hook can't see prior MCP
+calls". The gate does not need to. It can ask GitHub.
 
-**Sibling defects swept:** the same workflow gap also covered
-the *post-merge* arc — the agent doesn't auto-propose the
-follow-up actions on a `merged` webhook event. That's tracked
-separately under
-[`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md)
-because the eradication surface is different (CLAUDE.md rule,
-not Husky hook).
+**Proposed:** turn the reminder into a refusal. In `.husky/pre-push`, on a
+`claude/*` branch, find the open PR for the branch with
+`gh api repos/hugoleborso/borso.fr/pulls?head=hugoleborso:<branch>`, read
+`GET /repos/hugoleborso/borso.fr/pulls/<n>/ccr/review_threads`, and refuse the
+push while a thread by `hugoleborso` is unresolved and newer than the remote
+head. That makes a push over an unread thread impossible. The printed reminder
+is then deleted. Measured on 2026-11-27: GraphQL is refused from a session
+("GitHub GraphQL is not available from Claude Code sessions"), and the REST
+route `ccr/review_threads` answered for PR #24 with `resolved` per thread.
+Whether the route answers from the operator's own laptop is unverified.
 
-## See also
+**Proof it can fail:** not run, since no gate exists.
 
-- [`designated-branch-was-a-merged-pr-head.md`](./designated-branch-was-a-merged-pr-head.md) — sibling: the *previous* anchor along the same flow (which branch you're on before you commit).
-- [`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md) — sibling: the *next* anchor (what to do once the PR merges).
+**Similar instances:** the same flow's other anchors are
+[`designated-branch-was-a-merged-pr-head.md`](./designated-branch-was-a-merged-pr-head.md),
+before the commit, and
+[`post-merge-deploy-and-kaizen-reminder.md`](./post-merge-deploy-and-kaizen-reminder.md),
+after the merge.

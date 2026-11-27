@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#24'
 fix-commits: [9199b11e70]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [CLAUDE.md]
 time-to-detect: minutes
 tags: [harness, skill, conception, code-quality, claude-md]
 zone: CLAUDE.md
@@ -14,146 +14,101 @@ weak-point: prose-stands-in-for-a-check
 recurs: [believed-the-bundle-readme-not-the-live-package-json]
 ---
 
-# Lectured for four turns on CloudFront behaviour before reading the file
+# Four turns on CloudFront, citing a line nobody had opened
 
-## Symptom
+## User impact
 
-The session opened on a debugging question — *"is the JPEG-on-404
-mapping in `StaticSite` the cause of `/r/<slug>` direct-nav not
-loading the SPA?"* — and the agent answered for four consecutive
-turns with a confident narrative about CloudFront `errorResponses`,
-S3 `NoSuchKey`, OAC `ListBucket`, and content-type rewriting —
-including a specific citation, `infra/cdk/src/internal/static-site.ts:166`.
+The operator asked one debugging question and read four turns of narrative
+before the agent looked at the code. He had to pull it back twice.
 
-The user pulled back twice:
+| | Seen | Expected |
+| --- | --- | --- |
+| "Is the JPEG-on-404 mapping in `StaticSite` why `/r/<slug>` does not load the SPA?" | Four turns on CloudFront `errorResponses`, S3 `NoSuchKey`, OAC `ListBucket` and content-type rewriting, citing `infra/cdk/src/internal/static-site.ts:166` | One Read of the construct, then a one-line answer |
+| The cited location | Wrong folder (`internal/`) and wrong line (166) | `infra/cdk/src/constructs/static-site.ts`, line 173 |
+| The status CloudFront returns | The agent confirmed the operator's guess of 200 | 404 with the JPEG body, read from the file afterwards |
 
-> *« Donc en fait le problème, que tu aurais pu décrire en une
-> ligne, c'est que le code renvoyé par cloud front à la place
-> d'une 404 est 200 quand on sert cette image. »*
+The operator's pull-backs, from the session (quoted in the first version of
+this entry): *« Donc en fait le problème, que tu aurais pu décrire en une
+ligne, c'est que le code renvoyé par cloud front à la place d'une 404 est 200
+quand on sert cette image. »* then *« Est-ce que c'est ça ? »*
 
-> *« Est-ce que c'est ça ? »*
+## Causal chain
 
-Only then did the agent open the file. The cited path was wrong on
-two counts: the file lives under `infra/cdk/src/constructs/`, not
-`internal/`; and the relevant block is at line 173, not 166. The
-agent's narrative about the response status also turned out to be
-wrong — the current config returns 404 with the JPEG body, not 200
-as the user assumed and the agent confirmed. The eventual fix
-needed both a Read and a fresh explanation, after the agent had
-already burned the user's attention on a synthetic CloudFront
-lecture.
+- The operator read four turns of CloudFront narrative, one of them wrong about
+  the status code.
+  - The agent answered from its model of CloudFront, S3 and OAC, without a Read
+    of the construct.
+    - It cited a location to back the narrative, which it had not opened:
 
-Same misconception bit again two turns later, on a different
-artefact: the existing
-`docs/knowledge/github-mcp-pr-body-sanitizer.md` entry asserted
-that the GitHub MCP sanitizer strips `<details>` and wraps
-`![alt](url)` images in backticks. PR #26's stored body — opened
-from the same harness — contains literal `<details>...</details>`
-blocks and renders `![Catalog](https://…)` images correctly.
-Reviewer comment:
+      ```text
+      infra/cdk/src/internal/static-site.ts:166   ← ❌ folder and line invented to fit the claim
+      ```
 
-> *« Not true, and I want my details. Test your hypotheses before
-> saying things like this. »*
+      - The rule that held the right answer was in its context. CLAUDE.md at
+        `9199b11e70^` said "Verify before asserting. When a claim depends on
+        the state of the repo or live AWS, check it. … Don't restate from
+        memory". The prior that CloudFront behaviour is general knowledge won
+        over it (Man).
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. **Why did the agent answer four turns without opening the file?**
-   The mental model of CloudFront `errorResponses` ↔ S3 ↔ OAC felt
-   complete enough to explain without verification. Confidence was
-   sourced from prior corpus exposure, not from this repo's actual
-   `static-site.ts`.
-2. **Why did the agent cite a specific `file:line` it had not read?**
-   Citing a path lent the narrative the *shape* of a verified
-   answer ("look, I'm pointing at the code") without paying the
-   verification cost. The line number was hallucinated to match
-   the shape.
-3. **Why didn't the existing CLAUDE.md *"Verify before asserting"*
-   rule prevent this?**
-   The rule covers the *general* failure mode but doesn't bind a
-   verifiable artefact to the speech act. *Verify before asserting*
-   reads as advice; the agent rationalised the lecture as *general*
-   knowledge (CloudFront docs), not a *claim about the repo*.
-4. **Why did the same misconception bite again at the sanitiser
-   knowledge entry?**
-   That entry was written in a previous session under the same
-   pattern — three asserted patterns ("`<details>` stripped",
-   "`![]()` wrapped in backticks", "pseudo-HTML stripped") with no
-   round-trip verification recorded. The reviewer's *« Not true »*
-   reproduces the present session's defect at a different timescale.
+*Thought "how CloudFront maps a 404 is general knowledge, so I can describe it
+without the file", actually the question was about this repository's
+`StaticSite` construct, whose error mapping only the file states.* (Man)
 
-**Root cause:** *thought* "I understand CloudFront / I understand
-the MCP sanitizer", *actually* both narratives were memorised
-priors mapped onto a specific surface (this repo's `static-site.ts`,
-this harness's MCP server). Without a procedural anchor that binds
-*claim about a specific artefact* → *the artefact was Read this
-session*, the agent rationalises priors as repo knowledge.
+The agent wrote the line, and the right rule was loaded. CLAUDE.md at the
+parent of the fix commit (`git show 9199b11e70^:CLAUDE.md`, line 20) already
+said "Don't restate from memory", then "paste the relevant source". Under the
+standard's agentic 4M rule, a loaded rule that the prior overrode is Man. One
+more sentence in CLAUDE.md cannot remove a Man cause.
 
 ## Detection failure causes
 
-- **CLAUDE.md *Tone & rigor* rule** — present, but worded as
-  general advice ("Don't restate from memory — paste the relevant
-  source") that the agent rounded down to *paste sources when
-  asked*, not *before* speaking.
-- **Linter / type guard** — N/A; the false claims live in chat
-  output, not in code.
-- **Functional validation** — N/A.
-- **Self-review** — the agent's internal check was *"does this
-  narrative cohere?"* not *"did I open the file the narrative
-  describes?"*. Coherence is cheap; verification has a cost the
-  agent skipped.
+- **Harness:** nothing compares a turn's text with the tool calls of the
+  session. A turn can cite `<path>:<line>` with no Read or Grep of that path,
+  and it reaches the operator.
+- **Self-review:** the agent's check was whether the narrative cohered. A
+  coherent narrative and a read file look the same from inside the turn.
+- **Linter and types:** not applicable. The false claim lived in chat, not in
+  code.
 
 ## Countermeasure
 
-The user's two pull-backs forced the eventual Read. The cited
-`<file>:<line>` was corrected in the chat. The sanitiser knowledge
-entry was rewritten to document only what survives a round-trip
-verification and to name PR #26 as the control sample.
+The agent read `infra/cdk/src/constructs/static-site.ts`, corrected the path
+and the line in the chat, and corrected the status code from the file.
 
-- **Code:** commit [`2a4ecfc`](https://github.com/hugoleborso/borso.fr/commit/2a4ecfc) —
-  `docs/knowledge/github-mcp-pr-body-sanitizer.md` rewritten with
-  an explicit verification procedure (round-trip on a draft PR or
-  inspect a recent PR known to render the pattern) and the
-  unverifiable claims removed.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** knowledge (level 5). What holds today is one sentence in CLAUDE.md.
 
-**Type:** knowledge addition (level 5 — knowledge) — tightening
-CLAUDE.md's *Tone & rigor* section so the rule binds a verifiable
-artefact (a Read or Grep call **this session**) to any claim that
-references a specific repo file. The level-2 alternative
-considered (a hook that scans agent output for `<path>:<line>`
-and rejects unverified references) was rejected: hooks don't see
-agent chat output in this harness; only tool-input and
-tool-output. The corpus of sibling dantotsus (see *Sibling
-defects swept* below) is the reminder that the failure mode is
-recurring, not isolated.
+**Reference:** commit [`9199b11e70`](https://github.com/hugoleborso/borso.fr/commit/9199b11e70)
+rewrote the CLAUDE.md rule to bind a claim about a file to a Read this
+session. CLAUDE.md now says: "**Verify before asserting.** Read the file, run
+the command or call `aws ... get-...` this session before you describe it."
 
-**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
-this kaizen PR.
+The rule existed in another wording before the defect, so it is the weakest
+rung and does not hold against a Man cause.
 
-**The actual fix:**
+**Proposed:** a Stop check beside `scripts/hooks/checks/screens-shown.core.ts`,
+run by the existing `Stop` hook in `.claude/settings.json`
+(`scripts/hooks/hook.ts`). `screens-shown` already reads `transcript_path` to
+refuse a turn that claims a visual comparison without a showing tool call. The
+new check would read the last assistant text, extract each repository path it
+cites as `<path>` or `<path>:<line>`, and refuse the turn when no Read, Grep or
+Bash call of the session touched that path. A cited file nobody opened could
+then no longer reach the operator. The first version of this entry rejected a
+hook because "hooks don't see agent chat output". `screens-shown` shows that
+belief is false.
 
-```diff
- ## Tone & rigor
- 
- - **No invented numbers.** If you don't know a price, latency, capacity, or throughput, say so — or pull it from `aws … get-…`, the AWS pricing pages, or Cost Explorer. Never round to a memorable figure and pass it off as known.
--- **Verify before asserting.** When a claim depends on the state of the repo or live AWS, check it. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
-+- **Verify before asserting — bind the claim to an artefact.** If your answer describes a specific file, function, line, or AWS resource, the artefact must have been Read / Grep'd / `aws … get-…`'d **this session** before you describe it. Citing `<path>:<line>` without that prior tool call is a fabrication, even if the narrative is otherwise correct. *"I think CloudFront returns X here"* without an open Read on the file is the failure mode; *"`infra/cdk/src/constructs/static-site.ts:173` returns X"* without a prior Read is worse, because the path lends false authority. The branch you're on can be far behind `main`; fetch and confirm. Don't restate from memory — paste the relevant source.
-```
+**Proof it can fail:** not tried. The proposal is not built.
 
-**Sibling defects swept:** the same family — claim made before
-the verifying tool was called — already has dedicated entries
-under different surfaces:
-
-- [`described-screenshot-without-checking-pixels.md`](./described-screenshot-without-checking-pixels.md) — visual-validation layer (screenshots described from the agent's hypothesis, not the bytes).
-- [`believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md) — vendor-docs layer (README believed over the lockfile's actual version).
-- [`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) — library-availability layer (custom code built before checking npm).
-
-The pattern across all four: *prior knowledge framed as a verified
-claim about this surface*. Each dantotsu lands the local rule for
-its layer; the CLAUDE.md tightening above is the cross-cutting
-reminder that the failure mode applies to *every* surface.
-
-## See also
-
-- [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) — rewritten in `2a4ecfc` with the verification procedure mentioned above.
+**Similar instances:** `grep -ril 'before checking\|without checking\|believed' docs/dantotsus/`
+finds the same family on other surfaces:
+[`described-screenshot-without-checking-pixels.md`](./described-screenshot-without-checking-pixels.md),
+[`believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md)
+and [`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md).
+The first version of this entry counted a second instance, the knowledge entry
+claiming the GitHub MCP server strips `<details>`. It is dropped.
+`docs/knowledge/github-mcp-pr-body-sanitizer.md` now records, observed
+2026-08-15 on PR #49, that `<details>` and `<summary>` are stripped. That
+claim was not a prior passed off as fact.

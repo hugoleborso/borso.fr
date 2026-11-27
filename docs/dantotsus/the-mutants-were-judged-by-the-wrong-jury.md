@@ -5,8 +5,8 @@ detected-at: ci
 severity: medium
 related-pr: '#49'
 fix-commits: [fae5f30a5d, bf04c32fb1]
-eradication-level: 1
-eradication-paths: [stryker.shared.js]
+eradication-level: 5
+eradication-paths: [apps/last-loop-lepin/api/src/media/media.core.ts, stryker.shared.js, docs/knowledge/how-a-mutation-survivor-hides.md]
 time-to-detect: days
 tags: [testing, vitest, gates, ci, last-loop-lepin]
 zone: stryker.shared.js
@@ -17,11 +17,10 @@ blueprints: [core-lookup-table]
 
 # The mutants were judged by the wrong jury
 
-## Symptom
+## User impact
 
-`apps/last-loop-lepin` scored 99.75% on mutation against a break
-threshold of 100, exit 1, for four days. Five survivors, all in one
-seven-line file:
+`apps/last-loop-lepin` scored 99.75% on mutation against a break threshold of
+100, exit 1, for four days. Five survivors, all in one seven-line file:
 
 ```
 [Survived] StringLiteral  media.core.ts:11  'image/jpeg': 'jpg'  →  'image/jpeg': ""
@@ -31,83 +30,91 @@ seven-line file:
 [Survived] StringLiteral  media.core.ts:16  FALLBACK = 'bin'      →  ""
 ```
 
-`media.core.test.ts` asserts every one of those strings, and passes.
+| | Seen | Expected |
+| --- | --- | --- |
+| The app's mutation gate | red, five survivors | green: `media.core.test.ts` asserts every one of those strings, and passes |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the mutants survive tests that assert those exact
-   strings?**
-   Those tests were never run against them. Stryker's JSON report
-   names the covering set:
-   ```
-   coveredBy = ['media.adapter falls back to the deployment region …',
-                'media.adapter signs against the region the environment names']
-   killedBy  = []
-   ```
-   Two tests about an AWS signing region, neither of which reads a
-   file extension.
-2. **Why was the covering set those two tests?**
-   The mutants are `static: true` — they live in a module-level
-   `const`, so the mutated code runs once, when the module is first
-   imported, not when a function is called.
-3. **Why does that produce a wrong covering set?**
-   Coverage under `coverageAnalysis: 'perTest'` is attributed to
-   whichever test was executing at the moment the module first
-   loaded. `media.adapter.test.ts` sorts before `media.core.test.ts`,
-   `media.adapter.ts` imports `media.core.ts`, so the table was
-   initialised during an adapter test and charged to it. By the time
-   the core tests ran, the module was cached and recorded nothing.
-4. **Why did `ignoreStatic: true` not exclude them?**
-   Because Stryker only ignores a static mutant that **no** test
-   covers. These had a covering set. It was simply the wrong one, and
-   a wrong covering set is indistinguishable from a right one.
-5. **Why did the configuration say otherwise?**
-   `stryker.shared.js` carried a comment asserting that such a
-   mutation "is reported separately and does not fail the gate on its
-   own". Nothing had ever tested that claim.
+- Five mutants survived tests that assert those exact strings.
+  - Those tests were never run against them. Stryker's JSON report names the
+    covering set:
 
-**Root cause:** thought *"a module-level constant is covered by the
-tests of the module that declares it"*, actually *it is covered by
-whatever test happened to trigger the first import, which on this file
-was another suite entirely.*
+    ```
+    coveredBy = ['media.adapter falls back to the deployment region …',
+                 'media.adapter signs against the region the environment names']
+    killedBy  = []
+    ```
+
+    - Under `coverageAnalysis: 'perTest'`, Stryker charged the table's mutants
+      to the test running when the module first loaded. `media.adapter.test.ts`
+      sorts before `media.core.test.ts`, and `media.adapter.ts` imports
+      `media.core.ts`, so the table was initialised during an adapter test. By
+      the time the core tests ran, the module was cached and recorded nothing.
+      - `ignoreStatic: true` did not exclude them. Stryker ignores a static
+        mutant only when no test covers it, and these had a covering set.
+      - The table sat at module scope:
+
+        ```ts
+        const FILE_EXTENSION_BY_CONTENT_TYPE = {
+          'image/jpeg': 'jpg',
+        ```
+
+        - Commit `db221c687` wrote it there so one table fed both
+          `ALLOWED_PHOTO_CONTENT_TYPES` and the extension lookup, "so the
+          allow-list and the extensions cannot drift apart" (its message). The
+          same commit wrote `auth.core.ts` the same way. Two days later
+          `f2fa6f626` made that file the `core-lookup-table` blueprint source.
+          - `stryker.shared.js`, written that morning in `14fc404a6`, said such
+            a mutation "is reported separately and does not fail the gate on
+            its own".
+
+## Root cause of occurrence
+
+*Thought a module-level constant is measured by the tests of the module that
+declares it, actually Stryker charges it to whichever test first imported the
+module, which here was another suite.*
+
+**M: Machine.** The repository's own mutation config stated the opposite of the
+tool's behaviour. With that comment in `stryker.shared.js`, a module-level table
+read as safe, and a single source of truth for two exports read as the better
+design. The `core-lookup-table` blueprint, made from the sibling file of the same
+commit, then turned the shape into the one to copy.
 
 ## Detection failure causes
 
-- **Typing:** not applicable.
-- **Linter / static analysis:** no rule relates where a constant is
-  declared to which tests will be charged for it.
-- **Functional validation locally:** the pre-push mutation gate is
-  scoped with `--mutate` to the changed pure files, which *would* have
-  included this file on the push that created it. Whether it ran and
-  was overridden, or never ran, is not recoverable from the history;
-  the gate is skippable with `SKIP_MUTATION_GATE=1`.
-- **CI:** `ci.yml` runs coverage per changed app and no mutation at
-  all. Coverage was and remains 100% on this file — every line runs,
-  which is exactly what mutation testing exists to look past.
-- **Code review:** a lookup table with a test per entry reads as
-  well-covered, because it is. The gap is in the tool's accounting,
-  not the tests.
-- **CI backstop:** `full-suite` caught it on the first push and
-  reported it to nobody for twenty runs — see
+- **Linter:** no rule relates where a constant is declared to which tests will
+  be charged for it.
+- **Local:** the pre-push mutation gate is scoped with `--mutate` to the changed
+  pure files, which would have included this file on the push that created it.
+  Whether it ran and was overridden, or never ran, is not recoverable from the
+  history. The gate was skippable with `SKIP_MUTATION_GATE=1`.
+- **CI:** `ci.yml` ran coverage per changed app and no mutation. Coverage was
+  100% on this file, because every line runs.
+- **Review:** a lookup table with a test per entry reads as well covered,
+  because it is. The gap is in the tool's accounting.
+- **Backstop:** `full-suite` caught it on the first push and reported it to
+  nobody for twenty runs, see
   [`the-backstop-nobody-was-standing-behind.md`](./the-backstop-nobody-was-standing-behind.md).
 
 ## Countermeasure
 
-- **Code:** commit `fae5f30` (PR #79) — the table is read inside the
-  function that uses it, so its mutants are runtime mutants, covered
-  per test, and the three existing assertions kill them.
-- **Code:** commit `bf04c32` — the comment in `stryker.shared.js` now
-  states what the tool does instead of the opposite.
+Commit `fae5f30` (PR #79) reads the table inside the function that uses it, so
+its mutants are runtime mutants, covered per test, and the existing assertions
+kill them. Commit `bf04c32` makes the comment in `stryker.shared.js` state what
+the tool does.
 
-## Eradication (mandatory — code-level)
+Measured: `media.core.ts` 28.57% with 5 survivors → 100%, 0 survivors. The
+app's unscoped run 99.75%/exit 1 → 100.00%/exit 0. Coverage unchanged at 906
+tests, 100% on all four metrics.
 
-**Type:** code diff (level 1 — the mutants can no longer be static, so
-the mis-attribution has nothing to attribute)
+## Eradication
 
-**Reference:** [PR #79](https://github.com/hugoleborso/borso.fr/pull/79)
-· commits `fae5f30`, `bf04c32`
+**Type:** knowledge (level 5). The instance cannot recur, and the class is
+explained where it shows.
 
-**The actual fix:**
+**Reference:** [PR #79](https://github.com/hugoleborso/borso.fr/pull/79) ·
+commits `fae5f30`, `bf04c32`.
 
 ```diff
 - const FILE_EXTENSION_BY_CONTENT_TYPE: Readonly<Record<PhotoContentType, string>> = {
@@ -130,32 +137,27 @@ the mis-attribution has nothing to attribute)
   }
 ```
 
-Measured: `media.core.ts` 28.57% with 5 survivors → **100%, 0
-survivors**; the app's unscoped run 99.75%/exit 1 → **100.00%/exit 0**;
-coverage unchanged at 906 tests, 100% on all four metrics.
+For the class, [`how-a-mutation-survivor-hides.md`](../knowledge/how-a-mutation-survivor-hides.md)
+triggers on `[Survived]` output. Its section "A test that re-imports a module
+turns its constants into live mutants" says to read a surviving constant as a
+question about which test loads its module.
 
-**Property this changes:** the table is built per call rather than once
-at module load — one small object allocated on each presign request.
+**Proof it can fail:** the gate itself fails on the next instance, as it did
+here. The knowledge entry only explains it.
 
-**The trade-off, stated plainly.** This is a code shape chosen to suit
-the measuring tool, and the `core-lookup-table` blueprint puts the
-table at module scope. The blueprint is tagged here in the front
-matter for that reason: the pattern as written permits this defect
-wherever the module is first imported by another suite. Every other
-follower of it should be read with that in mind. The alternative
-considered was suppressing the mutants with a Stryker disable comment,
-which keeps the blueprint's shape but turns a gate off on the lines it
-is meant to guard, and the repository's own convention is to fix the
-code before scoping a rule and to scope before disabling.
+The blueprint still puts its table at module scope.
+`apps/pragma/api/src/uploads/uploads.core.ts` follows it and scores 100% only
+because its own test imports it first. That is luck, and it flips the day
+another suite imports it earlier. This is not eradicated.
 
-**Sibling defects swept:** `apps/pragma/api/src/uploads/uploads.core.ts`
-has the identical module-level shape and currently scores 100% — it
-happens to be imported first by its own test. That is luck, not
-design, and it will flip the day another suite imports it earlier.
+**Proposed:** fix the blueprint, not one follower. Move the table inside the
+function in `apps/last-loop-lepin/api/src/auth/auth.core.ts`, typed
+`Readonly<Record<Union, Value>>` as `media.core.ts` now is, so a missing case
+still fails to compile. Today's source derives its return type from the
+module-level table (`AuthDenialStatus`), so that type would be declared
+instead. Then migrate each follower that keeps a module-level table. The shape
+that lets a foreign suite be charged would no longer be the one to copy.
 
-## See also
-
-- [`the-backstop-nobody-was-standing-behind.md`](./the-backstop-nobody-was-standing-behind.md)
-- [`a-mutation-config-a-workspace-file-overruled.md`](./a-mutation-config-a-workspace-file-overruled.md)
-  — the previous time this app's mutation gate measured something
-  other than what it appeared to.
+**Similar instances:** `grep -rn '@FollowsBlueprint core-lookup-table' apps`
+lists the followers. `uploads.core.ts` is the one with the same
+import-from-another-suite exposure found in this sweep.

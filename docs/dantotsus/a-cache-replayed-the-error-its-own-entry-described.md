@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: linter
 severity: medium
 related-pr: '#95'
-fix-commits: [5d140956dd]
-eradication-level: 4
-eradication-paths: [.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh]
+fix-commits: [5d140956dd, 9dcf74547]
+eradication-level: 1
+eradication-paths: [scripts/lint-repository.sh, .husky/pre-commit]
 time-to-detect: minutes
 tags: [eslint, cache, typescript, deps, hooks, harness, knowledge-corpus, self-improvement-loop]
 zone: .husky/pre-commit
@@ -16,10 +16,15 @@ recurs: [a-knowledge-entry-did-not-stop-the-second-hit]
 
 # Twenty-four errors that were already fixed, and the entry that had said so all along
 
-## Symptom
+## User impact
 
-A dependency bump moved `@hono/zod-validator` from 0.4 to 0.9. ESLint reported
-24 errors across pragma's query modules:
+The session working on PR #95 was the user. A dependency bump moved `@hono/zod-validator` from 0.4 to 0.9, and ESLint reported 24 errors across pragma's query modules. The session found the cause and fixed it in `api.client.ts`: `isResponseSuccessful` returned `boolean`, which narrows nothing. `tsc --noEmit` then went clean across all six projects. ESLint still reported the same 24 errors, on the same files, lines and rules. The session read that as a fix that did not work.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| Lint after the fix | The same 24 type-aware errors | No error, as `tsc` said |
+
+<details><summary>Two of the 24 errors</summary>
 
 ```
 apps/pragma/site/src/lib/queries/songs.queries.ts
@@ -27,110 +32,58 @@ apps/pragma/site/src/lib/queries/songs.queries.ts
   102:64  error  Unsafe argument of type error typed  @typescript-eslint/no-unsafe-argument
 ```
 
-The cause was found and fixed: `isResponseSuccessful` returned `boolean`, which
-narrows nothing, so the new response union stayed unnarrowed at every call
-site. `tsc --noEmit` went clean across all six projects.
+</details>
 
-ESLint reported the same 24 errors. Same files, same lines, same rules. Nothing
-distinguished them from the errors before the fix.
+## Causal chain
 
-## Root-cause chain
+- ESLint reported 24 errors the fix had removed.
+  - Every query module was a cache hit, so ESLint replayed its stored result. The fix was in `api.client.ts`, and the query modules were not edited.
+    - `.husky/pre-commit` and the `lint` script ran ESLint with a cache keyed on each linted file's own bytes.
 
-1. **Why did ESLint report errors the fix had removed?**
-   `.husky/pre-commit` runs `eslint --cache --cache-strategy content`, which
-   keys each entry on the linted file's own bytes. The query modules were not
-   edited — the fix was in `api.client.ts` — so every one of them was a cache
-   hit and replayed its stored result.
+      ```sh
+      # .husky/pre-commit, from cbc90eca8 until 9dcf74547
+      echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --cache --cache-strategy content --cache-location .eslintcache  # ❌ type-aware verdicts cached per file
+      ```
 
-2. **Why is that wrong for these rules?**
-   A type-aware rule's verdict depends on the whole type graph, not on the file
-   in front of it. There is no cache strategy that expresses "invalidate on the
-   project": `metadata` has the identical flaw for the identical reason.
+      - Commit `314f24821` (2026-08-08, written by an agent) replaced Biome with ESLint. It turned on the typescript-eslint type-checked rules and `--cache` in the same commit. Its message gives the reason: "A warm cache brings it to 3.2 s". Commit `cbc90eca8` later switched the key from mtime to content, so the cache would hit on a CI runner.
+        - The agent's input was a runtime budget for the lint step and ESLint's own `--cache` option. That option is documented per file, and nothing in the input tied a type-aware verdict to other files. (Material, inferred from the commit message, which names only timings.)
 
-3. **Why was the wrong conclusion the natural one?**
-   Because the symptom argues against the cause. A stale cache should feel like
-   staleness, and this does not: re-running reproduces the errors exactly, which
-   is the signature of a *real* error. The available reading is "my fix did not
-   work".
+## Root cause of occurrence
 
-4. **Why did the written answer not help?**
-   `docs/knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md`
-   describes this precisely, names `rm -f .eslintcache`, and predates this pull
-   request. It was not read, because a knowledge entry is a lookup and the
-   search term is the answer.
+*Thought a cache keyed on a file is safe for any rule that reads that file, actually a type-aware rule reads the file's whole dependency graph, so a fix in another file leaves every dependent's cached verdict correct-looking and wrong.*
 
-5. **Why did that failure recur after being eradicated once?**
-   It has a dantotsu of its own —
-   `a-knowledge-entry-did-not-stop-the-second-hit.md` — which closes by saying
-   that the next sweep classifying something as `knowledge` should ask whether
-   the symptom argues against the cause, because level 5 is not enough when it
-   does. Here it does, and the entry was still only knowledge.
+Material. The agent that wrote `314f24821` worked from a lint budget and the ESLint CLI flag. The caveat lives in typescript-eslint's documentation, not in the flag's, and the commit names no source for it (inferred, the transcript is gone). The same misconception survived `cbc90eca8`, whose message reasons only about mtime against content.
 
-**Root cause:** thought a cache keyed on a file's content is safe for any rule
-that reads that file, actually a type-aware rule reads the file's whole
-dependency graph — so a fix landing in another file leaves every dependent's
-verdict cached, correct-looking and wrong.
+The knowledge entry [`eslint-content-cache-replays-a-stale-type-aware-error.md`](../knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md), added in `615774e49` on 2026-08-20, already stated the fact and the command `rm -f .eslintcache`. It predates PR #95.
 
 ## Detection failure causes
 
-- **Typing:** `tsc` was clean and disagreed with ESLint. The disagreement was
-  the tell and read as a tooling quirk.
-- **Linter:** the linter is the defect; it reported with full confidence.
-- **CI:** would have caught it, on a fresh checkout with no cache — after a
-  push, minutes later, for something already fixed locally.
-- **Code review:** invisible in a diff.
-- **Knowledge:** present, correct, well written, unread. Second occurrence of
-  exactly that.
+- **Typing:** `tsc` was clean and disagreed with ESLint. The disagreement was the tell, and it read as a tooling quirk.
+- **Linter:** the linter was the defect. A replayed error looks exactly like a real one, and re-running reproduces it, which is the signature of a real error.
+- **CI:** CI restored the same content-keyed cache, so it could replay the same verdicts.
+- **Knowledge:** the entry was a lookup. To find it, the session had to search for the answer, "cache", while the symptom pointed at its own fix. [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md) records the same failure once before.
 
 ## Countermeasure
 
-- **Code:** commit `5d14095` — a hook now names the cache whenever type-aware
-  errors are reported and `.eslintcache` exists.
-- **Operator action:** `rm -f .eslintcache && pnpm run lint` settles it in one
-  command; errors that survive are real.
+`rm -f .eslintcache && pnpm run lint` settles it. Errors that survive are real. Commit `5d140956dd` added a PostToolUse hook that named the cache whenever a lint run reported a type-aware error while `.eslintcache` existed. Commit `eaf16df21` later ported it to `scripts/hooks/checks/eslint-cache-replays-a-fixed-error.core.ts`.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — a PostToolUse hook on the lint run itself)
+**Type:** structural impossibility (level 1)
 
-**Reference:** [PR #97](https://github.com/hugoleborso/borso.fr/pull/97) ·
-commit [`5d14095`](https://github.com/hugoleborso/borso.fr/commit/5d14095)
-
-Level 1 was considered and rejected: dropping `--cache` makes the class
-impossible, and
-[`eslint-cache-useless-on-a-fresh-checkout.md`](./eslint-cache-useless-on-a-fresh-checkout.md)
-already measured what the cache is worth on a warm one. Paying that on every
-commit to avoid a few confused minutes is the wrong trade. Level 2 has no
-surface — no lint rule can see another tool's cache.
-
-So the sentence moves to where the wrong conclusion is formed, exactly as the
-empty-checks hook did for conflicted pull requests.
-`.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh` fires only when
-a lint command reports an error from one of ten type-aware rules **and**
-`.eslintcache` exists **and** the command did not already clear it.
-
-**The actual fix:**
+**Reference:** commit [`9dcf74547`](https://github.com/hugoleborso/borso.fr/commit/9dcf74547) (PR #197) replaced ESLint with oxlint. It met the same runtime budget with a faster tool instead of a cache.
 
 ```diff
-+TYPE_AWARE='no-unsafe-argument|no-unsafe-assignment|no-unsafe-call|…'
-+COUNT=$(printf '%s' "$RESPONSE" | grep -cE "@typescript-eslint/($TYPE_AWARE)")
-+[ "${COUNT:-0}" -gt 0 ] || exit 0
-+
-+  rm -f .eslintcache && pnpm run lint
+-ESLINT_FLAGS=(--max-warnings 0 --cache --cache-strategy content "$@")
++node_modules/.bin/oxlint --type-aware "$@" .
 ```
 
-It never asserts staleness — these errors are usually real — and always exits
-0, so it can never block a lint run.
+`scripts/lint-repository.sh` and the `oxlint` step of `.husky/pre-commit` now run with no cache, and `oxlint --help` lists no cache option (measured on 1.91.0). No script, hook or workflow calls the ESLint CLI any more (measured with `git grep -nE "(exec|bin/|^\s*)eslint "`, no match). A verdict can no longer be replayed from a cache.
 
-**Sibling defects swept:** none. The knowledge entry stays as the detail the
-hook points at.
+The first version of this entry rejected level 1 because the cache was worth its cost, per [`eslint-cache-useless-on-a-fresh-checkout.md`](./eslint-cache-useless-on-a-fresh-checkout.md). The oxlint migration removed that trade.
 
-## See also
+**Proposed:** delete `scripts/hooks/checks/eslint-cache-replays-a-fixed-error.core.ts`, its test, and its registration in `scripts/hooks/hook-events.ts`. It watches for a `.eslintcache` that nothing writes. The two `.eslintcache` lines in `.gitignore` go with it.
 
-- [`../knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md`](../knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md)
-  — the entry this is about. Still right; now reachable.
-- [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md)
-  — the general rule this is the second instance of, and the hook shape copied
-  from it.
-- [`eslint-cache-useless-on-a-fresh-checkout.md`](./eslint-cache-useless-on-a-fresh-checkout.md)
-  — the other half: the measurement that keeps the cache despite this.
+**Proof it can fail:** not applicable to a removal. There is no cache left to plant a stale entry in.
+
+**Similar instances:** `git grep -n "cache-strategy" HEAD -- ':!docs'` finds only the dead hook and its test. Prettier, the other tool CI cached, was replaced by oxfmt in the same commit, per its ADR `docs/adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md`.

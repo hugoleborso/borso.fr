@@ -207,3 +207,137 @@ refuses an entry that leaves them unusable. The *Front matter* section of
 | A good Dantotsu means filling in all fields and following the checklist | A good Dantotsu means the developer has deepened their understanding of the system |
 | I do a Dantotsu when there's a major bug in production | I maintain a regular Dantotsu rhythm to raise the level of play and build a culture of technical excellence |
 | An expert is someone who knows all the tidbits of a language/framework | A developer's mastery lies in the quality of their mental models on business modeling, system structure and failure modes |
+
+## Reaching a root cause: the 4M
+
+The causal chain does not stop at the faulty line. Below it, the chain goes
+on with the events that produced the line, such as the commit that wrote it and
+the input that commit was built from. Keep asking why until the answer is a
+work condition someone can change. The 4M
+break down the conditions in which someone produces value. A why that lands on
+one of them has reached a root cause.
+
+- **Man:** did the person know the standard? Were they trained on it?
+- **Machine:** the tools used, such as the codebase, its blueprints, its
+  gates and its examples.
+- **Method:** the standard or the process followed.
+- **Material:** the input from the previous workstation. For a developer it
+  is the user story, the spec, the mockup and its validation steps.
+
+A why that lands on a person's attention ("forgot", "did not notice") has not
+reached one. Ask why again, until a Man, Machine, Method or Material cause
+names what made the mistake easy. Tag each root cause with its M.
+
+### The 4M when an agent wrote the line
+
+An agent cannot be trained, so no countermeasure targets its knowledge. The
+transcript still separates two causes that call for different fixes. Read it
+to answer one question: was the document or tool that held the right answer
+loaded in the agent's context when it wrote the line?
+
+- **Material:** it was not. The spec, the doc, the brief or the tool was
+  missing at that moment. The fix brings the information to that moment, such
+  as a hook, a knowledge trigger or a line in the brief.
+- **Man:** it was, and the model's prior contradicted or ignored it. Or the
+  worker's state caused it: a saturated context, an effort level or a model
+  unfit for the task. The fix is never one more document, because the
+  document was already there. It is a gate that holds when the prior wins
+  (Machine), or a change to the worker's conditions, such as a shorter
+  session, one subagent per phase or a higher effort level.
+- **Machine** and **Method** keep their meaning: the codebase, its gates and
+  examples, and the process the agent followed.
+
+The operator is a Man of the whole system. Seen from the agent's workstation,
+what the operator hands over, a request, a decision or a mockup, is Material.
+
+## Lessons from the simulators
+
+The Theodo Academy simulators grade sample entries section by section. What
+they teach, condensed:
+
+### User impact
+
+- Someone with no project context understands the defect from it. A sentence
+  that needs the feature's context to read the screenshot fails.
+- It shows the expected result next to the broken one, unless the expected
+  result is common knowledge (an invoice, a login page).
+- It says which users are affected, and which are not.
+
+### Causal chain
+
+- It starts at what the user saw and descends, event by event, to the faulty
+  line, quoted with a comment on each step.
+- Only the chain. Context the reader does not need distracts from the root
+  cause and leads to the wrong countermeasure.
+- A code block that explains why the faulty line was written, such as a type
+  declaration, is not an event of the chain. It belongs to the causes.
+- What the IDE or the linter showed is not an event of the system. It belongs
+  to detection.
+- A point that states a missing solution ("we did not do X") is not an event.
+
+### Root cause of occurrence
+
+- It is the misconception of the person who wrote the line, as *thought ___,
+  actually ___*. Even months later, it is the belief we can be nearly sure
+  they held.
+- It is precise. "Lack of knowledge about iframes" fails. "Thought an origin
+  was a URL, actually it is a scheme, a host and a port" passes.
+- Typing is not a root cause. It only detects mistakes early, so it belongs
+  in detection.
+- A carelessness error teaches nothing. Look for what made it easy, such as
+  a manual pagination with many variables to get right.
+- It may name a misleading material, such as an unsafe example in a
+  framework's documentation, or a browser API that hands out a URL and an
+  origin as the same type.
+
+### Detection failure causes
+
+- Blaming someone's carefulness ("the PO did not test that value") teaches
+  nothing and fails.
+- A description of what happened ("we had to wait for QA") is not a cause.
+- Good causes are systemic: tests run in UTC on CI and in Paris time on a
+  laptop, a type assertion that silenced typing in the code and in its test,
+  a lint rule installed but not configured.
+
+### Countermeasure
+
+- A good one removes the misconception and improves the code, such as a
+  parsed payload instead of a type assertion, or a named `isTrustedOrigin`
+  check instead of a string comparison.
+- A fix that works without addressing the root cause fails, such as adding
+  the missing dependency to an effect that should not exist.
+
+### Eradication
+
+- It repairs the failing systems: a lint rule, an environment variable set in
+  every environment, every other occurrence replaced.
+- An end-to-end test or a new written standard alone fails. A costly test and
+  a document nobody reads add bulk without changing the system.
+- Sharing the knowledge alone is acceptable for a genuine one-off. Watch the
+  weak point if it comes back.
+- A fix too large for the team is escalated, not dropped.
+
+## The agentic template's checkpoints
+
+The Future of Software guild's template for dantotsus written with an agent
+adds these checkpoints to the standard.
+
+- **General:** hyper concise and readable by a person, short sentences,
+  nothing superfluous. The template is kept as is, with the same headings and
+  no added section. The title describes the problem, not the solution. Proof
+  images sit in collapsed blocks to keep the entry short.
+- **User impact:** describes the problem without the solution, in the text
+  and the visuals. Visual proof of what the user saw against what they should
+  have seen. Exact numbers, citing who measured them.
+- **Causal chain:** cascading bullets, each nested under the point it
+  explains. It reads with "Why?" between each point. One branch per cause when
+  several combine. Each point is a fact that happened, never the absence of a
+  solution. Ideally a causal diagram.
+- **Root cause of occurrence:** names the real misconception, not an element
+  of the context. States the fact, without "we did not know", which is
+  implicit and names nobody. Sourced, with a link, a quotation and a capture.
+- **Eradication:** not a to-do list, but the mechanism that guarantees the
+  problem never returns, such as an automated test in the repository. The
+  mechanism was tried, at least locally. Similar instances were searched and
+  listed. "Eradicated" only if no problem of the same type can recur, not just
+  this one.

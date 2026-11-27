@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#89'
-fix-commits: [4154b33a23]
-eradication-level: 2
-eradication-paths: [scripts/check-adr-numbers-resolve.sh, scripts/check-numbered-sequences.sh]
+fix-commits: [4154b33a23, c54e32da7, 2d59df1c1]
+eradication-level: 1
+eradication-paths: [scripts/check-adr-numbers-resolve.sh, scripts/check-numbered-sequences.sh, .claude/skills/adr/SKILL.md]
 time-to-detect: days
 tags: [adr, git, gates, pre-commit, ci, meta, documentation]
 zone: docs/adr
@@ -15,10 +15,12 @@ recurs: [two-branches-took-the-same-migration-number]
 
 # An ADR number goes to whoever writes it first, and both branches were first
 
-## Symptom
+## User impact
 
-Merging `main` into the audience-voting branch produced a folder holding two
-records numbered 0015 and two numbered 0016:
+An ADR is cited by number, from `CLAUDE.md`, the standards, other ADRs, and
+`/open-pr`, which pulls every record a branch cites into the pull-request
+body. Merging `main` into the audience-voting branch made two numbers name two
+records each:
 
 ```
 docs/adr/0015-musicbrainz-stays-the-song-search-source.md          (branch, 2026-08-26)
@@ -27,135 +29,113 @@ docs/adr/0016-qrcode-react-for-the-audience-vote-qr-code.md         (branch, 202
 docs/adr/0016-simplewebauthn-carries-the-passkey-flow.md            (main,   2026-09-14)
 ```
 
-Git reported no conflict on any of the four. The slugs differ, so from git's
-point of view the branch added two files and `main` added two others.
+| | Seen | Expected |
+| --- | --- | --- |
+| A citation of *ADR-0015* | Two records answer it | One record |
+| `0020-qrcode-react-…` after the renumber | Its heading still read `# ADR-0016: …`, the passkey record's number | `# ADR-0020: …` |
 
-An ADR is cited by number — from `CLAUDE.md`, from the standards, from other
-ADRs, and by `/open-pr`, which pulls every record a branch references into the
-pull-request body. *ADR-0015* had stopped naming one thing.
+Every reader of a citation to 0015 or 0016 was affected, and every agent that
+`/open-pr` fed those records. Git reported no conflict on any of the four
+files.
 
-Resolving it renamed the branch's pair to 0019 and 0020, which produced the
-second half of the symptom: `0020-qrcode-react-…` went on opening with the
-heading `# ADR-0016: …`. The rename moved the filename and the heading stayed
-where it was, so the document told its reader it was the record about
-passkeys. The `docs/adr/README.md` index kept a row numbered 0015 describing
-the branch's original draft, beside `main`'s genuine 0015.
+## Causal chain
 
-## Root-cause chain
+- Two records shared the numbers 0015 and 0016 after the merge.
+  - Each branch took 0015 and 0016, the highest number it could see plus one.
+    - The `/adr` skill told the agent to pick the number that way
+      (`git show 9e8c67b93:.claude/skills/adr/SKILL.md`, line 108):
 
-1. **Why did two records share a number?**
-   Each branch read `docs/adr/`, saw 0014 as the highest, and took 0015 and
-   0016. Both were correct about the tree they could see.
+      ```markdown
+      3. **Pick the number.** Find the highest 4-digit prefix across the
+         listing and add 1. Pad to 4 digits.   <!-- ❌ the local tree only -->
+      ```
 
-2. **Why did the merge not surface it?**
-   A number collision in a folder is not a text conflict. Two files with
-   different names are two files; git has no notion that the digits at the
-   front of a name are a claim on a shared namespace.
+      - The skill allocated from one branch's tree, while every branch open at
+        the same time drew from the same namespace (Method).
+  - Git merged both pairs, because two files with different slugs are two
+    files to git.
+- The renumbered `0020-qrcode-react-…` kept the heading `# ADR-0016:`.
+  - `git mv` renamed the file and left its content as it was. The number lived
+    in three places, the filename, the heading and the index row, and the
+    rename moved one.
 
-3. **Why did nothing else surface it?**
-   The repository had a gate for exactly this shape — twice over, for
-   migrations, in `check-migration-numbering.sh` and `check-migration-numbers.sh`
-   (see [`the-loop-shipped-the-same-gate-twice`](./the-loop-shipped-the-same-gate-twice.md)).
-   Neither looked at `docs/adr`. Both were written from the pull request that
-   had just hit the problem, and neither author asked which other folders have
-   the same shape.
+## Root cause of occurrence
 
-4. **Why did the branch's number survive eight weeks without being noticed?**
-   The branch took 0015 on 2026-08-26 and `main` took it on 2026-09-14. For
-   nineteen days there was nothing to see: on each side the number was free
-   when it was taken and unique afterwards. The collision does not exist until
-   the merge, and the merge is not a moment anybody is reading ADR numbers.
+*Whoever wrote the skill's numbering step thought an ADR number is a name the
+author picks, actually it is a claim on a namespace shared with every branch
+open at the same time, and a namespace with no allocator is allocated by
+whoever merges last being wrong.* (Method)
 
-5. **Why did the renumber leave a heading behind?**
-   `git mv` renames a file; nothing reads what is inside it. The number
-   appears in three places — the filename, the heading, the index row — and
-   only the first is what the rename operates on.
-
-6. **Why did review not catch the stale heading?**
-   The renumber landed inside a merge commit that also resolved a schema
-   slice, an adapter and eleven test files. A one-line heading inside a
-   118-line file that git reports as a rename is not where attention goes.
-
-**Root cause:** the author thought *a number is a name I pick*, actually *a
-number is a claim on a namespace shared with every branch open at the same
-time*, and a namespace with no registry is allocated by whoever merges last
-being wrong.
+Each agent followed the skill correctly. The step itself could not see the
+other branch. The same shape had already hit migrations
+([`two-branches-took-the-same-migration-number`](./two-branches-took-the-same-migration-number.md)),
+and its two gates each covered only the migrations folder
+([`the-loop-shipped-the-same-gate-twice`](./the-loop-shipped-the-same-gate-twice.md)).
 
 ## Detection failure causes
 
-- **Typing / linter:** markdown; nothing to type, and no linter reads a
-  filename as a claim.
-- **Functional validation locally:** an ADR does nothing at runtime. A
-  duplicate number breaks citation, which nothing executes.
-- **CI:** `check-doc-links.ts` verifies that every markdown link resolves. All
-  four files existed, so every link to them resolved — to the wrong one, when
-  the link was written before the merge.
-- **Code review:** the collision is visible only in a folder listing. A diff
-  shows two files being added, which is what adding two ADRs looks like.
-- **The existing gates:** two of them checked precisely this shape, for
-  migrations only, because each was scoped to the folder that had just failed.
+- **Linter:** markdown, and no linter reads a filename as a claim.
+- **CI:** `check-doc-links.ts` checks that every link resolves. All four files
+  existed, so every link resolved, to the wrong record when it was written
+  before the merge.
+- **Existing gates:** `check-migration-numbering.sh` and
+  `check-migration-numbers.sh` checked this exact shape, scoped to the folder
+  whose failure each was written from.
+- **Review:** the collision shows only in a folder listing. The diff showed
+  two files added, which is what adding two ADRs looks like. The stale heading
+  sat in a merge commit that also resolved a schema slice, an adapter and
+  eleven test files.
 
 ## Countermeasure
 
-- **Code:** the branch's pair renumbered to 0019 and 0020, `0019`'s heading
-  and metadata lines normalised to the shape the other nineteen use, `0020`'s
-  heading corrected from `ADR-0016:` to `ADR-0020:`, and the stale 0015 row
-  removed from the index.
-- **Rewritten, not renamed:** the branch's 0015 argued for MusicBrainz as the
-  search source, which `main`'s ADR-2026-09-15T2023 had already settled otherwise. It was
-  rewritten as ADR-2026-09-16T1931 about what the room's search actually needed, and says
-  so in its own Context section rather than leaving a reader to wonder why
-  0019 is dated after 0017 decided the same area.
+The branch's pair became 0019 and 0020. `0020`'s heading was corrected to
+`ADR-0020:`, `0019`'s metadata lines took the shape of the others, and the
+stale 0015 index row was removed. The branch's 0015 argued for MusicBrainz,
+which `main`'s ADR-2026-09-15T2023 had settled otherwise, so it was rewritten
+as ADR-2026-09-16T1931 about what the room's search needed.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — devx check), two of them
+**Type:** structural impossibility (level 1)
 
-**Reference:** PR #106 · commit `4154b33a` · `scripts/check-numbered-sequences.sh`
-and `scripts/check-adr-numbers-resolve.sh`
+**Reference:** commit `c54e32da7` (#224, 2026-10-29) named new ADRs by the UTC
+minute they are written. Commit `2d59df1c1` (#290, 2026-11-11) renamed records
+0001 to 0052 to that form. `scripts/check-adr-numbers-resolve.sh` refuses a
+file that does not start with a minute id:
 
-**1. The collision itself.** `check-numbered-sequences.sh` replaces the two
-migration-only scripts with one that takes a list of folders where the leading
-number is the order:
-
-```diff
-+SEQUENCE_GLOBS=(
-+  'apps/*/api/src/database/migrations:sql:migration'
-+  'docs/adr:md:architecture decision record'
-+)
+```bash
+ID_PATTERN='[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{4}'
+# …
+  if ! [[ "$filename" =~ ^(${ID_PATTERN})- ]]; then
+    failed=1
 ```
 
-Adding a sequence is one line, which is the point: the third occurrence of
-this shape had no gate because the first two gates were each written for one
-folder. Verified by dropping a decoy `docs/adr/0019-a-decoy.md` beside the
-real 0019, which exits 1 naming both.
+An id taken on one branch is no longer a guess about the others: two branches
+collide only when both write an ADR in the same UTC minute. That case, and the
+heading that disagrees with its filename, are refused at commit by the two
+gates of commit `4154b33a` (PR #106), which still run:
 
-**2. The rename's aftermath.** `check-adr-numbers-resolve.sh` refuses a
-record whose heading states a different number from its filename, a record
-with no index row, and an index row linking a record that is gone:
+- `scripts/check-numbered-sequences.sh` refuses two records with one id, in
+  every folder listed in its `SEQUENCE_GLOBS`.
+- `scripts/check-adr-numbers-resolve.sh` refuses a heading whose id differs
+  from the filename, a record with no index row, and an index row whose record
+  is gone.
 
-```diff
-+  heading_number="$(echo "$heading" | sed -n 's/^#[[:space:]]*ADR[ -]\{0,1\}\([0-9][0-9]*\).*/\1/p')"
-+  if [ "$heading_number" != "$filename_number" ]; then
-+    echo "[check-adr-numbers-resolve] $record: the heading says ${heading_number}" >&2
-```
+**Proof it can fail:** at the time, a decoy `docs/adr/0019-a-decoy.md` beside
+the real 0019 made `check-numbered-sequences.sh` exit 1 naming both. Restoring
+`# ADR-0016:` at the top of `0020-qrcode-react-…` made
+`check-adr-numbers-resolve.sh` exit 1 naming it (measured on 2026-09-16).
 
-Verified against the defect itself: restoring `# ADR-0016:` at the top of
-`0020-qrcode-react-…` exits 1 and names it. Its index half fired immediately
-on the tree it was written against — nine of twenty records had no row,
-having accumulated since ADR-2026-08-14T1116 in a table whose comment says *manually
-curated*.
+**Proposed:** migrations are still numbered in sequence, and held at level 2
+by `check-numbered-sequences.sh`. drizzle-kit 0.31.11, the version in
+`pnpm-workspace.yaml`, accepts `migrations: { prefix: 'timestamp' }` in
+`defineConfig` (read in its `index.d.ts`: `prefixes = ["index", "timestamp",
+…]`). Setting it in each `apps/*/drizzle.config.ts` would name new migrations
+by time, so two branches could no longer take the same migration number, and
+the migrations line of `SEQUENCE_GLOBS` could then go. Existing journals keep
+their names.
 
-Both are wired into `.husky/pre-commit` and `ci.yml`, and cited in
-`docs/standards/12-linting-and-gates.md`, which is what the enforcement ledger
-requires of a mechanism that runs.
-
-**Sibling defects swept:** `0019`'s `- Status:` / `- Date:` lines, which the
-first draft wrote without the bold the other nineteen records use; the stale
-index row; and the nine missing ones.
-
-## See also
-
-- [`the-loop-shipped-the-same-gate-twice.md`](./the-loop-shipped-the-same-gate-twice.md) — why the two gates that would have caught this covered one folder each.
-- [`two-branches-took-the-same-migration-number.md`](./two-branches-took-the-same-migration-number.md) — the same shape in `migrations/`.
-- [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md) — another defect that exists only once two branches meet.
+**Similar instances:** `grep -n "SEQUENCE_GLOBS" -A4 scripts/check-numbered-sequences.sh`
+lists the two numbered families, ADRs and migrations. Commit `bdd93b705`
+(2026-10-02, "the second ADR 0021 becomes 0022") shows the number-based scheme
+colliding again after the gate shipped, before the rename to minute ids.

@@ -1,106 +1,131 @@
 ---
 date: 2026-08-15
-introduced-at: conception
+introduced-at: self-validation
 detected-at: review
 severity: high
 related-pr: '#50'
-fix-commits: [e79224055f, 2e581bcfec]
+fix-commits: [e79224055f, 2e581bcfec, 67bf3a3d6, c54e32da7]
 eradication-level: 2
-eradication-paths: [scripts/argent.sh, scripts/check-negative-claims-are-dated.sh]
+eradication-paths: [scripts/check-negative-claims-are-dated.sh, scripts/phone.sh, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: 14 hours
 tags: [harness, tooling, ux, validation, claude-md, process]
-zone: .claude/skills/visual-validation
+zone: docs/knowledge/driving-previews-with-agent-browser-and-argent.md
 recurs: [described-screenshot-without-checking-pixels]
 ---
 
 # Two phone audits, six rounds, zero touch events
 
-## Symptom
+## User impact
 
-The operator asked for a phone UX audit driven with argent, the tool that sends
-real touch input. Two audit-and-fix workflows ran, three rounds each, 22 agents,
-about four million tokens. They found and fixed 63 real defects and reported not
-one finding about touch.
+The operator asked for a phone UX audit driven with argent, the tool that then
+sent real touch input. Two audit-and-fix workflows ran, three rounds each, 22
+agents, about four million tokens (measured from the workflow runs). They fixed
+63 real defects and reported no finding about touch.
 
-The operator read a line in the summary about what headless Chromium could not
-show and asked:
+| | Seen | Expected |
+| --- | --- | --- |
+| argent invocations across the 22 agent transcripts | 0 (counted) | every touch check driven by argent |
+| Touch findings | none | taps, drags and coarse-pointer layouts checked |
+
+The operator read a line about what headless Chromium could not show and
+asked:
 
 > What do you mean headless chromium ? Did you not use argent ??
 
-Counting actual invocations across all 22 agent transcripts: **zero**.
+## Causal chain
 
-## Root-cause chain
+- No audit agent sent a touch event.
+  - The workflow prompts steered them away from argent. The first run's prompt
+    said *"its gesture-tap is broken on this Chromium (CDP
+    `Input.dispatchMouseEvent` times out) — use agent-browser for
+    interaction"*. The second run's prompt did not mention argent.
+    - The prompt copied a section of
+      `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`
+      headed "`gesture-tap` does not work on this Chromium", citing two
+      reproductions.
+      - Commit `a6177d71d` (2026-08-08, written by an agent during a preview
+        validation) added that section, with the observation that every
+        `argent run gesture-tap` timed out:
 
-1. **Why did no agent use argent?** The workflow prompts told them not to. The
-   first run's prompt said *"its gesture-tap is broken on this Chromium (CDP
-   `Input.dispatchMouseEvent` times out) — use agent-browser for interaction"*.
-   The second run's prompt did not mention argent at all.
-2. **Why did the prompt say that?** It was copied from
-   `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`, which
-   carried a section headed *"`gesture-tap` does not work on this Chromium"*,
-   citing two independent reproductions.
-3. **Why did that section exist?** Two earlier validation runs really did see
-   `CDP request Input.dispatchMouseEvent timed out` on every call, and wrote it
-   down as a property of the tool.
-4. **Why was it wrong?** Both reproductions ran while `agent-browser` held a
-   session on the same browser. The same file already documents that the two
-   tools cannot share a browser, because Playwright owns the targets and
-   argent's `Page.navigate`, `Runtime.evaluate` and input dispatch all time out
-   against them. The observation was of the collision, not of the tool. Re-tested
-   with a browser of argent's own, `gesture-tap` answers `{"tapped": true}` and a
-   tap → keyboard → tap sequence logs in, opens a drawer, closes it, changes tab
-   and leaves a full-screen view without one timeout.
-5. **Why did nobody re-test in fourteen hours of audit work?** Because nothing
-   ever re-tests a negative claim. A positive claim fails loudly the first time
-   it is wrong — you run the command and it errors. A negative claim fails
-   silently forever, because it stops anyone running the command.
+        ```md
+        +## `gesture-tap` does not work on this Chromium   ← the faulty line
+        +
+        +Two validation runs hit it independently. Every `argent run gesture-tap` returns
+        ```
 
-**Root cause:** thought *"a knowledge entry recording two reproductions of a
-tool failing is a fact about the tool"*, actually *"it is a fact about two runs,
-and a negative claim carries no expiry, no owner and no re-test, so it outlives
-its cause and quietly redirects every agent that reads it"*.
+        - Both reproductions ran while `agent-browser` held a session on the
+          same browser. Playwright owned the targets, so argent's input
+          dispatch timed out. The observation was of the collision. Re-tested
+          with a browser of argent's own, `gesture-tap` answered
+          `{"tapped": true}` and a tap, keyboard, tap sequence logged in,
+          opened and closed a drawer and changed tab without one timeout.
+          - The setup let two drivers attach to one browser: argent took the
+            port from `agent-browser get cdp-url` (Machine).
+
+## Root cause of occurrence
+
+*Thought a CDP timeout on every `gesture-tap` call was a property of the
+tool, actually it was the documented collision of two drivers on one
+browser.* **Man:** the right fact was in the agent's context. The same file
+it edited already said, under "The two tools must not share one browser"
+(`git show a6177d71d^:docs/knowledge/driving-previews-with-agent-browser-and-argent.md`,
+line 101, read this session):
+
+> `Page.navigate`, `Runtime.evaluate` and `Page.captureScreenshot` all return
+> `CDP request … timed out`, because Playwright already owns those targets.
+
+The prior "a timeout means the tool is broken" won over a paragraph a few
+lines away. A Man cause is not answered by another document, so the
+eradication below removes the collision (Machine) and gates the claim.
 
 ## Detection failure causes
 
-- **Typing:** not applicable — prose in a markdown file.
-- **Linter / static analysis:** nothing reads knowledge entries for claims that
-  have gone stale. This is the gap the eradication closes.
-- **Functional validation locally:** the audits validated the *app* thoroughly
-  and never validated their own instrument. Each agent reported "argent was not
-  used for any measurement" as a note, not as a limitation of the verdict.
-- **CI:** the audits are not a CI job; nothing there could have noticed.
-- **Code review:** the operator caught it, on reading one sentence about
-  headless Chromium in a summary. Fourteen hours after the first round started.
-- **PO / QA validation:** the operator's original instruction named argent
-  explicitly. Nothing checked the work against that instruction — the reports
-  read as complete because they were full of real findings.
+- **Linter:** nothing read knowledge entries for a negative claim, so an
+  undated "does not work" stood as fact. A positive claim fails the first time
+  someone runs the command. A negative claim stops anyone running it.
+- **Local validation:** the audits validated the app and not their own
+  instrument. Each agent reported "argent was not used for any measurement" as
+  a note, not as a limit of the verdict.
+- **CI:** the audits are not a CI job.
+- **Review:** the operator caught it on one sentence about headless Chromium,
+  fourteen hours after the first round started.
+- **QA:** the operator's instruction named argent. The reports read as
+  complete because they were full of real findings, and nothing compared them
+  with the instruction.
 
 ## Countermeasure
 
-- **Code:** commit `e792240` — the false section is withdrawn and replaced with
-  the re-test, the probable cause of the original timeouts, and a header line
-  saying that a task about touch is driven with argent because a synthetic click
-  is not a tap.
-- **Code:** commit `2e581bc` — `scripts/argent.sh` makes the correct setup one
-  command, and the sweep corrects every other place the claim had spread:
-  `.claude/agents/visual-validator.md` (which told every validation run to check
-  touch with `agent-browser set device`, a call this repository's own knowledge
-  says leaves `matchMedia('(pointer: coarse)')` false), the visual-validation
-  standard, `docs/knowledge/agentic-device-testing.md`, the knowledge index, and
-  three PR-40 validation records that keep their findings behind a correction
-  banner.
+Commit `e792240` withdrew the false section and replaced it with the re-test.
+Commit `2e581bc` added `scripts/argent.sh`, which gave argent its own browser
+in one command, and corrected every place the claim had spread:
+`.claude/agents/visual-validator.md`, the visual-validation standard,
+`docs/knowledge/agentic-device-testing.md`, the knowledge index, and three
+PR-40 validation records, now behind a correction banner.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — a gate rejects the misconception at commit time)
+**Type:** DevX check (level 2)
 
-**Reference:** [PR #51](https://github.com/hugoleborso/borso.fr/pull/51) · commits
-[`e792240`](https://github.com/hugoleborso/borso.fr/commit/e792240),
-[`2e581bc`](https://github.com/hugoleborso/borso.fr/commit/2e581bc), plus
-`scripts/check-negative-claims-are-dated.sh` on this branch
+**Reference:** [PR #51](https://github.com/hugoleborso/borso.fr/pull/51),
+commits [`e792240`](https://github.com/hugoleborso/borso.fr/commit/e792240),
+[`2e581bc`](https://github.com/hugoleborso/borso.fr/commit/2e581bc) and
+[`67bf3a3d6`](https://github.com/hugoleborso/borso.fr/commit/67bf3a3d6), then
+[`c54e32da7`](https://github.com/hugoleborso/borso.fr/commit/c54e32da7) (#224).
 
-Correcting this one entry does not stop the next one. The class is *an undated
-negative claim about a tool*, so the gate is about dating them:
+Two mechanisms hold today.
+
+1. **The collision is gone.** Commit `c54e32da7` (2026-10-29) deleted argent
+   and `scripts/argent.sh` and added `scripts/phone.sh`. It sends
+   `Input.dispatchTouchEvent` into agent-browser's own session (lines 2 to
+   11), so no second driver competes for the browser's targets. Level 1 is not
+   claimed: `scripts/browser/touch-tap.ts` still opens its own CDP connection
+   to that browser, by design (`phone.sh:65-71`).
+2. **An undated negative claim is refused.**
+   `scripts/check-negative-claims-are-dated.sh` runs in `.husky/pre-commit`
+   (line 336) and in `ci.yml` (line 141). A knowledge entry that says
+   something does not work must carry `Last verified: YYYY-MM-DD`. Quoted and
+   code-spanned text is stripped first. Age prints a warning past 180 days and
+   never fails.
 
 ```diff
 +for doc in docs/knowledge/*.md; do
@@ -112,40 +137,20 @@ negative claim about a tool*, so the gate is about dating them:
 +done
 ```
 
-A knowledge entry that says a tool does not work must carry
-`Last verified: YYYY-MM-DD — <how it was checked>`. The date is what lets the
-next reader decide between believing it and spending two minutes re-testing;
-without one, the only options are obey or re-derive from scratch, and every
-agent so far has obeyed.
+**Proof it can fail:** planted on a scratch copy of `docs/knowledge/` on
+2026-11-27, a file saying "`gesture-tap` does not work on this Chromium."
+with no date. The gate answered, exit 1:
 
-Deliberate limits, so the gate stays cheap and never fires spuriously:
+```
+[negative-claims] FAIL docs/knowledge/planted.md says something does not work, with no date
+```
 
-- Quoted and code-spanned text is stripped before matching, because a quoted
-  *"deploy is broken"* is somebody being wrong in a story, and a withdrawn claim
-  quoted back is the correction itself.
-- Age does not fail the build. A stale date is still an honest one, and a clock
-  that reddens an unrelated pull request is friction with no matching benefit.
-  Past 180 days it prints a warning where somebody is already reading.
-
-Wired into `.husky/pre-commit` and `.github/workflows/ci.yml`, next to the other
-one-directory greps.
-
-**Sibling defects swept:** `.claude/agents/visual-validator.md` carried the same
-shape of false instruction from a different source — it told every visual
-validation run to check touch affordances with `agent-browser set device
-"iPhone 14"`, contradicting `agent-browser-coarse-pointer-emulation.md` in the
-same repository. Two documents disagreed and the wrong one was the one in the
-execution path. It now routes touch through `scripts/argent.sh` or marks the row
-UNVERIFIABLE.
-
-## See also
-
-- [`believed-the-bundle-readme-not-the-live-package-json.md`](./believed-the-bundle-readme-not-the-live-package-json.md)
-  — the same shape: a document believed over an observation that was one command
-  away.
-- [`lectured-without-reading-the-code.md`](./lectured-without-reading-the-code.md)
-  — asserting from memory rather than from the artefact.
-- [`said-the-file-was-unreachable-without-looking.md`](./said-the-file-was-unreachable-without-looking.md)
-  — same PR, same week: a capability declared impossible without probing it.
-- [`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](../knowledge/driving-previews-with-agent-browser-and-argent.md)
-  — the corrected recipe and the traps `scripts/argent.sh` now encodes.
+**Similar instances:** `.claude/agents/visual-validator.md` told every visual
+validation to check touch with `agent-browser set device "iPhone 14"`, which
+`agent-browser-coarse-pointer-emulation.md` in the same repository says
+leaves the pointer fine. Two documents disagreed and the wrong one was in the
+execution path. It now routes touch through `scripts/phone.sh`. The same
+shape, a document believed over one command, is in
+[believed-the-bundle-readme-not-the-live-package-json.md](./believed-the-bundle-readme-not-the-live-package-json.md)
+and
+[said-the-file-was-unreachable-without-looking.md](./said-the-file-was-unreachable-without-looking.md).

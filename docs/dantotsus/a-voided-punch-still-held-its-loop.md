@@ -9,24 +9,25 @@ eradication-level: 1
 time-to-detect: months
 tags: [last-loop-lepin, dsql, domain-model, vocabulary, gates, testing]
 blueprints: [core-decision, schema-dsql-constraints]
-eradication-paths: [apps/last-loop-lepin/api/src/punch/punch.repository.ts, apps/last-loop-lepin/api/src/punch/punch.schema.ts]
+eradication-paths: [apps/last-loop-lepin/api/src/punch/punch.repository.ts, apps/last-loop-lepin/api/src/punch/punch.schema.ts, apps/last-loop-lepin/api/src/punch/punch.core.ts]
 zone: apps/last-loop-lepin/api/src/punch
-recurs: none (a constraint that refused a legal write after a void, not a gate or vocabulary defect)
+recurs: none (a check that read voided rows as live ones, not a gate or vocabulary defect)
 ---
 
 # A voided punch still held its loop
 
-## Symptom
+## User impact
 
 A marshal records a punch for the wrong runner, or at the wrong moment, and
-voids it. Then they try to record the right punch for that runner and that
-loop. The admin screen refuses it with `already-punched-this-loop`, and with no
-existing punch attached, because the only punch for that loop is the voided
-one.
+voids it. Then they record the right punch for that runner and that loop.
 
-`apps/last-loop-lepin/VOCABULARY.md` promised the opposite: *"Voiding is what
-lets a runner be punched again for the same loop."* No test had ever tried it.
-The new test fails on the code as it was:
+| | Seen | Expected |
+| --- | --- | --- |
+| Re-punch after a void | The admin screen refuses it with `already-punched-this-loop`, with no existing punch attached | The punch is recorded, because the only punch for that loop is voided |
+
+The vocabulary promised the expected column: *"Voiding is what lets a runner
+be punched again for the same loop."* A new test reproduced the refusal on the
+code as it was (measured):
 
 ```
 FAIL  punch.service > punches a runner again for a loop whose punch was voided
@@ -34,73 +35,93 @@ PunchRejectedError: punch rejected: already-punched-this-loop
  ❯ buildPunchRejectionError api/src/punch/punch.service.ts:69:10
 ```
 
-Found by a read-only third-party review, not by a user. The only way out on
-race day was the catch-up endpoint, which happened to use a different query.
+A read-only third-party review found it, not a user. Every marshal of an
+edition was exposed. The only way out on race day was the catch-up endpoint,
+which used a different query.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the second punch refused?** `validatePunchTiming` found a punch
-   for the runner and the loop in the list it was given, and that punch was the
-   voided one.
-2. **Why was a voided punch in the list?** `registerPunch` and
-   `registerSelfPunch` passed every punch of the runner, read with
-   `listPunchesForEdition`, which does not filter on `voided_at`.
-3. **Why did the core function not filter it?** Its parameter was named
-   `validPunchesForRunner`. The filter was a promise made by a name, and the
-   caller written next to it never kept it.
-4. **Why did a name have to carry it?** Until 2026-05-13 the database held the
-   rule, with a partial unique index on
-   `(edition_slug, runner_slug, loop_index) WHERE voided_at IS NULL`. Aurora
-   DSQL refuses partial indexes, so commit `32e63381` dropped it and wrote
-   *"Re-punch guarding now lives entirely in `validatePunchTiming`."* The
-   `WHERE voided_at IS NULL` clause was half of what the index did, and it did
-   not move anywhere.
-5. **Why did nothing notice?** The vocabulary stated the rule as a sentence,
-   and no test was bound to that sentence.
+- The admin screen refused the second punch with `already-punched-this-loop`.
+  - `validatePunchTiming` found a punch for that runner and loop in the list it
+    was given. That punch was the voided one.
+    - `registerPunch` passed every punch of the runner, read with
+      `listPunchesForEdition`, which does not filter on `voided_at`
+      (`git show 32e63381^:apps/last-loop-lepin/api/src/punch/punch.service.ts`):
 
-**Root cause:** we thought moving a constraint into a check in code moved the
-rule; actually the partial index carried two properties, a filter on voided
-rows and a refusal at write time, and the check that replaced it carried
-neither. The filter survived only as the word *valid* in a parameter name.
+      ```ts
+      // every punch of the edition, voided ones included
+      const existingPunches = await listPunchesForEdition(database, input.editionSlug);
+      // narrowed to the runner, never to active punches
+      const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
+      // ❌ the core's parameter is named validPunchesForRunner
+      const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
+      ```
 
-The second property, the refusal at write time, is its own defect with its
-own root cause; see
-[`five-monkeys-at-a-three-seat-table`](./five-monkeys-at-a-three-seat-table.md).
+      - Commit `5353b6de1` (2026-05-12, "database client + 6 feature layers +
+        Hono app") wrote that caller. One agent commit wrote every repository,
+        service and controller of six features at once.
+        - The same commit wrote `findActivePunchForLoop` 21 lines above
+          `listPunchesForEdition`, with `isNull(loopPunchesTable.voidedAt)`.
+          The core it called, written the same day in `92fb11aa3`, named its
+          parameter `validPunchesForRunner`. Both facts sat in the agent's
+          context. The unfiltered list went in anyway (Man).
+  - `8ad75cc88` (2026-05-15) copied the same call into `registerSelfPunch`.
+
+## Root cause of occurrence
+
+*The agent thought `listPunchesForEdition` returned the punches that count for
+the re-punch rule, actually it returns every row of the edition, voided ones
+included, and the core's "valid" was a promise only its name carried.* (Man)
+
+The agent wrote the line. The right answer was in its context: the parameter
+name `validPunchesForRunner` in `punch.core.ts` (`92fb11aa3`), and the
+`isNull(loopPunchesTable.voidedAt)` filter it wrote in the same commit for
+`findActivePunchForLoop`. So the cause is not a missing document. The prior won
+in a worker state that favoured it: one commit writing six feature layers,
+where a list read for one purpose was reused for another (inferred from the
+commit's scope).
+
+The defect is not the index drop. At the parent of `32e63381`, which dropped
+the partial unique index because Aurora DSQL refuses partial indexes, the
+caller already passed the unfiltered list. So the app check refused a re-punch
+after a void while the index still existed.
 
 ## Detection failure causes
 
-- **Typing:** a `readonly LoopPunch[]` is a `readonly LoopPunch[]` whether it
-  was filtered or not. Nothing in the type said "valid".
+- **Typing:** a `readonly LoopPunch[]` is the same type filtered or not.
+  Nothing in the type said "active".
 - **Linter:** no rule reads a parameter name as a precondition.
-- **CI:** `punch.core.test.ts` only ever passed active punches, so the core
-  never met a voided one. `punch.service.test.ts` voided a punch in one case and
-  stopped there; it never punched again.
-- **Code review:** the commit that dropped the index was a `fix:` with a
-  one-line rationale. It did not name what the index did that the check would
-  not, which is the failure
+- **CI:** `punch.core.test.ts` only passed active punches, so the core never
+  met a voided one. `punch.service.test.ts` voided a punch in one case and
+  never punched again.
+- **Code review:** `32e63381` was a `fix:` whose message says *"Re-punch
+  guarding now lives entirely in `validatePunchTiming`"*. It did not check what
+  list that function received. That is the failure
   [`silent-property-regression-in-refactor-message`](./silent-property-regression-in-refactor-message.md)
-  describes.
-- **Vocabulary:** the promise was written on 2026-08-15, three months after it
-  had stopped being true, and `check-vocabulary-paths.sh` checked only that a
-  term's folder exists.
+  describes, so the reviewer had no list of what moved to check.
+- **Vocabulary:** the promise was written on 2026-08-15, and
+  `check-vocabulary-paths.sh` then only checked that a term's folder exists. No
+  test was bound to the sentence.
 
 ## Countermeasure
 
-The core no longer receives punches at all. `validatePunchTiming(edition, now)`
+The core no longer receives punches. `validatePunchTiming(edition, now)`
 decides the race window and the loop and nothing else. One active punch per
-runner and loop is held by the primary key of a new table,
-`loop_punch_claims`, written with the punch and deleted with the void in the
-same transaction, so a voided punch frees its loop by construction.
+runner and loop is held by the primary key of a new table, `loop_punch_claims`.
+The claim is written with the punch and deleted with the void in one
+transaction, so a voided punch frees its loop by construction.
 `lastLoopDurationMs`, the other core function that took a "valid" list, now
-filters voided punches itself.
+filters voided punches itself. The test above passes.
 
-## Eradication (mandatory — code-level)
+The other half of what the dropped index did, refusing a concurrent second
+write, is its own entry,
+[`five-monkeys-at-a-three-seat-table`](./five-monkeys-at-a-three-seat-table.md).
 
-**Type:** code diff (level 1 — structural impossibility)
+## Eradication
 
-**Reference:** commits listed in the front matter.
+**Type:** structural impossibility (level 1)
 
-**The actual fix:**
+**Reference:** the commit adding this file.
 
 ```diff
  export function validatePunchTiming(
@@ -123,35 +144,22 @@ filters voided punches itself.
 ```
 
 A caller can no longer hand the decision a list it forgot to filter, because
-the decision takes no list.
+the decision takes no list. It still holds today:
+`apps/last-loop-lepin/api/src/punch/punch.core.ts:24` reads
+`export function validatePunchTiming(edition: RaceEdition, now: Date)`, and
+`punch.repository.ts` inserts into and deletes from `loopPunchClaimsTable`.
 
-**Type:** DevX check (level 2)
+The promise is also bound to its test. `apps/last-loop-lepin/api/src/punch/INVARIANTS.md:117`
+carries `Held by: \`api/src/punch/punch.service.test.ts\` › punches a runner
+again for a loop whose punch was voided`, and `scripts/check-vocabulary-paths.sh`
+fails when that file or title is gone. That line moved from `VOCABULARY.md` to
+the folder's invariants in `2cfa2a34d` (#353).
 
-A vocabulary invariant that promises behaviour now names the test that holds
-it, on a `Held by:` line, and `scripts/check-vocabulary-paths.sh` fails when
-that test file or that test title is gone:
+**Proof it can fail:** the service test above, run on the code before the fix,
+fails with `PunchRejectedError: punch rejected: already-punched-this-loop`.
 
-```markdown
-Held by: `api/src/punch/punch.service.test.ts` › punches a runner again for a loop whose punch was voided
-```
-
-The gate checks that a cited test exists. Whether a sentence is a promise that
-needs one is reading prose, so that half is a `reviewer` bullet in
-[`01-naming.md`](../standards/01-naming.md), not a rule.
-
-**Sibling defects swept:** every parameter under `apps/*/api/src` named
-`valid…`. The two in `punch.core.ts` are fixed above. The third,
-`progressFor(…, validPunches, …)` in `ranking.core.ts`, is a private function
-whose only caller filters on `voidedAt === null` two lines before calling it,
-so the promise is kept inside one function and left as it is. Every caller of
-`lastLoopDurationMs` already filtered, so the change there is defence rather
-than a fix.
-
-## See also
-
-- [`five-monkeys-at-a-three-seat-table`](./five-monkeys-at-a-three-seat-table.md),
-  the other half of what the dropped index used to do.
-- [`a-comment-decayed-and-took-the-vocabulary-with-it`](./a-comment-decayed-and-took-the-vocabulary-with-it.md),
-  the previous time the vocabulary stated something the code had stopped
-  doing.
-- [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §6.
+**Similar instances:** `grep -rn "valid[A-Z][a-zA-Z]*" apps/*/api/src` for
+parameters named `valid…`. The two in `punch.core.ts` are removed above. The
+third, `progressFor(…, validPunches, …)` in `ranking.core.ts`, is private, and
+its only caller filters on `voidedAt === null` two lines before the call.
+Every caller of `lastLoopDurationMs` already filtered.

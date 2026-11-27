@@ -6,10 +6,10 @@ severity: low
 related-pr: '#252'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-no-prettier.sh, .claude/settings.json]
+eradication-paths: [scripts/hooks/checks/no-prettier.core.ts, .claude/settings.json]
 time-to-detect: minutes
 tags: [tooling, hooks, harness, agents]
-zone: .claude/hooks
+zone: scripts/hooks/checks/no-prettier.core.ts
 weak-point: none
 recurs: none (no earlier entry covers a second formatter; the-formatter-reached-outside-the-repository is about where oxfmt runs, not which formatter)
 ---
@@ -30,18 +30,33 @@ Each session spent a commit cycle putting back files it never meant to change.
 
 - Unrelated files changed in the working tree.
   - The session ran Prettier, which disagrees with oxfmt on some lines.
-    - Nothing stops a Prettier call, and the root still held
-      `.prettierrc.json`, which says Prettier is the formatter.
-      - ADR 2026-10-27T2320 swapped Prettier for oxfmt and left the old config behind.
+    - The model reached for Prettier, its default formatter for a TypeScript
+      repository.
+      - The root still held `.prettierrc.json`, which says Prettier is the
+        formatter.
+        - Commit `9dcf745479` (PR #197, ADR 2026-10-27T2320) swapped Prettier for
+          oxfmt. It removed the dependency and deleted `.prettierignore`, and left
+          `.prettierrc.json` at the root.
+          - The retirement was done file by file, by hand, with no list of the
+            files the old tool owned.
 
 ## Root cause of occurrence
 
-*Thought removing Prettier from the dependencies retired it, actually the
-config file stayed and `npx`/`pnpm dlx` fetch Prettier on demand.*
+*The session thought Prettier formats this repository, actually oxfmt does, and
+`npx` or `pnpm dlx` fetch Prettier on demand even though no dependency names it.*
+(Man)
 
-`scripts/check-coupled-lists.sh` says "Prettier is gone and oxfmt replaced it,
-so there is no such command left to guard". The command was still one `npx`
-away, and `.prettierrc.json` from commit `314f2482` was still at the root.
+The model's default won. The retirement in PR #197 rested on the opposite belief,
+that Prettier was gone once its dependency was. `scripts/check-coupled-lists.sh`
+then said "Prettier is gone and oxfmt replaced
+it, so there is no such command left to guard". The command was one `npx` away,
+and `.prettierrc.json` from commit `314f24821` was still at the root, a
+misleading material that confirmed the habit.
+
+The habit is the deeper cause, measured after the fix. The archived kaizen logs
+hold 27 refusals by `hook:no-prettier` after `.prettierrc.json` was deleted, the
+latest on 2026-11-26 (`grep -h 'hook:no-prettier' docs/features/*/*/kaizen.md`,
+measured). Deleting the config did not stop the reach. Only the refusal holds it.
 
 ## Detection failure causes
 
@@ -64,7 +79,13 @@ pipes, was considered and dropped. Prettier's `--cache`, `--ignore-unknown` and
 
 **Type:** DevX check (level 2)
 
-**Reference:** commit [self] in [PR #255](https://github.com/hugoleborso/borso.fr/pull/255)
+**Reference:** commit `5ce372fdb4` (PR #255) shipped the hook as
+`.claude/hooks/pretool-no-prettier.sh`. Commit `458e886c4` replaced it with
+`scripts/hooks/checks/no-prettier.core.ts`, run by `scripts/hooks/hook.ts`
+through the `Bash` matcher in `.claude/settings.json`. The shell script below is
+the first version. The TypeScript check keeps its behaviour: it splits the
+command into simple commands and refuses one whose word, or the target of `npx`,
+`bunx`, `exec`, `dlx`, `pnpm` or `yarn`, is `prettier`.
 
 ```diff
 +RUNNER='(npx|bunx|exec|dlx|pnpm|yarn)[[:space:]]+(-[^[:space:]]+[[:space:]]+)*'
@@ -74,7 +95,7 @@ pipes, was considered and dropped. Prettier's `--cache`, `--ignore-unknown` and
 +fi
 ```
 
-**Proof it can fail:** fed with `KAIZEN_LOG_REFUSALS=0`, measured this session.
+**Proof it can fail:** the first version, fed with `KAIZEN_LOG_REFUSALS=0`, measured when it shipped. `scripts/hooks/checks/no-prettier.core.test.ts` holds the same cases today.
 
 | Command | Exit |
 | --- | --- |
@@ -91,4 +112,5 @@ The first draft matched any word `prettier` and refused `grep -rn prettier
 docs`. The command-word match replaced it.
 
 **Similar instances:** `ls -a | grep -iE 'eslintrc|biome|prettier'` at the root
-finds nothing else left from a retired tool.
+finds nothing else left from a retired tool. `format-write.core.ts` runs oxfmt on
+every Write and Edit, so the session rarely needs to call a formatter at all.

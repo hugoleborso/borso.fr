@@ -15,57 +15,57 @@ recurs: none (the touch-event entry sent the wrong input; this one measured the 
 
 # The audit that measured buttons, not jobs
 
-## Symptom
+## User impact
 
-The bars page had two buttons labelled *Save*, and the first one on the page
-saved the outreach template, not the bar. The earlier mobile audit
-(`docs/features/meta/mobile-viewport-audit/`) had measured both buttons and
-passed them.
+A pragma member on the bars page who pressed *Save* to save a bar could save the outreach message template instead.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Bars page | Two buttons labelled *Save*. The first on the page saved the outreach template. | One *Save* for the bar, and a distinct label for the template |
+| Mobile audit (`docs/features/meta/mobile-viewport-audit/`) | Both buttons measured and passed | The wrong-target path reported |
 
-1. **Why did a member reach the wrong Save?** Both had the same label, and the
-   template's came first in the page.
-2. **Why did the audit pass it?** It checked each control in isolation: its
-   size, its contrast, whether it fit at 375 px. Both buttons passed every one
-   of those.
-3. **Why did it check controls in isolation?** It had no list of what a member
-   comes to do, so it had nothing to walk through the page in order.
+Found in review of PR #151. Every member using the bars page was exposed. Other pages were not affected by this pair.
 
-**Root cause:** we thought a screen whose every control passes is a usable
-screen, and actually usability is a property of the path a job takes through
-it: which control is reached first, and how far away it is.
+## Causal chain
+
+- A member could reach the wrong *Save*.
+  - Both buttons had the same label, and the template's came first in the page. `f3447d969` added the outreach editor with its own *Save*.
+  - The mobile audit passed both buttons.
+    - It checked each control alone: size, contrast, fit at 375 px. Both passed every check.
+      - The audit's method listed screens and controls to measure, and no member jobs to walk in order (Method).
+
+## Root cause of occurrence
+
+*Thought a screen whose every control passes is a usable screen. Actually usability is a property of the path a job takes through the screen, which control is reached first and how far away it is.* (Method)
+
+Source: the audit report's *Results by route and profile*, which scores controls per route and profile and names no job.
 
 ## Detection failure causes
 
-- **Visual validation:** asserted per-control properties only.
-- **Code review:** the second Save came from a separate component, so no
-  diff showed both.
-- The same blindness hid [the empty vote](./the-empty-vote-nobody-could-close.md)
-  and [the unrendered projection](./the-projection-nobody-rendered.md): each
-  control was fine, and the job was broken.
+- **Visual validation:** it asserted per-control properties only, so two passing controls with one label passed.
+- **Code review:** the second *Save* came from a separate component, `OutreachTemplateAction.tsx`, so no single diff showed both.
+- **The same unit hid two siblings:** [the empty vote](./the-empty-vote-nobody-could-close.md) and [the unrendered projection](./the-projection-nobody-rendered.md). Each control was fine and the job was broken.
 
 ## Countermeasure
 
-- **Code:** commit `c229a98` (PR #151) folded the outreach editor and renamed
-  its button *Save the message*.
+PR #151 (`67bab828`) folded the outreach editor and renamed its button *Save the message*. Verified by the harness below, whose bar journey now resolves *Save* to one element.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — a harness that walks the jobs)
+**Type:** detection (level 4)
 
-**Reference:** [PR #151](https://github.com/hugoleborso/borso.fr/pull/151) · commit `4d18fb9`
+**Reference:** commit [`67bab82`](https://github.com/hugoleborso/borso.fr/commit/67bab828) (#151).
 
-**The actual fix:** `apps/pragma/scripts/task-speed/` drives ten member jobs
-at 375 × 667 with touch on and counts, per tap, whether the target needed a
-scroll, sat in the top quarter, or changed the screen. Every tap finds its
-button by accessible name, and Playwright refuses to act on a name two
-elements share, so a second *Save* on a job's path fails the run.
+`apps/pragma/scripts/task-speed/` drives the member jobs listed in `task-speed-journeys.setup.ts` at 375 × 667 with touch on. It counts, per tap, whether the target needed a scroll, sat in the top quarter or changed the screen. Each tap finds its button by accessible name, and Playwright refuses to act on a name two elements share. A second *Save* on a job's path fails the run.
 
-**Limits:** it needs the dev server and the seeded database, so it runs by
-hand and not in CI. Standard 05's reviewer bullet on 375 px screens is where a
-reviewer asks for it.
+```diff
++    "task-speed": "tsx scripts/task-speed/task-speed.setup.ts",
+```
 
-## See also
+The gap is when it runs. It needs the dev server and the seeded database, so it runs by hand with `pnpm --filter @borso-app/pragma task-speed`. No CI job runs it (measured, `grep -n task-speed .github/workflows/*.yml` finds nothing). A duplicate name reaches a pull request unless someone remembers to run it.
 
-- [`../features/pragma/task-speed/spec/spec.md`](../features/pragma/task-speed/spec/spec.md)
+**Proposed:** run `task-speed` in a CI job of its own on pragma changes. It needs a Postgres service and `DATABASE_URL`, as `app-tests (pragma-e2e)` has, the seed, the dev server on `localhost:5174`, and `playwright install --with-deps chromium`, which the dashboard job already runs (`ci.yml:470`). It should not join `app-tests (pragma-e2e)`: that job finished at 9 min 58 s of its 10-minute limit on PR #222 (its comment, `ci.yml:330`). A second accessible name on a job's path would then fail the pull request instead of waiting for a hand run.
+
+**Proof it can fail:** before the rename, the bar journey's tap on *Save* hit Playwright's strict-mode refusal for two matching elements (inferred from the harness design; the refusal was not pasted at the time).
+
+**Similar instances:** `grep -rn '"save": "Save"' apps/*/site/src/i18n/en.json` finds four generic *Save* keys, all in pragma (lines 262, 404, 594 and 722, measured). Two of them on one job's path is the shape the harness refuses. The other apps have no job harness, so their screens are still checked per control only.

@@ -4,136 +4,119 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#2'
-fix-commits: [a3cd942c34, 92d6ae2442, d5714aebf0]
+fix-commits: [a3cd942c34, d5714aebf0]
 eradication-level: 4
-eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/eradication-checks.test.ts]
+eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/eradication-checks.test.ts, .oxlintrc.json]
 time-to-detect: minutes (first hit on the live preview URL)
 tags: [cloudfront, javascript, edge-runtime]
 zone: infra/cdk/src/internal/cf-host-routing-function.code.js
 blueprints: [cloudfront-function-source]
 ---
 
-# CloudFront Functions runtime 2.0 lies about its ES syntax surface
+# A CloudFront Function that passed every test threw on every request at the edge
 
-## Symptom
+## User impact
 
-Every request to `https://borso-fr-pr-2.preview.borso.fr/` returned
+Every preview URL showed a CloudFront error page instead of the app.
+Measured by the session that opened PR #2, on its first request.
 
-```
-HTTP/2 503
-x-cache: FunctionExecutionError from cloudfront
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `https://borso-fr-pr-2.preview.borso.fr/` | `HTTP/2 503`, `x-cache: FunctionExecutionError from cloudfront` | `200` and the borso.fr page |
 
-The user saw a CloudFront error page, no app content. The host-routing
-function it shipped had complete unit-test coverage and worked end-to-end
-against `new Function(code + '; return handler;')` in vitest. It just
-failed on the actual edge.
+All previews were affected, because one host-routing function serves
+every preview host. Production apps were not, since they do not use it.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** CloudFront returns `FunctionExecutionError`.
-   Because the function threw or produced an invalid response object on the edge.
-2. **Why does it throw on the edge but not in vitest?**
-   Because vitest evaluates the source via Node's `Function` constructor — full V8.
-   The CloudFront edge runs a QuickJS-based sandbox.
-3. **Why didn't AWS's "JavaScript runtime 2.0" docs warn us?**
-   AWS lists optional chaining, nullish coalescing, template literals as supported.
-   In practice the runtime is more conservative than the docs.
-4. **Why does the failure surface as `FunctionExecutionError` rather than a
-   parse error at deploy time?**
-   The runtime accepts the code at validation but errors at first invocation
-   on whichever feature it doesn't actually support.
-5. **Why couldn't we narrow down which feature?**
-   `aws cloudfront test-function` would say so via `FunctionErrorMessage`,
-   but it returned `ServiceUnavailable` repeatedly when we tried.
+- CloudFront answered 503 `FunctionExecutionError` on every preview request.
+  - The viewer-request function threw at its first invocation on the edge runtime (`FunctionRuntime.JS_2_0`, measured at `infra/shared/lib/shared-stack.ts:77` in a3cd942c34).
+    - The deployed source was the version written in e9d91494c. It used `const`, `let`, template literals, `?.` and a `\d` regex. Which of them the edge rejected is unknown: no run on the real runtime ever named the line.
 
-**Root cause:** we thought CloudFront Functions runtime 2.0 supported the
-ES2020 features its docs claim (optional chaining, template literals). It
-accepts the syntax at deploy time but fails opaquely at first invocation.
+      ```js
+      // e9d91494c, cf-host-routing-function.code.js
+      const host = request.headers.host?.value;     // optional chaining
+      const prMatch = sub.match(/^(.+)-pr-(\d+)$/); // \d escape
+      request.uri = `/${prefix}${app}/pr-${pr}${uri}`; // template literal
+      ```
+
+      - Commit e9d91494c moved the source out of a TypeScript string into a real `.js` file. Its message says it "Promoted to CloudFront Functions JS runtime 2.0 idioms: const/let, template literals, optional chaining (?.)". The source it replaced was already in `var` and string concatenation, and had never run on the edge (measured, `git show e9d91494c^:infra/cdk/src/internal/cf-host-routing-function.ts`).
+        - The agent checked the rewrite with the only harness the repository had. The message ends on "Tests still 73 passing at 100% coverage". Those tests evaluate the source with Node's `new Function`, which is V8, not the CloudFront runtime.
+          - The edge was not reachable from that loop. The shared stack that deploys the function did not exist yet (it arrived 40 minutes later in 68af89935), and no step in the repository ran the source on the CloudFront runtime.
+
+## Root cause of occurrence
+
+*Thought a syntax rewrite that keeps the Node tests green keeps the
+function working on the edge, actually those tests run V8, and the
+CloudFront runtime is a separate engine that only `aws cloudfront
+test-function` or a live request can exercise.*
+
+Tag: **Material** (agentic rule). The tool that held the answer, a run on
+the real runtime, was absent from the agent's context when it wrote the
+line. AWS documents optional chaining and template literals as supported
+in runtime 2.0, so the docs in hand pointed the other way. The fix commit
+a3cd942c34 confirms nobody isolated the construct: "TestFunction has been
+flaky enough that diagnosing the precise trigger isn't worth it".
 
 ## Detection failure causes
 
-- **Typing:** the `.code.js` file is a hand-written JS string read at synth
-  time; tsc never sees it.
-- **Linter / static analysis:** Biome's `useTemplate` and `useOptionalChain`
-  rules ENCOURAGED the syntax that broke. Linter pulled us towards the bug.
-- **Functional validation locally:** vitest evaluated the source under Node V8,
-  which trivially supports ES2020 — the test was too forgiving.
-- **CI:** same — tests ran under Node, no edge runtime in the loop.
-- **Code review:** reviewer would need to know runtime 2.0 lies. Tribal knowledge.
-- **Staging monitoring:** no staging — preview environments hit the same edge runtime.
-- **Production monitoring:** there's no metric for "CF Function 503" alarming
-  us before a user does.
+- **Typing:** the `.code.js` file is read as a string at synth time, so `tsc` never sees it.
+- **Linter:** the linter of the day (Biome) had `useTemplate` and `useOptionalChain` on, so it pushed toward the modern syntax.
+- **Local and CI tests:** they evaluate the source under Node V8, which accepts all of ES2020. No test runs on the CloudFront runtime.
+- **Pre-production:** previews are the first environment that runs the edge function, and `test-function` returned `ServiceUnavailable` when the session tried it (reported in the original entry, not reproduced).
+- **Monitoring:** no alarm watches CloudFront Function execution errors.
 
 ## Countermeasure
 
-- **Code:** commit `a3cd942` — rewrote
-  `infra/cdk/src/internal/cf-host-routing-function.code.js` in ES5: `var`,
-  string concat, regex literal, no `?.`, no template literals. Per-file
-  Biome override in `infra/cdk/biome.jsonc` exempts the file from
-  `useTemplate` / `useOptionalChain` / `noInnerDeclarations` so the linter
-  no longer fights the runtime. The construct in
-  `infra/cdk/src/internal/cf-host-routing-function.ts` reads the
-  `.code.js` file at synth time and ships its bytes verbatim — what you
-  write is what runs on the edge.
-- **Operator action:** none beyond redeploying shared after pulling.
+Commit a3cd942c34 rewrote the function in `var` and string concatenation,
+replaced `\d` with `[0-9]` and hardened the host-header guard. The
+previews answered again after a redeploy of the shared stack and the
+throttle described in
+[`cloudfront-function-throttle-persistence`](../knowledge/cloudfront-function-throttle-persistence.md)
+cleared. Since four changes shipped together, the countermeasure works
+without proving which construct was at fault.
 
 ## Eradication
 
-**Type:** code diff + DevX check (level 4 — source-level detection test)
+**Type:** detection (level 4).
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) (rewrite + Biome) · [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) (test backstop) · commits [`a3cd942`](https://github.com/hugoleborso/borso.fr/commit/a3cd942) (ES5 rewrite), [`92d6ae2`](https://github.com/hugoleborso/borso.fr/commit/92d6ae2) (Biome override), [`d5714ae`](https://github.com/hugoleborso/borso.fr/commit/d5714ae) (test)
-
-**The actual fix:**
-
-```diff
-  // infra/cdk/src/internal/cf-host-routing-function.code.js
-- const request = event.request;
-- const host = request.headers.host?.value;
-+ var request = event.request;
-+ var host = request.headers.host && request.headers.host.value;
-  …
-- request.uri = `/${prefix}${app}/pr-${pr}${uri}`;
-+ request.uri = '/' + prefix + app + '/pr-' + pr + uri;
-```
-
-```jsonc
-// infra/cdk/biome.jsonc — per-file override exempting the file
-// from rules that would push it back toward modern syntax.
-"overrides": [
-  {
-    "includes": ["src/internal/cf-host-routing-function.code.js"],
-    "linter": {
-      "rules": {
-        "complexity": { "useOptionalChain": "off" },
-        "correctness": { "noInnerDeclarations": "off" },
-        "style":      { "useTemplate": "off" }
-      }
-    }
-  }
-]
-```
+**Reference:** commit [`d5714aebf0`](https://github.com/hugoleborso/borso.fr/commit/d5714aebf0)
+added the source test. The Biome override of 92d6ae2442 is gone: commit
+314f24821 replaced Biome, and the same exemption now lives in
+`.oxlintrc.json` under `"files": ["**/*.code.js"]`, which turns off
+`prefer-template` and `no-var`.
 
 ```ts
-// infra/cdk/test/unit/eradication-checks.test.ts (new)
+// infra/cdk/test/unit/eradication-checks.test.ts
 describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
   const sourcePath = path.join(INTERNAL_DIR, 'cf-host-routing-function.code.js');
-  const stripped = readStripped(sourcePath);
-  it('uses var, not let or const',     () => expect(stripped).not.toMatch(/\b(let|const)\s+\w+\s*=/));
-  it('does not use optional chaining', () => expect(stripped).not.toMatch(/\?\./));
-  it('does not use template literals', () => expect(stripped).not.toMatch(/`[^`]*\$\{/));
+  it('uses var, not let or const, for variable declarations', () => {
+    expect(stripped).not.toMatch(/\b(let|const)\s+\w+\s*=/);
+  });
+  // also: no `?.`, no template literal, no import or export
 });
 ```
 
-The Biome override stops the linter from pushing toward modern syntax; the vitest backstop fails CI if the patterns sneak in anyway.
+What holds today has two gaps. The test forbids syntax that was never
+shown to be the cause. It also reads one file by path, while
+`infra/cdk/src/internal/` holds three `.code.js` files, all deployed on
+`JS_2_0`.
 
-**Sibling defects swept:** only one CF Function in the repo today; the test currently checks the existing file by path. Extend the glob if more `*.code.js` files are added under `src/internal/`.
+**Proof it can fail:** measured on 2026-11-27. Turning `var
+API_PATH_PREFIX` into `const` and running the test gives `× uses var,
+not let or const, for variable declarations` and `AssertionError:
+expected 'var PREVIEW_PARENT_DOMAIN = …' not to match
+/\b(let|const)\s+\w+\s*=/`. The file was reverted.
 
-**Why not level 1 (structural):** the file is JS source shipped to a foreign runtime (CloudFront edge); we can't impose CDK types on it. The closest level-1 fix would be transpiling ES2020 → ES5 at build time — a whole build chain for one small file. Level 4 is the realistic ceiling.
+**Proposed:** run each function on the real runtime before it serves
+traffic. A step in `shared-deploy.yml`, and in the app deploys that ship
+the `static-site.ts` functions, would call `aws cloudfront test-function`
+on the DEVELOPMENT stage with a sample `<app>-pr-<n>` event and fail on a
+non-empty `FunctionErrorMessage` before publishing to LIVE. A function
+that throws on the edge, whatever construct makes it throw, could then
+never reach LIVE. The ES5 regex test could then be deleted.
 
-## See also
-
-- After deploying the fix, the function went from
-  `FunctionExecutionError` to `FunctionThrottledError` for
-  ~10 min — see
-  [`../knowledge/cloudfront-function-throttle-persistence.md`](../knowledge/cloudfront-function-throttle-persistence.md).
+**Similar instances:** `ls infra/cdk/src/internal/*.code.js` lists
+`cf-api-viewer-address.code.js` and `cf-static-site-index-rewrite.code.js`
+beside this one. `grep -nE '\b(let|const)\s|\?\.|=>' ` on both finds
+nothing, so they are already ES5, but no test reads them.

@@ -5,97 +5,110 @@ detected-at: local
 severity: medium
 related-pr: '#193'
 fix-commits: [self]
-eradication-level: 1
-eradication-paths: [scripts/browser.sh]
+eradication-level: 5
+eradication-paths: [docs/knowledge/agent-browser-cli-quirks.md]
 time-to-detect: hours
 tags: [harness, agent-browser, tooling, visual-validation]
-zone: scripts/browser.sh
+zone: .claude/agents/visual-validator.md
 recurs: [the-browser-moved-and-the-wrapper-died-silently]
 ---
 
 # The wrapper forgot the user agent between calls
 
-## Symptom
+## User impact
 
 The takes branch's visual validations needed an Android and an iOS user agent
 for the install banner, and Chromium's fake microphone for recording. Seven
-`KAIZEN.md` lines from four validator agents record what followed:
+`KAIZEN.md` lines from four validator agents record what followed (measured
+by those agents on PR #193):
 
-- `scripts/browser.sh --user-agent "<android>" open …` loaded the page as
-  `HeadlessChrome`.
-- With `AGENT_BROWSER_USER_AGENT` exported instead, the next call that forgot
-  it relaunched the browser on `about:blank`, dropping the page, the signed-in
-  session and the CDP port, with no message.
-- The fake-microphone flags could not be passed at all: the wrapper set
-  `AGENT_BROWSER_ARGS` unconditionally, and one wrapper call after a hand-made
-  launch relaunched without them.
-- `scripts/browser.sh --restart --session banner` closed the *default* session,
-  which another agent was driving.
+| | Seen | Expected |
+| --- | --- | --- |
+| `scripts/browser.sh --user-agent "<android>" open …` | The page loaded as `HeadlessChrome` | The page loaded as Android |
+| A later call that forgot `AGENT_BROWSER_USER_AGENT` | Chromium relaunched on `about:blank`, page, sign-in and CDP port gone, no message | The same page, still signed in |
+| Fake-microphone flags after a hand-made launch | The next wrapper call relaunched without them | Recording with the fake microphone |
+| `scripts/browser.sh --restart --session banner` | The *default* session closed, which another agent was driving | Only `banner` closed |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was `--user-agent` ignored?** agent-browser 0.35.2 ignores its own
-   flag (re-measured 2026-10-25 without the wrapper); the environment variable
-   works.
-2. **Why did a call without it relaunch?** The daemon compares the launch
-   environment on every call and restarts Chromium when it differs, silently.
-3. **Why did the wrapper not keep it?** It held no state per session beyond a
-   drive count, and it overwrote the one variable that carries flags.
-4. **Why did `--restart --session` close the wrong session?** It ran
-   `agent-browser close` without passing the session on.
+- The validators' sessions loaded as `HeadlessChrome`, or relaunched blank
+  mid-run.
+  - Branch 1: `--user-agent` was ignored. agent-browser 0.35.2 ignores its
+    own flag (re-measured 2026-10-25 without the wrapper). The environment
+    variable `AGENT_BROWSER_USER_AGENT` works.
+  - Branch 2: a call without the variable relaunched Chromium. The daemon
+    compares `AGENT_BROWSER_USER_AGENT` and `AGENT_BROWSER_ARGS` on every
+    call and restarts the browser, silently, when either differs.
+    - `scripts/browser.sh` sent the sandbox's flags on every call and nothing
+      else. It overwrote the one variable that carries flags, and kept no
+      state per session beyond a drive count:
 
-**Root cause:** thought the wrapper only had to set the sandbox's two flags at
-launch, actually agent-browser re-reads its launch environment on every call,
-so whatever a session was launched with has to be sent again every time.
+      ```bash
+      export AGENT_BROWSER_ARGS="$BROWSER_ARGS"
+      ```
+
+      - The wrapper was built on the belief that launch settings are read
+        once, at launch. agent-browser re-reads them on every call. The tool
+        itself sets that rule. **Machine.**
+  - Branch 3: `--restart --session` ran `agent-browser close` without the
+    session flag, so it closed the default session.
+
+## Root cause of occurrence
+
+*Thought the wrapper only had to set the sandbox's flags at launch, actually
+agent-browser re-reads its launch environment on every call, so whatever a
+session was launched with has to be sent again every time.* **Machine.**
+
+The source is the measurement recorded in
+[`agent-browser-cli-quirks.md`](../knowledge/agent-browser-cli-quirks.md):
+"The daemon compares `AGENT_BROWSER_USER_AGENT` and `AGENT_BROWSER_ARGS` on
+every call, so a later call that omits the user agent… restarts Chromium on
+`about:blank`."
 
 ## Detection failure causes
 
-- **Functional validation locally:** a relaunch looks exactly like the
-  application signing you out or losing its page.
+- **Local validation:** a relaunch looks exactly like the application signing
+  you out or losing its page, so each validator first suspected the app.
+- **Tool output:** agent-browser prints no line when it relaunches, and exits
+  0 on an ignored `--user-agent`.
 
 ## Countermeasure
 
-- **Code:** `scripts/browser.sh` takes `--user-agent <ua>` and `--args <flags>`,
-  stores both per `--session`, exports them on every later call of that
-  session, appends the extra flags to the sandbox's own, says so when a call
-  changes either, and clears them on `--restart`, which now closes only the
-  named session. The drive-count warning prints at every thirtieth drive rather
-  than on every call past thirty, which a validator reported had stopped
-  meaning anything.
-
-## Eradication (mandatory — code-level)
-
-**Type:** code diff (level 1 — structural impossibility): a session can no
-longer be relaunched by a call that forgot its user agent or flags, because the
-wrapper sends them.
-
-**Reference:** the commit that adds this file.
-
-**The actual fix:**
-
-```diff
--export AGENT_BROWSER_ARGS="$BROWSER_ARGS"
-+export AGENT_BROWSER_ARGS="${BROWSER_ARGS}${session_extra_args:+,${session_extra_args}}"
-+if [ -n "$session_user_agent" ]; then
-+  export AGENT_BROWSER_USER_AGENT="$session_user_agent"
-+fi
-```
-
-```diff
--  pnpm exec agent-browser close > /dev/null 2>&1 || true
-+  pnpm exec agent-browser "${session_flag[@]}" close > /dev/null 2>&1 || true
-```
-
+`scripts/browser.sh` took `--user-agent <ua>` and `--args <flags>`, stored both
+per `--session`, and exported them on every later call of that session. It
+appended the extra flags to the sandbox's own, said so when a call changed
+either, and cleared them on `--restart`, which closed only the named session.
 Measured on 2026-10-25: a session opened with `--user-agent KaizenProbe/1.0`
-reads it on the next plain call; a call with another user agent prints the
-relaunch note; `--restart --session` closes that session only, and the next
-call is back to the default user agent.
+read it on the next plain call.
 
-**Sibling defects swept:** the vendor facts went into
-`agent-browser-cli-quirks.md`, with `addinitscript` listed in `--help` and
-refused, `fill` leaving a `datetime-local` input empty, and `display-mode`
-having no emulation.
+## Eradication
 
-## See also
+**Type:** knowledge (level 5)
 
-- [`../knowledge/agent-browser-cli-quirks.md`](../knowledge/agent-browser-cli-quirks.md)
+**Reference:** the commit adding this file (`a83f0a600`) wrote the vendor facts
+into `docs/knowledge/agent-browser-cli-quirks.md`. Its `triggers:` match
+`\bagent-browser\b` and `AGENT_BROWSER_(USER_AGENT|ARGS)`, so a hook prints it
+when a command drives the browser.
+
+The same commit first shipped a level-1 fix in the wrapper. #224
+(`c54e32da7`, 2026-10-29) deleted `scripts/browser.sh` and, in its words,
+"the per-session memory of --user-agent and --args". Agents now call
+`agent-browser` directly. So the ignored flag and the silent relaunch are
+held only by the triggered entry today.
+
+**Proof it can fail:** the entry prints on a command naming `agent-browser`,
+as the knowledge hook's `triggers:` match shows. It refuses nothing.
+
+**Proposed:** a Bash PreToolUse check in `scripts/hooks/checks/`, next to
+`no-broad-kill.core.ts`, which already parses `agent-browser` commands. It
+would refuse `agent-browser … --user-agent` and name
+`AGENT_BROWSER_USER_AGENT`. That makes relying on the ignored flag impossible
+(level 2). A vendor patch is not reachable, because agent-browser ships a
+native binary (`bin/agent-browser-linux-x64`). The silent relaunch stays at
+level 5 until upstream changes.
+
+**Similar instances:** the same commit recorded three more vendor facts in the
+entry: `addinitscript` listed in `--help` and refused, `fill` leaving a
+`datetime-local` input empty, and `display-mode` having no emulation.
+`grep -rn "user-agent" .claude scripts` finds where an instruction might pass
+the flag.

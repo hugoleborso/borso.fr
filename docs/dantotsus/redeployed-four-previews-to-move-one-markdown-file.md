@@ -14,76 +14,70 @@ zone: .github/workflows/preview.yml
 
 # Redeployed four previews to move one markdown file
 
-## Symptom
+## User impact
 
-A commit on the kaizen branch changed `CLAUDE.md` and one file under
-`docs/dantotsus/`. Nothing under `apps/` and nothing under `infra/` moved. The
-`preview` workflow then ran its deploy matrix for `borso-fr`,
-`borsouvertures`, `last-loop-lepin` **and** `pragma` — four checkouts, four
-`pnpm install`s, four CDK deploys, four seeds, against an account where all
-four previews were already serving exactly that build.
+The operator waited on four full preview deploys for a push that changed only
+`CLAUDE.md` and one file under `docs/dantotsus/`. Nothing under `apps/` or
+`infra/` moved. The `preview` workflow still ran its deploy matrix for
+`borso-fr`, `borsouvertures`, `last-loop-lepin` and `pragma`: four checkouts,
+four `pnpm install`s, four CDK deploys and four seeds, against previews already
+serving that build. Every push on PR #51 had done the same since it opened.
 
-Every push on that pull request had done the same thing since the branch
-opened.
+| Push on PR #51 | Seen | Expected |
+| --- | --- | --- |
+| docs-only push | four deploys, 57 to 75 s each, each ending in `borso-fr-pr-51 (no changes)` | no deploy |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the matrix contain four apps?** Because `detect` computes it from
-   `dorny/paths-filter@v3`, and the filter reported all four app groups as
-   changed.
-2. **Why did the filter report all four?** Because on a `pull_request` event
-   the action diffs the head against the **base branch**, not against the
-   previous commit. The pull request renames files in all four apps, so at
-   every point in its life the answer is "all four".
-3. **Was the filter wrong?** No. It answered its question exactly right. The
-   question is *"what does this pull request touch"*, which is the right
-   question for deciding whether to run tests, and the wrong one for deciding
-   whether to deploy.
-4. **Why was that mismatch not visible?** Because the two questions coincide on
-   a single-commit pull request, which is what the workflow was written and
-   tried against. They only diverge once a branch accumulates pushes, and by
-   then the extra work looks like normal cost rather than waste — the run is
-   green, the previews are correct, and nothing in the log says a deploy
-   changed nothing.
-5. **Why did nothing say so?** Because no step in the job knew what was already
-   deployed. The workflow's whole model of the account was "run `cdk deploy`
-   and let CloudFormation work it out", and CloudFormation happily accepts a
-   no-op update — after five minutes of install, build and synth.
+- Four preview deploys ran for a docs-only push.
+  - The deploy matrix named all four apps.
+    - `detect` builds the matrix from `dorny/paths-filter@v3`, which reported
+      all four app groups as changed.
+      - On a `pull_request` event the action diffs the head against the base
+        branch, not against the previous push. PR #51 renamed files in all four
+        apps, so every push answered "all four".
+  - Each matrix job installed, built, synthesised and ran `cdk deploy` for its
+    app.
+    - The job deployed every app the matrix named, and CloudFormation accepted
+      the no-op update after the install, build and synth.
+      - 56258c2b0 (2026-05-02) wrote `detect` and the deploy job, deciding what
+        to deploy from what the pull request touched.
 
-**Root cause:** thought *"deploy the apps this pull request changed"*, actually
-*"deploy the apps whose deployed build is no longer the one the head commit
-describes"*. Those are the same sentence only on the first push.
+## Root cause of occurrence
+
+*Thought "deploy the apps this pull request changed", actually "deploy the apps
+whose deployed build is no longer the one the head commit describes". The two
+coincide only on the first push.* (Method)
+
+The workflow answered the question that fits tests, "what does this pull request
+touch", and used it to decide a deploy, whose question is "what differs from
+what is deployed". Nothing in the job read the account's state.
 
 ## Detection failure causes
 
-- **Typing / linter:** not applicable — `actionlint` checks the workflow's
-  shape, and this workflow was shaped correctly for a question it should not
-  have been asking.
-- **CI:** the failure mode *is* CI, and it presented as success. A wasted
-  deploy and a needed one are indistinguishable in a green run; only the
-  duration differs, and duration has no baseline here.
-- **Code review:** the matrix expansion is one line of `jq` in `detect`, and
-  reading it tells you what it does. What it does not tell you is what
-  `paths-filter` compares against, which is documented in the action, not in
-  the workflow that calls it.
-- **Cost monitoring:** none exists. The account has no budget alarm on Actions
-  minutes, and a preview deploy of a static site plus a Lambda is cheap enough
-  per run that four of them per push never surfaced as a number anybody saw.
+- **Linter:** `actionlint` checks the workflow's shape, and the shape was right
+  for the question it asked.
+- **Local validation:** the workflow was tried on single-commit pull requests,
+  where both questions give the same answer. They diverge only once a branch
+  takes several pushes (inferred from the PR history).
+- **CI:** a wasted deploy and a needed one are both green. Only the duration
+  differs, and duration has no baseline.
+- **Review:** the matrix is one line of `jq` in `detect`. What `paths-filter`
+  compares against is documented in the action, not in the calling workflow.
+- **Monitoring:** no budget alarm on Actions minutes exists, and one preview
+  deploy is cheap enough that four per push never showed as a number.
 
 ## Countermeasure
 
-- **Code:** commit `69574f6` — every matrix job now decides for itself whether
-  it has anything to do, before it installs anything.
+69574f6e8 makes every matrix job decide for itself, before it installs
+anything, whether its app's inputs are already deployed. `detect` still names
+four apps.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — the job compares the repository against the
-account and stops when they already agree)
+**Type:** detection (level 4)
 
-**Reference:** [PR #51](https://github.com/hugoleborso/borso.fr/pull/51) ·
-commit `69574f6`
-
-**The actual fix:**
+**Reference:** commit 69574f6e8, [PR #51](https://github.com/hugoleborso/borso.fr/pull/51).
 
 ```diff
        - uses: actions/checkout@v4
@@ -102,49 +96,33 @@ commit `69574f6`
 ```
 
 The digest of the last successful deploy lives in the payload of the GitHub
-Deployment that deploy opened, which means the record of what is live is
-written by the thing that made it live, in the same repository, with no bucket
-and no extra credential. A deployment whose statuses never reached `success`
-is ignored, so a failed deploy cannot claim its inputs are serving.
+Deployment that deploy opened. A deployment that never reached `success` is
+ignored. Every unreadable or missing input deploys as before, so the check can
+only remove work, never skip a deploy that was owed.
 
-Measured on this pull request, across the two pushes that straddle the change.
-Push `b339ad7` changed `preview.yml` itself, so every digest differed and all
-four apps deployed in full; push `193ee6e` moved one markdown file, so all four
-skipped:
+Measured on PR #51. Push `b339ad7` changed `preview.yml`, so all four deployed
+(58, 57, 61 and 75 s). Push `193ee6e` moved one markdown file, so all four
+skipped (14, 19, 13 and 15 s).
 
-| push | borso-fr | borsouvertures | pragma | last-loop-lepin |
-| --- | --- | --- | --- | --- |
-| `b339ad7` — deployed | 58 s | 57 s | 61 s | 75 s |
-| `193ee6e` — skipped | 14 s | 19 s | 13 s | 15 s |
+`detect` cannot ask the right question itself. It would need the last deployed
+commit, which is the same lookup, and it would lose the stack-status check.
 
-The deployed row is the cost of the old behaviour on *every* push, and what it
-bought is visible in its own log: `borso-fr-pr-51 (no changes)`, reached after
-a checkout, an install, an `@borso/infra` build and a synth. The `detect` job
-still runs and still names four apps; it is right to, and now it costs a minute
-of runner time instead of four full deploys.
+The digest's tree hashes need no upkeep: `git rev-parse HEAD:apps/pragma`
+changes exactly when a byte under that folder does. Its file list does:
+`pnpm-lock.yaml .nvmrc .github/workflows/preview.yml`
+(`.github/workflows/preview.yml`, the `fingerprint` step) is kept by hand, and
+an input added to the build and not to that list would let a preview go stale
+silently. A comment above the step names that risk, and nothing holds it.
+Catalog versions in `pnpm-workspace.yaml` do reach the lockfile, so no missing
+input was found today.
 
-Both halves of the decision fail open, and that is the property worth keeping:
-an unreadable deployment list, an absent payload, a missing stack, a
-rolled-back stack, or a digest that cannot be computed all deploy exactly as
-the workflow did before. The check can only ever remove work, never skip a
-deploy that was owed.
+**Proposed:** none clearly better than the deploy job comparing itself with the
+account. The file list is the one weak point, and a check that derives it from
+what the build reads does not exist.
 
-**Why level 4 and not higher.** The structural fix would be for `detect` to
-ask the right question — diff against the last deployed commit rather than
-against the base branch. That requires knowing which commit that was, which is
-the same lookup the fingerprint does, so it buys nothing and loses the stack
-check. Asking the deploy job itself is where the information is.
+**Proof it can fail:** push `b339ad7` above, where a changed input deployed all
+four.
 
-**Why the fingerprint is a tree hash and not a file list.** `git rev-parse
-HEAD:apps/pragma` changes if and only if some byte under that directory
-changed, with no glob to keep in sync with the directory it describes. The one
-maintenance obligation left is the reverse: an input added to the build and not
-to the digest would let a preview go stale silently, so the list carries a
-comment naming that as the failure mode.
-
-## See also
-
-- [`preview-deploys-never-delete-what-you-removed.md`](../knowledge/preview-deploys-never-delete-what-you-removed.md)
-  — the other way a preview stops matching the branch that produced it.
-- [`cdk-destroy-all-wipes-the-shared-cluster-stack.md`](./cdk-destroy-all-wipes-the-shared-cluster-stack.md)
-  — the teardown half of the same workflow.
+**Similar instances:** the production deploy workflow decides by the same
+paths filter on a merge, where one merge is one push, so the two questions
+coincide (inferred).

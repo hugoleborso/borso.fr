@@ -31,14 +31,40 @@ The 16 entries came from three pull requests: #234 deleted the pragma streak fil
 ## Causal chain
 
 - The validator saw stale entries and a green check.
-  - `listSubjectDrift` only reports claims that moved inside a file that still carries a marker.
-    - `listDetachedClaims` skips a recorded file with no current claim: `if (subjectsNow === undefined) continue;`, pinned by the test *reports nothing when the whole file is gone*.
+  - `listSubjectDrift` only reported claims that moved inside a file that
+    still carries a marker.
+    - `listDetachedClaims` skipped a recorded file with no current claim,
+      pinned by the test *reports nothing when the whole file is gone*.
+      ← the faulty line, `scripts/blueprints/subjects.core.ts`
+
+      ```ts
+      const subjectsNow = claimedNow[filePath];
+      // a deleted file has no claims now, so its recorded entry is never read again
+      if (subjectsNow === undefined) continue;
+      ```
+
+      - An agent wrote it in `ff9e8e97b` ("fail the blueprint subject gate
+        only on a claim that detached", 2026-08-21). The same commit rekeyed
+        the baseline by file. Its message: "A rename or a deletion takes the
+        symbol with it and passes".
+        - The gate had just failed a merge of `main` for a change that moved
+          no marker, so the commit narrowed it to the one defect it was built
+          for, a marker that slides onto a new declaration (`3583040f9`).
+          - **Machine:** `docs/standards/blueprint-subjects.json` is a second,
+            committed copy of what the markers already state, keyed by file
+            path. A copy keyed by path outlives a deleted file unless someone
+            prunes it, and only `--accept <path>` prunes, path by path.
 
 ## Root cause of occurrence
 
-*Thought a file with no marker left has nothing to guard, actually the baseline is a committed document and an entry nobody can match misleads every reader of it.*
+*Thought a file with no marker left has nothing to guard, actually the
+baseline is a committed document, and an entry nobody can match misleads every
+reader of it.* **Machine:** the design keeps a path-keyed copy of the markers
+beside the markers, so deletion and pruning are two separate acts.
 
-The baseline was built in commit `3583040f9` to catch one defect, a marker that slides onto a new declaration. Deleting a file is not that defect, so the check skipped it. Nothing else removed the entry, because `--accept` prunes only the paths it is given.
+`ff9e8e97b`'s message shows the belief: a deletion "takes the symbol with it
+and passes". It took the symbol out of the check and left the entry in the
+file.
 
 ## Detection failure causes
 
@@ -79,5 +105,13 @@ A structural fix was weighed and rejected. Rewriting the baseline on every plain
 ```
 
 After `--accept` on those paths, `--check` exits 0. Stryker scores `subjects.core.ts` 100 (77 killed, 0 survived).
+
+**Proposed:** remove the baseline. The marker carries its subject,
+`// @FollowsBlueprint <id> <subject>`, and `--check` compares that subject with
+the next declaration through the existing `hasDeclarationOf` in
+`.claude/skills/blueprint/blueprint-utils.ts`. A deleted file takes its claim
+with it, a slid marker is still refused by name, and there is no committed copy
+to drift or to prune. `listVanishedFiles`, `acceptSubjects` and
+`docs/standards/blueprint-subjects.json` would all go.
 
 **Similar instances:** `ls docs/standards/*.json` lists one other baseline, `convention-baseline.json`. It counts violations by rule and app, holds no file path, and so cannot outlive a deleted file (measured).

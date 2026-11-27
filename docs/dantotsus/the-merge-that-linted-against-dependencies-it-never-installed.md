@@ -3,9 +3,9 @@ date: 2026-11-14
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: '#197'
+related-pr: '#141'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 2
 eradication-paths: [scripts/ensure-installed.sh, .husky/pre-commit, .husky/pre-push, scripts/lint-workspace.sh]
 time-to-detect: minutes
 tags: [gates, pre-commit, pnpm, oxlint, hooks]
@@ -28,29 +28,45 @@ hand.
 ## Causal chain
 
 - The merge commit was refused.
-  - oxlint's type-aware rules could not resolve a newly merged app's imports.
-    - `main` had brought a lockfile entry this checkout had never installed.
-      - Pre-push compares `pnpm-lock.yaml` with `node_modules/.pnpm/lock.yaml`
-        and installs on a difference. Pre-commit had no such step, and a merge
-        with a conflict commits through pre-commit.
+  - oxlint's type-aware rules, run by pre-commit, could not resolve a newly
+    merged app's imports.
+    - `main` had brought a lockfile entry this checkout had never installed,
+      and pre-commit linted against the old `node_modules`.
+      - The only install step sat in `.husky/pre-push`, before knip. Commit
+        `f3307abf2` (PR #141, the sweep of PR #136) put it there:
+
+        ```bash
+        if ! cmp -s pnpm-lock.yaml node_modules/.pnpm/lock.yaml; then
+          pnpm install --frozen-lockfile
+        fi
+        ```
+
+        - Its input was one refusal: knip, the first pre-push gate, reported a
+          new app's dependencies as unused after a restart from a newer main.
+          The commit message names knip and no other gate.
 
 ## Root cause of occurrence
 
-*Thought the stale install was handled, actually only pre-push handled it.*
+*Thought a stale install was a pre-push problem, because knip was the gate that
+had failed, actually every gate that reads `node_modules` reads it stale,
+pre-commit's type-aware lint included.*
 
-PR #155 made `scripts/lint-workspace.sh` refuse to lint while the two lockfiles
-differed. PR #197 replaced ESLint with oxlint and removed that script's cache,
-and the refusal went with it (`git log -S'node_modules/.pnpm/lock.yaml' --
-scripts/lint-workspace.sh` lists both commits). The property dropped was
-"no lint result is computed against a stale install".
+**M: Material.** The sweep fixed what its input reported. The friction it was
+built from named one gate, and the step went in front of that gate. The
+commit's own comment says "Every gate below reads node_modules", which scopes
+the step to the gates below it in one file (inferred from that wording).
 
 ## Detection failure causes
 
-- **Local:** PR #136's sweep put the comparison in pre-push only, because knip
-  was the gate that had failed. The lint gates that also read `node_modules`
-  were not listed.
-- **Review:** PR #197's commit named the cache it removed, not the refusal
-  that shared its file.
+- **Local:** a merge that brings a new dependency is rare in a sweep's
+  checkout, and a plain commit never moves the lockfile.
+- **Review:** PR #197 (`9dcf74547`) deleted the only other lockfile
+  comparison, the refusal in `scripts/lint-workspace.sh`. That file's comment
+  listed it as one of "two things" that kept a stale ESLint cache from forming,
+  so it left with the cache. The commit's "Properties that change" do not name
+  it. It never guarded pre-commit, which called `lint-changed-files.sh`, but
+  it was the one place the property was written down
+  (`git log -S'node_modules/.pnpm/lock.yaml' -- scripts/lint-workspace.sh`).
 
 ## Countermeasure
 
@@ -60,10 +76,10 @@ costs 6 ms (measured).
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). No gate that calls it reads a
-`node_modules` older than the lockfile.
+**Type:** DevX check (level 2). Each entry point that calls it installs before
+any gate reads `node_modules`.
 
-**Reference:** this commit.
+**Reference:** the commit adding this file.
 
 ```diff
 +# A merge of main can bring a lockfile this checkout never installed, and the
@@ -76,7 +92,16 @@ the script printed `[pre-commit] pnpm-lock.yaml changed since the last install;
 installing before the gates read node_modules` and ran `pnpm install`. With the
 two files equal it printed nothing and exited 0.
 
+The property holds only where an entry point calls the script. A new hook or
+script that reads `node_modules` without calling it reopens the defect, so
+this is not eradicated.
+
+**Proposed:** move the call from the entry points into the scripts that read
+`node_modules`. Each of `scripts/lint-staged-files.sh`,
+`scripts/lint-repository.sh` and the other readers would start with
+`ensure-installed.sh`, so the property travels with the reader. Pre-commit and
+pre-push would then need no install step of their own.
+
 **Similar instances:** `grep -rln 'node_modules/.bin' .husky scripts/*.sh`
-lists the gates that read node_modules. Pre-push and pre-commit run before all
-of them, and `lint-workspace.sh` is the one an app's `pnpm run lint` reaches
-without a hook.
+lists the readers. Pre-push and pre-commit run before all of them, and
+`lint-workspace.sh` is the one an app's `pnpm run lint` reaches without a hook.

@@ -5,8 +5,8 @@ detected-at: local
 severity: low
 related-pr: '#278'
 fix-commits: [self]
-eradication-level: 4
-eradication-paths: [apps/pragma/site/src/components/organisms/RequireSession.test.tsx, .claude/agents/technical-validator.md]
+eradication-level: 5
+eradication-paths: [.claude/agents/technical-validator.md]
 time-to-detect: days
 tags: [pragma, testing, vitest, react, validation]
 zone: apps/pragma/site/src/components/organisms/RequireSession.test.tsx
@@ -32,22 +32,36 @@ No user saw anything. The pragma core suite failed about one run in seven on
 
 - The test "shows the failure when the first batch fails, and retries every
   read in one batch" sometimes read `songs: none` where it expected `songs: 1`.
-  - After the retry click it waited one `setTimeout(0)` and ten microtask turns,
-    then asserted the rendered count.
+  - After the retry click it ran `flushTasks()` then `flushMicrotasks()`, one
+    `setTimeout(0)` and ten microtask turns, then asserted the rendered count.
     - The retry goes through the read batch, the stubbed `fetch`, a
       `Response.json()` and React Query's notify scheduler. Some of those hops
       are macrotasks whose count varies from run to run (inferred, from the
       failure rate moving with load and not with the commit).
-      - So the fixed budget of turns was usually enough and sometimes not.
+    - PR #278 (`e55214d`) wrote the test with those two calls.
+      - It imported them from `apps/pragma/site/src/lib/queries/queries.test-utils.tsx`,
+        the shared helper module, where `flushMicrotasks` has been the way to
+        settle a query since `cc98b75` (2026-05-25).
 
 ## Root cause of occurrence
 
-*Thought a fixed number of flushes settles a request chain, actually the chain's
-length in macrotasks is not fixed.*
+*Thought the shared flush helpers settle a request chain, actually they spend a
+fixed budget of turns, and the chain's length in macrotasks is not fixed.*
+**Machine.** The app's shared test utilities export a budget as the way to wait.
+The same pair is copied in `apps/talos/site/src/lib/queries/queries.test-utils.tsx`.
+`waitFor`, which waits on a condition, was already used in pragma tests at the
+parent of `e55214d` (`git grep -c waitFor e55214d^ -- apps/pragma/site/src`), so
+the codebase offered both, and the helper was the one beside the query code.
 
-`flushTasks()` and `flushMicrotasks()` in
-`apps/pragma/site/src/lib/queries/queries.test-utils.ts` advance one task and
-ten microtask turns. They state a budget, not a condition.
+```ts
+export async function flushMicrotasks(): Promise<void> {
+  await act(async () => {
+    for (let turn = 0; turn < MICROTASK_FLUSH_TURNS; turn += 1) {
+      await Promise.resolve();
+    }
+  });
+}
+```
 
 ## Detection failure causes
 
@@ -57,14 +71,11 @@ ten microtask turns. They state a budget, not a condition.
 - **CI:** CI runs the whole suite once per push. A test that fails one run in
   seven passed on PR #316. Whether it failed on earlier pull requests was not
   checked.
-- **This sweep found it** because PR #316's friction log named the `--changed`
-  gap, and the sweep ran the full core suites to measure what closing it costs.
 
 ## Countermeasure
 
 After the retry click, the test now waits for the condition it asserts, with
-Testing Library's `waitFor`, which the pragma suite already uses in
-`TakeUploadForm.test.tsx`, `RecordingSheet.test.tsx` and `SongEditForm.test.tsx`.
+Testing Library's `waitFor`.
 
 ```diff
      act(() => {
@@ -84,13 +95,12 @@ Verified: 0 of 30 runs failed after the change (measured, run alone).
 
 ## Eradication
 
-**Type:** detection (level 4)
+**Type:** knowledge (level 5). What holds is a line in the validator's agent
+file, which tells it to run each affected app's whole core suite when a diff
+moves the lockfile or the catalog. It detects some flakes at that moment and
+does not touch the class.
 
-**Reference:** the commit adding this file
-
-The validator now runs each affected full-stack app's whole core suite when a
-diff moves the lockfile or the catalog. That is the moment a timing-sensitive
-test is most likely to change behaviour, and the run that found this one.
+**Reference:** the commit adding this file.
 
 ```diff
 +  - When the diff changes `pnpm-lock.yaml` or a version in `pnpm-workspace.yaml`'s catalog, also run
@@ -98,14 +108,19 @@ test is most likely to change behaviour, and the run that found this one.
 +    whose resolved dependencies moved. ...
 ```
 
-Level 4 and not higher. The class is "a test that waits a budget, not a
-condition", and 16 pragma test files call `flushMicrotasks`. Removing the
-helpers would rewrite all of them for one observed flake.
-
 **Proof it can fail:** the full pragma core run on `main` before the fix
 printed `Test Files  1 failed | 408 passed (409)` with
 `AssertionError: expected 'songs: none' to be 'songs: 1'` (measured).
 
-**Similar instances:** `grep -ln "click()" $(grep -rl flushMicrotasks apps/pragma/site/src --include=*.test.tsx)`
-names this file and `routes/vote/VotePage.test.tsx`. VotePage failed 0 of 20
-runs alone (measured), so it is left as it is.
+**Similar instances:** `grep -rl -E 'flushMicrotasks|flushTasks' apps/*/site/src | grep -v test-utils`
+lists 23 test files this session, 21 in pragma and 2 in talos. Each waits on a
+budget. `routes/vote/VotePage.test.tsx` also clicks before flushing, and failed
+0 of 20 runs alone (measured when the entry was written).
+
+**Proposed:** subtract the helpers. Delete `flushTasks` and `flushMicrotasks`
+from both `queries.test-utils.tsx` files and move each of the 23 call sites to
+`waitFor` or a `findBy*` query on the condition it asserts. No test could then
+wait on a budget. If the rewrite is staged, a `no-restricted-imports` entry in
+`.oxlintrc.json` that names the two exports would stop new imports first (the
+rule is already configured there for other paths; restricting named imports from
+a relative module is untested here, inferred).

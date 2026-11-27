@@ -5,7 +5,7 @@ detected-at: local
 severity: low
 related-pr: '#24'
 fix-commits: [866e0cbb11]
-eradication-level: 2
+eradication-level: 5
 eradication-paths: [scripts/check-branch-context.sh]
 time-to-detect: 3 months
 tags: [harness, gates, meta, git, self-improvement-loop]
@@ -15,10 +15,10 @@ recurs: [designated-branch-was-a-merged-pr-head]
 
 # A warning that fired on every first commit
 
-## Symptom
+## User impact
 
-The session that fixed PR #60 opened with this, on a branch created
-seconds earlier and carrying no commits at all:
+The session that fixed PR #60 opened on a branch created seconds earlier,
+carrying no commits at all. SessionStart printed:
 
 ```
 ⚠️  [branch-context] "claude/setlist-creation-bug-025jld" is fully merged into origin/main.
@@ -28,60 +28,69 @@ seconds earlier and carrying no commits at all:
    intended work surface BEFORE committing …
 ```
 
-There was nothing to confirm. The branch was new.
+| | Seen | Expected |
+| --- | --- | --- |
+| Session start on a new `claude/*` branch | A warning to stop and confirm with the user | Silence, because there is no work to orphan yet |
 
-## Root-cause chain
+Every agent session that started on a fresh `claude/*` branch saw it, from
+2026-05-21 to 2026-08-18 (inferred from the commit dates). Sessions on `main`
+or on a branch with unmerged commits did not. A warning that fires on every
+task teaches the reader to skip it, including on the session where it is
+right.
 
-1. **Why did it fire?** The check warns when `git rev-list --count
-   origin/main..HEAD` is zero.
-2. **Why is that zero on a new branch?** Because a branch created from
-   main has no commits ahead of main — the same count as a branch whose
-   every commit already merged.
-3. **Why was the count trusted alone?** It is the exact signal of the
-   incident the check was written for: an orchestrator handing over a
-   merged pull-request head. It matches that case. It also matches the
-   start of every task.
-4. **Why did the header claim otherwise?** It states *"a
-   freshly-branched-from-main branch with no new commits … [is] NOT
-   flagged"*. The intent was right and the code never implemented it, so
-   the file documented a discriminator it did not have.
-5. **What does the false positive cost?** The warning asks the reader to
-   stop and confirm with the user before committing. Firing it on every
-   task teaches the reader to scroll past it — including on the session
-   where it is right, which is the whole point of writing it.
+## Causal chain
 
-**Root cause:** thought *"no commits ahead of main means the work
-already shipped"*, actually *"it means that or that no work exists yet,
-and the two are told apart by where the tip sits, not by the count"*.
+- SessionStart printed "fully merged" on a branch with no commits.
+  - `git rev-list --count origin/main..HEAD` returned zero on that branch,
+    which was created from `main` seconds earlier. The same command returns
+    zero on a head whose every commit merged.
+    - `scripts/check-branch-context.sh` warned on that count alone:
+
+      ```bash
+      unmerged_count=$(git rev-list --count origin/main..HEAD 2>/dev/null || echo 0)
+      # ❌ zero for a merged head and for a fresh branch alike
+      if [[ "$unmerged_count" -eq 0 ]]; then
+        printf '\n⚠️  [branch-context] "%s" is fully merged into origin/main.\n' "$current_branch"
+      ```
+
+      - Commit `9199b11e7` (2026-05-21, the kaizen of PR #24) wrote it, for
+        the incident in
+        [`designated-branch-was-a-merged-pr-head`](./designated-branch-was-a-merged-pr-head.md).
+        The same commit wrote a header that says *"a freshly-branched-from-main
+        branch with no new commits … [is] NOT flagged"*. The agent named the
+        case and ran the script only on the merged head (Man).
+
+## Root cause of occurrence
+
+*The agent thought no commit ahead of `main` means the work already shipped,
+actually it means that or that no work exists yet, and the two are told apart
+by where the tip sits, not by the count.* (Man)
+
+The fresh-branch case was in the agent's context: it wrote it into the header
+of the same file. So no document was missing. The prior that a zero count
+means "merged" won, and the only run was on the case the check was written for.
+A merged head is an ancestor of `origin/main`, behind the merge commit. A fresh
+branch is `origin/main` itself (`git rev-parse HEAD` equals
+`git rev-parse origin/main`).
 
 ## Detection failure causes
 
-- **Typing:** shell.
-- **Linter / static analysis:** nothing checks a script against its own
+- **Typing and linter:** shell, and nothing checks a script against its own
   header.
-- **Functional validation locally:** the check was validated on the case
-  it was written for — a merged head — which it handles correctly. The
-  fresh-branch case was documented as excluded and never run.
-- **CI:** a SessionStart script does not run in CI.
-- **Code review:** the header asserts the exclusion, and a reviewer
-  reading header-then-code sees an intent and an implementation that
-  look like the same thing.
-- **Production monitoring:** the failure mode of a false positive is
-  that people ignore it, which is invisible until the true positive
-  arrives.
+- **Local validation:** the script was run on the merged head, which it
+  handles. The fresh-branch case was written as excluded and never run.
+- **CI:** a SessionStart script does not run in CI, and the script has no test
+  file (`ls scripts/check-branch-context.test.ts` finds none today).
+- **Code review:** the header asserts the exclusion. A reviewer reading header
+  then code sees an intent and an implementation that look alike.
+- **Monitoring:** a false positive fails by being ignored, which stays
+  invisible until the true positive arrives.
 
 ## Countermeasure
 
-- **Code:** commit `866e0cb` — a tip comparison before the count.
-- **Operator action:** none.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — the false positive is now impossible)
-
-**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`866e0cb`](https://github.com/hugoleborso/borso.fr/commit/866e0cb)
-
-**The actual fix:**
+Commit [`866e0cb`](https://github.com/hugoleborso/borso.fr/commit/866e0cb)
+([PR #62](https://github.com/hugoleborso/borso.fr/pull/62)) compares the tip
+before the count:
 
 ```diff
 +# A branch sitting exactly on origin/main is a fresh start, not a
@@ -93,15 +102,34 @@ and the two are told apart by where the tip sits, not by the count"*.
  if [[ "$unmerged_count" -eq 0 ]]; then
 ```
 
-Verified both ways: silent on a branch just created from main, and still
-warning on `claude/setlist-creation-bug-025jld` once its work had shipped
-in PR #60, whose tip is an ancestor of main rather than equal to it.
+Verified both ways at the time: silent on a branch just created from `main`,
+and still warning on `claude/setlist-creation-bug-025jld` once PR #60 had
+shipped it. The header now explains the discriminator instead of asserting an
+exclusion.
 
-**Sibling defects swept:** the header now explains the discriminator
-instead of asserting an exclusion, so the next reader can check the code
-against a claim that is testable.
+## Eradication
 
-## See also
+**Type:** knowledge (level 5). Nothing structural holds.
 
-- [`designated-branch-was-a-merged-pr-head`](./designated-branch-was-a-merged-pr-head.md) — the incident this check exists for.
-- [`a-gate-that-reported-success-while-measuring-nothing`](./a-gate-that-reported-success-while-measuring-nothing.md) — the mirror image: a signal that never fires rather than one that always does.
+**Reference:** none. The countermeasure, commit `866e0cb`, fixes this
+instance. Nothing refuses a change that brings the false positive back.
+
+The root cause is Man: the fresh-branch case was in the agent's context, in
+the header it wrote. Under the agentic 4M rule a document cannot eradicate
+that cause, because the document was already there. So the knowledge entry
+[`the-shell-gates-are-only-ever-run-where-they-pass`](../knowledge/the-shell-gates-are-only-ever-run-where-they-pass.md),
+whose `triggers:` match `scripts/check-*.sh`, is not this entry's eradication.
+It only reaches the next agent that edits the script.
+
+**Proposed:** add `scripts/check-branch-context.test.ts`, a vitest suite on
+the model of `scripts/check-vocabulary-paths.test.ts`, which exists. It builds
+a scratch repository with a remote `main`, then asserts silence on a fresh
+`claude/*` branch and the warning on a merged head. CI then runs both cases on
+every change, so a script that warns on a fresh branch, or stops warning on a
+merged one, cannot merge. That is a gate that holds when the prior wins
+(level 4), and it is the eradication this entry waits for.
+
+**Proof it can fail:** none yet. The proposed suite would carry it.
+
+**Similar instances:** `git grep -n "rev-list --count" -- scripts .husky`
+finds only this script, so no other gate branches on a commit count.

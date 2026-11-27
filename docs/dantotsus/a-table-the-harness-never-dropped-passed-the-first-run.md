@@ -9,93 +9,115 @@ eradication-level: 2
 eradication-paths: [scripts/check-coupled-lists.sh]
 time-to-detect: minutes
 tags: [testing, postgres, dsql, migrations, harness, pragma]
-zone: apps/pragma/api/src/__test
+zone: apps/pragma/test/setup-postgres.ts
 ---
 
 # A table the harness never dropped, and the second run that found it
 
-## Symptom
+## User impact
 
-The back-e2e suite passed. Run again, unchanged, and it died before a single
-test body ran:
+The users are the developers running pragma's back-e2e suite. It passed.
+Run again, unchanged, it died before a single test body ran:
 
 ```
 Serialized Error: { severity: 'ERROR', code: '42P07',
   query: 'CREATE TABLE "outreach_template" (...)' }
 ```
 
-The same command, the same tree, green then red.
+| | Seen | Expected |
+| --- | --- | --- |
+| Second run of the same suite on the same tree | 42P07 before any test | the same green as the first run |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the second run fail where the first passed?**
-   The table already existed. `CREATE TABLE` without `IF NOT EXISTS` is
-   42P07 against a table that is already there.
-2. **Why did it already exist?**
-   The first run created it and nothing dropped it afterwards.
-3. **Why did nothing drop it?**
-   `apps/pragma/test/setup-postgres.ts` drops a hard-coded list of tables
-   before replaying every migration. `outreach_template` was added to the
-   migrations and to `test/database-utils.ts`, whose list is truncated
-   between cases, but not to the setup file's list.
-4. **Why were two lists written and only one updated?**
-   They look like the same list and are not: one is dropped before the
-   schema is rebuilt, the other is truncated between cases. A developer who
-   finds one by grepping for the table name beside its neighbours has no
-   signal that a second exists.
-5. **Why did the gate not catch it?**
-   Nothing compared the tables the migrations create against the tables the
-   harness knows. Both files read correctly on their own.
+- The second run failed where the first passed.
+  - Migration 0006 ran `CREATE TABLE "outreach_template"` on a database
+    where the table already existed, which is 42P07.
+    - The harness did not drop it before replaying the migrations. It drops a
+      list kept by hand:
 
-**Root cause:** thought the harness reset the schema, actually it drops a
-hand-maintained list of tables, so a table absent from that list survives the
-reset and collides with its own `CREATE TABLE` on the next run.
+      ```ts
+      await sql.unsafe(`DROP TABLE IF EXISTS ${TRACKED_TABLES.join(', ')} CASCADE`);   // ← drops only the listed tables
+      ```
+
+      - Commit f3447d969 (PR #104, an agent session) added the migration and
+        added the table to `test/database-utils.ts`'s `ALL_TABLES`, the list
+        truncated between cases. It did not add it to
+        `test/setup-postgres.ts`'s `TRACKED_TABLES`, the list dropped before
+        the schema is rebuilt.
+        - The harness resets through two lists that look alike, live in two
+          files, and name nothing that points from one to the other.
+          **Machine.**
+
+## Root cause of occurrence
+
+*Thought the harness rebuilt the schema from the migrations, so a new table
+needed only its migration and the truncate list, actually it drops a second
+hand-kept list first, and a table absent from that list survives the reset
+and collides with its own `CREATE TABLE` on the next run.* **Machine:** two
+copies of the same fact, with nothing linking them.
+
+`apps/pragma/test/setup-postgres.ts`, read this session: the drop runs
+`TRACKED_TABLES` only, then replays every migration statement.
 
 ## Detection failure causes
 
-- **Typing:** the lists are string arrays; no type relates them to the schema.
-- **Linter / static analysis:** no rule reads SQL.
-- **Functional validation locally:** the first run passed, which is the whole
-  trap. A defect that needs two runs is invisible to a developer who runs once
-  and pushes.
-- **CI:** every CI job starts from an empty Postgres service, so CI is
-  permanently in the "first run" state and can never see this class of defect.
-- **Code review:** the diff added a table and updated a list; the missing
-  second list is an absence, and absences do not appear in diffs.
+- **Typing:** the lists are string arrays. No type relates them to the
+  schema.
+- **Linter:** no rule reads SQL.
+- **Local validation:** the first run passed. A defect that needs two runs is
+  invisible to a developer who runs once and pushes.
+- **CI:** every CI job starts from an empty Postgres service, so CI is always
+  in the first-run state and can never see this class.
+- **Review:** the diff added a table and updated a list. The second list was
+  an absence, and absences do not appear in diffs.
 
 ## Countermeasure
 
-The table was added to `test/setup-postgres.ts`'s `TRACKED_TABLES` during
-PR #104, which restored the reset.
+Commit 7bf4a7029, in PR #104, added the table to `TRACKED_TABLES`, which
+restored the reset.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — pre-commit gate)
+**Type:** DevX check (level 2)
 
-**Reference:** PR #105
-
-**The actual fix:** `scripts/check-coupled-lists.sh` gained a fourth section
-that reads every `CREATE TABLE` out of each application's migrations and
-requires the name in both harness files:
+**Reference:** commit [`60fcd964e`](https://github.com/hugoleborso/borso.fr/commit/60fcd964e8).
+`scripts/check-coupled-lists.sh` gained a section that reads every
+`CREATE TABLE` out of each application's migrations and requires the name in
+both harness files. It runs in pre-commit when a migration or a harness file
+changes, and in CI.
 
 ```diff
-+for migrations_dir in apps/*/api/src/database/migrations; do
-+  created_tables=$(grep -ho 'CREATE TABLE[[:space:]]*"[a-z_]*"' "$migrations_dir"/*.sql | ...)
-+  while IFS= read -r table; do
-+    if ! grep -qE "(^|[^a-z_])$table([^a-z_]|$)" "$setup_file"; then
-+      fail "$migrations_dir creates '$table' and $setup_file does not list it. ..."
++  created_tables=$(
++    grep -ho 'CREATE TABLE[[:space:]]*"[a-z_]*"' "$migrations_dir"/*.sql |
++      sed 's/.*"\(.*\)"/\1/' | sort -u
++  )
 ```
 
-The check was verified against the original defect: deleting
-`'outreach_template'` from the setup file reproduces the failure at commit
-time rather than on the second test run. One harness names its tables in a
-quoted array and the other inside a single `DROP TABLE` statement, so the
-comparison is on the name rather than on a spelling.
+It holds with a gap. The pattern misses `CREATE TABLE IF NOT EXISTS`, the
+spelling of most pragma migrations since 0015. Six live tables created that
+way are absent from `TRACKED_TABLES`: `assistant_client`, `assistant_grant`,
+`assistant_authorization_code`, `vapid_key_pair`, `realtime_connection` and
+`gear_item`. The check still prints "the coupled lists agree" (measured
+2026-11-27). Those tables do not collide on a second run, because of
+`IF NOT EXISTS`. They survive the reset with whatever shape and rows the last
+run left.
 
-**Sibling defects swept:** the same check now covers `last-loop-lepin`, whose
-harness lists its tables in a different shape and agreed.
+**Proposed:** remove both lists. `setup-postgres.ts` would run
+`DROP SCHEMA public CASCADE; CREATE SCHEMA public` before replaying the
+migrations, and `database-utils.ts` would truncate every table that
+`pg_tables` lists in `public`. The harness then cannot miss a table, however
+its migration spells `CREATE TABLE`, and the coupled-lists section can be
+deleted. This holds only because the harness runs on its own sandbox
+Postgres, which `pnpm --filter @borso-app/pragma run test` boots
+(`setup-postgres.ts` refuses to run without `DATABASE_URL`). The schema drop
+must never reach the database the dev server reads, the trap of
+[the-test-suite-wiped-the-database-the-dev-server-was-reading](./the-test-suite-wiped-the-database-the-dev-server-was-reading.md).
 
-## See also
+**Proof it can fail:** deleting `'outreach_template'` from the setup file
+made the check fail at commit time, when the entry was written.
 
-- [`two-copies-that-had-to-agree-and-nothing-made-them.md`](./two-copies-that-had-to-agree-and-nothing-made-them.md) — the same class, which is why this check lives in the same script.
-- [`the-test-suite-wiped-the-database-the-dev-server-was-reading.md`](./the-test-suite-wiped-the-database-the-dev-server-was-reading.md) — the other half of what this harness's reset reaches.
+**Similar instances:** the same check covers `last-loop-lepin`, whose
+harness names its tables inside one `DROP TABLE` statement.
+`grep -n 'CREATE TABLE IF NOT EXISTS' apps/*/api/src/database/migrations/*.sql` lists
+the migrations the pattern does not read.

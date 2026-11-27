@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#151'
-fix-commits: [self]
+fix-commits: [df244dda3, e523fbe2d]
 eradication-level: 1
-eradication-paths: [apps/pragma/site/src/components/molecules/Menu.tsx, apps/pragma/site/src/styles/tokens.css, apps/pragma/site/src/components/molecules/Menu.test.tsx]
+eradication-paths: [apps/pragma/site/src/components/molecules/Menu.tsx, eslint-rules/no-raw-interactive-element.js, apps/pragma/site/src/components/molecules/Menu.test.tsx]
 time-to-detect: weeks
 tags: [react, frontend, pragma, accessibility, testing]
 zone: apps/pragma/site/src/components/molecules/Menu.tsx
@@ -37,32 +37,45 @@ Reproduced on `main` by `Menu.test.tsx` before the fix (measured):
 
 ## Causal chain
 
-- The menu stays open after a tap outside it
-  - Nothing listens for that tap. `Menu` is a `<details>` whose list sits
-    absolutely positioned below the `<summary>` button
-    (`apps/pragma/site/src/components/molecules/Menu.tsx`)
-    - A `<details>` toggles only when its own `<summary>` is activated. It
-      has no light dismiss and no Escape handling, unlike a popover
-    - The item path was closed by hand (`closeEnclosingMenu`), so closing
-      was thought about, but only for paths that start inside the menu
+- The menu stayed open after a tap outside it, and Escape did nothing.
+  - `Menu` was a `<details>` whose list sat absolutely positioned under its
+    `<summary>`. A `<details>` changes its open state only when its own
+    `<summary>` is activated or `open` is set:
 
-```tsx
-<details className="relative">
-  <summary aria-label={label}>…</summary>
-  <ul className="absolute top-full right-0 z-30 …">   {/* ← nothing outside closes it */}
-```
+    ```tsx
+    <details className="relative">
+      <summary aria-label={label}>…</summary>
+      <ul className="absolute top-full right-0 z-30 …">   {/* ← only the summary toggles it */}
+    ```
+
+    - The item path closed it by hand, with
+      `event.currentTarget.closest('details')?.removeAttribute('open')`. So
+      closing was handled for paths that start inside the menu only.
+      - Commit `67bab8288` (PR #151, "measure member jobs on a phone and cut
+        the taps and scrolls") wrote both lines in `OverflowMenu.tsx`. PR #216
+        renamed it `Menu` and restyled it.
+        - The author picked `<details>` because it opens and closes with no
+          React state and no `useEffect`, which pragma's standards ban. Modal
+          `<dialog>` examples existed in pragma at `67bab8288^`
+          (`ConfirmDialog.tsx`, `ListenLinksDialog.tsx` and others), each
+          opened through a ref.
 
 ## Root cause of occurrence
 
-*Thought a `<details>` with an absolutely positioned list behaves like a
-menu, actually it is a disclosure that only its own `<summary>` can close.*
+*Thought a `<details>` with an absolutely positioned list behaves like a menu.
+Actually it is a disclosure that only its own `<summary>` can close: no light
+dismiss, no Escape.* (Method)
 
 The [HTML standard](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-details-element)
-says: "The details element represents a disclosure widget from which the
-user can obtain additional information or controls." Its open state changes
-when the `summary` is activated or the `open` attribute is set, and on no
-other event. `<details>` was chosen in #151 because it opens and closes with
-no React state and no `useEffect`, which the standards ban.
+says: "The details element represents a disclosure widget from which the user
+can obtain additional information or controls." Its open state changes when
+the `summary` is activated or the `open` attribute is set, and on no other
+event.
+
+The tag is Method. The standard that bans React state and `useEffect` for this
+kind of toggle steered the author to the one stateless primitive that opens
+and closes by itself, and that primitive has no way to be dismissed from
+outside.
 
 ## Detection failure causes
 
@@ -82,59 +95,61 @@ no React state and no `useEffect`, which the standards ban.
 
 ## Countermeasure
 
-`Menu` is now a modal `<dialog>`, like `Sheet`. Opening it dims the page
-with the same `backdrop:bg-scrim`. A tap on that shadow only closes the
-menu, through the `closeOnBackdropTap` ref callback that `Sheet` now shares
-from `modal-dialog.adapter.ts`. The browser closes it on Escape and gives
-focus back to the button. Each item closes the menu, then runs.
+Commit `df244dda3` (PR #246) made `Menu` a modal `<dialog>`, like `Sheet`,
+dimmed by `backdrop:bg-scrim`. A tap on the shadow only closed it, through a
+`closeOnBackdropTap` ref callback shared with `Sheet`. The browser closed it on
+Escape and gave focus back to the button. Two earlier versions were replaced on
+operator review: a transparent backdrop that the bottom and tab bars sat above,
+and a `popover="auto"` whose closing tap also reached what was under it.
 
-Placement under the button uses CSS anchor positioning inside
-`@supports (position-area: bottom)` in `tokens.css`. A browser without it
-shows the menu centred, because the same file restores the `margin: auto`
-that Tailwind's preflight removes.
-
-Two earlier versions were replaced on operator review:
-
-- A hand-written transparent backdrop. The bottom bar (`z30`) and the tab
-  bar (`z40`) sat above it and stayed tappable with a menu open.
-- A native `popover="auto"`. With no shadow, the tap that closed it also
-  reached what was under it, and opened the song sheet in one tap
-  (measured, also on bare HTML with no app code). The operator wanted the
-  shadow and a tap that only closes, as on the transition sheet.
-
-Checked on the real app (`pnpm dev`, Chromium, 375 px, measured):
+Checked on the real app (`pnpm dev`, Chromium, 375 px, measured then):
 
 | Check | Result |
 | --- | --- |
-| Tap on the button | open, shadow on, list 4 px under the button, right edges aligned |
-| One tap on a song row | menu closed, shadow gone, nothing else opened |
+| Tap on the button | open, shadow on, list 4 px under the button |
+| One tap on a song row | menu closed, nothing else opened |
 | Escape | closed, focus back on the button |
 | Item tap | closed, item ran |
-| `@supports` rule removed, as in a browser without anchor positioning | list centred on screen |
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** structural impossibility (level 1) for pragma's menus, with a gap.
 
-**Reference:** commit `[self]` on this entry's pull request
+**Reference:** the `<dialog>` this entry first shipped no longer exists.
+Commit `e523fbe2d` (PR #249) rebuilt `Menu` on React Aria's `MenuTrigger` and
+`Popover`, under
+[ADR-2026-11-03T1438](../adr/2026-11-03T1438-pragma-interactive-primitives-come-from-react-aria-components.md)
+(accepted). The library owns the tap outside, Escape and focus return, and the
+ADR chose it because it passed the operator's tap rule by default. The same
+commit taught `borso/no-raw-interactive-element` to refuse a raw `<button>`, a
+raw `<dialog>`, a React Aria overlay outside `Sheet` or `Menu`, and a hidden
+element that takes a pointer event, in `apps/pragma/site/src`.
 
 ```diff
 -    <details className="relative">
 -      <summary aria-label={label} …>
-+      <button type="button" aria-haspopup="menu" onClick={openMenuOfButton} …>
--      <ul className="absolute top-full right-0 z-30 …">
-+      <dialog ref={closeOnBackdropTap} data-anchored-menu className="… backdrop:bg-scrim">
++    <MenuTrigger>
++      <MenuButton aria-label={label} …>
++      <Popover placement="bottom end" offset={GAP_BELOW_THE_BUTTON_PX} …>
 ```
 
-The menu and the sheet now dismiss through the same dialog primitive and
-the same backdrop callback, so no menu can be written without a way out.
-`Menu.test.tsx` taps the shadow and expects the menu closed. That test
-failed with the backdrop callback removed (measured).
+`Menu.test.tsx` taps the shadow and expects the menu closed and no item run,
+and presses Escape and expects focus back on the button.
 
-**Similar instances:** `grep -rn "<details" apps/*/site/src` finds five
-(measured). `Menu` is the only popup. The four in talos (`SourceView`,
-`TodayFocus`, `DraftBoard`, `FoldedSection`) are inline disclosures, where
-staying open is correct. All five pragma `more` menus
-(`PracticeHeader`, `SessionSetlistPreview`, `SongDetailHeader`,
-`SetlistEntryRow`, `SetlistHeaderActions`) render `Menu`, so the fix
-reaches them all.
+**The gap:** the rule does not refuse `<details>`, and it is enabled for
+`apps/pragma/site/src` only (measured, `.oxlintrc.json` line 569). A new
+`<details>` popup in pragma, or any popup in another app, would pass lint.
+
+**Proposed:** add `details` to the elements `no-raw-interactive-element`
+refuses in pragma, with a message that points at `Menu` for a popup and allows
+an inline disclosure by an exception on the line. Then the primitive that has
+no dismissal cannot be written as a popup again.
+
+**Proof it can fail:** `Menu.test.tsx` failed with the backdrop callback
+removed when the `<dialog>` version shipped (measured then). Not re-run on the
+React Aria version this session.
+
+**Similar instances:** `grep -rn "<details" apps/*/site/src --include=*.tsx`
+finds five, all in talos and all inline disclosures, where staying open is
+correct. `grep -rln "<Menu\b" apps/pragma/site/src` lists the pragma screens
+whose `more` menu renders `Menu`, so the library's dismissal reaches them all.

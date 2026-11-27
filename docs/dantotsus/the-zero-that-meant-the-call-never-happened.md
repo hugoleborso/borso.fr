@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#281'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 4
 eradication-paths: [scripts/quality/quality-dashboard.core.ts]
 time-to-detect: days
 tags: [sentry, quality-dashboard, observability, mcp, third-party, testing, meta]
@@ -32,24 +32,41 @@ The operator caught it that time by noticing the 400s. The board gave no sign.
 
 ## Causal chain
 
-- The board would show `0 open issues` for an application nobody counted
+- The board would show `0 open issues` for an application nobody counted.
   - `buildSentryIssueIndicators` returned `current: 0, status: { kind: 'ok' }`
-    for that application
-    - It summed `reading.value.filter((count) => count.app === app)` and an
-      empty array reduces to `0` with the seed the code passes
-      - Nothing distinguished "the collector wrote `count: 0`" from "the
-        collector wrote no row at all"
-        - The collector cannot write a row for a call that returned 400
-          - Two of the six `search_issues` calls returned
-            `400 Invalid query. Project(s) <name> do not exist`
-            - The Sentry MCP runs an agent over `query` before Sentry sees
-              it, and it rewrote a bare `app:<value>` tag filter into a
-              project filter
+    for that application.
+    - It summed the application's rows, and an empty array reduces to `0`
+      with the seed the code passes. The faulty line, from #281
+      (`5abe4b2b8`):
+
+      ```ts
+      const own = reading.value.filter((count) => count.app === app);
+      return {
+        ...base,
+        // No row for this app gives [], and [].reduce(..., 0) gives 0.
+        current: own.reduce((total, count) => total + count.count, 0),
+        status: { kind: 'ok' },
+      ```
+
+      - Branch 1: the collector wrote no row for two applications. Two of
+        the six `search_issues` calls returned
+        `400 Invalid query. Project(s) <name> do not exist`.
+        - The Sentry MCP runs an agent over `query` before Sentry sees it,
+          and it rewrote a bare `app:<value>` tag filter into a project
+          filter.
+      - Branch 2: a missing row was the only trace a failed call could
+        leave. The same commit defined the collector protocol in
+        `.claude/skills/quality-dashboard/SKILL.md:37` with one row shape,
+        `{ "app", "count" }`. It has no way to write down a refused call, so
+        the builder had to infer failure from absence. **Machine.**
+        - The builder was written to the shape of `sumSentry`, beside it,
+          where absence is a true zero.
 
 ## Root cause of occurrence
 
 *Thought an application missing from the Sentry rows means it had nothing,
 actually it means the call that would have counted it never landed.*
+**Machine.**
 
 The snapshot carries two Sentry sources that look alike and mean opposite
 things by absence. `.claude/skills/quality-dashboard/SKILL.md` defines them a
@@ -65,7 +82,8 @@ absence genuinely is zero. `sentryIssues` is built one call per application,
 so every application is supposed to have a row and absence can only mean the
 call failed. `sumSentry` and `buildSentryIssueIndicators` were written to the
 same shape, and the second inherited a meaning that was only ever true of the
-first.
+first. The row shape gave no other place to put a failure, which is why the
+belief was easy: both sources looked alike because their rows were alike.
 
 The test locked it in. `quality-dashboard.core.test.ts` passed `['pragma',
 'talos', 'nowhere']` with rows for `pragma` only, and asserted:
@@ -84,7 +102,7 @@ That is the defect, written down as the expectation, at 100% coverage.
   mutation were both satisfied by the wrong answer.
 - **The gates:** 100% statements, branches and mutation score all passed. The
   branch that would have been wrong did not exist, so no gate could measure
-  it. This is `gate-measures-nothing` seen from the other side: the gate was
+  it. This is `gate-measures-nothing` seen from the other side. The gate was
   honest, the code simply had no place for the question.
 - **The board:** `0` and `ok` render exactly like a real zero. An unavailable
   source is drawn differently, and that path existed already for a whole
@@ -95,7 +113,7 @@ That is the defect, written down as the expectation, at 100% coverage.
 A Sentry application with no row in `sentryIssues` is unavailable, not zero.
 
 Two options were weighed. Refusing the whole snapshot at parse time, in
-`snapshotSchema`, would be stricter but blunt: one refused call out of six
+`snapshotSchema`, would be stricter but blunt. One refused call out of six
 would throw away the five that worked and the rest of the board with them.
 Marking the one application unavailable keeps every other number and shows the
 reader exactly which figure is missing, which is what the board already does
@@ -103,11 +121,12 @@ for a whole source. Taken.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** detection (level 4)
 
-A zero is now reachable only from a row that says `count: 0`. No arrangement
-of inputs produces `current: 0` for an application the collector did not
-write, so the failure mode cannot be expressed.
+A zero is now reachable only from a row that says `count: 0`. The guard is a
+branch in `buildSentryIssueIndicators`, held by a unit test at 100% coverage
+and mutation. It is not a shape: the row type still admits a list missing an
+application, and a builder that skips the branch would compile.
 
 **Reference:** PR #288 · the commit adding this file
 
@@ -145,6 +164,14 @@ AssertionError: expected { id: 'sentry-issues-open', …(7) } to match object { 
 ```
 
 The guard was restored and all 37 tests in the file pass.
+
+**Proposed:** let each row of `sentryIssues` be either `{ app, count }` or
+`{ app, unavailable: reason }`, in `SentryIssueCount` and `snapshotSchema`
+(`scripts/quality/quality-dashboard.core.ts`), and have the skill record the
+400's text at `.claude/skills/quality-dashboard/SKILL.md:37`. The board would
+then show the actual reason, not a generic "no row". The schema could then
+require one row per application in `SENTRY_APPS`, so absence becomes a parse
+error rather than a branch. That is the level-1 version of the guard above.
 
 **Similar instances:** `grep -n 'reduce((total' scripts/quality/*.core.ts`
 finds `sumSentry` and this function. `sumSentry` reads `sentry`, where the

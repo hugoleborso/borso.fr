@@ -51,7 +51,8 @@ that was minutes from merging.
 ## Root cause of occurrence
 
 *Thought a hidden element is a fair shortcut in a component test, actually it
-couples the test to how the component hides things.* Standard 10 already said
+couples the test to how the component hides things.* **Method:** the standard
+existed and no tool held it. Standard 10 already said
 to test a component "through what a user sees". Nothing held that line, and
 `hidden: true` is the one option that steps outside it. A person cannot press
 an item in a closed menu.

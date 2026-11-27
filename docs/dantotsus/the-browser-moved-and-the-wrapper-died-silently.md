@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#194'
-fix-commits: [self]
+fix-commits: [b806f7909, c54e32da7]
 eradication-level: 1
-eradication-paths: [scripts/browser.sh, scripts/argent.sh]
+eradication-paths: [scripts/install-repo-deps.sh]
 time-to-detect: minutes
 tags: [harness, agent-browser, tooling, visual-validation]
 zone: scripts/browser.sh
@@ -15,56 +15,108 @@ recurs: [the-browser-was-on-disk-and-unreachable]
 
 # The browser moved and the wrapper died silently
 
-## Symptom
+## User impact
 
-On PR #194, `scripts/browser.sh open http://localhost:5180/` and `snapshot -i` printed nothing at all. The session read that as an empty page and fell back to a hand-written Playwright script. Run alone, the wrapper exited 2 with no message.
+On PR #194, `scripts/browser.sh open http://localhost:5180/` and `snapshot -i`
+printed nothing at all. The session read that as an empty page and fell back
+to a hand-written Playwright script. Run alone, the wrapper exited 2 with no
+message.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| `scripts/browser.sh open <url>` | no output, exit 2 | the page title, or a message naming what is missing |
 
-1. **Why exit 2 with no message?** `find_chromium` ran `ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome | head -1` inside `$( )` under `set -euo pipefail`. `ls` found nothing and exited 2, `pipefail` made the substitution fail, and `set -e` stopped the script before its own « no Chromium » note.
-2. **Why did `ls` find nothing?** The sandbox image now ships `chromium-1243/chrome-linux64/chrome`. The path was written against `chromium-1194/chrome-linux/chrome`.
-3. **Why a versioned path?** The image also ships a stable link, `/opt/pw-browsers/chromium`, which the environment brief names. The scripts globbed the versioned folder instead.
+Measured by the PR #194 session on 2026-10-24.
 
-**Root cause:** thought the browser lives at `chromium-*/chrome-linux/chrome`, actually the image names its folder per build and keeps `/opt/pw-browsers/chromium` as the one stable path.
+## Causal chain
+
+- The wrapper exited 2 and printed nothing.
+  - `find_chromium` ran `ls` inside `$( )` under `set -euo pipefail`. `ls`
+    found nothing and exited 2, `pipefail` failed the substitution, and
+    `set -e` stopped the script before its own "no Chromium" note.
+    ```bash
+    find_chromium() {
+      ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1  # ← the faulty line
+    }
+    ```
+    - The image now ships `chromium-1243/chrome-linux64/chrome`. The glob
+      matched only the `chrome-linux` folder of `chromium-1194`.
+      - `5a5ebc19f` (2026-08-15) wrote the glob into `scripts/browser.sh`. It
+        copied it from `scripts/argent.sh`, where `2e581bcfe` (2026-08-14) had
+        written it. Its input was the knowledge corpus.
+        `agent-browser-cli-quirks.md` gave the glob verbatim,
+        `/opt/pw-browsers/chromium-*/chrome-linux/chrome`, and
+        `driving-previews-with-agent-browser-and-argent.md` gave the full
+        `chromium-1194` path. No file in the repository named the stable link
+        `/opt/pw-browsers/chromium` (`git grep` at `2e581bcfe^` and at
+        `5a5ebc19f`, this session). (Material)
+      - On 2026-08-18, `f6463f6` taught SessionStart to prefer the stable link.
+        It left the two wrappers on their own glob. From then on the
+        repository held three Chromium resolvers, and only one used the stable
+        link, so the fix did not reach the file that broke. (Machine)
+
+## Root cause of occurrence
+
+*Thought the build number was the only part of the browser's path that
+changes, actually the image renames the whole folder per build and keeps
+`/opt/pw-browsers/chromium` as the one stable path.* (Material)
+
+The agent that wrote the glob copied it from the knowledge entry it had
+loaded, and the stable path was in no document it could have read. Under the
+agentic 4M rule that is Material: the right answer was absent from its
+context. The second branch is Machine. `f6463f6` fixed the path once, in
+SessionStart, and nothing tied the wrappers to that fix, because each kept its
+own copy of a fact the image owns. Measured this session:
+`ls -la /opt/pw-browsers/` shows
+`chromium -> /opt/pw-browsers/chromium-1243/chrome-linux64/chrome`.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** shellcheck does not flag a pipeline under `pipefail` inside a substitution.
-- **Functional validation locally:** a failure that prints nothing reads as « the page is empty », not « the tool died ».
-- **CI:** CI never runs the wrapper; the sandbox image is the only place it runs.
+- **Linter:** shellcheck does not flag a pipeline under `pipefail` inside a
+  command substitution.
+- **Local validation:** a failure that prints nothing reads as "the page is
+  empty", not "the tool died".
+- **CI:** CI never runs the wrapper. The sandbox image is the only place it
+  runs, so an image change is seen first by the next session.
+- **Review of `f6463f6`:** its diff touched only `scripts/install-repo-deps.sh`.
+  The wrappers' glob was outside the diff a reviewer reads.
 
 ## Countermeasure
 
-`find_chromium` in `scripts/browser.sh` and `scripts/argent.sh` uses `/opt/pw-browsers/chromium` when it is executable, and otherwise finds any `chrome-linux*/chrome`, never failing the script.
+`b806f7909` made `find_chromium` in `scripts/browser.sh` and
+`scripts/argent.sh` use `/opt/pw-browsers/chromium` when it is executable.
+Otherwise it ran `find ... -path '*chrome-linux*'` with `|| true`, so it could
+never stop the script. Verified on 2026-10-24: `open https://example.com`
+printed the title with the link present, and the fallback resolved with the
+link moved away.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility by subtraction (level 1)
 
-**Reference:** commit adding this file, in the kaizen pull request for #194.
+**Reference:** commit [`c54e32da7`](https://github.com/hugoleborso/borso.fr/commit/c54e32da7) (#224, 2026-10-29)
 
-**The actual fix:**
+The patch above kept two resolvers and a fallback glob. Five days later,
+`c54e32da7` deleted the class instead. It removed `scripts/browser.sh`,
+`scripts/argent.sh` and the agent-browser config that SessionStart wrote,
+because agent-browser now finds a browser itself. No file in the repository
+names a Chromium path for agent-browser any more, so an image rename has
+nothing to break.
 
 ```diff
--find_chromium() {
--  ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1
--}
-+STABLE_CHROMIUM=/opt/pw-browsers/chromium
-+
-+find_chromium() {
-+  if [ -x "$STABLE_CHROMIUM" ]; then
-+    printf '%s\n' "$STABLE_CHROMIUM"
-+    return 0
-+  fi
-+  find /opt/pw-browsers -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1 || true
-+}
+ scripts/argent.sh                                  |  300 -----
+ scripts/browser.sh                                 |  177 ---
+ scripts/install-repo-deps.sh                       |   61 +-
 ```
 
-The stable link does not depend on a build number, so a new image no longer breaks the wrapper. The fallback cannot stop the script. Verified on 2026-10-24: `open https://example.com` prints the title with the link present, and the fallback resolves with the link moved away.
+**Proof it holds:** measured this session, with no
+`~/.agent-browser/config.json`, `agent-browser open about:blank` opened the
+page on agent-browser 0.41.2. The browser it ran sits in its own cache,
+`~/.agent-browser/browsers/chrome-158.0.8127.88`.
 
-**Sibling defects swept:** `scripts/argent.sh` had the same glob and gets the same fix. `scripts/install-repo-deps.sh` already used `-path '*chrome-linux*'` and prefers the stable link.
-
-## See also
-
-- [`the-browser-was-on-disk-and-unreachable.md`](./the-browser-was-on-disk-and-unreachable.md)
-- [`driving-previews-with-agent-browser-and-argent.md`](../knowledge/driving-previews-with-agent-browser-and-argent.md)
+**Similar instances:** `grep -rn 'pw-browsers\|chrome-linux' scripts .claude .husky .github`
+finds one remaining reader of the image's folder,
+`scripts/browser/playwright-browsers.sh`. It links every entry of
+`/opt/pw-browsers` and picks builds with `find -name "$1-[0-9]*" | sort -V`,
+which neither depends on the `chrome-linux` subfolder nor fails under
+`pipefail` when nothing matches.

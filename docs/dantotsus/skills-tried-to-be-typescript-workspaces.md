@@ -5,8 +5,8 @@ detected-at: local
 severity: medium
 related-pr: '#14'
 fix-commits: [959b1e747d]
-eradication-level: 1
-eradication-paths: [pnpm-workspace.yaml, knip.json]
+eradication-level: 5
+eradication-paths: [pnpm-workspace.yaml, CLAUDE.md]
 time-to-detect: hours (mid-implementation)
 tags: [skills, harness, pnpm, workspaces, conception-pivot]
 zone: pnpm-workspace.yaml
@@ -14,148 +14,75 @@ zone: pnpm-workspace.yaml
 
 # I tried to make a Claude Code skill a pnpm workspace. It is not one.
 
-## Symptom
+## User impact
 
-The `/tech-lead-orchestrator` and `/adr-writer` skills were originally
-scaffolded as full pnpm workspaces — `package.json`, `tsconfig.json`,
-`vitest.config.ts`, a `src/` folder of `.utils.ts` modules at 100 %
-coverage, a `bin/tech-lead-metrics.ts` script wired into the root
-`package.json` as `tech-lead:metrics`. The repo's `pnpm-workspace.yaml`
-gained a `.claude/skills/*` glob; `knip.json` gained the two skill
-workspaces.
+The operator reviewed PR #14 mid-implementation and found two skills built as TypeScript packages whose code nothing ran.
 
-This was wrong. Skills are LLM-runtime artefacts: a set of markdown
-instructions an LLM follows. There's nothing to import; there's no
-runtime to run tests against. The TypeScript was inert ceremony — the
-LLM doesn't execute it. Hugo surfaced it mid-implementation:
+| | Seen | Expected |
+| --- | --- | --- |
+| `.claude/skills/tech-lead-orchestrator/` and `.claude/skills/adr-writer/` | A `package.json`, `tsconfig.json`, `vitest.config.ts`, seven `*.utils.ts` modules and their tests, a `tech-lead:metrics` root script (measured: `git show --stat 959b1e747`, 1812 lines deleted) | `SKILL.md`, `standard.md` and their tables, which is what the LLM reads and follows |
 
-> *skills are markdown-only — abandon TS scaffolding.*
+The operator's words: *skills are markdown-only, abandon TS scaffolding.*
 
-Commit `959b1e7` drops everything: `src/`, `tests/`, `bin/`, the two
-workspace `package.json` / `tsconfig.json` / `biome.jsonc` /
-`vitest.config.ts` files, the `pnpm-workspace.yaml` glob, the two
-knip workspace entries, the root `tech-lead:metrics` script. SKILL.md
-+ standard.md + the verdict-contract / template files become the
-*entire* skill.
+## Causal chain
 
-## Root-cause chain
+- The operator found 64 passing tests on code no runtime imported.
+  - `378f81ddc` built `@borso/skill-tech-lead-orchestrator` with five `*.utils.ts` at 100% coverage, and `1791cbe0b` did the same for `adr-writer`. The skill's state machine, verdict lookup and retry policy became TypeScript modules.
+    - The LLM, which runs a skill, reads only the markdown. The modules were imported by their own tests and nothing else.
+  - `003550953` made that shape the rule. It added `.claude/skills/*` to `pnpm-workspace.yaml` and this bullet to CLAUDE.md:
 
-1. **Why** scaffold a TS workspace for a skill?
-   Because every other code unit in the repo is a TS workspace, the
-   reflex was to mirror the pattern. State-machine derivation,
-   verdict-kind lookup, retry-action mapping all *look* like things
-   you'd write as `*.utils.ts` with 100 % coverage tests — that's
-   the repo's *Clean code* rule for pure helpers.
+    ```markdown
+    - `.claude/skills/<slug>/` — skills. Markdown-only by default. A skill becomes a **pnpm workspace** (`.claude/skills/*` is listed in `pnpm-workspace.yaml`) the moment it ships testable code — i.e. one or more `*.utils.ts` files.  ← the faulty line
+    ```
 
-2. **Why** does that reflex misfire for skills?
-   Because the runtime is the LLM, not Node. The "state machine" of
-   the orchestrator is a markdown table the LLM reads and follows;
-   the "verdict-kind derivation" is a 5-row lookup table in prose.
-   A `verdictKind.ts` with `verdictKind.test.ts` doesn't *run* —
-   the LLM never imports it. It's documentation in the wrong
-   format.
+    - The agent wrote that bullet to fit the CLAUDE.md rule it had in context at `003550953^`: "Any file containing only deterministic, side-effect-free functions ... is named `something.utils.ts` ... The gate applies to every workspace ... There is no exemption" (Material).
+    - No document in its context said who executes a skill (Material).
 
-3. **Why** wasn't this clear at conception?
-   CLAUDE.md's *Layout* section said:
-   > `.claude/skills/<slug>/` — skills. Promote to a pnpm workspace
-   > when there is testable code.
-   That bullet was the seed of the misconception. It *implied*
-   there is "testable code" in skills. There isn't — the skill is
-   the prose; the LLM is the executor. The bullet shouldn't exist.
+## Root cause of occurrence
 
-4. **Why** did it take "mid-implementation" to surface?
-   Because the scaffolding *looked right* to a TypeScript-shaped
-   audit. The PR's `/technical-validation` pass on the orchestrator
-   spec was green — 100 % coverage, biome clean, knip clean. The
-   defect was at the level of the *category* the code belonged to,
-   not the code itself.
+*Thought a skill's state machine is pure logic, so the clean-code rule asks for a `*.utils.ts` module tested at 100%. Actually a skill runs only as prose the LLM reads, so a module that only its own test imports runs nowhere.* (Material)
 
-**Root cause:** *thought* "if there's a state machine, there's
-testable utils, therefore there's a workspace"; *actually* skills
-are markdown documents an LLM reads, and any state machine in a
-skill is also a markdown document (a table, a lookup, a procedure)
-— never a TypeScript module. The CLAUDE.md hint to "promote to a
-pnpm workspace" was *what* made the wrong category feel right.
+The agent wrote the line. The rule it followed was loaded and unscoped, and the fact that would have stopped it was absent from its context. Source: `git show 003550953^:CLAUDE.md`, line 38, quoted above.
+
+The premise "skills are markdown-only" no longer holds as a rule. `.claude/skills/blueprint/*.ts` and `.claude/skills/dantotsu/scripts/list.ts` live there today with real callers. The misconception is narrower than the category: TypeScript for logic only the LLM executes.
 
 ## Detection failure causes
 
-- **Typing / linter / CI:** the scaffolded TypeScript was correct
-  TypeScript. Every gate passed. The defect wasn't in the code's
-  *shape*; it was in the code's *category*.
-- **`/technical-conception`:** the plan called out `*.utils.ts` at
-  100 % coverage because that's CLAUDE.md's standing rule for
-  pure helpers. The rule fires unconditionally; it can't see that
-  the workspace category itself is wrong.
-- **`/technical-validation`:** identical — the validator checked
-  what the plan asked for. The plan was wrong about the category.
-- **`/visual-validation`:** N/A — no UI.
-- **Code review:** Hugo caught it. The standard *Layout* bullet was
-  the seed, and reading it triggered "wait, why are we promoting
-  skills to workspaces, they have no executor".
+- **Typing, linter, knip, CI:** the code was correct TypeScript. knip treats every `*.test.ts` as an entry point, so a module reached only from its test counts as used.
+- **Coverage gate:** it measures a module against its test. A module whose only consumer is that test scores 100%.
+- **`/technical-validation`:** it checked the plan, and the plan asked for `*.utils.ts` at 100% because CLAUDE.md did. It had no question about who imports the module.
+- **The later caller gate:** `scripts/check-pure-modules-have-callers.sh` now refuses a module imported only by its test. It globs only `apps/**` and `infra/**`, so a test-only module under `.claude/` or `scripts/` still passes (measured, the script's `list_working_tree_files` calls).
 
 ## Countermeasure
 
-Commit `959b1e7` does the structural removal:
+Commit `959b1e747` deleted the code and the rule that made it look right.
 
-- Delete `src/`, `tests/`, `bin/`, `package.json`, `tsconfig.json`,
-  `biome.jsonc`, `vitest.config.ts` from `.claude/skills/adr-writer/`
-  and `.claude/skills/tech-lead-orchestrator/`.
-- Rewrite `SKILL.md` + `standard.md` so the procedures (pick number,
-  conflict check, render template / derive verdictKind, retry
-  policy, journal schema) live in prose with full tables.
-- Revert `pnpm-workspace.yaml`'s `.claude/skills/*` glob.
-- Drop the two skill workspaces from `knip.json`.
-- Drop `tech-lead:metrics` from root `package.json` (replaced by
-  a `jq` one-liner in `docs/knowledge/tech-lead-orchestrator.md`).
-- Update CLAUDE.md *Layout*: skills are **markdown-only**; the
-  "promote to a workspace" bullet is gone.
+- Deleted `src/`, `tests/`, `bin/` and the workspace configs of both skills.
+- Rewrote `SKILL.md` and `standard.md` so each procedure lives in a table.
+- Removed `.claude/skills/*` from `pnpm-workspace.yaml` and the two workspaces from `knip.json`.
+- Replaced the `tech-lead:metrics` script with a `jq` recipe in `docs/knowledge/tech-lead-orchestrator.md`.
+- Replaced the CLAUDE.md bullet.
 
-## Eradication (mandatory — code-level)
+The operator verified it by reading the rewritten skills in the PR.
 
-**Type:** Structural impossibility (level 1 — the "skill is a
-workspace" category no longer exists in the repo's conventions)
+## Eradication
 
-**Reference:** PR #14 · commit [`959b1e7`](https://github.com/hugoleborso/borso.fr/commit/959b1e7)
+**Type:** knowledge (level 5)
 
-**The actual fix:**
-
-```diff
---- a/CLAUDE.md
-+++ b/CLAUDE.md
-@@ -<line>,7 +<line>,7 @@
--- `.claude/skills/<slug>/` — skills. A skill is a set of instructions an LLM follows. Promote to a pnpm workspace when there is testable code.
-+- `.claude/skills/<slug>/` — skills. **Markdown-only.** A skill is a set of instructions an LLM follows: `SKILL.md`, `standard.md`, `template.md`, `worked-example.md` as needed. **No `package.json`, no test runner, no TS utilities.** Primitives the skill needs (verdict parsing, state transitions, retry budgeting, journal aggregation) are described in prose; the LLM runtime executes them. Skills are not pnpm workspaces.
-```
+**Reference:** commit [`959b1e7`](https://github.com/hugoleborso/borso.fr/commit/959b1e747dfa4e2890ae255a6441c61e2a5fef9a).
 
 ```diff
 --- a/pnpm-workspace.yaml
 +++ b/pnpm-workspace.yaml
-@@ -<line>,1 +<line>,0 @@
 -  - '.claude/skills/*'
 ```
 
-Plus the deletion of every `package.json` / `tsconfig.json` /
-`vitest.config.ts` under `.claude/skills/`, plus knip's workspace
-entries for the two skills. The category "skill is a workspace" is
-**structurally unrepresentable** going forward: the pnpm glob no
-longer covers `.claude/skills/*`, knip doesn't list them, CLAUDE.md
-forbids it. A future agent that tries to `pnpm add` something to a
-skill workspace gets an error from pnpm itself.
+What holds today is a subtraction and a sentence. `pnpm-workspace.yaml` lists only `apps/*` and `infra/*`, so a `package.json` under `.claude/` is no workspace and `pnpm -r test` never runs its tests. CLAUDE.md says `.claude/` holds its harness "as plain files". The "markdown-only" sentence of 2026-05 is gone (measured: `grep -n markdown-only CLAUDE.md` finds nothing). `.claude/skills/blueprint/SKILL.md:121` still cites it.
 
-**Sibling defects swept:** the `tech-lead:metrics` root script was
-broken at the same moment — it imported from the deleted skill
-workspace. Replaced with a `jq` one-liner documented in
-`docs/knowledge/tech-lead-orchestrator.md`. The spec.md / plan.md
-under `docs/features/meta/tech-lead-orchestrator/` get an addendum
-explaining how to read the original "Files to change" rows (prose,
-not code).
+Nothing refuses a test-only TypeScript module under `.claude/`. That is why the level is 5 and not 1.
 
-## See also
+**Proposed:** widen `scripts/check-pure-modules-have-callers.sh` from `apps/**` and `infra/**` to every tracked `*.core.ts` and `*.utils.ts`, `.claude/**` and `scripts/**` included. A pure module whose only importer is its test, as `verdict-parser.utils.ts` was, is then refused at commit. It needs no written rule. Measured feasible: a scratch run of the same question over `.claude/` and `scripts/` found 74 such modules and none without a caller outside its test.
 
-- [`docs/dantotsus/feature-flow-skills-do-not-auto-trigger.md`](./feature-flow-skills-do-not-auto-trigger.md) —
-  same family: "what is a skill, mechanically?". That dantotsu
-  established that skills can't auto-trigger; this one establishes
-  that they also can't be workspaces.
-- [`docs/knowledge/tech-lead-orchestrator.md`](../knowledge/tech-lead-orchestrator.md) —
-  operator notes; the `jq` recipe replacing `tech-lead:metrics`
-  lives here.
+**Proof it can fail:** not tried, because the proposal is not built.
+
+**Similar instances:** `git ls-files '.claude/**/*.ts'` lists the blueprint scripts and the dantotsu `list.ts`, each called by a script or a skill command. [`feature-flow-skills-do-not-auto-trigger.md`](./feature-flow-skills-do-not-auto-trigger.md) is the same family: what a skill is, mechanically.

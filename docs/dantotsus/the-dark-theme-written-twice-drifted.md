@@ -15,54 +15,102 @@ recurs: [two-copies-that-had-to-agree-and-nothing-made-them]
 
 # The dark theme written twice drifted
 
-## Symptom
+## User impact
 
-Rewriting the talos palette on PR #171 with a script that replaced each token in each dark block, the script failed on `--color-scrim`: the second dark block did not declare it. An owner who forced dark mode in the settings got the light scrim, `#191b1666`, behind every sheet and dialog.
+A talos owner who forced dark mode in the settings saw the light scrim behind
+every sheet and dialog.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Forced dark theme, any sheet open | scrim `#191b1666`, the light theme's | scrim `#000000a6`, as with a dark system setting |
+| Dark system setting, no forced theme | `#000000a6` | `#000000a6` |
 
-1. **Why was the scrim missing?** `tokens.css` declared the dark palette twice: once for a dark system setting (`@media (prefers-color-scheme: dark) :root:not([data-theme='light'])`) and once for a forced dark theme (`:root[data-theme='dark']`).
-2. **Why twice?** A CSS rule cannot be both inside and outside a media query, and the two cases need the same values. Copying the block was the shape the artifact guidance and most examples use.
-3. **Why did the copies drift?** Nothing compares them. The first block even declared the scrim twice, which looks like the line that was meant for the second block.
+Found on PR #171, when a script that rewrote each token in each dark block
+failed on `--color-scrim` in the second block (measured). Owners on the system
+theme were not affected.
 
-**Root cause:** thought two copies of the dark palette stay in step if they are edited together, actually nothing makes them, and the forced theme is the one nobody looks at.
+## Causal chain
+
+- A forced dark theme showed the light scrim.
+  - `:root[data-theme='dark']` declared no `--color-scrim`, so the light value
+    from `@theme` applied.
+    - `tokens.css` declared the dark palette twice: under
+      `@media (prefers-color-scheme: dark) :root:not([data-theme='light'])`
+      and under `:root[data-theme='dark']`.
+      - Commit `f723bb1fd` (#145) added the dark scrim twice to the first block
+        and never to the second (measured with `git show f723bb1fd`):
+
+        ```css
+        +      --color-scrim: #000000a6;
+        +      --color-scrim: #000000a6; /* ← meant for the forced-dark block */
+        ```
+
+        - The twice-written block is the shape the artifact guidance
+          prescribes. The Artifact tool's description, loaded in every agent
+          session here, says to redefine the colours "for dark mode under
+          `@media (prefers-color-scheme: dark)` guarded by
+          `:root:not([data-theme="light"])` and again under
+          `:root[data-theme="dark"]`" (Material).
+
+## Root cause of occurrence
+
+*Thought the dark palette must be declared once per selector, actually
+`light-dark()` with `color-scheme` holds both themes in one declaration.*
+(Material)
+
+The guidance in the agent's context named only the two-block shape, so every
+new token had to be added in three places. The duplicated line in `f723bb1fd`
+shows the writer meant one line per dark block and put both in the first
+(inferred from the diff).
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the stylesheet gate checks selectors, not that two blocks agree.
-- **Functional validation locally:** the system theme is what every screenshot uses; a forced theme is a settings toggle away.
+- **Linter:** `scripts/check-stylesheet-contents.sh` checks which selectors
+  the stylesheet may hold. It never compares the token sets of two blocks.
+- **Local validation:** screenshots use the system theme. The forced theme is
+  a settings toggle away, so no check rendered it.
 
 ## Countermeasure
 
-- **Code:** PR #171 added the missing scrim to the second block.
+PR #171 added the missing scrim to the second block.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1). In talos, each colour is written
+once, so there is no second copy to drift.
 
-**Reference:** commit adding this file.
+**Reference:** the commit adding this file.
 
-**The actual fix:** each colour is written once, in `@theme`, as `light-dark(<light>, <dark>)`. `color-scheme` on the root decides which side applies, `light dark` by default and the forced value under `data-theme`, so there is no second block left to drift. The shadows that carried colours are built from two new colour tokens, `shadow-umbra` and `shadow-edge`, and the focus ring from `surface` and `bronze`.
+Each colour sits in `@theme` as `light-dark(<light>, <dark>)`. `color-scheme`
+on the root picks the side: `light dark` by default, the forced value under
+`data-theme`. The shadows that carried colours are built from two new tokens,
+`shadow-umbra` and `shadow-edge`.
 
 ```diff
 -  --color-bg: #ecd6bb;
 +  --color-bg: light-dark(#ecd6bb, #111614);
  …
--@layer base {
 -  @media (prefers-color-scheme: dark) {
 -    :root:not([data-theme='light']) {
 -      --color-bg: #111614;
--      …
+-  …
 -  :root[data-theme='dark'] {
 -    --color-bg: #111614;
--    …
 ```
 
-Checked by computing every token in a browser before and after, in six cases (light and dark system, each with no forced theme, forced light and forced dark): all 46 colours are identical in all six. `shadow-2` changes slightly, by design: its second layer is now a 1px edge in both themes, where the light theme had a small drop.
+**Proof it can fail:** every token was computed in a browser before and after,
+in six cases (light and dark system, each with no forced theme, forced light
+and forced dark). All 46 colours are identical in all six (measured).
+`shadow-2` changes by design.
 
-**Sibling defects swept:** no other application has a forced theme; their tokens files declare no `data-theme` block.
+**Similar instances:** `grep -ln prefers-color-scheme apps/*/site/src/styles/*.css`
+finds `apps/borsouvertures/site/src/styles/tokens.css`. It has no forced
+theme, but line 64 redefines every colour token a second time inside
+`@media (prefers-color-scheme: dark)`. A token added to `@theme` and not there
+keeps its light value in dark mode. Nothing refuses a twice-written block in
+any app, talos included, so the level above holds for the talos file only.
 
-## See also
-
-- [`../knowledge/tailwind-v4-theme-and-preflight-traps.md`](../knowledge/tailwind-v4-theme-and-preflight-traps.md)
-- [`two-copies-that-had-to-agree-and-nothing-made-them.md`](./two-copies-that-had-to-agree-and-nothing-made-them.md): the same class, a rule written in two places; here the second place is deleted rather than checked.
+**Proposed:** teach `scripts/check-stylesheet-contents.sh` to refuse a
+`--color-*` declaration inside a `prefers-color-scheme` or `data-theme` block,
+and move borsouvertures to `light-dark()`. A second copy of a colour then
+cannot be committed in any app.

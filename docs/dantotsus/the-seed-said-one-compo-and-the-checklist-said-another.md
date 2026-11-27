@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#100'
 fix-commits: [948204d50a]
 eradication-level: 2
-eradication-paths: [apps/pragma/api/src/__test/test-seed.service.ts]
+eradication-paths: [apps/pragma/api/src/__test/test-seed.service.ts, apps/pragma/api/src/__test/test-seed-task-board.core.ts, apps/pragma/api/src/__test/test-seed-task-board.core.test.ts]
 time-to-detect: minutes
 tags: [pragma, testing, process, harness, gates]
 zone: apps/pragma/api/src/__test
@@ -14,122 +14,81 @@ zone: apps/pragma/api/src/__test
 
 # The seed said one compo, the checklist said another, and the screen was right all along
 
-## Symptom
+## User impact
 
-The visual validator returned **FAIL** on two of twenty rows:
+The operator paid for a validation round that proved a correct screen correct. The visual validator of PR #100 returned FAIL on two of twenty rows. The screen and the data were both right. The checklist was wrong.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| Row 11 of the validation checklist | Task "Réécrire le pont" should show the badge "Runaway Sun" | The checklist names the composition the seed linked, "Last Call" |
+
+The validator's finding:
 
 > **11 — compo badge names the wrong compo.** "Réécrire le pont" shows the
 > badge **"Last Call"**, not "Runaway Sun". The renderer is correct against
 > the data: `GET /api/tasks` gives that task `songId=77eea4e2…`, which
 > `GET /api/songs` names Last Call.
 
-The screen was right. The data was right. The *checklist* was wrong, and it
-was wrong because the person who wrote it — this session — also wrote the
-script that seeded the data, and the two disagreed with each other.
+## Causal chain
 
-A validation round was spent proving that a correct renderer renders
-correctly.
+- The validator failed row 11 against a correct screen.
+  - The checklist said the task was linked to "Runaway Sun". The seed had linked it to "Last Call".
+    - The session wrote the checklist from its own seeding script, which took the first song of `GET /api/songs` and called it Runaway Sun.
 
-## Root-cause chain
+      ```python
+      # heredoc piped to python3 by the session that wrote the brief, never committed
+      runaway_sun = songs[0]  # ❌ the newest song, not the first one seeded
+      ```
 
-1. **Why did the checklist name the wrong composition?**
-   It was written from the seeding script, which took `songs[0]` from
-   `GET /api/songs` and called it *Runaway Sun*.
-2. **Why was `songs[0]` not Runaway Sun?**
-   The catalogue comes back newest first (`listSongsNewestFirst`), so index 0
-   is the song created *last*. Of the two originals in the fixture, that is
-   Last Call.
-3. **Why was that not obvious?**
-   Because the ordering is documented — `VOCABULARY.md` says "the catalogue
-   is listed newest first by `createdAt`" — and an index into an array reads
-   like "the first one" regardless of what the array is sorted by. The
-   documented fact and the code that ignores it can sit in the same session
-   without ever meeting.
-4. **Why was there a hand-rolled seeding script at all?**
-   Because the committed preview fixture seeds instruments, members, songs, a
-   setlist and a transition comment, and no tasks. The two new screens had
-   nothing to show on a fresh database, so the brief needed data, so the data
-   got written in a shell heredoc that nobody would review.
-5. **Why is a throwaway script worse than a fixture?**
-   Not because it is throwaway. Because nothing checks it. The committed
-   fixture has a test file asserting that every lineup names a member the
-   fixture declares and every chart opens on its own title; the heredoc had
-   no such thing, and its one claim about the data was the claim that was
-   false.
+      - `GET /api/songs` returns the catalogue newest first (`listSongsNewestFirst` in `apps/pragma/api/src/songs/songs.repository.ts`). Of the fixture's two originals, the newest is Last Call.
+        - The session seeded tasks with a throwaway heredoc against the live API, because the committed preview fixture seeded instruments, members, songs, a setlist and a transition comment, and no tasks. The data it worked from was a list in an order it could not see. (Material)
 
-**Root cause:** thought the risk in a validation brief was the assertions
-about the screen, actually the risk was the assertion about the *data*, which
-was taken from an index into a list sorted the other way and checked by
-nothing.
+## Root cause of occurrence
+
+*Thought `songs[0]` is the first song the fixture seeded, actually `GET /api/songs` lists the catalogue newest first, so index 0 is the last one created.*
+
+Material, inferred. The order was written in `apps/pragma/VOCABULARY.md` at the time ("The catalogue is listed newest first by `createdAt`", line 472 at `948204d50^`). A one-off seeding script gives no reason to load the vocabulary, and the API response carries no hint of its order. The transcript was not read for this rewrite, so whether the file was in context is inferred. The committed fixture, the input a brief writer should seed from, held no tasks, which is what sent the session to a positional lookup in the first place.
 
 ## Detection failure causes
 
-- **Typing:** `songs[0]` is a `Song`. Every song is.
-- **Linter / static analysis:** the script was a heredoc piped to `python3`,
-  outside every gate in the repository.
-- **Functional validation locally:** the screens rendered the data correctly,
-  which is what made the disagreement look like a screen defect.
-- **CI:** the seed data never reached CI.
-- **Code review:** the brief was written and read by the same session inside
-  one turn.
-- **PO / QA validation:** this *is* the QA layer. It caught the disagreement
-  and could not tell which side was wrong without querying the API itself,
-  which it did — that part worked.
+- **Typing:** `songs[0]` is a song. Every song is.
+- **Linter / static analysis:** the script was a heredoc piped to `python3`, outside every gate in the repository.
+- **Tests:** the committed fixture has a test file asserting that every lineup names a member the fixture declares. The heredoc had none, and its one claim about the data was the false one.
+- **Code review:** the brief was written and read by the same session inside one turn.
+- **QA (caught it):** the validator saw the disagreement, and queried the API itself to tell which side was wrong.
 
 ## Countermeasure
 
-The task board a preview opens on is now part of the committed fixture, and a
-task names its member and its composition **by name**.
+The task board a preview opens on became part of the committed fixture, and a task names its member and its composition by name. `seedTasks` in `apps/pragma/api/src/__test/test-seed.service.ts` resolves each `songTitle` through a `songIdByTitle` map built from the fixture's own names.
 
-- **Code:** `SEED_TASKS` in `apps/pragma/api/src/__test/test-seed-fixture.core.ts`,
-  seeded by `seedTasks` in `test-seed.service.ts`.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2), on top of a seed that removes the position.
 
-**Type:** DevX check (level 2 — devx check), on top of a code diff that
-removes the need for the hand-rolled script
+**Reference:** commit [`948204d5`](https://github.com/hugoleborso/borso.fr/commit/948204d50a). `SEED_TASKS` now lives in `apps/pragma/api/src/__test/test-seed-task-board.core.ts`.
 
-**Reference:** PR #102 · commits on this branch adding `SEED_TASKS`, its
-seeding and its tests
-
-**The actual fix:**
-
-```diff
-+  it('points only at compositions, by title, and only at songs the fixture declares', () => {
-+    const originalTitles = new Set(
-+      SEED_SONGS.filter((song) => song.origin === 'original').map((song) => song.title),
-+    );
-+    for (const task of SEED_TASKS) {
-+      if (task.songTitle === null) continue;
-+      expect(originalTitles).toContain(task.songTitle);
-+    }
-+  });
+```ts
+// apps/pragma/api/src/__test/test-seed.service.ts
+songId: seed.songTitle === null ? null : (songIdByTitle.get(seed.songTitle) ?? null),
 ```
 
-The fixture is a `.core.ts`, so it is gated at 100% coverage and mutation
-score, and its sibling test now holds six assertions about the board: that
-every assignee is a member the fixture declares, that every linked song is a
-composition it declares, that one task is unclaimed, that one member owes
-nothing, that one open task is late and one done task is late, and that all
-three statuses appear. A fixture that fails any of those fails the commit.
+```ts
+// apps/pragma/api/src/__test/test-seed-task-board.core.test.ts
+it('points only at compositions, by title, and only at songs the fixture declares', () => {
+  const originalTitles = new Set(
+    SEED_SONGS.filter((song) => song.origin === 'original').map((song) => song.title),
+  );
+  for (const task of SEED_TASKS) {
+    if (task.songTitle === null) continue;
+    expect(originalTitles).toContain(task.songTitle);
+  }
+});
+```
 
-The indexing mistake is now unavailable rather than merely tested: a seed row
-carries `assigneeFirstName` and `songTitle`, and `seedTasks` resolves them
-through maps built from the fixture's own names. There is no position to get
-backwards.
+A seed row carries `assigneeFirstName` and `songTitle`, so there is no position to get backwards. The task board is a `.core.ts`, gated at 100% coverage and mutation score, and its sibling test checks every assignee and linked song against the fixture, plus the board's shape (an unclaimed task, late tasks, all three statuses). A brief writer now reads the board from the fixture instead of seeding it by hand.
 
-**Sibling defects swept:** the same `songIdByTitle` map replaced the
-positional lookup nowhere else — `seedConcertSetlist` and
-`seedTransitionComment` index `songIds` deliberately, against the array they
-were just handed in the same function, which is a position with a meaning
-rather than a guess about an order.
+The level is 2, not 1. A title that names no song resolves to `null` at seed time, and only the test refuses it.
 
-## See also
+**Proof it can fail:** inferred, not replayed this session. A `SEED_TASKS` row whose `songTitle` names a cover, or a title the fixture does not declare, fails "points only at compositions, by title".
 
-- [`docs/knowledge/a-pragma-preview-cannot-be-signed-into.md`](../knowledge/a-pragma-preview-cannot-be-signed-into.md)
-  — the other reason the preview fixture exists, and why anything a reviewer
-  needs on a fresh preview has to be in it.
-- [`the-hooks-that-refused-a-call-and-forgot-it.md`](./the-hooks-that-refused-a-call-and-forgot-it.md)
-  — the other half of this PR's lesson: the validator logged this friction to
-  `KAIZEN.md` because its prompt told it to, which is the only reason this
-  entry exists.
+**Similar instances:** `seedConcertSetlist` and `seedTransitionComment` index `songIds` against the array they were just handed in the same function, a position with a meaning rather than a guess about an order. `apps/pragma/api/src/__test/test-seed-edge-cases.service.ts` resolves songs by title through the same kind of map. [`../knowledge/a-pragma-preview-cannot-be-signed-into.md`](../knowledge/a-pragma-preview-cannot-be-signed-into.md) says why anything a reviewer needs on a fresh preview has to be in the fixture.

@@ -4,121 +4,118 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-commits: [01e8a281d5, e065cd169c, b5c02e572e]
+fix-commits: [01e8a281d5, e065cd169c, b5c02e572e, 8230bcebe]
 eradication-level: 2
-eradication-paths: [scripts/check-coupled-lists.sh]
+eradication-paths: [scripts/check-coupled-lists.sh, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: days
 tags: [ci, gates, pre-commit, github-actions, vitest, eslint, drift]
-zone: .husky/pre-commit
+zone: eslint-rules/impurity.js
+recurs: none (first entry on a rule held in two hand-written copies; later pairs joined the same check)
 ---
 
 # Two copies that had to agree, and nothing made them agree
 
-## Symptom
+## User impact
 
-Four times in one pull request, a rule was written down in two places and the
-two drifted. Every one of them read correctly on its own.
+Four times in PR #49, a rule was written in two places and the copies drifted.
+Each copy read correctly on its own (found by the PR #49 audit).
 
-| The rule | Copy A | Copy B | What the disagreement did |
-| --- | --- | --- | --- |
-| Which paths make the architecture map stale | `.husky/pre-commit`, as a `grep -E` | `.github/workflows/architecture.yml`, as a YAML list | A commit touching only `blueprint-utils.ts` reached CI with a map nothing had regenerated |
-| Which suffixes are gated | `eslint-rules/impurity.js`, as a regex | every `vitest.config.ts`, as `coverage.include` | A `.schema.ts` with no test would fail a coverage number and no rule that names it |
-| The text of the "browse the map" link | the architecture workflow's comment body | the guard that decides whether to rewrite it | `[Browse the full map]` never matched `[Browse the full maps]`, so the comment renotified everyone on every push |
-| The fields of a journey feature | the model in `architecture-journeys.ts` | the payload projection in `architecture-page.ts` | Adding `overview` to the model and not to the projection silently removed the overview entry from every feature |
+| The rule | Copy A | Copy B | What the maintainer saw | Expected |
+| --- | --- | --- | --- | --- |
+| Paths that make the architecture map stale | `.husky/pre-commit`, a `grep -E` | `.github/workflows/architecture.yml`, a YAML list | a commit touching only `blueprint-utils.ts` reached CI with a stale map | the map regenerated |
+| Suffixes that must ship a tested sibling | `eslint-rules/impurity.js`, a regex | every app's `vitest.config.ts`, `coverage.include` | a `.schema.ts` with no test caught by a coverage number and no rule naming it | one rule naming it |
+| Text of the "browse the map" link | the workflow's comment body | the guard deciding whether to rewrite it | the comment renotified everyone on every push | one notification |
+| Fields of a journey feature | the model in `architecture-journeys.ts` | the projection in `architecture-page.ts` | the overview entry vanished from every feature | the overview entry shown |
 
-None of these is a bug a reviewer can see, because there is nothing wrong with
-either half. Only the pair is wrong, and the pair is never on screen at once.
+## Causal chain
 
-## Root-cause chain
+- Four symptoms surfaced far from their cause, one per pair.
+  - The map went stale on an innocent commit.
+    - The workflow's YAML listed `blueprint-utils.ts` and the hook's `grep -E` did not.
+      - A path was added to one list and not to the other. Each list was written in its consumer's dialect and neither file could import the other.
+  - A `.schema.ts` had a coverage gate and no rule naming it.
+    - `TESTED_FILE_PATTERN` and the configs' `coverage.include` disagreed by one suffix on the day both were written. Today the rule reads (`eslint-rules/impurity.js:2`):
 
-1. A rule has to be expressed in a language each consumer speaks. A hook wants
-   a `grep -E` pattern; a workflow wants a YAML list; a lint rule wants a
-   regex; a coverage gate wants a glob.
-2. So the rule is written twice, in two dialects, and neither file can import
-   the other's version.
-3. The second copy is written at the same moment as the first, by the same
-   person, so it is right on the day it lands. Nothing about it announces that
-   it is a copy.
-4. Later, one consumer gains a case. The person adding it edits the file they
-   are in.
-5. The other copy is now wrong, and nothing reads both. **A gate can only fail
-   on what it looks at, and no gate looked at the relationship.**
-6. The failure surfaces somewhere unrelated — a stale map on an innocent
-   commit, a coverage number with no rule behind it, a notification storm —
-   and reads as a bug in the consumer rather than as drift between two lists.
+      ```js
+      const TESTED_FILE_PATTERN = /\.(core|utils|adapter|schema)\.tsx?$/;   // copy A
+      ```
+
+      and each config repeats it as globs (`apps/pragma/vitest.config.ts`):
+
+      ```ts
+      'api/src/**/*.schema.ts',   // copy B, typed by hand in each of the 7 app configs
+      ```
+
+      - Each `vitest.config.ts` is a hand copy of another. No module exports the suffix list and no shared preset exists, so a suffix has one place to land in the rule and seven in the configs (Machine, counted with `ls apps/*/vitest.config.ts`).
+  - The comment renotified on every push.
+    - The guard matched `[Browse the full map]` and the body said `[Browse the full maps]`. The same text was typed twice.
+  - The overview entry vanished.
+    - `overview` was added to the model and not to the projection, which listed fields by hand. `undefined` read as `false`, a legal value.
+
+## Root cause of occurrence
+
+*Thought a second copy written in the same session, in the consumer's own
+dialect, would stay in agreement with the first, actually nothing tied the two
+together, so the next edit to one left the other wrong and no gate read both.*
+**Machine:** the codebase gave each consumer no shared source to read. The
+suffix list lived only inside a regex literal, so a config could not import
+it, and the configs had no preset to inherit from.
+
+`scripts/check-coupled-lists.sh:13-14`, read this session: "both halves read
+correctly on their own, and only the pair is wrong."
 
 ## Detection failure causes
 
-- **Each half passes its own review.** The diff that adds a path to a workflow
-  is correct. The reviewer would have to know a second file exists and hold its
-  contents in memory.
-- **Three of the four were found by an audit, not by use.** They had been wrong
-  for as long as both copies existed and nothing had gone visibly wrong, which
-  is the definition of a defect with no detector.
-- **The consequence is displaced from the cause.** "The architecture page is
-  stale" names an application whose code nobody touched. Nothing in that message
-  points at a hook.
-- **The fourth one degraded to a plausible answer.** `overview` arriving
-  `undefined` read as `false`, which is a legal value, so the picker rendered a
-  smaller menu rather than an error. Same shape as
-  [the map that recognised modules by their names](./the-map-recognised-modules-by-their-names.md).
+- **Review:** each diff was correct alone. A reviewer would have to know the second file existed and hold its contents in mind.
+- **Local validation and CI:** no gate read both copies, and three of the four had been wrong since both existed. Only the PR #49 audit found them.
+- **Monitoring:** each consequence named a different place than its cause. "The map is stale" names an app nobody touched.
+- **Typing:** the projection degraded to a plausible value, so nothing threw (same shape as [the-map-recognised-modules-by-their-names.md](./the-map-recognised-modules-by-their-names.md)).
 
 ## Countermeasure
 
-`scripts/check-coupled-lists.sh`, run in pre-commit and in CI, reads both copies
-of the three rules that still exist as pairs and fails when they disagree.
-
-It compares meaning rather than text, because the dialects differ:
-
-- For the trigger paths it takes the YAML list as the source, strips the glob
-  tail, and requires each path to appear in the hook — with the hook's
-  backslashes removed first, so `blueprint-utils\.ts` and `blueprint-utils.ts`
-  are one path rather than two.
-- For the suffixes it reads the set out of `TESTED_FILE_PATTERN` and requires
-  each to appear in every application's `coverage.include`, allowing the one
-  case where absence is structural rather than an omission: a front end has no
-  `api/`, so it has no `.schema.ts` to cover.
-- A third pair joined it while this entry was being written: every file under
-  `docs/knowledge/` against the index in its `README.md`. Three had drifted out,
-  which makes them unfindable by everyone except the person who wrote them —
-  the whole audience. `docs/dantotsus/README.md` is deliberately *not* a
-  per-entry index, says so, and points at `ls` instead, so it is not checked.
-
-Both extractions fail loudly when they read nothing, because a check that has
-silently stopped finding its subject is the same defect one level up.
+Two pairs were subtracted in PR #49. The link text became one constant read
+by the producer and the guard. The page stopped being committed, so the
+guard's subject changed shape. `scripts/check-coupled-lists.sh` read both
+copies of the remaining pairs in pre-commit and CI, comparing meaning rather
+than text, and failing loudly when an extraction read nothing.
 
 ## Eradication
 
-**DevX check, level 2.** Verified against both original defects by
-reintroducing each:
+**Type:** DevX check (level 2)
 
-| Reintroduced | Result |
-| --- | --- |
-| `blueprint-utils.ts` removed from the hook's trigger | fails, naming the path and the file |
-| a suffix added to `TESTED_FILE_PATTERN` and not to the configs | fails once per application, naming the config |
-| a knowledge entry removed from its index | fails, naming the file nobody could now find |
+**Reference:** commits `01e8a28` and `e065cd1` shipped the check.
 
-Shipped in `01e8a28` and `e065cd1`, wired into `.husky/pre-commit` and `.github/workflows/ci.yml`.
+What holds today, read this session:
 
-The other two pairs were eradicated structurally in PR #49 rather than checked,
-which is the better rung and the reason they are not in the script:
+- **Map trigger paths:** gone. The generator now runs only on demand from the
+  `architecture` workflow, so there is no hook list to compare
+  (`check-coupled-lists.sh:27-31`).
+- **Knowledge index:** subtracted by commit `8230bcebe` (2026-11-15).
+  `docs/knowledge/README.md` now holds one `.md)` link for 160 files (counted
+  with `grep -c` and `ls`), so no per-entry index can drift.
+- **Suffixes:** still a pair, checked. `check-coupled-lists.sh:38-60` reads
+  the set out of `TESTED_FILE_PATTERN` and requires each suffix in every
+  app's `coverage.include`, except `.schema.ts` in an app with no `api/`. It
+  runs in `.husky/pre-commit` (line 365) and `ci.yml` (line 151).
 
-- The link text became one constant read by both the producer and the guard.
-- The page is no longer committed at all, so the comment guard's subject
-  changed shape.
+**Proof it can fail:** on a scratch copy, the check passed, then `policy` was
+added to `TESTED_FILE_PATTERN` alone. It exited 1, once per app:
 
-**Why not level 1 for the two that remain.** A single source of truth would mean
-generating the hook's `grep -E` from the workflow's YAML, or generating both
-from a third file. That is a build step producing a git-tracked hook, which
-brings back the problem this repository just removed from the architecture maps:
-a generated file under a byte gate. The pair is cheap to check and expensive to
-unify, so it is checked.
+```
+[check-coupled-lists] apps/banana-rush/vitest.config.ts covers no '*.policy.ts' while borso/test-file-has-sibling-source demands a test for one. Add it to coverage.include, or drop it from TESTED_FILE_PATTERN.
+```
 
-## The general shape
+**Proposed:** subtract the suffix pair as the other two were. Export the
+suffix list from one module that `eslint-rules/impurity.js` builds its regex
+from, and add a shared coverage preset that every `vitest.config.ts` imports
+and that builds `coverage.include` from the same list. A suffix then has one
+place to land, section 2 of `check-coupled-lists.sh` can be deleted, and a
+disagreement becomes impossible (level 1). The same preset would carry the
+per-run `reportsDirectory` of
+[two-coverage-runs-shared-one-scratch-folder.md](./two-coverage-runs-shared-one-scratch-folder.md).
 
-When a rule has to be expressed twice because two consumers speak different
-languages, the second copy is not documentation — it is an untested branch of
-the same logic. Write the check that reads both **at the moment you write the
-second copy**, not after the drift produces a symptom somewhere else. The
-question that finds these: *if I change this list, what else is now wrong, and
-what would tell me?*
+**Similar instances:** `grep -n "^# [0-9]\." scripts/check-coupled-lists.sh`
+lists the pairs the check reads today: the suffixes, a migration's tables
+against the back-e2e harness's two lists, pragma's preview clone against its
+ADR, and the blueprint tooling's layer suffixes against the naming standard. Each is a second hand-written copy, and each could be read from its
+source instead.

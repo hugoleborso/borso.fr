@@ -6,118 +6,98 @@ severity: medium
 related-pr: '#55'
 fix-commits: [50545c5bc1]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-no-swallowed-push.sh]
+eradication-paths: [scripts/hooks/checks/no-swallowed-push.core.ts]
 time-to-detect: hours
 tags: [bash, git, hooks, gates, meta]
-zone: .claude/hooks
+zone: scripts/hooks/checks
 ---
 
 # A push rejected by the pre-push gate read as a successful one for two hours
 
-## Symptom
+## User impact
 
-The command was
+A session pushed its branch and worked on for two hours as if the branch were
+on the remote. It was not. The pre-push hook had refused every push. No CI ran
+in that time, and no preview deployed.
 
-```bash
-git push -u origin claude/… 2>&1 | tail -3
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `git push -u origin claude/… 2>&1 \| tail -3` | exit 0 and three ordinary lines | a non-zero exit and the gate that refused |
+| `origin/<branch>` | not updated | the new commits |
 
-written that way because a successful push prints a dozen lines nobody needs.
-It returned exit 0 and three lines of ordinary-looking output. Work continued on
-the assumption that the branch was on the remote.
+## Causal chain
 
-It was not. The pre-push hook had rejected it, and kept rejecting it, for two
-hours.
+- The session believed the branch was pushed.
+  - The command returned exit 0.
+    - The command was `git push -u origin claude/… 2>&1 | tail -3`. Its status
+      is `tail`'s, and `tail` succeeded at reading whatever it got.
+      - The shell runs with `pipefail` off. Measured then and again this
+        session: `set -o | grep pipefail` prints `off`, and
+        `(false | tail -1); echo $?` prints `0`.
+    - The three lines left were the harmless end of the gate's output. The
+      refusal line came earlier and `tail -3` cut it.
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. `pipefail` is off in this shell. Verified rather than assumed:
-   `set -o | grep pipefail` prints `off`, and `(false | tail -1); echo $?`
-   prints `0`.
-2. A pipeline's exit status is therefore the **last** stage's. `tail` succeeds
-   at reading whatever it was given, so the pipeline exits 0 whether the push
-   succeeded or the hook refused it.
-3. The refusal itself is not silent — the pre-push hook prints which gate failed.
-   It prints to **stderr**. `2>&1` was present here, which should have folded it
-   in, but the gate's output is long and `tail -3` is short, so the three lines
-   that survived were the harmless end of it.
-4. Nothing else in the loop re-checks. `git status` says the working tree is
-   clean, because it is; the commits exist locally. Only `git log origin/<branch>`
-   would have disagreed, and there is no reason to run it after a push that
-   reported success.
-
-The general form: **a pipeline is a status filter as well as an output filter.**
-Piping a command whose exit code is the point — a push, a commit, a gate — into
-anything at all discards the only thing you were checking.
+*Thought `$?` after `git push … | tail -3` is the push's status, actually
+without `pipefail` a pipeline returns its last stage's status.* **Machine.**
+Every Bash call runs in a shell with `pipefail` off, so a pipe after any command
+erases its exit code. The bash manual, *Pipelines*: "The return status of a
+pipeline is the exit status of the last command, unless the `pipefail` option is
+enabled."
 
 ## Detection failure causes
 
-- **Success and failure look identical.** Not similar: identical. Same exit
-  code, same shape of output, and the distinguishing lines are the ones `tail`
-  cut.
-- **The habit is a good one everywhere else.** Trimming output is right for a
-  test run or a build; the reflex does not carry a warning that this command is
-  different.
-- **The feedback is delayed by design.** A push is fire-and-forget. Nothing
-  downstream fails until CI does not run, and CI not running looks like CI being
-  slow.
-- **`2>&1` reads as the fix.** Folding stderr in feels like it addresses the
-  problem, and it makes it worse: the refusal is now in the same stream that
-  `tail` is truncating.
+- **Exit code:** success and failure gave the same code and the same shape of
+  output. The lines that differed were the ones `tail` cut.
+- **`git status`:** it reports the working tree, which was clean. Only
+  `git log origin/<branch>` or `git ls-remote` would have disagreed.
+- **CI:** a push that never landed starts no run, and no run looks like a slow
+  run.
+- **`2>&1`:** it folded the refusal into the stream `tail` was cutting.
 
 ## Countermeasure
 
-`.claude/hooks/pretool-no-swallowed-push.sh`, a `PreToolUse` hook on `Bash`
-that refuses `git push` or `git commit` appearing anywhere in a pipeline, and
-says what to write instead:
-
-```
-git push -u origin <branch>                            # bare, read the tail after
-set -o pipefail; git push … 2>&1 | tail -20            # or keep the status
-```
-
-A command that already sets `pipefail` is allowed through, because there the
-pipeline reports the real status and the trimming is safe.
-
-It tells an invocation from a mention in two passes: heredoc bodies are dropped
-by the existing `strip-heredocs.py`, and quoted arguments by a new sibling,
-`strip-quoted-strings.py`. Only the second one makes
-`echo "never write git push | tail"` legal — a commit message written as a
-heredoc was already covered, a quoted one was not, and this entry's own commit
-would have been refused by its own hook without it.
+Commit `50545c5` added a PreToolUse hook on Bash that refused `git push` or
+`git commit` inside a pipeline, unless the command already set `pipefail`. It
+named the two right spellings: a bare push, or `set -o pipefail;` in front.
 
 ## Eradication
 
-**DevX check, level 2.** The shape cannot be run; the agent is told the two
-correct spellings at the moment it would have written the wrong one.
+**Type:** DevX check (level 2). The hook repairs the command before it runs.
 
-Level 1 was believed out of reach here, and was not. A PreToolUse hook can
-return `updatedInput`, and since PR #250's sweep this hook puts
-`set -o pipefail;` in front of the command instead of refusing it. See
+**Reference:** commit [`50545c5`](https://github.com/hugoleborso/borso.fr/commit/50545c5bc1)
+shipped the refusal. Since PR #250's sweep the hook rewrites the command instead
+of refusing it, see
 [`a-guard-that-refused-what-it-could-repair`](./a-guard-that-refused-what-it-could-repair.md).
+Commit `458e886` (#411) ported the shell hook to
+`scripts/hooks/checks/no-swallowed-push.core.ts`.
 
-Verified, all seven cases, by feeding the hook the tool-input JSON directly:
+```ts
+if (hasLineMatching(pipelines, GIT_INTO_PIPE)) {
+  const updatedInput = { ...input.tool_input, command: `set -o pipefail; ${command}` };
+  return { kind: 'rewrite', updatedInput, text: PIPEFAIL_CONTEXT };
+}
+```
 
-| Command | Expected | Result |
-| --- | --- | --- |
-| `git push -u origin main \| tail -3` | blocked | exit 2 |
-| `git push --force-with-lease 2>&1 \| tail -4` | blocked | exit 2 |
-| `git commit -q -m "x" \| tail -5` | blocked | exit 2 |
-| `git push -u origin main` | allowed | exit 0 |
-| `set -o pipefail; git push origin main \| tail -3` | allowed | exit 0 |
-| `echo "do not write git push \| tail"` | allowed | exit 0 |
-| `git status --short \| head` | allowed | exit 0 |
+A `git push` or `git commit` piped anywhere now runs with `pipefail` on, so the
+pipe reports the git status. The same check refuses `--no-verify`, `HUSKY=0` and
+a git error sent to `/dev/null`.
 
-**What this deliberately does not cover.** Only `git push` and `git commit`. A
-test run piped into `grep` swallows its status the same way, and blocking that
-would fire on the reading habit that makes long output usable at all — a failing
-suite still prints its failures into the pipe, where a rejected push prints its
-refusal past it. The two are not the same risk, and a hook that cried wolf on
-every `| tail` would be turned off within a day.
+**Proof it can fail:** `scripts/hooks/checks/no-swallowed-push.core.test.ts`
+covers the rewrite and each refusal. The original seven cases, fed to the shell
+hook as tool-input JSON, are in commit `50545c5`.
 
-## See also
+**Similar instances:** the check covers git only. A test run piped into `grep`
+swallows its status the same way.
+[`an-exit-status-read-through-a-pipe-is-the-pipes`](../knowledge/an-exit-status-read-through-a-pipe-is-the-pipes.md)
+records a refusal that exited 3 and read as 0 through `| tail`.
+[`cdk-destroy-failure-swallowed-by-trailing-or-echo`](./cdk-destroy-failure-swallowed-by-trailing-or-echo.md)
+is the same class with `|| echo`.
 
-- [`cdk-destroy-failure-swallowed-by-trailing-or-echo`](./cdk-destroy-failure-swallowed-by-trailing-or-echo.md) — the same defect with `|| echo` instead of a pipe.
-- [`the-gate-that-failed-on-a-broken-pipe`](./the-gate-that-failed-on-a-broken-pipe.md) — `pipefail` on, and the pipe failing the script that wanted it.
-- [`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md) — why a blocking hook has to exit 2 and not 1.
-- [`broad-pkill-killed-another-agents-measurement`](./broad-pkill-killed-another-agents-measurement.md) — the sibling hook this one is modelled on.
+**Proposed:** write `set -o pipefail` into `CLAUDE_ENV_FILE` from
+`scripts/hooks/checks/session-env.core.ts`, which already appends `TMPDIR` to that
+file at session start. Every pipeline of the session would then report its real
+status, including the test runs the check leaves out, and the git-only rewrite
+could be deleted. The cost to weigh: `| head` makes a long writer exit 141, and
+`grep` exits 1 on no match. The rewrite already accepts that cost for pushes.

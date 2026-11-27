@@ -4,90 +4,68 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#6'
-fix-commits: none (the Stop hook this entry describes was never committed; no commit on main contains it)
+fix-commits: [c578c5a9b]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [.claude/commands/feature-pipeline.md, CLAUDE.md]
 time-to-detect: hours
 tags: [skills, harness, workflow]
 zone: .claude/skills
 ---
 
-# Feature-flow skills do not auto-trigger; the human becomes the loop
+# The operator typed every next step of the feature flow
 
-## Symptom
+## User impact
 
-Across PR #6 the user had to nudge the agent to invoke each skill in the chain at the right moment:
+Across PR #6 the operator had to tell the agent to start each skill of the feature flow. Counted from the PR #6 session by the sweep that wrote this entry, about five times.
 
-| When | What didn't happen by itself |
-| --- | --- |
-| Spec finished, planning phase | Agent did not invoke `/technical-conception`. User said "now create the [plan]". |
-| Plan finished, implementation | Agent did not invoke `/implementation`. User said "Using /implementation yes". |
-| Implementation finished, validation | `/visual-validation` and `/technical-validation` were invoked manually each round. |
-| PR merged | `/after-task-kaizen` did not auto-trigger. User said "You should auto start the use of the tool /after-task-kaizen. You did not." |
+| When | Seen | Expected |
+| --- | --- | --- |
+| Spec finished | The agent stopped. The operator said "now create the [plan]". | The agent starts `/technical-conception`. |
+| Plan finished | The agent stopped. The operator said "Using /implementation yes". | The agent starts `/implementation`. |
+| Implementation finished | The operator started `/visual-validation` and `/technical-validation` by hand each round. | The agent runs both validations. |
+| PR merged | The operator said "You should auto start the use of the tool /after-task-kaizen. You did not." | The agent starts the sweep on merge. |
 
-The chain `/specification → /technical-conception → /implementation → /visual-validation → /technical-validation → /after-task-kaizen` is documented end-to-end in CLAUDE.md and in each skill's own SKILL.md, but each transition relies on the agent *remembering* the next step at the right moment. Across a long session, that memory fails.
+## Causal chain
 
-## Root-cause chain
+- The operator typed the next skill at each transition of PR #6.
+  - The agent finished each skill, answered the operator, and ended its turn.
+    - The only pointer to the next skill was a paragraph at the end of the current skill. Commit `0bde2842e` (2026-05-03) wrote it into `/specification`:
 
-1. **Why** did the agent not chain to the next skill?
-   Each skill's body lists the next skill as a follow-up at the end of `## What comes next` or in the procedure's last step, but the cross-reference is documentary, not operational. The agent reads the line, finishes the current skill, and exits; it doesn't auto-invoke the next.
+      ```markdown
+      ## What comes next
 
-2. **Why** is the cross-reference documentary?
-   Claude Code's skill system invokes a skill when the user types a slash command or when the agent decides to invoke it. There is no "skill A's last step is to invoke skill B" wiring; the agent has to make that call.
+      Once every perspective has been confronted and no `> ⚠️ Missing …` flag
+      remains, the spec is **ready for `/technical-conception`**.
+      ```
 
-3. **Why** doesn't the agent reliably make that call?
-   At each transition the agent has just finished a long stretch of work. It exits the current skill into the main session, sees the user's last message (often "looks good"), and treats that as a natural stop. The follow-up skill is one slot of working memory away; absent a hard prompt, it doesn't fire.
+      - The agent read that paragraph at the start of a long skill, then ran the skill in the same session. When the skill ended, the operator's last message ("looks good") read as a natural stop.
+    - Branch for the merge. The session ended its last turn before the merge. The operator then merged on GitHub, and no message reached the session until the operator typed the next one.
 
-4. **Why** is `/after-task-kaizen` the most-skipped of all?
-   Because the trigger is *external* — a PR merge happens on GitHub, often after the agent's session has effectively wound down. The agent isn't watching for the merge; the user is.
+## Root cause of occurrence
 
-5. **Why** is this category recurring, not one-off?
-   The skill chain is now six skills long. Each transition is a probability-of-skip; the cumulative probability of skipping at least one is high.
+*Thought a line at the end of each skill naming the next one makes the flow run itself, actually skills do not chain, so the whole sequence rested on one long session remembering it.* (Method)
 
-**Root cause:** *thought* documenting the skill chain in cross-references is enough; *actually* skills do not chain themselves and the agent's working memory is unreliable across long sessions, so transitions need a harness-level mechanism that doesn't depend on the agent remembering.
+The flow was a process held in prose, carried by the main session across six skills. Seen from the agent, the next-step paragraph was in its context when it stopped. The prior to end the turn after a finished task won over it in a saturated session (Man, worker's state). Under the agentic 4M, the fix is a change to the worker's conditions, never one more paragraph.
 
 ## Detection failure causes
 
-- **Typing / linter / CI:** N/A — process artefact.
-- **Self-validation:** the agent's "is the procedure complete?" check at the end of each skill has no opinion on what comes next.
-- **Code review:** the user noticed; the user is the gate by default. Failure mode: every skill chain across every feature requires the user to be the trigger.
+- **Self-validation:** each skill's closing check asks whether its own procedure is complete. It has no opinion on what comes next.
+- **Review:** the operator was the only gate, and caught each skip by typing the next command. Every feature therefore cost the operator one nudge per transition.
 
 ## Countermeasure
 
-The user explicitly invoked each skill at each transition during PR #6. The agent caught up after each prompt.
+The operator typed the next skill at each transition during PR #6, and the agent caught up after each prompt. No code changed for the recovery.
 
-- **Code:** none for the recovery itself.
-- **Operator action:** the user typed "use /<next-skill>" at every transition, ~5 times during the PR.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** knowledge (level 5)
 
-**Status, 2026-10-10:** The Stop hook described above was never committed:
-no commit in the history of `main` contains
-`.claude/hooks/stop-skill-chain-reminder.sh`. The entry is re-levelled to
-5 to say so.
+The transitions from plan to ship no longer depend on one session's memory. Commit `c578c5a9b` (2026-06-05) shipped `/feature-pipeline` (`.claude/commands/feature-pipeline.md`). Launched once, a Dynamic Workflow runs plan, implement, validate and ship, one fresh subagent per stage, and reads each verdict to choose the next step. `CLAUDE.md` *Feature flow* says the same for a session run by hand: "The main session orchestrates. It hands each phase (spec, plan, implementation, validation) and each fix round to a fresh subagent". The level is 5 because both live in markdown. No workflow script is saved under `.claude/workflows/` (its `README.md` says so), so every launch regenerates the script from the contract.
 
-**Type:** Detection (level 4 — Stop-hook reminder of the next skill in the chain)
+The merge transition holds by instruction only. `CLAUDE.md` *Self-improvement loop* says "After a merge, the same reply carries two follow-ups", and the session hears of the merge through the pull request webhook `subscribe_pr_activity` delivers.
 
-**Reference:** PR (this kaizen) · commit: none, the hook was never committed
+The Stop hook this entry first proposed, `.claude/hooks/stop-skill-chain-reminder.sh`, was never committed. No commit on `main` contains it.
 
-**The actual fix:** add a Stop-hook (`.claude/hooks/stop-skill-chain-reminder.sh`) that fires every time the agent finishes its turn. The hook inspects the recent transcript for the last `Skill` tool invocation; if the previous skill was one of the feature-flow skills (`specification`, `technical-conception`, `implementation`, `visual-validation`, `technical-validation`), the hook prints a single-line reminder of the next skill in the chain and which condition must hold to invoke it. The hook output is surfaced to the agent on the next turn, so the chain progresses without the user having to type the next slash command.
+**Proposed:** save the generated script as `.claude/workflows/feature-pipeline.js`, so the order of plan, implement, validate and ship lives in code and not in a regenerated contract. That makes the plan-to-ship transitions structural. For the merge, a `UserPromptSubmit` hook that matches the GitHub event envelope of a merged pull request could inject the `/after-task-kaizen` hand-off into the turn that event wakes (inferred feasible, not tried). The sweep would then start from the event itself, not from a line in `CLAUDE.md`.
 
-For the merge-time transition (`/after-task-kaizen`), a complementary GitHub webhook handler — already on the harness when `subscribe_pr_activity` is active — fires on `pull_request.closed` with `merged: true`. The hook turns that webhook event into a Stop-hook reminder: *"PR #N merged. Next: invoke /after-task-kaizen."*
-
-```bash
-# .claude/hooks/stop-skill-chain-reminder.sh — invoked by the harness on Stop event
-#
-# Reads the most recent Skill invocations from the transcript (via the stop-hook
-# context the harness provides), determines whether the agent just exited a
-# feature-flow skill, and emits the next-skill prompt so the agent's next turn
-# starts with the chain in mind.
-```
-
-Both reminders are non-blocking — they do not auto-invoke the next skill. The agent still has to call `Skill`. The reminders just close the working-memory gap that produces the skip in the first place.
-
-**Sibling defects swept:** the entire feature-flow skill chain inherits the reminder. Other skill clusters (e.g. `/dantotsu` standalone) are unaffected.
-
-## See also
-
-- [`.claude/skills/after-task-kaizen/SKILL.md`](../../.claude/skills/after-task-kaizen/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
-- CLAUDE.md *Self-improvement loop* section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.
+**Similar instances:** `grep -rln 'What comes next' .claude/skills/` finds no skill that still ends on that heading (run 2026-11-27). The merge transition above is the one left held by prose.

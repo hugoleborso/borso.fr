@@ -32,24 +32,34 @@ for the library it already imported (measured, his messages in
 
 - The operator spent three messages and 70 minutes steering a sweep to a one-line fix.
   - The sweep shipped a 137-line compiler walk, a fixture and a mutation suite to derive the cache buster (commits `eb52a28`, `ba61136`).
-    - It never offered the persister's own `buster` set to the build. PR #363's sweep had called that "a product call nobody asked for", so this sweep built around the cost instead of asking.
-      - Step 2c of `/after-task-kaizen`, the library search, sat as prose between classification and writing. Nothing fires there.
+    - It never offered the persister's own `buster` set to the build. It knew that option and built around its cost instead of asking.
+      - It read PR #363's inventory row 04, which ends "Deriving the buster from the build would wipe every member's cache at each deploy, which is a product call nobody asked for." The sweep took that sentence as the operator's answer.
+        - PR #363's sweep wrote row 04. It labelled an option a product call and recorded it as settled, without putting the question to the operator (`docs/features/meta/lessons-from-pr-363/inventory.md:14`).
   - When `kaizen-balance` went red in CI (added 366, removed 30 at `ba61136`), the sweep answered "as expected".
-    - The skill said "A sweep that still adds more stays red, and the operator merges it or sends it back." It permitted the red.
+    - It followed the skill's sentence "A sweep that still adds more stays red, and the operator merges it or sends it back."
 
 ## Root cause of occurrence
 
-*Thought a written step would make the sweep search the installed libraries before writing code, actually the only point that reliably fires is the gate that counts the lines, and the skill told the sweep that gate could stay red.*
+*Thought the build-derived `buster` was an option the operator had already declined, because a merged inventory called it "a product call nobody asked for", actually nobody had asked him, and a product call is a question to put, not a reason to drop the option.* (Material)
 
-`docs/dantotsus/built-my-own-before-checking-the-library.md` fixed the same
-class at level 4 in May with a paragraph in `/implementation`. This sweep had
-three paragraphs saying it (that one, step 2c, and `/technical-conception`'s
-pattern pass), and read none at the moment it mattered.
+The input from the previous workstation, row 04 of PR #363's inventory,
+stated an unasked question as settled. CLAUDE.md was in the sweep's context
+and says "Removing, narrowing or adding anything a user sees beyond the ask
+is a product call [...] List each one in the question." Row 04 read as the
+answer to that question, so the rule did not fire. Had the sweep known no one
+had decided, it would have offered the one-line `buster` with its cost first
+(inferred from the operator picking a costed option at 19:52).
+
+`docs/dantotsus/built-my-own-before-checking-the-library.md` fixed a related
+class at level 4 in May with a paragraph in `/implementation`.
 
 ## Detection failure causes
 
+- **Skill:** step 2c of `/after-task-kaizen`, the library search, sat as prose between classification and writing. No gate fires at that step, and the sweep already knew the library option anyway.
+- **Skill:** it told the sweep a red balance was acceptable, so the one count that saw the size did not stop it.
 - **CI:** `kaizen-balance` ran only once the pull request was open, after the walk, its fixture and its tests were written.
-- **Skill:** its refusal said "remove what each addition replaces". It did not ask whether a library already plays the role.
+- **Gate:** its refusal said "remove what each addition replaces". It did not ask whether a library already plays the role.
+- **Inventory:** nothing reads an inventory row that calls an option a product call and checks that a question to the operator went with it.
 
 ## Countermeasure
 
@@ -73,20 +83,32 @@ the sentence that allowed a red balance is gone.
 +esac
 ```
 
-```diff
--This sweep adds more than it removes. Remove what each addition replaces, or fold it into a file that exists.
-+This sweep adds more than it removes. The best code is the code you do not write.
-+For each file you wrote, name its role and look for it in a package already installed
-+(node_modules/.modules.yaml) before keeping it. Offer that option to the operator even
-+when it costs something he sees.
-+Then remove what each addition replaces, or clean up elsewhere, until this passes.
+The refusal in `scripts/kaizen.sh` reads today:
+
 ```
+This sweep adds more code than it removes. Delete or simplify code to earn the additions.
+For each file you wrote, name its role and look for it in a package already installed (node_modules/.modules.yaml) before keeping it. Offer that option to the operator even when it costs something he sees.
+Then remove what each addition replaces, or clean up elsewhere, until this passes.
+```
+
+What it does not hold: it fires only once a sweep is over the balance. An
+option dismissed as a "product call" in an inventory, a plan or a spec that
+stays under the balance is never offered.
+
+**Proposed:** a check in `.husky/pre-commit` over staged
+`docs/features/*/*/inventory.md` and `plan.md` files refuses a line that
+says "product call" unless the same line links the operator's answer or
+carries the closed question to ask him. No inventory check exists today
+(`grep -rln inventory scripts .husky`). That moves the
+refusal to the moment the label is written, and makes "a product call nobody
+asked for" impossible to record as settled.
 
 Level 1 is not available. A sweep can always write code, and only a count
 sees how much.
 
 **Proof it can fail:** on a worktree of `ba61136`, the head that held the walk,
-`scripts/kaizen.sh balance ba0557404` printed:
+`scripts/kaizen.sh balance ba0557404` printed (measured on 2026-11-23, with
+the wording of that day):
 
 ```
 Balance: added 366, removed 30 outside what a sweep does not count

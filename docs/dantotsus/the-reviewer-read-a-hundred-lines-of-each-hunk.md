@@ -4,88 +4,83 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#234'
-fix-commits: [self]
-eradication-level: 1
-eradication-paths: [.claude/hooks/rtk-rewrite.sh]
+fix-commits: [d1be9c429, b507ea56df]
+eradication-level: 2
+eradication-paths: [scripts/hooks/check-settings.ts, scripts/hooks/settings-hooks.core.ts]
 time-to-detect: one task
 tags: [harness, hooks, rtk, technical-validation, review]
-zone: .claude/hooks/rtk-rewrite.sh
+zone: .claude/settings.json
 weak-point: gate-measures-nothing
 recurs: [the-rewrite-that-hid-git-from-the-guard]
 ---
 
 # The reviewer read a hundred lines of each hunk
 
-## Symptom
+## User impact
 
-The second technical validator on PR #234 logged:
+The operator relies on the technical validator to have read every line of a pull request. On PR #234 it had read the first 100 added lines of each hunk. Its report still named each file as read.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| Validator runs `git diff` on the plan commit of PR #234 | 100 added lines, then `... (255 additions truncated)` | All 356 added lines |
+
+Measured on 2026-10-29 on that commit: `git --no-pager diff` printed 356 added lines, `rtk git diff` printed 100. The second validator logged it:
 
 > git diff output is rewritten by an rtk wrapper that truncates hunks, so a
 > validator must know to call rtk git diff --no-compact to read the whole diff
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the diff short?**
-   The PreToolUse hook rewrites `git diff` into `rtk git diff`. rtk keeps 100
-   added lines of a hunk and replaces the rest with one line. Measured on
-   2026-10-29 on the plan commit of PR #234: `git --no-pager diff` printed 356
-   added lines and `rtk git diff` printed 100, then
-   `... (255 additions truncated)`.
-2. **Why does that matter more for a diff than for other output?**
-   Most rtk targets are logs and listings, where a summary is what the reader
-   wants. A reviewer reads a diff to judge every line. A truncated hunk lets it
-   pass code it never saw, and its report names the file as read.
-3. **Why did the existing knowledge not stop it?**
-   [`rtk-truncates-command-output.md`](https://github.com/hugoleborso/borso.fr/blob/d1be9c42/docs/knowledge/rtk-truncates-command-output.md)
-   fires on `[N more lines]` and `rtk recall` markers. The diff marker reads
-   `additions truncated`, so the hook printed nothing, and the validator found
-   it on its own.
+- The validator read 100 added lines of a 356-line hunk.
+  - It ran `git diff`, and the shell ran `rtk git diff`. rtk keeps 100 added lines of a hunk and replaces the rest with one line.
+    - The repository's PreToolUse hook rewrote every Bash command rtk knew into its rtk form, `git diff` included.
 
-**Root cause:** thought *"rtk's compression is safe wherever the hook applies
-it"*, actually *"a diff is only useful whole, and rtk cuts each hunk at 100
-lines"*.
+      ```json
+      // .claude/settings.json, from 8e1f847e7 to b507ea56d
+      "PreToolUse": [
+        { "matcher": "Bash",
+          "hooks": [{ "type": "command", "command": ".claude/hooks/rtk-rewrite.sh" }] } // ❌ every command rtk knows, rewritten
+      ```
+
+      - Commit `8e1f847e7` (2026-05-01, written by an agent) vendored the hook "verbatim from rtk-ai/rtk@master" and registered it on the `Bash` matcher. Its message says the rewrite works "without changing what Claude sees as the command result".
+        - That sentence is rtk's own pitch, carried into the commit. The vendor's material said the rewrite was transparent, and said nothing about which outputs it cut. (Material)
+
+## Root cause of occurrence
+
+*Thought rtk's rewrite saves tokens without changing what a command's output means, actually rtk cuts each diff hunk at 100 added lines, and a diff is only useful whole.*
+
+Material. The agent that wrote `8e1f847e7` worked from rtk's hook and its claim of transparency (quoted above from the commit message). Nothing in that input listed what rtk truncates. A reviewer reads a diff to judge every line, so a summary of it is a different output, not a shorter one.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** none applies to a hook's choice of command.
-- **Code review:** the hook's skip list was written for crashes (`biome`) and
-  the worktree guard, not for output a consumer must read whole.
-- **Knowledge:** the trigger matched other truncation markers, not this one.
+- **Code review of `8e1f847e7`:** a 101-line vendored script, with a claim from its vendor. The claim was not measured on any command.
+- **The hook's own carve-outs:** they were added one at a time after something crashed or was refused (`biome`, git in a worktree). A truncated output does not crash, so nothing forced a carve-out for `git diff`.
+- **Knowledge triggers:** `rtk-truncates-command-output.md` fired on `[N more lines]` and `rtk recall` markers. The diff marker reads `additions truncated`, so nothing was printed.
 
 ## Countermeasure
 
-- **Code:** `git diff` and `git show` go through the hook unrewritten.
+Commit `d1be9c429` (PR #240) let `git diff` and `git show` through the hook unrewritten. The hook fed `git diff a b` returned `rtk git diff a b` before, and the command unchanged after (recorded by the first version of this entry).
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** DevX check (level 2), on top of the deletion of the rewrite.
 
-**Reference:** commits [self]
-
-**The actual fix:**
+**Reference:** commit [`b507ea56d`](https://github.com/hugoleborso/borso.fr/commit/b507ea56df86236aeb5d0652e3bca5630c0dfc54) (PR #245) removed the rtk rewrite. Its message: "It needed four carve-outs in its hook (biome, git diff and show, git in a worktree, lint) and eleven dantotsu and knowledge entries since 2026-05-01, and its truncation read as content."
 
 ```diff
-+GIT_DIFF_COMMAND='(^|[;&|[:space:]])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(--no-pager[[:space:]]+)?(diff|show)($|[[:space:]])'
-+if [[ "$CMD" =~ $GIT_DIFF_COMMAND ]]; then
-+  exit 0
-+fi
+     "PreToolUse": [
+-      {
+-        "matcher": "Bash",
+-        "hooks": [{ "type": "command", "command": ".claude/hooks/rtk-rewrite.sh" }]
+-      },
 ```
 
-The property dropped: rtk's token savings on `git diff` and `git show`. A
-diff's size is now the diff's size. `--stat` and `--name-status` still give a
-short view when that is what the reader wants.
+`.claude/hooks/` no longer exists. `grep -rln '\brtk\b' --exclude-dir=docs --exclude-dir=node_modules --exclude-dir=.git .` finds nothing (measured).
 
-**Proof it acts:** the hook fed `git diff a b` before the change returned
-`rtk git diff a b`. After it, these pass through unrewritten:
-`git diff origin/main...HEAD -- a.ts`, `git -C /x show HEAD`,
-`git --no-pager diff a b`, `cd x && git diff --stat`. `git status` and
-`git log --oneline` are still rewritten.
+What keeps a vendored rewrite from coming back is `scripts/hooks/check-settings.ts`, run in `.husky/pre-commit` and CI. Through `selectForeignHookCommands` in `scripts/hooks/settings-hooks.core.ts`, it refuses any hook command in `.claude/settings.json` that is not the one TypeScript entry.
 
-**Sibling defects swept:** `git show` prints the same hunks, so it is in the
-same exception.
+The level is 2, not 1. A check under `scripts/hooks/checks/` can still return `kind: 'rewrite'` and change a command before it runs.
 
-## See also
+**Proof it can fail:** inferred, not replayed this session. Adding back the `rtk-rewrite.sh` group makes `node scripts/hooks/check-settings.ts` print `PreToolUse: .claude/hooks/rtk-rewrite.sh is not the one TypeScript entry` and exit 1.
 
-- [`the-rewrite-that-hid-git-from-the-guard.md`](./the-rewrite-that-hid-git-from-the-guard.md),
-  the earlier case of the rewrite changing what a command means to its consumer.
-- [`../knowledge/rtk-truncates-command-output.md`](https://github.com/hugoleborso/borso.fr/blob/d1be9c42/docs/knowledge/rtk-truncates-command-output.md).
+**Similar instances:** `grep -rn "kind: 'rewrite'" scripts/hooks` finds one rewrite left, `noSwallowedPush`, which prefixes `set -o pipefail;` to a piped `git push`. It adds a shell option and cuts no output. See [`the-rewrite-that-hid-git-from-the-guard.md`](./the-rewrite-that-hid-git-from-the-guard.md) for the other way the rtk rewrite changed what a command meant to its consumer.

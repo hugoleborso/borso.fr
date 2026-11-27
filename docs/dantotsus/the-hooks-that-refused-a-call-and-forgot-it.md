@@ -4,138 +4,110 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#100'
-fix-commits: [948204d50a]
-eradication-level: 2
-eradication-paths: [.claude/hooks/kaizen-refusal.sh]
+fix-commits: [948204d50a, 458e886c4]
+eradication-level: 1
+eradication-paths: [scripts/hooks/hook-runner.adapter.ts, scripts/hooks/check.core.ts, scripts/hooks/settings-hooks.core.ts, scripts/hooks/check-settings.ts]
 time-to-detect: days
 tags: [meta, hooks, self-improvement-loop, harness, process]
-zone: .claude/hooks
+zone: scripts/hooks
 ---
 
 # The hooks refused five calls and the friction log heard about none of them
 
-## Symptom
+## User impact
 
-PR #100 ran for a day: two features, a subagent validation round, a
-merge with `main`, and an opened pull request. `KAIZEN.md` held one
-line at the end of it, written by the visual validator because its
-dispatch prompt told it to.
+The operator improves the repository from what `KAIZEN.md` records. After
+PR #100, a day of work with two features, a validation round, a merge and an
+opened pull request, it held one line (measured, at the end of that task).
 
-The main session logged nothing — while being refused five times by
-its own PreToolUse hooks:
+| | Seen | Expected |
+| --- | --- | --- |
+| Friction log after PR #100 | one line, written by the visual validator because its brief said so | one line per refusal at least |
+| Hook refusals that day | five, from `no-swallowed-push` twice, `no-broad-kill`, `pr-body` twice | the same five in the log |
 
-```
-[no-swallowed-push] git push piped into another command throws away the push's exit status.
-[no-broad-kill] pkill / killall matches every process whose command line contains the pattern
-[pr-body] the body carries a <details> toggle; the tag is removed and its contents are flattened
-[pr-body] the body carries <https://…>, which the server reads as an HTML tag and deletes.
-[no-swallowed-push] …again
-```
+The sweep that reads the file had to rebuild the inventory from the
+transcript, which works only while the transcript is still in the window.
 
-Every one of those is exactly what the file is for: a tool that
-failed, a correction received twice, a vendor behaviour nobody
-expected. The sweep that reads the file saw none of them, and had to
-rebuild the inventory from the transcript — which works only while the
-transcript is still in the window.
+## Causal chain
 
-## Root-cause chain
+- `KAIZEN.md` held none of the five refusals.
+  - After each refusal the main session rewrote the call and went on, and
+    did not run `scripts/kaizen.sh`.
+    - The refusal had told it what to do instead, and the second attempt
+      worked. A problem fixed in one retry did not register as friction
+      (inferred from the transcript, where no log call follows any of the
+      five).
+  - Each hook printed its refusal and exited 2, and wrote nothing else. In
+    `pretool-no-broad-kill.sh`, for example:
 
-1. **Why did the session not log these?**
-   Because at the moment a hook fires, the agent is mid-task and the
-   refusal reads as an instruction, not as an event. It fixes the call
-   and moves on.
-2. **Why does the refusal not read as friction?**
-   Because it was *resolved*. The hook told the agent exactly what to
-   do instead, the second attempt worked, and a problem that took
-   thirty seconds to fix does not feel like a problem worth recording.
-3. **Why is that the wrong instinct?**
-   The cost of the friction is not what it cost *this* session. It is
-   the number of sessions that will hit the same wall. A hook firing
-   five times in one day is the strongest evidence the repository has
-   that something is worth changing, and it was the evidence being
-   thrown away.
-4. **Why was logging left to the agent at all?**
-   Because `scripts/kaizen.sh` was designed for the friction only a
-   human or an agent can notice — a misleading error, an instruction
-   misread. Hook refusals are not in that category: they are machine
-   observable, and the machine that observes them is already running.
-5. **Why did CLAUDE.md's instruction not carry it?**
-   It says to log friction as you hit it, and the session that wrote
-   that sentence believed it was following it. An instruction that
-   depends on noticing cannot cover the case where not noticing *is*
-   the failure.
+    ```bash
+    echo "[no-broad-kill]   ss -lptn 'sport = :5173'" >&2
+    exit 2
+    ```
 
-**Root cause:** thought the friction log was something an agent writes
-when it notices friction, actually the most reliable observer of
-friction is the hook that just refused a call, and it was silent.
+    - The friction log was designed as something an agent writes when it
+      notices friction. `CLAUDE.md` says to log friction as it happens, and
+      the hooks were built as refusals only. (Method)
+
+## Root cause of occurrence
+
+*Thought the friction log is written by an agent when it notices friction,
+actually a refusal resolved in one retry does not feel like friction, and the
+hook that refused is the one observer that sees every refusal.* (Method)
+
+The process put the recording on the agent's attention. The hooks already ran
+at the exact moment of each refusal. Had the design known it, each refusal
+would have been logged by the code that made it.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** nothing reads `KAIZEN.md`; it is
-  gitignored scratch.
-- **CI:** the file never reaches CI by design.
-- **Code review:** an empty friction log looks identical to a smooth
-  task. There is no artefact that says "five refusals happened here".
-- **The sweep itself:** `/after-task-kaizen` treats a thin
-  `KAIZEN.md` as a finding, which is the right instinct and the wrong
-  moment — it fires after the context that would have filled the file
-  is gone.
+- **Lint and CI:** `KAIZEN.md` is gitignored scratch. No gate reads it.
+- **Review:** an empty friction log looks the same as a smooth task. No
+  artefact says that five refusals happened.
+- **The sweep:** `/after-task-kaizen` treats a thin `KAIZEN.md` as a finding,
+  but it runs after the context that would have filled the file is gone.
 
 ## Countermeasure
 
-The five hooks that block a call now record what they refused, in the
-same run that refuses it.
+Commit `948204d50` added `.claude/hooks/kaizen-refusal.sh` and called it from
+each blocking branch of the five `pretool-*` hooks. It never failed its
+caller, so `exit 2` stayed the last word, and it wrote only when `KAIZEN.md`
+existed.
 
-- **Code:** `.claude/hooks/kaizen-refusal.sh`, called from each
-  blocking branch of the five `pretool-*` hooks.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** structural impossibility (level 1)
 
-**Type:** DevX check (level 2 — devx check)
+**Reference:** the countermeasure wired the logger into five hooks one by one,
+so every new hook had to remember the call. Commit `458e886c4` (PR #411)
+deleted `kaizen-refusal.sh` and replaced the shell hooks with checks run by
+one entry, `scripts/hooks/hook.ts`. The runner logs every refusal in one
+place, in `scripts/hooks/hook-runner.adapter.ts`:
 
-**Reference:** PR #102 · commits on this branch adding
-`.claude/hooks/kaizen-refusal.sh` and wiring the five hooks
-
-**The actual fix:**
-
-```diff
-   echo "[no-broad-kill]   ss -lptn 'sport = :5173'" >&2
-+  "$(dirname "$0")/kaizen-refusal.sh" no-broad-kill "reached for pkill or killall on a machine other agents share"
-   exit 2
+```ts
+for (const { rule, summary } of outcome.refusals) {
+  runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), [
+    '--from',
+    `hook:${rule}`,
 ```
 
-The helper never fails its caller — a log that cannot be written is
-not a reason to let a refused call through, and `exit 2` has to stay
-the last word. It writes only when `KAIZEN.md` already exists, so a
-checkout that never started a task does not grow one.
+A check refuses only by returning `refuse(rule, summary, lines)` from
+`scripts/hooks/check.core.ts`, so every refusal carries the rule and summary
+the log needs. `scripts/hooks/check-settings.ts` refuses any hook command in
+`.claude/settings.json` other than that one entry, in pre-commit and in CI. A
+hook that refuses without being logged cannot be written.
 
-`scripts/check-hook-decisions.sh` feeds every hook the commands it must
-refuse, and those refusals are the check working rather than friction
-anyone hit, so it sets `KAIZEN_LOG_REFUSALS=0` while probing. Without
-that, running the commit gate would have filled the file with rows for
-calls nobody made.
+**Proof it can fail:** a second command planted beside the runner in a scratch
+`.claude/settings.json` this session, then restored (measured).
 
-**Sibling defects swept:** the sweep's own skill was the second casualty
-of the same blindness. `/after-task-kaizen` requires its friction
-inventory at the top of the kaizen PR body, and PR #101 landed
-`scripts/pr/check-pr-body.ts`, whose budget refuses a body that size.
-Two documents contradicted each other from that moment and nothing
-noticed, because the only thing that reads them both is the sweep, which
-runs once per PR. The skill now sends the inventory to a committed file
-under `docs/features/meta/` and has the body link it, which is the
-better shape regardless: the body is an index and the inventory is
-evidence.
+```text
+[hooks-are-typescript] .claude/settings.json:
+  SessionStart: NODE_COMPILE_CACHE="${TMPDIR:-/tmp}/borso-hook-compile-cache" node "$CLAUDE_PROJECT_DIR"/scripts/hooks/hook.ts; bash .claude/hooks/my-own-refusal.sh is not the one TypeScript entry
+exit=1
+```
 
-All five blocking hooks were wired in the same pass — `pretool-gh-pr-create`, `pretool-github-pr-body` (both of
-its exit paths), `pretool-no-broad-kill`, `pretool-no-discarding-reset`
-and `pretool-no-swallowed-push` — rather than the two that fired during
-this PR, because the next PR will hit a different subset.
-
-## See also
-
-- [`a-knowledge-entry-did-not-stop-the-second-hit.md`](./a-knowledge-entry-did-not-stop-the-second-hit.md)
-  — the same shape one rung down: writing the lesson somewhere is not
-  the same as the lesson arriving when it is needed.
-- [`the-hook-that-refused-the-page-explaining-it.md`](./the-hook-that-refused-the-page-explaining-it.md)
-  — the hooks' other contract, and why `check-hook-decisions.sh` runs
-  them with sample input in the first place.
+**Similar instances:** `grep '"command"' .claude/settings.json` lists five hook
+commands, all the runner (measured). The same blindness hit
+`/after-task-kaizen`, which wanted its friction inventory in a PR body that
+`scripts/pr/check-pr-body.ts` caps. The skill now writes the inventory to a
+committed file and links it.

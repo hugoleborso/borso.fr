@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#81'
-fix-commits: [03e16d4d6d]
-eradication-level: 5
-eradication-paths: []
+fix-commits: [03e16d4d6d, 9514a2ffb]
+eradication-level: 2
+eradication-paths: [eslint-rules/no-api-declaration-repeated-in-site.js, .oxlintrc.json, apps/last-loop-lepin/domain/haversine.core.ts]
 time-to-detect: ~25 minutes (one full pre-push wave)
 tags: [stryker, mutation, vitest, testing, gates, blueprint]
 zone: infra/cdk/test/unit/eradication-checks.test.ts
@@ -16,16 +16,11 @@ recurs: [the-mutants-were-judged-by-the-wrong-jury]
 
 # The invariant test read a file Stryker was rewriting
 
-## Symptom
+## User impact
 
-`apps/last-loop-lepin` ships two byte-identical copies of
-`haversine.utils.ts`, one under `api/src/helpers/geo/` and one under
-`site/src/lib/`. Nothing enforces the duplication — the old file header
-asserted it, and was wrong about the twin's path.
-
-Turning that assertion into a test looked obvious: read both files, strip
-annotations, compare. It passed locally in 6 s. Then the pre-push mutation
-gate died before running a single mutant:
+The agent pushing PR #81 lost one pre-push wave, about 25 minutes, to a test
+that passed locally in 6 s (measured, in that session). The mutation gate died
+before running a single mutant:
 
 ```
 ERROR DryRunExecutor One or more tests failed in the initial test run:
@@ -33,78 +28,88 @@ ERROR DryRunExecutor One or more tests failed in the initial test run:
     expected 'function stryNS_9fa48() {\n  var g = …' to be 'function stryNS_9fa48() {\n  var g = …'
 ```
 
-Two strings that print identically, compared unequal.
+| | Seen | Expected |
+| --- | --- | --- |
+| Pre-push mutation gate | dry run fails, no score | a mutation score |
+| The failing assertion | two strings that print the same, compared unequal | the two source files compared |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did two identical-looking strings differ?**
-   They were not the source files. Stryker had **instrumented** both, wrapping
-   each in its mutation switch scaffolding.
-2. **Why did instrumentation break the comparison?**
-   Each file gets its own mutant id range. Two copies of the same source come
-   out of the instrumenter as two *different* strings.
-3. **Why did it fail in the dry run, before any mutant?**
-   The dry run executes the suite against the instrumented tree to collect
-   per-test coverage. Instrumentation is already applied; only activation is
-   not.
-4. **Why did the test not anticipate this?**
-   `haversine.utils.ts` is a gated pure module, so it is in Stryker's
-   `--mutate` set. The test sat in that module's own sibling suite — the
-   natural place for it, and the one place guaranteed to run while the file
-   it reads is rewritten.
+- The mutation dry run failed on the invariant test.
+  - The test compared two strings that differed.
+    - They were not the source files. Stryker had instrumented both
+      `haversine.utils.ts` copies, and gives each file its own mutant id
+      range, so two copies of one source come out as two different strings.
+      - The dry run executes the suite against the instrumented tree to
+        collect per-test coverage, so the files are rewritten before any
+        mutant is active.
+        - The test sat in the sibling suite of `haversine.utils.ts`, a gated
+          pure module in Stryker's `--mutate` set, and read both copies off
+          disk.
+          - The test existed to hold two byte-identical copies equal:
+            `apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts`
+            and `apps/last-loop-lepin/site/src/lib/haversine.utils.ts`.
+            - The site and the API had no shared folder, so a rule both
+              needed lived twice. `domain/` arrived only with PR #166.
+              (Machine)
 
-**Root cause:** we thought a test reading a file off disk observes the source;
-actually it observes whatever is on disk at that moment, and under a mutation
-run that is the instrumented copy. A source-invariant test and mutation
-testing cannot share a workspace's gated files.
+## Root cause of occurrence
+
+*Thought a test that reads a file off disk observes the source, actually it
+observes whatever is on disk at that moment, and under a mutation run that is
+the instrumented copy.* (Material)
+
+The agent on PR #81 had no document saying Stryker rewrites gated files in
+place for the dry run (inferred: the `test-source-invariant` blueprint gained
+that sentence only in this entry's fix). The failing assertion above shows
+the `stryNS_` scaffolding in both strings. Had the agent known, the test would
+have lived outside a mutated workspace from the start.
 
 ## Detection failure causes
 
-- **Typing / linter:** neither reads a file at runtime.
-- **Functional validation locally:** `vitest run` passed — 8 tests, 6 s. The
-  file is only instrumented under Stryker.
-- **CI:** would have caught it, and did: the pre-push gate is where it
-  surfaced. The cost is that it surfaces ~25 minutes in, after the whole
+- **Typing and lint:** neither reads a file at runtime.
+- **Local:** `vitest run` passed, 8 tests in 6 s. Files are instrumented only
+  under Stryker.
+- **Pre-push:** it caught the defect, about 25 minutes in, after the whole
   parallel wave.
-- **Code review:** the test reads correctly. Nothing on the page says
-  "this file is mutated".
+- **Review:** the test reads correctly. Nothing on the page says the file it
+  reads is mutated.
 
 ## Countermeasure
 
-The invariant moved to `infra/cdk/test/unit/eradication-checks.test.ts`,
-commit `93142d2` — the file that already holds the repository's source-invariant
-tests, in a workspace whose mutation run covers `infra/cdk` gated files and
-never touches `apps/`.
+The invariant moved to `infra/cdk/test/unit/eradication-checks.test.ts`, the
+file that already held the repository's source-invariant tests, in a
+workspace whose mutation run never touches `apps/`. It landed on main in
+`8621866aa`, already moved, so `git log -S` finds no commit on main with the
+test in its first place. Appending `export const DRIFT = 1;` to the site
+copy failed the test with the diverging line quoted, and removing it passed.
 
-Verified non-vacuous: appending `export const DRIFT = 1;` to the site copy
-fails the test with the diverging line quoted; removing it passes.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Level 2 — DevX check via the pattern's own definition.** The
-`test-source-invariant` blueprint now states the constraint in its
-`@BlueprintDescription`, which is the text a writer is shown by the pre-write
-hook **before** creating a file of this kind:
+**Reference:** commit `03e16d4d6` added the Stryker constraint to the
+`@BlueprintDescription` of `test-source-invariant`, which still reads "It
+lives in a workspace whose gated files Stryker does not mutate". That is a
+written instruction, and the pre-write hook that showed blueprints was
+deleted in `c54e32da7` (PR #224).
 
-> *"It lives in a workspace whose gated files Stryker does not mutate: a test
-> that reads a file off disk sees that file instrumented during a mutation
-> run, and comparing two instrumented copies fails in the dry run before a
-> single mutant is activated."*
+The cause was removed instead. Commit `9514a2ffb` (PR #166) moved the rule to
+one copy, `apps/last-loop-lepin/domain/haversine.core.ts`, which the site and
+the API both import through `@domain/*`. The invariant test was deleted in
+the same commit, because nothing is left to compare. The lint rule
+`borso/no-api-declaration-repeated-in-site`, enabled in `.oxlintrc.json`,
+refuses a site declaration whose name the API or `domain/` already declares,
+so a second copy cannot be written.
 
-That is the highest level reachable here. Level 1 would mean making the
-mistake unexpressible, which would require knowing at lint time that a given
-`readFileSync` argument lands in a `--mutate` glob — a path that is computed,
-and a glob that lives in another file.
+**Proof it can fail:** a duplicate planted in a scratch site file this
+session, then removed (measured).
 
-The same description also dropped a sentence that PR #81 made false: it had
-justified stripping comments before comparing, and there are no longer
-comments to strip.
+```text
+apps/last-loop-lepin/site/src/lib/planted-haversine.utils.ts:1:17: error borso(no-api-declaration-repeated-in-site): `haversineDistanceMeters` is already declared in `apps/last-loop-lepin/domain/haversine.core.ts`.
+```
 
-## Related
-
-- [`the-mutants-were-judged-by-the-wrong-jury.md`](./the-mutants-were-judged-by-the-wrong-jury.md)
-  — the other Stryker-instrumentation surprise from the same branch, on the
-  scoring side rather than the reading side.
-- [`a-timeout-under-parallel-gates-is-not-a-regression.md`](../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md)
-  — how to tell this failure (a real red test) from the timeout that shares
-  the same gate.
+**Similar instances:** `git ls-files | grep -i haversine` lists only the
+`domain/` module and its test. The rule covers every app's site against its
+API and `domain/`. A copy under a new name walks past it, which is the gap
+left.

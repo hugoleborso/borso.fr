@@ -4,122 +4,117 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#202'
-fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
+fix-commits: [self, 458e886c4]
+eradication-level: 1
+eradication-paths: [scripts/hooks/check.core.ts, scripts/hooks/check.core.test.ts]
 time-to-detect: 1 day
 tags: [hooks, harness, gates, meta, deploy]
-zone: .claude/hooks
+zone: scripts/hooks/checks/merge-deploys-prod.core.ts
 weak-point: gate-measures-nothing
 recurs: [the-merge-whose-blast-radius-nobody-printed]
 ---
 
 # The notice that started firing and nobody heard
 
-## Symptom
+## User impact
 
-PR #202 fixed a hook that names what a merge deploys: registered on the GitHub
+PR #202 fixed a hook that names what a merge deploys. Registered on the GitHub
 MCP call alone, it had stayed silent through a `gh pr merge` while six
-applications went to production. The fix made it match the Bash shape, and a
-case in `check-hook-decisions.sh` proved it.
+applications went to production. The fix made it match the Bash shape.
 
-One day later the same session merged PR #202 itself with `gh pr merge 202`,
-and saw nothing. Invoked by hand on that exact command the hook answers
-correctly, exit 0, the blast radius printed. During the real call the text
-never arrived.
+| | Seen | Expected |
+| --- | --- | --- |
+| One day later, the same session ran `gh pr merge 202` | nothing | the hook's list of applications the merge deploys |
+| The hook run by hand on that exact command | exit 0, the blast radius printed | the same |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the notice not arrive?**
-   It goes to stdout. A PreToolUse hook's plain stdout reaches the debug log
-   and not the model.
-2. **Why was stdout chosen?**
-   The hook was written to be read by a person watching a terminal, and it was
-   never a problem while it only fired on an MCP call nobody made.
-3. **Why did the fix not catch it?**
-   The fix asked *does the hook fire on this tool shape*. That was the whole
-   question it had, because firing was the thing that had failed.
-4. **Why did the new test pass?**
-   The row added to the decisions table looked for its needle in the hook's
-   `additionalContext` **or** its stdout, so that the table would not have to
-   know which shape a hook had picked. That tolerance is what made the table
-   green on a hook the model cannot hear.
-5. **Why was the tolerance written?**
-   To let one existing hook keep its shape instead of changing it. The table
-   was adjusted to the hook rather than the hook to the contract.
+- The session merged PR #202 and saw no deploy notice.
+  - The hook ran and wrote its notice to plain stdout. A PreToolUse hook's
+    plain stdout reaches the debug log, not the model.
+    - The faulty lines, in `pretool-merge-deploys-prod.sh`:
 
-**Root cause:** thought a hook that runs has done its job, actually a hook has
-two halves — it fires, and it is heard — and the test written for the first
-half was widened until it stopped asking about the second.
+      ```bash
+      cat <<NOTE
+      [merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
+      ```
 
-CLAUDE.md states the rule outright: *plain stdout from either reaches no model,
-so every hook that informs answers with `additionalContext`.* It was read as
-being about the knowledge-trigger hook, which is where it was learned.
+      - Commit `5d140956d` (PR #95) wrote the notice for a person watching a
+        terminal.
+        - PR #202's fix (`02c715dc5`) kept that channel. It made the decisions
+          table in `check-hook-decisions.sh` accept the needle in the hook's
+          `additionalContext` or its stdout:
+
+          ```bash
+          spoken="$context
+          $output"
+          ```
+
+          - Its writer had CLAUDE.md's rule in context and read it as being
+            about another hook. The rule was the last clause of the bullet
+            describing `knowledge-triggers.sh`: "plain stdout from either
+            reaches no model, so every hook that informs answers with
+            `additionalContext`" (`git show 02c715dc5^:CLAUDE.md`, line 95).
+
+## Root cause of occurrence
+
+*Thought a notice a hook prints is a notice the model reads, actually a
+PreToolUse hook's plain stdout goes to the debug log, and only
+`additionalContext` reaches the model.*
+
+**M: Man.** The writer was an agent, and the rule was in CLAUDE.md, loaded in
+every session. Its place under one hook's bullet let the prior win: the rule
+read as that hook's detail. Per the agentic 4M, the fix is a gate or a shape
+that holds when the prior wins, not one more line of rule text.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** nothing relates a hook's output channel to what
-  the harness forwards.
-- **CI:** `check-hook-decisions.sh` ran and passed, because the assertion had
-  been widened to accept both channels.
-- **Code review:** the hook's output is correct text. Nothing on the page says
-  where it goes.
+- **Linter:** nothing related a hook's output channel to what the harness
+  forwards.
+- **CI:** `check-hook-decisions.sh` ran and passed, because its assertion
+  accepted both channels. The tolerance was written so one existing hook could
+  keep its shape.
+- **Review:** the hook's output is correct text. Nothing on the page says where
+  it goes.
 - **The operator:** a hook that says nothing and a hook whose notice is
-  discarded look identical from the chat.
+  discarded look the same from the chat.
 
 ## Countermeasure
 
-- **Code:** the notice is an `additionalContext` answer, and the table accepts
-  nothing else.
-- **Operator action:** none.
+PR #217 (`8d6962194`) made the notice an `additionalContext` answer, and the
+table accepted nothing else.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the table that proved the first half now asks
-the second)
+**Type:** structural impossibility (level 1)
 
-**Reference:** PR #217 · commit `self`
+**Reference:** commit `458e886c4` (PR #411) replaced the shell hooks and the
+decisions table. A check now returns a `Verdict`, and `renderOutcome` in
+`scripts/hooks/check.core.ts` chooses the channel. A `context` verdict is always
+sent as `additionalContext`:
 
-**The actual fix:** the hook answers on the channel the model reads.
-
-```diff
--cat <<NOTE
--[merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
--…
--NOTE
-+NOTICE="[merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
-+…"
-+jq -n --arg context "$NOTICE" \
-+  '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
+```ts
+| { readonly kind: 'context'; readonly text: string }
+…
+stdout: JSON.stringify({
+  hookSpecificOutput: { hookEventName: event, ...updatedInput, additionalContext },
+}),
 ```
 
-and the table stops accepting the other one:
+A check has no way to say "print this to stdout". The merge notice is a
+`context` verdict of `scripts/hooks/checks/merge-deploys-prod.core.ts`.
 
-```diff
--  context="$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$output")"
--  spoken="$context
--$output"
-+  context="$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$output")"
-```
+**Proof it can fail:** `scripts/hooks/check.core.test.ts` holds the rendering of
+each verdict kind. Not replanted this session.
 
-Putting the notice back on stdout makes `check-hook-decisions.sh` fail by name,
-which is the state that let PR #202's merge through:
+One way around remains. Checks live under `scripts/`, where `.oxlintrc.json`
+turns `no-console` off, so a check could still call `console.log` (inferred
+from the config, not tried).
 
-```
-[check-hook-decisions] a hook decided against its own contract, or has none.
-```
+**Proposed:** turn `no-console` on for `scripts/hooks/checks/**`. A check that
+writes to stdout itself would then fail lint at commit.
 
-The completeness loop keyed on `additionalContext|^cat <<NOTE` so that the
-stdout hook would be covered; it keys on `additionalContext` alone now, so a
-repository-side hook that informs on the wrong channel has no rows at all and
-is reported as missing them.
-
-**Sibling defects swept:** none. `pretool-blueprint-context.sh` and
-`knowledge-triggers.sh`, the other two hooks that inform, already answer with
-`additionalContext`.
-
-## See also
-
-- [`the-merge-whose-blast-radius-nobody-printed.md`](./the-merge-whose-blast-radius-nobody-printed.md) — the first half of this defect, fixed one day earlier.
-- [`the-hook-that-refused-the-page-explaining-it.md`](./the-hook-that-refused-the-page-explaining-it.md)
-- [`docs/quality/weak-points.md`](../quality/weak-points.md) — `gate-measures-nothing`.
+**Similar instances:** every informing check returns a `context` verdict
+(`grep -ln "kind: 'context'" scripts/hooks/checks/*.core.ts`). None writes to
+stdout (`grep -ln "console\.\|process\.stdout" scripts/hooks/checks/*.core.ts`
+finds nothing, measured on 2026-11-27).

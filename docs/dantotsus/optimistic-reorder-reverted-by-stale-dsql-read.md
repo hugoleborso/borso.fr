@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: qa
 severity: high
 related-pr: '#31'
-fix-commits: [12bf7d9a91]
-eradication-level: 5
-eradication-paths: []
+fix-commits: [12bf7d9a91, c933140e0, e4c428591]
+eradication-level: 2
+eradication-paths: [eslint-rules/no-refetch-of-optimistically-written-query.js, eslint-rules/optimistic-mutation-declares-scope.js, apps/pragma/site/public/sw.js]
 time-to-detect: hours
 tags: [react, tanstack-query, dsql, optimistic-updates, pragma]
 zone: apps/pragma/site/src/lib/queries
@@ -16,126 +16,133 @@ blueprints: [query-optimistic-mutation]
 
 # The reorder that travelled to the server and came back wrong
 
-## Symptom
+## User impact
 
-Dragging a setlist row to a new position animated correctly, then —
-once the drop animation finished — the row **jumped back to its
-original slot** and stayed there. The user reported it twice, the
-second time precisely: *"l'animation est correcte mais une fois
-l'animation terminée, la carte saute à son état d'origine. Est-ce que
-c'est le même state partout ?"*
+A band member drags a setlist row to a new place. The row should stay there.
 
-The server had the new order persisted the whole time.
+| | Seen | Expected |
+| --- | --- | --- |
+| Drop a dragged row | The drop animates, then the row jumps back to its old slot and stays | The row stays where it was dropped |
+| The database | Holds the new order | Holds the new order |
 
-## Root-cause chain
+The operator reported it twice, the second time precisely: *"l'animation est
+correcte mais une fois l'animation terminée, la carte saute à son état
+d'origine. Est-ce que c'est le même state partout ?"*
 
-1. **Why did the row revert after the animation?** The TanStack Query
-   cache for the entries list was overwritten with the *old* order
-   shortly after the optimistic update applied the new one.
-2. **Why was the cache overwritten with the old order?** The reorder
-   mutation's `onSettled` ran `invalidateQueries`, which refetched the
-   entries `GET` immediately after the `PUT /reorder` returned 200.
-   That refetch resolved with the pre-reorder order.
-3. **Why did the refetch return the pre-reorder order when the `PUT`
-   had already committed (200)?** It was a different request, served by
-   a different Lambda invocation on a different Aurora DSQL connection.
-   DSQL's read-after-write visibility lags across connections: a read
-   that starts microseconds after a commit on another connection can
-   still see the pre-commit snapshot. Captured live: `PUT` sent order
-   `[…, b16f]` (b16f last), the immediate refetch `GET` returned
-   `[b16f, …]` (b16f first).
-4. **Why did a refetch exist at all for reorder?** The optimistic
-   mutation pattern in `setlists.ts` invalidates the query on settle —
-   a blanket habit copied across every mutation, including the ones
-   (like reorder) where the client already holds the complete,
-   authoritative result and the `PUT` confirms it with 200.
+## Causal chain
 
-**Root cause:** *thought "invalidate-and-refetch after every mutation
-is always safe", actually "for a write whose full result the client
-already knows, the post-write refetch adds nothing and can race a
-not-yet-visible DSQL commit on another connection, reverting the
-optimistic update".*
+- The row jumped back after the drop animation.
+  - The TanStack Query cache for the entries list was overwritten with the old
+    order, after the optimistic update had written the new one.
+    - The reorder mutation refetched the list it had just written, on settle.
+      At `12bf7d9a91^`, `apps/pragma/site/src/lib/queries/setlists.ts`:
+
+      ```ts
+      onSettled: (_data, _error, variables) => {
+        if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
+          return;
+        }
+        void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });   ← ❌ refetch of a key this mutation wrote
+      },
+      ```
+
+      - The refetch answered the pre-reorder order. Captured live: `PUT` sent
+        `[…, b16f]`, the next `GET` returned `[b16f, …]`.
+        - The service worker answered that `GET` from its own cache (inferred
+          from the code, not reproduced). At `12bf7d9a91`, `sw.js` listed
+          `/api/setlists/<id>/entries` among its cached reads and answered
+          them with `return cached ?? networkPromise;`. A cached copy from
+          before the drag won whenever one existed (Machine). The worker came
+          in commit `fec7d61ea`, 2026-05-20, before this defect.
+      - The refetch existed because every optimistic mutation in the file
+        invalidated on settle, a pattern copied to all three entry mutations.
+
+The first version of this entry blamed a cross-connection read lag in Aurora
+DSQL. `docs/knowledge/dsql-strong-consistency-is-per-connection.md` contests
+it, measured on 2026-11-04: 0 stale reads in 180 fresh-connection `GET`s after
+30 reorders. AWS documents DSQL reads as strongly consistent.
+
+## Root cause of occurrence
+
+*Thought a refetch after a write reaches the server and returns what the write
+committed, actually every API read went through a service worker whose
+stale-while-revalidate returned its cached copy first.* (Machine)
+
+At `12bf7d9a91`, `apps/pragma/site/public/sw.js` routed every read in
+`isReadableApiPath`, the entries path included, to a handler ending in
+`return cached ?? networkPromise;`. Nothing in `setlists.ts` shows that a
+`GET` may not reach the network. The same worker later lost a saved order in
+production ([`the-offline-cache-that-answered-first-online.md`](./the-offline-cache-that-answered-first-online.md)).
+
+A second misconception made the worker matter: *thought invalidate-and-refetch
+after every mutation is always safe, actually for a write whose full result the
+client already holds, the refetch adds nothing and can only undo it.*
 
 ## Detection failure causes
 
-- **Typing:** invisible — `invalidateQueries` is well-typed; the bug is
-  a timing/consistency property, not a type.
-- **Linter / static analysis:** no rule distinguishes a "full-state-known"
-  write (safe to trust optimistically) from an "id-needing" write (add,
-  which genuinely needs the server round-trip). The distinction isn't
-  statically decidable.
-- **Functional validation locally — false PASS:** the read-after-write
-  lag was probed with a tight `curl` loop (`PUT` then immediate `GET`)
-  and **never reproduced**, because `curl --keepalive` reuses one warm
-  connection, where DSQL reads-its-own-writes consistently. The lag
-  only appears across *separate* connections — exactly the app's
-  `PUT`-then-`GET` shape. The warm-loop test gave false confidence and
-  sent two wrong fixes out (see
-  [`debug-client-state-reverts-in-the-browser-first.md`](../knowledge/debug-client-state-reverts-in-the-browser-first.md)).
-- **CI:** unit tests mock the network; the cross-connection DSQL race
-  has no representation in the test environment.
-- **QA:** this is where it was caught — manual drag on the seeded
-  preview, then a browser-driven repro capturing the `PUT` order vs the
-  `GET` order.
+- **Typing:** `invalidateQueries` is well typed. What the read returns is a
+  runtime property.
+- **Linter:** at the time no rule told a refetch of a key the mutation wrote
+  from a refetch of another key.
+- **Local validation, false pass:** a tight `curl` loop of `PUT` then `GET`
+  never reproduced it. `curl` does not go through the service worker, and that
+  run also reused one warm connection. The run sent two wrong fixes out
+  ([`debug-client-state-reverts-in-the-browser-first.md`](../knowledge/debug-client-state-reverts-in-the-browser-first.md)).
+- **CI:** unit tests mock the network, and no test ran the service worker in
+  front of an API read.
+- **QA:** caught it, with a manual drag on the seeded preview and a browser
+  repro capturing the `PUT` order against the `GET` order.
 
 ## Countermeasure
 
-- **Code:** commit [`12bf7d9`](https://github.com/hugoleborso/borso.fr/commit/12bf7d9) —
-  removed the `onSettled` refetch from `useReorderSetlist`. The
-  optimistic `onMutate` already writes the complete new order (every
-  entry id + its new position); `onError` rolls back on a real failure;
-  any later entries refetch (energy edit, remount, focus) reconciles
-  once the write has propagated. No blind refetch, no revert.
+Commit [`12bf7d9`](https://github.com/hugoleborso/borso.fr/commit/12bf7d9a91)
+removed the `onSettled` refetch from `useReorderSetlist`. `onMutate` already
+writes the complete new order, and `onError` rolls back on a real failure. The
+row stayed after the drop on the preview.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (structural removal for the reorder surface) +
-convention (level 2 — a CLAUDE.md "Clean code" rule the
-`/technical-validation` reviewer enforces, generalising the fix to the
-sibling optimistic mutations where a lint can't tell the two cases
-apart).
+**Type:** DevX check (level 2), and the worker branch subtracted.
 
-**Reference:** [PR #31](https://github.com/hugoleborso/borso.fr/pull/31) ·
-commit [`12bf7d9`](https://github.com/hugoleborso/borso.fr/commit/12bf7d9) ·
-CLAUDE.md *Clean code* "Optimistic writes the client fully knows".
+**Reference:**
 
-**The actual fix:**
+- Commit [`c933140e0`](https://github.com/hugoleborso/borso.fr/commit/c933140e0)
+  added `eslint-rules/no-refetch-of-optimistically-written-query.js`, now wired
+  as `borso/no-refetch-of-optimistically-written-query: error` in `.oxlintrc.json`.
+  It refuses an `invalidateQueries` or `refetchQueries` of a key the same
+  mutation wrote with `setQueryData`. Its message, line 6, still tells the agent
+  it stops that an immediate `GET` "may be served by another Lambda on another
+  DSQL connection that still sees the pre-commit snapshot", the belief this
+  entry no longer holds.
+- Commit [`e4c428591`](https://github.com/hugoleborso/borso.fr/commit/e4c428591)
+  (PR #247) made `apps/pragma/site/public/sw.js` answer no API read. Its fetch
+  handler now passes mutations through and handles only the shell and
+  fingerprinted assets. `grep -c api apps/pragma/site/public/sw.js` prints 0.
+  The same change added `eslint-rules/optimistic-mutation-declares-scope.js`,
+  so two drops no longer race.
+
+The CLAUDE.md "Clean code" rule this entry first cited is gone from CLAUDE.md.
 
 ```diff
-     onError: (_error, variables, context) => {
-       if (context?.previous !== undefined) {
-         queryClient.setQueryData<EntriesCache>(
-           setlistKeys.entriesOf(variables.setlistId),
-           context.previous,
-         );
-       }
-     },
 -    onSettled: (_data, _error, variables) => {
--      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
--        return;
--      }
+-      …
 -      void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
 -    },
-+    // Deliberately no `onSettled` refetch — see CLAUDE.md "Clean code".
-+    // A reorder's optimistic cache already holds the complete, correct
-+    // order and the PUT returns 200; an immediate GET can read a
-+    // pre-commit DSQL snapshot on another connection and revert it.
-   });
- }
 ```
 
-**Sibling defects swept:** `useAppendSetlistEntry` / `useDeleteSetlistEntry`
-share the refetch-after-write shape but legitimately need the round-trip
-(append needs the server-assigned id), so they keep the refetch and are
-*not* changed here. They remain latent candidates for the
-reconcile-from-response upgrade; the CLAUDE.md rule names the boundary
-so the next implementer reconciles from the mutation response rather
-than blind-refetching when the response carries the full result.
+**Proof it can fail:** the rule ships with
+`eslint-rules/no-refetch-of-optimistically-written-query.test.js`, whose
+invalid cases plant this refetch.
 
-## See also
+**Proposed:** rewrite the rule's message in
+`eslint-rules/no-refetch-of-optimistically-written-query.js` to state the real
+reason: the client already holds what the mutation wrote, so a refetch of that
+key adds no data and can only undo it, through a cache, a race or a slow read.
+`docs/standards/06-data-fetching.md` lines 107 to 110 give the same DSQL
+reason and change with it. The message is read at the moment an agent decides
+whether to keep the refetch, so it would stop planting a contradicted cause
+there.
 
-- [`debug-client-state-reverts-in-the-browser-first.md`](../knowledge/debug-client-state-reverts-in-the-browser-first.md)
-  — why the warm-connection `curl` test lied, and the browser-repro
-  discipline that finally located this.
-- [`dsql-strong-consistency-is-per-connection.md`](../knowledge/dsql-strong-consistency-is-per-connection.md)
-  — the DSQL property underneath this race.
+**Similar instances:** `grep -rn 'invalidateQueries' apps/*/site/src --include=*.ts`
+lists every refetch. The lint rule now runs on all of them. Append and delete
+keep a refetch, because append needs the server-assigned id.

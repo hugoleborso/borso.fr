@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#40'
-fix-commits: [39c7588cd2]
-eradication-level: 2
-eradication-paths: [eslint-rules/impurity.js]
+fix-commits: [39c7588cd2, 8c28403de]
+eradication-level: 4
+eradication-paths: [eslint-rules/decisions.js, .oxlintrc.json]
 time-to-detect: days
 tags: [eslint, custom-rules, purity, standards, false-positives]
 zone: eslint-rules/impurity.js
@@ -15,113 +15,122 @@ blueprints: [test-lint-rule]
 
 # A rule written before its subject was understood, four times
 
-## Symptom
+## User impact
 
+The developers of every app were told to move code that was not a defect.
 `borso/conditions-live-in-pure-functions` says a decision may not sit outside a
 `*.core.ts` or `*.utils.ts` file. It was rewritten three times, and its sibling
-`pure-functions-live-in-core-files` twice, because each version flagged code
-that was not a defect.
+`pure-functions-live-in-core-files` twice, because each version flagged correct
+code.
 
-The counts, in order:
+| Version | Findings over `apps/**` (measured by each commit) | Expected |
+| --- | ---: | ---: |
+| Flag every branch | 650 | only unnamed decisions |
+| Exempt shape tests, guards, lookup tables | 101 | same |
+| Exempt already-named results | 0 | same |
 
-| Version | Findings over `apps/**` |
-|---------|------------------------:|
-| Flag every branch | 650 |
-| Exempt shape tests, guards, lookup tables | 101 |
-| Exempt already-named results | 0 |
+## Causal chain
 
-Each narrowing was called the fix. The first two were wrong in ways the third
-made obvious.
+- 650 findings over `apps/**`, then 1,631 entries in `eslint-suppressions.json`.
+  - The rule reported null handling, presence tests and reads of a named flag.
+    - Branch 1. It reported every branch node. `if (raw === null) return []`
+      and `isConcert ? … : …` were reported like a business decision.
+      - The predicate in de888f87b reports `if`, the ternary, `switch` and a
+        JSX logical expression, with only throw guards and controller 404
+        guards exempt.
+        - The rule was built from `docs/standards/02-purity-and-core-files.md`,
+          *Every condition moves*, whose only example is a compound business
+          decision on a runner's status and laps.
+    - Branch 2. It reported `x ?` while it exempted `!x` and `x === null`, so
+      `...(props.dsqlSchema ? {…} : {})` failed while its negation passed.
+      - The first narrowing listed the negative presence shapes and not the
+        positive one.
+    - Branch 3. Seven findings under `test/unit/helpers/` were never exempt.
+      - Both purity rules call the narrow predicate.
 
-## Root-cause chain
+        ```js
+        if (isPureFile(filename) || isTestFile(filename)) { // ← ❌ test harness folders are not exempt
+        ```
 
-The rule was written from the standard's sentence rather than from the code it
-would run on. "A condition is a decision, and decisions belong in pure
-functions" is true as prose and underspecified as a predicate, so the first
-implementation used the only definition available to a parser: a branch node.
+        - de888f87b (10:56 UTC) wrote this line when `isTestFile` was the only
+          test predicate in `eslint-rules/impurity.js`.
+          - ff6446f6a (13:01 UTC) added `isTestPath` beside it, with a doc
+            comment saying harness folders count as tests, and moved only the
+            rules it wrote. The two purity rules kept `isTestFile`.
 
-What the four defects actually were:
+## Root cause of occurrence
 
-1. **A branch is not a decision.** `if (raw === null) return []` and
-   `row.chart === null ? null : JSON.parse(row.chart)` are null handling.
-   Extracting them buys one-line functions and tests asserting the obvious.
-2. **A presence test is a presence test in both polarities.** The rule exempted
-   `!x` and `x === null` but not `x ?`, so `...(props.dsqlSchema ? {…} : {})`
-   failed while its own negation passed.
-3. **A test that reads an already-named result is not deciding anything.**
-   `isConcert ? … : …`, `props.hasOverride ? … : …`, `moreOpen ? … : …` — the
-   deciding happened where the name was given. Re-extracting it produces a
-   function that returns its own argument.
-4. **`isTestFile` where `isTestPath` was meant.** The narrow helper matches a
-   filename pattern; the wide one asks whether the file is under a test
-   directory. Every sibling architecture rule used the wide one, and its own
-   doc comment says why. This rule used the narrow one, twice — in
-   `conditions-live-in-pure-functions` and in
-   `pure-functions-live-in-core-files`.
+*Thought a "condition" in the standard's sense is any branch node, actually it
+is a decision nobody has named yet. Null handling, a presence test and a read of
+a named flag decide nothing.* (Material)
 
-Defect 4 is the interesting one, because the fix already existed in the same
-folder with a comment explaining itself. It was not a hard problem; it was a
-rule written without reading its siblings.
+The writer was an agent. The definition it needed existed in no document at that
+moment. The standard's sentence was "every condition lives in a pure function",
+and its one example, at de888f87b's parent, is
+`runner.status === 'finished' && runner.lapCount >= edition.requiredLaps`. The
+definition of a decision was written later, by 8c28403de: "The deciding happened
+where the name was given."
+
+Branch 3 has its own cause. *Thought each rule picks the test predicate it needs,
+actually the module exports two near-identical names, and a rule written before
+the wide one existed keeps the narrow one.* (Machine) `eslint-rules/impurity.js`
+still exports both `isTestFile` and `isTestPath` today.
 
 ## Detection failure causes
 
-- **A suppressions file made a wrong rule survivable.** 1,631 violations went
-  into `eslint-suppressions.json` on day one so the rules could ship at `error`
-  immediately. That was the right call for real debt and the wrong container for
-  a false positive: an entry carries no reason, so "this rule is wrong" and
-  "this code is wrong" look identical, and the pile was too large to sample.
-  The operator's instinct — *"I think those eslint suppressions are coming from
-  a wrong rule"* — was the first time anyone asked.
-- **A high finding count read as a productive rule.** 650 findings looks like a
-  rule doing work. It is equally the signature of a rule that has not been
-  narrowed. Nothing in the process asked which.
-- **The rule's own tests agreed with it.** Each version had a passing
-  `RuleTester` suite, because the cases were written from the same
-  misunderstanding as the implementation. The third narrowing had to move six
-  existing invalid cases to valid, since they were bare-flag tests — the shape
-  now exempt. A suite written alongside a rule cannot falsify it.
+- **Rule tests:** each version had a passing `RuleTester` suite, written from
+  the same understanding as the rule. The third narrowing moved six invalid
+  cases to valid. A suite written alongside a rule cannot falsify it.
+- **Local validation:** de888f87b counted its hits ("The rules found 1443
+  places") and did not read a sample. Two hours later, ff6446f6a read the hits
+  of its sixteen rules and found three false-positive classes. The purity rules
+  were not run through that pass.
+- **Suppressions file:** 1,631 violations went into `eslint-suppressions.json`
+  so the rules could ship at `error`. An entry carries no reason, so "this rule
+  is wrong" and "this code is wrong" looked identical. The operator's remark,
+  *"I think those eslint suppressions are coming from a wrong rule"*, was the
+  first time anyone asked.
+- **Review:** a high finding count read as a productive rule. It is equally the
+  signature of a rule that has not been narrowed.
 
 ## Countermeasure
 
-The shared predicates live in `eslint-rules/decisions.js` and both rules import
-them, so a future correction lands in one place and cannot drift between the
-two. Every exemption carries a `RuleTester` case naming the shape it covers,
-and every still-invalid counterpart carries one too, so the boundary is
-executable rather than described.
-
-`eslint-suppressions.json` is deleted. An exception is now an inline
-`eslint-disable-next-line <rule> -- <reason>` where the reason is a claim a
-reviewer can check, backed by `reportUnusedDisableDirectives` so it cannot
-outlive its problem. That removes the container a wrong rule could hide in: a
-rule that misfires now produces visible comments repeating the same excuse,
-which is a smell the standard names.
+39c7588cd moved both rules to `isTestPath` and moved the shared predicates to
+`eslint-rules/decisions.js`. 8c28403de narrowed the rule to a decision nobody
+has named (`isNamedResultTest`, `isNamedResultOrPresenceTest`). Findings went
+from 107 to 0, nothing suppressed. Every exemption carries a `RuleTester` case
+naming its shape, and every still-invalid counterpart carries one too.
 
 ## Eradication
 
-**Level 2 — a check that catches the misconception.** The shared predicate
-module plus the per-shape test cases mean the next narrowing cannot silently
-disagree with the sibling rule, and cannot pass a suite that was written to
-match it.
+**Type:** detection (level 4)
 
-Level 1 was not reachable here. There is no structural way to make "this
-predicate matches the intent of a sentence in a standard" impossible to get
-wrong, because the gap is between prose and a parser and something has to
-bridge it by judgement.
+**Reference:** commits 39c7588cd and 8c28403de.
 
-## What to check next time
+What holds today:
 
-**Before writing a custom rule, run its predicate over the repository and read
-a sample of what it catches.** Not the count — the code. Twenty findings read
-in full would have caught defect 1 in an hour. 650 findings counted and
-suppressed took three rewrites and an operator's suspicion.
+- Both purity rules import their predicates from `eslint-rules/decisions.js`,
+  so a correction lands in one place and the two rules cannot disagree.
+- `eslint-suppressions.json` is deleted. An exception is an inline
+  `eslint-disable-next-line <rule> -- <reason>`, and `.oxlintrc.json` sets
+  `"reportUnusedDisableDirectives": "error"`. A rule that misfires now shows as
+  inline comments repeating one excuse, which a reviewer sees in the diff.
 
-**Write the exemption cases before the implementation.** The suite that ships
-with a rule is written from the same understanding as the rule and cannot
-falsify it. Cases drawn from real code in the repository can.
+This detects a wrong rule in review. It does not stop one from being written.
 
-**Read the sibling rules first.** Defect 4 was a helper with a doc comment
-explaining exactly which of two questions to ask, in a file the new rule
-already imported.
+**Proposed:** subtract the choice of test predicate. Rename `isTestFile` to a
+name that says it matches a file name only, such as `hasTestFileName`, or replace
+it with `isTestPath` where that fits. Then a new rule cannot pick the narrow one
+because its name reads like the general question. Then have the rule-suite
+harness lint a sample of real `apps/**` files as valid cases for each
+architecture rule, so a predicate that flags correct code fails its own suite
+before it ships. Neither exists yet.
 
-A rule with hundreds of findings is not obviously working. Ask what fraction
-you have actually read.
+**Proof it can fail:** not run for this entry.
+
+**Similar instances:** `grep -ln "isTestFile\b" eslint-rules/*.js` lists six
+rules that still call the narrow predicate: `no-adapter-import-in-pure-module`,
+`no-dynamic-translation-keys`, `no-flat-components-folder`,
+`no-impure-calls-in-core-files`, `no-literal-jsx-text` and
+`test-file-has-sibling-source`. Whether each one means the narrow question is
+unverified.

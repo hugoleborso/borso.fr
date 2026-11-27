@@ -6,101 +6,86 @@ severity: low
 related-pr: '#2'
 fix-commits: [5c47cc223c]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [docs/aws-setup.md]
 time-to-detect: minutes (failed at first cdk deploy of shared)
 tags: [aws-budgets, cfn, currency]
 zone: infra/shared/lib/shared-stack.ts
 ---
 
-# AWS Budgets evaluates spend in USD only — `EUR` is rejected at deploy
+# AWS Budgets evaluates spend in USD only, and `EUR` is rejected at deploy
 
-## Symptom
+## User impact
 
-`pnpm --filter @borso/shared-infra run deploy` failed with
-`InvalidParameterValue` from CloudFormation on the
-`AWS::Budgets::Budget` resource. The synth had emitted
-`{ amount: 5, unit: 'EUR' }` (and the same for €20, €50) for the three
-monthly cost alarms.
+The operator's first deploy of the shared stack failed, and the whole
+bootstrap waited on it (his run of `pnpm --filter @borso/shared-infra run deploy`).
 
-User impact: the shared stack didn't deploy at all, blocking the
-whole bootstrap until the unit was fixed.
+| | Seen | Expected |
+| --- | --- | --- |
+| First deploy of the shared stack | CloudFormation answers `InvalidParameterValue` on `AWS::Budgets::Budget`, and nothing deploys | The stack deploys with three monthly cost alarms |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** CFN rejected `Unit: EUR`.
-   Because the Budgets API validates the unit against an allow-list
-   that doesn't include `EUR`.
-2. **Why does AWS Budgets only accept USD?**
-   AWS billing is denominated in USD globally; Budgets compares
-   spend against the USD value. The display currency in the billing
-   console is independent — a per-account presentation choice — but
-   Budgets thresholds are evaluated in USD.
-3. **Why did we write `EUR`?**
-   Hugo pays invoices in euros (account default currency = EUR), so
-   "€5 budget" was the natural unit when modelling it in CDK.
-4. **Why didn't the CDK / TS layer flag it?**
-   CDK's `CfnBudget.budgetLimit.unit` is typed as `string`, not as
-   an enum. The constraint lives on the AWS-side validator, not on
-   the CDK type.
+- The shared stack failed to deploy.
+  - CloudFormation rejected the three budgets, whose limit said `Unit: EUR`.
 
-**Root cause:** we thought "budget unit" tracked the account's
-display currency. Actually Budgets evaluates spend in USD only,
-regardless of account display preference. The display currency in
-the billing console is separate.
+    ```ts
+    budgetLimit: { amount, unit: 'EUR' }, // ❌ Budgets accepts USD only
+    ```
+
+    - Commit `68af89935` (2026-05-01, written by an agent) ported the shared stack and wrote the unit. Its message and the stack's doc comment describe the budgets as "€5/€20/€50".
+      - The input described the alarms in euros, the currency the operator pays in, so euros became the unit. (Material)
+      - CDK types `CfnBudget.budgetLimit.unit` as `string`, so nothing in the code knew the allowed values. (Machine)
+
+## Root cause of occurrence
+
+*Thought a budget's unit followed the account's billing currency, actually AWS Budgets evaluates spend in USD whatever currency the console displays.*
+
+Material. The agent wrote the unit from a request phrased in euros. The
+account's default currency is `EUR`, so "€5" read as the natural unit.
+
+[`docs/aws-setup.md`](../aws-setup.md) §1: "AWS Budgets only supports USD;
+the EUR default-currency setting above only affects how invoices are
+displayed in the console."
 
 ## Detection failure causes
 
-- **Typing:** `unit: string` accepts anything; the AWS-side enum
-  isn't surfaced as a TS literal type.
-- **Linter:** no rule.
-- **Functional validation locally:** we ran `cdk synth` not
-  `cdk deploy` while iterating — synth doesn't validate against the
-  AWS Budgets API.
-- **CI:** unit tests asserted `Unit: 'EUR'` matched what the
-  construct produced — the test confirmed the bug rather than
-  catching it.
-- **Code review:** "EUR" reads as plausible for an EU-based account.
-- **Operator-deploy:** caught the moment Hugo first ran shared
-  deploy — fastest detection layer that could have caught it given
-  the type system limitation.
+- **Typing:** `unit: string` accepts any string. The allowed values live in the AWS validator only.
+- **Local:** `cdk synth` does not call the Budgets API, and deploys run only through the operator.
+- **CI:** the unit test asserted `Unit: 'EUR'`, the value the construct produced, so it confirmed the defect.
+- **Review:** `EUR` reads as plausible for an account billed in euros.
 
 ## Countermeasure
 
-- **Code:** commit `5c47cc2` — `infra/shared/lib/shared-stack.ts`
-  passes `{ amount, unit: 'USD' }`, names the budgets
-  `borso-monthly-{5,20,50}usd`. Tests + docs (`flows.md`,
-  `architecture.md`) updated. Budget thresholds are now dollars,
-  which on a personal infra bill at this scale tracks closely with
-  euros (€5 ≈ $5 ± a few %).
+Commit [`5c47cc2`](https://github.com/hugoleborso/borso.fr/commit/5c47cc2)
+passes `{ amount, unit: 'USD' }` and names the budgets
+`borso-monthly-<amount>usd`. The thresholds are now dollars, close to euros at
+this scale.
 
 ## Eradication
 
-**Type:** code diff + inline comment (level 5 — knowledge as floor, justified)
+**Type:** knowledge (level 5)
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) · commit [`5c47cc2`](https://github.com/hugoleborso/borso.fr/commit/5c47cc2)
+**Reference:** commit `5c47cc2` added an inline comment above the budgets,
+"AWS Budgets only accepts USD as the currency unit". Commit `8621866aa`
+(2026-08-20) removed every comment from the code, that one with it. What holds
+today:
 
-**The actual fix:**
+- `shared-stack.ts` names its four amounts `MONTHLY_BUDGET_*_USD` and writes `unit: 'USD'` once, in the loop of `createMonthlyBudgets`.
+- `shared-stack.test.ts` asserts `Unit: 'USD'` on each budget. It catches an accidental change, but a deliberate one would update it, as the first test did.
+- `docs/aws-setup.md` §1 states the rule.
 
-```diff
-+ // AWS Budgets only accepts USD as the currency unit. The amounts
-+ // below are dollar thresholds — close enough to euro at the tiny
-+ // absolute scale we operate at, and AWS rejects any other Unit
-+ // value at deploy time.
-  for (const amount of [5, 20, 50]) {
-    new CfnBudget(this, `Budget${amount}`, {
-      budget: {
--       budgetName: `borso-monthly-${amount}eur`,
-+       budgetName: `borso-monthly-${amount}usd`,
-        budgetType: 'COST',
-        timeUnit: 'MONTHLY',
--       budgetLimit: { amount, unit: 'EUR' },
-+       budgetLimit: { amount, unit: 'USD' },
-      },
-      …
-    });
-  }
-```
+The original entry rejected a typed helper because three budgets with no
+expected addition did not justify it, and promised to revisit when budgets
+were added. A fourth amount, `MONTHLY_BUDGET_FIRST_ALERT_USD = 2`, has since
+been added.
 
-**Sibling defects swept:** Budgets is the only place a currency literal lives — `grep -rn "unit: '" infra/` shows no other matches.
+**Proposed:** a function in `shared-stack.ts` such as
+`monthlyUsdBudget(amountUsd: number)` returns the `CfnBudget` props with
+`unit: 'USD'` as a literal no caller passes. A budget created through it
+cannot carry another currency, and the amount's name says what it is counted
+in.
 
-**Why not level 1 (structural):** a typed `monthlyUsdBudget(amountUsd)` helper that hardcodes USD was considered and rejected. This codebase has exactly three budget alarms with no expected addition; extracting a helper for a one-time-only call site adds ceremony without preventing a realistic recurrence. The inline comment is the honest ceiling. **If we ever add more budgets, revisit this and promote to level 1.**
+**Proof it can fail:** none. Nothing refuses `unit: 'EUR'` before AWS does.
+
+**Similar instances:** `grep -rn "unit: '" infra apps/*/cdk --include=*.ts`
+finds only the budget loop.

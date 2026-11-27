@@ -4,149 +4,113 @@ introduced-at: implementation
 detected-at: production
 severity: medium
 related-pr: '#25'
-fix-commits: [79ffc6ac6a]
+fix-commits: [79ffc6ac6a, f531ff64e]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [CLAUDE.md, apps/last-loop-lepin/cdk/lib/stack.ts]
 time-to-detect: days
 tags: [claude-md, refactor, observability, last-loop-lepin, dsql, auth, self-improvement-loop]
-zone: CLAUDE.md
+zone: apps/last-loop-lepin/api/src/auth/auth.service.ts
 ---
 
-# A refactor commit said "drop both Secrets Manager secrets" — and silently dropped the *shared-across-stages* property of one of them
+# A refactor commit said "drop both Secrets Manager secrets" and silently dropped the shared-across-stages property of one of them
 
-## Symptom
+## User impact
 
-Login on the freshly-deployed preview of last-loop-lepin
-(PR #27) returned `500 {"error":"auth denied", "reason":
-"misconfigured"}`. Same shape on prod login : `findAdminPinHash`
-returned `null`.
+The race admin of last-loop-lepin could not sign in. Admin login on the PR #27
+preview, and on prod, returned
+`500 {"error":"auth denied", "reason":"misconfigured"}`. Before PR #25, one PIN
+seeded once by the operator opened the admin on every stage.
 
-A few sessions earlier, PR #25
-([`1951beb refactor(last-loop-lepin): move admin auth into DB,
-drop both Secrets Manager secrets`](https://github.com/hugoleborso/borso.fr/commit/1951beb))
-had landed with a long, well-explained body. The body framed
-the change as "$0.80/mo saved, drop two SM secrets, auth lives
-in DB". What the body never named was that the dropped
-`<app>/admin-pin-hash` secret had been *shared across every
-stage* — its full name was just `<app>/admin-pin-hash`, no
-`/<stage>/` segment. Every preview, every integ, every prod
-deploy read the same SM value ; one operator seed propagated
-everywhere.
+| | Seen | Expected |
+| --- | --- | --- |
+| Admin login on a fresh preview or prod | 500 `misconfigured` | the admin panel, with the operator's PIN |
 
-The replacement `admin_credentials` table is per-schema. Each
-preview gets a fresh `pr_<N>` schema (and now a per-PR clone
-from prod, per `dsql-clone-from-prod`). Without an explicit
-"seed prod first" act, every stage's `admin_credentials` table
-is empty and login 500s.
+## Causal chain
 
-Time-to-detect on the operator side: days. The agent rediscovered
-the implicit "shared PIN" property weeks later, by reading the
-commit before `1951beb` :
+- Admin login answered 500 `misconfigured`.
+  - `login` found no PIN hash.
 
-```
-$ git show 1951beb~1:apps/last-loop-lepin/cdk/lib/stack.ts | grep ADMIN_PIN
-const ADMIN_PIN_HASH_SECRET_NAME = `${APP_SLUG}/admin-pin-hash`;
-```
+    ```ts
+    const pinHash = await findAdminPinHash();
+    if (pinHash === null) {
+      throw new AuthDeniedError('misconfigured'); // ← ❌ every stage's admin_credentials starts empty
+    }
+    ```
 
-— no `${stage}` interpolation. The other secret in the same body
-(`<app>/<stage>/admin-jwt-secret`) WAS per-stage. The body said
-"drop both Secrets Manager secrets" without naming the
-asymmetry.
+    - The stage's `admin_credentials` table was empty. Migration
+      `0002_admin_auth_tables.sql` creates it per schema, and each preview gets
+      a fresh `pr_<N>` schema.
+      - 1951beb06 (2026-05-17, PR #25) replaced both Secrets Manager secrets
+        with per-schema tables. One of them was not per stage.
 
-## Root-cause chain
+        ```ts
+        const ADMIN_PIN_HASH_SECRET_NAME = `${APP_SLUG}/admin-pin-hash`; // 1951beb~1, stack.ts:19: no stage segment
+        ```
 
-1. **Why?** The new design assumed an explicit per-stage seed
-   step. *No infrastructure or runbook codifies the seed step,
-   and the commit body doesn't name the stage-portability
-   property the old mechanism carried.*
-2. **Why?** The old `<app>/admin-pin-hash` SM secret was
-   stage-agnostic by name ; the dropped property "single seed in
-   the operator's hand propagates to every stage" was a
-   side-effect of the unsuffixed secret name. *Naming
-   conventions implied stage portability without anyone writing
-   it down.*
-3. **Why?** The refactor author saw "drop two SM secrets, both
-   are $0.40/mo" as the relevant economic argument and didn't
-   re-derive the portability properties of each. *The body was
-   written from a cost-lens, not from a
-   what-properties-do-callers-rely-on lens.*
+        The other, `<app>/<stage>/admin-jwt-secret`, was. Every stage had read
+        the same PIN secret, so one operator seed reached them all. The
+        commit's body framed the change as "$0.80/mo saved, drop two SM
+        secrets, auth lives in DB" and named neither property.
 
-**Root cause:** *thought the two SM secrets were
-interchangeable for the purpose of describing what's being
-dropped, actually one was per-stage and one was shared-across-
-stages — the body only named the cost they shared.*
+## Root cause of occurrence
+
+*Thought the admin PIN was per-stage data like the JWT secret, actually every
+stage read one unsuffixed secret, and the replacement table is per schema and
+starts empty.* (Man)
+
+The writer was an agent. The unsuffixed secret name was in its context: its own
+diff deleted the line. The prior that both secrets were alike won. The commit
+body, which treated the two secrets as one cost, is where that belief shows. It
+is not the cause.
 
 ## Detection failure causes
 
-- **Typing:** N/A. Property-level semantics aren't reachable from
-  the type system.
-- **Linter:** N/A. No static analysis catches a behaviour change
-  that the runtime continues to "work" against.
-- **Functional validation locally:** Dev seeds its own
-  `admin_credentials` row in the local Postgres ; no signal that
-  prod / preview have a different propagation story.
-- **CI:** No integration test exercises "log in to admin on
-  preview after a fresh deploy".
-- **Code review:** Reviewers saw cost numbers + clean code +
-  one happy login screenshot ; the dropped property wasn't
-  named, so no one asked.
-- **Operations:** First preview after the refactor presumably
-  exercised admin login — and likely got the 500. If anyone hit
-  it, it didn't escalate.
-- **Production monitoring:** A 500 on admin login is a low-traffic
-  event ; no alarm fired.
+- **Local validation:** dev seeds its own `admin_credentials` row in the local
+  Postgres, so local login works.
+- **CI:** no test logs in to a freshly deployed stage.
+- **Review:** the body named cost numbers and showed one happy login on a seeded
+  database. The dropped property was not named, so nobody asked.
+- **Monitoring:** a 500 on admin login is a low-traffic event, and no alarm
+  covers it. The post-deploy step in `deploy.yml` runs
+  `scripts/smoke-agent-reader.sh` and `/api/health` answers `{ ok: true }`
+  whether or not a credential exists.
 
 ## Countermeasure
 
-This dantotsu's eradication is a **CLAUDE.md rule** added under
-*Tone & rigor* :
+f531ff64e (PR #27) clones each preview schema from prod through `DsqlSchema`'s
+`cloneFromSchema`, so a preview inherits prod's `admin_credentials` row. See
+[`dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md). Prod still
+needs its row seeded once by the operator.
 
-> **Name silent property regressions in refactor commits.** When
-> a `refactor:` / `chore:` commit removes or replaces a
-> mechanism (a Secrets Manager secret, a shared env var, a
-> centrally-managed config…), the body MUST explicitly name any
-> *observable property* the old mechanism carried that the new
-> one drops or changes — even when the change is functionally
-> equivalent. …
+## Eradication
 
-The rule names the failure shape and forces the next refactor
-author to enumerate observable properties before declaring "drop
-X, replace by Y". A reviewer who sees a refactor body without
-that section knows to push back.
+**Type:** knowledge (level 5)
 
-The *runtime* fix for the specific PIN-portability regression —
-clone-from-prod into preview schemas — landed in PR #27 itself
-(see [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)) ;
-this dantotsu is about *the meta-defect that allowed it to land
-without being noticed*.
+**Reference:** commit [`79ffc6ac6a`](https://github.com/hugoleborso/borso.fr/commit/79ffc6ac6a)
+and commit f531ff64e.
 
-## Eradication shipped
+What holds today:
 
-**Type:** knowledge addition (level 5 — codified in CLAUDE.md so
-the next refactor author and the next reviewer see the rule)
+- Previews cannot start empty while prod has a row: `apps/last-loop-lepin/cdk/lib/stack.ts`
+  passes `cloneFromSchema`.
+- CLAUDE.md's hard rules say: "A `refactor:` or `chore:` commit that replaces a
+  mechanism names the property the old one had and the new one drops." It is a
+  written instruction. `commitlint.config.js` does not check it.
 
-**Reference:** PR ./lessons-from-pr-27 · CLAUDE.md commit
-[`79ffc6ac6a`](https://github.com/hugoleborso/borso.fr/commit/79ffc6ac6a) (new bullet under *Tone & rigor*)
+Nothing stops a stage whose `admin_credentials` is empty from shipping
+silently, prod included. The 2026-05-25 entry gave no reason a stronger
+mechanism could not work, and one can.
 
-**The actual fix:**
+**Proposed:** hold the property in the system. Make `/api/health` in
+`apps/last-loop-lepin/api/src/app.ts` answer 503 when `findAdminPinHash()`
+returns null, and add a step to `deploy.yml` that calls it after the deploy, so
+a prod stage with no credential fails its deploy instead of failing its admin.
+Alternatively, seed the row in a migration from a deploy-time parameter. Either
+makes an empty credential table impossible to ship unnoticed. The CLAUDE.md rule
+can then go. Neither exists yet.
 
-```diff
-+- **Name silent property regressions in refactor commits.** When a
-+  `refactor:` / `chore:` commit removes or replaces a mechanism
-+  (a Secrets Manager secret, a shared env var, a centrally-managed
-+  config…), the body MUST explicitly name any *observable property*
-+  the old mechanism carried that the new one drops or changes — even
-+  when the change is functionally equivalent. …
-```
+**Proof it can fail:** not run.
 
-**Sibling defects swept:** none directly — but the runtime
-remedy (clone-from-prod into preview schemas, including
-`admin_credentials`) shipped in PR #27 to restore the shared-
-PIN behaviour the refactor accidentally dropped.
-
-## See also
-
-- [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)
-  — Neon-branch-style clone that restores stage portability
-  for `admin_credentials` and any future per-stage data.
-- [`CLAUDE.md`](../../CLAUDE.md) — *Tone & rigor* section.
+**Similar instances:** pragma also moved auth into a per-schema table, and its
+auth row arrives with the clone from prod (`.github/workflows/preview.yml`, the
+auto-seed step's comment). The same empty-prod risk applies to it (inferred).

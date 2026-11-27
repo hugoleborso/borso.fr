@@ -5,19 +5,25 @@ detected-at: production
 severity: high
 related-pr: '#26'
 fix-commits: [b35a066dc8, 3a5c9f6e01]
-eradication-level: 2
+eradication-level: 5
 eradication-paths: [apps/last-loop-lepin/package.json, apps/pragma/package.json]
 time-to-detect: days
 tags: [cdk, cloudformation, dsql, deploy, github-actions, last-loop-lepin]
 zone: apps/last-loop-lepin/package.json
 ---
 
-# `cdk destroy --all` aimed at a per-PR stack also fired at the shared DSQL cluster
+# Closing one pull request tried to delete the database every pragma stage shares
 
-## Symptom
+## User impact
 
-PR #26 merged. The preview teardown ran, then the operator's prod
-deploy failed. `pragma-cluster` sat in `DELETE_FAILED`:
+PR #26 merged. The preview teardown ran, then the operator's first prod deploy of pragma failed.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| After the teardown | `pragma-cluster`, the stack holding the DSQL cluster of every pragma stage, sat in `DELETE_FAILED`. The prod deploy failed against it. | Only `pragma-pr-26` is torn down. The prod deploy runs. |
+
+<details>
+<summary>CloudFormation event</summary>
 
 ```
 Cluster3DA9CCBA  DELETE_FAILED
@@ -25,104 +31,59 @@ Can't delete cluster: Deletion protection is enabled. To proceed,
 disable deletion protection and try again. (Service: Dsql, Status Code: 400)
 ```
 
-The per-PR app stack `pragma-pr-26` was *supposed* to be the only
-thing torn down on PR close. Instead the teardown tried to delete the
-long-lived, shared DSQL cluster that holds all of the app's database
-state.
+</details>
 
-## Root-cause chain
+The same teardown had fired at `last-loop-lepin-cluster` three times before (2026-05-25 20:55Z and 23:34Z, 2026-06-05 17:20Z). A prod deploy after each one repaired the stack, so nobody saw it.
 
-1. **Why did the cluster stack get a delete request?** The preview
-   teardown job runs `pnpm --filter @borso-app/<app> run destroy` per
-   app. Pragma's `destroy` script was `cdk destroy --all --force`.
-2. **Why does `--all` touch the cluster?** The pragma CDK app
-   (`apps/pragma/cdk/bin/cdk.ts`) synthesizes **two** stacks:
-   `pragma-pr-<N>` (the per-stage app) *and* `pragma-cluster` (the
-   long-lived DSQL owner, shared across every preview and prod).
-   `--all` means "every stack this app synthesizes" — including the
-   cluster.
-3. **Why didn't anyone notice at write time?** The same `--all`
-   destroy script was copied from `last-loop-lepin`, where it had been
-   silently mis-firing for weeks — its cluster's deletion protection
-   refused the delete every time, and a prod deploy soon after each
-   teardown brought the cluster stack back to `UPDATE_COMPLETE`, so
-   the `DELETE_FAILED` window was never observed.
-4. **Why did pragma get stuck where last-loop-lepin didn't?** Pragma
-   had never had a successful prod deploy before this merge, so
-   nothing came along to repair the `DELETE_FAILED` cluster stack —
-   it stayed broken and blocked the very prod deploy the operator was
-   trying to run.
+## Causal chain
 
-**Root cause:** thought `cdk destroy --all` scoped to "this PR's
-resources", actually it scopes to "every stack in the CDK app", which
-includes the shared, stateful, cross-stage DSQL cluster.
+- The prod deploy failed on `pragma-cluster` in `DELETE_FAILED`.
+  - The teardown asked CloudFormation to delete `pragma-cluster`, and the cluster's deletion protection refused.
+    - The teardown job runs `pnpm --filter @borso-app/pragma run destroy`, and that script was `cdk destroy --all --force`.
+      - `--all` selects every stack the CDK app synthesizes. `apps/pragma/cdk/bin/cdk.ts` synthesizes two, `pragma-pr-<N>` and the shared `pragma-cluster`.
+        - Commit `0fafc5782` (2026-05-19, an agent) scaffolded pragma by copying last-loop-lepin's script.
+          - In last-loop-lepin, commit `5b2643aaa` (2026-05-12) wrote `"destroy": "cdk destroy --all --force"` while the CDK app held a single placeholder stack, so `--all` was then correct.
+            - Commit `5870a42c9` (2026-05-12, an agent) added `last-loop-lepin-cluster` to the same CDK app. Its message says "Two stacks per deploy". It left the `destroy` script in `package.json` unchanged, so `--all` began to target the cluster.
+              - The list of stacks lives in `cdk/bin/cdk.ts` and the destroy target in a hand-written string in `package.json`. Each app keeps its own copy of that string (Machine).
+    - Pragma had never deployed prod before this merge, so no deploy came to repair the stack, as one had in last-loop-lepin.
+
+## Root cause of occurrence
+
+*Thought `cdk destroy --all` covered this stage's stacks, actually it covers every stack in the CDK app, including the shared, stateful cluster stack.* (Man)
+
+The agent of `5870a42c9` had the fact in its context, since its own commit message names the two stacks. It did not connect it to a script in another file. The CDK CLI help says of `--all`: "Destroy all available stacks".
 
 ## Detection failure causes
 
-- **Typing / linter:** a package.json script string is opaque to both;
-  `--all` reads as innocuous.
-- **Functional validation locally:** nobody runs `destroy` locally;
-  it only executes in the close-triggered teardown job.
-- **CI (tests / build):** teardown isn't exercised by CI — it only
-  fires on a real PR-close event against real AWS.
-- **Code review:** the script was copied verbatim from an existing app
-  whose teardown "worked" (the failure was masked by deletion
-  protection + a following prod deploy), so it carried an implicit
-  seal of approval.
-- **Production monitoring:** the `DELETE_FAILED` state was only
-  surfaced because the operator's *next* action (prod deploy) failed
-  against it — there is no alarm on cluster-stack delete attempts.
+- **Typing and linter:** a `package.json` script is an opaque string.
+- **Local validation:** nobody runs `destroy` locally. It runs only in the teardown job.
+- **CI:** no job runs the teardown. It fires only on a real pull request close, against real AWS.
+- **Review:** the script was copied from an app whose teardown seemed to work. Deletion protection and the next prod deploy hid every misfire.
+- **Monitoring:** no alarm fires on a delete attempt against a cluster stack. The `DELETE_FAILED` showed only because the next deploy failed.
 
 ## Countermeasure
 
-- **Code:** scope the destroy to the per-PR app stack via an explicit
-  `PR_NUMBER` env var; fail-fast with a named message when it's absent
-  so a local `destroy` can never wildcard the cluster.
-- **Operator action:** unstick the already-broken `pragma-cluster`
-  stack by deleting it while *retaining* the DSQL resource —
-  `aws cloudformation delete-stack --stack-name pragma-cluster
-  --retain-resources Cluster3DA9CCBA` — then re-run the prod deploy so
-  CDK recreates a fresh cluster stack. The retained cluster lives on as
-  an orphan; clean up post-incident via
-  `aws dsql update-cluster --no-deletion-protection-enabled` then
-  `delete-cluster`.
-
-## Eradication (mandatory — code-level)
-
-**Type:** DevX check (level 2 — scoped command + fail-fast guard)
-
-**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commits on the kaizen branch (`fix(pragma)`, `fix(last-loop-lepin)`)
-
-**The actual fix:**
+Commits `b35a066` (pragma) and `3a5c9f6` (last-loop-lepin) scope `destroy` to the stage stack:
 
 ```diff
 - "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy --all --force"
 + "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force"
 ```
 
-The `${PR_NUMBER:?message}` form makes the per-PR scope mandatory: a
-destroy with no `PR_NUMBER` aborts before CDK runs, with the message
-explaining why. The preview teardown already exports `PR_NUMBER`; a
-local operator must pass it deliberately. The cluster stack name
-(`pragma-cluster`) is never expressible by this script, so the teardown
-can never target it again.
+A destroy with no `PR_NUMBER` aborts before CDK runs. The operator unstuck `pragma-cluster` with `aws cloudformation delete-stack --stack-name pragma-cluster --retain-resources Cluster3DA9CCBA`, then re-ran the prod deploy.
 
-Why level 2 and not level 1: a true structural impossibility would
-move the cluster stack into a separate CDK app (so a per-PR `destroy`
-literally cannot see it) **or** set CloudFormation
-`terminationProtection: true` on the cluster stack. Both are larger
-`@borso/infra` changes under a 100%-coverage gate; the scoped-destroy
-guard removes the live hazard now, and the structural split is the
-documented next step.
+## Eradication
 
-**Sibling defects swept:** `apps/last-loop-lepin/package.json` carried
-the identical `cdk destroy --all --force` and had mis-fired three times
-(2026-05-25 20:55Z, 23:34Z; 2026-06-05 17:20Z), saved each time only by
-deletion protection + a following prod deploy. Same scoped-destroy fix
-applied in the same kaizen PR.
+**Type:** knowledge (level 5). Hand-written copies, no mechanism for the class.
 
-## See also
+**Reference:** commits [`b35a066`](https://github.com/hugoleborso/borso.fr/commit/b35a066dc8) and [`3a5c9f6`](https://github.com/hugoleborso/borso.fr/commit/3a5c9f6e01).
 
-- [`cdk-destroy-failure-swallowed-by-trailing-or-echo.md`](./cdk-destroy-failure-swallowed-by-trailing-or-echo.md) — the teardown's *other* destroy hazard (masking failures), fixed earlier.
-- [`docs/knowledge/cfn-update-rollback-recovery.md`](../knowledge/cfn-update-rollback-recovery.md) — recovering a stack stuck in a failed CFN state.
-- [`dsql-first-deploy-must-be-prod.md`](./dsql-first-deploy-must-be-prod.md) — why pragma's never-deployed-prod cluster had no repair path.
+Each full-stack app now carries its own scoped string. `grep -n '"destroy"' apps/*/package.json` shows six scoped copies, plus `cdk destroy --all` in `borso-fr`, which is static and has no cluster stack. Nothing checks the copies. `infra/cdk/test/unit/eradication-checks.test.ts` only asserts that each `destroy` contains the build steps and `cdk destroy`. A new app copied from `borso-fr` would carry `--all` again. What still holds the data is the DSQL cluster's own deletion protection, `DeletionProtectionEnabled: props.deletionProtection ?? true` in `infra/cdk/src/constructs/dsql-cluster.ts`. It leaves the stack in `DELETE_FAILED`, as here.
+
+The entry's "documented next step", termination protection on the cluster stack, never landed. `grep -rn terminationProtection infra apps` finds nothing.
+
+**Proposed:** pass `terminationProtection: true` to `super()` in `DsqlClusterStack` (`infra/cdk/src/constructs/dsql-cluster-stack.ts`), with a synth assertion in `infra/cdk/test/unit/`. CloudFormation then refuses any delete of every app's cluster stack, for any script and any future app, before it reaches the cluster. Then replace the six `destroy` strings with one shared script that takes the app and the stage, so the target exists once.
+
+**Proof it can fail:** none. No check exists to plant against.
+
+**Similar instances:** `grep -n '"destroy"' apps/*/package.json`. At the time, last-loop-lepin carried the identical `--all`, fixed in `3a5c9f6`.

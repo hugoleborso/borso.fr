@@ -2,7 +2,7 @@
 
 Everything Hugo runs by hand to bring a fresh AWS account into a state where the monorepo can deploy itself. Sequential — later steps depend on earlier ones.
 
-You go through this **once** per AWS account. The end state is: shared infra deployed, GitHub Repository Variables filled, prod and prod-shared environments configured with you as required reviewer.
+You go through this **once** per AWS account. The end state is: shared infra deployed, GitHub Repository Variables filled, prod and prod-shared environments created with no required reviewer.
 
 ## 1. Root account hardening (never log in as root again after this)
 
@@ -176,8 +176,8 @@ These are **Variables**, not Secrets — the role ARNs aren't sensitive (the tru
 
 In the same repo settings → **Environments**:
 
-- **`prod`** — required reviewer: yourself. Optionally drop the requirement after a few months once you trust the pipeline.
-- **`prod-shared`** — required reviewer: yourself. (Reserved for the future shared-infra workflow.)
+- **`prod`** has no protection rule. It only scopes the OIDC subject `ProdDeployRole` trusts. The gate is the merge to `main` (see the header of `.github/workflows/deploy.yml`).
+- **`prod-shared`** has no protection rule either. It only scopes the OIDC subject `SharedInfraDeployRole` trusts, and `shared-deploy.yml` runs as soon as it is dispatched (see its header).
 
 The environment names are the literal strings the deploy roles trust — don't rename them without updating `infra/shared/lib/shared-stack.ts`.
 

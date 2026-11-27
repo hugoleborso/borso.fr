@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#84'
-fix-commits: [77473535c1, 2672da66f9]
+fix-commits: [77473535c1, 2672da66f9, c54e32da7]
 eradication-level: 5
 eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
 time-to-detect: hours
@@ -14,123 +14,61 @@ zone: .claude/skills/technical-validation
 
 # Ten review rounds on a two-file bug fix
 
-## Symptom
+## User impact
 
-A bug report — an instrument delete that did not look optimistic — became a
-59-file pull request with 13 commits and ten rounds of standards review. Nine
-of those rounds returned findings and every finding was real, but by round five
-the subject had drifted: an edition delete that orphaned its roster, punch
-writes with no transaction, a hand-written row type, an error class in the wrong
-layer. None of it was about optimistic updates.
+The operator reported one bug, an instrument delete that did not look optimistic. He got back a draft pull request he could not decide on.
 
-The operator asked, halfway through: *"Pourquoi c'est en draft ?"* The honest
-answer was that the review had not stopped finding things and nobody could see
-how deep it went.
+| | Seen | Expected |
+| --- | --- | --- |
+| PR #84 | 59 files, 13 commits, ten rounds of standards review. By round five the findings were an edition delete that orphaned its roster, punch writes with no transaction, a hand-written row type and an error class in the wrong layer. | A two-file fix of the optimistic delete, and a clear choice about any older defect the review found |
 
-## Root-cause chain
+Nine rounds returned findings and every finding was real (measured from the round reports). Two were data-integrity bugs a user would hit. The operator asked halfway: *"Pourquoi c'est en draft ?"* ("Why is it still a draft?").
 
-1. **Why did the review keep finding things?** Each round's fix touched files
-   the previous rounds had not, and the seal gate reviews a file the first time
-   anything pulls it into a diff.
-2. **Why did fixing a front-end refetch touch back-end files?** Round four
-   showed a projection was derivable from the list the mutation had just
-   written, so the selection moved to a shared `domain/` folder. That put
-   `edition.service.ts` in the diff, which put its cascade in front of a
-   reviewer, whose fix put the punch and runner slices in the diff.
-3. **Why did that compound instead of converging?** Every file carries its
-   whole unreviewed history, not just its diff. A one-line delegation exposes
-   every finding in a 200-line service.
-4. **Why did the operator not stop it at round two?** Because nothing in the
-   reports said which findings the branch had caused. Each report named a real
-   defect and a real fix; none of them said *"the branch never touched these
-   lines"* or *"this is four lines"* or *"this is a refactor across three
-   files"*. Without that, every finding reads with the same urgency.
-5. **Why did the reviewer not volunteer it?** Its contract did not ask for it.
-   The report format specified path, bullet, quoted line and remedy — all about
-   the finding, nothing about the finding's relationship to the change under
-   review.
+## Causal chain
 
-**Root cause:** *thought "a review that only reports real findings is a review
-working correctly", actually "a real finding on code the branch never wrote is
-a scope decision, and a report that does not mark it as one hands the operator
-no way to make that decision except to keep going".*
+- The operator saw ten rounds and could not tell when they would stop.
+  - Each round's fix pulled files into the diff that no earlier round had reviewed.
+    - The seal gate reviewed a file in full the first time anything brought it into a diff, so each new file brought its whole history.
+    - Round four moved a projection to a shared `domain/` folder. That put `edition.service.ts` in the diff. Its cascade fix then put the punch and runner slices in the diff.
+  - Each report gave every finding the same weight. None said whether the branch had written the line, or how large the fix was.
+    - The reviewer's report contract asked for path, bullet, quoted line and remedy, all about the finding and nothing about its link to the change under review (Method).
+
+## Root cause of occurrence
+
+*Thought a review that reports only real findings is working correctly. Actually a real finding on code the branch never wrote is a scope decision, and a report that does not mark it as one leaves the operator no way to decide except to keep going.* (Method)
+
+Source: the report format of `.claude/agents/standards-reviewer.md` before `7747353`, which had no field relating a finding to the diff. Round nine's brief asked for that relation ad hoc, and the round-ten decision then took one reading.
 
 ## Detection failure causes
 
-- **The gate:** working exactly as designed, and it earned its keep — two of
-  the findings were data-integrity bugs a user would hit, including a deleted
-  edition whose roster came back when its slug was reused. Nothing here argues
-  for a weaker gate.
-- **The reports:** each one correct in isolation. The missing information was
-  never a fact about the code, so no amount of care per report would have
-  produced it.
-- **`seal.ts verify`:** printed its file list only on failure, so a reviewer
-  had to fail the gate once to learn its own scope, and reported `unsealed` for
-  both a first review and a re-review after an edit. Four of the ten rounds
-  logged friction about this; the reviewer had to grep `seals.jsonl` by hand to
-  tell the two apart.
-- **The operator:** asked the right question at round four and got a
-  round-by-round answer, because that was the only shape the information had.
+- **The seal gate:** it worked as designed. It had no notion of a branch's scope, only of a file's content.
+- **The reports:** each was correct alone. The missing fact was about the change, not the code, so care per report could not produce it.
+- **`seal.ts verify`:** it printed its file list only on failure, and said `unsealed` both for a first review and for a re-review after an edit. Four of the ten rounds logged friction about it. The reviewer grepped `seals.jsonl` by hand to tell them apart.
+- **The operator's question at round four:** the answer came round by round, because that was the only shape the information had.
 
 ## Countermeasure
 
-Round nine's brief asked the reviewer, ad hoc, to say for each finding whether
-the branch introduced it and how large the fix was. Its report did, and the
-round-ten decision took seconds instead of an investigation. That worked, so
-it stops being ad hoc.
+Round nine's brief asked the reviewer to say, for each finding, whether the branch introduced it and how large the fix was. The round-ten report did, and the operator decided from it at once. `7747353` and `2672da6` made that permanent in the report contract and in `seal.ts verify`'s output.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2), in two parts.
+**Type:** knowledge (level 5)
 
-**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`7747353`](https://github.com/hugoleborso/borso.fr/commit/7747353), [`2672da6`](https://github.com/hugoleborso/borso.fr/commit/2672da6)
+**Reference:** commits [`7747353`](https://github.com/hugoleborso/borso.fr/commit/77473535c1), [`2672da6`](https://github.com/hugoleborso/borso.fr/commit/2672da66f9), then [`c54e32d`](https://github.com/hugoleborso/borso.fr/commit/c54e32da7) (#224).
 
-**The actual fix — the report contract.** Every finding now carries two
-required lines, in `.claude/agents/standards-reviewer.md`:
+The seal, `seal.ts` and the separate standards reviewer were removed on 2026-10-29 in `c54e32d`. The standards checklist moved into `/technical-validation`. Two things hold today.
 
-```diff
- <Why it fails the bullet, in one or two sentences. What would satisfy it.>
-+
-+Introduced: <by this branch | pre-existing, the branch's diff on this file is <what it touched>>
-+Fix size: <one line | one file, no callers | N call sites across M files>
-```
-
-with a rule telling the reviewer why, and a section in the skill telling the
-operator how to read the pair: a one-line fix on a pre-existing finding is
-cheaper to ship than to schedule, a refactor is not, and the seal on the
-untouched half stays valid either way because a seal is on content and not on
-a path.
-
-**The actual fix — the gate's own output.** `seal.ts verify` now prints the
-reviewable set on success as well as on failure, so a reviewer learns its scope
-without failing first, and `verifySeals` tells the two failures apart:
+- The report contract. `.claude/agents/technical-validator.md:78` asks each standards finding for `Introduced: <this branch | pre-existing>` and `Fix size: <one line | one file | N call sites>`. That makes the scope decision legible from round one.
+- The round bound. `.claude/skills/technical-validation/SKILL.md`, step 6 and *Findings and rounds*, allows two rounds, the second reading only the diff since the reviewed SHA. "There is no round 3."
 
 ```diff
--export type SealFailureReason = 'unsealed' | 'sealed-against-an-older-ledger';
-+export type SealFailureReason =
-+  | 'never-reviewed'
-+  | 'edited-since-it-was-reviewed'
-+  | 'sealed-against-an-older-ledger';
++6. **Pick the round.** Round 1 when no earlier `technical-validation-*.md`
++   report of this branch sits in that folder; round 2 otherwise, with
++   `previous_report` set to it. There is no round 3.
 ```
 
-`never-reviewed` is a file entering review for the first time — the case this
-dantotsu is about, and the one where `Introduced` matters. `edited-since-it-was-reviewed`
-is a re-review after a fix, where it does not.
+The bound is what makes ten rounds impossible. The contract lines only make them readable. Both are written instructions to the session and the validator, and no gate counts rounds. That is why the level is 5. The bound still removes the compounding this entry describes, because round 2 never reopens a file its diff did not touch.
 
-**What this does not fix:** the compounding itself. A branch that touches a new
-file will still surface that file's history, and it should — the two data bugs
-were found that way. What changes is that the operator sees the shape of it on
-round one.
+**Proof it can fail:** not tried. A written rule has no refusal to paste, which is the gap the level records.
 
-## See also
-
-- [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md)
-  — the defect that started the branch.
-- [`the-marker-that-moved-to-the-function-below-it.md`](./the-marker-that-moved-to-the-function-below-it.md)
-  — one of the findings, and an example of the kind only a reader catches.
-- [`docs/standards/README.md`](../standards/README.md) — why the seal is
-  recorded rather than trusted.
-
-## Superseded mechanism
-
-The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.
+**Similar instances:** `grep -rn "Introduced:" .claude/` finds the contract only in `technical-validator.md`. The other review agent, `.claude/agents/dantotsu-reviewer.md`, judges finished entries and has no scope to mark. [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md) is the defect that started the branch.

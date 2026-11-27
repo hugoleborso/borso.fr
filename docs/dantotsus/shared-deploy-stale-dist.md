@@ -5,8 +5,8 @@ detected-at: operator-deploy
 severity: high
 related-pr: '#2'
 fix-commits: [daf6ebbde6]
-eradication-level: 1
-eradication-paths: [infra/shared/package.json]
+eradication-level: 4
+eradication-paths: [infra/shared/package.json, scripts/ensure-infra-built.sh]
 time-to-detect: 30+ minutes of debugging (the symptom looked like AWS, not local)
 tags: [pnpm, cdk, monorepo, build-graph]
 zone: infra/shared/package.json
@@ -14,97 +14,101 @@ zone: infra/shared/package.json
 
 # `pnpm shared-infra deploy` shipped a stale `@borso/infra` dist/
 
-## Symptom
+## User impact
 
-After fixing the host-routing CloudFront Function (ES5 rewrite —
-see [`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md))
-and committing it, Hugo ran
-`pnpm --filter @borso/shared-infra run deploy`. CFN claimed success.
-But `aws cloudfront get-function --stage LIVE /tmp/cf-fn.js`
-revealed the LIVE bytes were still the broken ES2020 version. The
-edge kept returning `503 FunctionExecutionError` for everyone.
+Every visitor of every preview kept getting `503 FunctionExecutionError` after
+the operator deployed the fix for the host-routing CloudFront Function (the ES5
+rewrite, see [`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md)).
+`pnpm --filter @borso/shared-infra run deploy` reported success.
+`aws cloudfront get-function --stage LIVE` showed the broken ES2020 bytes still
+live. The operator spent several rounds on "is this CloudFront propagation?"
+before seeing the bytes never left the laptop.
 
-User impact: the operator believed they had deployed a fix when they
-hadn't. Several rounds of "is this a CloudFront propagation issue?"
-debugging went into the void before realising the bytes never left
-the laptop.
+| | Seen | Expected |
+| --- | --- | --- |
+| LIVE function after the deploy | the old ES2020 source, 503 for everyone | the committed ES5 source, 200 |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** The deployed function source is the old version.
-   Because the shared stack reads `HOST_ROUTING_FUNCTION_CODE` from
-   `@borso/infra` at synth time. That string is loaded by
-   `cf-host-routing-function.ts` via
-   `readFileSync('dist/internal/cf-host-routing-function.code.js')`
-   — i.e. the file in the **compiled `dist/`** directory.
-2. **Why is `dist/` outdated?**
-   `@borso/infra`'s `build` script runs `tsc` and then `cp`s the
-   `.code.js` source file into `dist/internal/`. It only runs when
-   explicitly invoked.
-3. **Why didn't the shared `deploy` script trigger that build?**
-   `infra/shared/package.json`'s deploy was just
-   `cdk deploy --all --require-approval never`. No dependency-build
-   chain. The dist Hugo had on his laptop was whatever he last
-   rebuilt manually — usually stale relative to the source he just
-   pulled.
-4. **Why does CI not have the same problem?**
-   `preview.yml` and `deploy.yml` explicitly run
-   `pnpm --filter @borso/infra build` before the cdk step. CI
-   always rebuilds; local-only didn't.
-5. **Why didn't we notice the asymmetry between CI and local
-   sooner?**
-   CI was working green for the same PR. Local was the only failure
-   path, and it presented as a downstream AWS problem (function on
-   the edge "looking wrong"), not as a local-build issue.
+- The edge kept serving the broken function after a successful deploy.
+  - CloudFormation received the old function source from the synth.
+    - The shared stack reads `HOST_ROUTING_FUNCTION_CODE` from `@borso/infra`,
+      whose package entry is `dist/index.js`.
+      `cf-host-routing-function.ts` loads the `.code.js` beside the compiled
+      module, so from `dist/internal/`.
+      - `dist/` on the laptop predated the fix. Only `@borso/infra`'s `build`
+        script writes it, with `tsc` then one `cp` per `.code.js` file.
+        - The deploy script did not build first.
 
-**Root cause:** we thought `cdk deploy` rebuilt its dependencies
-along the way (the way `npm run` often re-resolves things). Actually
-CDK only reads what's on disk; if `dist/` is stale, the deploy ships
-stale bytes silently.
+          ```json
+          "deploy": "cdk deploy --all --require-approval never" // ← ❌ ships whatever dist/ holds
+          ```
+
+          - 68af89935 (2026-05-01) ported `@borso/shared-infra` with this
+            script, consuming `@borso/infra` through its gitignored `dist/`.
+
+## Root cause of occurrence
+
+*Thought `cdk deploy` reads the current source of a workspace dependency,
+actually it reads the package entry, `dist/`, which only an explicit build
+writes and nothing keeps current.* (Machine)
+
+The writer was an agent porting the package. The condition that made the
+mistake easy is in the codebase: `infra/cdk/package.json` points `exports` and
+`types` at `./dist/`, a gitignored build output, so every consumer must remember
+to rebuild it. The class recurred:
+[`the-worktree-that-could-not-see-its-own-infra.md`](./the-worktree-that-could-not-see-its-own-infra.md)
+records a subagent's typecheck failing on a missing `dist/`, and
+`scripts/ensure-infra-built.sh` exists because of it.
 
 ## Detection failure causes
 
-- **Typing:** the build chain isn't a type-checked thing.
-- **Linter:** no rule for "deploy script must rebuild upstream
-  workspace deps".
-- **Functional validation locally:** Hugo verified `cdk deploy`
-  exited 0 — it did. Nothing in CDK output reveals "the function
-  source you bundled was stale".
-- **CI:** CI was fine — its workflow rebuilt. So no early signal.
-- **Code review:** the deploy script being one line reads as
-  minimal, not as missing-a-step.
-- **Operator-deploy:** detection happened only when Hugo
-  cross-checked the LIVE function's actual bytes against what he'd
-  just committed and saw they didn't match.
+- **Local validation:** `cdk deploy` exited 0. Nothing in its output says the
+  bundled function source is stale.
+- **CI:** `preview.yml` and `deploy.yml` run `pnpm --filter @borso/infra build`
+  before the CDK step, so CI was green on the same PR. The laptop path was the
+  only one that failed, and it looked like an AWS problem.
+- **Review:** a one-line deploy script reads as minimal, not as missing a step.
+- **Monitoring:** detection came only when the operator compared the LIVE
+  function's bytes with the commit.
 
 ## Countermeasure
 
-- **Code:** commit `daf6ebb` — `infra/shared/package.json`'s
-  `synth`, `diff`, `deploy` scripts now run
-  `pnpm --filter @borso/infra run build && cdk ...`. Same for
-  `apps/borso-fr/package.json`. `destroy` is left alone (teardown
-  doesn't need fresh source).
+daf6ebbde prefixes `synth`, `diff` and `deploy` in `infra/shared/package.json`
+and `apps/borso-fr/package.json` with `pnpm --filter @borso/infra run build &&`.
+`destroy` is left alone.
 
 ## Eradication
 
-**Type:** code diff (level 1 — structural by convention)
+**Type:** detection (level 4)
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) · commit [`daf6ebb`](https://github.com/hugoleborso/borso.fr/commit/daf6ebb)
+**Reference:** commit [`daf6ebb`](https://github.com/hugoleborso/borso.fr/commit/daf6ebb),
+[PR #2](https://github.com/hugoleborso/borso.fr/pull/2).
 
-**The actual fix:**
+What holds today:
 
-```diff
-  // infra/shared/package.json and apps/borso-fr/package.json:
-- "synth":   "cdk synth --all",
-- "diff":    "cdk diff --all",
-- "deploy":  "cdk deploy --all --require-approval never",
-+ "synth":   "pnpm --filter @borso/infra run build && cdk synth --all",
-+ "diff":    "pnpm --filter @borso/infra run build && cdk diff --all",
-+ "deploy":  "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
-```
+- Every `deploy` and `diff` script (`grep -n '"deploy"\|"diff"' apps/*/package.json infra/shared/package.json`)
+  starts with `pnpm --filter @borso/infra run build`. The `synth` scripts call
+  `scripts/ensure-infra-built.sh`, which rebuilds when a file under
+  `infra/cdk/src` is newer than `dist/index.d.ts`.
 
-The handover docs (`docs/adding-an-app.md`, `docs/adding-a-fullstack-app.md`) bake the same chain into the recommended scripts, so any new package following the template gets it for free. `destroy` is left alone — teardown doesn't need fresh source.
+The 2026-05-02 entry called the prefix "level 1, structural by convention". A
+prefix copied by hand into every `package.json` is not structural. A new script
+or a new app that omits it ships a stale `dist/` again. The `build` script
+itself keeps a hand list of four `cp` commands for the `.code.js` and `.mjs`
+files, and a new one left off the list is missing from `dist/` (inferred: it
+would fail loudly at `readFileSync`, not silently).
 
-**Sibling defects swept:** every `cdk`-calling `package.json` in the repo audited; all chain the build.
+**Proposed:** subtract `dist/` for in-repo consumers. Point `@borso/infra`'s
+`exports` and `types` at `src/index.ts`, since every consumer already runs under
+`tsx` (`infra/shared/cdk.json` has `"app": "tsx bin/shared.ts"`, and every app's
+`cdk.json` runs `tsx`), and read each `.code.js` relative to its source module.
+With no `dist/`, nothing can go stale: the build prefixes, the `cp` list and
+`scripts/ensure-infra-built.sh` can all be deleted. Whether the type-aware lint,
+the typecheck and the handler bundling accept a `src/` entry is untried. It does
+not exist yet.
 
-**Why not a workspace-wide build orchestrator (turbo / nx):** considered and rejected. Would add a build-config layer for a 4-package monorepo whose dep graph fits on a Post-it. The per-script chain is loud and obvious in `package.json` review.
+**Proof it can fail:** not run.
+
+**Similar instances:** the worktree entry above, and the four `cp` commands in
+`infra/cdk/package.json`'s `build`.

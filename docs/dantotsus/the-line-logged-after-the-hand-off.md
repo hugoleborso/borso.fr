@@ -30,30 +30,61 @@ hand happened to hold it.
 
 ## Causal chain
 
-- A friction line logged after the archive reached no sweep, and an operator
-  message on an inline page could be missed.
-  - The hand-off prompt was the only carrier for a late line. Its author writes
-    it before the session's last turns end, so a line logged during or after
-    the hand-off has no carrier at all.
-  - `operator-messages.ts` took saved files as arguments. A page under about
-    50k characters stays inline and is never saved, so the script never saw it.
-    - Both rest on one belief about where a session's record lives.
+- PR #401's sweep started without the friction line the shipping session
+  logged at 10:48:25, and PR #399's sweep scanned six of fifteen pages by eye.
+  - Branch 1, the late line. The shipping session wrote its hand-off prompt at
+    10:48:15. Then its `screens-shown` Stop hook fired and it logged one more
+    line into its own `KAIZEN.md`.
+    - The sweep read late lines only from the hand-off prompt. `/open-pr` and
+      `CLAUDE.md` told the shipping session to paste "any line logged after
+      the archive" into it.
+      - Commit `c54e32da7` (PR #224) wrote that step, which made a pasted copy
+        the carrier of late lines (measured, `git log -S'logged after the
+        archive'`).
+  - Branch 2, the inline page. The sweep listed the shipping session's user
+    events with `kinds: ["user"]`. Pages under about 50k characters came back
+    inline and were never saved to a file.
+    - `operator-messages.ts` read only the files passed as arguments, so it
+      never saw an inline page:
+
+      ```ts
+      const pages = process.argv.slice(2); // only pages someone saved
+      ```
+
+      - Commit `ba0557404` (PR #389, sub-commit "make the kaizen sweep read
+        every operator message from the transcript") wrote that line. It told
+        `/after-task-kaizen` to "Save each page and run
+        `operator-messages.ts <page.json>...`".
+        - Its input was the operator's request that the kaizen read all of
+          their messages. The agent built it on the sweep's existing method,
+          where every input reaches the sweep through a step done by hand.
 
 ## Root cause of occurrence
 
-*Thought a session's record lives in files someone saves for the sweep (the
-archive, the pasted lines, the spilled pages). Actually the record already
-exists twice without anyone saving it.* The shipping session's transcript holds
-every `[kaizen] logged as` line as a tool result, archived or not. The
-sweeping session's own transcript, `~/.claude/projects/*/$CLAUDE_CODE_SESSION_ID.jsonl`,
-holds every page `list_events` returned, an inline one as the same text blocks
-a spilled file holds (measured on this session: 5 spilled pages and 2 inline).
+*Thought a session's record reaches the sweep through files someone saves or
+pastes for it (the archive, the pasted late lines, the saved pages). Actually
+the record already exists twice without anyone saving it.* (Method)
+
+The shipping session's transcript holds every `[kaizen] logged as` line as a
+tool result, archived or not. The sweeping session's own transcript,
+`~/.claude/projects/*/$CLAUDE_CODE_SESSION_ID.jsonl`, holds every page
+`list_events` returned, an inline one as the same text blocks a spilled file
+holds (measured on this session: 5 spilled pages and 2 inline).
+
+The tag is Method because the sweep's process fed it through steps done by
+hand. Under the agentic rule the inline half also has a Man part. At
+`ba0557404^`,
+[`reading-another-sessions-transcript-with-list-events`](../knowledge/reading-another-sessions-transcript-with-list-events.md)
+already said "A `kinds` filter makes pages small enough to land inline", and
+its trigger matches `list_events` output. Whether it was printed in that
+session is inferred, not read from its transcript. Removing the step holds
+either way.
 
 ## Detection failure causes
 
-- **Review:** nothing checks a hand-off prompt against what the session logged
-  afterwards. The claim "No line was logged after the archive" is the
-  author's, and nothing can verify it once the container is gone.
+- **Review:** the claim "No line was logged after the archive" is the
+  author's own, written before the session's last turns. The container that
+  could disprove it is reclaimed when the session ends.
 - **The script:** it printed nothing for a page it was never given, so a
   skipped page looked like a page with no operator message.
 
@@ -70,7 +101,8 @@ and `/after-task-kaizen` drop that step.
 **Type:** structural impossibility (level 1). A late line and an inline page
 are read from the record itself, so no author has a step to forget.
 
-**Reference:** the commit adding this file.
+**Reference:** commit `b2238b1a7` (PR #404), which added this file. The
+script still reads the session transcript today (`scripts/kaizen/operator-messages.ts`, line 21).
 
 ```diff
 -const pages = process.argv.slice(2);
@@ -93,4 +125,3 @@ The old script, given no argument, printed its usage and exited 1.
 found the paste step in `/open-pr`, `CLAUDE.md` and `/after-task-kaizen`. All
 three are gone. The page-reading half is in
 [`reading-another-sessions-transcript-with-list-events`](../knowledge/reading-another-sessions-transcript-with-list-events.md).
-

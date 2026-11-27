@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#64'
 fix-commits: [de7a3458dc]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [.claude/agents/technical-validator.md, .claude/skills/technical-validation/SKILL.md]
 time-to-detect: hours
 tags: [skill, standards, gates, harness, meta]
 zone: .claude/skills/technical-validation
@@ -15,11 +15,11 @@ weak-point: prose-stands-in-for-a-check
 
 # The brief said four files, the gate said five
 
-## Symptom
+## User impact
 
-Two of the five standards-review passes on one branch were dispatched with a
-brief naming the files to review, and both times the list was short by a file
-that had changed since the brief was written. Both agents logged it themselves:
+Two of the five standards-review passes on one branch were briefed with a list
+of files to review. Both lists were short by a file that had changed since the
+brief was written. Both agents logged it:
 
 > the dispatching brief named four unsealed files and seal.ts verify named
 > five, so an agent that trusts its brief over the gate silently skips a file
@@ -28,87 +28,79 @@ that had changed since the brief was written. Both agents logged it themselves:
 > files than seal.ts verify reports, so the brief and the gate disagree by
 > default and only the gate is right
 
-Both agents ran the gate anyway and caught it. An agent that had followed its
-brief would have left a file unsealed while the report said the branch was
-reviewed — and on this repository the seal is what CI gates on, so the file
-would have reached `main` with a review it never had.
+| | Seen | Expected |
+| --- | --- | --- |
+| The brief of two passes | four files | the five files `seal.ts verify` named when the agent ran |
 
-## Root-cause chain
+Both agents ran the gate anyway and reviewed all five. An agent that had
+followed its brief would have left a file unsealed while its report said the
+branch was reviewed. The seal was what CI gated on.
 
-1. **Why did the brief name files?**
-   Because the skill tells the dispatcher to run `seal.ts verify` first, to find
-   out whether there is a review to run at all. Its output is a list of files,
-   and pasting it into the brief looks like helping the agent aim.
+## Causal chain
 
-2. **Why was the list wrong by the time the agent read it?**
-   The dispatcher writes the brief once. The agent starts, reads a dozen files,
-   runs the gate, and reports — six to nine minutes later. On an active branch a
-   commit lands in that window, and it landed twice here.
+- A review agent received a brief naming four files while five needed review.
+  - A commit landed between the brief and the agent's run of the gate. The
+    agent ran six to nine minutes after the brief was written, and a commit
+    landed in that window twice on this branch.
+    - The dispatcher had pasted `seal.ts verify`'s output into the brief.
+      - The standards-review skill told the dispatcher to run `seal.ts verify`
+        first, to learn whether there was a review to run. Its output was a
+        list of files.
+      - The skill said the brief carries "exactly these fields" and listed
+        three (`standards-review/SKILL.md` at `de7a345^`, line 44). The
+        dispatcher had that rule loaded and added a fourth.
 
-3. **Why is that worse than no list?**
-   Because the brief is the agent's instructions and the gate is a command it
-   may or may not run. A list in the brief competes with the gate and looks
-   authoritative — it came from the human-equivalent, it is specific, and it is
-   at the top of the prompt. The gate is the only one that is right by
-   construction, because it reads the tree at the moment it is asked.
+## Root cause of occurrence
 
-4. **Why did the skill not forbid it?**
-   It said the brief carries "exactly these fields" and listed three. It did not
-   say what happens if you add a fourth, and "exactly" was read as a minimum.
+*Thought a file list in the brief helps the agent aim, actually it is a
+snapshot of a moving tree that competes with a gate reading the tree live.*
 
-**Root cause:** thought a file list helps the agent aim, actually it is a
-snapshot competing with a live gate, and the agent has no way to know which one
-is stale.
+- **Method**, first branch. The dispatch process had the dispatcher compute the
+  review's state and hand it over, instead of letting the agent read it at its
+  start.
+- **Man**, second branch. The rule "exactly these fields" was in the
+  dispatcher's context, and the prior to paste helpful state won over it. That
+  is why the 2026-08-20 countermeasure, one more sentence in the same skill, was
+  the wrong rung, and why the proposal below removes the state fields instead of
+  adding a rule.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the brief is prose in a tool call; nothing reads
-  it.
-- **CI:** `seal.ts verify` in CI would have caught the *consequence* — an
-  unsealed file reaching `main` — but only after the fact, and only because
-  both agents happened to ignore their brief.
-- **Code review:** the reviewers here are the agents that were mis-briefed.
-- **Knowledge:** the skill is the knowledge, and it was ambiguous.
+- **Linter:** the brief is prose in a tool call, and nothing read it.
+- **CI:** `seal.ts verify` in CI would have caught an unsealed file after the
+  fact, at the merge.
+- **Review:** the reviewers were the agents that were mis-briefed.
 
 ## Countermeasure
 
-- **Operator action:** none. Both passes self-corrected by running the gate.
+The standards-review skill said that the brief carries its three fields and no
+file list, and that the agent runs `seal.ts verify` itself. Both passes had
+already self-corrected by running the gate.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the instruction that made the mistake
-expressible is removed)
+**Type:** knowledge (level 5).
 
-**Reference:** [PR #64](https://github.com/hugoleborso/borso.fr/pull/64) — the
-kaizen branch commits below.
+**Reference:** commit [`de7a345`](https://github.com/hugoleborso/borso.fr/commit/de7a3458dc)
+shipped the skill sentence. Commit `c54e32d` (#224, 2026-10-29) deleted the seal
+and the standards-review skill. The standards checklist moved into
+`/technical-validation`.
 
-`.claude/skills/standards-review/SKILL.md` now says plainly that the brief
-carries the three fields and no file list, names the failure, and says what to
-put there instead: what changed, so the agent can aim, and nothing that claims
-to be the set of files.
+What holds today: `.claude/agents/technical-validator.md` records
+`Reviewed: <sha>` before reading anything and computes its own file list from
+`git diff <base_ref>...HEAD --name-status`. No brief carries files.
 
-**The actual fix:**
+**Proof it can fail:** not applicable to a skill or agent edit.
 
-```diff
-+**Exactly those three fields, and no file list.** The temptation, having just
-+run `seal.ts verify` to find out whether there is a review to run, is to paste
-+its output into the brief. Do not: the brief is written once and the tree keeps
-+moving … The agent runs `seal.ts verify` itself; naming files can only make its
-+answer worse. Say what changed if it helps the agent aim, and let the gate say
-+which files that means.
-```
+**Similar instances:** the belief survives in the successor.
+`.claude/skills/technical-validation/SKILL.md` steps 4 and 6 still have the
+dispatcher compute `base_ref`, `round` and `previous_report` and paste them into
+the brief. [`a-revision-after-a-passed-review-had-no-round`](./a-revision-after-a-passed-review-had-no-round.md)
+is that snapshot going wrong on PR #327.
 
-**Sibling defects swept:** none. Worth checking the other dispatching skills the
-next time one is edited — the same "helpfully paste the current state into the
-brief" instinct applies to any agent that reads a moving tree.
-
-## See also
-
-- [`orchestrator-dispatch-hygiene`](../knowledge/orchestrator-dispatch-hygiene.md)
-  — what a dispatch brief is for, and what it must not carry.
-- [`parallel-agents-share-one-index-and-every-generator.md`](./parallel-agents-share-one-index-and-every-generator.md)
-  — the other way a moving tree invalidates what an agent was told.
-
-## Superseded mechanism
-
-The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.
+**Proposed:** have the validator derive its round and base from the tree, and
+drop those fields from the brief. The validator already writes `Reviewed: <sha>`
+and a verdict in every report under `validation_dir`. No report means round 1 on
+the merge base. A last FAIL means round 2 on that report's SHA. A last PASS means
+a new round 1 on that SHA. Step 6 and the three fields then disappear, and no
+dispatcher can hand the agent a stale or wrong state.

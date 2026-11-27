@@ -14,154 +14,98 @@ zone: infra/cdk/src/constructs/previewable-app.ts
 
 # A DB-using app's first deploy must be to prod (chicken-and-egg)
 
-## Symptom
+## User impact
 
-For a brand-new app whose `PreviewableApp` includes
-`database: { migrationsPath: ... }`, opening the first PR triggered
-a preview deploy that failed at synth with:
+A brand-new full-stack app could not get its first preview. The first
+pull request's preview deploy failed, and the error did not say that prod
+had to deploy first.
 
-```
-SSM Parameter Store value not found: /borso/<app>/dsql-cluster-arn
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| First preview deploy of a new app with `database:` | `SSM Parameter Store value not found: /borso/<app>/dsql-cluster-arn` | a preview URL |
 
-User impact (developer-facing): a brand-new app can't ship its
-first preview. The first contributor hits a confusing synth error
-that doesn't explain it's an ordering issue.
+Apps whose prod had already deployed were not affected.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** `cdk synth` aborts with SSM parameter not found.
-   Because `lookupDsqlCluster` calls
-   `StringParameter.valueFromLookup` against
-   `/borso/<app>/dsql-cluster-arn`. CDK resolves SSM lookups at
-   synth time and writes the resolved value to `cdk.context.json`.
-   If the parameter doesn't exist, synth raises.
-2. **Why doesn't the parameter exist?**
-   It's published by `DsqlCluster`, which only runs in the
-   **prod** stack of the app. Until prod has deployed once, no SSM
-   param exists.
-3. **Why is the cluster only in the prod stack?**
-   We deliberately moved DSQL clusters from "one shared cluster
-   account-wide" to "one cluster per app, owned by the app's prod
-   stack" to isolate blast radius and clean up DPU accounting.
-4. **Why does the consequence surface as a confusing synth error
-   rather than a clear ordering message?**
-   Because the failure is in a CDK SSM lookup deep inside
-   `lookupDsqlCluster`, which doesn't carry context about why the
-   parameter is missing. To a fresh contributor, "SSM not found"
-   reads as a broken construct.
-5. **Why didn't we anticipate this when designing the refactor?**
-   We thought through the runtime sharing semantics (preview reads
-   from prod's cluster) but not the bootstrapping order (prod must
-   exist for any other stage to synth).
+- The first preview deploy of a new app failed on a missing SSM parameter.
+  - The preview stack read the cluster's ARN from `/borso/<app>/dsql-cluster-arn`, and that parameter did not exist yet.
+    - `PreviewableApp` built the cluster only for prod and looked it up for every other stage.
 
-**Root cause:** we thought "preview/integ stacks share the prod
-cluster via SSM" was symmetric. Actually it's strictly ordered: prod
-publishes, others consume. A brand-new app must therefore deploy
-prod first.
+      ```ts
+      // previewable-app.ts at 785cc80d6
+      this.cluster =
+        props.stage === 'prod'
+          ? new DsqlCluster(this, 'Cluster', { app: props.app, stage: props.stage })
+          : lookupDsqlCluster(this, props.app); // ← reads an SSM parameter only prod publishes
+      ```
+
+      - Only prod's `DsqlCluster` published the parameter, so until prod deployed once, no other stage could deploy.
+        - Commit 785cc80d6 ("make DSQL clusters per-app instead of one shared", 2026-05-02) wrote it. Its message reasons about the runtime: "Preview/integ stacks of the same app share that cluster via SSM lookup". It says nothing about which stage deploys first.
+
+## Root cause of occurrence
+
+*Thought previews sharing prod's cluster through SSM is a question of
+runtime access, actually it orders deploys: prod publishes the parameter
+and every other stage needs it, so a new app cannot preview before its
+prod exists.*
+
+Tag: **Method**. The refactor was reasoned through the steady state of an
+app whose prod already runs. Nothing in the process walked the first
+deploy of a new app.
+
+The order bites at deploy, not at synth. `lookupDsqlCluster` used
+`StringParameter.valueForStringParameter`, so CloudFormation read the
+parameter when it resolved the stack (inferred from the code at
+785cc80d6; the original entry said synth).
 
 ## Detection failure causes
 
-- **Typing:** SSM lookups are runtime, not type-checked.
-- **Linter:** no rule.
-- **Functional validation locally:** the original developer of the
-  refactor tested with an existing app whose prod was already
-  deployed; the bootstrap path wasn't on their critical path.
-- **CI:** unit tests for `PreviewableApp` synth a stack with a real
-  `DsqlCluster` in the same stack (no SSM lookup), so they don't
-  exercise the lookup-not-found case.
-- **Code review:** the ordering constraint is a property of the
-  whole system, not visible in any one diff.
+- **Typing:** an SSM parameter name is a string, so its existence is not typed.
+- **Local run:** the refactor was tried on an existing app whose prod had deployed, so the parameter existed.
+- **CI:** the `PreviewableApp` unit tests built a real `DsqlCluster` in the same stack, so no test resolved the parameter for a stage without a prod.
+- **Review:** the ordering is a property of the whole system, not visible in one diff.
 
 ## Countermeasure
 
-- **Code:** commit [`9e78acb`](https://github.com/hugoleborso/borso.fr/commit/9e78acb) —
-  the cluster moved out of the prod stage stack into a dedicated
-  `DsqlClusterStack`. `PreviewableApp.database` now requires
-  `cluster: IDsqlCluster` as a prop, passed in from the cluster
-  stack via cross-stack reference. CDK's reference machinery
-  orders deploys automatically — `cdk deploy --all` walks the
-  cluster stack first, then the stage stack.
-- **Operator action when introducing a DB-using app:** none beyond
-  the standard handover doc — declare `DsqlClusterStack` and the
-  stage stack in `bin/app.ts`, pass `clusterStack.cluster` into
-  `PreviewableApp.database`. First preview deploy of a brand-new
-  app just works regardless of stage.
+Commit 9e78acb176 moved the cluster into its own `DsqlClusterStack`.
+`PreviewableApp.database` now requires `cluster: IDsqlCluster`, passed from
+that stack. CDK's cross-stack reference makes `cdk deploy` create the
+cluster stack before the stage stack, so a new app's first preview deploys
+whatever the stage.
 
 ## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1).
 
-**Reference:** [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) · commit [`9e78acb`](https://github.com/hugoleborso/borso.fr/commit/9e78acb)
-
-**The actual fix:**
+**Reference:** commit [`9e78acb`](https://github.com/hugoleborso/borso.fr/commit/9e78acb176).
 
 ```diff
   // infra/cdk/src/constructs/previewable-app.ts
 - readonly database?: { readonly migrationsPath: string };
-+ readonly database?: {
-+   readonly migrationsPath: string;
-+   readonly cluster: IDsqlCluster;  // required: passed from DsqlClusterStack
-+ };
++ readonly database?: { readonly migrationsPath: string; readonly cluster: IDsqlCluster };
 …
-  if (props.database) {
--   this.cluster =
--     props.stage === 'prod'
--       ? new DsqlCluster(this, 'Cluster', { app: props.app, stage: props.stage })
--       : lookupDsqlCluster(this, props.app);
+-   this.cluster = props.stage === 'prod' ? new DsqlCluster(…) : lookupDsqlCluster(this, props.app);
 +   this.cluster = props.database.cluster;
-    this.database = new DsqlSchema(this, 'Db', {
-      …
-      cluster: this.cluster,
-    });
-  }
 ```
 
-```ts
-// New: infra/cdk/src/constructs/dsql-cluster-stack.ts
-export class DsqlClusterStack extends Stack {
-  public readonly cluster: IDsqlCluster;
-  constructor(scope: Construct, id: string, props: DsqlClusterStackProps) {
-    super(scope, id, props);
-    this.cluster = new DsqlCluster(this, 'Cluster', {
-      app: props.app,
-      stage: 'prod',
-    });
-  }
-}
-```
+`PreviewableApp` has no stage branch any more, and it cannot build a
+database without a cluster handed to it
+(`infra/cdk/src/constructs/previewable-app.ts:50` and `:72`).
 
-```ts
-// Operator's bin/app.ts now declares:
-const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, { env, app: APP_SLUG });
-const stageStack = new Stack(app, stageId, { env });
-new PreviewableApp(stageStack, 'App', {
-  …
-  database: { migrationsPath, cluster: clusterStack.cluster },
-});
-```
+What holds today has one escape. `lookupDsqlCluster` is still exported
+from `infra/cdk/src/index.ts:2`, and passing its result as `cluster`
+would bring the ordering back. No app calls it (measured, `grep -rn
+lookupDsqlCluster apps infra --include=*.ts` finds only its definition, the
+export and its own test).
 
-The misconception "preview can run before prod for a brand-new
-app" is now structurally impossible to express against
-`PreviewableApp`'s API. The `cluster: IDsqlCluster` prop is
-required when `database` is set; the only way to obtain one is
-either `DsqlClusterStack.cluster` (canonical) or
-`lookupDsqlCluster` (advanced, decoupled). Either way, the
-cluster either exists in the same `cdk.App` invocation (cross-
-stack ref → automatic deploy ordering) or has been deployed
-previously (SSM resolves at deploy time).
+**Proof it can fail:** the type is the check. A `database:` without
+`cluster` fails `tsc`. Not rerun for this rewrite.
 
-**Sibling defects swept:**
-- `PreviewableApp` no longer has a `stage === 'prod' ? new : lookup`
-  branch; the conditional is gone.
-- `lookupDsqlCluster` kept as a public helper for advanced use
-  but no longer emits its synth-time annotation (the chicken-and-
-  egg is no longer a thing in the canonical path).
-- Tests: `previewable-app.test.ts` rewritten to use the new
-  bin/app.ts shape (cluster stack first, stage stack second).
-  New `dsql-cluster-stack.test.ts` covers the new construct.
+**Proposed:** delete `lookupDsqlCluster`, its export and its test. It has
+no caller. With it gone, the only `IDsqlCluster` an app can obtain is
+`DsqlClusterStack.cluster`, and a stage that deploys before its cluster
+could not be written at all.
 
-**Earlier eradication (level 4) superseded:** the synth-time
-`Annotations.addInfo` previously added in commit `9adfe24` was
-removed — it's no longer needed because the chicken-and-egg
-itself is gone. See the diff snippet above.
+**Similar instances:** the earlier synth-time annotation of 9adfe24 was
+removed in 9e78acb, since the canonical path no longer needs it.

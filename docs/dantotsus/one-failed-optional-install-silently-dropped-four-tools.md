@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#40'
-fix-commits: [1cf220368d]
+fix-commits: [1cf220368d, b507ea56d]
 eradication-level: 2
-eradication-paths: [scripts/install-repo-deps.sh]
+eradication-paths: [scripts/install-repo-deps.sh, .husky/pre-push]
 time-to-detect: months
 tags: [tooling, hooks, session-start, actionlint, gates]
 zone: scripts/install-repo-deps.sh
@@ -14,131 +14,119 @@ zone: scripts/install-repo-deps.sh
 
 # One failed optional install silently dropped the four tools after it
 
-## Symptom
+## User impact
 
-A push printed
+A push that changed two workflows went through without the workflow linter.
+Every session that hit the same failure also started without agent-browser and
+without the `/tmp/cdk.out` disk sweep, and nothing said so.
 
-```
-[pre-push] WARN: actionlint not installed — skipping.
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| Push changing `ci.yml` and `preview.yml` | `[pre-push] WARN: actionlint not installed — skipping.`, push accepted | actionlint runs on both workflows |
+| Session start | No actionlint, no agent-browser, no disk sweep, no branch check, and no warning | Each tool installed, or a line naming the one missing |
 
-and went through. The branch changed `ci.yml` and `preview.yml`, so the linter
-whose entire purpose is checking those two files excused itself on precisely the
-branch that needed it.
+Measured by running the installer by hand, which exited 1 at its second step.
+After the fix, the same run installed `agent-browser 0.27.0` and actionlint
+1.7.7.
 
-`scripts/install-repo-deps.sh` contains an actionlint installer, `~/.local/bin`
-is on `PATH`, and the SessionStart hook runs the script. The binary had never
-been installed anyway. Running the installer by hand explained why:
+## Causal chain
 
-```
-[install-repo-deps] rtk not found; installing from rtk-ai/rtk install.sh
-[WARN] Redirect lookup failed, falling back to GitHub API...
-curl: (22) The requested URL returned error: 403
-[ERROR] Failed to get latest version (GitHub API may be rate-limited)
-INSTALLER_EXIT=1
-```
+- The push went through with actionlint absent.
+  - `pre-push` saw no `actionlint` binary and skipped the lint with a warning.
+    - The installer had never reached its actionlint step. It aborted at step 2
+      of eight:
 
-## Root-cause chain
+      ```text
+      [install-repo-deps] rtk not found; installing from rtk-ai/rtk install.sh
+      [WARN] Redirect lookup failed, falling back to GitHub API...
+      curl: (22) The requested URL returned error: 403
+      [ERROR] Failed to get latest version (GitHub API may be rate-limited)
+      ```
 
-1. **`rtk` is step 2 of eight, and its installer reads the GitHub API**, which
-   answers 403 when rate-limited or proxied. That is an ordinary, expected
-   network condition, not a broken machine.
-2. **The script is `set -euo pipefail` with a `fail()` that exits 1.** A failing
-   `rtk` aborts the whole run.
-3. **Everything below step 2 therefore never ran**: the pnpm install, the AWS
-   CLI, actionlint, agent-browser, the `/tmp/cdk.out` sweep that exists to stop
-   the sandbox filling its disk, and the branch-context check. Six steps
-   cancelled by one optional tool.
-4. **Nothing said so.** The hook's output scrolls past at session start, the
-   exit code is not surfaced anywhere, and each missing tool degrades
-   independently and quietly somewhere else — as a warning in a gate, a `FAIL`
-   row in a validator, an ENOSPC hours later.
-5. **The one gate that noticed excused itself.** `pre-push` treated the missing
-   binary as "not always installed, carry on", which is right on a branch that
-   touches no workflow and wrong on one that does.
+      - Step 2 ran rtk's upstream installer under the script's
+        `set -euo pipefail`, and made rtk's absence fatal. Commit `836df5f48`
+        (2026-05-01) wrote it:
 
-The blast radius was measured, not assumed: after the fix, the same run that
-still fails on `rtk` installed `agent-browser 0.27.0`, which the aborting script
-had also been skipping.
+        ```bash
+        curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+        if ! command -v rtk >/dev/null 2>&1; then
+          fail "rtk install completed but binary still not on PATH (~/.local/bin not in PATH?)."   ← ❌ an optional tool aborts the run
+        fi
+        ```
+
+        - The installer behind a `raw.githubusercontent.com` URL resolves
+          "latest" through the GitHub API, which the session proxy answers
+          with 403 when rate-limited (Material).
+        - The steps added after `pnpm install` by later commits, actionlint
+          among them, were appended below this one, under the same `set -e`.
+
+## Root cause of occurrence
+
+*Thought rtk's upstream installer is one more download that works like
+`pnpm install`, so its failure can be fatal, actually it queries the
+rate-limited GitHub API for the latest version, and rtk is a token-saving
+proxy whose absence breaks nothing.* (Material)
+
+The agent that wrote `836df5f48` saw only a `raw.githubusercontent.com` URL.
+The API call lives inside the upstream script, and its own error names it:
+"Failed to get latest version (GitHub API may be rate-limited)". The commit's
+own header listed rtk under "Installs", beside pnpm, with no line on which
+steps the session can live without.
 
 ## Detection failure causes
 
-- **An install script's exit code is nobody's gate.** SessionStart hooks are
-  fire-and-forget; a non-zero exit produces no failure anywhere a human or an
-  agent looks.
-- **`set -e` is the right default for the required steps and the wrong one for
-  the optional ones**, and the script did not distinguish. `jq` and `pnpm`
-  genuinely should abort. `rtk` is a token-saving proxy whose absence costs
-  tokens and breaks nothing.
-- **Every consumer degraded politely.** The rtk hook passes commands through,
-  the visual validator reports a `FAIL` row, `pre-push` warns. Each is sensible
-  alone, and together they made a dead installer invisible.
+- **SessionStart hook:** its exit code reaches no gate. A non-zero exit shows
+  nowhere a person or an agent looks.
+- **The banner:** it surfaces stdout only, and `fail()` wrote to stderr. The
+  first session after the fix showed no WARN line until the warnings moved to
+  stdout (observed by the first version of this entry).
+- **pre-push:** it treated a missing actionlint as "not always installed", the
+  same on a push that changes a workflow as on one that does not.
+- **Each consumer:** the rtk hook passed commands through, the visual
+  validator reported a FAIL row, `pre-push` warned. Each degraded alone, so
+  none pointed at the installer.
 
 ## Countermeasure
 
-Optional installs now run independently. Each records its own failure through
-`note_missing`, and the script re-states the collected list at the end rather
-than letting six quiet degradations stand in for one loud message:
-
-```
-[install-repo-deps] WARN: rtk did not install (…). The PreToolUse hook passes
-                    commands through unrewritten, which costs tokens and breaks nothing.
-[install-repo-deps] actionlint: 1.7.7
-[install-repo-deps] agent-browser: agent-browser 0.27.0
-[install-repo-deps] WARN: optional tools missing: rtk
-[install-repo-deps] WARN: re-run ./scripts/install-repo-deps.sh once the network settles.
-[install-repo-deps] done
-```
-
-Each warning states the consequence of *that* tool being absent, so the reader
-does not have to know what `rtk` is to decide whether to care.
-
-**The warnings print on stdout, not stderr**, which is the opposite of the
-convention and deliberate. The first session to run the fixed script proved why:
-it worked — `rtk` failed, every later step ran — and the SessionStart banner an
-agent reads at the top of a session showed *not one* WARN line, because that
-banner surfaces stdout only. A warning nobody sees is the exact failure this
-mechanism exists to stop, so the summary had to move to the stream that reaches
-the reader.
-
-And `pre-push` no longer skips the workflow lint unconditionally. No workflow
-touched, warn and continue as before. A workflow touched and no actionlint,
-fail with the command that installs it.
+Commit [`1cf220368d`](https://github.com/hugoleborso/borso.fr/commit/1cf220368d)
+runs each optional install on its own. A failure calls `note_missing`, which
+prints one stdout warning naming what the absence costs, and the script
+restates the list at the end. Required steps (`jq`, `pnpm`) still `fail`. The
+installer then exited 0 with rtk still failing its 403, and every later step
+ran.
 
 ## Eradication
 
-**Level 2 — DevX check**, on both halves.
+**Type:** DevX check (level 2).
 
-The installer completes despite the failure it used to abort on:
+**Reference:** commit `1cf220368d` made `pre-push` refuse a push that changes a
+workflow when actionlint is absent:
 
-```
-INSTALLER_EXIT=0     (was 1)
-```
-
-with `rtk` still failing its 403, and every later step running.
-
-The gate refuses the branch it used to wave through. Simulated against this
-branch's own diff, with actionlint absent:
-
-```
-workflows changed on this branch:
-.github/workflows/ci.yml
-.github/workflows/preview.yml
--> would FAIL the push
+```bash
+elif echo "$changed" | grep -q '^\.github/workflows/'; then
+  echo "[pre-push] actionlint is not installed and this push changes a workflow." >&2
+  exit 1
 ```
 
-actionlint 1.7.7 was then installed and run over every workflow in the
-repository: exit 0, no findings. So this closes a hole in the gate rather than a
-defect in the workflows.
+Commit [`b507ea56d`](https://github.com/hugoleborso/borso.fr/commit/b507ea56d)
+(2026-10-29) then removed rtk from `scripts/install-repo-deps.sh`. The step that
+queried the API is gone. actionlint downloads a pinned release,
+`releases/download/v1.7.7/actionlint_1.7.7_…tar.gz`, and
+`grep -c api.github.com scripts/install-repo-deps.sh` prints 0.
 
-## What to check next time
+**Proof it can fail:** simulated against the branch's own diff with actionlint
+absent, the gate listed `.github/workflows/ci.yml` and
+`.github/workflows/preview.yml` and would refuse the push (first version of
+this entry).
 
-When a gate says it is skipping itself, that is the finding — not a footnote on
-the way to the thing you were doing. Ask why the tool is missing before deciding
-whether the skip is tolerable, because the answer is often that something else
-is missing too.
+**Proposed:** subtract the class instead of collecting its failures. A
+pre-commit grep on `scripts/install-repo-deps.sh` would refuse any
+`api.github.com`, any `refs/heads/` and any `/latest` in a download URL. An
+install could then not resolve a version over a rate-limited API, so this
+failure could not recur for the next tool. Today agent-browser still falls back
+to `agent-browser@latest` when no version is pinned (line 197).
 
-The narrower rule: in a bootstrap script, `set -e` must not span steps of
-different necessity. Required dependencies abort; optional ones record and
-continue, and the script says at the end what it could not install and what each
-absence costs.
+**Similar instances:** `grep -n 'curl\|npm install -g' scripts/install-repo-deps.sh`
+lists the downloads. The AWS CLI zip is unversioned but served by
+`awscli.amazonaws.com`, not the GitHub API. The agent-browser fallback above is
+the one left.

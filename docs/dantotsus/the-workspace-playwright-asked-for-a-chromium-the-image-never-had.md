@@ -6,10 +6,10 @@ severity: medium
 related-pr: '#327'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/browser/playwright-browsers.sh, .claude/hooks/session-start.sh]
+eradication-paths: [scripts/browser/playwright-browsers.sh, scripts/hooks/checks/session-start.core.ts]
 time-to-detect: minutes
 tags: [harness, tooling, session-start, sandbox, visual-validation]
-zone: .claude/hooks/session-start.sh
+zone: scripts/hooks/checks/session-start.core.ts
 recurs: [the-browser-was-on-disk-and-unreachable]
 ---
 
@@ -49,7 +49,11 @@ Reproduced on 2026-11-14 (measured).
 *Thought the browsers the image ships serve any Playwright in the session,
 actually Playwright looks only for its own revision's folder name, and the
 workspace's revision moves with every catalog bump while the image's does
-not.*
+not.* **Machine.**
+
+The image is a tool of the workstation. Its browsers are pinned at build
+time, while Dependabot moves the workspace's Playwright (`5dc75b21c` set the
+catalog to `^1.64.1`). Nothing in the session tied the two revisions.
 
 ## Detection failure causes
 
@@ -73,6 +77,11 @@ headless shell and ffmpeg revision a workspace `playwright-core` asks for, it
 links that revision's folder name to the newest build the image has. The
 SessionStart hook exports `PLAYWRIGHT_BROWSERS_PATH` to that folder. Off the
 image (a Mac) the script prints nothing and the variable is left alone.
+
+The hook first lived in `.claude/hooks/session-start.sh`, the diff below.
+#411 (`458e886c4`) replaced that file with
+`scripts/hooks/checks/session-start.core.ts`, whose `persistToolPaths` runs
+the same script and writes the same export, with a test beside it.
 
 ```diff
    printf 'export PATH="$HOME/.local/bin:$PATH"\n' >> "$CLAUDE_ENV_FILE"

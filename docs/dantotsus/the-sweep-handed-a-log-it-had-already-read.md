@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#281'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 5
 eradication-paths: [scripts/kaizen.sh, .claude/skills/after-task-kaizen/SKILL.md]
 time-to-detect: minutes
 tags: [kaizen, self-improvement-loop, meta, harness, gates]
@@ -33,23 +33,30 @@ of this pull request's entries exist.
 
 ## Causal chain
 
-- The sweep read the wrong set of lines
-  - It read the file a hand-written prompt named
+- The sweep read the wrong set of lines.
+  - It read the file a hand-written prompt named.
     - The prompt's author was the session that shipped the work, naming the
-      archive it had just run
-      - `scripts/kaizen.sh archive` appends into the destination when the
-        destination exists, and PR #281 archived into `meta/quality-dashboard`,
-        a slug PR #263 had already committed a log at
-        - The merge is correct and deliberate: it is what stops a second
-          archive in one task destroying the first. It has no notion of which
-          pull request a line arrived with
-      - And the same session archived twice, into two slugs, so there were two
-        files to remember and the prompt remembered one
+      archive it had just run.
+      - `scripts/kaizen.sh archive` appended into the destination, because
+        PR #281 archived into `meta/quality-dashboard`, a slug PR #263 had
+        already committed a log at.
+      - The same session archived twice, into two slugs, so there were two
+        files to remember and the prompt named one.
+        - **Method:** the hand-off step asked a person to type the sweep's
+          input. CLAUDE.md said the hand-off prompt "names the merged PR, the
+          archived `kaizen.md`", and `/after-task-kaizen` said to read the
+          archive "at the path the task prompt names".
 
 ## Root cause of occurrence
 
 *Thought the sweep's input is the archive file, actually it is the entry lines
 one merge added to any archive, and only git knows which those are.*
+**Method:** the process handed the sweep a typed path instead of computing its
+input from the merge.
+
+The append is correct and deliberate. It is what stops a second archive in one
+task destroying the first. It has no notion of which pull request a line
+arrived with, so a file is the wrong unit to hand over.
 
 Three defects have now been fixed in this one mechanism, each removing one way
 for the log to carry the wrong lines:
@@ -59,18 +66,19 @@ made it travel,
 made it merge rather than replace, and
 [the-friction-log-that-arrived-twice](./the-friction-log-that-arrived-twice.md)
 made the archive drain the log so a second pull request's archive holds only its
-own lines. All three fixed the *source*. None of them touched the *destination*,
-which accumulates across pull requests by design, or the step that tells the
-sweep which file to open, which is a sentence a person types.
+own lines. All three fixed the source. None touched the destination, which
+accumulates across pull requests by design, or the step that tells the sweep
+which file to open, which is a sentence a person types.
 
 ## Detection failure causes
 
-- **The archive command:** it reports what it added and the running total —
+- **The archive command:** it reports what it added and the running total, as
   `merged 3 new entry/entries into docs/features/meta/quality-dashboard/kaizen.md (19 total)`.
   Both numbers are correct and the sweep is handed the 19.
-- **The pre-create hook:** `.claude/hooks/pretool-gh-pr-create.sh` refuses a
-  pull request whose branch commits no archive while the log holds entries. It
-  counts; it cannot ask which pull request a committed line belongs to.
+- **The pre-create hook:** it refuses a pull request whose branch commits no
+  archive while the log holds entries (then `.claude/hooks/pretool-gh-pr-create.sh`,
+  today `scripts/hooks/checks/gh-pr-create.core.ts`). It counts. It cannot ask
+  which pull request a committed line belongs to.
 - **The skill:** `/after-task-kaizen` said to read the archive "at the path the
   task prompt names". A path in prose is not a computed input.
 - **The sweep itself:** sixteen already-eradicated lines read exactly like
@@ -86,7 +94,9 @@ apart.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** knowledge (level 5). The command below computes the right input.
+What makes a sweep use it is a written step of `/after-task-kaizen`, so the
+level is the instruction's.
 
 **Reference:** this commit, on the kaizen branch for PR #281.
 
@@ -104,15 +114,27 @@ pull request's.
 +        sed -n 's/^+\(- \[.*\)/\1/p')"
 ```
 
-Neither failure is expressible any more. A reused slug cannot hand the sweep an
+When the command runs, neither failure is expressible. A reused slug cannot hand the sweep an
 earlier pull request's lines, because those lines are not in the merge's diff. A
 second archive cannot be forgotten, because the command finds every file the
 merge touched rather than the one a person remembered. An empty result is itself
-a finding — the task logged nothing, or never archived — and the command says so
+a finding. The task logged nothing, or never archived, and the command says so
 in those words.
 
 `/after-task-kaizen` now opens step 1 with this command and says that the
-prompt's path is a line to check, not a file to read.
+prompt's path is "a row to check, not a file to read".
+
+The typed path still exists upstream. CLAUDE.md, *Self-improvement loop*, says
+the hand-off prompt "names the merged PR, the archived `kaizen.md`", and
+`.claude/skills/open-pr/SKILL.md`, *After the merge*, lists "the archived
+friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`" among what the
+prompt names.
+
+**Proposed:** remove the archive path from both, so the hand-off prompt names
+only the merged pull request and `/after-task-kaizen`. The sweep then has one
+input, the merge, and `scripts/kaizen.sh sweep-input` derives the rest. A
+wrong or partial path could no longer reach a sweep, because no prompt would
+carry one.
 
 **Proof it can fail:** run against the merge that prompted this sweep, it
 prints what the prompt did not:
@@ -137,7 +159,7 @@ docs/features/meta/quality-dashboard/kaizen.md: last merge added 3 of 19 (#263, 
 ```
 
 `pragma/ux-redesign` cost nothing, because one sweep covered both pull requests
-and read all 197 lines on purpose — the row for them in
+and read all 197 lines on purpose. The row for them in
 [docs/quality/feature-cost.md](../quality/feature-cost.md) is a single
 `#216 and #231`. This one cost sixteen rows, because the two pull requests were
 swept a week apart. Slug reuse itself is not the defect and does not need

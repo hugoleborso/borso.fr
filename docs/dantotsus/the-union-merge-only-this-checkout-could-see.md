@@ -4,7 +4,6 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#351'
-fix-pr: '#352'
 fix-commits: [8230bcebe]
 eradication-level: 1
 eradication-paths: [scripts/check-coupled-lists.sh, .husky/pre-push]
@@ -54,7 +53,7 @@ GIT_ATTR_SOURCE=<empty tree> git merge-tree --write-tree ...    -> CONFLICT
 ## Root cause of occurrence
 
 *Thought the local merge is the merge GitHub makes, actually the local merge
-applies the checkout's merge drivers and GitHub's applies none.*
+applies the checkout's merge drivers and GitHub's applies none.* (Machine)
 
 The guard's own comment named GitHub's merge ref as what it predicts. The
 `merge=union` lines were added by PR #304 to stop parallel sweeps colliding on

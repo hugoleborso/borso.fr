@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#278'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 4
 eradication-paths: [apps/pragma/site/src/lib/read-batch.adapter.ts, apps/pragma/site/src/lib/read-batch.core.ts, apps/pragma/site/src/lib/query-client.setup.ts]
 time-to-detect: hours
 tags: [pragma, tanstack-query, offline, testing]
@@ -53,7 +53,11 @@ queries: { staleTime: DEFAULT_STALE_TIME_MS, gcTime: PERSISTED_CACHE_MAX_AGE_MS,
 *Thought the retries of reads that failed together come back together,
 actually each query owns its retryer and sleeps on its own timer, so the
 retries arrive one task at a time and the transport cannot know how many
-more are coming.*
+more are coming.* **Material.**
+
+The plan's retry row (D13) was written from that belief. The vendor's source,
+which holds the fact, was not read until this entry, so under the agentic 4M
+rule the cause is the missing input at the moment the plan was written.
 
 `@tanstack/query-core` 5.102.8, `src/retryer.ts`, read this session:
 
@@ -73,7 +77,9 @@ sleep(delay)
   wrote one.
 - **The fix loop:** three fixes rested on one premise, that the transport can
   reassemble the retries. CLAUDE.md says to test the premise after two such
-  failures. Nobody wrote it down, so the third fix added a timer.
+  failures. Nobody wrote it down, so the third fix added a timer. That rule
+  is a written instruction, and it failed here. This entry leaves that Method
+  cause at level 5.
 
 ## Countermeasure
 
@@ -82,9 +88,16 @@ cost of a 100 ms wait and about sixty lines of bookkeeping.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** detection (level 4)
 
 **Reference:** the commit that adds this file.
+
+The level is what holds today. The retry now has one owner by structure, but
+only the default in `query-client.setup.ts` is guarded, by the test below. A
+`retry:` key in any `useQuery` or `queryOptions` call would bring a per-query
+retryer back, and nothing refuses it. Today `grep -rn "retry:"
+apps/pragma/site/src` finds it in query options only in
+`query-client.setup.ts` and the test utilities (measured).
 
 The retry moved into the transport, the one place that knows which reads
 failed together. A request refused with `429` or a `5xx`, or dropped by the
@@ -130,6 +143,15 @@ Tests  1 failed | 2399 passed (2400)
 
 Reverted after. Stryker on the two changed modules scores 100 (277 killed,
 1 timed out, 0 survived).
+
+**Proposed:** a rule under `eslint-rules/`, loaded by `.oxlintrc.json`'s
+`jsPlugins` and scoped to `apps/pragma/site/src/**`, that refuses a `retry`
+property in the options of `useQuery`, `useQueries`, `queryOptions` and the
+`QueryClient` defaults, outside `query-client.setup.ts`. The transport would
+then be the only possible owner of a retry at lint time (level 2), for every
+query, not only the default. oxlint has no `no-restricted-syntax`
+(`grep -c no-restricted-syntax .oxlintrc.json` gives 0), so a custom rule is
+the route.
 
 **Similar instances:** `grep -rn "retry" apps/*/site/src --include=*.ts
 --include=*.tsx` finds no other site whose requests are grouped below the

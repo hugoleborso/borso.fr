@@ -34,24 +34,39 @@ half. Both were pragma or borsouvertures sessions that noticed a red `main`.
   - `architecture-graph.ts --skip-layout` printed
     `@DependsOnExternal aws-dsql in apps/borsouvertures/api/src/database/client.ts names an external system the manifest does not declare.`
     (job `132562985422`), and for talos the same line for `browser-location`.
-    - `validateExternals` compares an app's tags with
-      `scripts/architecture/manifests/<app>.manifest.ts`, and exits 1 on a difference.
-      - Nothing on a pull request runs it. `wiki.yml` runs on `push` to `main`
-        only, and `architecture.yml` and `pages.yml` run on dispatch.
+    - `validateExternals` compared each app's tags with the `externals` of
+      `scripts/architecture/manifests/<app>.manifest.ts`, and exited 1 on a
+      difference.
+      - Commit `02755aa1a` (PR #324) added this tag to talos app code, and PR
+        #321 added `aws-dsql` to borsouvertures, without a manifest entry:
+
+        ```ts
+        /** @DependsOnExternal browser-location */ // declared here, not in talos.manifest.ts
+        ```
+
+        - Each external system is declared twice: once as a tag beside the
+          code that calls it, once as an entry with a name and a description
+          in the app's manifest, in another directory. The agent wrote the
+          copy beside its code.
 
 ## Root cause of occurrence
 
-*Thought a check in a workflow guards the code, actually a check that runs
-only on `main` guards nothing a pull request can still change.*
+*Thought a check in a workflow guards the code. Actually a check that runs
+only on `main` guards nothing a pull request can still change.* (Machine)
 
-`wiki.yml`: `on: push: branches: [main]`. The tag and the manifest live in
-different directories, so an agent adding `@DependsOnExternal` to app code has
-no reason to open `scripts/architecture/`.
+The tag is Machine. The tree asked for one fact in two places, the tag in app
+code and the entry in `scripts/architecture/manifests/`, and placed the only
+comparison of the two after the merge. At `02755aa1a^`, the one standard that
+names `@DependsOnExternal`, `docs/standards/00-principles.md` line 80, lists
+it among tags tools read, and says nothing about the manifest (measured,
+`git grep DependsOnExternal 02755aa1a^ -- docs/standards .claude CLAUDE.md`).
 
 ## Detection failure causes
 
 - **Pre-commit and CI:** neither ran `validateExternals`. The only callers
-  were the wiki, architecture and pages workflows, none on `pull_request`.
+  were the wiki, architecture and pages workflows. `wiki.yml` starts
+  `on: push: branches: [main]`, and the other two on dispatch, so both pull
+  requests merged green.
 - **Review:** the validator reads the diff, and the manifest is not in it.
 
 ## Countermeasure
@@ -68,7 +83,8 @@ add its 3.6 s to them for a defect the pull request's CI already stops.
 
 **Type:** DevX check (level 2)
 
-**Reference:** this kaizen pull request · commit [self]
+**Reference:** the commit adding this file. The step is still in the `build`
+job of `.github/workflows/ci.yml` today (line 203).
 
 ```diff
        - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
@@ -83,3 +99,19 @@ Proved on a scratch copy. The borsouvertures manifest from before PR #335
 1 architecture manifest problem(s). Declare the system in scripts/architecture/manifests/<app>.manifest.ts, or drop the tag.
 exit 1
 ```
+
+**Similar instances:** `grep -n "on:" -A3 .github/workflows/wiki.yml` shows
+the wiki runs on `push` to `main` and on dispatch only. Its *Build the
+reports* and *Build the pages* steps also run `scripts/reports.sh blueprints`,
+`scripts/reports.sh standards` and `scripts/wiki/build-wiki.ts`, which can
+exit non-zero (`set -euo pipefail` in `reports.sh`, `process.exit(1)` in
+`build-wiki.ts`), and none of them runs on a pull request. Whether they can
+fail on content a pull request changes is not checked.
+
+**Proposed:** run the wiki's two build steps on pull-request CI, writing to a
+temporary folder and skipping the push. Then any failure that today can only
+happen after the merge stops the pull request, not just this one check. A
+second option subtracts: generate each manifest's external ids from the tags
+and keep only the descriptions in the manifest, so a tag without an entry
+fails at type-check. That needs a design for where a description lives, so it
+is an operator decision.

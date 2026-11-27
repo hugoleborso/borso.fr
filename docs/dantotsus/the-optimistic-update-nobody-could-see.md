@@ -17,75 +17,104 @@ blueprints: [query-optimistic-mutation]
 
 # The optimistic update nobody could see
 
-## Symptom
+## User impact
 
 > Updating the artist of a song does no optimistic update too…
 
-Editing a song's artist and pressing Save left the operator watching a still
-form until the server answered, then moved them to the song page. The catalog
-row and the song page both had correct optimistic writes behind them.
+| | Seen | Expected |
+| --- | --- | --- |
+| Edit a song's artist, press Save, on a real connection | The form stays still until the server answers, then the song page opens | The song page opens at once with the new artist |
 
-## Root-cause chain
+Every band member editing a song was affected. The catalog row and the song
+page both had correct optimistic writes behind them, and nobody could see
+either.
 
-1. **Why did nothing appear immediately?** The page did not change until the
-   round trip finished.
-2. **Why not — was the write not optimistic?** It was.
-   `useUpdateSong().onMutate` cancels the in-flight reads, snapshots both
-   caches, patches `songKeys.list()` and `songKeys.byId(id)`, and returns the
-   snapshot for rollback. All of it correct, and all of it invisible.
-3. **Why invisible?** The caller awaited the round trip before moving:
-   `await updateSong.mutateAsync({ id, ...payload }); navigateTo(…)`. The
-   operator was still on the form, which reads its values from `defaultValues`
-   captured at mount, not from the patched cache. The only surface showing the
-   new values was the page they had not been sent to yet.
-4. **Why was it written that way?** Because the create path directly above it
-   has to await — it navigates to `/catalog/<id>` and only the server can issue
-   that id — and the update path was written to match its shape.
-5. **Why did nobody notice for three months?** Locally the round trip is a few
-   milliseconds, so the two shapes are indistinguishable on a dev machine. It
-   only reads as broken over a real network, which is where the operator was.
+## Causal chain
 
-**Root cause:** thought *"a write is optimistic when `onMutate` patches the
-cache"*, actually *"it is optimistic when the interface moves before the server
-answers, and awaiting the result before navigating cancels the whole benefit
-while leaving every sign of it in place"*.
+- Nothing moved on screen until the round trip finished
+  - The form stayed open, and it reads its values from `defaultValues`
+    captured at mount, not from the patched cache
+    - The caller awaited the write before navigating ← the faulty line, in
+      `SongEditPage.tsx`
+
+      ```ts
+      await updateSong.mutateAsync({ id: songId, ...payload }); // holds the form for the round trip
+      navigate(`/catalog/${songId}`);
+      ```
+
+      - `useUpdateSong().onMutate` did patch `songKeys.list()` and
+        `songKeys.byId(id)`, but only on the page the member had not been
+        sent to yet
+      - Commit `4b678d898` (2026-05-25, the TanStack Query migration) wrote
+        that line one for one in place of `await apiRequest(…PUT…)`, inside
+        the `try`/`catch` that reports a failed save. The hook then had no
+        `onMutate`, so the await was correct
+        - Commit `a079ca659` (2026-05-25, "optimistic updates on song
+          create/update/delete") added `onMutate` to `useUpdateSong` and
+          touched only `songs.ts`. The caller kept its await
+          - The repository's only guidance on optimistic writes,
+            `CLAUDE.md:62` at that commit, described them as hook options:
+            "does `onMutate`/`onError`-style optimistic updates with
+            rollback". It said nothing of the caller. Material
+
+## Root cause of occurrence
+
+*Thought a write becomes optimistic when its hook patches the cache in
+`onMutate`, actually it becomes optimistic when the screen moves before the
+server answers, and an awaited `mutateAsync` before the navigation cancels
+that while leaving every sign of it in place.* **Material.**
+
+The agent that wrote `a079ca659` changed one file, the hook. The document in
+its context, `CLAUDE.md` line 62 at `a079ca659^`, framed an optimistic update
+as a property of the mutation:
+
+> Every mutation either calls `queryClient.invalidateQueries({ queryKey })` in
+> `onSuccess` (default) or does `onMutate`/`onError`-style optimistic updates
+> with rollback.
+
+Nothing it read said the caller decides when the screen moves. The await it
+left in place had been correct a few hours earlier, when the hook was not
+optimistic.
 
 ## Detection failure causes
 
-- **Typing:** both shapes type-check; `mutateAsync` returning a promise nobody
+- **Typing:** both shapes type-check. `mutateAsync` returning a promise nobody
   reads is legal.
-- **Linter / static analysis:** no rule looked at what happens *after* an
-  awaited write. This is the gap the eradication closes.
-- **Functional validation locally:** a local API answers in single-digit
-  milliseconds. The defect is a latency defect and the local environment has no
-  latency to expose it.
-- **CI:** the tests assert `onMutate` patches the cache — which it does. Nothing
-  asserts the operator sees it, and a unit test of a query hook cannot.
-- **Code review:** the awaited call reads as careful rather than wrong. `await`
-  before navigation looks like correctness, not like a stall.
-- **PO / QA validation:** the operator found it by using the app on a real
-  connection, which is the only place it is visible.
+- **Linter:** no rule looked at what happens after an awaited write.
+- **Local validation:** a local API answers in single-digit milliseconds. The
+  defect is a latency defect, and the local environment has no latency to
+  expose it.
+- **CI:** the tests assert `onMutate` patches the cache, which it does. A unit
+  test of a query hook cannot assert what the member sees.
+- **Code review:** `a079ca659` showed only the hook, so the caller was not in
+  the diff. An `await` before a navigation reads as careful, not as a stall.
+- **QA:** the operator found it by using the app on a real connection, the
+  only place it shows.
 
 ## Countermeasure
 
-- **Code:** commit `531e6e4` — the update path fires and navigates:
-  `updateSong.mutate({ id, ...payload }); navigateTo(\`/catalog/${songId}\`)`.
-  The create path keeps its `await`, because the route it goes to needs the
-  server-issued id.
+Commit `531e6e4` fires the update and navigates:
+`updateSong.mutate({ id, ...payload }); navigateTo(\`/catalog/${songId}\`)`.
+The create path keeps its `await`, because the route it goes to needs the
+server-issued id.
 
 That move takes away where a failure used to be reported, so it also ships
-`didLastSongWriteFail`, a pure selector over the mutation cache, and a banner on
-the song page: *the last save did not go through — what you read below is the
-song as it was before the edit*. It clears as soon as a later write for that
-song succeeds. Verified with the `PUT` aborted in the browser: the detail page
-opens on the new artist, then rolls back and says so.
+`didLastSongWriteFail`, a pure selector over the mutation cache, and a banner
+on the song page saying the last save did not go through and that the song
+below is as it was before the edit. It clears as soon as a later write for
+that song succeeds. Verified with the `PUT` aborted in the browser: the
+detail page opens on the new artist, then rolls back and says so.
 
-## Eradication (mandatory — code-level)
+The delete path in the same file had the same shape. It now fires and
+navigates too, and `selectSongThatLostItsLastWrite` names the song on the
+catalog when the delete fails.
 
-**Type:** DevX check (level 2 — a custom lint rule rejects the shape)
+## Eradication
 
-**Reference:** [PR #51](https://github.com/hugoleborso/borso.fr/pull/51) ·
-`eslint-rules/no-discarded-await-before-navigation.js` on this branch
+**Type:** DevX check (level 2), for the shape it matches.
+
+**Reference:** [PR #51](https://github.com/hugoleborso/borso.fr/pull/51),
+`eslint-rules/no-discarded-await-before-navigation.js`
 
 ```diff
 +      statements.forEach((statement, index) => {
@@ -97,45 +126,29 @@ opens on the new artist, then rolls back and says so.
 +      });
 ```
 
-The discriminator is whether the awaited value is *used*. A create assigns it
-and needs it; an update discards it and is therefore waiting for nothing. The
-rule reports only the second shape, and only when a navigation follows in the
-same block.
+The rule reports an awaited `mutateAsync` whose result is discarded, on a
+receiver built by a hook named `useCreate…`, `useUpdate…` or `useDelete…`,
+when the next statement navigates. A create that uses the returned id is
+left alone. A login, which has no optimistic cache, is left alone.
 
-Getting the scope right took a false positive worth recording. The first draft
-flagged `await login.mutateAsync({ password }); navigateTo('/catalog')`, which
-is correct code — a login has no optimistic cache standing in for the session,
-and a wrong password has to keep the operator on the form. So the rule now
-resolves the receiver's declaration and reports only writes a cache can answer
-for: `useCreate…`, `useUpdate…`, `useDelete…`. An unresolvable receiver is left
-alone rather than guessed at.
+**Proof it can fail:** the rule flags both `SongEditPage` sites in
+`531e6e4^`, and over the whole front end it flagged nothing after the fix.
 
-Verified against the pre-fix file: the rule flags both `SongEditPage` sites in
-`531e6e4^`, and against the whole front end it now flags nothing.
+**Gap in what holds:** the rule keys on the hook's name and on a navigation.
+The same defect lives on today in
+`apps/pragma/site/src/components/organisms/BandLinksSection.tsx:35`:
+`await add.mutateAsync(…)` then `setIsAdding(false)`, where `useAddBandLink`
+declares an `onMutate` (`band-links.queries.ts:81`). Its hook is named
+`useAdd…` and closing a sheet is not a navigation, so the rule passes it.
+`PasskeyNameSheet.tsx:38` has the same shape, but `useRenamePasskey` has no
+`onMutate`, so its await is correct.
 
-**Sibling defects swept:** the delete path in the same file, which the rule
-found. It was first excused rather than fixed, behind a written exception
-arguing that a delete is the one write where waiting is the point, because a
-failed one has nowhere to be reported once the operator has left the form. The
-operator read the exception and asked whether TanStack had a hook for exactly
-that. It does, and this file was already using it: `useMutationState` carries a
-failed update to the song page, and the catalog can read the same mutation
-cache. So the delete now fires and navigates like every other write, and
-`selectSongThatLostItsLastWrite` names the song on the catalog — *"The last
-change to 'Last Call' did not go through — the song is as it was."* The
-rolled-back row is what makes the title readable again, which is what lets the
-banner name the song instead of saying something failed.
+**Proposed:** key the rule on the fact, not the name. Report a discarded
+`await` of `mutateAsync` whose hook declares `onMutate`, whatever statement
+follows, in `eslint-rules/no-discarded-await-before-navigation.js`. That makes
+it impossible to hide an optimistic write behind an await, whether the next
+step navigates, closes a sheet or resets a form. A create that uses the
+returned value stays allowed.
 
-Worth keeping as a lesson in its own right: **an eslint-disable whose reason is
-"there is nowhere to report this" is usually a missing surface, not a genuine
-exception.** The reason was checkable, a reviewer checked it, and it did not
-hold. Verified with the `DELETE` aborted in the browser — the catalog opens at
-once, the banner names the song, the row is listed again, and a later successful
-write clears it without a reload.
-
-## See also
-
-- [`optimistic-reorder-reverted-by-stale-dsql-read.md`](./optimistic-reorder-reverted-by-stale-dsql-read.md)
-  — the other half of the same lesson: having written optimistically, do not
-  then re-read a write the client already knows the result of.
-- `docs/standards/07-data-fetching.md` — the TanStack Query contract.
+**Similar instances:** `grep -rn 'await .*\.mutateAsync' apps/*/site/src`
+lists the candidates. `BandLinksSection.tsx:35` is the one confirmed above.

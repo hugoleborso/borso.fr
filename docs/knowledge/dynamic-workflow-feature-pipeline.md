@@ -80,29 +80,11 @@ This is the moment the workflow becomes a repo artefact:
    **`.claude/workflows/`** (project-shared) so every clone of the repo
    sees `/feature-pipeline` autocomplete.
 5. Name: `feature-pipeline`.
-6. Commit the resulting `.claude/workflows/feature-pipeline.js`.
 
-From that commit onward, `/feature-pipeline <spec-path>` runs the saved
-JS directly; the `ultracode:` keyword and the launch prompt in
-`.claude/commands/feature-pipeline.md` are only needed for the first run
-or after the script is regenerated.
-
-## When to regenerate the JS
-
-The workflows runtime is in research preview as of 2026-06; the JS API
-surface isn't a stable contract. If a future Claude Code release breaks
-the saved script:
-
-1. Delete `.claude/workflows/feature-pipeline.js`.
-2. Re-run `/feature-pipeline` with the `ultracode:` prefix per the slash
-   command's launch instructions.
-3. Save the new script. Diff against the previous one in the PR for
-   reviewers.
-
-The skill standards (`.claude/skills/<skill>/standard.md`) are the
-durable contract — the workflow regenerates against them. Same with the
-slash command's stage-by-stage description: that's the spec the
-regenerated script honours.
+Once a saved script exists, `/feature-pipeline <spec-path>` runs it
+directly. The `ultracode:` keyword and the launch prompt in
+`.claude/commands/feature-pipeline.md` are needed only while no script is
+saved.
 
 ## Cost + caps
 

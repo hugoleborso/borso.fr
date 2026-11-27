@@ -3,9 +3,9 @@ date: 2026-11-09
 introduced-at: conception
 detected-at: production
 severity: medium
-related-pr: '#263'
+related-pr: '#281'
 fix-commits: [self]
-eradication-level: 1
+eradication-level: 4
 eradication-paths: [scripts/quality/check-dashboard-page.ts, scripts/quality/dashboard-page.core.ts, scripts/quality/dashboard/fixture.json, .husky/pre-push, .github/workflows/ci.yml]
 time-to-detect: 2 days
 tags: [meta, gates, visual-validation, frontend, harness, skill]
@@ -36,41 +36,53 @@ archives, all one wall, now
 
 ## Causal chain
 
-- The operator saw a blank modal and a board that scrolled sideways
-  - The page that drew them had never been rendered anywhere but on their phone
-    - No preview deploy, dev server or `/visual-validation` draws it: it is not
-      a site, it is a `files/index.html` document written into a claude.ai
-      dashboard artifact's store
-      - The one check that does look at it is the artifact type's own `check`
-        document, which reports what the published page threw, after the write
-        - And `.claude/skills/quality-dashboard/SKILL.md` said *"Do not render,
-          screenshot or browse the board to check it: the type forbids it, and
-          the check document is the check"*
-          - Which the session read as *the page cannot be rendered*, and so it
-            wrote 1,887 lines of page over 18 commits without once looking at
-            one
+- The operator saw blank chips and a modal with no chart
+  - The page threw `drawChart is not defined` when a chip drew its sparkline
+    - `drawChart` was declared in the second `<script>` of
+      `scripts/quality/dashboard/index.html` and called bare from the third
+      ← the faulty line
+      - The Dashboard type runs each `<script>` in its own scope, so a name
+        declared in one is not visible in another
+- The operator saw the whole board 738 px wide in a 390 px viewport
+  - The card's grid column was left at the implicit `auto`, which floors at
+    the min-content width of the chips strip inside it ← the faulty line
+    (`61b68f1` found it and set `grid-template-columns: minmax(0, 1fr)`)
+- Both lines came from PR #281's session, which wrote 1,887 lines of page
+  over 18 commits, squashed as `5abe4b2b8`
+  - The same session wrote into `.claude/skills/quality-dashboard/SKILL.md`
+    "Do not render, screenshot or browse the board to check it: the type
+    forbids it" (`git log -S'the type forbids it'` names `5abe4b2b8` only),
+    and rendered nothing
+    - It wrote the page from the Dashboard type's instructions, which a
+      publish from the type returns. Those instructions held both answers
+      (quoted below), and they say only to render "if asked" (inferred, the
+      transcript is gone). Man
 
 ## Root cause of occurrence
 
-*Thought the artifact type forbids rendering this page, actually it asks only
-that the published board is not browsed to keep the reader waiting, and says
-nothing about the page file on disk.*
+*Thought top-level scripts on one page share one scope, as they do in a
+browser, and that the type forbade rendering the page, actually the type
+runs each script in its own scope and asks only that the published board not
+be browsed while the reader waits.* **Man.**
 
 The type's own instructions, read from
 `https://claude.ai/artifact/GZLZthZ2sQjn7T16skfdeF` on 2026-11-09:
 
 > Render or browse to the page only if asked, since that keeps them waiting.
 
-"Only if asked" became "forbidden" in the repository's skill, and the skill is
-what an agent changing the page reads. The two facts that would have saved both
-defects were in the same type instructions and in neither the skill nor the
-page:
-
 > Scripts run in order once the page is in place, each in its own scope.
 > Anything two scripts share goes on `window`.
 
 > The page has to read both at full width and at about 400px beside a chat: no
 > fixed widths, and drawings sized from `clientWidth`.
+
+These sentences reach an agent with the type's instructions when it creates
+or writes the artifact, so they were in the session's context (inferred). The
+browser's prior, one global scope for classic scripts, won over the first.
+The session turned "only if asked" into "forbids" in a skill it wrote itself.
+A long session of 18 commits is the worker condition the inferred lapse fits.
+A Man cause needs a gate that holds when the prior wins, not one more
+document.
 
 ## Detection failure causes
 
@@ -80,15 +92,15 @@ page:
   mutation, and every one of those tests builds rows. None of them is the page.
   The rebuild deleted the HTML renderer that tests could reach, which was the
   right subtraction and left the page itself untested.
-- **The Stop hook:** `.claude/hooks/stop-screens-shown-not-described.py` blocks
-  a turn that *claims* a visual comparison with no image. The session claimed
+- **The Stop hook:** `.claude/hooks/stop-screens-shown-not-described.py` blocked
+  a turn that *claimed* a visual comparison with no image. The session claimed
   none. It wrote "The type forbids rendering or browsing it, so nothing further
   was run" in the pull-request body, which is an absence of a look, and the
   hook has no opinion about those.
 - **CI:** no job in `ci.yml` had a browser.
 - **The artifact type's `check` document:** it reported `no fault` after the
-  write that shipped the scope defect. It is the publisher's own check and it is
-  not a substitute for rendering: whatever it looks at, it did not look at this.
+  write that shipped the scope defect. Whatever it looks at, it did not look
+  at this.
 - **Code review:** none. No `/technical-validation` and no `/visual-validation`
   ran on PR #281, so the diff had one reader, who was the author.
 
@@ -100,9 +112,10 @@ container was reclaimed. This entry's eradication is that harness, committed.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** detection (level 4). A browser check refuses the page at push and
+in CI.
 
-**Reference:** this commit, on the kaizen branch for PR #281.
+**Reference:** the commit adding this file, on the kaizen branch for PR #281.
 
 `scripts/quality/check-dashboard-page.ts` loads the real page in Chromium with
 real d3, a `dash` stubbed from `scripts/quality/dashboard/fixture.json`, and
@@ -117,16 +130,15 @@ enlarged chart that drew no bar.
 +fi
 ```
 
-The scope fault is no longer expressible unseen, because the check runs the
-page under the same per-script scoping the published board uses: a function
-declared in one script and called from another throws here first. The width
-fault is measured rather than eyeballed.
-
-It runs on push and in CI, not on commit: a browser launch is 4.2 s measured on
-2026-11-09, against the 300 ms a pre-commit check gets in
+It runs the page under the same per-script scoping the published board uses,
+so a function declared in one script and called from another throws here
+before the operator sees it. The width fault is measured rather than
+eyeballed. It runs in `.husky/pre-push:324` and in the `dashboard-page` job
+of `ci.yml`, not on commit: a browser launch is 4.2 s measured on 2026-11-09,
+against the 300 ms a pre-commit check gets in
 [docs/standards/14-tool-runtime-budgets.md](../standards/14-tool-runtime-budgets.md).
-The CI job sits behind its own paths filter, so a pull request that does not
-touch the page installs no browser and pays nothing.
+That makes it detection, level 4, and not an impossibility. The scope fault
+can still be written.
 
 The fixture is generated by the real builders in
 `scripts/quality/quality-datasets.core.ts`, six applications over all three
@@ -137,9 +149,18 @@ density: an undefined custom property computes to nothing, which would have
 measured a page with no gaps and no padding. See
 [docs/dantotsus/an-undefined-custom-property-paints-black.md](./an-undefined-custom-property-paints-black.md).
 
-The skill was the thing that said not to look, so it changed with the code. It
-now separates the published board from the page file, names the per-script
-scoping and the 375 px floor, and names the command.
+The skill now separates the published board from the page file, names the
+per-script scoping and the 375 px floor, and names the command.
+`docs/knowledge/the-dashboard-artifact-types-page-contract.md` carries the
+same contract with `triggers:` on the page's path and on the check's
+refusal.
+
+**Proposed:** subtract the second and third scripts. Merge the page's three
+`<script>` blocks (`scripts/quality/dashboard/index.html:367`, `:411` and
+`:525`) into one, and make `check-dashboard-page.ts` refuse a page with more
+than one. A name shared across scripts then cannot exist, which turns the
+scope fault into a structural impossibility. The width fault stays
+detection.
 
 **Proof it can fail:** `drawChart` and `PANEL` put back into the second
 script's own scope and called bare from the third, as `05d36cf` found them.

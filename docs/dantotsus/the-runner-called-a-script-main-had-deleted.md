@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#216'
-fix-commits: [self]
+fix-commits: [bff04a955]
 eradication-level: 2
-eradication-paths: [scripts/check-named-paths-exist.sh]
+eradication-paths: [scripts/check-named-paths-exist.sh, .github/workflows/ci.yml]
 time-to-detect: days
 tags: [gates, pre-commit, ci, harness, pragma]
 zone: apps/pragma/scripts/task-metrics/run-task-metrics.sh
@@ -15,54 +15,52 @@ recurs: none (the named-paths gate read prose and backticks; this is the first c
 
 # The runner called a script main had deleted
 
-## Symptom
+## User impact
 
-`review6`, 2026-10-29 10:07: "The task-metrics harness (run-task-metrics.sh,
---screen-rule included) cannot run since #224 removed scripts/argent.sh and the
-argent binary it calls for sign-in taps." Every run failed. Nothing had said so
-when `main` was merged into the branch two hours earlier, and the repair took
-commit `6dd6eac9` on PR #216, which replaced argent with agent-browser and a CDP
-touch adapter.
+The pragma task-metrics harness, which the operator uses to measure a change, could not run at all. Nothing said so when `main` was merged into the branch of PR #216. A reviewer found it two hours later.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| `run-task-metrics.sh` after `main` was merged into PR #216 | Every run failed: `scripts/argent.sh` was gone | The harness signs in and measures the task |
 
-1. **Why did the runner break silently?** It ran `scripts/argent.sh start` and
-   `scripts/argent.sh stop`. PR #224 deleted that file on `main`, and the merge
-   brought the deletion into the branch.
-2. **Why did no gate fail?** `check-named-paths-exist.sh` exists for this
-   question, a path the repository names that it does not have. It read
-   `docs/*.md` citations in scripts and backticked paths in instruction files.
-   It did not read a script calling another script by path.
-3. **Why not that surface?** Its surfaces were the folders where a path had
-   rotted before. `apps/*/scripts/` held no shell script then.
+`review6`, 2026-10-29 10:07: "The task-metrics harness (run-task-metrics.sh, --screen-rule included) cannot run since #224 removed scripts/argent.sh and the argent binary it calls for sign-in taps." The repair, commit `6dd6eac9` on PR #216, replaced argent with agent-browser and a CDP touch adapter.
 
-**Root cause:** thought the named-paths gate covered every path a script names,
-actually it covered only the two kinds that had broken before.
+## Causal chain
+
+- Every run of the task-metrics harness failed on PR #216's branch.
+  - The runner called a script that no longer existed.
+
+    ```bash
+    # apps/pragma/scripts/task-metrics/run-task-metrics.sh, lines 34 and 39, before 6dd6eac9
+    scripts/argent.sh start   # ❌ deleted on main by c54e32da7
+    scripts/argent.sh stop
+    ```
+
+    - The merge of `main` into the branch brought in the deletion.
+      - Commit `c54e32da7` (PR #224, 2026-10-29, written by an agent) deleted `scripts/argent.sh` while cutting harness cost. It updated every caller on `main`: `CLAUDE.md`, the visual-validator agent, the harness README and `harness-path.sh` (measured with `git grep argent.sh c54e32da7^`). No caller lived under `apps/` on `main`.
+        - The only code caller lived on #216's unmerged branch. From `main`, where #224 was written and checked, a caller on another branch cannot be seen. (Machine)
+
+## Root cause of occurrence
+
+*Thought `scripts/argent.sh` had no caller left once every reference on `main` was updated, actually a caller existed on an open branch, and it would meet the deletion only at that branch's next merge of `main`.*
+
+Machine. A deletion is checked against the tree it is made in. Callers on open branches are outside that tree, so the first place the deletion and its caller meet is the merge into the branch.
 
 ## Detection failure causes
 
-- **Linter / static analysis:** no surface read shell calls.
-- **CI (tests / build):** the task-metrics harness runs on demand, never in CI,
-  so only a person running it could notice.
-- **Code review:** #224 deleted 300 lines of `argent.sh`; its caller lived on an
-  unmerged branch.
+- **Named-paths gate:** `check-named-paths-exist.sh` read `docs/*.md` citations in scripts and backticked paths in instruction files. It did not read a script calling another script by path. `apps/*/scripts/` held no shell script when its surfaces were chosen.
+- **Git hooks at the merge:** the merge of `main` completed without a conflict. A clean merge runs `pre-merge-commit`, not `pre-commit`, and `.husky/` has no `pre-merge-commit` (measured: `ls .husky` lists `commit-msg`, `pre-commit` and `pre-push`).
+- **CI:** the harness runs on demand, never in CI, so only a person running it could notice.
 
 ## Countermeasure
 
-- **Code:** commit `6dd6eac9` on PR #216 replaced the argent calls.
+Commit `6dd6eac9` on PR #216 replaced the argent calls with agent-browser and a CDP touch adapter.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — an existing gate gains a surface)
+**Type:** DevX check (level 2). An existing gate gains a surface.
 
-**Reference:** the kaizen pull request for #216 and #231 · this commit
-
-**The actual fix:** a third surface in `scripts/check-named-paths-exist.sh`. Every
-`scripts/…{sh,ts,mjs,js,py}` that a shell script, a hook or a workflow calls
-must resolve from the repository root, from the app or plugin holding the
-caller, or from the caller's folder. `apps/*/scripts/*` joins the surfaces that
-`--staged` searches for a removed name, so the commit or merge that deletes a
-called script is the one refused.
+**Reference:** commit [`bff04a955`](https://github.com/hugoleborso/borso.fr/commit/bff04a955) (PR #233).
 
 ```diff
 -SURFACES=('scripts/*' '.husky/*' '.github/*' 'plugins/*' 'CLAUDE.md' '.claude/*')
@@ -70,8 +68,13 @@ called script is the one refused.
 +# 3. A script that a shell script or a workflow calls by its path.
 ```
 
-Proved once. On a scratch worktree at `6dd6eac9^`, the tree just before the
-repair:
+Every `scripts/…{sh,ts,mjs,js,py}` that a shell script, a hook or a workflow calls must resolve from the repository root, from the app holding the caller, or from the caller's folder. The gate runs in `.husky/pre-commit` with `--staged` and in `.github/workflows/ci.yml` on the whole tree.
+
+On this entry's case, CI on the branch fails once the merge is pushed. No local hook refuses the merge itself, which is why the level stays at 2 with a gap.
+
+**Proposed:** add `.husky/pre-merge-commit` that runs `scripts/check-named-paths-exist.sh` on the whole tree, as CI does. A clean merge that brings a deletion onto a branch still calling the deleted script would then be refused at the merge, before any push.
+
+**Proof it can fail:** on a scratch worktree at `6dd6eac9^`, the tree just before the repair (recorded by the first version of this entry):
 
 ```text
 [check-named-paths-exist] apps/pragma/scripts/task-metrics/run-task-metrics.sh:34: calls scripts/argent.sh, which is not there
@@ -79,14 +82,6 @@ repair:
 exit 1
 ```
 
-The gate as it was on `main` passed the same tree. In `--staged` mode, staging
-the deletion of `scripts/lint-staged-files.sh` was refused with
-`.husky/pre-commit:142: calls scripts/lint-staged-files.sh, which is not there`.
-The gate checks 167 calls on today's tree, all resolved, in about 0.1 s.
+The gate as it was before passed the same tree. In `--staged` mode, staging the deletion of `scripts/lint-staged-files.sh` was refused with `.husky/pre-commit:142: calls scripts/lint-staged-files.sh, which is not there`.
 
-**Sibling defects swept:** none were broken on `main`.
-
-## See also
-
-- [`a-deleted-file-broke-the-records-that-named-it.md`](./a-deleted-file-broke-the-records-that-named-it.md), the same deletion seen from the dantotsu corpus
-- [`the-link-checker-skipped-the-folder-it-was-trusted-for.md`](./the-link-checker-skipped-the-folder-it-was-trusted-for.md)
+**Similar instances:** none were broken on `main` when the surface was added. [`a-deleted-file-broke-the-records-that-named-it.md`](./a-deleted-file-broke-the-records-that-named-it.md) is the same deletion seen from the dantotsu corpus.

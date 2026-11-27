@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: low
 related-pr: '#40'
-fix-commits: [1fad0d792d]
-eradication-level: 1
-eradication-paths: [infra/shared/test/unit/shared-stack.test.ts, infra/shared/test/unit/__snapshots__/borso-shared.template.json]
+fix-commits: [1fad0d792d, 9dcf74547]
+eradication-level: 2
+eradication-paths: [.oxlintrc.json, eslint-rules/no-comments.js, infra/shared/test/unit/shared-stack.test.ts]
 time-to-detect: hours
 tags: [cdk, cloudfront, cloudformation, drift, vitest, snapshot, ci]
 zone: infra/cdk/src/internal/cf-host-routing-function.code.js
@@ -15,14 +15,15 @@ blueprints: [cloudfront-function-source]
 
 # A comment that shipped to the CloudFront edge
 
-## Symptom
+## User impact
 
-PR #40 was merged after an audit that had proved the four app stacks'
-prod templates byte-identical between the merge base and the head. Asked
-afterwards whether a shared-infra deploy was needed, I synthesized
-`borso-shared` at both commits and found the template was **not**
-identical. `cdk diff` against the real account then confirmed two
-properties had moved:
+The operator was the user. PR #40 merged after an audit had proved the four app stacks' prod templates byte-identical between the merge base and the head. Asked afterwards whether a shared-infra deploy was needed, the session synthesized `borso-shared` at both commits and found it was not identical. `cdk diff` against the account confirmed that the production CloudFront function `HostRouter` had changed. No visitor saw a difference, because the change was one comment line.
+
+| | Seen | Expected |
+| --- | --- | --- |
+| `borso-shared` after a merge that "changed no template" | `FunctionCode` of `HostRouter` differs from the deployed one | A merge that changes no behaviour changes no production template |
+
+<details><summary>The diff against the account</summary>
 
 ```
 [~] AWS::CloudFront::Function HostRouter
@@ -32,115 +33,72 @@ properties had moved:
 ✨  Number of stacks with differences: 1
 ```
 
-The `FunctionCode` delta was a single deleted line:
+The `Description` change was an intended PR #40 change that had not been deployed yet.
 
-```diff
--// biome-ignore lint/correctness/noUnusedVariables: CloudFront Functions runtime requires the entry point be named exactly `handler`. …
-```
+</details>
 
-A dead comment, left over from the Biome-to-ESLint migration, removed as
-tidy-up. It changed a production CloudFormation template.
+## Causal chain
 
-## Root-cause chain
+- The production template of `borso-shared` changed in a merge nobody expected to touch it.
+  - PR #40 deleted a dead Biome suppression from `cf-host-routing-function.code.js`. `git log -S` names commit `bd4d6be23` (2026-08-08) as the deletion.
 
-1. **Why did deleting a comment change a template?**
-   `cf-host-routing-function.code.js` is not compiled or imported — the
-   construct reads the file as a **string** at synth time and embeds it in
-   `FunctionCode`. Every byte, comments included, is a deployed artefact.
-2. **Why did the merge-safety audit miss it?** The audit synthesized the
-   four *app* stacks, because the question it was asked was "will merging
-   lose app data". `borso-shared` is not an app stack and was never in the
-   list.
-3. **Why did no gate catch it?** The changed file lives in `infra/cdk`.
-   The affected template belongs to `infra/shared`. Coverage suites for
-   both ran and passed — neither asserts anything about this template's
-   contents beyond a handful of named properties.
-4. **Why did no deploy catch it?** `shared-deploy.yml` is
-   `workflow_dispatch` only, so no run on `main` ever diffs the shared
-   stack. Drift there is invisible until somebody dispatches by hand.
+    ```diff
+    -// biome-ignore lint/correctness/noUnusedVariables: CloudFront Functions runtime requires the entry point be named exactly `handler`. …
+    ```
 
-**Root cause:** *thought a comment is inert, actually this file's comments
-are shipped source — and the stack they ship in is owned by a workspace
-the change did not touch, so nothing linked the edit to its consequence.*
+    - The construct reads this file as a string at synth time and embeds every byte, comments included, in `FunctionCode`.
+      - The comment had been put in shipped bytes by commit `7289561d9` (2026-05-02, written by an agent), answering review thread c2 of PR #2: "the suppression for the CloudFront Function `handler` is a single-line `// biome-ignore` directly above the declaration, documents the constraint at the call site instead of the config."
+        - Biome flagged `handler` as an unused variable, because the CloudFront runtime calls it by name. The linter of the day had to be silenced somewhere, and the review moved the silencing from the config into the file. (Machine)
+
+## Root cause of occurrence
+
+*Thought a lint suppression is a comment, and a comment is inert, actually this file's bytes are the deployed function, so a comment in it is production code.*
+
+Machine. The linter could not express "the runtime calls `handler`" in its config without a blanket override, which the review rejected. The only other place for the exception was a comment inside the shipped string. Commit `7289561d9` chose it, and `bd4d6be23` deleted it three months later as tidy-up, each without a signal that the bytes reached CloudFront.
 
 ## Detection failure causes
 
-- **Typing:** the file is JavaScript read as text. There is nothing to
-  type.
-- **Linter:** ESLint is configured not to parse this file at all, exactly
-  because it targets the CloudFront edge runtime rather than Node — see
-  the `Don'ts` entry in CLAUDE.md. The `biome-ignore` comment being dead
-  was therefore also invisible.
-- **CI:** `infra/cdk` and `infra/shared` both ran at 100% coverage. The
-  shared suite asserted named properties — one OIDC provider, no
-  AdministratorAccess, correct sub claims — and a template snapshot is
-  precisely the assertion that catches what nobody thought to name.
-- **Code review:** the diff read as "delete a stale lint suppression",
-  which is what it was, in a file whose header explains it is read as a
-  string. The consequence needed a reader who held both facts.
-- **Staging:** there is no staging for the previews CDN.
-- **Production monitoring:** no drift detection on any stack. The repo and
-  the account can disagree indefinitely without a signal.
+- **Linter:** at the time, the linter did not parse `*.code.js`, because it targets the CloudFront runtime and not Node. The dead suppression was invisible.
+- **CI:** `infra/cdk` and `infra/shared` both ran at 100% coverage. The shared suite asserted named properties, such as one OIDC provider and no `AdministratorAccess`, and nothing about `FunctionCode`.
+- **Merge audit:** it synthesized the four app stacks, because its question was "will merging lose app data". `borso-shared` is not an app stack.
+- **Deploy:** `shared-deploy.yml` runs only on dispatch, so no run on `main` diffs the shared stack.
+- **Monitoring:** no drift detection runs on any stack.
 
 ## Countermeasure
 
-- **Code:** commit `1fad0d7` — a committed template snapshot for
-  `borso-shared`, asserted by the existing unit suite.
-- **Operator action:** dispatch `shared-deploy` once to clear the standing
-  drift. Both deltas are cosmetic; the deploy updates a CloudFront
-  function and an IAM description.
+Commit `1fad0d7` (PR #45) committed a template snapshot for `borso-shared`, asserted by the existing unit suite. Asset hashes are replaced by a placeholder, and everything else compares verbatim. The operator was asked to dispatch `shared-deploy` once to clear the standing drift.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection, promoted to structural (level 1 — a change to this
-template cannot reach `main` without appearing in the pull request that
-causes it)
+**Type:** DevX check (level 2), a lint rule for comments in edge code. Detection (level 4), for any other byte.
 
-**Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
-commit [`1fad0d7`](https://github.com/hugoleborso/borso.fr/commit/1fad0d7)
+**Reference:** commit [`9dcf74547`](https://github.com/hugoleborso/borso.fr/commit/9dcf74547) (PR #197) lints `**/*.code.js` with oxlint. It states the runtime's exception in the config, so no comment is needed for it:
 
-**The actual fix:**
-
-```diff
-+  describe('template snapshot', () => {
-+    it('matches the committed template, so drift shows up in the diff', async () => {
-+      const template = serializeTemplateForSnapshot(synth({ budgetEmail: 'hugo@example.com' }));
-+      await expect(template).toMatchFileSnapshot('./__snapshots__/borso-shared.template.json');
-+    });
-+  });
+```json
+{
+  "files": ["**/*.code.js"],
+  "rules": {
+    "no-unused-vars": ["error", { "varsIgnorePattern": "^handler$" }]
+  }
+}
 ```
 
-Why this counts as level 1 rather than level 4: a snapshot is a detector,
-but the thing it makes impossible is *silence*. The template cannot change
-without the change being visible in a reviewed diff, whichever workspace
-caused it and whether or not anyone anticipated the property. That is the
-misconception — "my edit is local to infra/cdk" — rendered inexpressible.
+`borso/no-comments` applies to these files like any other. The three `*.code.js` files under `infra/cdk/src/internal/` hold no comment today (measured with `grep -c`). A comment can no longer reach the edge.
 
-Asset content hashes are replaced by a placeholder, because they move
-whenever aws-cdk-lib changes its bundling and say nothing about this
-stack. Everything else compares verbatim, which is the whole point: the
-drift was a comment inside a string.
+Commit [`1fad0d7`](https://github.com/hugoleborso/borso.fr/commit/1fad0d7) holds the rest of the class. Any change to the shared template, from whatever workspace, shows in the pull request that causes it:
 
-`**/__snapshots__/` is added to `.prettierignore`. Vitest writes the
-string the test hands it and Prettier collapses short JSON arrays, so
-letting both own the file makes every run report a mismatch against
-something the other just rewrote.
+```ts
+await expect(template).toMatchFileSnapshot('./__snapshots__/borso-shared.template.json');
+```
 
-**Sibling defects swept:** the four app stacks were re-synthesized at the
-merge base and at `e79d27a` during the same investigation and are
-byte-identical, so this was the only drift PR #40 introduced. The second
-delta in the diff above — `ProdDeployRole`'s Description — is an
-intentional PR #40 change that had simply never been deployed.
+The first version of this entry called the snapshot level 1. It detects a change, it does not prevent one, so it is level 4.
 
-## See also
- 
-- [`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md)
-  — the same file, the same "this is shipped source, not ordinary
-  JavaScript" property, discovered from the other direction.
-- [`shared-deploy-stale-dist.md`](./shared-deploy-stale-dist.md) — the
-  other way the shared stack and the repository fall out of step.
-- [`an-approval-gate-that-only-existed-in-a-comment.md`](./an-approval-gate-that-only-existed-in-a-comment.md)
-  — why nothing on `main` diffs this stack.
-- [`biome-must-not-reformat-generated-files.md`](./biome-must-not-reformat-generated-files.md)
-  — the neighbouring hazard: a formatter rewriting a file whose bytes are
-  an artefact.
+**Proof it can fail:** a comment planted on line 1 of `cf-static-site-index-rewrite.code.js` on a scratch copy, then `oxlint` on it:
+
+```
+infra/cdk/src/internal/cf-static-site-index-rewrite.code.js:1:1: error borso(no-comments): No comment here. Say it with a name, a helper, a constant, a type or a test. See docs/standards/00-principles.md.
+```
+
+Reverted after the run (measured this session).
+
+**Similar instances:** `git ls-files '*.code.js'` lists three edge functions, all covered by the same override. The four app stacks were re-synthesized during the original investigation and were byte-identical, so `HostRouter` was the only drift PR #40 introduced. [`cloudfront-function-runtime-es5.md`](./cloudfront-function-runtime-es5.md) is the same "shipped source" property from the other direction.
