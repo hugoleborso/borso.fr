@@ -55,12 +55,23 @@ its `findBy` timeout to 10 s, which hid that the region never appeared rather
 than appeared late. The product was not slow: a position took 13 to 35 ms on
 the full book (measured in that session).
 
-The fix was to click inside an awaited `act`
-(`selectTabAwaitingSuspense` in
-`apps/borsouvertures/site/src/routes/trainer-page.test-utils.tsx`, commit
-`351ef1eca`). So, when a page test that suspends times out only under load,
-check whether the click that suspends runs in an awaited `act` before you
-blame contention, and never raise a `findBy` timeout to make it pass.
+The fix was to click inside an awaited `act` (commit `351ef1eca`). So, when a
+page test that suspends times out only under load, check whether the click
+that suspends runs in an awaited `act` before you blame contention, and never
+raise a `findBy` timeout to make it pass.
+
+_2026-11-27_: an awaited `act` was not enough. It closes once its callback
+settles, and the reads the page suspends on settle later, in macrotasks
+(fake-indexeddb took 100 ms idle and up to 940 ms under load, measured). React
+then commits the fallback and holds it for `FALLBACK_THROTTLE_MS` (300 in
+react-dom 19.3.1) before it shows the content. The default 1 s `findBy` was
+spending its budget on that real time, so a different page test failed on each
+loaded push. `openApplication` and `selectExploreTab` in
+`apps/borsouvertures/site/src/routes/trainer-page.test-utils.tsx` now await the
+same memoised reads the screen calls `use()` on, then render inside the
+awaited `act`. The content is in the DOM when `act` returns, and a `getBy`
+checks it. A new read that the helper does not settle fails that `getBy` on
+every run, not only under load.
 
 `vitest --execArgv=--cpu-prof` writes no profile for a test worker. That
 session profiled the page test with a `node:inspector` session opened inside a

@@ -1,7 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
+import { readDecksRequest } from '@/decks/decks-resource.setup';
 import { openScreen } from '@/navigation/navigation.store';
+import { readOpeningsRequest } from '@/openings/openingsResource';
+import { readDeckLineLogRequest } from '@/personal-deck/deck-line-log.store';
+import { readReviewLogRequest } from '@/review/review-log.store';
 import { reviewMachine } from '@/review/review-machine.setup';
+import { readSchedulerRequest } from '@/review/scheduler-resource.setup';
 import { OpeningTrainerPage } from './OpeningTrainerPage';
 
 const BOARD_SQUARE_PX = 40;
@@ -51,17 +56,28 @@ export function stubBoardGeometry(): void {
   );
 }
 
-export async function openApplication(): Promise<void> {
-  openScreen({ kind: 'today' });
-  await act(async () => {
-    render(<OpeningTrainerPage />);
-    await Promise.resolve();
-  });
-  await screen.findByRole('button', { name: /^(Start|Commencer|Reload|Recharger)$/ });
+async function settleTheReadsTodaySuspendsOn(): Promise<void> {
+  await Promise.all([
+    readDecksRequest(),
+    readReviewLogRequest(),
+    readDeckLineLogRequest(),
+    readSchedulerRequest(),
+  ]);
 }
 
-export async function selectTabAwaitingSuspense(name: string): Promise<void> {
-  const tab = screen.getByRole('button', { name });
+export async function openApplication(): Promise<void> {
+  openScreen({ kind: 'today' });
+  await settleTheReadsTodaySuspendsOn();
+  await act(() => {
+    render(<OpeningTrainerPage />);
+    return Promise.resolve();
+  });
+  screen.getByRole('button', { name: /^(Start|Commencer|Reload|Recharger)$/ });
+}
+
+export async function selectExploreTab(): Promise<void> {
+  await readOpeningsRequest();
+  const tab = screen.getByRole('button', { name: 'Explore' });
   await act(() => {
     tab.click();
     return Promise.resolve();

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import '@/i18n/i18n';
-import { openApplication, stubDecksFetch } from './trainer-page.test-utils';
+import { openApplication, selectExploreTab, stubDecksFetch } from './trainer-page.test-utils';
 
 const sentry = vi.hoisted(() => ({
   init: vi.fn(),
@@ -31,7 +31,7 @@ describe('the opening trainer when the deck file does not parse', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Opening decks' }));
     expect(screen.getByRole('alert').textContent).toContain("Couldn't load the decks");
-    await userEvent.click(screen.getByRole('button', { name: 'Explore' }));
-    expect(await screen.findByRole('region', { name: 'Explore' })).toBeTruthy();
+    await selectExploreTab();
+    expect(screen.getByRole('region', { name: 'Explore' })).toBeTruthy();
   });
 });
