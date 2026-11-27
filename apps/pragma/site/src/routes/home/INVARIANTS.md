@@ -28,3 +28,5 @@ Held by: `site/src/routes/login.core.test.ts` › opens Home when the state carr
 Held by: `site/src/sw/service-worker.test.ts` › opens a new window when none is open, at home when the URL is missing
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows only the next concert, its venue as a map search, its message and its prize, and no way to the members area
 Held by: `site/src/routes/home/HomePage.test.tsx` › offers the visitor QR code in the header even with no session ahead
+Held by: `site/src/routes/home/HomePage.test.tsx` › shows no flame when the flames cannot be read, and the rest of Home still works
+Held by: `site/src/components/organisms/visitor-qr-code.core.test.ts` › encodes the concert sign-up page at the root and shows only the host
