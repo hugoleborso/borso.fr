@@ -103,6 +103,19 @@ describe('kaizen.sh balance', () => {
     expect(status).toBe(1);
   });
 
+  it('counts no line removed from a skill or an agent definition, so cutting one cannot pay for an addition', () => {
+    const before = { '.claude/skills/a/SKILL.md': lines(9), '.claude/agents/a.md': lines(9) };
+    const sweep = {
+      '.claude/skills/a/SKILL.md': lines(1),
+      '.claude/agents/a.md': lines(2),
+      'a.sh': lines(2),
+    };
+    const { status, stdout } = kaizenAfter([before, sweep], 'balance', 'HEAD^');
+
+    expect(stdout).toContain('Balance: added 2, removed 0 outside');
+    expect(status).toBe(1);
+  });
+
   it('passes a sweep that removes as much as it adds, and leaves out what a sweep does not count', () => {
     const sweep = {
       [INVENTORY]: lines(9),

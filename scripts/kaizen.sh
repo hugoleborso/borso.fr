@@ -237,6 +237,8 @@ case "${1:-}" in
     # test is held to its speed (docs/standards/14-tool-runtime-budgets.md), not its size.
     # Over the 60 sweeps before that day the full count was 42,304 lines added
     # for 5,421 removed, beside a written rule that already said to subtract.
+    # A line removed from a skill or an agent definition does not count, by the
+    # operator's choice on 2026-11-27: the PR #421 sweep cut a skill to pass.
     not_counted='docs/features/meta/lessons-.*|(.*/)?(kaizen|inventory|cost)[.]md'
     not_counted+='|docs/(knowledge|dantotsus|adr|operator-backlog)/.*|pnpm-lock[.]yaml|.*/__snapshots__/.*|.*[.]test[.](ts|tsx|js)'
     base="${2:-origin/main}"
@@ -244,7 +246,8 @@ case "${1:-}" in
       { printf 'scripts/kaizen.sh: cannot compare with %s; fetch origin first\n' "$base" >&2; exit 2; }
     read -r added removed < <(printf '%s\n' "$numstat" |
       grep -vE "	($not_counted)\$" |
-      awk '{ added += $1; removed += $2 } END { print added + 0, removed + 0 }')
+      awk '{ added += $1; if ($3 !~ /^[.]claude[/](skills|agents)[/]/) removed += $2 }
+        END { print added + 0, removed + 0 }')
     printf 'Balance: added %s, removed %s outside what a sweep does not count\n' "$added" "$removed"
     [ "$added" -le "$removed" ] || {
       printf 'This sweep adds more than it removes. The best code is the code you do not write.\n' >&2
