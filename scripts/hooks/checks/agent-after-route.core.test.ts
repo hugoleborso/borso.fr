@@ -35,13 +35,21 @@ function agentCall(fields: Partial<HookInput>, toolInput: HookInput['tool_input'
   };
 }
 
+function editCall(tool: string, toolInput: HookInput['tool_input']): HookInput {
+  return agentCall({ tool_name: tool }, toolInput);
+}
+
 const NOT_ROUTED = fakeWorld({ transcript: '{"type":"user"}' });
 
 // @FollowsBlueprint test-pure-unit
 describe('agentAfterRoute', () => {
-  it('fires on the Agent and Task tools only', () => {
-    expect(agentAfterRoute.tools?.test('Task')).toBe(true);
+  it('fires on the agent tools and the file-writing tools only', () => {
+    for (const tool of ['Agent', 'Task', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']) {
+      expect(agentAfterRoute.tools?.test(tool)).toBe(true);
+    }
     expect(agentAfterRoute.tools?.test('Bash')).toBe(false);
+    expect(agentAfterRoute.tools?.test('Editor')).toBe(false);
+    expect(agentAfterRoute.tools?.test('AWrite')).toBe(false);
   });
 
   it('refuses a general-purpose agent by default when nothing sized the work', () => {
@@ -119,5 +127,81 @@ describe('agentAfterRoute', () => {
     const framed = fakeWorld({ addedSpecs: 'docs/features/pragma/x/spec/spec.md\n' });
 
     expect(agentAfterRoute.run(agentCall({}), framed)).toBe(PASS);
+  });
+
+  describe('a file edit by the main session', () => {
+    it('refuses the first edit of an app file, absolute or relative, before /route', () => {
+      expect(
+        agentAfterRoute.run(
+          editCall('Write', { file_path: '/repo/apps/pragma/api/src/x.core.ts' }),
+          NOT_ROUTED,
+        ),
+      ).toEqual(
+        refuse('agent-after-route', 'apps/pragma/api/src/x.core.ts was edited before /route ran', [
+          'This session has not run /route, and its branch adds no spec.md.',
+          'Size the work before the first change to an app: run /route. A one-file fix comes back Tier 0.',
+          'A Tier 2 feature shows the operator mockups and a spec before any code.',
+        ]),
+      );
+      expect(
+        agentAfterRoute.run(editCall('Edit', { file_path: 'apps/pragma/site/a.tsx' }), NOT_ROUTED)
+          .kind,
+      ).toBe('refuse');
+      expect(
+        agentAfterRoute.run(
+          editCall('NotebookEdit', { notebook_path: '/repo/apps/talos/n.ipynb' }),
+          NOT_ROUTED,
+        ).kind,
+      ).toBe('refuse');
+    });
+
+    it('lets an edit outside apps/ pass, such as a script, a doc or another checkout', () => {
+      for (const path of [
+        '/repo/scripts/a.ts',
+        'docs/x.md',
+        '/elsewhere/apps/a.ts',
+        '/repoapps/a.ts',
+      ]) {
+        expect(agentAfterRoute.run(editCall('Edit', { file_path: path }), NOT_ROUTED)).toBe(PASS);
+      }
+    });
+
+    it('lets an edit with no path pass', () => {
+      expect(agentAfterRoute.run(editCall('Write', {}), NOT_ROUTED)).toBe(PASS);
+      expect(agentAfterRoute.run(editCall('Write', { file_path: 3 }), NOT_ROUTED)).toBe(PASS);
+      expect(
+        agentAfterRoute.run(
+          { hook_event_name: 'PreToolUse', tool_name: 'Edit', transcript_path: '/t.jsonl' },
+          NOT_ROUTED,
+        ),
+      ).toBe(PASS);
+    });
+
+    it('lets an app edit pass once /route ran or the branch adds a spec', () => {
+      const routed = fakeWorld({ transcript: '"skill":"route"' });
+      const framed = fakeWorld({ addedSpecs: 'docs/features/pragma/x/spec/spec.md\n' });
+      const call = editCall('Edit', { file_path: 'apps/pragma/a.ts' });
+
+      expect(agentAfterRoute.run(call, routed)).toBe(PASS);
+      expect(agentAfterRoute.run(call, framed)).toBe(PASS);
+    });
+
+    it('lets a subagent edit an app file, since its brief came after the sizing', () => {
+      expect(
+        agentAfterRoute.run(
+          agentCall({ tool_name: 'Write', agent_id: 'a1' }, { file_path: 'apps/pragma/a.ts' }),
+          NOT_ROUTED,
+        ),
+      ).toBe(PASS);
+    });
+
+    it('reads a call with no tool name as an edit', () => {
+      expect(
+        agentAfterRoute.run(
+          { hook_event_name: 'PreToolUse', tool_input: { file_path: 'apps/x/a.ts' } },
+          NOT_ROUTED,
+        ).kind,
+      ).toBe('refuse');
+    });
   });
 });
