@@ -16,15 +16,19 @@ recurs: none (the first entry where a site copied an API rule across the boundar
 
 # The boundary a sentence held and a copy crossed
 
-## Symptom
+## User impact
 
 A band member opens a bar in pragma, types the venue's phone number with
 its extension, and presses Save. The form accepts it, and the API
 refuses the request.
 
+| | Seen | Expected |
+| --- | --- | --- |
+| A 40-character phone number on a bar | The form accepts it, the save is refused | The form says 32 characters at most, as the API does |
+
 The form allowed 256 characters for the phone, the city and the contact
 name. The API allows 32, 128 and 128. Nothing in either side was wrong on
-its own terms: each had a test, and each test passed. This was found by
+its own terms. Each had a test, and each test passed. This was found by
 reading the two schemas side by side, not by a report from the band.
 
 The same shape was in every application with an API:
@@ -43,36 +47,27 @@ The same shape was in every application with an API:
   above, and setlist entry notes, where the form stopped at 1024
   characters and the API at 2048.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the save refused?** `barCreateSchema` caps `contactPhone` at
-   32 characters, and the form's schema let 256 through.
-2. **Why did the form have its own number?** `bar-form.core.ts` declares
-   its own Zod schema with a local `BAR_FIELD_MAX_LENGTH = 256` for four
-   fields the API limits three different ways.
-3. **Why did it declare its own?** Its blueprint told it to. The
-   `core-form-schema` description read: "The schema restates the back
-   end's input schema rather than importing it, because that file also
-   declares the Drizzle tables." Ten files followed it.
-4. **Why was restating the only option the blueprint saw?** The limits
-   lived in `*.schema.ts`, next to the tables, and CLAUDE.md forbids a
-   site importing from `@api/*`. ADR-2026-08-13T0026 had opened `domain/` for rules
-   both sides read, and nobody read a maximum length as a rule.
-5. **Why did banana-rush import from `@api/*` instead?** Nothing stopped
-   it. The rule was a sentence in CLAUDE.md, and ADR-2026-08-13T0026 said "the alias
-   plus the lint rules already hold" the boundary. The only lint rule
-   near it was `no-restricted-imports` on `domain/`, which stops the
-   folder reaching into either side and says nothing about the site
-   reaching into the API.
+- The bar's save was refused.
+  - `barCreateSchema` caps `contactPhone` at 32 characters, and the form's schema let 256 through.
+    - `bar-form.core.ts` declared its own limit for four fields the API limits three ways. `61cfe0797` wrote it:
 
-**Root cause:** the developer thought an input limit was a detail of
-the form and the boundary was held by a lint rule; actually the limit is
-a rule the API enforces, and no rule read the boundary. So both quick
-paths stayed open: import it from the API, or copy it.
+      ```ts
+      const BAR_FIELD_MAX_LENGTH = 256;  // ← the API says 32 for contactPhone, 128 for city and contactName
+      ```
 
-If the developer had known the limit is the API's rule, they would have
-put it in `domain/` the first time, because the folder already existed
-for exactly that.
+      - The API's limits lived in `bars.schema.ts`, the file that also declares the Drizzle tables. CLAUDE.md at `61cfe0797^`, line 65, prescribed that shape ("`<domain>.schema.ts` (Drizzle table definitions + Zod input schemas)") and named no folder both sides could read. Importing the limit meant pulling the tables into the site, so restating was the path the layout left (Machine).
+    - `f2fa6f626` wrote that restatement into the `core-form-schema` blueprint: "The schema restates the back end's input schema rather than importing it, because that file also declares the Drizzle tables." Ten files followed it (Machine).
+      - ADR-2026-08-13T0026 opened `domain/` three days later, for rules both sides read. The blueprint was not revised, and no one read a maximum length as such a rule.
+- banana-rush took the other path and imported `normalizeJoinCode` and `JOIN_CODE_LENGTH` from `@api/*`.
+  - ADR-2026-08-13T0026 said "the alias plus the lint rules already hold" the boundary. The only nearby rule was `no-restricted-imports` on `domain/`, which stops the folder reaching into either side and says nothing about the site reaching into the API (Method).
+
+## Root cause of occurrence
+
+*Thought an input limit is a detail of the form, and the boundary is held by a lint rule. Actually the limit is a rule the API enforces, and no rule read the site-to-API boundary.* So both quick paths stayed open: import it from the API, or copy it. (Machine, with Method behind it)
+
+Had the writers known the limit is the API's rule, they would have put it in `domain/` once that folder existed. Before it existed, the layout gave them no place to share it. Sources: the blueprint description and the ADR sentence quoted above, and `git show 61cfe0797^:CLAUDE.md`, line 65.
 
 ## Detection failure causes
 
@@ -109,13 +104,11 @@ The `core-form-schema` description now says the form keeps its own
 schema, because its fields are the strings a person types, and takes
 every limit inside it from `domain/`.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — custom lint rules)
+**Type:** DevX check (level 2)
 
-**Reference:** [PR #166](https://github.com/hugoleborso/borso.fr/pull/166) · commit `84891d2d`
-
-**The actual fix:**
+**Reference:** the commit adding this file, [`84891d2d`](https://github.com/hugoleborso/borso.fr/commit/84891d2dc) in PR #166. Both rules are enabled as errors today (`.oxlintrc.json:902-903`, read this session).
 
 ```diff
 + // eslint-rules/no-api-import-in-site.js
@@ -124,36 +117,14 @@ every limit inside it from `domain/`.
 + // eslint-rules/no-api-declaration-repeated-in-site.js
 + // refuses a site constant or pure function whose name the same
 + // application's api/ or domain/ already declares
-
-  // eslint.config.js, SITE_FILES
-  'borso/no-api-anchor-in-site': 'error',
-+ 'borso/no-api-import-in-site': 'error',
-+ 'borso/no-api-declaration-repeated-in-site': 'error',
 ```
 
-The second rule is what turned a three file finding into a sweep. Each
-time a limit moved to `domain/`, the rule named the next copy of it,
-such as the two other `MINIMUM_INTERVAL_MINUTES` in last-loop-lepin's
-site.
+The import door is closed at lint. The copy door is closed only for a copy that keeps its name. The second rule turned a three-file finding into a sweep. Each time a limit moved to `domain/`, it named the next copy, such as the two other `MINIMUM_INTERVAL_MINUTES` in last-loop-lepin's site.
 
-It compares names, so a copy under a new name still passes. The
-`reviewer` bullet added to
-[02](../standards/02-purity-and-core-files.md) covers that case, and the
-blueprint no longer tells anyone to restate.
+A copy under a new name still passes, and one does today. `apps/last-loop-lepin/site/src/components/organisms/admin-login.core.ts:5-6` declares `MINIMUM_PIN_LENGTH = 4` and `MAXIMUM_PIN_LENGTH = 32`, and `api/src/auth/auth.schema.ts:23-24` declares `PIN_MIN_LENGTH = 4` and `PIN_MAX_LENGTH = 32` (measured). The `reviewer` bullet in [02](../standards/02-purity-and-core-files.md), line 291, is what holds the renamed case, and it missed this one.
 
-**Sibling defects swept:** every finding listed under Symptom. The
-`infra/cdk` test that compared the two haversine copies is retired,
-because there is one copy. Two front end restatements remain on
-purpose: banana-rush's `isJoinable` repeats the lobby clause of
-`refuseJoin`, and pragma's `judgeRelease` and `judgeTap` repeat the
-budget comparison of `judgeScore`. Both decide what a screen offers
-before a request exists, and the API still decides.
+**Proposed:** add a lint rule on site files of apps with a `domain/` (`ls -d apps/*/domain`) that refuses any argument to Zod `.min`, `.max` or `.length` that is not an identifier imported from `@domain/*`. A copy then fails whatever it is named, and the reviewer bullet can go. A site-only limit with no API counterpart would have to live in `domain/` too or carry a disable with its reason (inferred tradeoff, not measured).
 
-## See also
+**Proof it can fail:** the rules' suites, `eslint-rules/no-api-import-in-site.test.js` and `no-api-declaration-repeated-in-site.test.js`, pin the refused shapes.
 
-- [`the-invariant-test-read-a-file-stryker-was-rewriting.md`](./the-invariant-test-read-a-file-stryker-was-rewriting.md),
-  the test that held the two haversine copies together until there was
-  one.
-- [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md),
-  the same shape: a blueprint prescribed the move that caused the defect.
-- [ADR-2026-08-13T0026](../adr/2026-08-13T0026-pragma-domain-folder-for-cross-boundary-rules.md).
+**Similar instances:** every finding listed under *User impact* was moved to `domain/`. The `infra/cdk` test that compared the two haversine copies is retired, because there is one copy. Two front-end restatements remain on purpose. banana-rush's `isJoinable` repeats the lobby clause of `refuseJoin`, and pragma's `judgeRelease` and `judgeTap` repeat the budget comparison of `judgeScore`. Both decide what a screen offers before a request exists, and the API still decides. The PIN pair above is the one unintended copy found this session.

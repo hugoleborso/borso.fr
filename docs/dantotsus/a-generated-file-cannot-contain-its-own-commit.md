@@ -14,10 +14,9 @@ zone: scripts/architecture/architecture-graph.ts
 
 # A generated file cannot contain its own commit, so a byte gate on it failed the commit after the one that moved it
 
-## Symptom
+## User impact
 
-Editing a document under `docs/standards/` and committing it succeeded. The
-**next** commit then failed:
+A session that edited a document under `docs/standards/` committed it fine. Its **next** commit then failed, naming an app nobody touched:
 
 ```
 [pre-commit] checking the architecture pages
@@ -25,106 +24,56 @@ Editing a document under `docs/standards/` and committing it succeeded. The
   Run `pnpm exec tsx scripts/architecture/architecture-graph.ts`.
 ```
 
-The failure names an application whose code nobody touched, on a commit that
-touched neither `apps/` nor the generator. Regenerating fixes it, and the next
-standards edit brings it straight back.
+| | Seen | Expected |
+| --- | --- | --- |
+| The commit after a standards edit | Refused on `pragma-architecture.html`, on a commit touching neither `apps/` nor the generator | Accepted, because no code moved |
+| After regenerating | Accepted, and the next standards edit brought the refusal back | One fix that holds |
 
-## Root-cause chain
+## Causal chain
 
-1. The architecture page carries a Standards tab with a commit-by-commit diff
-   viewer, so each document ships with its whole history: sha, date, subject and
-   the file's text at every commit.
-2. That history comes from `git log`, which is the one input to the page that is
-   not the working tree.
-3. A pre-commit hook runs before the commit exists, so the generator reads
-   history up to `HEAD`, the *parent* of the commit being made. The page written
-   into commit N therefore contains history up to N−1, and `--check` passes.
-4. Commit N lands. `git log` now returns N.
-5. At commit N+1 the generator produces a page containing N, the committed page
-   stops at N−1, the bytes differ, and the gate fails.
+- The commit after a standards edit (commit N+1) was refused as out of date.
+  - The page the generator built at N+1 held history up to N. The committed page stopped at N−1.
+    - At commit N, pre-commit ran before the commit existed, so `git log` returned history up to `HEAD`, the parent N−1. That page was committed and passed.
+      - The page embedded each standard's history from `git log`, the one input that is not the working tree. a58ab3193, "standards get a tab with a commit diff", added it: "The text at every commit ships with the page".
+        - The page was committed and gated to the byte. d562e9159, the commit that created it, says "pre-commit runs the same script with `--check` ... so the page cannot fall behind the code".
+          - Committing a generated file beside a `--check` that diffs it against git was the repository's practice. ADR 2026-08-20T1031 counts fourteen files built that way (Method).
 
-The general form: **a file cannot contain the sha of the commit that adds it.**
-Any artefact embedding its own history is one commit behind by construction, and
-a byte gate over it is asking a question with no true answer.
+## Root cause of occurrence
 
-## Detection failure causes
+*Thought readers open the committed page, so it must be committed and kept equal to the code byte for byte. Actually every consumer rebuilt it from source before use, so the committed copy had no reader, and the byte gate's only subject was its own output.* (Method)
 
-- **The gate was right about the bytes and wrong about the question.** Its
-  purpose is "the map matches the code"; it was comparing bytes that do not
-  describe code at all.
-- **The failure surfaced one commit late and pointed at the wrong file.** It
-  named `pragma-architecture.html` on a commit touching `docs/standards/`, so
-  the natural first read is a generator bug or a stale checkout.
-- **The workaround always worked.** Running the generator cleared it every time,
-  which is exactly what makes a recurring cost invisible: each instance is
-  thirty seconds, and nothing accumulates a signal.
-
-## Countermeasure
-
-**Stop committing the pages.** `.gitignore` covers `docs/architecture/*.html`;
-the model beside each page stays committed and stays gated to the byte, because
-every byte of it comes from the working tree.
-
-Nothing was reading the committed bytes. Both consumers already rebuilt from
-source before using them:
+The consumers, as read on PR #49:
 
 | Consumer | What it does | Needed the commit? |
 | --- | --- | --- |
-| `pages.yml` | regenerates, then publishes to GitHub Pages | no — its own comment said "a page published from a stale file is impossible" |
+| `pages.yml` | regenerates, then publishes to GitHub Pages | no, its own comment said "a page published from a stale file is impossible" |
 | `architecture.yml` | regenerates the head model, then diffs it against a worktree of the merge base | no |
 | `--check` | compared the committed page against a fresh one | only because the page was committed |
 
-So the gate's only subject was its own output. Removing the file removed the
-gate, the staleness, and 9.3 MB that was rewritten in full on every change.
+Under that practice, adding a `git log` input made a page that can never match itself. A file cannot contain the sha of the commit that adds it.
 
-`.gitignore` already carried the same rule for the per-pull-request diff pages,
-with the same reason written next to it. The maps should have joined them.
+## Detection failure causes
+
+- **Pre-commit:** the gate compared bytes, not "the map matches the code". It passed on the commit that moved the history and failed one commit late, on a file the failing commit did not touch.
+- **The workaround:** regenerating cleared it every time, so each hit cost a short regeneration and nothing accumulated a signal.
+
+## Countermeasure
+
+Commit `256c89f06` (then `50eb3dbf4`) stopped committing the pages. `.gitignore` covers `docs/architecture/*.html`. A first attempt fenced the git-derived bytes and taught `--check` to skip them. It worked, and it spent a renderer change and a comparison special case to keep a file nothing read, so it was replaced by the deletion.
 
 ## Eradication
 
-**Structural, level 1.** The failure cannot recur, because the artefact it was
-about no longer exists in the tree. There is no committed page to fall behind,
-and a reader always opens one built from the current code.
+**Type:** structural impossibility (level 1)
 
-Verified after the change:
+**Reference:** commit `256c89f06` (PR #49), then `9326a890a`, "refactor(meta): a generated file is not committed" (PR #70), which applied the rule to every generator.
 
-| Scenario | Expected | Result |
-| --- | --- | --- |
-| A commit edits a standard, then `--check` runs without regenerating | passes | passes |
-| A `*.utils.ts` gains an export, no regeneration | fails | fails, on `borso-fr-architecture.json` |
+```diff
++docs/architecture/*.html
++docs/architecture/*-architecture.json
+```
 
-**A first attempt that was the wrong altitude, kept here because the reasoning
-is the lesson.** The first fix fenced the git-derived bytes between
-`<!--history-->` and `<!--/history-->` and taught `--check` to compare the page
-with that region removed. It worked, and it was verified three ways. But it
-spent a page-renderer change, a client-side rewrite of the version counts and a
-comparison special case to preserve a file that nothing read. *Making a gate
-tolerate a useless artefact is worse than deleting the artefact.* The question
-"why is this committed at all" arrives before "how do I compare it", and asking
-it in that order would have skipped the fence entirely.
+There is no committed page to fall behind. ADR 2026-08-20T1031 made the rule general: a file is committed when it is an input a person wrote or accepted, and ignored when it is an output. Every generator's `--check` lost its byte comparison and keeps only its validations. `scripts/reports.sh` rebuilds the outputs before anything reads them.
 
-**What this deliberately accepts:** a fresh clone cannot open the map without
-running the generator, and GitHub's file view no longer serves it. Neither is a
-loss in practice — a 4.5 MB HTML blob was never readable in that view, the
-published Pages site is the address people use, and every pull request carries
-its own maps as a workflow artifact.
+**Proof it can fail:** after the change, a commit that edits a standard and runs `--check` without regenerating passes. A `*.utils.ts` that gains an export without regeneration still failed, on `borso-fr-architecture.json`, the model that was then still committed (measured on PR #49). The model has been an ignored output since `9326a890a`.
 
-## The general shape
-
-A byte gate over a generated file is only honest when every input to that file
-is in the tree being committed. The moment one input is `git log`, the wall
-clock, a network response or an environment variable, the gate stops asking "is
-this derived from the code" and starts asking "was this generated at this exact
-moment", which nothing can satisfy twice.
-
-The second question to ask, and the one that resolves it faster: **who reads the
-committed copy?** A generated artefact that every consumer rebuilds before using
-is not an artefact, it is a cache — and a cache under a byte gate is a chore
-with no beneficiary.
-
-Two other generators here read the history, and both took the second road before
-this one did: `scripts/standards/hotspots.ts` and
-`scripts/standards/temporal-coupling.ts` ship no `--check` at all, and each page
-prints the revision its dates were read at. That is the answer whenever the
-artefact is worth committing — state the revision, drop the gate — and this one
-is the case where the artefact was not worth committing either.
+**Similar instances:** the ADR lists the fourteen generated files of the time, all now ignored. `git ls-files docs/architecture` lists no generated file. `scripts/standards/hotspots.ts` and `scripts/standards/temporal-coupling.ts` also read the history, and are outputs under the same rule.

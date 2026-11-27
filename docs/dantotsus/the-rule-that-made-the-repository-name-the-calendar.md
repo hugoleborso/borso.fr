@@ -14,110 +14,73 @@ zone: .oxlintrc.json
 
 # The naming standard's own example failed the rule the naming standard cites
 
-## Symptom
+## User impact
 
-`docs/standards/01-naming.md` shows this shape as the thing to do — a duration
-named once, built from its units:
+The users are the agents and the operator writing code here. `docs/standards/01-naming.md` showed a duration built from its units as the thing to do. Written into any file under `apps/` or `infra/`, that shape failed the lint rule the same document cites as its enforcement. So every duration needed its factors named first, in every file.
 
-```ts
-const SESSION_TIME_TO_LIVE_MS = 30 * 24 * 60 * 60 * 1000;
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `const SESSION_TIME_TO_LIVE_MS = 30 * 24 * 60 * 60 * 1000;` in `apps/` | Five `no-magic-numbers` errors, one per factor | At most `30` flagged, the one number that needs a name |
 
-Written into any file under `apps/` or `infra/`, it produced five errors from
-`no-magic-numbers`, the rule that same document cites two sections later as its
-enforcement:
+Across `apps/` and `infra/` on 2026-08-19, 48 declarations of four constants (`SECONDS_PER_MINUTE`, `MILLISECONDS_PER_SECOND`, `MINUTES_PER_HOUR`, `HOURS_PER_DAY`) sat in 21 files. 45 of them arrived with the commit that turned the rule on (measured by the first version of this entry).
 
-```
-1:33  error  No magic number: 30    no-magic-numbers
-1:38  error  No magic number: 24    no-magic-numbers
-1:43  error  No magic number: 60    no-magic-numbers
-1:48  error  No magic number: 60    no-magic-numbers
-1:53  error  No magic number: 1000  no-magic-numbers
-```
+## Causal chain
 
-## Root-cause chain
+- Every duration under `apps/` and `infra/` had to be built from per-file factor constants.
+  - `no-magic-numbers` reported every numeric literal outside its `ignore` list, including the factors inside the initializer of a constant that already had a name.
 
-1. `CLAUDE.md` states the rule as *"a bare `31` **inside a function body**
-   becomes a named const"*. That scope is the whole idea: the name is what the
-   reader needs, and inside a `const NAME = …` the name is already there.
-2. ESLint's `no-magic-numbers` has no such scope. It reports every numeric
-   literal outside its `ignore` list wherever it appears, including inside the
-   initializer of the named constant that satisfies the rule's own purpose.
-3. So the only way to write a duration was to name each factor first:
-   `MILLISECONDS_PER_SECOND`, `SECONDS_PER_MINUTE`, `MINUTES_PER_HOUR`,
-   `HOURS_PER_DAY`.
-4. Those four facts are needed in every file that touches time, and this
-   repository forbids cross-application imports, so each file declared its own.
+    ```js
+    // eslint.config.js, as of a9c72cedd
+    'no-magic-numbers': ['error', {
+      ignore: [...IDENTITY_VALUES, ...HTTP_STATUS_CODES], // ❌ 60, 24 and 1000 reported even in `const X_SECONDS = 12 * 60 * 60`
+      …
+    }],
+    ```
 
-The measurement is the finding. Across `apps/` and `infra/` today:
+    - Commit `a9c72cedd` (2026-08-15, written by an agent, 434 files) turned the rule on to close an audit gap: the standard cited it and it was off. Its message: "`no-magic-numbers` is on, with `0`, `1`, `-1` and HTTP status codes exempt … The literals it found are named."
+      - The right answer was in the agent's context. The commit edited the *Enforced by* section of `01-naming.md`. That section said the rule "reports 1928 sites across the repository … so turning it on is a decision about 1928 edits rather than a configuration line". The same file showed `const MAXIMUM_RACE_DURATION_SECONDS = 12 * 60 * 60;` as its example, which the rule now refused. The goal of closing every gap in one 434-file commit won over both. (Man)
 
-| Constant | Declarations |
-| --- | --- |
-| `SECONDS_PER_MINUTE` | 17 |
-| `MILLISECONDS_PER_SECOND` | 16 |
-| `MINUTES_PER_HOUR` | 10 |
-| `HOURS_PER_DAY` | 5 |
+## Root cause of occurrence
 
-Forty-eight declarations of four facts, spread over 21 files in four
-applications. **Forty-five of them arrived with the commit that turned the rule
-on**, against eleven that existed before it. A rule introduced to remove magic
-numbers quadrupled the number of places the same four numbers are written down.
+*Thought turning on `no-magic-numbers` enforces the standard's rule, "a bare `31` inside a function body becomes a named const", actually the rule reports every literal outside its `ignore` list, including the factors of a constant that is already named.*
+
+Man, under the agentic rule. The standard's example and its warning about 1928 sites were both in the file the commit edited (read at `a9c72cedd^:docs/standards/01-naming.md`, lines 142 and 205). The agent verified the change by asking whether the repository still linted, and it did, after 242 literals were named. The worker's state fits too: one commit closed fifteen audit gaps across 434 files. The fix is a gate, not another sentence in the standard.
 
 ## Detection failure causes
 
-- **Every individual instance looks right.** `const SECONDS_PER_MINUTE = 60;`
-  is a named constant. Nothing about it, read alone, says it is the fortieth
-  copy.
-- **The rule was verified against the wrong question.** Turning it on was
-  checked by *"does the repository still lint"*, and it did — after 242 literals
-  were named. Nobody asked what the naming had produced.
-- **The contradiction is two sections apart in one document**, and the example
-  was written before the rule was cited. Neither half was wrong when it was
-  written.
-- **The enforcement ledger cannot see this.** It checks that a cited rule exists
-  and is enabled. `no-magic-numbers` is both. A rule that is on and asking for
-  the wrong thing is exactly what the ledger does not model.
+- **Linter:** every copy looks right alone. `const SECONDS_PER_MINUTE = 60;` is a named constant, and nothing says it is the fortieth.
+- **Self-validation:** the change was checked by "does the repository still lint". Nobody counted what the naming produced.
+- **The enforcement ledger:** `scripts/standards/enforcement-ledger.ts` checks that a cited rule exists and is enabled. A rule that is on and asks for the wrong thing passes it.
 
 ## Countermeasure
 
-Exempt the time-unit factors — `1000`, `60`, `24`, `7`, `365` — as a named
-`TIME_UNIT_FACTORS` list beside the identity values and the HTTP status codes,
-which are in the `ignore` list for the same reason: a status code is already a
-name in a published registry, and so is the number of seconds in a minute.
+`8c08c5d87` exempted the time-unit factors `1000`, `60`, `24`, `7` and `365`, beside the identity values and the HTTP status codes. A status code is a name in a published registry, and so is the number of seconds in a minute. `31` asks "why thirty-one". `60` does not.
 
-The test is whether the name answers a question. `31` asks *why thirty-one*.
-`60` does not.
+| Probe | Result |
+| --- | --- |
+| `const SESSION_TIME_TO_LIVE_MS = 30 * 24 * 60 * 60 * 1000;` | only `30` flagged |
+| `function readRetryBudget() { return 31; }` | flagged |
+| `pnpm exec eslint . --max-warnings 0` | clean |
+
+The cost: a bare `60` is now legal as a timeout or a limit, where before it had to be named.
 
 ## Eradication
 
-**Configuration, level 2.** The rule now asks for a name where a name adds
-something, and stops asking where it does not, so the pressure that produced the
-duplication is gone.
+**Type:** DevX check (level 2).
 
-Verified in both directions after the change:
+**Reference:** commit [`8c08c5d8`](https://github.com/hugoleborso/borso.fr/commit/8c08c5d872). The rule moved to oxlint in `9dcf74547` (PR #197) and kept the list.
 
-| Probe | Expected | Result |
-| --- | --- | --- |
-| `const SESSION_TIME_TO_LIVE_MS = 30 * 24 * 60 * 60 * 1000;` | only `30` flagged | only `30` flagged — the domain number, which does deserve a name |
-| `function readRetryBudget() { return 31; }` | flagged | flagged |
-| `pnpm exec eslint . --max-warnings 0` | clean | clean |
+```json
+// .oxlintrc.json
+"no-magic-numbers": ["error", { "ignore": [0, 1, -1, 200, …, 503, 1000, 60, 24, 7, 365], … }]
+```
 
-`docs/standards/01-naming.md` now lists the exemption with the count behind it,
-and states the rule the exemption follows from, so the next literal argues about
-the right thing.
+The standard's example now lints. The rule no longer demands a factor constant.
 
-**The cost, stated because it is real:** a bare `60` is now legal as a timeout
-or a limit, where before it had to be named. That is a genuine loss and it is
-not measurable in advance — the case for taking it is the table above, four
-facts against forty-eight copies.
+The copies it demanded are still there and still growing. `grep -rhoE "const (SECONDS_PER_MINUTE|MILLISECONDS_PER_SECOND|MINUTES_PER_HOUR|HOURS_PER_DAY)\b" apps infra --include=*.ts --include=*.tsx | wc -l` counts 74 declarations in 39 files today, against 48 in 21 when this entry was written (measured 2026-11-27). Nothing refuses a new one.
 
-**What this deliberately does not do:** delete the forty-eight declarations.
-They are correct code, and rewriting 21 files across four applications in a
-kaizen pull request trades a documented redundancy for an undocumented
-regression surface. What changes is that they are now removable rather than
-required, and the next file that needs a duration does not have to add four more.
+**Proposed:** subtract, then gate. Inline the 74 factor constants, which the `ignore` list already allows. Add a rule under `eslint-rules/`, loaded through `jsPlugins` in `.oxlintrc.json`, that refuses a `const` whose initializer is only one of `1000`, `60`, `24`, `7` or `365`. A new per-file copy of a calendar fact could then not be committed, whatever the next audit decides.
 
-## See also
+**Proof it can fail:** inferred from the probe table above, not replayed this session. `function readRetryBudget() { return 31; }` in `apps/` is still flagged.
 
-- [`purity-rule-was-wrong-four-times`](./purity-rule-was-wrong-four-times.md) — the other shape of this: a rule that was on, enforced, and asking for the wrong thing.
-- [`a-lint-rule-that-knew-only-one-of-three-spellings`](./a-lint-rule-that-knew-only-one-of-three-spellings.md) — a rule right about its subject and wrong about its reach.
+**Similar instances:** [`purity-rule-was-wrong-four-times.md`](./purity-rule-was-wrong-four-times.md) is another rule that was on, enforced, and asking for the wrong thing. [`a-lint-rule-that-knew-only-one-of-three-spellings.md`](./a-lint-rule-that-knew-only-one-of-three-spellings.md) is a rule right about its subject and wrong about its reach.

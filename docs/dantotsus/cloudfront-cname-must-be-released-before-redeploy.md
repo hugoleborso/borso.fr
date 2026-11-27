@@ -5,103 +5,65 @@ detected-at: operator-deploy
 severity: high
 related-pr: '#6'
 fix-commits: [88b1178cf6]
-eradication-level: 2
-eradication-paths: [scripts/preflight-cloudfront-aliases.sh]
+eradication-level: 5
+eradication-paths: [docs/knowledge/cloudfront-cname-uniqueness.md]
 time-to-detect: minutes
 tags: [cdk, cloudfront, route53, deploy]
 zone: .github/workflows/deploy.yml
 ---
 
-# A CloudFront CNAME is single-distribution; cutover deploys must release it first
+# The new borso.fr stack could not take its own domain from the old distribution
 
-## Symptom
+## User impact
 
-`pnpm --filter @borso-app/borso-fr run deploy` for the new prod stack failed at `SiteDistribution390DED28` with:
+The first CDK prod deploy of borso.fr failed, and the stack rolled back.
 
-```
-AWS::CloudFront::Distribution: One or more of the CNAMEs you provided are already
-associated with a different resource.
-(Service: CloudFront, Status Code: 409, Request ID: …)
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `pnpm --filter @borso-app/borso-fr run deploy` | `AWS::CloudFront::Distribution: One or more of the CNAMEs you provided are already associated with a different resource. (Service: CloudFront, Status Code: 409)` at `SiteDistribution390DED28` | The new stack serves `borso.fr`. |
 
-The new CDK stack tried to claim `borso.fr` as an alias on its CloudFront distribution. The pre-existing distribution `E80907R476ZAJ` (the legacy S3-website-origin setup, last deployed 2025-12-07) still listed `borso.fr` in its Aliases and CloudFront refused the request.
+The hand-made distribution `E80907R476ZAJ`, last deployed 2025-12-07, kept serving the site.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why** did the deploy fail with `CNAME already associated`?
-   CloudFront enforces a global, account-wide uniqueness on Aliases (CNAMEs): exactly one distribution can claim a given hostname at any time. The new distribution requested `borso.fr` while the old one still owned it; the API returned 409.
+- The deploy failed with a 409 on the new distribution, and CloudFormation rolled the stack back.
+  - The new distribution asked for the alias `borso.fr`:
 
-2. **Why** was the old distribution still claiming the alias?
-   Nothing had explicitly released it. The migration plan implicitly assumed the new deploy would "take over" the alias — there is no take-over operation. The new distribution can only acquire the alias *after* the old distribution releases it.
+    ```ts
+    domainNames: [props.domainName], // ← claims borso.fr
+    ```
 
-3. **Why** wasn't this caught in conception?
-   The CDK `StaticSite` construct creates a distribution + alias as a single unit and the spec walked happy-path "create new prod" only. The migration case (alias currently held by a *different* CloudFront resource) wasn't named in the spec or plan.
+    - CloudFront lets one distribution hold an alias at a time, and `E80907R476ZAJ` still listed `borso.fr` in its aliases.
+      - The deploy ran without releasing the alias from the old distribution first.
+        - The migration was run as a plain "create new prod" deploy. Its input, the plan, covered only creating a new prod, not taking a domain over from a hand-made distribution (inferred from this entry's first version). That migration happens once per hand-made site.
 
-4. **Why** didn't the local `cdk diff` warn?
-   `cdk diff` compares the proposed template against the current stack; it can't see resources owned by *other* CloudFormation stacks (or, in this case, a CloudFront distribution that was created manually outside CDK). The 409 only surfaces at AWS API call time.
+## Root cause of occurrence
 
-5. **Why** is this the operator's first encounter with the constraint?
-   This is the first feature where a CDK-managed apex distribution replaces a hand-managed one. Every prior deploy either created a fresh alias (no conflict) or updated an alias the same stack already owned.
+*Thought the new distribution would adopt the alias at `cdk deploy`, actually CloudFront has no take-over: the old distribution must release the alias first, and the change must finish deploying before the new one can claim it.* (Man)
 
-**Root cause:** *thought* the new distribution would adopt the alias on `cdk deploy`; *actually* CloudFront's alias-uniqueness invariant means the alias must be released from the old distribution as a separate, prior operation, with a propagation wait between them.
+`docs/knowledge/cloudfront-cname-uniqueness.md` records the rule: "A CloudFront alias belongs to one distribution at a time; release it from the old one before the new one can claim it."
 
 ## Detection failure causes
 
-- **Typing:** N/A — runtime AWS API error.
-- **Linter / static analysis:** N/A.
-- **Functional validation locally:** `cdk synth` produces a valid template; `cdk diff` against the empty `borso-fr-prod` stack shows a clean creation. Neither inspects the live CloudFront state.
-- **CI (tests / build):** `pnpm typecheck` / `pnpm exec biome lint` / `pnpm exec knip` all green; the constraint is at deploy time, not build time.
-- **Code review:** Reviewer would have to remember the CNAME constraint and trace whether the apex was already claimed elsewhere — not in the diff.
-- **PO / QA validation:** N/A.
-- **Staging monitoring:** N/A — the new stack never reached `CREATE_COMPLETE`.
-- **Operator-deploy:** the failure landed here. CFN rolled the stack back; the operator now had to manually release the alias before retrying.
+- **Typing and linter:** the alias is a valid string. The constraint lives in the live account.
+- **Local synth and diff:** they compare with the target stack, which did not exist yet. They cannot see a distribution created by hand outside CloudFormation.
+- **CI:** typecheck, lint and knip read the code, not the account.
+- **Review:** the diff shows a new distribution with an alias. Who holds that alias today is not in it.
 
 ## Countermeasure
 
-Run the alias-release on the old distribution, wait for it to deploy, retry `pnpm deploy`. Concretely:
+The operator removed the alias from `E80907R476ZAJ` with `aws cloudfront update-distribution` and an empty `Aliases`, waited for `Status=Deployed`, and re-ran the deploy. A later one-shot script (commit `9109730`, since deleted as its message asked) automated the same takeover for the remaining hand-made sites.
 
-```bash
-ETAG=$(aws cloudfront get-distribution-config --id E80907R476ZAJ --query 'ETag' --output text)
-aws cloudfront get-distribution-config --id E80907R476ZAJ \
-  --query 'DistributionConfig' > /tmp/old-config.json
-jq '.Aliases = {Quantity: 0}' /tmp/old-config.json > /tmp/old-config-no-alias.json
-aws cloudfront update-distribution \
-  --id E80907R476ZAJ \
-  --if-match "$ETAG" \
-  --distribution-config file:///tmp/old-config-no-alias.json
-# Wait for Status=Deployed, then re-run pnpm deploy.
-```
+## Eradication
 
-- **Code:** none for the recovery itself — it's an operator action against the AWS API.
-- **Operator action:** above commands; takes 5–15 min for CloudFront to propagate.
+**Type:** knowledge (level 5)
 
-## Eradication (mandatory — code-level)
+**Reference:** `docs/knowledge/cloudfront-cname-uniqueness.md`, triggered on the output `One or more of the CNAMEs you provided are already associated with a different resource` and `CNAMEAlreadyExists`.
 
-**Type:** DevX check (level 2 — pre-deploy preflight script)
+Commit `88b1178` also added `scripts/preflight-cloudfront-aliases.sh`, chained before `cdk deploy` in seven `apps/*/package.json` deploy scripts. It checks nothing. It reads `.Properties.DistributionConfig.Aliases.Items`, the shape of the CloudFront API. A CloudFormation template carries `Aliases` as a plain list, as `infra/cdk/test/unit/static-site.test.ts` asserts (`Aliases: ['borso.fr']`). jq fails on `.Items` of a list, `2>/dev/null || true` swallows the error, and the script exits 0. Measured this session: given a template with `"Aliases":["borso.fr"]` and a fake `aws` that reports another distribution holding `borso.fr`, it printed `no Aliases declared in synth — nothing to check.` and exited 0. Had it read the right shape, it would have refused every redeploy, because it counts the stack's own distribution as a conflict. The migration script's commit message already noted that it "can't tell self-ownership from cross-distribution conflict".
 
-**Reference:** PR (this kaizen) · commit `88b1178cf6`
+**Proposed:** subtract the preflight. Remove `../../scripts/preflight-cloudfront-aliases.sh cdk.out &&` from the seven deploy scripts and delete the script. It never ran a check, and the case it targets, a takeover from a hand-made distribution, is done for every site. That removes a call that runs on every deploy for a migration that will not recur, and its seven copies. The triggered knowledge entry stays, so the next 409 brings the runbook to whoever sees it.
 
-**The actual fix:** add a preflight script run by `pnpm --filter @borso-app/<app> run deploy` *before* `cdk deploy`. The script:
+**Proof it can fail:** the preflight's failure to fail is measured above. The knowledge entry fires on the 409 text, by its `triggers.output`.
 
-1. Reads the desired aliases from the stack synth (`cdk synth --json` and grep `AWS::CloudFront::Distribution.Properties.DistributionConfig.Aliases.Items`).
-2. Calls `aws cloudfront list-distributions` and finds any *other* distribution currently claiming any of those aliases.
-3. If a conflict exists, prints the conflict + the exact `aws cloudfront update-distribution` commands to release the alias, and exits non-zero. The deploy never reaches CFN with the latent 409.
-
-The check is also a knowledge entry under [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md) for context the script can't fit in error output.
-
-```bash
-# scripts/preflight-cloudfront-aliases.sh (added in this kaizen PR)
-# Reads cdk.out/<stack>.template.json after `cdk synth`, extracts every Aliases.Items
-# entry, queries `aws cloudfront list-distributions`, and refuses to proceed if any
-# alias is held by a distribution other than the one the stack will manage.
-```
-
-The pre-existing `apps/<app>/package.json` deploy script chains this preflight before `cdk deploy --all --require-approval never`.
-
-**Sibling defects swept:** all four `StaticSite` consumers (`borso-fr`, `borsouvertures` migration if/when it happens, the previewable-app construct's preview distribution, the shared previews CDN) inherit the same preflight via the package-script chain.
-
-## See also
-
-- [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md) — vendor rule + recovery runbook.
-- [`docs/knowledge/cloudfront-resources-in-us-east-1.md`](../knowledge/cloudfront-resources-in-us-east-1.md) — sister CloudFront constraint that bites the same migration class.
-- [`docs/dantotsus/dsql-first-deploy-must-be-prod.md`](./dsql-first-deploy-must-be-prod.md) — same defect shape (vendor ordering rule that surfaces only at deploy time).
+**Similar instances:** `grep -l "preflight-cloudfront-aliases" apps/*/package.json` lists the seven deploy scripts that call it.

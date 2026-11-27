@@ -6,7 +6,7 @@ severity: high
 related-pr: '#40'
 fix-commits: [0bf0ad517b]
 eradication-level: 2
-eradication-paths: [.github/workflows/ci.yml, apps/last-loop-lepin/vitest.config.ts]
+eradication-paths: [.github/workflows/ci.yml, apps/last-loop-lepin/vitest.config.ts, .github/workflows/preview.yml]
 time-to-detect: months
 tags: [gates, ci, testing, coverage, mutation, process]
 zone: .github/workflows/ci.yml
@@ -16,102 +16,85 @@ recurs: [per-file-coverage-gate-was-never-armed]
 
 # Four gates reported success while measuring nothing
 
-## Symptom
+## User impact
 
-Four independent checks in this repository were green, or silent, while
-enforcing nothing. They were found within a few hours of each other, by
-measuring rather than by reading.
+Every pull request was merged behind four checks that were green, or silent, while enforcing nothing. They were found within a few hours of each other on PR #40, by measuring.
 
-| Gate | What it looked like | What it did |
-|------|---------------------|-------------|
-| Per-file 100% coverage on pure files | A coverage table printed on every run | Thresholds sat inside a `vitest.workspace.ts` project entry, which Vitest ignores. Nothing was asserted. |
-| The same gate, in CI | `test:core` passing | The script never passed `--coverage`. |
-| Mutation testing at zero survivors | A task reporting `exit code 0` | The command was piped through `tail`, so the shell reported the pager's status. Stryker had exited 1. |
-| Preview auto-seed | A green deploy | `last-loop-lepin` requires a `fixture` query parameter. The step posted without one, took a 400, and emitted a `::warning::`. |
+| Gate | Seen | Expected |
+| --- | --- | --- |
+| Per-file 100% coverage on pure files | A coverage table on every run, and a pass | A failure when a pure file is under 100% |
+| The same gate in CI | `test:core` passing | The same failure in CI |
+| Mutation testing at zero survivors | A task reporting `exit code 0` | Exit 1, which Stryker had returned |
+| Preview auto-seed of `last-loop-lepin` | A green deploy with a `::warning::` | A failed job, because every seed took a 400 |
 
-A fifth belongs with them: `apps/pragma` appeared in no CI workflow at all. Its
-609 tests had never gated a pull request.
+`apps/pragma` also appeared in no CI workflow. Its 609 tests had never gated a pull request (measured on PR #40).
 
-## Root-cause chain
+## Causal chain
 
-Each has its own mechanism, and they are worth reading together because the
-mechanisms differ and the shape does not.
+- A pure file under 100% coverage passed locally.
+  - Vitest asserted no threshold, and warned about nothing.
+    - The thresholds sat inside a project entry of `apps/last-loop-lepin/vitest.workspace.ts`. Vitest reads `coverage` from the root config only:
 
-1. **Configuration in a place the tool does not read.** Vitest takes
-   `coverage` from the root config only. A block inside a project entry is
-   accepted, ignored, and warned about nowhere.
-2. **A flag on the wrong script.** `--coverage` was on `test:coverage`, which
-   needs a live Postgres; CI ran `test:core`, which did not have it.
-3. **An exit code destroyed in transit.** `stryker run | tail -60` reports
-   `tail`'s status. The last line of the output said "setting exit code to 1",
-   and the harness said the task succeeded.
-4. **A failure severity that nobody acts on.** `::warning::` in a green run is
-   invisible. The seed had been failing since the endpoint was written.
-5. **A job that was never added.** Nothing enforces that every workspace appears
-   in a workflow, so one never did.
+      ```ts
+      coverage: {
+        thresholds: { perFile: true, ...COVERAGE_THRESHOLDS },   // ← inside a project entry, never read
+      ```
 
-The common factor is not carelessness about the mechanism. It is that in every
-case **the gate was verified by reading it rather than by breaking something.**
-The config said `thresholds: { perFile: true, statements: 100 }`, which is what
-a working gate looks like. The run printed per-file percentages, which is what a
-working gate produces. The task said exit 0. None of that is evidence.
+      - An agent wrote this in 5b2643aaa, "scaffold workspace + pure helpers at 100% coverage". It read the printed per-file table as the proof (inferred from the commit title, which claims the 100% the gate never checked).
+        - The gate shipped after its config and its output were read, and was never run against a planted defect (Method).
+- The same gate passed in CI.
+  - `--coverage` was on `test:coverage`, which needs a live Postgres. CI ran `test:core`, which had no `--coverage`.
+    - The change shipped after a green CI run was read, with no uncovered file planted to see it fail (Method).
+- A mutation run with survivors reported exit 0.
+  - The command was `stryker run | tail -60`, so the shell reported `tail`'s status. Stryker's last line said "setting exit code to 1".
+    - The task's exit 0 was read as the result, and no run with a known survivor was checked (Method).
+- The preview seed of `last-loop-lepin` failed on every deploy, and the deploy stayed green.
+  - The step posted without the `fixture` query parameter the endpoint requires, took a 400, and emitted `::warning::`.
+    - The step shipped after a green deploy was read, and its seed response was never checked against a failing call (Method).
+
+## Root cause of occurrence
+
+*Thought a gate whose config reads right and whose run prints the right numbers is enforcing. Actually a gate is proven only by a defect it refuses, and each of these accepted its config, printed its output and asserted nothing.* (Method)
+
+The process for adding a gate had no step that breaks something. For the coverage gate, the precise belief was *thought Vitest reads `coverage` from each project entry, actually it reads it only from the root config and ignores the block without a warning*. The same Method let the three other mechanisms through.
 
 ## Detection failure causes
 
-- **Documentation asserted the gates as fact.** CLAUDE.md and two standards
-  state that pure files ship at 100% and that the runner enforces it. Once a
-  document says a thing is enforced, the next reader inherits the claim instead
-  of testing it. Three of these gates were described in prose more carefully
-  than they were wired.
-- **Output was mistaken for enforcement.** A coverage table, a mutation score
-  table, and a seed response were all printed and read. Printing a number is not
-  asserting it.
-- **The one honest signal was a warning.** The seed step said exactly what was
-  wrong, in the log, on every deploy, for months. Severity below "error" in a
-  green run is severity zero.
+- **Documentation:** CLAUDE.md and two standards stated that pure files ship at 100% and that the runner enforces it. Each later reader inherited the claim instead of testing it.
+- **Output read as enforcement:** a coverage table, a mutation score and a seed response were all printed and read. A printed number is not an asserted one.
+- **Severity:** the seed's `::warning::` named the exact fault on every deploy for months. A warning in a green run reaches nobody.
+- **Workspace coverage of CI:** nothing checked that every workspace appeared in a workflow, so `pragma` was never added and no job reported it.
 
 ## Countermeasure
 
-Each gate was fixed in its own way — coverage moved to the root config,
-`--coverage` added to `test:core`, `pragma` added to `app-tests` with its own
-Postgres, the seed given its query parameter and promoted from `::warning::` to
-`::error::` with a non-zero exit.
+Each gate was fixed in commit `0bf0ad517`, "fix(ci): arm the per-file coverage gate, and run pragma at all":
 
-The countermeasure that generalises is the verification method, and it was
-applied to each fix before it was committed:
+- coverage moved to the root `vitest.config.ts` of each app, and CI runs `vitest run --project core --coverage`
+- `pragma` joined `app-tests` with its own Postgres
+- the seed got its query parameter, and a non-2xx answer prints `::error::` and exits 1
+- the mutation run is no longer piped
 
-- **Coverage**: an unreachable branch was injected into one pure file per app
-  and the exact CI command run. Every test passed and the command exited 1.
-  Both injections reverted.
-- **Seed**: both endpoints were called against the live previews and returned
-  200 with their fixture payloads, then the workflow was run and its jobs
-  checked.
-- **Mutation**: the run is no longer piped.
+Each was verified by breaking it. An unreachable branch injected into one pure file per app made the exact CI command exit 1 while every test passed. Both injections were reverted.
 
 ## Eradication
 
-**Level 2 — DevX checks that catch the misconception.** The coverage gate now
-fails on a real regression, proven by causing one. The seed fails the job rather
-than warning. `pragma` runs.
+**Type:** DevX check (level 2), one gate at a time
 
-Level 1 is not reached, and it is worth saying why rather than claiming it. A
-structural fix would be a meta-check asserting that every declared gate actually
-fails on a planted defect — a mutation test for the gates themselves. That is
-buildable and it is not built here.
+**Reference:** commit `0bf0ad517` (PR #40).
 
-## What to check next time
+What holds today:
 
-**Break it and watch it fail.** Before trusting any gate, cause the failure it
-claims to catch and confirm a non-zero exit. This is the whole lesson and it
-would have caught all four.
+- The per-file thresholds sit in the root config, for example `apps/last-loop-lepin/vitest.config.ts`, and `ci.yml` runs each app's core project with `--coverage`.
+- `ci.yml` derives the app list from `find apps -mindepth 1 -maxdepth 1 -type d`, so an app can no longer be missing from `app-tests`.
+- `preview.yml` fails the job on a seed that does not answer 2xx.
+- `scripts/hooks/checks/no-swallowed-push.core.ts` refuses a mutation run piped into `head`. A pipe into `tail`, the shape of this entry, is not refused.
 
-Three specific traps, all live in this repository:
+This is not eradicated. Each fix arms one gate. `docs/quality/weak-points.md` lists `gate-measures-nothing` with 47 entries (measured with `grep -l "^weak-point: gate-measures-nothing" docs/dantotsus/*.md | wc -l`), and its countermeasure is still marked Proposed.
 
-- `coverage` is root-config-only. A `coverage` key inside a project
-  entry is silently inert.
-- Piping a command through `tail`, `head` or `grep` replaces its exit code. Use
-  `set -o pipefail`, or redirect to a file and read the file.
-- `::warning::` in GitHub Actions is a line nobody reads in a green run. If the
-  condition means the artefact is broken, it is `::error::` and a non-zero exit.
+**Proof it can fail:** the injected unreachable branch above, one per app, made the CI command exit 1.
 
-And a habit: when a gate has never failed, that is not evidence it works.
+**Proposed:** a CI job that proves each gate fails. For every gate, a planted-defect patch is applied to a scratch tree, the gate runs, and the job fails if the gate exits 0. A new gate then ships with its planted defect, or the job refuses it. That replaces the Method that let all four through, reading a gate instead of breaking it, with a check that holds for every gate. It also closes the weak point, where each entry so far has fixed one gate.
+
+**Proposed:** close this entry's own pipe branch with the rewrite that already exists. `no-swallowed-push.core.ts` refuses only `stryker run | head` (`MUTATION_INTO_HEAD`), and already rewrites a piped `git push` or `git commit` with `set -o pipefail; ` in front. The same `rewrite` verdict on `stryker run` or `test:mutation` piped into any command, `tail` included, would make a mutation run's status impossible to swallow from an agent's Bash call.
+
+**Similar instances:** `grep -l "^weak-point: gate-measures-nothing" docs/dantotsus/*.md` lists the other gates found measuring nothing. `per-file-coverage-gate-was-never-armed` is the earlier occurrence of the coverage branch.

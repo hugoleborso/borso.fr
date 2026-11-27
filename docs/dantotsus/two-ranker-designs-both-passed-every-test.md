@@ -4,121 +4,114 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#52'
-fix-commits: [2b6c6bc5a2]
+fix-commits: [2b6c6bc5a2, 6765875f6]
 eradication-level: 4
-eradication-paths: [apps/pragma/api/src/songs/search-ranking.core.test.ts]
+eradication-paths: [apps/pragma/api/src/songs/search-ranking.core.test.ts, apps/pragma/api/src/songs/__fixtures__/deezer-valerie.json]
 time-to-detect: minutes
 tags: [testing, mutation, fixture, musicbrainz, pragma, validation]
 zone: apps/pragma/api/src/songs/search-ranking.core.ts
+recurs: none (first entry on a ranking rule designed from fixture shapes rather than real queries)
 ---
 
 # A hundred per cent coverage, no surviving mutants, and the ranking was wrong
 
-## Symptom
+## User impact
 
-The first scoring design for the catalogue's MusicBrainz search gave a flat
-bonus when the query contained the hit's exact title. Searching
-`Valerie Amy Winehouse` then returned, in order, three tracks literally
-**titled** *Amy Winehouse* — because the query contains that string, so each of
-them scored the exact-title bonus.
+A pragma member searching the catalogue for a song to add would have seen
+covers named after the artist above the song. Measured against live
+MusicBrainz responses during PR #52, before the design shipped:
 
-The design had full statement, branch, function and line coverage, and a
+| | Seen | Expected |
+| --- | --- | --- |
+| Search `Valerie Amy Winehouse` | first three results: tracks titled *Amy Winehouse* | Amy Winehouse's *Valerie* first |
+
+The design had 100 % statement, branch, function and line coverage and a
 mutation score of 100 with zero survivors.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did tracks titled *Amy Winehouse* rank first?**
-   Because `matchesTitleExactly(hit, query)` asked whether the query *contains*
-   the hit's title, which a two-word artist name satisfies as readily as a
-   song title.
+- Tracks titled *Amy Winehouse* ranked first for `Valerie Amy Winehouse`.
+  - Each scored the flat exact-title bonus.
+    - The first design rewarded a hit whose title the query contains:
 
-2. **Why did the tests not catch it?**
-   Because every fixture was hand-written from the shape the function expects.
-   A hit was `{ title: 'Beggin', artist: 'Maneskin', … }`; no fixture had a
-   *title* that was somebody's *name*, because nobody writing a test thinks to
-   invent one.
+      ```ts
+      matchesTitleExactly(hit, query)   // query.includes(hit.title) ← the faulty line
+      ```
 
-3. **Why did mutation testing not catch it?**
-   Because Stryker asks whether the tests notice the code changing. They did.
-   It cannot ask whether the code is answering the right question — a mutant of
-   a wrong rule is still wrong, and the tests kill it just as reliably.
+      A two-word artist name inside the query satisfies it as readily as a song title.
+      - The rule was designed in the PR #52 session from one example query, the operator's report "Beggin Maneskin", and from hand-written hits of the shape `{ title: 'Beggin', artist: 'Maneskin', … }`. In that input every title is a song name and every artist a person (Material, inferred: the session had no set of real queries or payloads before it ran live ones).
 
-4. **Why was the gap invisible?**
-   Because both gates measure the tests against the code, and the code against
-   itself. Neither reaches outside for the data the function exists to handle.
+## Root cause of occurrence
 
-**Root cause:** thought *full coverage plus zero surviving mutants means the
-function is right*, actually *both gates measure the tests against the code
-they were written from, so a design that is wrong about the world passes them
-exactly as well as one that is right*.
+*Thought a query that contains a hit's title names that song, actually a
+query mixes title words and artist words, and an artist's name is also the
+title of other tracks.* **Material (inferred):** the input held one query and
+fixtures shaped like the function, none with a title that is somebody's name,
+so the design and its tests were both built from the same blind spot.
+
+Commit `a76962211` records the measurement that disproved it: "Measured
+against live MusicBrainz responses, the first hit becomes the original for
+Beggin' (Måneskin), Uprising (Muse), Valerie (Amy…" (read this session).
 
 ## Detection failure causes
 
-- **Typing:** the wrong design type-checked; both take a hit and a query and
-  return a number.
-- **Linter:** no rule distinguishes a defensible scoring rule from an
-  indefensible one.
-- **Functional validation locally:** this is the layer that caught it. Running
-  the ranker against live MusicBrainz responses, rather than fixtures, showed
-  the wrong order immediately.
-- **CI:** would have gone green. Coverage and mutation were both at 100 on the
-  wrong design.
-- **Code review:** the rule reads plausibly in isolation. "Reward a hit whose
-  title the query names" is a sentence a reviewer nods at.
+- **Typing:** the wrong design type-checked. Both designs take a hit and a query and return a number.
+- **Linter:** no rule tells a defensible scoring rule from a wrong one.
+- **Unit tests and coverage:** every fixture was written from the shape the function expects, so the tests reached every branch of the wrong rule.
+- **Mutation testing:** Stryker asks whether the tests notice the code changing. They did. A mutant of a wrong rule is still killed by tests written for it, so the score was 100.
+- **CI:** both gates measure the tests against the code they were written from, so CI would have gone green.
+- **Local validation:** this caught it. Running the ranker against live MusicBrainz responses showed the wrong order at once.
 
 ## Countermeasure
 
-Word-level overlap on title and artist replaced the flat exact-title bonus, and
-title words the query never asked for now cost points — which is what separates
+Word-level overlap on title and artist replaced the flat exact-title bonus,
+and title words the query never asked for now cost points, which separates
 `Valerie` from `Since I Left Valerie (Amy Winehouse vs. The Avalanches)`.
+Shipped in PR #52 (`apps/pragma/api/src/songs/search-ranking.core.ts`).
 
-- **Code:** shipped in PR #52, `apps/pragma/api/src/songs/search-ranking.core.ts`.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** detection (level 4)
 
-**Type:** detection (level 4 — a test over a real payload the unit fixtures
-could not have imagined)
+**Reference:** [PR #53](https://github.com/hugoleborso/borso.fr/pull/53),
+commit [`2b6c6bc`](https://github.com/hugoleborso/borso.fr/commit/2b6c6bc5a2be080478dbefa39dd35cf95a152cb0)
+committed the verbatim MusicBrainz `dismax` response for
+`Valerie Amy Winehouse` and ran the real mapper and ranker over it. Commit
+`6765875f6` (2026-09-15) replaced MusicBrainz with Deezer and replaced that
+fixture with the real Deezer response,
+`apps/pragma/api/src/songs/__fixtures__/deezer-valerie.json`. The MusicBrainz
+fixture no longer exists.
 
-**Reference:** [PR #53](https://github.com/hugoleborso/borso.fr/pull/53) · commit [`2b6c6bc`](https://github.com/hugoleborso/borso.fr/commit/2b6c6bc5a2be080478dbefa39dd35cf95a152cb0)
-
-**The actual fix:** the verbatim response `dismax` returns for
-`Valerie Amy Winehouse` is committed as
-`apps/pragma/api/src/songs/__fixtures__/musicbrainz-valerie-dismax.json`, and
-three assertions in `search-ranking.core.test.ts` run the real mapper and the
-real ranker over it.
+What holds today (`search-ranking.core.test.ts:215-240`, read this session):
 
 ```ts
-it('is handed a response whose first hits are covers, not the original', () => {
-  const hits = mapMusicBrainzRecordings(FIXTURE);
-  expect(hits[0]?.artist).not.toBe('Amy Winehouse');
-  expect(hits.findIndex((entry) => entry.artist === 'Amy Winehouse')).toBeGreaterThan(0);
+it('is handed a response that mixes the original with tributes and a television cast', () => {
+  const artists = mapDeezerTracks(FIXTURE).map((entry) => entry.artist);
+  expect(artists).toContain('Mark Ronson');
+  expect(artists).toContain('Glee Cast');
 });
 
-it('promotes the Amy Winehouse recording to the first result', () => {
-  const ranked = rankExternalHits(mapMusicBrainzRecordings(FIXTURE), QUERY);
-  expect(ranked[0]?.artist).toBe('Amy Winehouse');
-});
+it('keeps the studio original first, which is credited to Mark Ronson', () => {
+  const ranked = rankExternalHits(mapDeezerTracks(FIXTURE), QUERY);
+  expect(ranked[0]?.artist).toBe('Mark Ronson');
 ```
 
-The first assertion is the one that gives the fixture its teeth: it pins that
-the upstream response really does put covers first, so the fixture cannot rot
-into a trivially-passing one without the test saying so.
+The first assertion gives the fixture its teeth. It pins that the real
+response mixes the original with covers, so the fixture cannot rot into one
+that passes trivially. Level 1 is out of reach: no type can express "this
+scoring rule matches how people search", so the reachable mechanism is to make
+real data part of the gate.
 
-What makes this payload worth committing is that the studio recording sits
-sixth with **one release, no ISRC and no tag** — every notability signal reads
-zero. Nothing in the scoring's popularity proxies promotes it; only the word
-overlap and the unasked-word penalty do. A synthetic fixture would have given
-the original a healthy release count, and the test would have passed for the
-wrong reason.
+**Proof it can fail:** the replaced design is the planted defect. Against the
+real payload, the exact-title bonus put tracks titled *Amy Winehouse* first,
+which fails "keeps the studio original first" (measured in PR #52 against the
+live response, not replanted this session).
 
-This is a level 4 rather than a level 1 because no type can express "this
-scoring rule matches how people search". The reachable eradication is to make
-the real data part of the gate.
-
-## Related
-
-- [`docs/standards/10-testing.md`](../standards/10-testing.md) — the coverage
-  and mutation gates, and what they are each for.
-- [`docs/dantotsus/lectured-without-reading-the-code.md`](./lectured-without-reading-the-code.md)
-  — the same family: confidence sourced from a plausible internal story rather
-  than from the artefact.
+**Similar instances:** `find apps -type d -name __fixtures__` finds real
+payloads only under `apps/pragma/api/src/songs/`. `grep -rlni "rank\|score"
+apps/*/api/src --include=*.core.ts` lists 21 files. By their names, most
+score the app's own records (game scores, lap rankings, mastery). Two rank
+free text a person typed and could carry the same blind spot:
+`apps/talos/api/src/memory/memory-search.core.ts` and
+`apps/talos/api/src/memory/memory-context.core.ts` (inferred from the names,
+not read this session).

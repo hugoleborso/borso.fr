@@ -49,16 +49,30 @@ connection would fit (guess).
     cache was older than its 30 s `staleTime`
     - The service worker answered that request from its own cache, holding
       the response from when the page was first opened
+      - `PUT /reorder` went through the worker untouched (`sw.js:94` and
+        `:153` before the fix), so the copy stayed as it was before the drags
+      - The worker's background request refreshed the copy for the next
+        read only. The screen kept the old answer (measured)
       - `staleWhileRevalidate` returns the cached copy whenever one exists,
-        online or not (`apps/pragma/site/public/sw.js:124-135`)
-      - The entries path is on its list of cached reads
-        (`sw.js:86`)
-    - Nothing ever updated that copy after the drags
-      - The worker lets every non-GET request through untouched
-        (`sw.js:94`, `sw.js:153`), so `PUT /reorder` leaves its cache as
-        it was
-      - Its background request does refresh the copy, but only for the
-        next read. The screen keeps the old answer (measured)
+        online or not, and the entries path was on its list of cached reads
+        (`apps/pragma/site/public/sw.js:86` and `:124-135` before the fix)
+        ← the faulty line
+
+        ```js
+        return cached ?? networkPromise; // the copy wins whenever it exists
+        ```
+
+        - Commit `fec7d61e` ("offline service worker + offline banner",
+          2026-05-20) wrote it, and called it "the spec's offline-read scope"
+          - The plan it implemented named the scope only: "SW caches catalog
+            JSON + all 3 chart formats + setlist of session with smallest
+            future `date`", through a precache list from
+            `/api/offline-manifest`
+            (`docs/features/pragma/first-features/plan/plan.md:18`). It said
+            nothing of when a cached copy answers while online
+            - The planner wrote that it "had to invent the cache strategy
+              from scratch" and asked for a `/pwa-service-worker` recipe that
+              did not exist (`plan.md:132`). Material
 - The next drag then saves the old order
   - Each `PUT /reorder` carries the whole order as the screen shows it, so a
     drag on the old screen writes the old order back with one change
@@ -68,38 +82,42 @@ connection would fit (guess).
     - TanStack Query runs mutations in parallel by default, and the order
       they finish in may differ from the order of the calls
       ([Mutations guide](https://tanstack.com/query/latest/docs/framework/react/guides/mutations))
-      - `useReorderSetlist` declares no `scope`, so every drop sends at once
+      - `useReorderSetlist` declared no `scope`, so every drop sent at once
     - The one that commits last wins, since each carries the whole order.
       Reproduced locally with a forced 1.5 s delay on the first `PUT`
 
-```js
-function staleWhileRevalidate(request) {
-  return caches.open(DATA_CACHE).then(async (cache) => {
-    const cached = await cache.match(request);
-    const networkPromise = fetch(request).then(/* refresh the copy */);
-    return cached ?? networkPromise; // ← the copy wins whenever it exists
-  });
-}
-```
-
 ## Root cause of occurrence
 
-*Thought the offline cache only answers when the network is down, actually
+*Thought an offline cache only answers when the network is down, actually
 stale-while-revalidate answers every read from its copy first, and no write
-ever refreshes that copy.*
+ever refreshes that copy.* **Material.**
 
-The worker was added for offline use, in commit `fec7d61e`
-("offline service worker + offline banner"). The strategy it chose serves
-the copy online too. The optimistic mutations keep TanStack Query's cache in
-step with each write, and nothing keeps the worker's cache in step. There
-are two caches, and only one of them is updated.
+The agent that wrote `fec7d61e` had the plan in its context, and the plan
+held no answer to give. It named what to cache and not when the copy answers.
+Its planner had flagged the gap itself: "The planner had to invent the cache
+strategy from scratch: which assets to precache vs runtime-cache, how to
+version the cache" (`plan.md:132`). No recipe for a service worker existed in
+the repository, since this was its first. So the agent took the common
+offline recipe, stale-while-revalidate, and its commit message calls that the
+spec's scope. The optimistic mutations keep TanStack Query's cache in step
+with each write. Nothing keeps the worker's cache in step. There were two
+caches, and only one of them was updated.
 
 ## Detection failure causes
 
+- **Technical validation:** round 2 failed the worker as A10, on scope only:
+  "SW caches all session reads stale-while-revalidate; no
+  `/api/offline-manifest` endpoint"
+  (`validation/technical-validation-2026-05-20-0020.md:32`). Commit
+  `d7be0d9ac` closed A10 by adding the manifest, and its message says
+  "Stale-while-revalidate stays as the runtime default". The next visual
+  validation wrote that "the change tightened cache scope, not the cache
+  mechanic" (`visual-validation-2026-05-20-1035.md:40`). Every row checked
+  what is cached, and none checked when the copy answers.
 - **Local validation:** `registerServiceWorker` returns early when
   `import.meta.env.DEV` is set, so `pnpm dev` never runs the worker. Every
   local check, including the first reproduction, ran without it (measured).
-- **Unit tests:** `sw.js` is a plain file under `public/`. No test runs its
+- **Unit tests:** `sw.js` is a plain file under `public/`. No test ran its
   fetch strategies.
 - **Previous dantotsus:** two earlier reverts of an optimistic write were
   blamed on a stale Aurora DSQL read and fixed by removing refetches. That
@@ -153,7 +171,8 @@ until that fetch answered (`useSetlistEntriesToReorder`,
 
 **Type:** structural impossibility (level 1)
 
-**Reference:** commit `[self]` on this entry's pull request
+**Reference:** the commit adding this file, squashed on `main` as
+`e4c428591` (PR #247).
 
 ```diff
 -  if (url.pathname.startsWith('/api/') && isReadableApiPath(url.pathname)) {
@@ -163,7 +182,10 @@ until that fetch answered (`useSetlistEntriesToReorder`,
 ```
 
 The worker holds no copy of any API read, so no copy can answer before the
-network. The only read cache left is the one the writes update.
+network. The only read cache left is the one the writes update. It still
+holds: `grep -n '/api/' apps/pragma/site/public/sw.js` finds nothing
+(measured 2026-11-27). The missing strategy recipe no longer matters for API
+reads, because there is no strategy left to choose.
 
 **Detection kept beside it:** `service-worker.test.ts` seeds an old copy of
 `GET /api/setlists/setlist-1/entries` in every cache, answers the network

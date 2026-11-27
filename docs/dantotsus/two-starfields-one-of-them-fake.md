@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#63'
 fix-commits: [957846c4d2]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [docs/standards/08-styling.md]
 time-to-detect: 40 minutes
 tags: [frontend, animation, webgl, conception, tailwind]
 zone: apps/borso-fr/site/src
@@ -14,97 +14,99 @@ zone: apps/borso-fr/site/src
 
 # Two starfields, one of them fake
 
-## Symptom
+## User impact
 
-The ask was a lightspeed warp when a link is clicked on borso.fr. What shipped
-first was a DOM overlay drawn on top of the landing page: a dark veil, ninety-six
-absolutely positioned streak elements flying outwards, and a white bloom, all on
-CSS keyframes. It passed every gate — lint, typecheck, 100% coverage, 100%
-mutation, a browser pass — and was rejected on sight:
+The ask was a lightspeed jump when a link is clicked on borso.fr. The landing
+page already renders a WebGL galaxy the viewer travels through.
 
-> ce n'est pas la même galaxie qui fait un saut vitesse lumière, tu as rajouté un
-> truc moche par dessus
+| | Seen | Expected |
+| --- | --- | --- |
+| A click on an internal link | A dark veil, ninety-six streak elements flying outwards and a white bloom, drawn over the galaxy on CSS keyframes | The galaxy itself speeding up into the jump |
 
-The landing page already renders a WebGL galaxy the viewer is travelling
-through. The overlay covered it with a second, unrelated starfield. Two
-starfields, one of them fake.
+It passed lint, typecheck, 100% coverage, 100% mutation and a browser pass.
+The operator rejected it on the first look at the preview:
 
-## Root-cause chain
+> ce n'est pas la même galaxie qui fait un saut vitesse lumière, tu as rajouté
+> un truc moche par dessus
 
-1. **Why did the page end up with two starfields?**
-   Because the warp was built as a new thing drawn over the page rather than as
-   a change to the thing already on it.
+("It is not the same galaxy making a lightspeed jump. You added something ugly
+on top.") Every visitor clicking an internal link would have seen it (inferred). It
+never reached production.
 
-2. **Why was it built as a new thing?**
-   Because the effect was designed from the words in the request — streaks,
-   speed, a flash — rather than from the page it would play on.
+## Causal chain
 
-3. **Why was it designed from the words rather than the page?**
-   Because the page's existing visual was treated as a backdrop the effect sits
-   in front of, not as material the effect could be made out of.
+- The page showed two starfields.
+  - The jump was a DOM overlay drawn over the page, not a change to the galaxy
+    already on it.
+    - Commit `8d81acbc4` ("feat(borso-fr): a lightspeed jump plays before the
+      browser leaves a page") built it: "an overlay draws a field of streaks
+      flying out from the centre of the screen". `warp-streaks.core.ts` placed
+      96 streaks, and `warp-drive.ts` appended "an overlay of plain DOM".
+      - The design came from the words in the request (streaks, speed, a
+        flash), not from the page it would play on.
+        - While scoping, the agent read `index.html`, `home-page.ts` and
+          `tokens.css`, the files the new code would touch. It never opened
+          `apps/borso-fr/site/src/components/organisms/Galaxy.tsx`, which
+          draws the starfield.
+          - The work went from the operator's request straight to
+            implementation. No spec and no plan were written:
+            `docs/features/borso-fr/lightspeed-jump/` holds only the friction
+            log and the validation screenshots.
 
-4. **Why was it treated as a backdrop?**
-   Because `Galaxy.tsx` was never opened. `index.html`, `home-page.ts` and
-   `tokens.css` were all read while scoping the work; the one component that
-   draws the thing the effect is about was not.
+## Root cause of occurrence
 
-5. **Why was that component not opened?**
-   Because nothing asked. The files read were the ones the new code would touch,
-   and a component the new code does not import never came up.
+*Thought a lightspeed effect is something you add on top of a page. Actually
+this page already renders a starfield the viewer travels through, and the jump
+is that starfield's own travel rate going up.* (Material.)
 
-**Root cause:** thought *a lightspeed effect is something you add to a page*,
-actually *this page already renders a starfield the viewer travels through, and
-the effect is that starfield's own travel rate going up*. Had that been known
-first, the first version would have been the four lines in the frame loop that
-the second version turned out to be — and `uStarSpeed`, the shader's own
-distance-travelled uniform, was sitting there the whole time.
+The component that held the answer, `Galaxy.tsx`, was never loaded in the
+agent's context. Had it been, the first version would have been the few lines
+in the frame loop the second version became. `uStarSpeed`, the shader's own
+distance-travelled uniform, was there the whole time.
+
+Below it sits Method. Scoping read only the files the new code would import or
+change, so a component the new code did not import never came into view. And
+nothing showed the operator a cheap version before the full build. The favicon
+in the same PR repeats exactly that: a `b` monogram built and shipped without a
+preview, rejected in one line, reverted in `040542e`.
 
 ## Detection failure causes
 
-- **Typing:** nothing type-level distinguishes an effect that duplicates an
-  existing visual from one that does not.
-- **Linter / static analysis:** every rule passed. The overlay was clean code;
-  being clean is orthogonal to being the wrong thing.
-- **Functional validation locally:** the browser pass checked that the overlay
-  did what the overlay was designed to do. A validation written against the
-  implementation cannot discover that the implementation is the wrong idea.
-- **CI:** green throughout, for the same reason.
-- **Code review:** this is where it was caught, by the operator, on the first
-  look at the preview. The cost was the round trip, not the miss.
-- **PO / QA validation:** the operator is the PO here; see above.
-
-The honest reading is that no automated layer could have caught this, because
-every layer checks the artefact against its own design. The gap is upstream of
-all of them, at conception.
+- **Linter and typing:** every rule passed. They check code against rules,
+  and the overlay was clean code for the wrong idea.
+- **Local browser pass:** it checked that the overlay did what the overlay was
+  designed to do. A validation written from the implementation cannot find
+  that the implementation is the wrong idea.
+- **Harness:** the agent cannot watch an animation, so a frame capture of the
+  overlay looked acceptable. See
+  [`judging-an-animation-you-cannot-watch.md`](../knowledge/judging-an-animation-you-cannot-watch.md).
+- **Review:** caught here, by the operator, on the preview. The cost was the
+  round trip.
 
 ## Countermeasure
 
-- **Code:** commit `efd65da` — the overlay is deleted entirely (the veil, the
-  ninety-six streaks, the bloom, three `@keyframes` and three `@utility` blocks
-  in `tokens.css`, and a whole pure module of streak geometry). The jump becomes
-  the galaxy's own travel rate and glow climbing, read once per frame from a
-  module outside React. `tokens.css` returned byte-identical to `main`.
+Commit `efd65da` deletes the overlay: the veil, the ninety-six streaks, the
+bloom, three `@keyframes` and three `@utility` blocks in `tokens.css`, and the
+pure module of streak geometry. The jump becomes the galaxy's own travel rate
+and glow climbing, read once per frame from a module outside React.
+`tokens.css` returned byte-identical to `main`.
 
-Two changes were needed to make the galaxy able to jump at all, and both are the
-interesting residue of the pivot:
+Two changes let the galaxy jump at all:
 
 - `selectStarClock` accumulates distance frame by frame instead of deriving it
   from elapsed time. Under the old formula, multiplying `starSpeed` mid-flight
-  moved the whole starfield by that factor in a single frame — a tear, not an
+  moved the whole starfield by that factor in one frame, a tear and not an
   acceleration.
 - The intensity is read from a module the frame loop imports, not from React
-  state, because the loop lives inside the effect that owns the WebGL context
-  and a state change would rebuild the context mid-jump.
+  state. The loop lives inside the effect that owns the WebGL context, and a
+  state change would rebuild the context mid-jump.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — a reviewer bullet, which the ledger collects and
-the standards-review agent enforces)
+**Type:** knowledge (level 5)
 
-**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
-sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
-
-**The actual fix:**
+**Reference:** commit `957846c4d`, the kaizen sweep of PR #63, added a
+`reviewer` bullet to `docs/standards/08-styling.md` (line 165 today):
 
 ```diff
 +- `reviewer` checks that a visual effect added to an existing screen is made
@@ -113,32 +115,23 @@ sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
 +  them fake; see docs/dantotsus/two-starfields-one-of-them-fake.md.
 ```
 
-Added to the `## Enforced by` block of
-[`docs/standards/08-styling.md`](../standards/08-styling.md). This is not
-decoration: `scripts/standards/enforcement-ledger.ts` collects every `reviewer`
-bullet into the *What only a reviewer can check* section of
-`enforcement-ledger.md` (removed on 2026-10-29; the validator now reads the `reviewer` bullets from the standards directly), and that section
-is the entire scope of the [`/technical-validation`](../../.claude/skills/technical-validation/SKILL.md)
-agent. Adding the bullet adds the question to every future review of a
-front-end change, and the seal records the answer.
+This entry first claimed level 4. It is level 5. The bullet is a written
+instruction that `/technical-validation` reads at review. It catches the wrong
+idea only after it has been built, and only if the reviewer opens the screen.
+It does not bring `Galaxy.tsx` into the context of the agent that designs the
+effect.
 
-Level 4 rather than 2 is the honest ceiling. No linter can ask whether a new
-effect duplicates an existing one — that comparison is between a diff and a
-screen, and only a reader can make it.
+**Proposed:** make `/route` and `/specification` require, for any visual
+change to an existing screen, a capture of that screen today
+(`scripts/dev-server.sh start <app>` plus `agent-browser`) and the path of the
+component that renders it, before any design. The capture and the path go in
+the spec, and the cheap version is shown to the operator before the full
+build. An effect could then no longer be designed without the thing it plays
+on in view. That moves the catch from review to conception.
 
-**Sibling defects swept:** the favicon in the same PR was the same shape at
-smaller scale — a `b` monogram designed and shipped without showing a cheap
-preview first, rejected in one line, reverted in `040542e`. Both are the
-conception-stage habit of building the artefact before checking what it has to
-live with.
-
-## See also
-
-- [`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md)
-  — the same misconception pointed outwards at dependencies instead of inwards
-  at the page. That entry asks "does a library already do this?"; this one asks
-  "does this screen already draw this?".
-- [`a-tailwind-variant-that-compiled-to-nothing.md`](./a-tailwind-variant-that-compiled-to-nothing.md)
-  — a second silent failure from the same PR, in the styling toolchain.
-- [`../knowledge/judging-an-animation-you-cannot-watch.md`](../knowledge/judging-an-animation-you-cannot-watch.md)
-  — why the overlay looked acceptable from this harness for as long as it did.
+**Similar instances:** the favicon of the same PR, above.
+[`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md)
+is the same habit pointed at dependencies: "does a library already do this?"
+against "does this screen already draw this?".
+[`a-tailwind-variant-that-compiled-to-nothing.md`](./a-tailwind-variant-that-compiled-to-nothing.md)
+is a second silent failure from the same PR.

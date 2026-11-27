@@ -16,93 +16,110 @@ recurs: [a-feature-that-was-never-switched-on-in-any-stage]
 
 # The variable the workflow set to nothing
 
-## Symptom
+## User impact
 
-PR #163 shipped Sentry for pragma on 2026-10-12. The site and the API both
-started the SDK whenever a DSN was configured. For 17 days no event reached
-Sentry from production, and no gate, log or page said that reporting was off.
-PR #235 found it on 2026-10-29 while switching Sentry on, and the operator set
-the DSN in the prod environment.
+PR #163 shipped Sentry for pragma on 2026-10-12. For 17 days, no error from
+pragma's production site or API reached Sentry, and no gate, log or page said
+that reporting was off. PR #235 found it on 2026-10-29 while switching Sentry
+on (measured by #235's session).
 
-The workflow did set the variable. It set it to this:
+| | Seen | Expected |
+| --- | --- | --- |
+| A pragma user hits a crash in prod | Nothing in Sentry | An event in Sentry, tagged `app: pragma` |
+| The operator reads the deploy run | Green, no word about Sentry | Green with Sentry on, or a refusal saying it is off |
 
-```yaml
-VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
-```
+## Causal chain
 
-`PRAGMA_SENTRY_DSN` did not exist as a repository variable. GitHub Actions
-evaluates a missing `vars.X` to an empty string, with no warning.
+- Prod pragma sent no event to Sentry for 17 days.
+  - The bundle was built with an empty `VITE_SENTRY_DSN`, and the Lambda got
+    an empty `PRAGMA_SENTRY_DSN`. Both sides read an empty DSN as "no
+    project", the designed off switch for local runs.
+    - The deploy workflow set the variable from a repository variable nobody
+      had created. GitHub Actions evaluates a missing `vars.X` to `''`, with
+      no warning. The faulty line, from #163 (`6385b5727`):
 
-## Root-cause chain
+      ```yaml
+      # Empty unless the repository variable exists, and it did not.
+      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
+      ```
 
-1. **Why did prod send nothing?** The bundle was built with an empty
-   `VITE_SENTRY_DSN`, and the Lambda got an empty `PRAGMA_SENTRY_DSN`. Both
-   sides treat an empty DSN as no project, which is the designed off switch
-   for local runs and the other apps.
-2. **Why was the DSN empty?** The workflow read `vars.PRAGMA_SENTRY_DSN`, which
-   nobody had created. #163's commit says so on purpose: "nothing changes
-   until the operator creates the project".
-3. **Why did nothing report the off state?** The earlier entry,
-   [a-feature-that-was-never-switched-on-in-any-stage](./a-feature-that-was-never-switched-on-in-any-stage.md),
-   made it visible with an `ALLOWED_UNSET` line in
-   `scripts/check-frontend-env-vars.sh`. #163 removed that line, because the
-   workflow now named `VITE_SENTRY_DSN`, and the check passed.
-4. **Why did the check pass?** It compares the `VITE_*` names a site reads
-   with the names the workflows mention. A workflow that maps the name to an
-   undefined `vars.X` mentions it. The check can only see text, and the value
-   exists only when the job runs, inside the `prod` environment.
+      - #163's session shipped the line knowing it was dormant. Its commit
+        says so: "nothing changes until the operator creates the project".
+        - The operator step to create the variable was written only in that
+          commit message. No queue of operator tasks existed then.
+          `docs/operator-backlog/` first appeared on 2026-11-15 (`9b8d380ed`),
+          a month later. **Method.**
+      - The same commit removed the one visible flag. Its message says
+        "VITE_SENTRY_DSN is now set by both deploy workflows, so its entry in
+        check-frontend-env-vars.sh is removed". An empty string reads the
+        same as "off on purpose" for last-loop-lepin and "not configured yet"
+        for pragma, so removing the entry looked safe. **Machine.**
 
-**Root cause:** thought *a workflow that sets `VITE_SENTRY_DSN` switches
-Sentry on*, actually *it sets it to whatever `vars.X` holds at run time, and a
-missing `vars.X` is an empty string*, so the only place that can tell on from
-off is the deploy job itself.
+## Root cause of occurrence
+
+*Thought a dormant DSN is safe because the commit message tells the operator
+what to create, actually a step written only in a commit message reaches no
+queue the operator works from, and an empty value cannot tell "not set up
+yet" from "off on purpose".* **Method**, with a Machine branch.
+
+The agent that wrote #163 knew the API. The same commit says the SDK stays off
+"unless a DSN is configured". The missing piece was the handover. The repo had
+no place where an operator step waited until done, and the value gave no
+signal of its own.
 
 ## Detection failure causes
 
-- **Typing:** `string | undefined` models absence correctly, which is what
-  makes it silent.
-- **Linter / static analysis:** `check-frontend-env-vars.sh` reads names. A
+- **Typing:** `string | undefined` models absence correctly, so an empty DSN
+  is a valid value and raises nothing.
+- **Linter / static analysis:** `scripts/check-frontend-env-vars.sh` compares
+  the `VITE_*` names a site reads with the names the workflows mention. A
+  workflow that maps the name to an undefined `vars.X` mentions it. A
   variable's value lives in GitHub settings, which no static gate reads.
   actionlint accepts any `vars.X`.
-- **CI (tests / build):** the build succeeds with an empty DSN, by design.
+- **CI:** the build succeeds with an empty DSN, by design.
 - **Code review:** #163's review saw the variable mapped in both workflows.
   Whether `PRAGMA_SENTRY_DSN` existed is a question about settings, which a
   diff does not show.
-- **Production monitoring / alerting:** the missing thing was the monitoring.
+- **Monitoring:** the missing thing was the monitoring itself.
 
 ## Countermeasure
 
-- **Code:** PR #235 (squash `85a61342`) reads the DSN, org and project from
-  variables of the prod environment and tags every event `app: pragma`.
-- **Operator action:** the operator created `SENTRY_DSN`, `SENTRY_ORG`,
-  `SENTRY_PROJECT` and the `SENTRY_AUTH_TOKEN` secret in the prod environment
-  (#235's *Before merge*). Measured on 2026-10-29: the live bundle at
-  `https://pragma.borso.fr/assets/index-O6uXEC1p.js` carries an
-  `ingest.de.sentry.io` DSN.
+PR #235 (squash `85a613429`) reads the DSN, org and project from variables of
+the prod environment and tags every event `app: pragma`. The operator created
+`SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT` and the `SENTRY_AUTH_TOKEN`
+secret in the prod environment (#235's *Before merge*). Measured on
+2026-10-29: the live bundle at
+`https://pragma.borso.fr/assets/index-O6uXEC1p.js` carried an
+`ingest.de.sentry.io` DSN.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — the deploy job refuses an off state)
+**Type:** detection (level 4)
 
-**Reference:** this kaizen PR's commit, in `.github/workflows/deploy.yml`.
+**Reference:** commit [`53c0d307c`](https://github.com/hugoleborso/borso.fr/commit/53c0d307c)
+added the step for pragma. #263 (`cb33e10d8`) dropped its `if: matrix.app ==
+'pragma'`, so it now runs for every app. What holds today, in
+`.github/workflows/deploy.yml`:
 
-**The actual fix:** the first step of the prod deploy job, for pragma only,
-fails when the DSN it is about to build with is empty. It runs where the value
-exists, before anything is built or deployed.
-
-```diff
-     steps:
-+      - name: Refuse to deploy pragma with Sentry off
-+        if: matrix.app == 'pragma'
-+        run: |
-+          if [ -z "$VITE_SENTRY_DSN" ]; then
-+            echo "::error::vars.SENTRY_DSN is empty in the prod environment, so pragma would deploy with Sentry off. Set it, or delete this step and say why in the commit."
-+            exit 1
-+          fi
-       - uses: actions/checkout@v7
+```yaml
+- name: Refuse to deploy with Sentry off
+  run: |
+    if [ -z "$VITE_SENTRY_DSN" ]; then
+      echo "::error::vars.SENTRY_DSN is empty in the prod environment, so ${{ matrix.app }} would deploy with Sentry off. Set it, or delete this step and say why in the commit."
+      exit 1
+    fi
 ```
 
-Proven both ways on the step's own script, extracted from the workflow:
+The step runs where the value exists, before anything is built. Turning
+Sentry off in prod now takes a commit that deletes the step, which is a
+reviewable decision. Previews stay off on purpose, because the preview job
+names no environment.
+
+The Method branch is held by `docs/operator-backlog/`, where CLAUDE.md now
+asks every operator step to land in the pull request that found it. That is
+a written rule (level 5), so the deploy gate is what holds when it is missed.
+
+**Proof it can fail:** the step's script, extracted and run both ways.
 
 ```text
 $ VITE_SENTRY_DSN= bash gate.sh
@@ -112,24 +129,15 @@ $ VITE_SENTRY_DSN=https://k@o1.ingest.de.sentry.io/1 bash gate.sh
 exit 0
 ```
 
-Turning Sentry off in prod is still possible. It now takes a commit that
-deletes the step, which is the reviewable decision the `ALLOWED_UNSET` line
-used to be.
+**Proposed:** the gate checks only `VITE_SENTRY_DSN`. `SENTRY_ORG`,
+`SENTRY_PROJECT` and pragma's `SENTRY_AUTH_TOKEN` also read as `''` when
+missing, and `apps/pragma/cdk/bin/cdk.ts` then skips the source-map upload
+without a word. Extending the same step to refuse an empty value for every
+Sentry variable or secret the job reads would cover the class "a missing
+`vars.X` reads as empty", not one name.
 
-The check is not extended to previews. The preview job names no environment,
-so the prod variables read as empty there and previews run with Sentry off on
-purpose. The same commit corrects `preview.yml`'s comment, which still said the
-DSN was a repository variable.
-
-**Sibling defects swept:** `last-loop-lepin` reads `VITE_SENTRY_DSN` too and
-both workflows set it to `''` for every app but pragma. That is off by an
-explicit choice in the workflow text, not by a missing variable, so it needs
-no gate.
-
-## See also
-
-- [a-feature-that-was-never-switched-on-in-any-stage](./a-feature-that-was-never-switched-on-in-any-stage.md),
-  the same off switch before any workflow named the variable.
-- [the-connection-parameter-no-mock-could-refuse](./the-connection-parameter-no-mock-could-refuse.md),
-  another property that only the deploy job can check.
-- `docs/adr/2026-10-10T0457-pragma-reports-errors-and-traces-to-sentry-eu.md`
+**Similar instances:** `grep -n "vars\.\|secrets\." .github/workflows/deploy.yml`
+lists the values the job reads. `SENTRY_ORG`, `SENTRY_PROJECT` and
+`SENTRY_AUTH_TOKEN` are unguarded, as above. last-loop-lepin, which the first
+version of this entry called off by choice, is now gated like every app since
+#263.

@@ -43,12 +43,18 @@ explained again (measured, transcript of `session_01K69KnDzbVY3yxgGHEWuPgJ`).
 ## Root cause of occurrence
 
 *Thought a concrete example of the problem lets him judge the options,
-actually he judges an option by what it changes in his day.*
+actually he judges an option by what it changes in his day.* (Material)
 
 `CLAUDE.md`, *Writing*, before this entry: « Ask one closed question at a
 time, in the words the operator sees on the screen, with one concrete
 example, its options and your recommendation. » The rule does not say what the
-example illustrates.
+example illustrates. It was the instruction in the session's context when the
+question was written, and it was added in `1f788045d`.
+
+For the summary: *thought the candidate numbers and the hook's file name were
+shared vocabulary, actually only the session had read the prompt's list and
+the file.* (Material) The rule « Lead with impact » said what to lead with,
+not to drop names from the session's own working list.
 
 ## Detection failure causes
 

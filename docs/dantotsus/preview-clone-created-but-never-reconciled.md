@@ -5,8 +5,8 @@ detected-at: ci
 severity: medium
 related-pr: '#49'
 fix-commits: [450e82316d]
-eradication-level: 1
-eradication-paths: [infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts]
+eradication-level: 5
+eradication-paths: [infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts, infra/cdk/src/internal/migration-runner/index.ts]
 time-to-detect: one preview deploy
 tags: [dsql, cdk, preview, migrations, clone]
 zone: infra/cdk/src/internal/migration-runner
@@ -14,91 +14,128 @@ zone: infra/cdk/src/internal/migration-runner
 
 # A preview schema that could be created but never updated
 
-## Symptom
+## User impact
 
-Every preview deploy of PR #49 failed, after PR #50 merged, with:
+Every preview deploy of PR #49 failed once PR #50 merged, though nothing in
+PR #49 touched the database. The stack reached `UPDATE_ROLLBACK_FAILED` and
+needed manual attention. Production had deployed the same migration minutes
+earlier and succeeded.
 
-```
-Received response status [FAILED] from custom resource.
-Message returned: column "family" of relation "instrument" does not exist
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| Preview deploy of PR #49 | `Message returned: column "family" of relation "instrument" does not exist`, then a failed rollback | the preview deploys with production's current data |
 
-The stack reached `UPDATE_ROLLBACK_FAILED`, so the rollback failed too and the
-preview needed manual attention.
+## Causal chain
 
-Nothing in PR #49 touched the database. Production had deployed the same
-migration minutes earlier and succeeded.
+- The preview deploy failed and could not roll back.
+  - Aurora DSQL rejected the clone's
+    `INSERT INTO pr_49.instrument (id, is_harmonic, family) SELECT … FROM pragma.instrument`.
+    - The INSERT's column list came from the source, `pragma.instrument`, which
+      now had `family`. PR #50's migration `0002` ran
+      `ALTER TABLE instrument ADD COLUMN IF NOT EXISTS family text` in
+      production.
+    - The target, `pr_49.instrument`, had been created days earlier without
+      `family`, and every later deploy left its shape as it was. The structural
+      step was:
 
-## Root-cause chain
+      ```sql
+      -- a no-op on a table that already exists, so pr_49 keeps its first shape for good
+      CREATE TABLE IF NOT EXISTS pr_49.instrument (LIKE pragma.instrument INCLUDING ALL)
+      ```
 
-1. PR #50 added migration `0002`, which does
-   `ALTER TABLE instrument ADD COLUMN IF NOT EXISTS family text`, and merged.
-2. Production ran it. `pragma.instrument` gained the column.
-3. PR #49's preview schema, `pr_49`, had been created days earlier, when
-   production did not have that column, so `pr_49.instrument` does not have it.
-4. On every deploy, the runner re-clones production into the preview. The
-   structural half is
-   `CREATE TABLE IF NOT EXISTS pr_49.instrument (LIKE pragma.instrument INCLUDING ALL)`.
-   **`IF NOT EXISTS` makes that a no-op on a table that already exists**, so the
-   preview keeps whatever shape it was created with, for good.
-5. The data half reads its column list from the **source**, which now includes
-   `family`, and builds
-   `INSERT INTO pr_49.instrument (id, is_harmonic, family) SELECT … FROM pragma.instrument`.
-6. The target does not have that column. Aurora DSQL rejects the INSERT, the
-   custom resource fails, and CloudFormation cannot roll the schema back either.
+      - Commit `44dd7ae693` built the clone "Neon-branch-style" and runs it on
+        every deploy, Create and Update alike. A Neon branch is a snapshot taken
+        once. Here the snapshot step reruns against a target that already
+        exists.
+        - The same commit copies the source's `_migrations` rows on every
+          deploy "so `applyMigrations` short-circuits every migration prod has
+          already run". The target's ledger then claims every migration
+          production ran, whether or not it ran on the target.
 
-The structural step could **create** and could never **reconcile**, and the two
-halves of the clone disagreed about which schema was authoritative: the
-structure came from the target's history, the column list came from the source's
-present.
+## Root cause of occurrence
 
-## Why nothing caught it
+*Thought `IF NOT EXISTS` and `ON CONFLICT DO NOTHING` made the clone safe to
+rerun on every deploy, actually they make a step safe to repeat on an unchanged
+target, and a preview target falls behind its source the moment production
+migrates.* (Material)
 
-- **The failure needs three deploys in a specific order** — a preview created,
-  production gaining a column, then that preview deployed again. A branch opened
-  and merged inside one migration's lifetime never sees it, which is most of
-  them.
-- **The unit test fixture set the same columns on both schemas.** The clone
-  tests pass `columnsPerTable` for the source only, and the mock returned an
-  empty list for any table it was not given, so the target always looked either
-  identical or absent — never *behind*.
-- **Production cannot reproduce it.** The prod stack's source and target schema
-  are the same name, and the clone returns early on that, so the only code path
-  that can hit this is the preview one.
-- **`ON CONFLICT DO NOTHING` and `IF NOT EXISTS` read as "idempotent".** They
-  make a step safe to *repeat*; neither makes it safe to run against a target
-  that has drifted. The construct's own comment claimed idempotence, and it was
-  true of the operation and false of the outcome.
+The design's input was Neon's branch model, named in the commit: "same shape as
+Neon's branch databases". That model creates a branch once and never reconciles
+it. The construct's comment claimed idempotence, which was true of the
+operation and false of the outcome.
+
+## Detection failure causes
+
+- **Unit tests:** the clone tests passed `columnsPerTable` for the source only,
+  and the mock returned an empty list for any other table. The target always
+  looked identical or absent, never behind.
+- **Production:** the prod stack's source and target are the same schema, and
+  the clone returns early on that, so only a preview can reach this path.
+- **Order of events:** it needs a preview created, production gaining a column,
+  then that preview deployed again. A branch opened and merged within one
+  migration's lifetime never sees it.
 
 ## Countermeasure
 
-The structural step reconciles instead of only creating. After the
-`CREATE TABLE IF NOT EXISTS … LIKE`, the runner reads both column lists and
-issues `ALTER TABLE … ADD COLUMN IF NOT EXISTS <name> <type>` for every column
-the source has and the target lacks.
-
-`ADD COLUMN` in its bare form is the one alter Aurora DSQL accepts
-([compat gaps §10](../knowledge/dsql-postgres-compat-gaps.md)), so a column that
-is NOT NULL in production arrives nullable in the preview. That is the same
-compromise every migration in this repository already makes for the same reason.
+After the `CREATE TABLE IF NOT EXISTS … LIKE`, the runner reads both column lists
+and issues `ALTER TABLE … ADD COLUMN IF NOT EXISTS <name> <type>` for each column
+the source has and the target lacks. Bare `ADD COLUMN` is the one alter Aurora
+DSQL accepts, so a NOT NULL production column arrives nullable in the preview,
+the same compromise every migration here makes.
 
 ## Eradication
 
-Structural, at the level below detection: the clone can no longer name a column
-in an INSERT that the target does not have, because the step before it puts the
-column there.
+**Type:** knowledge (level 5) for the class, a preview target that falls behind
+its source. A structural impossibility (level 1) holds for one member of it, a
+column the target lacks.
 
-- `selectMissingColumns` and `buildAddColumnSql` in
-  `infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts`, pure and
-  covered at 100% like every `*.utils.ts` file.
-- `listColumnDefinitions` in `migration-runner/index.ts` reads the type back out
-  of `information_schema`, folding in the length or precision that `data_type`
-  alone drops.
-- The type string is validated against a pattern that admits a type name with a
-  length or a precision and nothing else, so a catalogue read can never become
-  an injected fragment.
-- `infra/cdk/test/unit/migration-runner-clone.test.ts` now carries a case where
-  the target is genuinely behind the source, which is the state no fixture could
-  express before, and asserts the ALTER lands *before* the INSERT.
-- The mock returns a type alongside each column name, so a fixture cannot again
-  describe a schema the runner could not actually query.
+**Reference:** commit [`450e82316d`](https://github.com/hugoleborso/borso.fr/commit/450e82316d).
+The clone cannot name a column the target lacks, because the step before the
+INSERT adds it. `cloneFromSchema` in `migration-runner/index.ts` does it today:
+
+```ts
+for (const column of selectMissingColumns(sourceColumns, targetColumns)) {
+  await sql.unsafe(buildAddColumnSql(targetSchemaName, table, column));
+}
+```
+
+`selectMissingColumns` and `buildAddColumnSql` are pure, in
+`clone-from-schema.utils.ts`, at 100% coverage. The type string read from
+`information_schema` is validated against a pattern that admits a type name with
+a length or precision and nothing else.
+
+**Proof it can fail:** `infra/cdk/test/unit/migration-runner-clone.test.ts` has a
+case where the target is behind the source and asserts the ALTER lands before
+the INSERT. The mock now returns a type with each column, so a fixture cannot
+describe a schema the runner could not query.
+
+**Gap:** only `ADD COLUMN` is reconciled. The clone still copies the source's
+`_migrations` rows on every deploy (`index.ts`, the `APPLIED_MIGRATIONS_TABLE`
+insert after the data loop). On a branch rebased onto a production migration
+that creates an index or a table, the copied ledger marks it applied and
+`applyMigrations` skips it on the preview (inferred from the code, not
+reproduced).
+
+**Proposed:** stop copying `_migrations`, and apply the target's own pending
+migrations before the data copy. In `provisionSchema` the order flips, from
+clone then migrate to migrate then copy, and the `APPLIED_MIGRATIONS_TABLE`
+insert after the data loop goes away. The INSERT then takes its column list
+from the columns both schemas hold, not from the source alone. Each preview
+runs every migration its own branch carries, so a rebased branch gets
+production's indexes and tables from the real migration, not from a ledger
+that claims them. `selectMissingColumns`, `buildAddColumnSql` and
+`listColumnDefinitions` could then be deleted. All of this is inferred, not
+tried. The migrations have been idempotent since `db7745820`, so rerunning
+them on every deploy is safe.
+
+This answers the reason the first review's version was dismissed. A branch
+behind main, as PR #49 was, does not carry production's newest migration, so
+migrating first alone would leave the target without `family`, and a source
+column list would still fail. With the column list taken from both schemas,
+the copy skips `family` on that branch, and the branch's code, which never
+reads `family`, loses nothing. The column arrives with the migration once the
+branch is rebased. Until this ships, the ADD COLUMN step stays, because it is
+what holds today.
+
+**Similar instances:** `grep -n 'IF NOT EXISTS' infra/cdk/src/internal/migration-runner/*.ts`
+lists the other create-only steps. Each is safe to repeat and none reconciles.

@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: low
 related-pr: '#24'
-fix-commits: [9199b11e70]
+fix-commits: [9199b11e70, 5d140956dd]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [CLAUDE.md, scripts/hooks/checks/merge-deploys-prod.core.ts]
 time-to-detect: minutes
 tags: [harness, workflow, claude-md, deploy, kaizen, self-improvement-loop]
 zone: CLAUDE.md
@@ -14,125 +14,88 @@ zone: CLAUDE.md
 
 # Post-merge follow-ups were implicit, so they almost slipped
 
-## Symptom
+## User impact
 
-PR #24 merged, a `<github-webhook-activity>` event with
-`Outcome: merged` arrived in the session. The agent's response
-mentioned the deploy reminder *and* the `/after-task-kaizen`
-follow-up — but only because the agent happened to remember
-both. CLAUDE.md prescribes the deploy reminder explicitly, but
-the *Self-improvement loop* rule (open the kaizen PR after every
-merge) lives in a different section and the agent's response
-treated it as a soft suggestion rather than a load-bearing rule.
+After PR #24 merged, the operator had to ask twice before the session treated the
+kaizen pass as owed. With a less engaged operator, the lessons of the PR would
+have been lost.
 
-A turn later, the user asked:
+| | Seen | Expected |
+| --- | --- | --- |
+| Reply to the `merged` webhook | the deploy reminder as an action, the `/after-task-kaizen` pass as a soft suggestion | both follow-ups as actions in the same reply |
+| Next turns | the operator asks « Mergé, good pour toi ? », then « Redonne les 4 leçons ? » | no prompt needed |
 
-> *« Mergé, good pour toi ? »*
+## Causal chain
 
-And, two turns later:
+- The operator had to re-ask for the kaizen pass.
+  - The session's reply to the merge offered the kaizen as optional and the
+    deploy reminder as required.
+    - CLAUDE.md held the two follow-ups in two sections written in two moods.
+      *Deployments* said "After a PR merges, Claude's deploy-related action is
+      to remind the user". *Self-improvement loop* described the loop, "open a
+      follow-up PR labelled `kaizen`", with no moment attached.
+      - The kaizen rule was written as a description of a practice, not as an
+        action tied to the merge event, and no one paired it with the deploy
+        reminder when either was added.
 
-> *« Redonne les 4 leçons ? »*
+## Root cause of occurrence
 
-The follow-up only landed because the user re-asked. With a
-less-engaged operator, the loop would have been skipped — exactly
-the failure mode the *Self-improvement loop* rule exists to
-prevent.
+*Thought a rule stated in CLAUDE.md fires when its moment comes, actually a rule
+written as a description, with no event named, competes with every other line
+of a long file at the moment the merge arrives.* (Method)
 
-The matching gap is the *library-search* habit codified in
-[`/after-task-kaizen`](../../.claude/skills/after-task-kaizen/SKILL.md)
-step 2c (added in commit `a0b7f27`): the rule exists, but the
-kaizen skill itself only fires when the operator invokes it.
-The "next layer" of automation — *the harness proposes the right
-skill on a merge webhook* — is the underlying gap.
-
-## Root-cause chain
-
-1. **Why is the deploy reminder mandated by CLAUDE.md but the
-   kaizen reminder isn't?**
-   CLAUDE.md *Deployments* says *"After a PR merges, Claude's
-   deploy-related action is to remind the user to approve the
-   pending deploy in GitHub Actions"*. The *Self-improvement
-   loop* section says *"open a follow-up PR labelled `kaizen`"* —
-   which is one section away and reads as a description of the
-   loop, not as an action item paired with the deploy reminder.
-2. **Why doesn't the harness auto-propose `/after-task-kaizen`
-   on a `merged` webhook event?**
-   The webhook-handling rule in the system prompt covers PR
-   activity events (comments, CI, reviews) but treats
-   `Outcome: merged` as a terminal state — *"do not reopen this
-   PR or open a new PR for the same change"* — without
-   prescribing the kaizen follow-up. The terminal-state phrasing
-   is correct (don't re-touch the merged PR) but the gap is the
-   *new* PR (`claude/lessons-from-pr-<n>`) that the rule should
-   propose.
-3. **Why does the kaizen miss matter when the deploy reminder
-   didn't?**
-   Both rules exist; one fires, the other relies on memory. The
-   asymmetry is the defect — when only one of two paired
-   follow-ups is enforced, the unenforced one decays.
-
-**Root cause:** *thought* the *Self-improvement loop* rule
-self-applies on merge, *actually* it depends on the agent
-remembering to propose `/after-task-kaizen` at exactly the
-moment the merge webhook arrives. CLAUDE.md doesn't pair the
-two follow-ups in one rule, and the system prompt's
-webhook-handling section doesn't list the kaizen proposal as a
-mandatory action on merge.
+Both rules were in context, since CLAUDE.md loads in every session. The one
+phrased as an action at a named moment fired. The one phrased as a description
+did not.
 
 ## Detection failure causes
 
-- **CLAUDE.md *Deployments* section** — covers the deploy
-  reminder explicitly, ends there.
-- **CLAUDE.md *Self-improvement loop* section** — names the
-  follow-up PR but doesn't pin it to the merge moment.
-- **System-prompt webhook handling** — handles `merged` as a
-  terminal state for the current PR, not as a trigger for the
-  next PR.
-- **Operator review** — caught it implicitly by re-asking; on a
-  less-engaged session this would have been a silent skip.
+- **Harness:** a merge done outside the session arrives as a message, and no
+  hook read the reply to it.
+- **CLAUDE.md:** the two follow-ups lived one section apart, so nothing showed
+  that one of a pair was missing.
+- **Operator review:** it caught the gap only by re-asking.
 
 ## Countermeasure
 
-The user invoked `/after-task-kaizen` directly, which produced
-this PR.
+The operator invoked `/after-task-kaizen` directly, which produced PR #28.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** knowledge addition (level 5) — pair the two follow-ups
-in a single CLAUDE.md rule and surface it in the system-prompt's
-webhook-handling section as a mandatory action on
-`Outcome: merged`. Level 2 alternative (a hook that fires when
-the webhook event arrives) was rejected: webhook events are
-delivered as messages to the agent, not as harness events with
-hookable surface; the agent itself is the only place the rule
-can fire.
+**Type:** knowledge (level 5), delivered by a hook when the session merges.
 
-**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
-this kaizen PR.
+**Reference:** commit [`9199b11e70`](https://github.com/hugoleborso/borso.fr/commit/9199b11e70)
+paired the two follow-ups in one CLAUDE.md rule. Commit `c54e32da79` later
+rewrote CLAUDE.md, and the pair now sits in *Self-improvement loop*: "After a
+merge, the same reply carries two follow-ups, and says so when either is not
+needed". The deploy half changed meaning. A merge now deploys with no approval
+step, so the first follow-up is the `shared-deploy` dispatch when the shared
+template moved.
 
-**The actual fix:**
+Commit [`5d140956dd`](https://github.com/hugoleborso/borso.fr/commit/5d140956dd)
+added the `merge-deploys-prod` hook, today
+`scripts/hooks/checks/merge-deploys-prod.core.ts`. When the session itself
+merges, it prints "There is no approval step after this call", whether a
+`shared-deploy` dispatch is owed, and, since commit `458e886c4`:
 
-```diff
- ## Deployments
- 
- - **Preview deploys are automatic.** A preview stack is created/updated on every PR push, and torn down on PR close, by the GitHub Actions workflow.
--- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally. **After a PR merges, Claude's deploy-related action is to remind the user to go approve the pending deploy in GitHub Actions** — once approved, the deploy is automatic. The reminder is not optional: a merged PR touching infra or app code sits in the approval queue until Hugo clicks Approve.
-+- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally.
-+- **On every merge webhook, Claude surfaces TWO paired follow-ups in the same response — not one, not optional:**
-+  1. *Approve the pending prod deploy* in GitHub Actions (the deploy sits in the queue until approved; this is the reminder described above).
-+  2. *Propose `/after-task-kaizen`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
-+  The asymmetry where one fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no infra/app changes for the deploy step ; a trivial PR for the kaizen step), say so explicitly in the same response — silence is not equivalent to "no action needed".
- - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md).
+```text
+After it lands, surface both post-merge follow-ups of CLAUDE.md's
+Self-improvement loop, the shared-deploy dispatch and the kaizen, as it
+words them.
 ```
 
-**Sibling defects swept:** the library-search-at-the-right-moment
-gap (`built-my-own-before-checking-the-library.md`) is the same
-*"the rule exists, the trigger doesn't"* shape. That dantotsu's
-fix landed the rule in three skills (planning, implementation,
-kaizen); this entry adds the missing *merge-event* trigger that
-ensures the kaizen skill actually fires.
+The entry's first reason for staying at level 5, that "the agent itself is the
+only place the rule can fire", no longer holds. The hook fires at the merge.
 
-## See also
+**Proof it can fail:** none. The hook reminds and does not refuse. A merge done
+by the operator on GitHub reaches the session as a message, and no hook runs.
 
-- [`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) — same shape (rule exists, trigger missing) at a different stage.
-- [`pushed-without-reading-pr-review-comments.md`](./pushed-without-reading-pr-review-comments.md) — sibling on the same PR-flow timeline.
+**Proposed:** a Stop check in `scripts/hooks/checks/`, registered beside
+`screensShown` under `Stop` in `scripts/hooks/hook-events.ts`. When the turn
+answers a merged-PR event, it reads the reply from the transcript, as
+`screens-shown.core.ts` does, and refuses a reply that names neither the
+`shared-deploy` decision nor the kaizen decision. A merge reply missing a
+follow-up would then be impossible, whoever merged.
+
+**Similar instances:** `built-my-own-before-checking-the-library.md` has the
+same shape, a rule that exists with no trigger at its moment.

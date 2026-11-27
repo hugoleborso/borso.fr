@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: staging
 severity: high
 related-pr: '#6'
-fix-commits: [7c62539f2c]
+fix-commits: [88b1178cf]
 eradication-level: 2
-eradication-paths: [scripts/check-non-module-scripts.sh]
+eradication-paths: [scripts/check-non-module-scripts.sh, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: hours
 tags: [vite, ci, frontend]
 zone: apps/borso-fr/site/index.html
@@ -14,78 +14,112 @@ zone: apps/borso-fr/site/index.html
 
 # Vite quietly leaves non-module `<script src>` tags un-bundled
 
-## Symptom
+## User impact
 
-The borso.fr preview deploy (`https://borso-fr-pr-6.preview.borso.fr/`) loaded the document but the JavaScript was missing — no nav-icon listener, no gradient canvas. DevTools showed `GET /script.js → 404`. Every other entry page (mondrian, family) worked because they used `type="module"` script tags.
+The borso.fr preview deploy of PR #6 loaded the home page without its
+JavaScript. The operator found it on the preview URL.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Home page, preview deploy | No nav-icon listener, no gradient canvas. DevTools: `GET /script.js → 404` | The menu opens and the gradient draws, as in `pnpm dev` |
 
-1. **Why** did `/script.js` 404 in the preview deploy?
-   The asset wasn't in `dist/`. Vite's build had not copied or bundled it.
+Every visitor of the home page would have seen it in production (inferred). The mondrian
+and family pages worked.
 
-2. **Why** wasn't it in `dist/`?
-   The source HTML at `apps/borso-fr/site/index.html` referenced it as `<script src="script.js"></script>` (no `type="module"`). Vite's HTML pipeline treats that as a literal-text reference, not a build input.
+## Causal chain
 
-3. **Why** does Vite treat non-module script tags as opaque?
-   Vite documents that only `<script type="module">` is rewritten by the HTML plugin. Non-module scripts are left alone for back-compat with apps that hand-manage classic scripts (e.g. analytics, third-party SDK loaders that need to stay un-bundled).
+- `/script.js` returned 404 on the preview.
+  - The file was not in `dist/`, and `dist/index.html` still pointed at it.
+    - Vite's build bundled only the module scripts. The home page carried a
+      classic tag, which Vite passes through as literal text and does not copy:
 
-4. **Why** did this slip past `pnpm build`?
-   The build *succeeded* — Vite emits zero warnings for non-module script tags it deliberately doesn't process. The asset graph contained only the `type="module"` entries; the non-module reference passed through into `dist/index.html` unchanged.
+      ```html
+      <!-- apps/borso-fr/site/index.html: no type="module", so Vite leaves it alone -->
+      <script src="script.js"></script>
+      ```
 
-5. **Why** did local `pnpm dev` work?
-   The dev server proxies the `site/` directory directly. `script.js` lives there, dev requests `/script.js`, dev server serves `apps/borso-fr/site/script.js`. The build-time gap doesn't appear locally.
+      - Commit `ac49ae999` ("feat(borso-fr): port Mondrian Atelier to
+        /art/mondrian", 2026-05-03, an agent) moved the app "from cp -R to a
+        Vite multi-page project". It added `site/index.html` to
+        `rollupOptions.input` in `apps/borso-fr/vite.config.ts`. It rewrote the
+        mondrian page it was porting and left the home page's tag as it was.
+        - Before that commit, `pnpm build` was `cp -R site dist`, so the
+          classic tag worked.
+          - The tag dates from `c22cca220` ("refactor: split into files",
+            2025-02-09), for a plain static site with no build.
+            `5744b7a53` moved it unchanged into `apps/borso-fr/site/`.
 
-**Root cause:** *thought* Vite's HTML pipeline rewrites every `<script src>`; *actually* it rewrites `type="module"` only and silently passes the rest through, so the asset lands in `dist/` only when the developer remembers the `type="module"` keyword.
+## Root cause of occurrence
+
+*Thought adding a page to Vite's build inputs brings its scripts along.
+Actually Vite rewrites and bundles only `<script type="module">`. A classic
+`<script src>` stays literal text in the output, and the file it names is not
+copied.* (Material, inferred.)
+
+The writer of the tag never had Vite in mind. The writer of `ac49ae999` did:
+it built the Vite config. Its task was the mondrian port, and the home page
+came along as a side effect of the move to one build graph. Nothing in the
+repository described what Vite does with an HTML page it did not write. Vite
+itself does warn. Vite 6's HTML plugin logs `<script src="…"> in "…" can't be
+bundled without type="module" attribute` (read in
+`node_modules/.pnpm/vite@6.4.5_*/node_modules/vite/dist/node/chunks/dep-CkSfqg8D.js:36661`).
+Whether the agent ran `vite build` and saw that line is unknown. If it did, the
+cause is Man, and the gate below answers it the same way.
+
+Below it sits Method. The migration changed who owns every HTML reference, and
+nothing in it checked that each reference still resolved in `dist/`.
 
 ## Detection failure causes
 
-- **Typing:** N/A — not a TS issue.
-- **Linter / static analysis:** Biome doesn't lint HTML. Knip looks at JS imports, not HTML asset references. Vite emits no warning.
-- **Functional validation locally:** Dev server worked, masking the build-time gap. The implementer's manual sweep was on dev, not on `pnpm preview` (production-build serve).
-- **CI (tests / build):** `pnpm build` exits 0 because the build technically succeeds — there's just no asset in `dist/` and no rewritten reference. The build's success criteria don't include "every src referenced in HTML resolved".
-- **Code review:** Diff was small (one line in an unfocused-area HTML file); reviewer didn't notice the missing `type="module"`.
-- **PO / QA validation:** First detected on the production preview URL during an end-to-end check by the human. The visual-validator never visits the index page (out of spec scope).
-- **Production monitoring / alerting:** None — static-site 404s for assets aren't surfaced.
+- **Build:** Vite prints a warning and exits 0. A warning that does not fail
+  the build is not detection.
+- **Local:** `pnpm dev` serves `site/` directly, so `/script.js` resolved. The
+  manual sweep ran on dev, not on `pnpm preview`.
+- **Linter:** Biome did not lint HTML, and knip reads JS imports, not HTML
+  references.
+- **Review:** the defect was not in the diff. The diff added the page to the
+  build inputs, and the tag sat unchanged in a file the commit never touched.
+- **Visual validation:** the spec covered the mondrian page, so the validator
+  never opened the home page.
+- **Monitoring:** a 404 on a static asset raises no alert.
 
 ## Countermeasure
 
-Add `type="module"` to the script tag so Vite picks it up, bundles it into `dist/assets/index-<hash>.js`, and rewrites the HTML reference.
+Commit `7c62539` adds `type="module"` to the tag,
+`<script type="module" src="./script.js"></script>`. Vite then bundles it into
+`dist/assets/index-<hash>.js` and rewrites the reference.
 
-- **Code:** commit [`7c62539`](https://github.com/hugoleborso/borso.fr/commit/7c62539) — `<script type="module" src="./script.js"></script>` in `apps/borso-fr/site/index.html`.
-- **Operator action:** None — once merged the next preview / prod build emits a working `dist/index.html`.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** DevX check (level 2 — pre-push hook)
-
-**Reference:** PR (this kaizen) · commit `7c62539f2c`
-
-**The actual fix:** add a pre-push grep guard that fails if any HTML in `apps/*/site/**` references a script without `type="module"`. The check is shell, not JS, so it costs nothing on every push.
-
-```bash
-# .husky/pre-push (excerpt — see scripts/check-non-module-scripts.sh)
-scripts/check-non-module-scripts.sh
-```
+**Reference:** commit `88b1178cf` ("docs: lessons from PR #6") added
+`scripts/check-non-module-scripts.sh`. It fails when any
+`apps/*/site/**/*.html` holds a `<script src>` without `type="module"`.
+`.husky/pre-commit:358` runs it on staged HTML, and `.github/workflows/ci.yml:159`
+runs it on every pull request. This entry first said pre-push.
 
 ```bash
-# scripts/check-non-module-scripts.sh
-#!/usr/bin/env bash
-set -euo pipefail
 matches=$(/usr/bin/grep -rEn '<script[^>]+src=' apps/*/site \
-  --include='*.html' \
-  | /usr/bin/grep -v 'type="module"' || true)
-if [ -n "$matches" ]; then
-  printf '\033[31mFAIL\033[0m non-module <script src> tag — Vite will not bundle this; production will 404.\n'
-  printf '%s\n' "$matches"
-  printf 'Fix by adding type="module" to the tag.\n'
-  exit 1
-fi
+  --include='*.html' 2>/dev/null \
+  | /usr/bin/grep -v 'type="module"' \
+  || true)
 ```
 
-A CI job running the same script on PR open is a sibling defence-in-depth, but the pre-push catches it locally before push, which is cheaper.
+**Proof it can fail:** not recorded. The check exits 1 on any match, by
+reading of the script.
 
-**Sibling defects swept:** none (this was the only non-module reference in the repo at the time of the dantotsu).
+The check holds only for this tag shape. It misses a `<link href>`, an
+`<img src>` or a reference split across lines. It would also refuse a
+legitimate classic script, such as one served from `public/`, which Vite
+skips on purpose.
 
-## See also
+**Proposed:** replace the grep with a post-build check in CI. For each
+`apps/*/dist/**/*.html`, every local `src` and `href` must resolve to a file in
+that `dist/`. Delete `scripts/check-non-module-scripts.sh` and its two call
+sites in the same change. A page whose output points at a file the build did
+not emit would then fail CI, whatever the tag, and whether it came from a
+migration or not.
 
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) — another Vite-build / repo-tooling interaction, where Biome scanning the build output caused a different class of failure.
+**Similar instances:** `grep -rEn '<script[^>]+src=' apps/*/site --include='*.html' | grep -v 'type="module"'`
+finds none today, since the gate passes on main.

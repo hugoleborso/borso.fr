@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#249'
-fix-commits: [self]
+fix-commits: [self, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-merge-strands-no-work.sh, .claude/settings.json]
+eradication-paths: [scripts/hooks/checks/merge-strands-no-work.core.ts, scripts/hooks/checks/merge-strands-no-work.core.test.ts, .claude/settings.json]
 time-to-detect: minutes
 tags: [agents, git, hooks, harness, pragma]
 zone: CLAUDE.md
@@ -28,54 +28,45 @@ broke the merge's gate run, was stopped, and was lost with the container.
 
 ## Causal chain
 
-- The prototype was lost, and a gate run reported failures that were not the
-  merge's.
-  - The energy subagent wrote `EnergyMeter.tsx` at 00:23 into the checkout
-    where the main session was running the merge's gates.
-    - The main session kept the agent running after "Merge" and said "the
-      agent hasn't changed any file yet" three minutes before it did.
-      - Main had rewritten the energy bar in PR #252 and PR #256, so the
-        prototype stood on old code. The main session stopped it with
-        `TaskStop`, stashed its two files, and merged.
-        - Nothing between the stash and `merge_pull_request` asked where the
-          stashed work would go.
+- A gate run reported failures that were not the merge's, and the prototype was lost.
+  - The energy subagent wrote `EnergyMeter.tsx` at 00:23 into the checkout where the main session was running the merge's gates.
+    - The main session had dispatched it in the background into the shared checkout, with no `isolation: "worktree"` (inferred: its file landed in the shared tree, and `TaskStop` stopped it), and kept it running after "Merge". It said "the agent hasn't changed any file yet" three minutes before the agent did.
+      - CLAUDE.md asks for a worktree only when "Two or more agents that write code at the same time" run. One background writer beside a main session that runs gates fell outside that sentence. (Method)
+  - The main session stopped the agent with `TaskStop`, stashed its two files, and called `merge_pull_request`. Main had rewritten the energy bar in PR #252 and PR #256, so the prototype stood on old code, and the stash ended with the container.
 
 ## Root cause of occurrence
 
 *Thought a background agent and the main session can share one checkout as
 long as the agent does not commit, actually any agent edit lands in the next
-gate run, and anything not pushed ends with the container.* CLAUDE.md's
-*Parallel agents* section covers the shared index. It says nothing about the
-main session running gates while an agent writes, or about merging with work
-parked locally.
+gate run, and anything not pushed ends with the container.*
+
+Method. The rule that would have kept them apart counts writers. The main
+session running lint and tests is a reader of the tree, so the rule did not
+apply, and a shared checkout was the default for every dispatch.
 
 ## Detection failure causes
 
-- **Hooks:** `no-discarding-reset` caught the first attempt to clear the
-  prototype, a `git checkout --` of its two files, and named the main session's
-  own merge fixes as also at risk. It worked as designed. The stash it pointed
-  to was safe only until the container went.
-- **Merge:** `merge_pull_request` ran with a non-empty stash, and nothing
-  looked.
+- **Hooks:** `no-discarding-reset` caught the first attempt to clear the prototype, a `git checkout --` of its two files, and named the main session's own merge fixes as also at risk. It pointed to a stash, which was safe only until the container went.
+- **Merge:** `merge_pull_request` ran with a non-empty stash, and no hook read the stash.
 
 ## Countermeasure
 
-The main session stashed the two prototype files, re-ran the gates on the
-merge alone (3,621 tests passed), merged main a second time, and told the
-operator the prototype was lost.
+The main session re-ran the gates on the merge alone (3,621 tests passed),
+merged main a second time, and told the operator the prototype was lost.
 
 ## Eradication
 
 **Type:** DevX check (level 2)
 
-**Reference:** the commit that adds this file.
+**Reference:** the commit adding this file. `458e886c4` (2026-11-27) replaced
+the shell hook `.claude/hooks/pretool-merge-strands-no-work.sh` with
+`scripts/hooks/checks/merge-strands-no-work.core.ts`, run by
+`scripts/hooks/hook.ts` and covered by its sibling test. The rule did not change.
 
-```diff
-+      {
-+        "matcher": "mcp__github__merge_pull_request",
-+        "hooks": [ { "type": "command",
-+          "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/pretool-merge-strands-no-work.sh" } ]
-+      }
+```ts
+export const mergeStrandsNoWork: Check = {
+  name: RULE,
+  tools: /^mcp__github__merge_pull_request$/u,
 ```
 
 `merge-strands-no-work` refuses `merge_pull_request` while the checkout holds
@@ -83,14 +74,21 @@ tracked changes or stash entries. It names the two ways out: push the work to a
 branch, or drop it with the operator's own confirmation. Untracked files do
 not count, since build output and scratch files live there.
 
-A level-1 fix was considered and rejected. Forcing every writing subagent into
-`isolation: "worktree"` would remove the shared checkout, but it changes how
-every feature subagent works and is an architecture decision for the operator.
+**Proposed:** a check in `scripts/hooks/checks/` on `Agent|Task`, the tools
+`.claude/settings.json` already routes to `scripts/hooks/hook.ts`, that
+refuses a dispatch with `run_in_background` and no `isolation: "worktree"`
+when its prompt asks for edits, or refuses every background dispatch without
+a worktree. That moves the existing rule to the moment of dispatch. A
+background writer could then no longer share the tree a gate run reads, and
+the merge check would have nothing left to catch. When this entry was written,
+forcing every writing subagent into a worktree was judged an architecture
+decision for the operator. Today's CLAUDE.md already asks for it whenever two
+agents write at once.
 
-**Proof it can fail:** in this sweep's checkout, with its own uncommitted
+**Proof it can fail:** in the sweep's checkout, with its own uncommitted
 eradications, the hook printed `[merge-strands-no-work] this container holds
-work no branch has, and it is reclaimed after the merge:` and listed the files.
-On a clean checkout with an empty stash it exits 0.
+work no branch has, and it is reclaimed after the merge:` and listed the
+files. On a clean checkout with an empty stash it exits 0.
 
 **Similar instances:** `parallel-agents-share-one-index-and-every-generator`
 is the same shared checkout seen through `git add -A`. The Stop hook nagged

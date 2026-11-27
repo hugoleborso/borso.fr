@@ -14,78 +14,80 @@ zone: .claude/skills/open-pr
 
 # A route in a mermaid node opened a parallelogram
 
-## Symptom
+## User impact
 
-PR #107's description opened on a flow diagram that GitHub did not draw.
-The operator found it by reading the page after CI was green:
-*"attention to mermaid est cassé"*.
+PR #107's description opened on a flow diagram that GitHub did not draw. The
+operator found it by reading the page after CI was green: *"attention to
+mermaid est cassé"* ("careful, the mermaid is broken").
 
-```mermaid
-flowchart LR
-  login["/login"] --> recover["/recover"]
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| The Flow section of PR #107 | a parse error in place of the diagram | the login to recover flow, drawn |
 
-That is the fixed version. The shipped one wrote `login[/login]`.
+## Causal chain
 
-## Root-cause chain
+- GitHub showed a parse error instead of the diagram.
+  - Mermaid gave up on the whole block at its first node.
+    - The node was `login[/login]`. In a flowchart, `[/` opens a slanted shape:
+      `[/text/]` is a parallelogram and `[/text\]` a trapezoid. `[/login]`
+      opens one, meets a bare `]`, and fails.
+      - The session wrote the label unquoted and named it after the URL, which
+        starts with a slash.
+        - It copied the form of the `/open-pr` template's example, which writes
+          every label unquoted: `search[Search] --> deezer[Deezer]` in
+          `.claude/skills/open-pr/template.md` at `bbf11f9^`.
 
-1. **Why did the diagram fail?** Mermaid could not parse its first line.
-2. **Why not?** In a flowchart, `[/` opens a slanted shape: `[/text/]` is a
-   parallelogram, `[/text\]` a trapezoid. `[/login]` opens one, finds a
-   bare `]`, and the parser gives up on the whole block, not just the node.
-3. **Why was a route written that way?** The node was named after the URL,
-   and a URL starts with a slash. Writing a label in brackets is the common
-   case and nothing about it looks like syntax.
-4. **Why did the checker pass it?** `check-pr-body.ts` reads the Flow
-   section only to count nodes against the budget. It found nine and said
-   nothing about whether they parse.
+## Root cause of occurrence
 
-**Root cause:** thought the text inside a node's brackets was free text,
-actually its first character can be shape syntax, and a slash is.
+*Thought the text inside a node's brackets is free text, actually its first
+character can be shape syntax, and a slash is.* **Material.** The template the
+body was drafted from showed only unquoted labels, a form that holds for words
+and breaks on any label that starts with `/`, `\`, `(`, `{` or `>`. `/open-pr`
+drafts from that template (inferred: the session's transcript was not read).
 
 ## Detection failure causes
 
-- **Linter / static analysis:** the PR-body checker counted nodes but never
-  parsed them.
-- **Functional validation locally:** a body is drafted in a file and posted
-  through the API. Nothing renders it before it is live.
-- **Code review:** caught here, by the operator, after merge-readiness was
-  announced.
+- **Linter:** `check-pr-body.ts` read the Flow section only to count nodes
+  against the budget. It found nine and did not parse them. No mermaid parser is
+  installed in the repository (`ls node_modules/.pnpm | grep -i mermaid` prints
+  nothing, measured this session).
+- **Local validation:** a body is drafted in a file and posted through the API.
+  Nothing renders it before it is live.
+- **Review:** the operator caught it, after merge-readiness was announced.
 
 ## Countermeasure
 
-- **Operator action:** the body was updated with every label quoted.
+The body was updated with every label quoted, as `login["/login"]`.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — DevX check)
+**Type:** DevX check (level 2), for this one shape.
 
-**Reference:** commit `bbf11f9`
-
-**The actual fix:** the Flow check in `scripts/pr/pr-body.core.ts` refuses
-any `[/…]` or `[\…]` label that does not end on a slash, and names the
-quoted form that renders:
+**Reference:** commit [`bbf11f9`](https://github.com/hugoleborso/borso.fr/commit/bbf11f9969).
+The Flow check in `scripts/pr/pr-body.core.ts` refuses any `[/…]` or `[\…]`
+label that does not close its slant, and names the quoted form.
 
 ```diff
 +const SLANTED_SHAPE_LABEL = /\[[/\\][^\]"]*\]/g;
 +const CLOSED_SLANTED_SHAPE = /^\[[/\\].*[/\\]\]$/;
 ```
 
+**Proof it can fail:** the test suite carries the exact line PR #107 shipped.
+The checker on that body reports:
+
 ```
 [pr-body] Flow: [/login] opens a slanted shape it never closes, so the diagram fails to render; quote the label, as ["/login"]
 ```
 
-The four shapes mermaid defines still pass, as do quoted labels and a slash
-anywhere but first. The test suite carries the exact line PR #107 shipped,
-and running the checker on that body as posted reports both broken nodes.
-Stryker kills 395 of 395 mutants in the file.
+Stryker killed 395 of 395 mutants in the file (measured at the fix).
 
-**Sibling defects swept:** the checker runs on every body drafted through
-`/open-pr` and through `pretool-gh-pr-create.sh`, so every future flow
-diagram is covered. Diagrams inside committed markdown are not checked;
-GitHub renders those in the file view, where a broken one is visible
-before merge.
+**Similar instances:** the checker runs on every body drafted through `/open-pr`.
+Other first characters still break a diagram the same way, such as `(`, `{` or
+`>`, and the template still writes unquoted labels today. Diagrams inside
+committed markdown are not checked. GitHub renders those in the file view before
+merge.
 
-## See also
-
-- [`github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md)
+**Proposed:** quote every label in `.claude/skills/open-pr/template.md`, and make
+`readMermaidNodes` in `scripts/pr/pr-body.core.ts` refuse any unquoted bracket
+label. One rule then makes every first character inert, inside the existing
+regex checker, and the template stops teaching the fragile form.

@@ -6,182 +6,108 @@ severity: high
 related-pr: '#23'
 fix-commits: [c5eb3e0b3d]
 eradication-level: 2
-eradication-paths: [scripts/check-migration-sql-dsql-compat.sh]
+eradication-paths: [scripts/check-migration-sql-dsql-compat.sh, scripts/check-migration-sql-dsql-compat.test.ts]
 time-to-detect: hours
 tags: [dsql, postgres, drizzle, ddl, deploy]
 zone: apps/last-loop-lepin/api/src/database/migrations
 prior-fix-commits: [20bbed6, 0d4fc0e, dd47f3b]
 ---
 
-# DSQL's ALTER TABLE surface is far narrower than Postgres — and the local Postgres hides it
+# DSQL's ALTER TABLE surface is far narrower than Postgres, and the local Postgres hides it
 
-## Symptom
+## User impact
 
-Preview deploy of PR #23 failed three times in a row, each time on
-the same custom-resource migration runner:
+The PR #23 preview of last-loop-lepin, runners punching their own loop
+end, failed to deploy three times in a row on the migration runner. Each
+attempt cost a deploy and a rollback, 15 to 20 minutes (reported by the
+operator, who watched the CloudFormation events).
 
-1. *« ALTER TABLE ADD COLUMN with constraint not supported »* on the
-   compact `ADD COLUMN "source" text DEFAULT 'admin' NOT NULL`.
-2. *« unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL
-   statement »* on the canonical fallback (`ADD COLUMN nullable
-   → UPDATE backfill → ALTER COLUMN SET NOT NULL → ALTER COLUMN SET
-   DEFAULT`).
-3. *« column "source" of relation "loop_punches" already exists »*
-   on the re-deploy, because the DSQL schema is a logical schema in
-   a shared cluster and CFN's `DELETE_COMPLETE` doesn't wipe it —
-   the partial state from attempt 1 survived.
+| | Seen | Expected |
+| --- | --- | --- |
+| Attempt 1 | `ALTER TABLE ADD COLUMN with constraint not supported` | the migration applies |
+| Attempt 2 | `unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL statement` | the migration applies |
+| Attempt 3 | `column "source" of relation "loop_punches" already exists` | the migration applies |
 
-Each iteration burnt 15-20 minutes of deploy + rollback.
+## Causal chain
 
-## Root-cause chain
+- The preview's migration runner failed on `0001_self_punch_columns.sql`.
+  - DSQL refused the statement. Its `ADD COLUMN` action takes a name and a type and no constraint clause ([AWS ALTER TABLE support](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)).
 
-1. **Why did DSQL refuse the compact `ADD COLUMN … NOT NULL DEFAULT`
-   form?** It's not in the DSQL ALTER TABLE grammar. The
-   [AWS doc](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/alter-table-syntax-support.html)
-   enumerates exactly which `action` clauses are accepted; the
-   `ADD COLUMN` action has signature `ADD [COLUMN] [IF NOT EXISTS]
-   column_name data_type [STORAGE ...]` — **no constraint clauses
-   at all**.
-2. **Why did the canonical fallback fail too?** Same doc: there is
-   no `ALTER COLUMN ... SET NOT NULL` action, no `ALTER COLUMN ...
-   SET DEFAULT` either. The only `ALTER COLUMN` actions DSQL accepts
-   are `SET STORAGE`, the four GENERATED variants, and `DROP
-   IDENTITY`. Post-creation, the column's nullability / default /
-   type are *all immutable*.
-3. **Why did the implementer ship the buggy migration despite the
-   risk being named in `plan.md` (R-DSQL)?** The plan said *"if
-   DSQL rejects, fall back to the 3-statement form"*. The implementer
-   tested the compact form locally on `pnpm dev`'s Postgres — which
-   accepted it without complaint — and concluded *"the dry-run gate
-   accepted it, ship the compact form"*. The dry-run gate was on
-   the wrong engine.
-4. **Why didn't the back-e2e suite catch the difference?** Because
-   it runs against the same local Postgres. DSQL was never in the
-   loop until preview deploy.
-5. **Why did the re-deploy fail with "column already exists"?** The
-   partial DSQL state from attempt 1 left `source` column already
-   on `loop_punches`. The migration runner Lambda has a
-   `makeIdempotent` rewrite that injects `IF NOT EXISTS`, but the
-   bundle in question apparently didn't pick it up (CDK cached an
-   older `dist/`?), or the rewrite missed something in the path.
-   The cleanest path was to write `IF NOT EXISTS` *directly into
-   the migration SQL file* so the file is self-evidently safe.
+    ```sql
+    -- 0001_self_punch_columns.sql at 8ad75cc88
+    ALTER TABLE "loop_punches" ADD COLUMN "source" text DEFAULT 'admin' NOT NULL;
+    ```
 
-**Root cause:** *thought DSQL's post-creation ALTER TABLE surface
-mirrored Postgres's; actually DSQL only accepts plain `ADD COLUMN
-<name> <type>` post-creation — no constraint, no default, and no
-subsequent ALTER COLUMN can patch those in. The team's mental model
-needs to be `CREATE TABLE` for everything, `ADD COLUMN <type>` (no
-constraints) for additions, app-level invariants for the rest.*
+    - Commit 8ad75cc88 (2026-05-15) shipped it after a dry-run on local Postgres: "Dry-run on local Postgres confirmed the single-statement ADD COLUMN".
+      - The plan named the risk and the check. `plan.md` row R-DSQL: the statement "peut être rejeté par DSQL (la doc `dsql-postgres-compat-gaps.md` ne le couvre pas)" (may be rejected by DSQL, the compat doc does not cover it). Its mitigation was a local dry-run, with a fallback of `ADD COLUMN nullable → UPDATE → ALTER COLUMN SET NOT NULL`.
+        - Local Postgres accepts every form DSQL refuses, so the dry-run passed.
+  - Attempt 2 shipped the plan's fallback (20bbed6). DSQL has no `ALTER COLUMN … SET NOT NULL` or `SET DEFAULT` action either.
+  - Attempt 3 met the `source` column that attempt 1 had already added. The DSQL schema lives in a cluster shared across stacks, so a stack rollback does not remove it.
+
+## Root cause of occurrence
+
+*Thought a dry-run on local Postgres answers whether DSQL accepts a
+migration, actually local Postgres accepts a superset of DSQL's DDL, and
+DSQL's `ALTER TABLE` accepts only a bare `ADD COLUMN <name> <type>` after
+creation.*
+
+Tag: **Material** (agentic rule). The plan handed to the implementer named
+the local dry-run as the check and carried a fallback DSQL also refuses.
+The compat doc in its context did not cover `ALTER TABLE`, as the plan
+itself says. The Machine condition under it: every local and CI run uses
+an engine that accepts more than DSQL.
 
 ## Detection failure causes
 
-- **Typing / drizzle-kit:** `drizzle-kit generate` emits whatever
-  the schema declares — `.notNull().default('admin')` becomes
-  `NOT NULL DEFAULT 'admin'` in the SQL. drizzle-kit has no DSQL
-  awareness.
-- **Linter / static analysis:** None — Biome doesn't introspect SQL.
-- **Functional validation locally:** `pnpm run db:local:wipe &&
-  pnpm test` runs against `pnpm dev`'s Postgres, which accepts every
-  banned form. The CREATE-then-ADD path also masks the
-  "non-empty-table" subtlety because the back-e2e starts from an
-  empty table.
-- **CI:** No DSQL is wired into CI today (cost / boot time). Only
-  preview deploys exercise DSQL.
-- **Code review:** The migration file *was* commented to mention
-  R-DSQL, but the bundling of NOT NULL DEFAULT was missed.
-- **Production monitoring:** Custom-resource failures are surfaced
-  via CloudFormation events; the operator caught them in real
-  time, but that's a 15-minute round-trip per attempt.
+- **drizzle-kit:** it emits what the schema declares, so `.notNull().default('admin')` becomes `DEFAULT 'admin' NOT NULL`. It knows nothing of DSQL.
+- **Local and CI tests:** the back-e2e suite runs on the same local Postgres, which accepts every refused form. No DSQL runs in CI.
+- **Review:** the migration header mentioned R-DSQL, so it read as handled.
+- **Deploy:** a custom-resource failure surfaces only in CloudFormation events, one 15-minute round trip per attempt.
 
 ## Countermeasure
 
-The migration was rewritten in PR #23 over three commits (one per
-DSQL revelation):
+Three commits in PR #23. 0d4fc0e dropped `.notNull().default()` from the
+Drizzle schema, so `source` stays nullable and `narrowPunchSource` holds
+the invariant in the app. dd47f3b wrote `ADD COLUMN IF NOT EXISTS` into
+the SQL file, so a retry after a partial apply is a no-op.
+`docs/knowledge/dsql-postgres-compat-gaps.md` §10 now lists the refused
+`ALTER TABLE` actions with the AWS reference.
 
-- `20bbed6` — split the compact `ADD COLUMN ... NOT NULL DEFAULT`
-  into ADD + UPDATE + SET NOT NULL + SET DEFAULT (still wrong).
-- `0d4fc0e` — drop the `.notNull().default()` from the drizzle
-  schema entirely; the `source` column is now nullable forever, the
-  app layer guarantees the invariant via `narrowPunchSource`.
-- `dd47f3b` — write `ADD COLUMN IF NOT EXISTS` *into the SQL file
-  itself* so a re-deploy after a partial-state survival is a no-op.
+## Eradication
 
-The knowledge entry
-[`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md)
-§10 was rewritten with the AWS reference and the exhaustive list of
-rejected `action` clauses.
+**Type:** DevX check (level 2).
 
-## Eradication (mandatory — code-level)
-
-### Library search (before reaching for a custom check)
-
-Per [`/after-task-kaizen`](../../.claude/skills/after-task-kaizen/SKILL.md)'s
-library-search pass, the question asked first was: *does an
-existing tool already know that DSQL rejects these DDL forms?*
-
-| Candidate                                                                                                  | Verdict | Why                                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`awslabs/aurora-dsql-connectors`](https://github.com/awslabs/aurora-dsql-connectors)                      | No      | The repo ships eight per-language connectors (.NET, Go, Java, Node, PHP, Python, Ruby, Rust) — wire-protocol auth + signed-token helpers. **No migration validation, no DDL linter** — read the README and the package list to confirm. |
-| AWS Aurora DSQL [user guide](https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html) | No      | Documents the unsupported feature surface as prose and tables; no companion linter or CI-ready tool is referenced anywhere in the guide.                                                     |
-| [`sbdchd/squawk`](https://github.com/sbdchd/squawk)                                                        | No      | Lints Postgres migrations for safety (locking, downtime, missing CONCURRENTLY) — but it's about *self-hosted Postgres* hazards. None of its rules know that DSQL rejects `ALTER COLUMN SET NOT NULL` outright. |
-| [`ariga/atlas`](https://github.com/ariga/atlas)                                                            | No      | Cross-engine schema migration tool; its `dsql` driver targets Aurora DSQL but the compat checks are about *its own diff output*, not arbitrary drizzle-kit-emitted SQL.                      |
-
-Conclusion: no off-the-shelf tool checks drizzle-kit's output
-against the DSQL DDL whitelist. The repo-local
-`scripts/check-migration-sql-dsql-compat.sh` is the cheapest
-gap-fill. If AWS ships an official DSQL linter later, this
-script becomes redundant and gets deleted — the dantotsu eradication
-level (DevX check via pre-commit + CI) doesn't change.
-
-### The check itself
-
-**Type:** DevX check (level 2 — pre-commit hook + CI gate, paired
-with the existing knowledge entry).
-
-**Reference:** this kaizen PR ·
-[`scripts/check-migration-sql-dsql-compat.sh`](../../scripts/check-migration-sql-dsql-compat.sh) ·
-wired into `.husky/pre-commit` and `.github/workflows/ci.yml`.
-
-**The actual fix:**
+**Reference:** commit [`c5eb3e0b3d`](https://github.com/hugoleborso/borso.fr/commit/c5eb3e0b3d)
+added `scripts/check-migration-sql-dsql-compat.sh`. `.husky/pre-commit:259`
+runs it on staged migrations and `.github/workflows/ci.yml:81` on all of
+them. `scripts/check-migration-sql-dsql-compat.test.ts` tests it. No
+library checks drizzle output against DSQL (squawk, atlas and
+aurora-dsql-connectors were read when the entry was written; none has DSQL
+DDL rules).
 
 ```bash
-# .husky/pre-commit (excerpt)
-if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
-  echo "[pre-commit] migration SQL changed — running DSQL-compat check"
-  ./scripts/check-migration-sql-dsql-compat.sh
-fi
+if echo "$stripped" | grep -qE -i 'ADD[[:space:]]+COLUMN[[:space:]]+[^,;]*NOT[[:space:]]+NULL'; then
 ```
 
-The script greps every `apps/*/api/src/database/migrations/*.sql`
-for the seven banned forms (`ADD COLUMN ... NOT NULL`, `ADD COLUMN
-... DEFAULT`, `ALTER COLUMN ... SET/DROP NOT NULL`, `ALTER COLUMN
-... SET/DROP DEFAULT`, `ALTER COLUMN ... TYPE`, `ADD CONSTRAINT`
-(except UNIQUE-USING-INDEX), `DROP COLUMN`). SQL comments are
-stripped before scanning so a documentation comment can mention the
-trap without false-positive.
+What holds today has a gap. The script is a deny-list of forms it has
+already met: `ADD COLUMN … NOT NULL`, `ADD COLUMN … DEFAULT`, `ALTER COLUMN
+… SET/DROP NOT NULL`, `SET/DROP DEFAULT`, `TYPE`, `ADD CONSTRAINT` except
+`UNIQUE USING INDEX`, `DROP COLUMN`, and `jsonb`. A form nobody has met yet
+passes. It already happened once:
+[`jsonb-column-passed-local-postgres-failed-dsql`](./jsonb-column-passed-local-postgres-failed-dsql.md)
+(2026-06-05) reached a deploy, and `jsonb` joined the list only then in
+8776ee26d.
 
-```diff
-+ # DSQL-compat scan on every migration SQL file. Mirrors the
-+ # pre-commit hook so a bypass via `git push --no-verify` still
-+ # gets caught before merge.
-+ - run: ./scripts/check-migration-sql-dsql-compat.sh
-```
+**Proof it can fail:** `scripts/check-migration-sql-dsql-compat.test.ts`
+plants each form and expects the refusal. Not rerun for this rewrite.
 
-If a future drizzle-kit emits one of the banned forms (e.g. someone
-adds `.notNull()` to a new column in an existing table), the commit
-is rejected with a message pointing at the §10 knowledge entry —
-the engineer chooses to either: change the schema (drop the
-constraint, set the value app-side), or rewrite the migration
-manually before committing.
+**Proposed:** turn the deny-list into an allow-list. The script would
+accept only the statement shapes DSQL documents: `CREATE TABLE` with
+supported types, `CREATE INDEX ASYNC`, bare `ADD COLUMN [IF NOT EXISTS]
+<name> <type>`, and the few other documented actions. It would refuse
+anything else. A form not proven accepted, such as the next `jsonb`, would
+then fail at commit by default, instead of after a deploy.
 
-**Sibling defects swept:** the script scans every migration in the
-repo, not just freshly-staged ones. Today only one app
-(`last-loop-lepin`) has DSQL migrations and they all pass. When
-the second DSQL-backed app lands, no special wiring needed.
-
-## See also
-
-- [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) — the broader DSQL ↔ Postgres divergence reference; §10 covers this trap with the AWS doc citation.
-- [`docs/dantotsus/dsql-first-deploy-must-be-prod.md`](./dsql-first-deploy-must-be-prod.md) — neighbour entry: another DSQL-specific deploy-time gotcha.
-- [`docs/dantotsus/dsql-grant-mismatched-runtime-auth.md`](./dsql-grant-mismatched-runtime-auth.md) — neighbour entry: DSQL's IAM/auth surface diverges similarly from Postgres'.
+**Similar instances:** the script scans every
+`apps/*/api/src/database/migrations/*.sql`, so each new DSQL app is
+covered without wiring.

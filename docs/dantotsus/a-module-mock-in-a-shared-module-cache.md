@@ -32,28 +32,36 @@ that looked correct.
 - The `trace.id` assertion failed in the suite only
   - `findActiveTraceId` answered `null`: the real adapter ran, not the mock
     - `app.test.ts`, earlier in the same fork, had loaded the real `error-reporting.adapter`
-      - back-e2e runs `isolate: false` in one fork, so every file shares one module cache
-        - a hoisted `vi.mock` cannot replace a module the cache already holds
+      - back-e2e ran `isolate: false` in one fork, so every file shared one module cache, and a hoisted `vi.mock` cannot replace a module the cache already holds
+
+        ```ts
+        pool: 'forks',
+        maxWorkers: 1,
+        isolate: false, // ❌ one module cache for every back-e2e file
+        fileParallelism: false,
+        ```
+
+        - Commit `f1c25506e` (2026-08-09, an agent) moved every workspace to vitest 4. The vitest 2 config said `poolOptions: { forks: { singleFork: true } }` and no `isolate`, so each file had its own module cache under vitest's default `isolate: true`. The commit wrote `isolate: false` beside `maxWorkers: 1` and described both as "Vitest 4's spelling of what `poolOptions.forks.singleFork` used to say".
+          - The vitest 4 migration guide's example config moves `singleFork` and an existing `isolate: false` out of `poolOptions.forks` together, and its after block shows `maxWorkers: 1` next to `isolate: false`. Its text says only "`singleThread` and `singleFork` are now `maxWorkers: 1`" (read this session at `raw.githubusercontent.com/vitest-dev/vitest/v4.0.0/docs/guide/migration.md`). (Material)
 
 ## Root cause of occurrence
 
-*Thought back-e2e needs `isolate: false` to run its files one at a time on
-one Postgres, actually `maxWorkers: 1` and `fileParallelism: false` already
-do that, and `isolate: false` only made every file share one module cache.*
+*Thought vitest 4 spells `singleFork` as `maxWorkers: 1` plus `isolate: false`,
+actually `singleFork` is `maxWorkers: 1` alone, and `isolate: false` makes every
+file share one module cache.*
 
-The vitest 4 migration (`f1c25506e`, 2026-08-09) spelled vitest 2's
-`singleFork` as "`maxWorkers: 1` plus `isolate: false`", and gave as the
-reason that "the back-e2e suites share one Postgres". Serial files answer
-that reason. The shared module cache was a side effect nobody chose, and it
-breaks a standard tool: a hoisted `vi.mock` cannot replace a module an
-earlier file already loaded.
+Material, inferred. The commit's wording matches the guide's example block,
+where `isolate: false` sits beside the migrated `singleFork` because the
+example's before config already had it. The commit's own reason, "the back-e2e
+suites share one Postgres", needs serial files only, and `maxWorkers: 1` with
+`fileParallelism: false` gives that. Whether the agent read the guide's text
+line or only its example is not recorded.
 
 ## Detection failure causes
 
 - **Local:** the agent ran the file alone, where the mock applies.
 - **Lint:** nothing knew which test files share a module cache.
-- **The migration commit:** it named the reason for serial files and not for
-  the shared cache, so no one questioned the cache.
+- **Review of `f1c25506e`:** the message gave one reason for two settings, so a reader saw a justified block.
 
 ## Countermeasure
 
@@ -67,9 +75,12 @@ vitest tool to protect a setting nobody chose is backwards.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). Every back-e2e project runs
-with vitest's default isolation, so each file gets its own module cache and
-a hoisted mock always applies. The lint rule and its list are deleted.
+**Type:** structural impossibility (level 1), by subtraction. Every back-e2e
+project runs with vitest's default isolation, so each file gets its own module
+cache and a hoisted mock always applies. The lint rule and its list are
+deleted.
+
+**Reference:** the commit adding this file (`fix-commits: [self]`).
 
 ```diff
            pool: 'forks',

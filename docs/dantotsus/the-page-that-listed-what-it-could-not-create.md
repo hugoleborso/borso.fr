@@ -1,116 +1,146 @@
 ---
 date: 2026-08-18
-introduced-at: conception
+introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#37'
 fix-commits: [a991fc965d, 4e660b46e6]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [.claude/agents/visual-validator.md]
 time-to-detect: 3 months
 tags: [pragma, frontend, spec, product, visual-validation]
-zone: apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx
+zone: apps/pragma/site/src/routes/setlists/SetlistsPage.tsx
 ---
 
 # The page that listed what it could not create
 
-## Symptom
+## User impact
 
 A band member reported, in one sentence and with no detail:
 
 > je peux pas créer de setlist
 
-Nothing was broken. The setlists index listed only the concerts that
-already carried a setlist, so the page a musician opens to write a set
-could never be the place a set is started. The only entry point was a
-concert's own session page, reached from Sessions, and the band's single
-concert already had one — leaving nowhere in the application to make
-another.
+| | Seen | Expected |
+| --- | --- | --- |
+| Setlists page, prod, the band's one concert already had a setlist | A list of that one setlist, no create action, and an empty state saying to open a concert from `/sessions` | Every concert, each without a setlist carrying a way to start one |
 
-## Root-cause chain
+Nothing was broken. The page a musician opens to write a set could never be
+where a set is started. The only entry point was a concert's own session
+page, and the band's single concert already had a setlist, so nowhere in the
+app could make another. Every member was affected once a second concert
+needed a set.
 
-1. **Why could he not create a setlist?** The setlists index has no
-   create action, and it shows only concerts that already have a set.
-2. **Why did that leave him stuck rather than merely inconvenienced?**
-   A concert without a setlist is invisible on that page, so the surface
-   that names the feature hides exactly the rows the feature applies to.
-3. **Why was it built that way?** The index was specified as *"lists
-   every concert session that already carries a setlist"*, which is a
-   faithful description of a read surface and a complete omission of the
-   write.
-4. **Why did the spec omit it?** The author knew the setlist is born on
-   the session page, so the question *"where does a person start one?"*
-   was answered before it was asked. Its own empty state proves it: the
-   copy read *"ouvre un concert depuis /sessions pour en composer une"* —
-   a page telling the reader to go elsewhere, naming a URL path.
-5. **Why did no gate catch it?** Every validation row is pulled from the
-   spec, so a surface the spec does not claim is a surface nothing
-   checks. The tests, the coverage gate and the mutation gate all cover
-   what the page does; none asks what it cannot do.
-6. **Why did it take three months and a bug report?** Prod carried one
-   concert, which had a setlist from the start. The dead end only exists
-   for the second concert.
+## Causal chain
 
-**Root cause:** thought *"a list page lists"*, actually *"a list page is
-where the work on that record starts, so a list with no create action
-hides the feature from everyone who does not already know where it
-lives"*.
+- The member could not create a setlist from the setlists page
+  - The page showed only concerts that already carried a setlist, and had no
+    create action
+    - `SetlistsPage` kept a concert only when its setlist read answered
+      ← the faulty lines, from `c58cd5f77`
+
+      ```tsx
+      const concerts = sessionsBody.sessions
+        .filter((entry) => entry.kind === 'concert')
+      // then each concert is kept only if its setlist read answers
+      ```
+
+      Its header comment said the page "lists every session that already
+      carries a setlist" and exists "so the sidebar has its
+      prototype-fidelity primary entry".
+
+      - Commit `c58cd5f77` (2026-05-20) built the page to close blockers 5
+        to 7 of a round-5 visual-validation FAIL, which asked for the
+        prototype's four nav entries. Its message: "The /setlists route
+        mounts a new SetlistsPage index that lists concert sessions with a
+        setlist; the editor surface still lives inside the session detail"
+        - The prototype's *Setlist* entry opened the editor of the next
+          concert's setlist directly
+          (`design-bundle/project/src/app.jsx:125-133`, `initialSetlist`)
+        - The spec listed no `/setlists` surface. It placed creation on the
+          concert: "User opens the concert, taps 'build setlist'"
+          (`spec.md:71` at `a991fc965d^`)
+          - The agent's input named a nav entry to add and the prototype's
+            look, and no job for the page. Material
+
+## Root cause of occurrence
+
+*Thought the Setlist nav entry needed a read index of the setlists that
+exist, actually the page is where a member goes to write a set, so an index
+that shows only existing setlists hides every concert that needs one.*
+**Material.**
+
+The agent that wrote `c58cd5f77` worked from a visual-validation blocker
+about nav fidelity, from the prototype, and from the spec. The blocker asked
+for an entry in the sidebar. The prototype's entry opened one editor, with
+fixed data, so it showed no list and no empty case. The spec had no
+`/setlists` page at all and started a set from the concert. None of the three
+said what a member does on this page, so the agent filled it with the
+smallest read that matched the nav label. Its own empty state shows the gap:
+"ouvre un concert depuis /sessions pour en composer une", a page telling the
+reader to go elsewhere.
 
 ## Detection failure causes
 
-- **Typing:** a missing affordance is well-typed.
-- **Linter / static analysis:** no rule relates a route that reads a
-  collection to a route that writes one.
-- **Functional validation locally:** the seeded fixture gives its concert
-  a setlist, so the empty-handed case never renders in a dev session.
-- **CI:** the back-end route exists and its tests pass; creation works
-  perfectly, from a page nobody reaches.
-- **Code review:** the page matched its spec line for line.
-- **Visual validation:** the checklist is spec-derived, and the spec
-  described a read.
-- **Production monitoring:** the trace is an absence — no write request
-  of any kind, over the whole retention window, while the reader
-  reloaded the same two pages. Absences do not raise alarms.
+- **Typing:** a missing affordance is well typed.
+- **Linter:** no rule relates a route that reads a collection to a route that
+  writes one.
+- **Local validation:** the seeded fixture gives its concert a setlist, so
+  the empty-handed case never rendered in a dev session.
+- **CI:** the back-end route exists and its tests pass. Creation worked, from
+  a page nobody reached.
+- **Visual validation:** every row came from the spec, and the spec named no
+  `/setlists` surface. The checklist asked whether the nav entry existed, not
+  what the page lets a member do.
+- **Production data:** prod carried one concert, which had a setlist from the
+  start. The dead end exists only for the second concert.
+- **Production monitoring:** the trace is an absence, no write request of any
+  kind over the retention window, while the reader reloaded the same two
+  pages. See
+  [`docs/knowledge/cloudwatch-retention-bounds-an-absence-claim.md`](../knowledge/cloudwatch-retention-bounds-an-absence-claim.md).
 
 ## Countermeasure
 
-- **Code:** commit `a991fc9` (PR #60) — the index lists every concert,
-  and a concert with no setlist carries a create action that lands on
-  its editor in one tap.
-- **Operator action:** none.
+Commit `a991fc9` (PR #60): the index lists every concert, and a concert with
+no setlist carries a create action that lands on its editor in one tap. The
+same PR hardened the create path. The mutation reconciles from its own
+response instead of re-reading a row Aurora DSQL may not yet show, a 409 now
+opens the editor instead of throwing, and both surfaces paint a failure
+rather than nothing.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — the class is now a standing validation row)
+**Type:** knowledge (level 5). A written row in the visual validator's
+checklist.
 
-**Reference:** [PR #60](https://github.com/hugoleborso/borso.fr/pull/60) · commits [`a991fc9`](https://github.com/hugoleborso/borso.fr/commit/a991fc9), [`4e660b4`](https://github.com/hugoleborso/borso.fr/commit/4e660b4)
+**Reference:** [PR #60](https://github.com/hugoleborso/borso.fr/pull/60),
+commits [`a991fc9`](https://github.com/hugoleborso/borso.fr/commit/a991fc9)
+and [`4e660b4`](https://github.com/hugoleborso/borso.fr/commit/4e660b4)
 
-**The actual fix:**
+The instance is closed by the create action. For the class, `4e660b4` added a
+row the validator walks whether or not the spec names it. It lives today in
+`.claude/agents/visual-validator.md:63`:
 
-The instance is closed by the create action itself. The class is closed
-in `.claude/skills/visual-validation/standard.md`, which now walks the
-write a listing surface implies whether or not the spec names it:
-
-```diff
-+6. **Reachability of every write the surface implies.** For each screen that
-+lists a kind of record, the validator checks that the screen itself offers a
-+path to create one, and follows it. […] This row is checked even when the spec
-+does not name it, because a spec written from the author's mental model rarely
-+names the door they already know about […]
+```text
+5. **Reachability of every write the surface implies.** For each screen that
+   lists a kind of record, check the screen itself offers a path to create
+   one, and follow it, even when the spec does not name it.
 ```
 
-Level 1 was considered and rejected: a rule relating "route that lists
-X" to "affordance that creates X" needs a model of what a route lists,
-which the architecture graph does not carry, and the guess rate on a
-five-page application would exceed its value.
+It is an instruction to an agent, so it holds only when the validator reads
+and applies it. A rule relating "route that lists X" to "affordance that
+creates X" was considered and rejected: it needs a model of what a route
+lists, which the architecture graph does not carry.
 
-**Sibling defects swept:** the same PR hardened the create path itself —
-the mutation reconciles from its own response instead of re-reading a
-row Aurora DSQL may not yet show, a 409 now opens the editor instead of
-throwing, and both surfaces paint a failure rather than nothing.
+**Proposed:** derive the row from a gated spec field instead of free text.
+`scripts/check-spec-records.sh` now holds every new table to a `### Records`
+row whose *Created from* cell names where the record is created, with the
+operator's dated answer. Have the visual validator turn each *Created from*
+cell into one checklist row that walks that path from the named screen. A
+spec cannot then ship a record whose creation path no validation row walks,
+and the Material gap above, a page with no stated job, becomes a question
+the operator answers before the plan.
 
-## See also
-
-- [`docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md`](./optimistic-reorder-reverted-by-stale-dsql-read.md) — the read-after-write trap the same PR closed on this path.
-- [`spec-skill-let-perspectives-be-skipped`](./spec-skill-let-perspectives-be-skipped.md) — the other way a spec ships with a hole nobody notices.
-- [`docs/knowledge/cloudwatch-retention-bounds-an-absence-claim.md`](../knowledge/cloudwatch-retention-bounds-an-absence-claim.md) — how the absence of writes was read, and how far that reading goes.
+**Similar instances:** `grep -rln 'indexEmpty' apps/*/site/src` names only
+`SetlistCatalogList.tsx`, whose empty state now says to create the first
+setlist (`fr.json:707`). Other list pages are walked by the row above on
+each validation.

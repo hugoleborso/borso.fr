@@ -10,7 +10,7 @@ eradication-paths: [.claude/skills/technical-validation/SKILL.md]
 time-to-detect: minutes
 tags: [validation, skill, process, agents]
 zone: .claude/skills/technical-validation/SKILL.md
-recurs: none (the first entry on the round count, not on a round's scope)
+recurs: [a-review-brief-that-disagreed-with-its-own-gate]
 ---
 
 # A revision after a passed review had no round
@@ -35,8 +35,12 @@ lines 6 and 8. The validator logged it as
   - The brief called the run round 1 and scoped it to `git diff ef529130f..HEAD`.
     - The agent gives that two-dot scope only to round 2, and round 1 always
       reads `<base_ref>...HEAD`.
-      - The main session could not name the run by the skill, because step 6
-        has no case for it:
+      - The main session named the round and its scope itself, because the
+        skill has the dispatcher compute `round`, `base_ref` and
+        `previous_report` and paste them into the brief.
+        - Step 6, the rule it followed, had no case for a revision after a pass.
+          With two reports present it said round 2, and round 2 had already
+          passed:
 
 ```text
 6. Pick the round. Round 1 when no earlier technical-validation-*.md report
@@ -44,16 +48,13 @@ lines 6 and 8. The validator logged it as
    previous_report set to it. There is no round 3.
 ```
 
-With two reports already present, step 6 says round 2, and round 2 had
-already passed. The spec revision after it was new work.
-
 ## Root cause of occurrence
 
 *Thought a branch is validated once, in at most two rounds, actually a spec
 revision after a pass reopens the branch to new code that no round has read.*
-
-The rule's own source, `.claude/skills/technical-validation/SKILL.md` step 6,
-counts reports and has no notion of a pass between them.
+**Method.** Step 6 of `.claude/skills/technical-validation/SKILL.md` counts
+reports and has no notion of a pass between them, and the process puts the
+counting in the dispatcher's hands.
 
 ## Detection failure causes
 
@@ -71,7 +72,7 @@ The agent's existing round-1 rule then reads exactly the revision, through
 
 **Type:** knowledge (level 5). The fix is a skill edit.
 
-**Reference:** this commit.
+**Reference:** the commit adding this file.
 
 ```diff
  6. **Pick the round.** ... There is no round 3.
@@ -80,13 +81,19 @@ The agent's existing round-1 rule then reads exactly the revision, through
 +   round 2.
 ```
 
-Level 2 was considered and rejected. A hook on the Agent tool could read the
-brief's `round` and `base_ref`, but the brief is free text, and the PR #327
-brief was already well formed apart from the round's name. The mismatch would
-need a parser for the brief to catch it.
-
 **Proof it can fail:** not applicable to a skill edit.
 
 **Similar instances:** `grep -ci round .claude/skills/visual-validation/SKILL.md`
-prints 1, a line about a background time limit. `/visual-validation` counts no
+printed 1, a line about a background time limit. `/visual-validation` counts no
 rounds, so it has none to reopen.
+[`a-review-brief-that-disagreed-with-its-own-gate`](./a-review-brief-that-disagreed-with-its-own-gate.md)
+is the same belief with a file list: the dispatcher hands the agent a snapshot
+of state the agent could read itself.
+
+**Proposed:** subtract the fields rather than parse them. A level-2 hook was
+rejected because the brief is free text. Instead, the validator reads
+`validation_dir` itself. `.claude/agents/technical-validator.md` already writes
+`Reviewed: <sha>` and a verdict in every report. No report means round 1 on the
+merge base. A last FAIL means round 2 on that report's SHA. A last PASS means a
+new round 1 on that SHA. Step 6 and the brief's `round`, `base_ref` and
+`previous_report` then disappear, and no dispatcher can name a round wrongly.

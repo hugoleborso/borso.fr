@@ -5,8 +5,8 @@ detected-at: staging
 severity: high
 related-pr: '#40'
 fix-commits: [e3af9d248a, 4aaab634c7]
-eradication-level: 1
-eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts]
+eradication-level: 2
+eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts, infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts]
 time-to-detect: minutes
 tags: [dsql, cdk, preview, auth, pragma, clone]
 zone: infra/cdk/src/internal/migration-runner
@@ -14,105 +14,83 @@ zone: infra/cdk/src/internal/migration-runner
 
 # The clone conceded the password to a stale row
 
-## Symptom
+## User impact
 
-pragma's previews were changed to clone production, so a reviewer sees
-real songs and real setlists instead of a thin fixture (ratified in
-[ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md); the operator
-consented explicitly to their own and their band's data being replicated
-into a password-protected preview).
+pragma's previews were changed to clone production, so a reviewer sees real
+songs and setlists instead of a thin fixture
+([ADR-2026-08-09T1654](../adr/2026-08-09T1654-pragma-previews-clone-production.md);
+the operator consented to his band's data being replicated into a
+password-protected preview). The first deploy looked like a success: the song
+count went from the fixture's handful to 56.
 
-The first deploy looked like a success. The song count went from the
-fixture's handful to 56, so production data had landed. Then, probing the
-live PR-40 preview:
+| | Seen | Expected |
+| --- | --- | --- |
+| `POST …/api/auth/login` with `{"password":"pragma-preview"}` on the PR-40 preview | `200` | `401 invalid-password` |
 
-```
-$ curl -so /dev/null -w '%{http_code}' -X POST …/api/auth/login \
-    -d '{"password":"pragma-preview"}'
-200
-```
+`pragma-preview` is the test fixture's password, written in this public
+repository. The preview served real band data behind a password anybody could
+read on GitHub. Measured by probing the live PR-40 preview on 2026-08-10.
 
-`pragma-preview` is the password the **test fixture** uses. It is written
-in this repository, which is public. So the preview was serving real band
-data — names, songs, setlists — behind a password anybody could read on
-GitHub. The worst available combination of the two halves, and each half
-had worked exactly as written.
+## Causal chain
 
-## Root-cause chain
+- The fixture's password signed into a preview holding production data.
+  - `app_config` row id=1 still held the fixture's hash.
+    - The clone skipped production's row id=1, because the target already had
+      one and the copy concedes every conflict:
+      ```sql
+      INSERT INTO pr_N.<t> (cols) SELECT cols FROM prod.<t>
+        ON CONFLICT DO NOTHING  -- ← the faulty line
+      ```
+      - The target was not empty. The test fixture had bootstrapped that
+        preview schema on an earlier deploy, before cloning was switched on.
+      - `44dd7ae69` (2026-05-25) wrote the clone with one conflict rule for
+        every table. Its message names the case it designed for: "Re-deploy of
+        the same PR: `ON CONFLICT DO NOTHING` keeps existing" rows. The
+        construct's API offered `tableBlocklist` and `columnsToNullify`, and no
+        way to say a table must mirror its source. (Machine)
 
-1. **Why did the fixture's password still work?** `app_config` row id=1
-   still held the fixture's hash. Production's row had not replaced it.
-2. **Why not?** The clone's data step is
-   `INSERT … SELECT … ON CONFLICT DO NOTHING`. Row id=1 already existed in
-   the target, so production's row lost the conflict and was skipped —
-   silently, as designed.
-3. **Why did row id=1 already exist?** That preview schema had been
-   bootstrapped by the test fixture on an earlier deploy, before cloning
-   was switched on. The clone ran against a schema that was not empty.
-4. **Why was `ON CONFLICT DO NOTHING` chosen?** Because it is right for
-   domain data: a re-deploy keeps what the preview accumulated and adds
-   what is new upstream. It is wrong for a singleton row whose only
-   purpose is to mirror the source, and the config had no way to say which
-   kind a table was.
-5. **Why did the deploy report success?** It did everything it was asked.
-   No step failed. The gap was between "the clone ran" and "the clone's
-   result is what anyone intended".
+## Root cause of occurrence
 
-**Root cause:** *thought "clone production" means the target ends up
-matching the source, actually it means "add the source's rows where they
-do not collide" — and for a credential row with a fixed primary key,
-collision is the normal case, so the one row where losing silently is
-unacceptable is the one row guaranteed to lose.*
+*Thought the only rows a clone would collide with were its own, from an
+earlier deploy of the same preview, actually a target seeded by anything else
+holds rows with the same fixed ids, and for a singleton credential row the
+existing row then wins silently.* (Machine)
+
+The API defaulted every table to "the existing row wins" and could not express
+"the source is authoritative". For domain data the default is right, because a
+re-deploy keeps what the preview accumulated. For a credential row with a fixed
+primary key, collision is the normal case, so the one row where losing is
+unacceptable is the one row guaranteed to lose.
 
 ## Detection failure causes
 
-- **Typing:** `tableBlocklist` and `columnsToNullify` were both optional
-  string lists. Every wrong configuration was a well-typed one.
-- **Linter:** not a lint-shaped defect.
+- **Typing:** `tableBlocklist` and `columnsToNullify` were both optional string
+  lists. Every wrong configuration was well typed.
 - **CI:** the pragma cdk suite asserted the clone config's contents, so it
-  faithfully confirmed the configuration that had the hole. No test
-  exercised a clone into a **non-empty** target, which is the only
-  condition under which this fails — the runner's own tests all start
-  from an empty schema.
-- **Code review:** would have required knowing that this particular
-  preview schema predated cloning.
-- **QA validation:** caught it. The only reason it was found is a probe
-  that asked *"does the old password still work?"* rather than *"did the
-  data arrive?"* — the second question returned a satisfying yes.
-- **Production monitoring:** the affected surface is a preview. Nothing
-  watches previews, and previews are public.
+  confirmed the configuration that had the hole. The runner's own tests all
+  start from an empty schema, the one condition under which this cannot fail.
+- **Deploy:** the clone step reports success when its statements run. It
+  checks nothing about the rows it skipped.
+- **Monitoring:** nothing watches previews.
 
 ## Countermeasure
 
-- **Code:** commit `e3af9d2` — `tablesToReplace` empties a named table
-  immediately before its rows are copied, so the source is authoritative
-  on every deploy. pragma names `app_config`.
-- Verified after redeploy: the fixture's password returns
-  `401 invalid-password`. 401 rather than 503 matters — 503
-  `auth-not-bootstrapped` would mean the table was left empty; 401 means
-  production's row is in place.
-- **Cost, stated:** a sub-second window mid-deploy, between the DELETE and
-  the INSERT, where the app answers 503.
+`e3af9d2` adds `tablesToReplace`, which empties a named table just before its
+rows are copied, so the source is authoritative on every deploy. pragma names
+`app_config`. Verified after redeploy: the fixture's password returns
+`401 invalid-password`. A 503 `auth-not-bootstrapped` would have meant an empty
+table. The 401 means production's row is in place. The cost is a sub-second
+window mid-deploy, between the `DELETE` and the `INSERT`, where the app answers
+503.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — the construct refuses to synthesize a clone
-that has not stated its decision)
+**Type:** DevX check (level 2). The construct refuses to synthesize a clone
+that leaves a known credential table undecided.
 
-**Reference:** [PR #40](https://github.com/hugoleborso/borso.fr/pull/40)
-commit [`e3af9d2`](https://github.com/hugoleborso/borso.fr/commit/e3af9d2)
-· [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) commit
-[`4aaab63`](https://github.com/hugoleborso/borso.fr/commit/4aaab63)
-
-`e3af9d2` fixed the instance. It did nothing to stop the next app from
-repeating it, so `4aaab63` makes the omission unsynthesizable:
+**Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) commit [`4aaab63`](https://github.com/hugoleborso/borso.fr/commit/4aaab63)
 
 ```diff
-+function assertCredentialTablesDecided(
-+  config: DsqlSchemaCloneFromConfig | undefined,
-+  migrations: readonly MigrationFile[],
-+): void {
-+  if (config === undefined) return;
 +  const undecided = findUndecidedCredentialTables(config, migrations.map((m) => m.sql));
 +  if (undecided.length === 0) return;
 +  throw new Error(
@@ -120,45 +98,30 @@ repeating it, so `4aaab63` makes the omission unsynthesizable:
 +      `Add each to tableBlocklist (the preview gets no credential) or to tablesToReplace ` +
 +      `(the preview shares the source's credential — see ADR-2026-08-09T1654).`,
 +  );
-+}
 ```
 
-The three outcomes are all defensible and all different, which is exactly
-why the choice must be written rather than defaulted:
+`apps/pragma/cdk/test/stack.test.ts` and its last-loop-lepin sibling build the
+stack, so a clone config that leaves one of those tables undecided fails there
+and in CI (inferred from the suites building the stack, not planted this
+session).
 
-| Config | Result |
-| --- | --- |
-| blocklisted | preview has no credential, answers 503 until seeded |
-| in `tablesToReplace` | preview shares the source's credential (ADR-2026-08-09T1654) |
-| **neither** | whatever row was already there wins — **this defect** |
+The gap, stated: the guard asks only about names on a list kept by hand,
+`CREDENTIAL_TABLES = ['app_config', 'admin_credentials']` in
+`infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts`. The list
+has already drifted. pragma has since created `member_credential`,
+`member_passkey`, `vapid_key_pair` and other secret tables, and decides each in
+its own `SECRET_TABLES_*` constants in `apps/pragma/cdk/lib/stack.ts`. The
+guard would not have asked about any of them (measured this session).
 
-Scoped to credential tables the app's own migrations `CREATE`, so pragma
-is asked about `app_config` and last-loop-lepin about
-`admin_credentials`, neither about the other's. A guard that fires on
-schemas it does not apply to is a guard somebody deletes. `ALTER TABLE`
-does not count as creating one, so an app inheriting a cloned schema is
-not asked to re-decide.
+**Proposed:** delete `CREDENTIAL_TABLES` and require a decision for every
+table. The guard already parses each migration's `CREATE TABLE`. Make
+`cloneFromSchema` take one record keyed by table name, whose values say what
+the preview gets, such as `copyNew`, `copyFromSource` or `leaveEmpty`, and
+refuse at synth any created table missing from it. The default "existing row
+wins" then disappears, and no table can be cloned without a stated decision,
+whatever its name. The same shape is proposed in
+[the-commit-that-reversed-an-adr-without-touching-it](./the-commit-that-reversed-an-adr-without-touching-it.md).
 
-**The limit, stated:** the table-name list is hand-maintained. An app that
-names its credential table something else escapes the guard until the name
-is added. A regex was rejected because it would fire on `config`,
-`configuration`, and every table with `auth` in it — noise is what gets a
-guard removed.
-
-**Sibling defects swept:** last-loop-lepin's clone already blocklisted
-`admin_credentials` (commit `a6177d7`, PR #40) after the same class of
-question was asked of it, so both existing configs satisfy the new guard
-and no template changes. `auth_attempt` remains blocklisted on pragma —
-rate-limit state, not data.
-
-## See also
-
-- [`docs/adr/2026-08-09T1654-pragma-previews-clone-production.md`](../adr/2026-08-09T1654-pragma-previews-clone-production.md)
-  — the decision to clone at all, and the consent it rests on.
-- [`docs/knowledge/dsql-clone-from-prod.md`](../knowledge/dsql-clone-from-prod.md)
-  — the clone contract in full.
-- [`fresh-prod-bootstrap-503.md`](../knowledge/fresh-prod-bootstrap-503.md) — the 503
-  the replace window briefly reproduces, and why it is the safe failure.
-- [`a-gate-that-reported-success-while-measuring-nothing.md`](./a-gate-that-reported-success-while-measuring-nothing.md)
-  — the same shape one layer up: a step that did everything asked of it
-  and nothing anyone wanted.
+**Similar instances:** `git grep -n 'cloneFromSchema:' -- 'apps/*/cdk'` finds
+last-loop-lepin and pragma. last-loop-lepin blocklists `admin_credentials`,
+and pragma replaces `app_config` and `member_credential`.

@@ -4,100 +4,68 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#2'
-fix-commits: [2a4aef4902]
-eradication-level: 4
-eradication-paths: [infra/cdk/src/constructs/static-site.ts, infra/cdk/test/unit/static-site.test.ts]
+fix-commits: none (the prune false that hid the symptom came with the port in 1aa979e74, and no mechanism holds the class)
+eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes (next CI deploy after manual upload)
 tags: [cdk, s3, bucketdeployment]
 zone: infra/cdk/src/constructs/static-site.ts
 ---
 
-# `BucketDeployment.prune` defaults to true and wipes out-of-band uploads
+# Images uploaded by hand to a preview vanished at the next deploy
 
-## Symptom
+## User impact
 
-We `aws s3 cp`'d a `lucie/` folder of personal images to the
-previews bucket so they would be served alongside the deployed
-preview. Worked fine — until the next CI deploy, after which they
-were gone. Re-uploaded; same outcome on the next deploy.
+The operator copied a `lucie/` folder of personal images with `aws s3 cp` into the previews bucket, so a preview would serve them.
 
-User impact: silent data loss. The operator could spend ages
-debugging "why does the URL 404 today when it worked yesterday".
+| | Seen | Expected |
+| --- | --- | --- |
+| Right after the upload | The images load. | The images load. |
+| After the next CI deploy | The image URLs answer 404. A second upload vanished the same way. | The images still load. |
 
-## Root-cause chain
+Nobody measured how many files were lost. The report is the operator's.
 
-1. **Why?** Manually-uploaded objects vanished after the next deploy.
-   Because `BucketDeployment` ran a sync that deleted them.
-2. **Why does it delete files it didn't put there?**
-   `BucketDeployment` syncs a source directory to a destination
-   bucket; on each invocation it diffs and removes anything in the
-   bucket that's not in the source.
-3. **Why is "remove orphans" the default?**
-   `BucketDeployment.prune` defaults to `true`. CDK's stated intent
-   is "the deployed assets should be the bucket's exact content";
-   pruning enforces that.
-4. **Why didn't this hit the previews bucket the first time we
-   deployed it?**
-   It would have — but the first preview deploy populated an empty
-   bucket. The collision only shows up when there's pre-existing
-   content the source doesn't know about.
-5. **Why did we expect manual uploads to survive?**
-   Mental model: "this bucket holds whatever I put in it". CDK's
-   model: "this bucket mirrors `dist/` exactly".
+## Causal chain
 
-**Root cause:** we thought `BucketDeployment` was additive (it
-uploads its source). It's actually a sync (it makes the bucket equal
-its source), with `prune: true` as the default that enforces the
-sync semantics.
+- The image URLs answered 404 after the next deploy.
+  - The `BucketDeployment` custom resource deleted the objects.
+    - Its handler runs `aws s3 sync <source> s3://<bucket>/<prefix>` and appends `--delete` when `prune` is true (`bucket-deployment-handler/index.py`, lines 110 and 229 of the installed `aws-cdk-lib@2.276.0`). The `--delete` removes every object under the prefix that the source does not hold.
+      - The deployment did not set `prune`, so it took the default, `true`.
+      - The `lucie/` objects sat under that destination prefix (inferred). The sync never reaches outside `destinationKeyPrefix`, so objects outside it would have survived.
+        - The operator uploaded files that no commit holds into a prefix that a deploy owns.
+
+## Root cause of occurrence
+
+*Thought `BucketDeployment` adds its source to the bucket, actually it makes its destination prefix equal to its source and deletes the rest.* (Man)
+
+The person who uploaded held the model "this bucket holds whatever I put in it". The construct's model is "this prefix mirrors `dist/`". The installed `aws-s3-deployment/lib/bucket-deployment.d.ts` says of `prune`:
+
+> By default, files in the destination bucket that don't exist in the source will be deleted when the BucketDeployment resource is created or updated.
 
 ## Detection failure causes
 
-- **Typing:** `prune?: boolean` defaults to `true` silently.
-- **Linter:** no rule against not setting `prune` explicitly.
-- **Functional validation locally:** we never tested the "manual
-  upload survives next deploy" scenario.
-- **CI:** unit tests don't model out-of-band content.
-- **Code review:** the prop's absence is invisible.
-- **Operator-deploy:** this is where it surfaced — Hugo did the
-  manual `s3 cp` on the previews bucket, the next CI run wiped it,
-  and the loss became evident on the next URL hit.
+- **Typing:** `prune?: boolean` defaults to `true` with no trace in the call.
+- **Linter:** no rule reads CDK construct props.
+- **Local validation:** a local run never touches S3, so it never meets content uploaded out of band.
+- **CI:** the unit tests synthesize from `dist/` alone. Out-of-band content exists only in the real bucket.
+- **Review:** the upload was a shell command. It left nothing in any diff to review.
 
 ## Countermeasure
 
-- **Code:** commit `2a4aef4` — `StaticSite.buildPreview`'s
-  `BucketDeployment` explicitly sets `prune: false`. Previews are
-  multi-tenant (each app's PR uploads to its own key prefix) so
-  pruning would be wrong anyway. Prod kept the default `prune: true`
-  by design; per-app prod buckets are single-tenant and stale assets
-  shouldn't linger.
-- **Operator decision:** if you want non-versioned content on
-  prod, host it elsewhere — don't drop it into the prod bucket
-  expecting it to survive. Or version it in `apps/<slug>/site/` and
-  let it ship through the normal pipeline.
+The preview deployment in `infra/cdk/src/constructs/static-site.ts` carries `prune: false`. It did not come from a fix. It was already in the first commit of the file here, `1aa979e74`, ported verbatim from `hugoleborso/borso-platform`. So the incident most likely happened upstream, before the port (inferred). Commit `2a4aef4`, which this entry cited before, only added the CloudFront invalidation next to that line.
+
+This countermeasure wraps the failing path instead of removing the cause. It also caused a worse defect. `docs/knowledge/preview-deploys-never-delete-what-you-removed.md` measured a deleted photo still served in prod and in 57 preview prefixes on 2026-11-21. Prod has run `prune: false` too since commit `0b560c3`, so a browser holding an older page still finds its bundle.
 
 ## Eradication
 
-**Type:** code diff + detection test (level 4 — explicit choice baked into the construct)
+**Type:** knowledge (level 5). No mechanism holds the class.
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) · commit [`2a4aef4`](https://github.com/hugoleborso/borso.fr/commit/2a4aef4)
+**Reference:** none. Nothing keeps files that no commit holds out of a deploy-owned prefix. The preview `prune: false` is not even asserted by a test. `grep -n "Prune" infra/cdk/test/unit/static-site.test.ts` finds only the two prod deployments.
 
-**The actual fix:**
+The old claim that pruning would "wipe other apps' previews" is false. The sync is scoped to `s3://<bucket>/<prefix>`, so pruning never reaches another app's prefix.
 
-```diff
-  // infra/cdk/src/constructs/static-site.ts (preview path)
-  new BucketDeployment(this, 'Deploy', {
-    sources: [Source.asset(path.resolve(props.assetsPath))],
-    destinationBucket: sharedBucket,
-    destinationKeyPrefix: keyPrefix,
-+   // Multi-tenant bucket — don't wipe other apps' previews.
-+   prune: false,
-    distribution: previewsDistribution,
-    distributionPaths: [`/${keyPrefix}/*`],
-  });
-```
+**Proposed:** subtract the exception. Restore `prune: true` on the preview deployment in `static-site.ts`, and assert `Prune: true` on it in `infra/cdk/test/unit/static-site.test.ts`. It is safe, because pruning stays inside the PR's own prefix. For prod, keep old fingerprinted assets with an S3 lifecycle rule that expires them after a delay, instead of `prune: false`, so a browser holding an older page still finds its bundle and a deleted file then disappears. Files that no commit holds then have one home, outside every deploy-owned prefix. A file deleted in git could no longer stay served, and a hand upload into a deploy prefix would vanish at once, at the next deploy, instead of hiding a stale copy.
 
-The prod path keeps the default `prune: true` (single-tenant per-app bucket; stale assets shouldn't linger). `infra/cdk/test/unit/static-site.test.ts` asserts the preview path's `Prune: false` in the synth output, so a regression that flips it fails CI.
+**Proof it can fail:** none. No check exists to plant against.
 
-**Sibling defects swept:** every `BucketDeployment` in the repo audited; both have intentional, commented prune choices.
-
-**Why not level 1 (structural):** `prune` is genuinely a per-context decision (multi-tenant vs single-tenant bucket). Forcing one default at the construct level would just move the problem. Level 4 (explicit + tested) is the right ceiling.
+**Similar instances:** `grep -n "prune" infra/cdk/src/constructs/*.ts` finds three deployments, all in `static-site.ts`, all `prune: false`.

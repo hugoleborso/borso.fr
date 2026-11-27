@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-commits: [f4f14f2ff5]
-eradication-level: 1
+fix-commits: [f4f14f2ff5, 64d0ce43b]
+eradication-level: 5
 eradication-paths: [scripts/vitest-cdk-outdir-teardown.js, infra/cdk/vitest.config.ts]
 time-to-detect: months
 tags: [cdk, vitest, disk, sandbox, gates, ci]
@@ -13,92 +13,65 @@ zone: infra/cdk/test/unit
 blueprints: [test-cdk-synth]
 ---
 
-# Every CDK test run left a cloud assembly on disk, and the disk ran out
+# A push failed on a full disk that 905 forgotten test assemblies had filled
 
-## Symptom
+## User impact
 
-`git push` failed on the pre-push hook. Three infra suites had failed:
+An agent could not push. The pre-push hook failed three infra suites, although the diff touched nothing in `infra/`, and the same suites had passed twice in the previous twenty minutes.
 
-```
-Error: ENOSPC: no space left on device, copyfile
-  'node_modules/.pnpm/@aws-cdk+asset-awscli-v1@2.2.273/.../layer.zip'
-  -> '/tmp/cdk.outfAHVA9/asset.e2659170….zip'
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `git push` | `Error: ENOSPC: no space left on device, copyfile '.../layer.zip' -> '/tmp/cdk.outfAHVA9/asset.e2659170….zip'` | The hook passes, as it did twenty minutes earlier. |
+| `df` | 1.8 MB available on a 252 GB filesystem | Gigabytes free |
+| `/tmp` | 905 directories named `cdk.out*`, about 28 GB | None left after a run |
 
-Nothing in the diff touched `infra/`. The same suites had passed twice in the
-preceding twenty minutes.
+Measured by the session that hit it.
 
-`df` showed 1.8 MB available on a 252 GB filesystem. `/tmp` held **905**
-directories named `cdk.out*`, together about 28 GB.
+## Causal chain
 
-## Root-cause chain
+- The pre-push suites failed with `ENOSPC`.
+  - The sandbox's disk allowance was spent: 905 `cdk.out*` directories held about 28 GB in `/tmp`.
+    - Each test synth wrote a cloud assembly to a fresh temporary directory, and nothing removed it. One `test:coverage` run of `infra/cdk` left 50.
+      - Each assembly staged real assets, such as the 25 MB awscli layer `BucketDeployment` needs, in every assembly with a static site.
+      - Every synth test created its `App` with no `outdir`:
 
-1. `new App()` without an explicit `outdir` writes its cloud assembly to a fresh
-   `fs.mkdtemp` directory under the system temp folder.
-2. CDK never removes it. There is no `App.dispose()`, and the assembly is
-   deliberately left behind so a real `cdk synth` can be inspected.
-3. `infra/cdk`'s unit suite constructs an `App` per test case. One
-   `test:coverage` run creates **50** of them.
-4. Each assembly stages real assets. The awscli Lambda layer that
-   `BucketDeployment` needs is 25 MB, copied into every assembly that contains a
-   static site.
-5. Four workspaces synthesize CDK in their test suites — `infra/cdk`,
-   `infra/shared`, `apps/pragma`, `apps/last-loop-lepin` — and the pre-push hook
-   runs two of them on every push.
-6. This session ran the suites dozens of times. 905 directories accumulated, the
-   sandbox's fixed disk allowance was exhausted, and the failure surfaced inside
-   a test that had nothing to do with the cause.
+        ```ts
+        export function synthTemplate(setup: (stack: Stack) => void): Template {
+          const app = new App(); // ← assembly goes to a new temp dir, never removed
+        ```
+
+        - The pattern came with the test suite ported in `1aa979e74` (2026-05-01) and was gathered into `synthTemplate` (`infra/cdk/test/unit/helpers/template.ts`). The `test-cdk-synth` blueprint (`infra/cdk/test/unit/photos-cdn.test.ts`) tells every construct test to synthesize through that helper (Machine).
+    - The only cleanup, a sweep of `/tmp/cdk.out*` in `scripts/install-repo-deps.sh`, ran once at session start. This session ran the suites dozens of times.
+
+## Root cause of occurrence
+
+*Thought a test `App` synthesizes in memory and leaves nothing behind, actually without `outdir` CDK writes the assembly to a new temporary directory and never removes it.* (Machine)
+
+No test author chose this. The line is written once in the shared helper, and the blueprint copies it into every construct test. The vendor doc steers away from the fix. The installed `aws-cdk-lib@2.276.0` `core/lib/app.d.ts` says of `outdir`:
+
+> You should never need to set this value. … @default - If this value is _not_ set, considers the environment variable `CDK_OUTDIR`. If `CDK_OUTDIR` is not defined, uses a temp directory.
 
 ## Detection failure causes
 
-- **The cleanup existed, but only at session start.** `scripts/install-repo-deps.sh`
-  sweeps `/tmp/cdk.out*` from the SessionStart hook. That covers a fresh session
-  and does nothing for a long one, which is exactly the session shape where the
-  leak matters. A countermeasure that runs once per session cannot hold against
-  a leak that is per test run.
-- **`ENOSPC` names the victim, not the cause.** The error points at
-  `infra/cdk`'s asset staging, so the first instinct is to look at what changed
-  in `infra/`. Nothing had. Reading `df` before reading the diff would have been
-  quicker.
-- **A full disk reads as a broken machine.** On this sandbox "Avail" reaches 0
-  while "Used" stays low, because the allowance is spent rather than the volume
-  filled. That looks like an environment fault rather than something a `rm`
-  fixes.
+- **Local validation and CI:** each run passes. The leak only shows as a sum over many runs, and CI starts from a fresh disk every time.
+- **The session-start sweep:** it covers a fresh session and nothing within a long one, the very shape where the leak adds up.
+- **The error:** `ENOSPC` names the asset copy that failed, in `infra/cdk`, not what filled the disk. It points at the diff.
+- **The sandbox:** "Avail" reaches 0 while "Used" stays low, because an allowance is spent rather than the volume filled. It reads as a broken machine.
 
 ## Countermeasure
 
-A vitest `globalSetup` at `scripts/vitest-cdk-outdir-teardown.js`, wired into
-every workspace whose tests synthesize a CDK `App`:
-
-- `infra/cdk/vitest.config.ts`
-- `infra/shared/vitest.config.ts`
-- `apps/pragma/vitest.workspace.ts`, the `core` project
-- `apps/last-loop-lepin/vitest.workspace.ts`, the `core` project
-
-It lists `cdk.out*` in the temp folder before the run, lists them again at
-teardown, and removes the difference. Differencing rather than globbing means a
-concurrently running suite keeps its own directories, which matters because the
-pre-push hook and an editor's test watcher can overlap.
-
-Measured: `infra/cdk`'s `test:coverage` left 50 directories before the change.
-After wiring the teardown, all four suites leave zero — checked by clearing the
-temp folder, running each suite, and counting. The other three suites'
-before-counts were not measured, because the fix was already in place by then.
+Commit `f4f14f2` added a vitest `globalSetup`, `scripts/vitest-cdk-outdir-teardown.js`. Commit `64d0ce43b` reshaped it. It now creates one temporary root per run, points `TMPDIR` at it, and deletes it at teardown, so a concurrent suite keeps its own files. Measured by the fix's author: `infra/cdk`'s `test:coverage` left 50 directories before and zero after.
 
 ## Eradication
 
-**Level 1 — structural.** The leak is closed where it happens rather than swept
-up later. The SessionStart sweep stays as a second line for directories left by
-an interrupted run, but it is no longer the only thing standing between the
-repository and a full disk.
+**Type:** knowledge (level 5). The teardown closes the leak only where a config wires it.
 
-## What to check next time
+**Reference:** commits [`f4f14f2`](https://github.com/hugoleborso/borso.fr/commit/f4f14f2ff5) and [`64d0ce4`](https://github.com/hugoleborso/borso.fr/commit/64d0ce43b).
 
-A test that stages CDK assets writes tens of megabytes per case. If a suite
-constructs an `App` and the config has no `globalSetup` pointing at
-`scripts/vitest-cdk-outdir-teardown.js`, it leaks. When adding a new workspace
-with CDK tests, wire the teardown at the same time as the config.
+Each workspace wires the teardown by hand. `grep -rln "vitest-cdk-outdir-teardown" --include=*.ts infra apps` finds eight configs today, every workspace that synthesizes CDK in its tests. Nothing wires a new workspace or refuses one that forgets. `scripts/check-app-registration.sh` does not read vitest configs. A new app with CDK tests and no `globalSetup` leaks again.
 
-More generally: when a gate fails on an error that names a file rather than a
-behaviour — `ENOSPC`, `EMFILE`, `ENOMEM` — check the resource before checking
-the diff.
+**Proposed:** give the helper the cleanup. Make `synthTemplate` create its `App` with an explicit `outdir` under one per-run directory, and remove that directory after the run, so a test that follows the blueprint cannot leak. Or move the `globalSetup` into one shared vitest base config that every workspace extends, so a new workspace inherits it. Either way, the eight hand-wired entries go.
+
+**Proof it can fail:** none. No check refuses a config without the teardown.
+
+**Similar instances:** `grep -rln "new App(" infra apps --include=*.test.ts` lists the tests that synthesize. Each must run under a wired config.

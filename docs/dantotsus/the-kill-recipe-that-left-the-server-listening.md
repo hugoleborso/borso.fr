@@ -4,12 +4,12 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#40'
-fix-commits: [self]
+fix-commits: [b48ce3675, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-no-broad-kill.sh]
+eradication-paths: [scripts/dev-server.sh, scripts/hooks/checks/no-broad-kill.core.ts]
 time-to-detect: minutes
 tags: [agents, hooks, processes, sandbox]
-zone: .claude/hooks/pretool-no-broad-kill.sh
+zone: scripts/hooks/checks/no-broad-kill.core.ts
 weak-point: prose-stands-in-for-a-check
 recurs: none (broad-pkill-killed-another-agents-measurement is the broad kill this hook refuses; this is the advice it gives after refusing)
 ---
@@ -34,53 +34,56 @@ The third row was measured on a scratch package whose `dev` script runs
 ## Causal chain
 
 - The agent reached for `pkill` after its own stop did not work.
-  - `kill "$pid"` stopped pnpm and left concurrently and both servers running.
+  - `kill "$pid"` stopped pnpm and left concurrently and both servers
+    running.
     - SIGTERM goes to one PID. pnpm exits on it without forwarding it to the
-      process tree under it (measured, see above).
+      tree under it (measured, see above).
   - Under `setsid pnpm dev &`, `$!` named a process that had already exited.
     - The Bash tool's shell runs with job control (`$-` printed `hmBc`), so
       a background job leads its own process group, and `setsid` forks to
       leave it. `$!` is the wrapper that forked (measured: `$!` 20712 gone,
       the servers in group 20718).
-      - The hook's refusal taught exactly these two moves:
+  - Both moves came from the hook's refusal message, written in `cac22f1e9`
+    on 2026-08-08:
 
-```bash
-echo "[no-broad-kill]   On pnpm dev in apps/pragma it freed the site and API ports and left no child." >&2
-echo "[no-broad-kill]   pnpm dev & pid=\$!   …   kill \"\$pid\"" >&2
-```
+    ```bash
+    echo "[no-broad-kill]   pnpm dev & pid=\$!   …   kill \"\$pid\"" >&2
+    ```
+
+    - That commit verified which commands the hook refuses. It ran none of
+      its advice. Commit `e523fbe2d` later put a measured claim right above
+      the line, "On pnpm dev in apps/pragma it freed the site and API ports
+      and left no child", which measured `TaskStop`, not this recipe.
+      - Stopping a server was left to each agent, assembled from prose in a
+        refusal message. No script owned a dev server's lifecycle. (Method)
 
 ## Root cause of occurrence
 
 *Thought a dev server is one process, so its PID stops it, actually it is a
-process group, and only the group stops it.*
+process group, and only the group stops it.* (Method)
 
-[`kill(2)`](https://man7.org/linux/man-pages/man2/kill.2.html), read this
-session: "If pid is less than -1, then sig is sent to every process in the
-process group whose ID is -pid."
+The process handed the stop to prose that nobody executed, so the belief was
+never tested. [`kill(2)`](https://man7.org/linux/man-pages/man2/kill.2.html),
+read this session: "If pid is less than -1, then sig is sent to every process
+in the process group whose ID is -pid." Had the recipe's author known, it
+would have started the server in its own group and killed the group.
 
 ## Detection failure causes
 
-- **Local:** the recipe was written as measured, and nothing re-measured it.
-  A refusal message is prose no test runs.
-- **Review:** the claim named the measurement, which reads as evidence.
+- **Local:** a refusal message is prose. No test runs the advice it gives.
+- **Review:** the measured `TaskStop` claim sat above the recipe and read as
+  evidence for it.
 
 ## Countermeasure
 
-The refusal now gives a recipe measured this session on four start shapes:
-start under `setsid` so the server owns a group, then stop the group that
-holds your port, with a guard against your own group.
+This entry's commit replaced the recipe in the refusal with one measured on
+four start shapes: start under `setsid` so the server owns a group, then stop
+the group that holds your port, with a guard against your own group.
 
 ```bash
 pgid=$(ps -o pgid= -p "$(lsof -ti tcp:5173 -sTCP:LISTEN | head -1)" | tr -d ' ')
 [ -n "$pgid" ] && [ "$pgid" != "$(ps -o pgid= -p $BASHPID | tr -d ' ')" ] && kill -- "-$pgid"
 ```
-
-| Start | Stop | Ports after |
-| --- | --- | --- |
-| `pnpm dev &`, top level | the recipe | free within 1 s, group empty |
-| `setsid pnpm dev &`, top level | the recipe | free within 1 s, group empty |
-| `setsid pnpm dev &`, then a pipeline in a later call | the recipe | free, group empty |
-| `pnpm dev &` inside a `{ … } \| cat` pipeline | the recipe | guard refuses, nothing killed |
 
 The guard is there because a first draft compared against `$$`. Inside a
 pipeline the background server joined the pipeline's group, `$$` named the
@@ -89,24 +92,32 @@ parent shell, and `kill -- -$pgid` terminated the calling command itself
 
 ## Eradication
 
-**Type:** DevX check (level 2). `pretool-no-broad-kill.sh` already refuses
-the broad kill, and its refusal now carries the stop that works, at the moment
-the agent needs it.
+**Type:** DevX check (level 2)
 
-**Reference:** this commit.
+**Reference:** the recipe above was still prose. Commit `b48ce3675` (PR #370)
+replaced it with one script that owns the lifecycle, `scripts/dev-server.sh`.
+`start` runs the server as the leader of its own session and records that id,
+and `stop` kills exactly that group:
 
-```diff
--  echo "[no-broad-kill]   pnpm dev & pid=\$!   …   kill \"\$pid\"" >&2
-+  echo "[no-broad-kill] Otherwise start the server as 'setsid pnpm dev > log 2>&1 &', so it owns a process group," >&2
-+  echo "[no-broad-kill]   pgid=\$(ps -o pgid= -p \"\$(lsof -ti tcp:5173 -sTCP:LISTEN | head -1)\" | tr -d ' ')" >&2
-+  echo "[no-broad-kill]   [ -n \"\$pgid\" ] && [ \"\$pgid\" != \"\$(ps -o pgid= -p \$BASHPID | tr -d ' ')\" ] && kill -- \"-\$pgid\"" >&2
+```bash
+setsid bash -c 'echo $$ >"$1"; cd "$2" && exec pnpm dev' _ "$GROUP_FILE" "$REPO_ROOT/apps/$APP" \
+# ...
+kill -- "-$group"
 ```
 
-**Proof it can fail:** fed `{"tool_input":{"command":"killall node"}}` with
-`KAIZEN_LOG_REFUSALS=0`, the hook exits 2 and prints the recipe. Fed the
-recipe itself, it exits 0, so the advice does not trip the hook it comes from.
+Commit `458e886c4` (PR #411) ported the hook to
+`scripts/hooks/checks/no-broad-kill.core.ts`. Its refusal now carries no
+recipe and points at the script:
 
-**Similar instances:** `grep -rn 'kill "\$pid"' .claude docs/knowledge docs/dantotsus`
-finds the old recipe outside the hook only in
-[`broad-pkill-killed-another-agents-measurement.md`](./broad-pkill-killed-another-agents-measurement.md),
-a dated record left as written. No hook or skill repeats it.
+```ts
+'A dev server: scripts/dev-server.sh start <app>, then scripts/dev-server.sh stop <app>.',
+```
+
+The broad kill is refused, and the stop that works is one command nobody
+assembles. An agent can still start `pnpm dev &` by hand, and nothing refuses
+that, which is the gap left.
+
+**Similar instances:** `grep -rn 'kill "\$pid"' scripts docs/knowledge`
+finds no other copy of the old recipe. `broad-pkill-killed-another-agents-measurement.md`
+keeps it as a dated record. `the-dev-server-nobody-could-stop.md` covers the
+same lifecycle from the start side.

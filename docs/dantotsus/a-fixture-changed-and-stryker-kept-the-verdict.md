@@ -53,7 +53,10 @@ per-PR cache reuses the file between pushes, so run 3 also passes CI.
 
 *Thought the incremental file goes stale only when sources or tests move, which
 Stryker diffs, actually every module a test imports, and the toolchain, are
-inputs Stryker never diffs.*
+inputs Stryker never diffs.* (Machine)
+
+The tool is the condition. Stryker's incremental mode presents one file as a
+complete cache, and nothing in its output says which inputs it skipped.
 
 The differ's own header states its reuse rules and names no other input. A test
 without a location in the report (Vitest reports none) spans its whole file, so

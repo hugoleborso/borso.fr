@@ -4,19 +4,19 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#60'
-fix-commits: [f6463f6071]
-eradication-level: 1
-eradication-paths: [scripts/install-repo-deps.sh, scripts/browser.sh]
+fix-commits: [f6463f6071, c54e32da7]
+eradication-level: 5
+eradication-paths: [docs/knowledge/driving-previews-with-agent-browser-and-argent.md]
 time-to-detect: minutes
 tags: [harness, agent-browser, tooling, meta, visual-validation]
-zone: scripts/browser.sh
+zone: scripts/install-repo-deps.sh
 ---
 
 # The browser was on disk and unreachable
 
-## Symptom
+## User impact
 
-First browser command of the session, in the managed container:
+The first browser command of a session, in the managed container, failed:
 
 ```
 ✗ Chrome not found. Checked:
@@ -27,97 +27,116 @@ First browser command of the session, in the managed container:
 Run `agent-browser install` to download Chrome, or use --executable-path.
 ```
 
-A Chromium was sitting at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`,
-and the environment's own instructions forbid downloading another one.
-Passing `--executable-path` then appeared to do nothing:
+| | Seen | Expected |
+| --- | --- | --- |
+| first `agent-browser open <url>` | "Chrome not found", with an offer to download a second browser | the page opens on the Chromium the container ships |
+| retry with `--executable-path` | `⚠ --executable-path ignored: daemon already running` | the page opens |
 
-```
-⚠ --executable-path ignored: daemon already running. Use 'agent-browser close' first to restart with new options.
-```
+A Chromium sat at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, and
+the environment forbids downloading another one. Measured by the session that
+wrote this entry, on 2026-08-18.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the browser not found?** agent-browser searches its own
-   cache, the system Chrome locations, and the Puppeteer and Playwright
-   caches. The container keeps its browser at
-   `$PLAYWRIGHT_BROWSERS_PATH`, which is none of those.
-2. **Why not follow the error's advice?** `agent-browser install`
-   downloads a second browser, and the container asks explicitly that
-   nothing does — it ships one and sets `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`.
-   The tool's remedy and the environment's rule point opposite ways.
-3. **Why did the flag look broken?** The first failing call had already
-   started a daemon. A daemon holds its launch options for its lifetime,
-   so the flag is accepted, ignored, and reported in a line that scrolls
-   past under the successful-looking output of the command that follows.
-4. **Why did SessionStart not handle it?** It runs `agent-browser
-   install` when the binary is missing, swallowing failure with
-   `|| true` — provisioning a browser rather than pointing at the one
-   already there.
-5. **Why does this cost more than the minutes it took?** Every visual
-   check in every session starts here, and the first thing the agent
-   reads is an error naming four places the browser is not.
+- agent-browser reported "Chrome not found".
+  - It searched its own cache, the system Chrome locations, and the Puppeteer
+    and Playwright caches. The container keeps its browser at
+    `$PLAYWRIGHT_BROWSERS_PATH`, which is none of those.
+    - SessionStart provisioned a browser instead of pointing at the one on
+      disk. Its step ran `agent-browser install` and swallowed the failure:
+      ```bash
+      npm install -g agent-browser >/dev/null
+      agent-browser install >/dev/null || log "agent-browser install (Chromium provision) failed; …"  # ← the faulty line
+      ```
+      - `5105c2407` (2026-05-03) wrote that step from agent-browser's own
+        install instructions, on the belief that a fresh session has no
+        browser. The container already shipped one and sets
+        `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`. (Material)
+  - The retry with `--executable-path` changed nothing, because the first
+    failing call had started a daemon, and a daemon holds its launch options
+    for its lifetime.
 
-**Root cause:** thought *"a browser automation CLI finds whatever
-browser is installed"*, actually *"it looks in the four places it knows,
-and a container that ships its own puts it in a fifth"*.
+## Root cause of occurrence
+
+*Thought a browser automation CLI finds whatever browser is installed, actually
+it looks in the four places it knows, and this container puts its browser in a
+fifth.* (Material)
+
+The step was written from the vendor's install recipe, which assumes no
+browser exists. Where the managed container keeps its browser was written in
+no file of the repository at `5105c2407` (measured, `git grep pw-browsers 5105c2407`
+finds nothing). The answer was absent from the context of
+whoever wrote the step.
 
 ## Detection failure causes
 
-- **Typing:** not a typed surface.
-- **Linter / static analysis:** none applicable.
-- **Functional validation locally:** on a laptop the system Chrome is in
-  one of the four searched locations, so the whole class is invisible
-  where the setup script is usually exercised.
+- **Local validation:** on a laptop the system Chrome is in one of the four
+  searched locations, so the whole class is invisible where the setup script
+  is usually exercised.
 - **CI:** no CI job drives a browser.
-- **Code review:** the SessionStart block reads correctly — install if
-  absent — and its assumption about where a browser lives is not written
-  down anywhere to disagree with.
-- **Knowledge:** `docs/knowledge/agent-browser-cli-quirks.md` existed and
-  covered other quirks, which reads as coverage of the tool.
+- **Review:** the SessionStart block reads correctly, install if absent. Its
+  assumption about where a browser lives was written down nowhere to disagree
+  with.
+- **The tool's output:** the option-pinning warning prints one line that
+  scrolls past under the successful-looking output of the next command.
 
 ## Countermeasure
 
-- **Code:** commit `f6463f6` — SessionStart writes agent-browser's
-  user-level config pointing at the Chromium already on disk.
-- **Operator action:** none.
+`f6463f6` made SessionStart write agent-browser's user-level config, pointing
+at the Chromium already on disk. Verified end to end on 2026-08-18: config
+removed, block run, page opened with no flag.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — the tool cannot fail to find the browser, so the misconception has nothing to express)
+**Type:** triggered knowledge (level 5). The path half is subtracted. The
+faulty line itself still runs.
 
-**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`f6463f6`](https://github.com/hugoleborso/borso.fr/commit/f6463f6)
+**Reference:** commit [`c54e32da7`](https://github.com/hugoleborso/borso.fr/commit/c54e32da7) (#224, 2026-10-29)
 
-**The actual fix:**
+The `f6463f6` config was a second answer beside a wrapper that kept its own.
+Its sibling sweep missed `find_chromium` in `scripts/browser.sh`, added three
+days earlier by `5a5ebc19f` with a versioned glob. That glob broke on
+2026-10-24, as
+[the-browser-moved-and-the-wrapper-died-silently](./the-browser-moved-and-the-wrapper-died-silently.md)
+records.
 
-```diff
-+browsers_root="${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}"
-+agent_browser_config="$HOME/.agent-browser/config.json"
-+if command -v agent-browser >/dev/null 2>&1 && [ ! -f "$agent_browser_config" ]; then
-+  chromium_binary=""
-+  if [ -x "$browsers_root/chromium" ]; then
-+    chromium_binary="$browsers_root/chromium"
-+  else
-+    chromium_binary=$(find "$browsers_root" -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1)
-+  fi
-+  if [ -n "$chromium_binary" ]; then
-+    mkdir -p "$(dirname "$agent_browser_config")"
-+    printf '{"executablePath":"%s"}\n' "$chromium_binary" > "$agent_browser_config"
-+    log "agent-browser: pointed at $chromium_binary"
-+  fi
-+fi
+`c54e32da7` then removed the config, `scripts/browser.sh` and
+`scripts/argent.sh`. No file in the repository resolves a browser path for
+agent-browser any more, so no copy is left to point at the wrong place.
+
+**The recurrence, stated:** the faulty line was never removed. `f6463f6` added
+the config beside it, and `c54e32da7` did not touch it. It sits today at
+`scripts/install-repo-deps.sh:199` on `origin/main` `79814b4c8`, in the branch
+that runs when no agent-browser binary is found:
+
+```bash
+agent-browser install >/dev/null 2>&1 || log "agent-browser install (Chromium provision) failed; …"
 ```
 
-Written only when absent, so an operator's own config is never
-overwritten, and a no-op on a machine with no Playwright browsers
-directory. Verified end to end: config removed, block run, page opened
-with no flag.
+On this container it ran. `~/.local/bin/agent-browser`, which only the install
+branch creates, is dated 2026-11-24 10:48:56, and
+`~/.agent-browser/browsers/chrome-158.0.8127.88` was created one second later
+(measured with `ls --time-style=full-iso`). So the second browser this
+environment once forbade is downloaded at session start, while `CLAUDE.md`,
+`.claude/agents/visual-validator.md` and the knowledge entry
+`driving-previews-with-agent-browser-and-argent.md` all say never to run
+`agent-browser install`. That knowledge entry's trigger on
+`agent-browser install` is what holds today, and only for an agent that types
+the command. SessionStart runs it without passing through that hook.
 
-**Sibling defects swept:** the daemon's option-pinning is now moot for
-this case, and is recorded in the knowledge entry for the cases where a
-flag is still the right tool.
+**Proof, corrected:** the earlier proof of this entry, `agent-browser open
+about:blank` with no config, ran on that downloaded copy. It shows the config
+is no longer needed. It does not show that agent-browser finds the image's
+Chromium. The round 2 review measured that it does, with an empty `HOME`. I
+could not repeat it, because the session refused a command that sets `HOME`.
 
-## See also
+**Proposed:** delete the `agent-browser install` call, and its log line, from
+`scripts/install-repo-deps.sh`. SessionStart then installs the binary and
+provisions nothing, so the step that contradicts the environment's rule no
+longer exists, and the repository's code and its instructions agree.
 
-- [`docs/knowledge/agent-browser-cli-quirks.md`](../knowledge/agent-browser-cli-quirks.md) — the daemon trap and the nested-scroller click.
-- [`docs/knowledge/driving-previews-with-agent-browser-and-argent.md`](../knowledge/driving-previews-with-agent-browser-and-argent.md) — the full recipe for driving a preview.
-- [`one-failed-optional-install-silently-dropped-four-tools`](./one-failed-optional-install-silently-dropped-four-tools.md) — the same SessionStart script, the same class of silent gap.
+**Similar instances:** `grep -rn 'agent-browser install\|pw-browsers\|chrome-linux' scripts .claude .husky .github CLAUDE.md docs/knowledge`
+finds the SessionStart call above, the three instructions that forbid it, and
+`scripts/browser/playwright-browsers.sh`. That script aligns the image's folder
+for the workspace Playwright, not for agent-browser, and links every entry of
+`/opt/pw-browsers` rather than globbing one path.

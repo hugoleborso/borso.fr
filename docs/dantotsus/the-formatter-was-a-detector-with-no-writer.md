@@ -1,23 +1,23 @@
 ---
 date: 2026-08-10
-introduced-at: implementation
+introduced-at: conception
 detected-at: local
 severity: low
-related-pr: '#36'
-fix-commits: [ebabfe7650]
+related-pr: '#40'
+fix-commits: [9b8d380ed]
 eradication-level: 2
-eradication-paths: [.claude/hooks/posttool-format-write.sh]
+eradication-paths: [.husky/pre-commit]
 time-to-detect: minutes
 tags: [prettier, formatter, hooks, pre-commit, self-improvement-loop]
-zone: .claude/hooks
+zone: .husky/pre-commit
 recurs: [biome-formatter-was-not-gated]
 ---
 
 # The formatter was a detector with no writer
 
-## Symptom
+## User impact
 
-A `git commit` rejected by `.husky/pre-commit`, because a freshly written
+A `git commit` was rejected by `.husky/pre-commit`, because a freshly written
 file carried layout the formatter wanted different:
 
 ```
@@ -28,92 +28,91 @@ Checking formatting...
 husky - pre-commit script failed (code 1)
 ```
 
-The remedy is always the same three steps — run the writer, re-`git add`,
-re-commit — and it always costs a full cycle for zero semantic change.
+The remedy was always the same three steps: run the writer, `git add` again,
+commit again. Each cost a full cycle for zero semantic change. Expected: a
+commit that carries formatted files without anyone formatting by hand.
 
-This was first written up against Biome in PR #37 (June 2026), a kaizen PR
-that never merged. PR #40 replaced Biome with ESLint and Prettier, and the
-friction survived the migration unchanged, because it was never about
-which formatter was installed.
+The friction was first written up against Biome in PR #37, which never
+merged. PR #40 replaced Biome with ESLint and Prettier, and the friction
+survived unchanged.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the commit rejected?** The hook runs `prettier --check`,
-   which reports drift and fails. It does not fix it.
-2. **Why did the file carry drift?** Nothing ran the formatter between the
-   file being written and the commit being attempted.
-3. **Why was there no step in between?** The repo gated formatting at the
-   commit and CI boundaries — correctly, and after a dantotsu about it not
-   being gated at all — and stopped there. Both gates are *detectors*.
-   Neither is a *writer*.
+- The commit was rejected for layout only.
+  - The pre-commit hook ran the formatter in check mode, which reports drift
+    and fails:
 
-**Root cause:** *thought "the formatter is wired up" meant the formatter
-was in the loop, actually it was wired only as a detector at the commit
-boundary — so every drift surfaced as a rejected commit instead of being
-fixed as the file was written.*
+    ```sh
+    echo "[pre-commit] running prettier"
+    pnpm exec prettier --check . --cache   # ← ❌ refuses drift it could have written
+    ```
+
+    - Commit `314f24821` (PR #40), written by an agent, replaced Biome's
+      `biome check` with this line. It kept the shape of the gate it
+      replaced: a check that rejects.
+      - That shape came from the Biome entries, `biome-lint-was-not-gated-anywhere`
+        and `biome-formatter-was-not-gated`. Their eradications gated lint and
+        format the same way, as checks at commit and CI. The process treated
+        a formatter like a linter. **Method.**
+
+## Root cause of occurrence
+
+*Thought the formatter belongs at the gate as a check, like the linter,
+actually its rewrite is layout only and deterministic, so the gate can write
+and stage the result instead of refusing the commit.* Method: the gate design
+was inherited from the lint gate, whose autofix is not safe to apply
+silently. The edit-time hook's own header states that difference for
+`eslint --fix`, and the format gate never applied it to itself.
 
 ## Detection failure causes
 
-- **Typing / linter:** layout, not behaviour. Nothing to catch.
-- **Functional validation locally:** the gate *did* catch it. That is the
-  point — it caught it one step too late.
-- **CI:** would also catch it, defence in depth, if the hook were bypassed.
-- **Code review:** structurally invisible. Once the gate exists, drift
-  never reaches a reviewer.
-
-Nothing here failed. The layer that was missing was one nobody had built.
+- **Typing and linter:** layout is not behaviour.
+- **Local validation:** the gate caught every drift, one step too late, as a
+  rejected commit.
+- **Code review:** once the gate exists, drift never reaches a reviewer, so
+  the cost of each rejection was visible only in sessions.
 
 ## Countermeasure
 
-- **Code:** commit `ebabfe7` — a `PostToolUse` hook on `Edit|Write|MultiEdit`
-  that runs Prettier's writer on the file just touched.
+Commit `ebabfe765` (PR #45) added a `PostToolUse` hook on
+`Edit|Write|MultiEdit` that ran Prettier's writer on the file just touched.
+It covered only those tools. A write made with `sed`, a heredoc or a script
+still reached the commit unformatted. The same hook later formatted files
+outside the repository, see
+[`the-formatter-reached-outside-the-repository`](./the-formatter-reached-outside-the-repository.md).
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — an edit-time writer above the commit-time
-detector; the gate stays the enforcement, so disabling the hook costs
-ergonomics, not correctness)
+**Type:** DevX check (level 2)
 
-**Reference:** [PR #45](https://github.com/hugoleborso/borso.fr/pull/45) ·
-commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7)
+**Reference:** commit [`9b8d380ed`](https://github.com/hugoleborso/borso.fr/commit/9b8d380ed)
+(PR #359). The writer moved to the commit, where the check already was.
 
-**The actual fix:**
-
-```diff
-+    "PostToolUse": [
-+      {
-+        "matcher": "Edit|Write|MultiEdit",
-+        "hooks": [
-+          {
-+            "type": "command",
-+            "command": ".claude/hooks/posttool-format-write.sh",
-+            "statusMessage": "Formatting with Prettier"
-+          }
-+        ]
-+      }
-+    ]
+```sh
+# The commit formats what it carries, so nobody formats by hand.
+if [ "$#" -gt 0 ] && [ -x node_modules/.bin/oxfmt ]; then
+  node_modules/.bin/oxfmt --no-error-on-unmatched-pattern "$@" >/dev/null
+  git add -- "$@"
+fi
 ```
 
-The hook always exits 0, filters to the extensions Prettier owns here, and
-runs from the project root so it resolves the same config the gate uses.
+Every file whose whole change is staged is formatted and staged again,
+however it was written. A file with unstaged changes is left to the check,
+because staging it would commit work its author held back. That is the gap
+that keeps this at level 2. The hook's comment records the cost before the
+move: "nineteen archived friction lines record it".
 
-**Prettier only, deliberately.** `eslint --fix` is not run. Several rules
-in this repository autofix by rewriting code rather than layout, and a
-silent rewrite between an edit and the next read leaves an agent reasoning
-about a file that no longer says what it read. Lint stays a gate that
-reports and the author fixes.
+**Proposed:** delete the edit-time writer,
+`scripts/hooks/checks/format-write.core.ts`, and its registration. The commit
+now formats every staged file, including those written by `sed` or a
+heredoc, and only files inside the repository can be staged. Removing it
+removes its "read it again before an exact-text replace" notice and makes
+the out-of-repository defect impossible.
 
-**Property this changes:** every Edit/Write now spawns Prettier on the
-touched file — a few hundred milliseconds per edit, and the file on disk
-can differ from what was just written. Layout moves; semantics do not.
+**Proof it can fail:** not replayed for this entry. Read from the hook's
+code, an unformatted file whose whole change is staged is rewritten by
+`oxfmt` and staged again before the check runs (inferred).
 
-**Sibling defects swept:** none. Single-behaviour gap.
-
-## See also
-
-- [`biome-formatter-was-not-gated.md`](./biome-formatter-was-not-gated.md)
-  — the layer below: it added the *detector* to the commit and CI gates.
-  This entry adds the *writer* above it.
-- [`biome-lint-was-not-gated-anywhere.md`](./biome-lint-was-not-gated-anywhere.md)
-  — the original gap in the same lineage.
-- [`biome-formatter-trips-line-count-ceiling.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-formatter-trips-line-count-ceiling.md)
+**Similar instances:** `grep -n -- "--check" .husky/pre-commit` lists the
+other checks that only report. Lint stays a check on purpose, because its
+autofix rewrites code, not layout.

@@ -15,15 +15,15 @@ prior-fix-commits: [3415a37]
 
 # A relative `fetch('/api/...')` hit the static-site CloudFront and got 403'd
 
-## Symptom
+## User impact
 
 Live retransmission on the preview, operator tapping their own chip
 to self-punch: every attempt produced *« Tu n'es pas inscrit comme
 coureur dans cette édition. »* in the modal. The runner is, of course,
 inscrit. A direct curl against the API host (`*-api.preview.borso.fr`)
-returned 201 with a valid punch — so the back was correct.
+returned 201 with a valid punch, so the back was correct.
 
-## Root-cause chain
+## Causal chain
 
 1. **Why did the modal show that specific message?** Because the
    `SelfPunchModal` FSM has a fallback branch that maps an
@@ -33,10 +33,10 @@ returned 201 with a valid punch — so the back was correct.
    fallback fired.
 2. **Why was the error envelope unparseable?** The fetch resolved
    with `response.ok === false` and a body that wasn't a JSON
-   `{ error: '<reason>' }` envelope — it was an HTML page returned
+   `{ error: '<reason>' }` envelope. It was an HTML page returned
    by something other than the API.
 3. **Why did the fetch return an HTML page?** The fetch URL was
-   `'/api/self-punches'` — a *relative path*. The page lives on
+   `'/api/self-punches'`, a *relative path*. The page lives on
    `last-loop-lepin-pr-23.preview.borso.fr`, so the browser resolved
    the URL to that origin. That origin is the static-site CloudFront
    distribution, which serves only the SPA bundle and has no
@@ -54,7 +54,7 @@ because dev uses Vite's proxy and prod could in theory route via the
 same CloudFront; actually preview and prod split front and API onto
 distinct hostnames, so the front MUST be told the API origin via
 `VITE_API_BASE`, and any fetch that bypasses `resolveUrl` lands on
-the wrong host.*
+the wrong host.* (Man)
 
 ## Detection failure causes
 
@@ -63,8 +63,12 @@ the wrong host.*
 - **Linter / static analysis:** Biome doesn't ship a rule for
   call-site URL conventions. The repo had no custom rule for it.
 - **Functional validation locally:** `pnpm dev` proxies `/api/*` to
-  the local Hono server via Vite's `server.proxy` config — so the
+  the local Hono server via Vite's `server.proxy` config, so the
   relative path *works* locally. The failure is preview/prod-only.
+  That proxy is still in all six `apps/*/vite.config.ts` (measured,
+  `git grep -n proxy origin/main -- 'apps/*/vite.config.ts'`,
+  2026-11-27), so a local run still hides the split between site and
+  API hosts.
 - **CI:** No integration test exercises the preview-origin split.
   The /visual-validation skill could in theory have caught it, but
   the operator approved the PR after a successful manual test on
@@ -75,7 +79,7 @@ the wrong host.*
   attention because the codebase has other bare fetches (the photo
   upload PUT in `RunnerAdminPanel.tsx` is one, but that uses a
   presigned absolute URL from the API).
-- **Staging / production monitoring:** The 403 is silent — no Sentry
+- **Staging / production monitoring:** The 403 is silent. No Sentry
   hookup yet, no alert.
 
 ## Countermeasure
@@ -89,39 +93,41 @@ envelope shape (its error handling is custom).
 
 - **Code:** commit `3415a37` in PR #23.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility) + DevX check (Biome Grit plugin) as defence-in-depth.
+**Type:** code diff (level 1, structural impossibility) + DevX check (Biome Grit plugin) as defence-in-depth.
 
 **Reference:** this kaizen PR.
 
 **The actual fix:** two layers.
 
-*Layer 1 — every front-side fetch now goes through Hono's `hc`
+*Layer 1. Every front-side fetch now goes through Hono's `hc`
 client.* The site's `api/client.ts` was rewritten on top of
 `hc<AppType>` (the back's chained-router type, exported from
 `apps/.../api/src/app.ts`). Each `apiClient.<method>` dispatches to
 the typed `client.api.<path>.$<method>(...)` and unwraps via
 `r.ok` narrowing. There is no `fetch('/api/...')` literal anywhere
-in the source — the only direct fetch left is the photo PUT against
+in the source. The only direct fetch left is the photo PUT against
 a *presigned absolute URL* returned by the API, which is by
 definition not a `/api/...` path. End-to-end typing of every front
 call comes from the back's Hono types ; no hand-rolled Zod schema
 on the read side. See the companion knowledge entry
 [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
-*Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
+*Layer 2. Anyone reintroducing a bare `fetch('/api/...')` in site/
 code gets a lint error.* Shipped as the Biome Grit plugin
 `no-direct-api-fetch-in-site.grit`, registered in
 `apps/last-loop-lepin/biome.jsonc`; the rule survived the move off Biome and is
 now [`eslint-rules/no-direct-api-fetch-in-site.js`](../../eslint-rules/no-direct-api-fetch-in-site.js),
-which fires on any string-literal `/api/...` URL passed as the first argument to
-`fetch`.
+which fires on a string or template literal starting with `/api/` passed as the
+first argument to `fetch`. Its sibling
+[`eslint-rules/no-api-anchor-in-site.js`](../../eslint-rules/no-api-anchor-in-site.js)
+refuses the same path in a JSX attribute, such as a link's `href`.
 Dynamic URLs (variables, absolute URLs returned by the API) are
-intentionally not caught — those are the legitimate non-apiClient
+intentionally not caught. Those are the legitimate non-apiClient
 cases.
 
-## See also
-
-- [`docs/dantotsus/static-site-cloudfront-default-root-only-handles-apex.md`](./static-site-cloudfront-default-root-only-handles-apex.md) — neighbour entry: another way the static-site CloudFront silently 403s when asked to do something outside its scope.
-- [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md) — the broader split-host topology between front and API in this repo.
+Related: [`static-site-cloudfront-default-root-only-handles-apex.md`](./static-site-cloudfront-default-root-only-handles-apex.md),
+another way the static-site CloudFront 403s outside its scope, and
+[`cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md),
+the split-host topology between front and API.

@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#40'
 fix-commits: [d49af83ae0]
 eradication-level: 2
-eradication-paths: [.husky/pre-push]
+eradication-paths: [.husky/pre-push, docs/knowledge/writing-a-small-function-the-hundred-percent-gates-accept.md]
 time-to-detect: one push
 tags: [stryker, vitest, coverage, mutation, gates, pre-push]
 zone: .husky/pre-push
@@ -16,67 +16,48 @@ recurs: [a-gate-that-reported-success-while-measuring-nothing]
 
 # A green mutation gate is not a green coverage gate
 
-## Symptom
+## User impact
 
-A push cleared `pre-push` — knip, both infra coverage suites, actionlint, and
-the mutation gate at **100.00% with zero survivors on all four applications**,
-forty minutes of it — and CI went red four minutes later:
+A session pushed after forty minutes of `pre-push`, which reported the mutation gate at **100.00% with zero survivors on all four applications**. CI went red four minutes later on a file that gate had just measured:
 
 ```
 ERROR: Coverage for branches (91.66%) does not meet global threshold (100%)
        for site/src/lib/initials.utils.ts
 ```
 
-The file had just been rewritten by a mutation sweep and had been *measured* at
-100% mutation score. Two gates, both about test strength, disagreeing about the
-same file on the same commit.
+| | Seen | Expected |
+| --- | --- | --- |
+| `pre-push` on PR #40 | Green, mutation 100% on `initials.utils.ts` | A refusal for the uncovered branch |
+| CI | Red on the same file, same commit | The same verdict as `pre-push` |
 
-## Root-cause chain
+## Causal chain
 
-1. **The rewritten line carried an unreachable fallback.**
+- CI's coverage gate refused `initials.utils.ts` at 91.66% branches.
+  - One branch never ran. The rewritten line carried a fallback no input can reach:
 
-   ```ts
-   const lastInitial = wordInitials.at(-1) ?? firstInitial;
-   ```
+    ```ts
+    const lastInitial = wordInitials.at(-1) ?? firstInitial;   // ← the ?? branch is dead
+    ```
 
-   By that line `firstInitial` is known defined and `wordInitials.length !== 1`,
-   so the array holds at least two entries and `.at(-1)` cannot be `undefined`.
-   The `?? firstInitial` branch is dead. It was written to satisfy
-   `noUncheckedIndexedAccess`, which types `.at()` as `string | undefined`
-   regardless of what the surrounding checks establish.
+    By that line `firstInitial` is defined and `wordInitials.length !== 1`, so the array holds at least two entries and `.at(-1)` is never `undefined`.
+    - An agent wrote this line in 815eb19b7, "test(last-loop-lepin): kill the surviving site core and lib mutants". It added `?? firstInitial` because `noUncheckedIndexedAccess` types `.at(-1)` as `string | undefined`, whatever the guards above establish (Machine).
+  - Stryker killed the mutant on that line. Its `LogicalOperator` mutator turns `??` into `&&`, which yields `firstInitial` for a two-word name, so a test noticed. No mutant takes the right-hand branch, so v8 still counted it as never run.
 
-2. **Stryker killed it; v8 did not cover it.** Stryker's `LogicalOperator`
-   mutator rewrites `??` as `&&`, which for a two-word name yields
-   `firstInitial` instead of the last initial — a different string, so a test
-   noticed and the mutant died. Nothing Stryker does *takes the right-hand
-   branch*, so v8 still reports it as never executed. **Mutation asks whether a
-   test would notice a change; coverage asks whether a line ran. A dead branch
-   next to a live operator answers yes to the first and no to the second.**
+## Root cause of occurrence
 
-3. **The coverage gate was in CI and not in `pre-push`.** `pre-push` ran the
-   `infra/cdk` and `infra/shared` coverage suites, and the four apps' mutation
-   suites, but never the four apps' own `test:core` / `test:coverage`. So the
-   longest, most expensive gate on the branch was armed locally while the
-   cheaper one that would have caught this was not.
+*Thought the type of `.at(-1)` described the value at that line, so a fallback was needed. Actually the guards above had already made it defined, and the type cannot see them, so the fallback is a branch no input reaches.* (Machine)
+
+The compiler setting asks for a fallback on every index read, and offers it as the safe choice. The sweep's own feedback was a mutation run, which asks whether a test would notice a change, not whether a line ran. A dead branch beside a live operator passes the first and fails the second.
 
 ## Detection failure causes
 
-- **Two gates were treated as one.** Having watched mutation testing find 105
-  pieces of dead code across three applications, "zero survivors" read as "the
-  strongest possible statement about this file". It is a strong statement about
-  a different property.
-- **The expensive gate ran locally and the cheap one did not**, which is exactly
-  backwards. Forty minutes of Stryker at `pre-push`; ninety seconds of coverage
-  only in CI.
-- **The fallback looked like diligence.** `?? firstInitial` reads as careful
-  defensive code, and `noUncheckedIndexedAccess` supplies a standing excuse for
-  writing one. A reviewer scanning the diff has no reason to stop on it.
+- **Pre-push:** it ran the `infra/cdk` and `infra/shared` coverage suites and the four apps' mutation suites, but never the apps' own coverage gate. Forty minutes of Stryker ran locally, and ninety seconds of coverage ran only in CI.
+- **Lint:** `@typescript-eslint/no-unnecessary-condition` did not fire, because `.at()` really returns `string | undefined` under `noUncheckedIndexedAccess`. No type-aware rule knows what the surrounding guards establish.
+- **Review:** `?? firstInitial` reads as careful defensive code, so a reader has no reason to stop on it.
 
 ## Countermeasure
 
-The dead branch is gone rather than covered. Destructuring the tail makes the
-single-word case and the "no last initial" case the same case, so both branches
-are reachable and both are tested:
+Commit `d49af83ae` deleted the dead branch. Destructuring the tail makes the single-word case and the "no last initial" case the same case, so both branches are reachable and tested:
 
 ```ts
 const [firstInitial, ...laterInitials] = wordInitials;
@@ -88,45 +69,25 @@ if (lastInitial === undefined) {
 return (firstInitial + lastInitial).toUpperCase();
 ```
 
-`laterInitials.at(-1) === undefined` holds exactly when there was one word,
-which is the branch the old code tested separately as `length === 1`.
-
-And `pre-push` now runs the per-app coverage gate for every application that
-changed on the branch — `test:core` where it exists, since the full-stack apps'
-`test:coverage` wants a Postgres, and `test:coverage` otherwise. Same scripts
-`ci.yml` runs, resolved from `package.json` rather than a hard-coded list.
+`test:core` exited 0 with 730 tests, and a scoped Stryker run over the file reported 100.00 with 0 survivors (measured on PR #40).
 
 ## Eradication
 
-**Level 2 — DevX check.** The gate that caught this now runs before the push
-that would have carried it. Verified on this branch, which touches all four
-applications:
+**Type:** DevX check (level 2)
 
-```
-would run: pnpm --filter @borso-app/borso-fr run test:coverage
-would run: pnpm --filter @borso-app/borsouvertures run test:coverage
-would run: pnpm --filter @borso-app/last-loop-lepin run test:core
-would run: pnpm --filter @borso-app/pragma run test:core
+**Reference:** commit `d49af83ae` (PR #40), which added the per-app coverage gate to `pre-push`. It has since become a `--changed` run per changed app, in `.husky/pre-push`:
+
+```sh
+start_gate "tests-$app" \
+  pnpm --filter "@borso-app/$app" exec vitest run --project core --changed "$push_base" --coverage
 ```
 
-The rewrite holds both gates: `test:core` exits 0 with 730 tests, and a scoped
-Stryker run over the file alone reports `100.00`, 0 survivors, in 25 seconds.
+The gate that caught this now runs before the push. A dead fallback in a gated file is refused locally, whichever sweep wrote it.
 
-Level 1 was considered — a lint rule banning `??` where the left side is
-non-nullable. `@typescript-eslint/no-unnecessary-condition` is exactly that rule
-and it did not fire here, because `.at()` genuinely returns
-`string | undefined` under `noUncheckedIndexedAccess`. The type system does not
-know what the surrounding guards establish, so no type-aware rule can. That is
-the argument for keeping the coverage gate rather than replacing it.
+The shape itself reaches the next writer too. `docs/knowledge/writing-a-small-function-the-hundred-percent-gates-accept.md` names "a `noUncheckedIndexedAccess` guard no test reaches", and its `triggers:` fire on any edit to a `*.core.ts`, `*.utils.ts` or `*.adapter.ts` file.
 
-## What to check next time
+Level 1 is out of reach. A rule refusing `??` on a value the guards make defined needs the guards in the type, and `noUncheckedIndexedAccess` gives every index read `| undefined`.
 
-Do not read one gate's verdict as another's. Coverage and mutation testing
-overlap enough to feel redundant and are not: coverage finds code no test
-reaches, mutation finds code no test *checks*. Dead code beside a live operator
-is invisible to the second and obvious to the first.
+**Proof it can fail:** on PR #40 the new step listed the four apps' coverage runs and, before the countermeasure, refused `initials.utils.ts` (measured then). `the-coverage-gate-a-wrong-comment-kept-in-ci` records the `--changed --coverage` form refusing an uncovered tree in 7 s.
 
-The narrower rule: when `noUncheckedIndexedAccess` pushes you into a `??` after
-an index or an `.at()`, ask whether the surrounding code already guarantees the
-value. If it does, restructure so the compiler can see it — usually by
-destructuring — rather than writing a fallback that can never be taken.
+**Similar instances:** `grep -rn "\.at(-1) ??" apps --include=*.ts | grep -v test` finds three today (four without the filter, the fourth in `pirate-editor.core.test.ts`), in `labours.core.ts`, `deck-build.core.ts` and `task-walks.setup.ts`. The two gated files pass the coverage gate on `main`, so their fallbacks are reached (inferred from CI being green). The third is a setup script outside the gate.

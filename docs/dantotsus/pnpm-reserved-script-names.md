@@ -12,101 +12,93 @@ tags: [pnpm, ci, github-actions]
 zone: .github/workflows/deploy.yml
 ---
 
-# `deploy` and `destroy` are pnpm built-ins, not script names
+# `pnpm --filter <app> deploy` never ran the app's deploy script
 
-## Symptom
+## User impact
 
-The first preview deploy of `borso-fr` failed in CI in 23 s. The
-`preview.yml` step
-`run: pnpm --filter "@borso-app/borso-fr" deploy` appeared to
-execute, but the package's `scripts.deploy` (`pnpm build && cdk
-deploy --all ...`) never ran. `cdk` never ran. No CFN change. No URL.
+Every pull request's preview failed on its first push. The operator spent half
+an hour checking whether OIDC was misconfigured before finding the cause.
 
-User impact: every PR's preview was broken on first push. Hugo
-spent half an hour debugging "is OIDC misconfigured?" before
-spotting the actual cause.
+| | Seen | Expected |
+| --- | --- | --- |
+| First preview deploy of `borso-fr` | the step fails in 23 s, `cdk` never runs, no stack change, no URL | `scripts.deploy` runs `pnpm build && cdk deploy --all ...` and posts the preview URL |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** The package's deploy script didn't run.
-   Because `pnpm <name>` consults pnpm's built-in command table
-   *before* falling through to scripts. `deploy` is one of those
-   built-ins.
-2. **Why does pnpm have a built-in named `deploy`?**
-   It copies a workspace package and its production deps into a
-   deployable bundle (intended for things like Docker container
-   builds).
-3. **Why does that built-in take precedence over a user script?**
-   pnpm gives built-ins priority so adding a script named `install`
-   (or `update`, etc.) in your `package.json` doesn't accidentally
-   shadow a critical command.
-4. **Why doesn't pnpm warn when a script is shadowed?**
-   Built-in commands take silent precedence; the user-facing
-   `package.json` script is simply unreachable via the bare name.
-   Same hazard applies to `destroy` (also a pnpm built-in,
-   companion to `deploy`).
-5. **Why were the scripts named `deploy` / `destroy` in the first
-   place?**
-   Convention from CDK projects: `cdk deploy` / `cdk destroy` are
-   the verbs CDK uses, so `pnpm deploy` reads naturally for an
-   operator. We didn't realise the collision until CI failed.
+- No preview deployed.
+  - The package's `scripts.deploy` never ran.
+    - pnpm ran its own `deploy` command instead. pnpm checks its built-in
+      commands before scripts, and `deploy` is one of them. In a scratch package
+      on pnpm 10.28.0, `pnpm deploy` printed `ERR_PNPM_CANNOT_DEPLOY ... Maybe
+      you wanted to invoke "pnpm run deploy"` (measured this session).
+      - The faulty line, written by commit `56258c2b01` (PR #2) in
+        `preview.yml`, `deploy.yml` and `cleanup-orphans.yml`:
 
-**Root cause:** we thought `pnpm <pkg> deploy` would run the
-package's `scripts.deploy`. Actually pnpm's built-in `deploy`
-command (which copies a workspace package into a deployable bundle)
-shadows it.
+        ```yaml
+        - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy   # pnpm's built-in, not the script
+        ```
+
+        - The same commit calls every other script the same short way,
+          `pnpm --filter @borso/infra test:coverage` and
+          `pnpm --filter @borso/infra build`, and those work, because no
+          built-in carries those names.
+          - The apps name their CDK script `deploy`, after `cdk deploy`, which
+            is also the name of a pnpm command.
+
+## Root cause of occurrence
+
+*Thought `pnpm --filter <pkg> <name>` runs `scripts.<name>` for any name, as it
+did for `build` and `test:coverage`, actually pnpm resolves `<name>` against its
+own commands first, and `deploy` is one.* (Material)
+
+The short form worked for every script the agent had called before, and pnpm's
+command table was not in its context when it wrote the workflow (inferred, no
+transcript survives).
 
 ## Detection failure causes
 
-- **Typing:** package.json scripts aren't typed.
-- **Linter:** no rule for "pnpm script names colliding with built-ins".
-- **Functional validation locally:** locally we ran `pnpm --filter
-  ... run deploy` (with `run`) by reflex, which dodges the trap.
-  Hugo only realised CI was different when it failed.
-- **CI:** CI is where this surfaced — the first run of
-  `preview.yml` against a real PR.
-- **Code review:** the bare command reads as natural; reviewer
-  would need to have hit the trap before to notice.
+- **Local validation:** the operator ran `pnpm --filter ... run deploy`, with
+  `run`, which dodges the trap. The workflow used the other form.
+- **Linter:** no workflow lint knows pnpm's command table.
+- **CI:** the first run of `preview.yml` against a real PR was the first
+  execution of the line.
 
 ## Countermeasure
 
-- **Code:** commit `10f3f10` — every CI workflow now invokes
-  `pnpm --filter <pkg> run deploy` (and same for `destroy`). The
-  `run` keyword forces script lookup and bypasses built-in
-  resolution. Affected: `preview.yml`, `deploy.yml`,
-  `cleanup-orphans.yml`, `shared-deploy.yml`.
+Commit `10f3f10e3a` makes every workflow call `pnpm --filter <pkg> run deploy`
+and `run destroy`. `run` forces the script lookup.
 
 ## Eradication
 
-**Type:** code diff + DevX check (level 2 — pre-push grep)
+**Type:** DevX check (level 2)
 
-**Reference:** [PR #2](https://github.com/hugoleborso/borso.fr/pull/2) (workflow fix) · [PR #4](https://github.com/hugoleborso/borso.fr/pull/4) (pre-push grep) · commits [`10f3f10`](https://github.com/hugoleborso/borso.fr/commit/10f3f10) (qualify with `run`), [`181f266`](https://github.com/hugoleborso/borso.fr/commit/181f266) (pre-push grep)
+**Reference:** commit [`181f2667ac`](https://github.com/hugoleborso/borso.fr/commit/181f2667ac).
+`check_pnpm_reserved_names` in `.husky/pre-commit`, mirrored in `ci.yml`,
+refuses a workflow that calls a reserved name without `run`:
 
-**The actual fix:**
-
-```diff
-  # .github/workflows/preview.yml (and deploy.yml, cleanup-orphans.yml, shared-deploy.yml)
--      - run: pnpm --filter "@borso-app/${{ matrix.app }}" deploy
-+      - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+```bash
+PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
 ```
 
-```diff
-  # .husky/pre-push (new check)
-+ # Reject any workflow YAML invoking `pnpm --filter <pkg> <reserved-name>`
-+ # without `run`. `deploy`, `destroy`, `install`, `update`, `sync`, `fetch`,
-+ # `publish` are pnpm built-in commands; without `run` they shadow the
-+ # package's scripts.* entry and silently do the wrong thing.
-+ echo "[pre-push] checking workflows for pnpm reserved-name shadowing"
-+ PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
-+ if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
-+   echo "[pre-push] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
-+   echo "[pre-push] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
-+   exit 1
-+ fi
-```
+**Proof it can fail:** the regex matches the original line,
+`- run: pnpm --filter "@borso-app/borso-fr" deploy`, and does not match
+`pnpm -F @borso-app/borso-fr deploy` (both measured this session with
+`grep -cE`).
 
-CLAUDE.md captures the rule under Conventions: *"Always use `pnpm run <script>` for `deploy` / `destroy` (and any name pnpm reserves)."*
+**Gap:** the regex reads only `.github/workflows/` and only the
+`--filter <pkg> <name>` form. It misses `-F`, `--filter=<pkg>` and any call in a
+script or an agent's command. It also lists names pnpm does not own. In the
+scratch package on pnpm 10.28.0, `pnpm destroy` and `pnpm sync` ran the scripts
+(measured). The repository pins `pnpm@10.0.0`, where the review measured the
+same for `destroy`.
 
-**Sibling defects swept:** every `pnpm --filter ... <verb>` in the repo audited; all four workflows use `run`. The pre-push grep covers any future workflow added.
+**Proposed:** subtract the collision. Rename `deploy` in every app's and
+`infra/shared`'s `package.json` to a name pnpm does not own, such as
+`cdk:deploy`, and update the workflows and CLAUDE.md's "Call reserved names
+through `run`" rule in the same change. Shadowing would then be impossible in
+workflows, scripts and agent commands alike, and the regex could be deleted.
 
-**Why not level 1 (structural):** workflows are YAML; no type surface. A wrapper script `pnpm-app-run <pkg> <verb>` could enforce `run` semantically, but it adds a layer for a regex check that already does the job.
+**Similar instances:** `grep -n '"deploy"' apps/*/package.json infra/*/package.json`
+lists every script that carries the built-in's name (measured, one per app and
+one in `infra/shared`).

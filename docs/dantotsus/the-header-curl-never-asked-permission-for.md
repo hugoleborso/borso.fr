@@ -5,7 +5,7 @@ detected-at: qa
 severity: high
 related-pr: '#261'
 fix-commits: [06abedfd9, self]
-eradication-level: 1
+eradication-level: 4
 eradication-paths: [apps/pragma/domain/request-headers.core.ts, apps/pragma/cdk/lib/stack.ts, infra/cdk/src/constructs/lambda-api.ts, infra/cdk/src/constructs/previewable-app.ts, apps/pragma/cdk/test/stack.test.ts]
 time-to-detect: hours
 tags: [pragma, cdk, preview, validation, visual-validation]
@@ -47,7 +47,7 @@ it did not probe, and it is wrong for the reason in the last row.
 ## Root cause of occurrence
 
 *Thought the API accepts any header the code sends, actually the deployed
-preflight accepts only the names a second, hand-kept list holds.*
+preflight accepts only the names a second, hand-kept list holds.* (Machine)
 
 The header had one owner in the code, `REALTIME_CLIENT_HEADER` in
 `apps/pragma/domain/stale-scope.core.ts`, and a second spelling in `infra/`
@@ -81,9 +81,9 @@ pragma stack test asserting the synthesized preflight names
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** detection (level 4)
 
-**Reference:** this kaizen pull request, the commit adding this file.
+**Reference:** the commit adding this file, on this kaizen pull request.
 
 pragma's custom request headers now live in one record,
 `PRAGMA_REQUEST_HEADERS` in `apps/pragma/domain/request-headers.core.ts`.
@@ -120,10 +120,17 @@ holds no copy to forget.
 +      requestHeaders: PRAGMA_REQUEST_HEADER_NAMES,
 ```
 
-A header declared in the record reaches the preflight with no second edit.
-What stays possible is a header written as a bare string outside the record.
-No such string exists in `apps/pragma/site/src` today (the two `headers.set`
-and `headers:` sites both read the domain constants).
+A header declared in the record reaches the preflight with no second edit,
+and the stack test fails if the wiring is cut. That part is structural.
+
+**What stays possible:** a header written as a bare string outside the record
+still reaches no preflight, and nothing refuses it. So the level is the stack
+test's, detection, not structural impossibility. Today every custom header in
+`apps/pragma/site/src` reads the record or a constant built from it:
+`grep -rn "headers.set\|headers: {" apps/pragma/site/src` finds
+`REALTIME_CLIENT_HEADER`, `BALLOT_TOKEN_HEADER`,
+`PRAGMA_REQUEST_HEADERS.registrationToken`, and a `Content-Type` sent to a
+presigned storage URL, not to the API (measured 2026-11-27).
 
 **Proof it can fail:** with the `requestHeaders:` line removed from
 `apps/pragma/cdk/lib/stack.ts`, the stack test refuses:

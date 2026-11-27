@@ -15,25 +15,62 @@ recurs: none (a computed value no component rendered, not a dialog or harness de
 
 # The projection nobody rendered
 
-## Symptom
+## User impact
 
 Filtering a setlist to one member is how a member answers "what do I play at
-the concert". The filter still worked, but no row said which instrument that
-member played on each song. Found while measuring the *my part* job in PR #151.
+the concert".
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Setlist filtered to one member | Each row's instrument slots, with that member's slots tinted, and no instrument named | Each row names what that member plays, such as "Bass + Backing vocals" |
 
-1. **Why did rows not name the instrument?** `SetlistEntryRow` did not render
-   it. `setlist-filter.core.ts` still computed it per row.
-2. **Why was it computed and not rendered?** `9a94594` replaced the row's
-   instrument text with the lineup glyph column. The projection kept its
-   caller, so nothing looked unused.
-3. **Why did no test notice?** The core's tests checked the projection, and no
-   component test checked that a row shows it. The answer the member needed
-   lived between the two.
+Every member using the filter was affected. The filter still worked. It was
+found while measuring the *my part* job in PR #151.
 
-**Root cause:** we thought a tested projection meant a shown answer, and
-actually only a test on the rendered row can say the member sees it.
+## Causal chain
+
+- Filtered rows did not name the member's instrument
+  - `SetlistEntryRow` no longer rendered it, while `setlist-filter.core.ts`
+    still computed it per row
+    - Commit `9a945946` (2026-09-19) removed the chip and its call ← the
+      faulty change
+
+      ```diff
+      -            const prominent = prominentMemberInstrumentFor(
+      -              props.filteredInstrumentIdsByEntryId[entry.id],
+      -              props.selectedMemberId,
+      ```
+
+      - It did so on purpose, and its message says so: "The chip that named
+        the filtered member and their instruments beside the row is gone
+        with `prominentMemberInstrumentFor`. The member filter itself is
+        untouched, and the column shows that member's slots tinted."
+        - `CLAUDE.md:33` at `9a945946^` told a commit to "name any
+          observable property the old mechanism carried that the new one
+          drops", in the commit body, "to surface the trade-off to
+          reviewers". The commit did that, and went to `main` with no pull
+          request. Method
+
+## Root cause of occurrence
+
+*Thought the tinted slots answered "what do I play", and that naming the
+dropped chip in the commit body put the trade-off before a reviewer,
+actually a tint names no instrument, and the operator reads no commit body,
+so a user-visible removal went out undecided.* **Method.**
+
+The author knew the chip was going, wrote it down, and judged the column a
+replacement. The repository's rule at the time sent that judgement to the
+commit message:
+
+> When a `refactor:` / `chore:` commit removes or replaces a mechanism […],
+> the body MUST explicitly name any *observable property* the old mechanism
+> carried that the new one drops or changes […]. The intent is to surface
+> the trade-off to reviewers.
+
+The process routed a product call into text that no decider reads. Today
+`CLAUDE.md` says "Removing, narrowing or adding anything a user sees beyond
+the ask is a product call", which puts the decision with the operator, but
+it is still written prose.
 
 ## Detection failure causes
 
@@ -41,35 +78,46 @@ actually only a test on the rendered row can say the member sees it.
 - **Linter:** `scripts/check-pure-modules-have-callers.sh` and knip see the
   function's caller, not whether its result reaches the screen.
 - **CI:** no component test rendered a filtered row.
-- **Code review:** the glyph change was the visible subject of `9a94594`.
+- **Review:** there was none. `9a945946` went to `main` without a pull
+  request, so no preview showed the operator the row without the chip.
 
 ## Countermeasure
 
-- **Code:** commit `c229a98` (PR #151) — the editor passes `memberPart` to each
-  row and the row renders it under the title.
+Commit `c229a98` (PR #151): the editor passes `memberPart` to each row and
+the row renders it under the title.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — a component test on the rendered row)
+**Type:** detection (level 4), a component test on the rendered row.
 
-**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `bd60cb7`
+**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154),
+commit `bd60cb7`
 
-**The actual fix:**
+PR #154 added a test that the row names the member's instruments. The
+redesign of PR #216 (`de91fdfe8`) replaced it with the test that holds
+today, `SetlistEntryRow.test.tsx:172`:
 
-```diff
-+  it('names what that member plays on the song', () => {
-+    render(<SetlistEntryRow {...buildProps(['Bass', 'Backing vocals'])} />);
-+    expect(screen.getByText('Bass + Backing vocals')).toBeTruthy();
-+  });
+```ts
+it('shows the instruments of the chosen member in place of the band lineup', () => {
+  renderRow(buildProps({ isMemberView: true, heldInstruments: [HELD_BASS, HELD_LEAD_VOCALS] }));
+  expect(screen.getByRole('img', { name: 'Bass' })).toBeTruthy();
+  expect(screen.getByText('Lead vocals')).toBeTruthy();
 ```
 
-Removing the label from the row fails this test (checked by hand on
-2026-10-10). The *my part* journey of `pnpm run task-speed` covers the same
-answer end to end, by hand only.
+It holds this row only. It would not stop the next deliberate removal of a
+user-visible property, which is the cause above.
 
-**Sibling defects swept:** the same sweep found `mastery.subtitle` and
-`scaffold.subtitle`, two messages no component rendered; removed in `d26622c`.
+**Proposed:** make a dropped property reach the operator by structure.
+`check-pr-body.ts` already parses the body and runs on `gh pr create`
+(`scripts/hooks/checks/gh-pr-create.core.ts`). Have it read the branch's
+commit messages and refuse a body when a commit lists a property the old
+code carried and the new one does not, unless the body's decisions table or
+question block names it. A user-visible removal could then not reach a
+merge without appearing where the operator decides. A commit pushed to
+`main` without a pull request, as `9a945946` was, would still pass it.
 
-## See also
-
-- [`the-audit-that-measured-buttons-not-jobs.md`](./the-audit-that-measured-buttons-not-jobs.md)
+**Similar instances:** the same sweep found `mastery.subtitle` and
+`scaffold.subtitle`, two messages no component rendered, removed in
+`d26622c`. `git log --grep='carried and this one does not'` lists two
+commits on `main` that recorded a dropped property in their body, this one
+included (measured 2026-11-27).

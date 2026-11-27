@@ -5,8 +5,8 @@ detected-at: review
 severity: low
 related-pr: '#118, #163, #167'
 fix-commits: [self]
-eradication-level: 2
-eradication-paths: [.claude/skills/adr/SKILL.md, scripts/check-numbered-sequences.sh]
+eradication-level: 1
+eradication-paths: [.claude/skills/adr/SKILL.md, scripts/check-adr-numbers-resolve.sh, scripts/check-numbered-sequences.sh]
 time-to-detect: hours
 tags: [adr, git, agents, orchestrator, meta]
 zone: docs/adr
@@ -15,78 +15,77 @@ recurs: [an-adr-number-goes-to-whoever-writes-it-first]
 
 # The reservation nobody else could read
 
-## Symptom
+## User impact
 
-A coordinator running twelve agents reserved ADR numbers by message: 0028
-for Sentry, 0029 for weak point management, 0030 for knowledge triggers. In
-the meantime a kaizen pull request, #167, which never saw the message, merged
-its own `2026-10-12T0032-tailwind-merge-resolves-class-conflicts.md`. The Sentry branch
-renumbered to 0031, and #118's three ADRs moved to 0032 to 0034. Each move
-touches the file name, its heading and every citation.
+The operator's pull requests carried renumbered ADRs, and every citation of
+them had to move (measured in the session).
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| ADR numbers on the coordinator's branches | 0028 taken by kaizen PR #167. The Sentry branch renumbered to 0031, and #118's three ADRs moved to 0032 to 0034 | Each branch keeps the id it wrote, and no citation moves |
 
-1. **Why did 0028 go to the wrong record?** #167 took the next number on
-   main, which was correct from where it stood.
-2. **Why did it not know 0028 was reserved?** The reservation was a message
-   in one conversation, readable by the agents in it and by nobody else.
-3. **Why was a reservation needed?** The `/adr` skill picks the highest
-   number in the local `docs/adr` plus one, and the local folder cannot see
-   other branches, so parallel branches all pick the same number.
+Each move touched the file name, its heading and every citation. Only parallel
+branches that each wrote an ADR were affected.
 
-**Root cause:** the coordinator thought a reservation was the way to keep
-parallel branches apart, but only a pushed branch is visible to every agent,
-and the allocation step read only its own checkout.
+## Causal chain
+
+- PR #167 merged ADR 0028, a number the coordinator had given to Sentry.
+  - #167 took the highest number on its checkout plus one, which was correct
+    from where it stood.
+    - It never saw the reservation. The coordinator had reserved 0028 for
+      Sentry, 0029 for weak point management and 0030 for knowledge triggers
+      by message, readable only by the twelve agents in its conversation.
+      - The coordinator reserved numbers because the `/adr` skill's numbering
+        step picked the highest number in the local `docs/adr` plus one, and a
+        local folder cannot see other branches (Machine).
+
+## Root cause of occurrence
+
+*Thought a reservation in the conversation keeps parallel branches apart,
+actually only a pushed file is visible to every agent, and the allocation step
+read only its own checkout.* (Machine)
+
+A sequential id needs one place that knows the last value. The skill's
+allocator had no such place, so any branch that did not share the
+coordinator's conversation computed the same next number (inferred from the
+skill's numbering step as this entry first described it).
 
 ## Detection failure causes
 
 - **CI / pre-commit:** `check-numbered-sequences.sh` refuses two records with
-  one number once both are in one tree, which is after the second author
-  has written, cited and pushed.
+  one number once both are in one tree. That is after the second author has
+  written, cited and pushed.
 
 ## Countermeasure
 
-`plugins/borso-harness/scripts/next-adr-number.sh` fetches every branch on
-origin and prints one more than the highest ADR number in this checkout or on
-any of them. The `/adr` skill's numbering step now runs it, and says not to
-take or hand out numbers by message.
+The first fix, `next-adr-number.sh`, fetched every branch on origin and printed
+one more than the highest ADR number on any of them. It printed `0035` on this
+branch and named #118's branch as the holder of 0034 (measured). It was removed
+in `c54e32da7` (PR #224), when the minute id below made it unnecessary.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — devx check)
+**Type:** structural impossibility (level 1)
 
-> **Superseded mechanism.** `next-adr-number.sh` was removed on 2026-10-29.
-> A new ADR is now named after the UTC minute it was written,
-> `YYYY-MM-DDTHHMM-<slug>.md`, so parallel branches take different ids without
-> reading each other and there is nothing left to allocate. The `/adr` skill's
-> id step runs `date -u +%Y-%m-%dT%H%M`, and `check-numbered-sequences.sh` still
-> refuses two records that land in the same minute. Records `0001` to `0049`
-> kept their numbers.
+**Reference:** `c54e32da7` (PR #224) replaced the allocator. The records 0001
+to 0052 were renamed to minute ids on 2026-11-11.
 
-**Reference:** [PR #173](https://github.com/hugoleborso/borso.fr/pull/173) · commit `self` (this entry ships with it)
+A new ADR is named after the UTC minute it was written,
+`YYYY-MM-DDTHHMM-<slug>.md`. Parallel branches take different ids without
+reading each other, so there is nothing left to allocate or reserve. Step 3 of
+`.claude/skills/adr/SKILL.md` runs `date -u +%Y-%m-%dT%H%M`.
+`check-adr-numbers-resolve.sh` refuses a file that does not start with a
+minute, so a branch cannot fall back to a number.
+`check-numbered-sequences.sh` refuses two records in the same minute. Both run
+in `.husky/pre-commit` (lines 373 and 374).
 
-**The actual fix:**
+> 3. **Pick the id.** Run `date -u +%Y-%m-%dT%H%M` and take what it prints,
+> for example `2026-10-29T1405`.
 
-```bash
-while read -r reference; do
-  consider "$reference" "$(git ls-tree --name-only "$reference" "$ADR_DIRECTORY/" 2>/dev/null || true)"
-done < <(git for-each-ref --format='%(refname:short)' refs/remotes/origin)
-printf '%0*d\n' "$ADR_NUMBER_WIDTH" $((highest + 1))
-```
+**Proof it can fail:** `check-numbered-sequences.sh` lists a minute claimed by
+two files, and `check-adr-numbers-resolve.sh` refuses a numbered file name
+(read in their source this session, not planted).
 
-Run on this branch, it printed `0035` and named
-`origin/claude/shared-availability-calculator-dfout2`, #118's branch, as the
-holder of 0034, a number main does not have yet.
-
-It takes the highest number on any branch, stale ones included. A skipped
-number costs nothing, and the sequence already skips 0024 and 0025. Two
-agents that both write an ADR before either pushes can still collide, and
-`check-numbered-sequences.sh` still refuses the second.
-
-**Sibling defects swept:** migrations are the other numbered sequence that
+**Similar instances:** migrations are the other sequence
 `check-numbered-sequences.sh` covers. They are numbered per app, and no
-coordinator has reserved one, so they are left as they are.
-
-## See also
-
-- [`an-adr-number-goes-to-whoever-writes-it-first.md`](./an-adr-number-goes-to-whoever-writes-it-first.md)
+coordinator has reserved one, so they keep plain numbers.

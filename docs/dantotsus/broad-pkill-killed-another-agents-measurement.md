@@ -4,115 +4,98 @@ introduced-at: implementation
 detected-at: local
 severity: medium
 related-pr: '#40'
-fix-commits: [cac22f1e9b]
+fix-commits: [cac22f1e9b, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-no-broad-kill.sh]
+eradication-paths: [scripts/hooks/checks/no-broad-kill.core.ts, scripts/hooks/hook-events.ts, scripts/dev-server.sh]
 time-to-detect: minutes
 tags: [agents, sandbox, processes, hooks, tooling]
-zone: .claude/hooks
+zone: scripts/hooks
 ---
 
 # A broad `pkill` killed another agent's twenty-minute measurement
 
-## Symptom
+## User impact
 
 A `last-loop-lepin` mutation baseline running in the background died at 79%,
-1533 of 2200 mutants tested, nineteen minutes in. The task notification said
-only:
+1533 of 2200 mutants tested, nineteen minutes in (from its log). The operator
+lost the measurement and the session lost the time to rerun it. The task
+notification said only:
 
 ```
 Background command "Run last-loop-lepin mutation baseline" failed with exit code 144
 ```
 
-The log's last line was an ordinary progress line. No Stryker error, no stack,
-no out-of-memory notice — the process simply stopped mid-count. From the
-victim's side there was nothing to diagnose: a signal death looks identical to
-whatever the reader assumes it is, and the first assumption was a crash in the
-tool.
+| | Seen | Expected |
+| --- | --- | --- |
+| A background Stryker run while other agents work on the same machine | It stops mid-count, no error in its log | It runs to 2200 of 2200 and writes its score |
 
-The cause was in another agent's transcript, not in any log the victim could
-read. It had run `pkill -f "stryker run"` to stop its own run, and the pattern
-matched all three Stryker processes on the machine.
+## Causal chain
 
-## Root-cause chain
+- The mutation baseline stopped at 1533 of 2200 mutants with exit code 144.
+  - It received a signal (144 is 128 + 16), and its log ended on an ordinary progress line.
+    - Another agent, stopping its own Stryker run, matched every Stryker process on the machine by name.
 
-1. **Several agents share one 4-core sandbox.** Four were running: three
-   subagents on separate applications plus the parent session's own
-   measurements. Nothing in the environment separates their processes.
-2. **No name pattern distinguishes one agent's process from another's.**
-   `node`, `vite`, `vitest` and `stryker run` appear identically in every
-   agent's process list, because they are all running the same monorepo's
-   tooling. `pkill -f "stryker run"` is precise about *what kind* of process to
-   kill and says nothing about *whose*.
-3. **The pattern kill is the obvious idiom for stopping a background job.** An
-   agent that started something with `cmd &` and did not keep `$!` has no PID
-   to work with, and `pkill -f` is what everyone reaches for. The safe form —
-   capture the PID at launch, or find the process holding your own port — takes
-   deliberate thought at the moment you start the job, not the moment you want
-   to stop it.
-4. **The blast radius is invisible to the person causing it.** `pkill` prints
-   nothing about how many processes it matched. The agent that ran it saw a
-   clean exit and moved on.
+      ```sh
+      pkill -f "stryker run"   # ❌ matched all three Stryker runs, two of them other agents'
+      ```
+
+      - That agent held no handle to the job it had started, so a name was its only way to reach it. Four agents shared one 4-core sandbox and ran the same monorepo's tooling, so a name pattern said what kind of process to kill and nothing about whose. (Machine)
+
+## Root cause of occurrence
+
+*Thought `pkill -f "stryker run"` stopped the Stryker run it had started, actually it matched every process whose command line held the pattern, on a machine three other agents shared.*
+
+Machine. The harness gave an agent no way to name its own background job. Every
+process looked the same in the process list, and the obvious idiom for
+stopping a job without its PID is a pattern kill. `pkill` prints nothing about
+how many processes it matched, so the agent saw a clean exit.
 
 ## Detection failure causes
 
-- **The victim gets an exit code and no cause.** 144 is `128 + 16`, a signal
-  death, but the number alone does not say who sent it or why. Reading the log
-  tail suggests the tool crashed, which is the wrong investigation.
-- **The evidence lives in a transcript the victim cannot read.** The only
-  reason this was diagnosed at all is that the agent responsible wrote the
-  incident into `KAIZEN.md` itself. Without that honesty it would have been
-  filed as a flaky Stryker run and the same kill would have happened again.
-- **A single-machine assumption that used to be true.** Every earlier session
-  on this repository ran one thing at a time, so a broad kill was safe for as
-  long as anybody had been writing them.
+- **The victim's notification:** an exit code and no cause. 144 says a signal arrived, not who sent it, and the log tail suggests the tool crashed.
+- **The evidence:** it lived in the other agent's transcript, which the victim could not read. It surfaced only because that agent wrote the incident into its friction log.
+- **Earlier sessions:** they ran one thing at a time, so a pattern kill had always been safe.
 
 ## Countermeasure
 
-A `PreToolUse(Bash)` hook, `.claude/hooks/pretool-no-broad-kill.sh`, refuses
-`pkill`, `killall`, `killall5`, and `pgrep … | xargs kill`. The rejection
-message names the two safe alternatives rather than only stating the ban:
-
-```
-kill a PID you own:          pnpm dev & pid=$!   …   kill "$pid"
-or the one holding YOUR port: ss -lptn 'sport = :5173'
-```
-
-Naming the port form matters. The case the hook has to survive is an agent
-that has genuinely lost the PID of its own dev server — told only "do not use
-pkill", it has no next move and will either give up or work around the hook.
+Commit `cac22f1` added a `PreToolUse(Bash)` hook,
+`.claude/hooks/pretool-no-broad-kill.sh`, that refused `pkill`, `killall`,
+`killall5` and `pgrep … | xargs kill`, and named the safe alternatives in its
+refusal.
 
 ## Eradication
 
-**Level 2 — DevX check.** The command cannot run. Verified against the three
-dangerous forms and five benign ones:
+**Type:** DevX check (level 2), with the cause itself subtracted.
+
+**Reference:** commit `862d7c1bb` (2026-10-05) moved the harness into a plugin
+and deleted `.claude/hooks/`. The check holds today in
+`scripts/hooks/checks/no-broad-kill.core.ts`, registered in
+`scripts/hooks/hook-events.ts` since commit `458e886c4`. It refuses
+`pkill`, `killall`, `killall5`, `pgrep … | xargs kill` and
+`agent-browser close --all`.
+
+The deeper cause is gone too. An agent now has a handle to what it starts.
+The main session stops a `run_in_background` job with `TaskStop` and its task
+id. A dev server starts with `scripts/dev-server.sh start <app>`, which owns
+its process group, and `scripts/dev-server.sh stop <app>` stops exactly that
+group. The refusal names both.
+
+**Proof it can fail:** the check run on three commands (measured on
+2026-11-27, with a probe calling `noBroadKill.run`):
 
 ```
-exit=1  pkill -f "stryker run"
-exit=1  killall node
-exit=1  pgrep -f vite | xargs kill -9
-exit=0  kill "$pid"
-exit=0  kill -9 12345
-exit=0  pnpm dev
-exit=0  git log --oneline | head
-exit=0  echo "the pkillers are coming"
+"pkill -f \"stryker run\""          {"kind":"refuse","rule":"no-broad-kill",…}
+"pgrep -f vite | xargs kill"        {"kind":"refuse","rule":"no-broad-kill",…}
+"kill $(pgrep -f \"stryker run\")"  {"kind":"pass"}
 ```
 
-The last case is the one that decides the regex: matching `pkill` as a bare
-word rather than a substring keeps `pkillers` from tripping it. A command whose
-*prose* contains the word `pkill` will still be blocked, which is a false
-positive worth accepting at this frequency.
+The last command has the same blast radius as `pkill` and passes.
 
-Level 1 was considered and rejected: making the syscall unreachable would mean
-sandboxing each agent's process namespace, which is not ours to change from
-inside the repository.
+**Proposed:** `no-broad-kill.core.ts` refuses any `pgrep` whose output feeds
+`kill`, through a pipe or a command substitution. With `TaskStop` and
+`dev-server.sh stop` in place, no legitimate stop needs a name, so the check
+can refuse the whole family rather than chase its spellings.
 
-## What to check next time
-
-Before stopping a background job, ask whose it is. On a shared machine the
-question "which processes match this pattern" is never the same as "which
-processes did I start", and only the second one is safe to act on.
-
-More generally: when a long-running background task dies with a bare non-zero
-exit and a log that ends mid-progress, suspect a signal before suspecting the
-tool. `128 + n` exit codes are somebody else's decision, not a crash.
+**Similar instances:** `agent-browser close --all` closed every agent's
+browser session, the same mistake on another shared resource. The check
+refuses it too.

@@ -16,88 +16,68 @@ recurs: none (the first entry about an operator preference the procedure did not
 
 # The question I answered instead of obeyed
 
-## Symptom
+## User impact
 
-A day after ADR-2026-10-28T2126 was written and its implementation merged, the operator
-read the pull request and asked:
+A day after ADR-2026-10-28T2126 was written and its implementation merged, the
+operator read the pull request and asked (translated): "One function per
+application: I thought I said I wanted a shared one, why did we decide the
+other way?"
 
-> One function per application : je croyais avoir dit que je voulais un shared,
-> pourquoi on a tranché dans l'autre sens ?
+| | Seen | Expected |
+| --- | --- | --- |
+| The operator proposes a shared reader Lambda during `/adr` | The ADR rebuts it under *Why one function per application*, and per-app ships | The walk asks him to accept or reject his own candidate before the decision is written |
 
-They had said it. During the `/adr` walk their input was:
+He had said it. During the walk his input was (translated): "One reader Lambda
+per app, really? Why not one Lambda in shared infra?" His next message, "Yes,
+it replaces it", was about ADR-2026-10-25T0054 being superseded, not about
+this. Per-app shipped with no ratification. Every ADR written through the
+walk was exposed, since none recorded who raised which option.
 
-> Une lambda lectrice par app, vraiment ? Pourquoi pas une lambda dans shared
-> infra ?
+## Causal chain
 
-That was treated as a question to rebut. Three reasons were written into the
-ADR under *Why one function per application*, the walk continued, and their
-next message — *"Oui, il le remplace"* — was about ADR-2026-10-25T0054 being superseded,
-not about this. Per-app shipped with no ratification of any kind.
+- Per-app shipped unratified.
+  - The ADR rejected the operator's option with three reasons under *Why one
+    function per application*, and the walk moved on.
+    - The author read "Why not X?" as a request for reasons and answered it.
+      - The `/adr` skill's five rounds ended at *choose*, and the choosing was
+        the author's. Its Round 5 treated an option the operator raised like
+        one the author surfaced, so his candidate competed on the author's
+        rubric and lost (Method).
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. **Why did per-app ship unratified?**
-   The operator's preference was recorded as an objection and answered, rather
-   than as an input to the decision.
-2. **Why was it read as an objection?**
-   It was phrased as a question. *"Pourquoi pas X ?"* is grammatically a
-   request for reasons, and answering it with reasons feels like the
-   cooperative move.
-3. **Why did the walk not stop there?**
-   The skill's five rounds end at *choose*, and the choosing is the author's.
-   Nothing in the procedure distinguishes an option the operator raised from
-   one the author surfaced, so the operator's own candidate competed on equal
-   terms with the others and lost to the author's own rubric.
-4. **Why did the ADR not expose it?**
-   The template has *Alternatives considered*, and the rejected option went
-   there, correctly. Nothing in the template records **who** proposed an
-   option, so a page that reads as a balanced survey is also a page where the
-   operator's preference is invisible.
-5. **Why did review not catch it?**
-   The pull request body carried the decision table; the operator read it a day
-   later and caught it. That is the system working, but it worked by the
-   operator rereading their own week rather than by anything in the artefact.
+*Thought the operator's question was an objection to answer, actually it was
+a preference to weigh, and only his answer can reject it.* (Method)
 
-**Root cause:** thought the operator's question was an objection to answer,
-actually it was a preference to weigh, and the ADR's own format gave the
-decision no way to say which option came from whom.
+The procedure the author followed gave them the last word on every option.
+Round 5 of `.claude/skills/adr/SKILL.md`, before the fix, said to score the
+options and pick the winner, with no rule for an option the operator named
+(inferred from the diff of the fix, which adds that rule to Round 5).
 
 ## Detection failure causes
 
-- **The `/adr` skill:** requires alternatives and consequences. It has no rule
-  about an alternative the operator named.
-- **The ADR template:** *Alternatives considered* has `name`, `summary`,
-  `strengths`, `costs`, `rejection-rationale`. No provenance field.
-- **`/open-pr`:** copies the decision through faithfully. Faithful to a record
-  that was already missing the point.
-- **The operator:** caught it, a day late, by rereading. The only mechanism
-  that worked.
+- **ADR template:** *Alternatives considered* had `name`, `summary`,
+  `strengths`, `costs` and `rejection-rationale`, and no provenance field. A
+  page that read as a balanced survey hid whose preference it rejected.
+- **`/open-pr`:** it copies the ADR's decision into the body faithfully, so
+  the body hid the same thing.
+- **Review:** the operator caught it a day late, by rereading his own week.
+  Nothing in the artefact pointed at the rejected preference.
 
 ## Countermeasure
 
-- **Code:** the skill and the template now mark an option the operator raised,
-  and rejecting one is a ratification step rather than a paragraph.
-- **Operator action:** none.
+The skill and the template now mark an option the operator raised, and
+rejecting one is a ratification step rather than a paragraph. ADR-2026-10-28T2126
+now records that the operator raised the shared variant, and his answer when
+asked again a day later (translated): "OK, we keep it per app."
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** instruction change (level 5 — the floor, and honestly the floor)
+**Type:** knowledge (level 5)
 
-The `/adr` skill is markdown the model executes; there is no runtime that could
-refuse an ADR for missing a ratification, because nothing but a model reads the
-walk. A gate could check the *artefact* — an `Operator's answer` field absent
-where `Raised by: operator` appears — and that is worth building the day a
-second ADR trips this. One instance is not a pattern, and a gate on a corpus of
-one is the mistake
-[`the-check-that-cost-more-than-the-defect.md`](./the-check-that-cost-more-than-the-defect.md)
-is about.
+**Reference:** the commit adding this file (PR #220).
 
-**Reference:** PR #220 · commit `self`
-
-**The actual fix:** two changes to the `/adr` skill, in the plugin.
-
-The template's alternatives gain a provenance line, so a page that rejects the
-operator's own candidate says so on its face:
+The template's alternatives gain a provenance line and an answer field:
 
 ```diff
  ### Option B — <name> (rejected)
@@ -105,26 +85,25 @@ operator's own candidate says so on its face:
 +- **Raised by:** operator | author
  - **Summary:** …
  - **Rejection rationale:** …
++- **Operator's answer:** required when "Raised by" is operator
 ```
 
-And Round 5 gains the rule the walk was missing:
+Round 5 gains the rule the walk was missing:
 
 > **An option the operator raised is not rejected by argument.** When the
 > winner is not the option they named, say so in one line, give the reason, and
-> ask. Their yes is what rejects it; silence is not. An ADR whose chosen path
-> beats an operator-raised alternative, with no recorded answer, is not
-> finished.
+> ask. Their yes is what rejects it; silence is not.
 
-The asymmetry is deliberate. An author-raised alternative is rejected by the
-rubric, which is what the rubric is for. An operator-raised one is rejected by
-the operator.
+**Proof it can fail:** none. No check reads the fields yet.
 
-**Sibling defects swept:** ADR-2026-10-28T2126 itself. Its *Why one function per
-application* section now records that the operator raised the shared variant,
-and the answer they gave when asked again a day later — *"Ok on garde par
-app"* — which is the ratification the walk never collected.
+**Similar instances:** the same weak point came back as ADR-2026-11-03T1438,
+whose criteria were the author's. That recurrence got a gate,
+`scripts/check-adr-criteria.sh`, run by `.husky/pre-commit:375`.
+`grep -c "Raised by:\*\* operator" docs/adr/*.md` finds operator-raised
+options in ten records today, so the original reason for level 5, "a gate on a
+corpus of one", no longer holds.
 
-## See also
-
-- [`docs/adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md`](../adr/2026-10-28T2126-agents-read-production-through-an-invoked-reader-lambda.md)
-- [`docs/quality/weak-points.md`](../quality/weak-points.md) — `prose-stands-in-for-a-check`.
+**Proposed:** extend `scripts/check-adr-criteria.sh` to refuse an option
+marked `(rejected)` whose block has `Raised by:** operator` and no
+`Operator's answer`. An unratified rejection of the operator's own candidate
+could then not be committed. The template already carries both fields.

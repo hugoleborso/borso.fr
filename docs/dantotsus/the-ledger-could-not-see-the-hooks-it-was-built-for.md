@@ -4,19 +4,20 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#101'
-fix-commits: [ee6308b8ec]
+fix-commits: [ee6308b8ec, 320f1cdca, c54e32da7]
 eradication-level: 1
-eradication-paths: [scripts/standards/enforcement-ledger.ts]
+eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: minutes
 tags: [ci, standards, hooks, tooling]
-zone: scripts/standards/enforcement-ledger.ts
+zone: scripts/standards
 ---
 
 # The ledger could not see the hooks it was built for
 
-## Symptom
+## User impact
 
-CI refused a commit that added a working, tested, cited gate:
+The agent on PR #101 had a working, tested gate refused by CI twice, with
+opposite complaints (measured, in that run).
 
 ```
 (none): `scripts/pr/check-pr-body.ts` runs and no standard says why
@@ -24,109 +25,92 @@ Wrote docs/standards/enforcement-ledger.md (1 problem(s)).
 ##[error]Process completed with exit code 1.
 ```
 
-Citing it in `docs/standards/12-linting-and-gates.md` then produced the
-opposite complaint, from the same run:
+Citing it in `docs/standards/12-linting-and-gates.md` then produced:
 
 ```
 12-linting-and-gates.md: `scripts/pr/check-pr-body.ts` exists but runs nowhere
 ```
 
-The script did run. `.claude/hooks/pretool-gh-pr-create.sh` calls it on every
-`gh pr create` it guards, and that call is the hook's entire body.
+| | Seen | Expected |
+| --- | --- | --- |
+| A script that an agent hook calls | "runs nowhere" | counted as running |
 
-## Root-cause chain
+The script did run. `.claude/hooks/pretool-gh-pr-create.sh` called it on every
+`gh pr create` it guarded.
 
-1. **Why did the ledger say the script runs nowhere?**
-   `listInvocationSites()` reads two directories: `.husky` and
-   `.github/workflows`. A script named in neither is, to the ledger, a script
-   nothing invokes.
-2. **Why only those two?** They were the two places a mechanism ran when the
-   ledger was written. Git hooks and CI were the whole enforcement surface.
-3. **Why is that no longer true?** `.claude/hooks/` now holds eleven
-   PreToolUse and PostToolUse hooks that refuse commands outright — a broad
-   `kill`, a discarding `reset`, a swallowed push, a merge that deploys prod, a
-   pull-request body carrying markup the server deletes. They are enforcement
-   by any reading: they decide, they refuse, and `scripts/check-hook-decisions.sh`
-   holds each of them to a contract.
-4. **Why did nobody notice the blind spot until now?** Every earlier hook
-   enforced its rule *inline*, in its own shell. This was the first one whose
-   body was a call to a script that also had to be cited in a standard, so it
-   was the first time the ledger had to answer *does this script run* about a
-   hook.
+## Causal chain
 
-**Root cause:** thought the enforcement surface was git hooks and CI, actually
-the agent hooks became a third one and the ledger's model of "runs" was never
-extended, so a mechanism could be simultaneously required by a standard and
-invisible to the file that checks standards against mechanisms.
+- The ledger reported a running script as running nowhere.
+  - `listInvocationSites()` read two directories, `.husky` and
+    `.github/workflows`. A script named in neither was, to the ledger, a
+    script nothing invokes. The lines, from `a9c72cedd`:
+
+    ```ts
+    const HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.husky');
+    const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
+    ```
+
+    - Commit `a9c72cedd` (2026-08-15) wrote that list by hand, as a second
+      copy of where the repository runs its mechanisms. At that commit
+      `.claude/hooks/` already held two refusing hooks,
+      `pretool-gh-pr-create.sh` and `pretool-no-broad-kill.sh`
+      (`git ls-tree --name-only a9c72cedd .claude/hooks/`, measured).
+      - The writer left the agent hooks out although they were in the tree.
+        A hand-kept list of surfaces held what its writer had in mind that
+        day, and nothing compared it with the repository. (Machine)
+    - PR #101 was the first time a standard cited a script that only an agent
+      hook called, so the stale list met its first case.
+
+## Root cause of occurrence
+
+*Thought the enforcement surface was git hooks and CI, actually agent hooks
+under `.claude/hooks/` already refused commands when the ledger was written.*
+(Machine)
+
+The ledger kept its own list of where mechanisms run instead of reading it
+from the repository. `git ls-tree` at `a9c72cedd` shows the two hooks beside
+the commit that omitted them. Had the writer counted agent hooks as
+enforcement, the list would have held three directories from the start.
 
 ## Detection failure causes
 
-- **Typing:** the invocation sites are a list of directory paths. Nothing in
-  the type says the list is meant to be exhaustive over enforcement surfaces.
-- **Linter / static analysis:** no rule can know that a directory of shell
-  scripts is an enforcement surface.
-- **Functional validation locally:** pre-commit runs the ledger and it passed,
-  because before this commit no standard cited a script that only a hook
-  invoked. The gap was latent, not dormant — it needed a first case to appear.
-- **CI (tests / build):** CI is where it fired, which is the ledger working. It
-  fired on the true half of the contract (a mechanism no standard explains) and
-  then on the false half (a mechanism that does run, reported as running
-  nowhere).
-- **Code review:** the ledger's own prose in CLAUDE.md says it "fails on a rule
-  that does not exist, one that runs nowhere, one that reaches three
-  applications out of four, and on a mechanism that runs and no standard
-  explains" — a description of the intent that a reader would not test against
-  the directory list.
+- **Typing:** the invocation sites are a list of paths. Nothing in the type
+  says the list is meant to cover every enforcement surface.
+- **Local:** pre-commit ran the ledger and it passed, because before PR #101
+  no standard cited a script that only a hook invoked.
+- **CI:** it fired, on both halves of its contract, once the first case
+  existed.
+- **Review:** `CLAUDE.md` described the ledger by its intent, "fails on ...
+  one that runs nowhere", and a reader would not test that against the
+  directory list.
 
 ## Countermeasure
 
-- **Code:** commit `ee6308b` — the checker is cited in
-  `docs/standards/12-linting-and-gates.md` as a `script:` bullet, and pre-commit
-  runs it over the pull-request template the skill drafts from, so the
-  mechanism has a gate the ledger can see in `.husky`. That made CI green
-  while leaving the blind spot in place.
+Commit `ee6308b` cited the checker in `docs/standards/12-linting-and-gates.md`
+and ran it in pre-commit over the pull-request template, so the ledger could
+see it in `.husky`. Commit `320f1cdca` added `.claude/hooks` as a third invocation
+directory.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1)
 
-**Reference:** [PR #101](https://github.com/hugoleborso/borso.fr/pull/101) ·
-the kaizen branch commit below
-
-The countermeasure gave this one script a `.husky` invocation, which is a
-workaround: a hook-only mechanism would still read as dead, and the next author
-would either invent a gate to satisfy the ledger or delete a bullet that was
-true. The eradication makes the ledger's model match the repository's, so a
-hook is a place a mechanism runs.
-
-**The actual fix:**
+**Reference:** commit `c54e32da7` (PR #224) deleted
+`scripts/standards/enforcement-ledger.ts` and its `--check` by operator
+decision, among the gates that only guarded the harness. It removed the
+ledger's call from `.husky/pre-commit` and `.github/workflows/ci.yml`:
 
 ```diff
- const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
-+const AGENT_HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.claude', 'hooks');
-
-   for (const [directory, prefix] of [
-     [HOOKS_DIRECTORY, '.husky'],
-     [WORKFLOWS_DIRECTORY, '.github/workflows'],
-+    [AGENT_HOOKS_DIRECTORY, '.claude/hooks'],
-   ] as const) {
+-      - run: pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
 ```
 
-Verified not to cascade: with the third directory in scope the ledger reports
-*"Every standard names a mechanism that exists and runs"* — no hook-invoked
-mechanism was left unexplained by a standard, and no standard gained a false
-citation.
+A ledger that does not exist cannot hold a stale model of the repository, and
+it cannot refuse a commit for one. The agent hooks have moved again since,
+from `.claude/hooks/` to `scripts/hooks/` in `458e886c4`. With the ledger in
+place, that move would have blinded it a second time.
 
-**Sibling defects swept:** the pre-commit template check stays. It was written
-to satisfy the ledger but it is a real gate on its own terms — a template that
-drifts outside the budget teaches every body drafted from it to be refused, and
-nothing else would say so.
-
-## See also
-
-- [`the-tooling-that-gates-everything-was-checked-by-nothing`](./the-tooling-that-gates-everything-was-checked-by-nothing.md)
-  — the gates themselves as an unchecked surface.
-- [`the-gate-that-was-never-pointed-at-the-code`](./the-gate-that-was-never-pointed-at-the-code.md)
-  — a gate whose scope did not cover what it claimed to.
-- [`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md)
-  — hooks as an enforcement surface with its own failure modes.
+**Similar instances:** `grep -rn "enforcement-ledger" .husky .github scripts`
+finds no caller today. The same shape, a check holding a hand-kept copy of
+another file's facts, is the subject of the *Eradication* rule in
+`.claude/skills/dantotsu/SKILL.md`: "A list kept by hand is not an
+eradication."

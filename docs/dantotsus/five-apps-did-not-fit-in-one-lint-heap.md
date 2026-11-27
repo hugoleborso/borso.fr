@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#110'
-fix-commits: [3d7adaa065]
-eradication-level: 1
-eradication-paths: [scripts/lint-repository.sh]
+fix-commits: [3d7adaa065, 9dcf74547]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: days
 tags: [ci, eslint, gates, banana-rush]
 zone: .github/workflows/ci.yml
@@ -14,91 +14,60 @@ zone: .github/workflows/ci.yml
 
 # Five apps did not fit in one lint heap
 
-## Symptom
+## User impact
 
-From PR #110 onwards, every push to main ended with a red `build` job:
+From PR #110 onwards, every push to `main` ended with a red `build` job, so `main` could not be trusted as green.
 
-```
-FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
-ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command was killed with SIGABRT (Aborted): eslint . --max-warnings 0 --cache …
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| Four consecutive runs on `main`, and the PR #119 kaizen branch | `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`, then `Command was killed with SIGABRT (Aborted): eslint . --max-warnings 0 --cache …` | The lint step reports rule violations or passes |
 
-Four consecutive runs on main failed the same way, and the PR #119 kaizen
-branch inherited it.
+## Causal chain
 
-## Root-cause chain
+- The `build` job on `main` aborted with an out-of-memory error.
+  - ESLint reached Node's default heap limit of about 4 GB on the runner.
+    - typescript-eslint builds a TypeScript program for each tsconfig it meets before any rule runs. `eslint .` met every workspace's tsconfigs and kept all their programs alive in one process until it exited.
+      - PR #110 added banana-rush, the fifth application, with three tsconfigs of its own. The sum crossed the limit, while each workspace alone stayed under it. pragma, the largest, linted in 73 s under the same 4 GB.
+        - The faulty line, in `.github/workflows/ci.yml`:
 
-1. **Why did ESLint die?** It reached Node's default heap limit of about
-   4 GB on the runner.
-2. **Why did it need that much?** The configuration is type-aware: before
-   any rule runs, typescript-eslint builds a TypeScript program for each
-   tsconfig it meets. `eslint .` meets every workspace's tsconfigs and keeps
-   all their programs alive in one process until it exits.
-3. **Why now?** PR #110 added banana-rush, the fifth application, with
-   three tsconfigs of its own. The sum crossed the limit, while each
-   workspace alone stays under it — pragma, the largest, lints in 73 s
-   under the same 4 GB.
-4. **Why did PR #110 merge with it?** Its own `ci` runs were green on the
-   branch (run 35540614177 among them), and the first run on main was red.
-   The likeliest difference is the ESLint cache: a pull-request run restores
-   one, and a warm cache spares the type-aware pass most files, while the run
-   on main started from a different key. That explanation is not verified
-   from here; what is verified is that a cold whole-repository run exhausts
-   a 4 GB heap.
+          ```yaml
+          - run: pnpm exec eslint . --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
+          ```
 
-**Root cause:** thought one `eslint .` grew with the repository linearly
-and harmlessly, actually its memory is the sum of every workspace's
-TypeScript program, and the fifth application tipped it over a fixed
-ceiling.
+          - Commit `314f24821` (2026-08-08, "replace biome with eslint and prettier", written by an agent) introduced one `eslint .` over the whole repository. Four applications fitted then.
+  - Branch for the merge. PR #110's own `ci` runs were green on the branch (run 35540614177 among them). The likeliest difference is the ESLint cache. A pull-request run restored a warm one that spared the type-aware pass most files, while the run on `main` started from a different key (inferred, not verified). What is verified is that a cold whole-repository run exhausts a 4 GB heap.
+
+## Root cause of occurrence
+
+*Thought one `eslint .` grows with the repository linearly and harmlessly, actually its memory is the sum of every workspace's TypeScript program, so each new application moves it toward a fixed ceiling.* (Material)
+
+The agent that wrote the line in `314f24821` replaced Biome, which builds no TypeScript program. Nothing in its brief carried typescript-eslint's cost model, in which each tsconfig adds a program held in memory (inferred from the commit, whose message weighs rules and speed and never memory).
 
 ## Detection failure causes
 
-- **CI:** it did detect it, on main, and nothing acted on four red runs.
-- **Local:** pre-commit lints staged files only, so no local command ever
-  ran the whole repository in one process.
-- **Cache:** if the explanation above holds, a warm cache hides the
-  cold-run cost, so a green pull-request run says little about main's.
+- **Local:** pre-commit linted staged files only, so no local command ran the whole repository in one process.
+- **CI on the pull request:** a warm cache hid the cold-run cost, if the explanation above holds, so a green pull-request run said little about `main`'s.
+- **CI on `main`:** it detected the failure four times. A red run on `main` blocks no later merge, because each pull request is gated on its own checks, so later pull requests merged on top (inferred).
 
 ## Countermeasure
 
-- **Code:** commit `3d7adaa` replaces the single run with
-  `scripts/lint-repository.sh`.
+Commit `3d7adaa` replaced the single run with `scripts/lint-repository.sh`, one ESLint process per directory under `apps/` and `infra/`, then one for everything else. Each process freed its programs on exit, so the peak was the largest workspace rather than the sum. Reproduced locally with `--max-old-space-size=4096`: `eslint .` died at 215 s, the split passed cold in 190 s.
 
-## Eradication (mandatory — code-level)
+Raising the heap was rejected. It moves the ceiling by an amount that depends on the runner's memory, which nothing in this repository can see.
 
-**Type:** code diff (level 1 — structural impossibility)
+## Eradication
 
-**Reference:** commit `3d7adaa`
+**Type:** none holds today (level 5 in the front matter). The level 1 split shipped for ESLint and was replaced on 2026-10-27.
 
-**The actual fix:** one ESLint process per directory under `apps/` and
-`infra/`, then one for everything else with those two ignored. Each
-process frees its programs when it exits, so the peak is the largest
-workspace rather than the sum:
+**Reference:** commit `3d7adaa` (the split), then commit `9dcf74547` (PR #197), which replaced ESLint with oxlint.
 
 ```diff
 -      - run: pnpm exec eslint . --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
 +      - run: scripts/lint-repository.sh
 ```
 
-Reproduced locally with `--max-old-space-size=4096`: `eslint .` dies at
-215 s, the split passes cold in 190 s, and errors planted in an app and in
-`scripts/` both fail it. Coverage is the whole repository by construction,
-and a sixth application is linted in its own process without an edit, so
-adding apps can no longer exhaust a shared heap.
+The split held until PR #197. Since then `scripts/lint-repository.sh` runs one process, `oxlint --type-aware .`, over the whole repository, and tsgolint builds each tsconfig's program with the TypeScript 7 compiler ([ADR 2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md)). The pre-commit sibling, `scripts/lint-changed-files.sh`, is deleted, and staged files go to `scripts/lint-staged-files.sh`. The property the split held, a peak bounded by the largest workspace, went with it. No measurement of tsgolint's peak memory against the runner is recorded, so the margin is unknown. Today one process again holds every workspace, and no check, alarm or triggered knowledge entry bounds its memory.
 
-Raising the heap was rejected: it moves the ceiling by an amount that
-depends on the runner's memory, which nothing in this repository can see.
+**Proposed:** wrap the lint step in CI with `/usr/bin/time -v`, read its maximum resident set size, and fail above a budget computed from the runner's memory. A new application would then fail at a named number, with the margin visible in every run, instead of aborting with a heap error.
 
-**Sibling defects swept:** `pnpm run lint` and `lint:fix` called the same
-single run and now call the script.
-
-**Missed sibling, found 2026-10-25:** the pre-commit hook still linted every
-staged file in one process. A kaizen commit touching one file in
-`apps/pragma`, one in `apps/talos` and two in `eslint-rules/` died with
-`JavaScript heap out of memory` before any rule ran. Pre-commit now pipes the
-staged files to `scripts/lint-changed-files.sh`, which groups them by
-workspace the way `lint-repository.sh` does.
-
-## See also
-
-- [`the-hook-that-was-missing-from-its-own-contract.md`](./the-hook-that-was-missing-from-its-own-contract.md) — found in the same sweep.
+**Similar instances:** `grep -rn 'bin/oxlint\|exec oxlint' scripts/*.sh .husky/` finds four type-aware runs. `scripts/lint-repository.sh` (CI) holds the whole repository in one process. `scripts/lint-staged-files.sh` (pre-commit) and `.husky/pre-push` hold every workspace the change touches. `scripts/lint-workspace.sh` holds one workspace.

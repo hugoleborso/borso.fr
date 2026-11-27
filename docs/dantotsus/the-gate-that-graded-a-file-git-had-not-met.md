@@ -31,22 +31,24 @@ but positively asserted it had passed.
 
 ## Causal chain
 
-- The local run reported every changed gated file passing
-  - `quality-datasets.core.ts` was not in the changed set it graded
-    - The changed set came from `git diff --name-only <merge-base> HEAD`
-      - Which compares two commits, so a file that is untracked, staged or
-        modified in the working tree is in neither side of it
-        - And the new dataset builder was untracked at that moment, written
-          minutes earlier in the same session
-          - So Stryker was never pointed at it, `runs` counted the runs that did
-            happen, and the closing message described those
+- The local run reported every changed gated file passing.
+  - Stryker was never pointed at `quality-datasets.core.ts`, and the closing message counted only the runs that happened.
+    - The file was not in the changed set the script graded.
+      - The script built that set with `git diff --name-only <merge-base> HEAD`, which compares two commits, so an untracked, staged or modified file is in neither side:
+
+```bash
+changed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)   # commits only
+```
+
+      - The new dataset builder was untracked at that moment, written minutes earlier in the same session.
 
 ## Root cause of occurrence
 
 *Thought the gate's subject is the branch, actually its purpose is to predict
 the CI run, and CI grades the branch plus everything the push is about to add
-to it.*
+to it.* (Method)
 
+The gate was designed around the wrong unit of work, which is a Method cause.
 The script's own closing line carried the belief out loud:
 
 > no gated file changed between $base and HEAD, so nothing ran; commits only,
@@ -78,7 +80,8 @@ it was.
 
 **Type:** structural impossibility (level 1)
 
-**Reference:** this commit, on the kaizen branch for PR #281.
+**Reference:** the commit adding this file, on the kaizen branch for PR #281.
+`scripts/mutate-changed.sh:50-51` still holds it (read 2026-11-27).
 
 The changed set is now the commits plus the working tree, untracked files
 included, so the local run grades the files CI will grade once they are

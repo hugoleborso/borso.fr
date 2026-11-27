@@ -4,231 +4,97 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#14'
-fix-commits: [6b16fa535f]
+fix-commits: [6b16fa535f, 3d7adaa06, 9dcf74547]
 eradication-level: 1
-eradication-paths: [.husky/pre-commit, scripts/lint-repository.sh]
+eradication-paths: [scripts/lint-repository.sh, .github/workflows/ci.yml, .husky/pre-commit]
 time-to-detect: weeks (3 PRs in)
 tags: [biome, ci, hooks, pre-commit]
 zone: .husky/pre-commit
 weak-point: gate-measures-nothing
 ---
 
-# `biome lint` at root scope was gated by no one — 47 errors sat on `main` in plain sight
+# `biome lint` at root scope was gated by no one, and 47 errors sat on `main` in plain sight
 
-## Symptom
+## User impact
 
-While resolving a merge conflict on PR #14, `pnpm exec biome lint` was
-run from the repo root for sanity. It returned **47 errors** in
-design-export JSX fixtures under `docs/features/borso-fr/12-travaux/
-spec/design-export/project/*`, plus 1 new error in `docs/features/
-borso-fr/front-page-redesign/spec/design-landing.jsx` that this branch
-was adding. The 47 had merged onto `main` via PR #11 and sat there
-silently for two PR cycles.
+The operator's CI reported a green lint on every pull request while `main`
+held 47 lint errors. They were found by chance, running `pnpm exec biome lint`
+from the root while resolving a merge conflict on PR #14 (measured then):
 
 ```
 docs/features/borso-fr/12-travaux/spec/design-export/project/direction-c.jsx:148:9 lint/a11y/useButtonType
   × Provide an explicit type prop for the button element.
 …
 Found 47 errors.
-Found 18 warnings.
 ```
 
-None of these errors was blocking, because no automation was reading
-the output at root scope. The only consumer was a human running the
-command on a whim.
+| | Seen | Expected |
+| --- | --- | --- |
+| A pull request adds a file with lint errors outside any workspace | CI is green and the errors merge | CI fails and names them |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why** did 47 errors live on `main` at root scope?
-   No gate ran `pnpm exec biome lint` from the repo root during the
-   PRs that landed them.
+- 47 lint errors sat on `main` for two PR cycles.
+  - PR #11 merged design-export JSX fixtures under `docs/features/borso-fr/12-travaux/spec/design-export/` with those errors, and every gate passed.
+    - CI linted through the workspaces only.
 
-2. **Why** wasn't there a root-scope biome gate? Wasn't `pnpm -r lint`
-   in CI already running biome?
-   Half-true, and that's exactly why it slipped. `.github/workflows/
-   ci.yml` runs `pnpm -r lint`, which iterates every workspace and
-   runs each one's `lint` script (`biome lint`). Each per-workspace
-   `biome.jsonc` has `"files.includes": ["bin/**", "site/**"]` —
-   biome only scans the workspace's own source. **Files outside any
-   workspace** — `docs/`, `scripts/`, `biome-plugins/`, top-level
-   markdown-adjacent code — were never scanned by `pnpm -r lint`.
-   The root `biome.jsonc` *would* scan them, but nothing in CI or
-   hooks invoked biome from the root.
+      ```yaml
+      - run: pnpm -r lint   # ❌ each workspace lints its own includes glob, nothing lints the rest
+      ```
 
-3. **Why** does scope-narrowed-per-workspace + un-gated-at-root
-   produce silent drift?
-   Because the assumption "biome lint runs in CI" is true for
-   workspace code but false for everything else. The signal "biome
-   ran green" was *valid* for the apps; it was *vacuous* for the
-   files under `docs/`. The vacuous case is invisible — no error
-   message says "biome didn't even look at this file".
+      - `pnpm -r lint` ran each workspace's `biome lint`, and each workspace's `biome.jsonc` scanned only `"files.includes": ["bin/**", "site/**"]`. `docs/`, `scripts/` and `biome-plugins/` belonged to no workspace.
+        - The scaffolding commit `11d98b276` (2026-05-01, written by an agent) put the lint gate in a per-workspace `lint` script. Each ported workspace copied it with its own include glob, and no command ran Biome from the root. A green run was valid for the apps and vacuous for every other file, and nothing in its output said which. (Machine)
 
-4. **Why** were biome-eligible files in `docs/` at all?
-   Hand-off bundles from external design tools (Claude Design,
-   Figma exports) drop their source files into `docs/features/
-   <app>/<slug>/spec/design-export/` as references. Those files
-   are *intent documentation*, not source — but they have `.jsx`
-   / `.ts` extensions and biome happily lints them. The first time
-   PR #11 landed design-export fixtures, biome would have flagged
-   them — but no gate looked, so the errors merged. PR #14 added
-   one more.
+## Root cause of occurrence
 
-5. **Why** is "if a tool exists in the repo, it must be gated"
-   not enshrined anywhere?
-   Because the convention is implicit: `package.json` scripts +
-   pre-commit + pre-push + CI are *expected* to invoke every
-   long-lived tool, but no checklist enforces it. The first time
-   a tool is added behind a per-workspace include glob, the root
-   surface becomes a blind spot.
+*Thought a green `pnpm -r lint` meant Biome had checked the repository, actually it checked only the files inside each workspace's include glob.*
 
-**Root cause:** *thought* "biome's presence in CI implies biome's
-enforcement"; *actually* `pnpm -r lint` enforces biome only on
-files inside workspace `includes` globs, and the repo had grown
-biome-eligible files outside any workspace (under `docs/`) that
-nothing was gating. The defect-class is "tool with workspace
-narrowing + un-gated root scope = invisible drift outside the
-workspaces".
+Machine. The gate was assembled from per-workspace scripts. Its coverage was
+the union of their globs, which nobody wrote down and no output showed, so a
+file outside them was silently out of scope.
 
 ## Detection failure causes
 
-- **Typing / unit tests:** N/A — biome is the linter; absent from
-  the relevant scope it can't catch anything.
-- **Pre-commit hook:** ran `infra/cdk` / `infra/shared` coverage
-  conditionally. No biome call at any scope.
-- **Pre-push hook:** ran `knip`, `actionlint`, and a script-shadow
-  check. No biome call at any scope.
-- **CI workflow `ci.yml`:** ran `pnpm -r typecheck` and `pnpm -r
-  lint`. The latter executes biome inside each workspace at its
-  own `includes` glob — covered `apps/<x>/bin/` + `apps/<x>/site/`
-  but missed everything outside (`docs/`, `scripts/`, root-level
-  markdown). The CI gate was *partially* there, which made it
-  feel covered.
-- **Code review:** humans don't run `pnpm exec biome lint` on
-  every branch. Biome is supposed to be the automation, not the
-  operator's responsibility — and "partially gated" is harder to
-  notice than "ungated", because the green check on `pnpm -r lint`
-  reads as "biome is fine".
+- **Pre-commit:** it ran coverage for `infra/cdk` and `infra/shared` and no Biome at any scope.
+- **Pre-push:** it ran `knip`, `actionlint` and a script-shadow check, no Biome.
+- **CI:** `pnpm -r lint` was partly there, which made it feel complete. A green check reads as "Biome is fine".
+- **Review:** reviewers do not run the linter by hand. It is meant to be the automation.
 
 ## Countermeasure
 
-The same kaizen PR that captures this dantotsu installs a
-two-layer gate so the defect class can no longer reach `main`,
-and also excludes the design-export fixtures from biome consideration
-so the gate isn't permanently red on `main` for fixture-shape
-problems we don't actually want to fix.
+PR #15 (commits `6b16fa5` and `3eb11c2`) ran `pnpm exec biome lint` from the
+root in `.husky/pre-commit` and in CI, beside `pnpm -r lint`. The root
+`biome.jsonc` excluded `docs/**`, because design-export fixtures document
+intent and are not source. That exclusion made the 47 errors moot.
 
-- **Code:** PR #15 — adds `pnpm exec biome lint` to `.husky/
-  pre-commit` (primary gate, fast feedback) and to `.github/
-  workflows/ci.yml`'s `build` job (defense-in-depth, catches
-  commits where the hook was bypassed despite the
-  no-`--no-verify` rule). The earlier same-PR fix to root
-  `biome.jsonc` (`"files.includes": ["**", "!docs/**"]`)
-  removes `docs/` from biome's consideration entirely — fixtures
-  there document *intent*, not source.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** structural impossibility (level 1). One command lints the whole
+repository, so no file can sit outside the gate's scope by accident.
 
-**Status, 2026-10-10:** Biome was removed in 314f2482. The same two gates
-now run ESLint: `.husky/pre-commit` on the staged files and
-`scripts/lint-repository.sh` in CI.
+**Reference:** commit `314f24821` (2026-08-08) replaced Biome with ESLint, and
+commit `9dcf74547` (2026-10-27) replaced ESLint with oxlint. Commit
+`3d7adaa06` (2026-10-02) moved CI to `scripts/lint-repository.sh`, and
+`pnpm -r lint` is no longer in `ci.yml`. Since `9dcf74547` the script runs one
+process from the root:
 
-**Type:** Structural impossibility (level 1 — biome errors at
-root scope cannot land on `main` because two independent gates
-must both fail for that to happen)
-
-**Reference:** PR #15 · commits `6b16fa535f`
-
-**The actual fix:**
-
-Primary gate — `.husky/pre-commit`:
-
-```diff
-+# Repo-wide Biome lint at every commit — fast, catches per-file issues
-+# before they accumulate in a branch. Runs at root scope so it covers
-+# files outside any pnpm workspace (e.g., scripts/, docs/-adjacent code),
-+# complementing the per-workspace `pnpm -r lint` step in CI. Biome takes
-+# ~1 s on this repo. Rung-1 eradication (combined with the ci.yml backup
-+# below) of docs/dantotsus/biome-lint-was-not-gated-anywhere.md — the
-+# defect class is now structurally unable to land in main: pre-commit
-+# rejects the introducing commit, and if the hook is bypassed CI rejects
-+# the PR.
-+echo "[pre-commit] running biome lint"
-+pnpm exec biome lint
+```sh
+node_modules/.bin/oxlint --type-aware "$@" .
 ```
 
-Backup gate — `.github/workflows/ci.yml`:
+What it skips is written in one place, `ignorePatterns` in `.oxlintrc.json`,
+which keeps `docs/**` out on purpose. Pre-commit lints the staged files and
+pre-push the changed files, both with the same configuration.
 
-```diff
-       - run: pnpm -r typecheck
-+      # Per-workspace biome lint (each app's biome.jsonc has its own
-+      # `includes` glob — e.g. apps/borso-fr restricts to bin/ + site/).
-       - run: pnpm -r lint
-+      # Repo-wide biome lint at root scope — covers files outside any
-+      # workspace (scripts/, docs-adjacent code, biome-plugins/, etc.).
-+      # Defense in depth on top of the .husky/pre-commit gate: catches
-+      # commits that bypassed the local hook. Rung-1 eradication (paired
-+      # with the pre-commit hook) of
-+      # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
-+      - run: pnpm exec biome lint
+**Proof it can fail:** a planted `debugger;` in `scripts/zz-probe.ts`, a folder
+in no workspace, linted from the root (measured on 2026-11-27):
+
+```
+$ node_modules/.bin/oxlint .
+scripts/zz-probe.ts:2:3: error eslint(no-debugger): `debugger` statement is not allowed
 ```
 
-Scope exclusion — root `biome.jsonc` (already shipped in PR #14
-post-merge resolution; restated here for completeness because it's
-the third leg of the structural fix):
-
-```diff
-   "vcs": { … },
-+  "files": {
-+    "includes": ["**", "!docs/**"]
-+  },
-   "linter": { … },
-```
-
-The three pieces together make the defect-class structurally
-unrepresentable:
-
-1. `biome.jsonc` excludes `docs/**` so design-export fixtures
-   don't generate noise the project doesn't intend to fix.
-2. `.husky/pre-commit` runs biome at root scope — every commit
-   pays the ~1-s cost; no commit with a biome error can land
-   locally without `--no-verify` (banned by CLAUDE.md).
-3. `.github/workflows/ci.yml` runs biome at root scope on every
-   PR and every push to main — even if the pre-commit hook is
-   bypassed, the PR cannot merge.
-
-A future contributor adding new code outside the existing
-workspaces (e.g., a new top-level `tools/` folder) inherits the
-gate automatically; the root-scope biome.jsonc covers them by
-default.
-
-**Sibling defects swept:** the 47 pre-existing `main` errors are
-moot because the `docs/**` exclusion makes them invisible to
-biome; they remain on disk as design-intent references. The 1 new
-error this branch was adding (`design-landing.jsx`) is swept by
-the same exclusion. The pre-commit + CI gates apply prospectively
-to every future commit and every future PR.
-
-A simpler eradication ("just add biome to pre-push") was
-considered first and rejected for two reasons. **Latency**:
-pre-push fires once per branch, so errors accumulate locally
-through multiple commits before the developer sees them — biome
-is fast enough to enforce per-commit, and the tighter loop is
-worth the ~1 s. **Bypass surface**: a single gate has a single
-failure mode (hook disabled / `--no-verify` despite the ban /
-hook script renamed). Pairing pre-commit with a CI gate removes
-that failure mode entirely.
-
-## See also
-
-- [`docs/dantotsus/pnpm-reserved-script-names.md`](./pnpm-reserved-script-names.md) — same family: "the
-  hook is the only thing standing between this defect class and
-  `main`".
-- [`docs/dantotsus/paths-filter-base-head1-on-push.md`](./paths-filter-base-head1-on-push.md) — same family
-  (a missing pre-push check let workflow bugs through).
-- [`docs/dantotsus/vite-non-module-script-tags-arent-bundled.md`](./vite-non-module-script-tags-arent-bundled.md) — neighbour
-  in the pre-push hook script (the gate that was already there).
-- [`docs/knowledge/biome-ignore-must-be-single-line.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-ignore-must-be-single-line.md) — biome quirk
-  that occasionally collides with the new gate.
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) — neighbour:
-  biome scope hygiene, but at the workspace level (excluding
-  `dist/`). This dantotsu is the matching root-level story.
+**Similar instances:** `cat pnpm-workspace.yaml` lists `apps/*` and `infra/*`
+as the workspaces. `scripts/`, `eslint-rules/` and `.claude/skills/` are in
+none, and the root run covers them. Each workspace still has a `lint` script for
+linting one workspace, and all of them call `scripts/lint-workspace.sh`.

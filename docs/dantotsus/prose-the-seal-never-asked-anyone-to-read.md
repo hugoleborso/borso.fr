@@ -6,7 +6,7 @@ severity: low
 related-pr: '#63'
 fix-commits: [957846c4d2]
 eradication-level: 5
-eradication-paths: [.claude/skills/technical-validation/SKILL.md, .claude/agents/technical-validator.md]
+eradication-paths: [.claude/agents/technical-validator.md, scripts/check-vocabulary-paths.sh]
 time-to-detect: 3 hours
 tags: [standards, documentation, tooling, ci]
 zone: .claude/skills/technical-validation
@@ -16,141 +16,109 @@ recurs: [an-approval-gate-that-only-existed-in-a-comment]
 
 # Prose the seal never asked anyone to read
 
-## Symptom
+## User impact
 
-`apps/borso-fr/VOCABULARY.md` went false against its own application twice in
-one pull request, and every mechanical gate stayed green through both.
+`apps/borso-fr/VOCABULARY.md` went false against its own application three times
+in PR #63, and every mechanical gate stayed green. The next agent to read it
+would have built on a wrong description of the Galaxy and the Jump.
 
-The first time, the Galaxy entry said the component mounts *"with one frozen
-parameter set"*. The branch had just made two of its uniforms move every frame —
-that was the entire mechanism of the feature being shipped.
+| | Seen | Expected |
+| --- | --- | --- |
+| Galaxy entry | "with one frozen parameter set", while the branch made two of its uniforms move every frame | the two moving uniforms named |
+| Jump entry | "Only the landing page installs it", one commit before the operator's instruction installed it on all three pages | the install sites as they are |
+| Departure entry | "the caller passes the length the click is held for", while two of three callers pass nothing | what each caller does |
 
-The second time, and after the entry had been rewritten, the Jump entry said
-*"Only the landing page installs it"*. The next commit installed it on all three
-pages, which was the operator's explicit instruction. A third pass then caught a
-weaker version of the same drift: *"the caller passes the length the click is
-held for"*, where two of the three callers pass nothing and take a default.
+## Causal chain
 
-Three falsifications, three separate reviewer passes, zero mechanical signals.
+- The Galaxy entry described a component that no longer existed.
+  - Commit `efd65da5e1` ("the galaxy makes the jump, instead of a field drawn
+    over it") changed `Galaxy.tsx` so two uniforms move each frame, and left
+    `VOCABULARY.md` unchanged.
+    - The sentence it made false, written by commit `db661ac8f` four days
+      earlier:
 
-## Root-cause chain
+      ```markdown
+      <!-- true when written, false once efd65da5e1 moved the uniforms -->
+      ... with one frozen parameter set
+      ```
 
-1. **Why did the prose go false without anything failing?**
-   Nothing reads it. `scripts/check-vocabulary-paths.sh` checks that each term
-   names a folder that exists, which is the one mechanically checkable part, and
-   it passed every time — the folders were all real.
+      - The writer changed code that a vocabulary entry described, and edited
+        only the code. Nothing in the implementation flow tied a change to a
+        folder to the prose that describes that folder.
+- The Jump and Departure entries went false the same way, each against the
+  code beside it. Commit `fb4f52a07` wrote "Only the landing page installs it".
+  Commit `3fff8a765` installed the Jump on all three pages, replaced that
+  sentence, and wrote the Departure line "the caller passes the length the click
+  is held for", which two of the three callers contradict.
 
-2. **Why did the standards seal not cover it?**
-   `isReviewablePath` in `scripts/standards/seal.core.ts` returned `false` for
-   it. The predicate asked for `.ts` and `.tsx` under `apps/` and `infra/`, and
-   nothing else.
+## Root cause of occurrence
 
-3. **Why did the predicate stop at source files?**
-   Its own comment says so: *"the standards are about that code, and asking for
-   a seal on a generated page or a lock file would train everyone to seal
-   without reading."* A sound instinct aimed at generated files and lock files,
-   which swept up hand-written prose as collateral.
+*Thought a vocabulary entry needs updating when the entry is edited, actually it
+goes false when the code it describes changes, and that change never opens the
+entry.* (Method)
 
-4. **Why was that not noticed when the seal was built?**
-   Because the ledger says the opposite, in as many words. `01-naming.md` ships
-   the bullet *"`reviewer` checks that a definition in a `VOCABULARY.md` is
-   still true, which is prose against code and therefore nothing a rule can
-   do."* The reviewer is named. Nothing routed the file to one.
-
-**Root cause:** thought *the seal covers the code the standards govern*,
-actually *the seal covers the code the standards govern and the ledger also
-names a reviewer for a file the seal never hands them*. The two halves of the
-same mechanism disagreed, and the disagreement is invisible because each half is
-individually correct.
-
-The sentence in the ledger — *"nothing a rule can do"* — is true and was read as
-more than it says. No rule can check whether a definition is **true**. The seal
-does not check truth; it records that a reviewer read exact content, and
-unseals the moment that content changes. That is precisely the mechanism this
-file needed.
+The flow treated the glossary as a document to edit, not as a claim about code.
+The 01-naming bullet named a reviewer for it, "`reviewer` checks that a
+definition in a `VOCABULARY.md` is still true", and nothing routed a code change
+to that reviewer.
 
 ## Detection failure causes
 
-- **Typing:** markdown has no types.
-- **Linter / static analysis:** Prettier does not touch markdown here by
-  policy, and no linter reads prose for truth.
-- **Functional validation locally:** `check-vocabulary-paths.sh` passed
-  correctly — it checks paths, and the paths were fine.
-- **CI:** the seal is not wired into CI at all yet, which
-  [`docs/standards/README.md`](../standards/README.md) states plainly. Even
-  once it is, it would have asked for nothing on this file.
-- **Code review:** this is where all three were caught, by the
-  `standards-reviewer` agent, and only because it opened the file on its own
-  initiative while checking a claim in a `.ts` comment. The third catch was
-  explicitly recorded as *advisory, outside the checklist*.
-
-That last point is the sharp one: the corrections happened by luck. The agent
-was reviewing `warp-drive.ts`, followed a claim into the vocabulary, and found
-it stale. Nothing in its brief sent it there.
+- **`check-vocabulary-paths.sh`:** it checked that each term names a folder that
+  exists, the one mechanical part, and passed.
+- **Standards seal:** `isReviewablePath` in `scripts/standards/seal.core.ts`
+  accepted only `.ts` and `.tsx` under `apps/` and `infra/`, so the file was
+  never in a review's scope.
+- **Code review:** the `standards-reviewer` agent caught all three, only because
+  it followed a claim in `warp-drive.ts` into the vocabulary. Its brief did not
+  send it there.
 
 ## Countermeasure
 
-- **Code:** commits `fb4f52a` and `305f138` — the Galaxy entry now names the two
-  uniforms that move and why the clock accumulates; the Jump entry no longer
-  claims a single install site; Departure and Fade were added as terms, because
-  the branch had created a second kind of page departure the vocabulary had no
-  word for; and the overstated caller sentence was narrowed to what the three
-  call sites actually do.
+Commits `fb4f52a07` and `305f138` correct the Galaxy and Jump entries, add the
+terms Departure and Fade, and narrow the caller sentence to what the three call
+sites do.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the seal predicate now asks for this file)
+**Type:** knowledge (level 5)
 
-**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
-sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
+**Reference:** commit [`957846c4d2`](https://github.com/hugoleborso/borso.fr/commit/957846c4d2)
+added `VOCABULARY.md` to `isReviewablePath`, so an edited vocabulary needed a
+reviewer's seal. Commit `c54e32da79` removed the seal and the separate standards
+review on 2026-10-29. Two mechanisms hold today.
 
-**The actual fix:**
+- `.claude/agents/technical-validator.md` reads "each changed `VOCABULARY.md` or
+  `INVARIANTS.md` **in full**". A brief to an agent is level 5. It also reads
+  only changed files, so this entry's first case, code changed and prose left
+  alone, still passes.
+- Commit `2cfa2a34d4` (PR #353) split each vocabulary into a glossary and an
+  `INVARIANTS.md` beside the code. The Galaxy's rules now live in
+  `apps/borso-fr/site/src/components/organisms/INVARIANTS.md`.
+  `scripts/check-vocabulary-paths.sh` fails when a `Held by:` test file or title
+  is gone. The Galaxy's bullets carry no `Held by:` line, so nothing checks them.
 
-```diff
-+/**
-+ * Prose a reviewer bullet already asks somebody to check against the code, and
-+ * which no other gate reads. `01-naming.md` asks a reviewer whether each entry
-+ * in a `VOCABULARY.md` is still true; nothing pointed the seal at the file, so
-+ * a definition could go false against the branch that falsified it and every
-+ * mechanical check stayed green. Hashing it here does not make the prose
-+ * checkable — it makes the review of it recorded, which is the whole mechanism.
-+ */
-+const REVIEWABLE_FILENAMES = ['VOCABULARY.md'];
-+
- export function isReviewablePath(path: string): boolean {
-   if (!REVIEWABLE_ROOTS.some((root) => path.startsWith(root))) return false;
-+  if (REVIEWABLE_FILENAMES.some((filename) => path.endsWith(`/${filename}`))) return true;
-   if (!REVIEWABLE_EXTENSIONS.some((extension) => path.endsWith(extension))) return false;
-   return !EXCLUDED_SUFFIXES.some((suffix) => path.endsWith(suffix));
- }
-```
+**Proof it can fail:** none for this class. A change to `Galaxy.tsx` that leaves
+its `INVARIANTS.md` false passes every gate.
 
-`isReviewablePath` is a pure function in a `.core.ts` file, so it carries the
-repository's 100% coverage and mutation gates; the change ships with three new
-cases in `seal.core.test.ts`, including two that pin the boundary — `docs/VOCABULARY.md`
-is not under an application and `NOT-VOCABULARY.md` must not match as a suffix.
+**Proposed:** make `scripts/check-vocabulary-paths.sh` refuse an `INVARIANTS.md`
+section that carries a rule bullet and no `Held by:` line. The script already
+parses every section and fails when a named test file or title is gone, so the
+refusal is one more condition in the same loop. Each behaviour claim would then
+name a test, and a code change that makes the claim false would fail that test,
+not wait for a reader. This moves the class from knowledge to detection (level
+4). `Held by:` lines sit per section, not per bullet, so the check works at that
+grain. Today 70 of 207 sections have no `Held by:` line, the Galaxy's among them
+(measured with awk over every `INVARIANTS.md`), so the change ships with their
+tests or with a narrowed rule.
 
-The consequence is small and exactly the point: a branch that edits an
-application's vocabulary now cannot be sealed until a reviewer has read the
-edited content, and editing it afterwards unseals it again.
+**Proposed, as a supplement:** have the validator read every `INVARIANTS.md` in
+a folder the diff touches, not only the changed ones. The list is
+`git diff --name-only <base> | xargs -n1 dirname | sort -u`, then the
+`INVARIANTS.md` in each, printed into the validator's brief by the
+`/technical-validation` skill. It covers the bullets no test can hold, such as
+where a component was ported from. It stays level 5, since it is a brief.
 
-**Sibling defects swept:** the pull-request description drifted the same way,
-twice — first when the merge with `main` moved every source file to `site/src/`
-and left the body's file table pointing at paths that no longer existed, then
-when the departure work made its "the other pages hold no click" section the
-opposite of the truth. Both were corrected by hand. No gate is proposed for a
-PR body: it lives on GitHub rather than in the checkout, so nothing here can
-read it, and that limit is itself recorded in
-[`../knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md).
-
-## See also
-
-- [`an-approval-gate-that-only-existed-in-a-comment.md`](./an-approval-gate-that-only-existed-in-a-comment.md)
-  — the same shape one layer up: prose asserting a protection that nothing in
-  the repository could observe.
-- [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md)
-  — another entry about a gate whose subject was not what it appeared to be.
-
-## Superseded mechanism
-
-The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.
+**Similar instances:** the pull-request body of PR #63 drifted the same way twice
+and was corrected by hand. It lives on GitHub, outside the checkout, so no check
+here can read it.

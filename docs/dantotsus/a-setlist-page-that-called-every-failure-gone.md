@@ -5,8 +5,8 @@ detected-at: qa
 severity: medium
 related-pr: none (the setlist pages came in 9f4b443eb on 2026-08-19, and offline reading made the lie reachable in #247)
 fix-commits: [self]
-eradication-level: 1
-eradication-paths: [apps/pragma/site/src/routes/setlists/missing-setlist.core.ts, apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx, apps/pragma/site/src/routes/setlists/SetlistScenePage.tsx, apps/pragma/site/src/routes/setlists/SetlistOrderPage.tsx, apps/pragma/site/src/routes/sessions/PracticeModePage.tsx]
+eradication-level: 4
+eradication-paths: [apps/pragma/site/src/routes/setlists/missing-setlist.core.ts, apps/pragma/site/src/routes/setlists/SetlistScenePage.test.tsx]
 time-to-detect: 2 days
 tags: [pragma, offline, tanstack-query, i18n]
 zone: apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx
@@ -40,29 +40,35 @@ promises the next-concert setlist offline (row 30, measured, screenshot
       - The message was a literal, chosen without reading the error:
 
         ```tsx
-        <NotFoundNotice message={t('setlist.notFound')} … />
+        <NotFoundNotice message={t('setlist.notFound')} … />   // ← the faulty line
         ```
 
-The song and session pages did not have it. Since 1b5402aec (2026-08-14),
-they pick their message from `selectMissingRecordReason(error)`, which says
-"not found" only for a `404`. The setlist pages came five days later
-(9f4b443eb) and wrote the literal. So did the practice mode page for a
-missing session.
+        - Commit 9f4b443eb (2026-08-19, an agent session) wrote the setlist
+          pages with that literal, and the practice mode page's missing
+          session the same way.
+          - `NotFoundNotice` takes `message: string`
+            (`components/molecules/NotFoundNotice.tsx:5`). A literal key
+            type-checks, and reading the error is optional. The correct form
+            costs a new per-entity `missing-*.core.ts` file. The wrong form
+            costs nothing. **Machine.**
 
 ## Root cause of occurrence
 
 *Thought a missing setlist on a page that finished loading means the setlist
 was deleted, actually a read that failed or is paused offline also leaves it
-missing, and only a `404` means deleted.*
+missing, and only a `404` means deleted.* **Man** (inferred, no transcript
+read): the right pattern sat in the same app. At the parent commit, all four
+`NotFoundNotice` call sites passed `selectMissing*MessageKey(query.error)`
+(`git grep -A3 '<NotFoundNotice' 9f4b443eb^ -- apps/pragma/site/src`), and
+the prior "not loaded means not found" won over them.
 
 `@tanstack/query-core` 5.102.8 `src/queryObserver.ts`, read this session:
 `const isLoading = isPending && isFetching` (line 585).
 
 ## Detection failure causes
 
-- **Reuse:** the helper that separates the two cases sat in
-  `lib/missing-record.utils.ts`. Nothing pointed a new page at it, and a
-  literal key type-checks.
+- **Typing:** `message: string` accepts any key, so the type says nothing
+  about which reason the page names.
 - **Tests:** no setlist page test rendered a setlist that was missing.
 - **Offline:** offline reading from the cache shipped in #247 on 2026-11-03.
   Before it, an offline open never reached the page.
@@ -72,22 +78,37 @@ missing, and only a `404` means deleted.*
 PR #278 (7cde5696c) made the preload read each next setlist, so the
 next-concert case renders. Other setlists and refused reads still lied.
 
-## Eradication
-
-**Type:** structural impossibility (level 1)
-
-**Reference:** the commit that adds this file.
-
-`routes/setlists/missing-setlist.core.ts` maps the shared reason to a key, as
-`missing-song.core.ts` and `missing-session.core.ts` already did. All three
-setlist pages and the practice mode page now pass the query's error through
-it. A setlist page can no longer say "gone" for a read that failed, because
-the key comes from the error.
+`routes/setlists/missing-setlist.core.ts` then mapped the shared reason to a
+key, as `missing-song.core.ts` and `missing-session.core.ts` already did. All
+three setlist pages and the practice mode page's session read pass the
+query's error through it.
 
 ```diff
 -        message={t('setlist.notFound')}
 +        message={t(selectMissingSetlistMessageKey(setlistQuery.error))}
 ```
+
+## Eradication
+
+**Type:** detection (level 4)
+
+**Reference:** the commit that added this file.
+
+What holds today is the setlist scene page's test, which renders a read
+paused offline and expects the load-failed message. It guards the setlist
+pages. It does not guard the class. The level 1 this entry first claimed was
+wrong: the class came back five days later. `routes/compos/SketchPage.tsx:51`
+(c4ec9b94e, PR #327, 2026-11-14) renders `t('sketch.notFound')` for any null
+sketch, though `useSketch` is a network query that can fail or pause the
+same way.
+
+**Proposed:** make the molecule hold the rule. `NotFoundNotice` takes a
+`reason: MissingRecordReason`, or the query's `error`, plus the entity's
+not-found key, and picks `common.loadFailed` itself for every reason but
+`not-found`. The three `missing-*.core.ts` files are then deleted. A page can
+no longer pass a free string, so it cannot call a failed read "gone".
+`PracticeModePage.tsx:65`, which answers a URL with no session id, passes an
+explicit `'not-found'`.
 
 **Proof it can fail:** the literal planted back in `SetlistScenePage.tsx`,
 then `vitest run --project core site/src/routes/setlists/SetlistScenePage`:
@@ -101,6 +122,6 @@ Tests  1 failed | 13 passed (14)
 Reverted after.
 
 **Similar instances:** `grep -rn "<NotFoundNotice" -A4 apps/pragma/site/src/routes | grep "message="`
-lists ten call sites. Nine now read the error. The tenth,
-`PracticeModePage.tsx:64`, answers a URL with no session id, which is a
-true not-found.
+lists twelve call sites today (measured 2026-11-27). Ten read the error.
+`PracticeModePage.tsx:65` answers a URL with no session id, a true
+not-found. `SketchPage.tsx:51` is the open instance.

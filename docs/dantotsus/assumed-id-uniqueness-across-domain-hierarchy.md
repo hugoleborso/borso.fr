@@ -4,150 +4,115 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#8'
-fix-commits: [683375572c, f97e162c9b]
-eradication-level: 1
-eradication-paths: [apps/borsouvertures/site/src/openings/openingIds.utils.ts, apps/borsouvertures/site/src/openings/openingIds.utils.test.ts]
+fix-commits: [683375572c, f97e162c9b, 8946e708ea]
+eradication-level: 5
+eradication-paths: [docs/knowledge/lichess-openings-dataset-identity-and-matching.md, apps/borsouvertures/site/src/openings/openingIds.utils.ts, apps/borsouvertures/site/src/openings/openingIds.utils.test.ts]
 time-to-detect: hours
 tags: [react, identifiers, domain-model, borsouvertures]
 zone: apps/borsouvertures/site/src/openings/openingIds.utils.ts
 ---
 
-# Assumed variation IDs were globally unique — they aren't
+# Assumed variation IDs were globally unique, and they aren't
 
-## Symptom
+## User impact
 
-The "Switch to Play with this scope" button in Learn-tree should carry the
-*drilled* opening + variation into Play mode. The visual-validator caught
-the wrong opening in the resulting scope:
+The visual validator caught it on PR #8, before the merge (run 1508, row 12,
+quoted):
 
-> **Row #12** — Scope shown was *"Modern Defense / Main Line / Modern
-> Defense"* rather than the drilled *"Italian Game / Main Line /
-> Italian Game C50"*. Switch happened; scope-mapping correctness is
-> questionable.
+> Scope shown was *"Modern Defense / Main Line / Modern Defense"* rather than
+> the drilled *"Italian Game / Main Line / Italian Game C50"*.
 
-The handler did:
+| | Seen | Expected |
+| --- | --- | --- |
+| Drill Italian Game's Main Line in Learn, then tap "Switch to Play with this scope" | Play opens on Modern Defense's Main Line | Play opens on Italian Game's Main Line |
 
-```ts
-function handleSwitchToPlayWithVariation(variation: Variation): void {
-  const openingId = openings.find((opening) =>
-    opening.variations.some((v) => v.id === variation.id),
-  )?.id;
-  setPlayScope({
-    openingIds: openingId ? [openingId] : [],
-    variationIds: [variation.id],
-    lineIds: [],
-  });
-  ...
-}
-```
+Any variation whose name also appears in an earlier opening of the dataset
+opened Play on that earlier opening (inferred from the lookup).
 
-`openings.find(...)` returns the *first* opening whose variations contain a
-variation with the given ID. Many openings have a variation named `main`
-(slug: `main`). The first one in the dataset's iteration order is "Modern
-Defense", not "Italian Game" — so the user who drilled Italian Game's
-Main Line saw the Play view configured against Modern Defense.
+## Causal chain
 
-## Root-cause chain
+- Play opened on the wrong opening.
+  - The handler looked the opening up from the variation's id alone, and `find` returned the first opening holding a variation with that id.
 
-1. **Why did the lookup return the wrong opening?**
-   Because variation IDs (`'main'`, `'classical'`, etc.) are not globally
-   unique — they're scoped under their parent opening. `.find()` over the
-   whole list collides on the shared slug.
-2. **Why did I write the lookup that way?**
-   Because I treated `Variation.id` as if it were sufficient to identify a
-   variation, ignoring that the dataset's `slugify(variation.name)`
-   produces collisions across openings (many openings have a "Main Line"
-   variation → all slug to `main`).
-3. **Why isn't the domain model stricter?**
-   Because `Variation` has no back-reference to its parent `Opening`, and
-   the typed API of `handleSwitchToPlayWithVariation` accepted only a
-   `Variation`, encouraging exactly this lookup pattern.
-4. **Why didn't a test catch it?**
-   Because the only fixture used in `bookEngine.utils.test.ts` was
-   single-opening (`italianMain` / `sicilian`); the cross-opening collision
-   scenario was never asserted. The visual-validator caught it instead.
+    ```ts
+    const openingId = openings.find((opening) =>
+      opening.variations.some((v) => v.id === variation.id), // ❌ 'main' is in many openings
+    )?.id;
+    ```
 
-**Root cause:** *thought* `Variation.id` was a primary key; *actually*
-it's a *child* key — only unique within its parent opening. The handler
-was structurally permitted to write the wrong relationship because the
-function signature didn't require both halves of the (opening, variation)
-pair.
+    - Variation ids were `slugify(variation.name)`, and many openings have a "Main Line", so all of them had the id `main`.
+      - The dataset build derived every id from a name, and the Lichess openings data reuses one name across several rows and several openings. The dataset handed the screen a field called `id` that was unique only inside its parent. (Material)
+
+## Root cause of occurrence
+
+*Thought `Variation.id` identified a variation across the whole dataset, actually it was a child key, unique only within its opening.*
+
+Material. The handler's author worked from the dataset's `Variation` type,
+whose field is named `id` and carries no back-reference to its opening. The
+dataset was built by slugging names, so the collision was in the input before
+any screen read it.
+
+[`docs/knowledge/lichess-openings-dataset-identity-and-matching.md`](../knowledge/lichess-openings-dataset-identity-and-matching.md):
+"The dataset reuses a single name across several rows … A slug derived from
+the name alone is therefore not an identifier: it collides, and the collisions
+are silent."
 
 ## Detection failure causes
 
-- **Typing:** Both openings have variations typed `Variation`; TS can't
-  distinguish "an Italian variation" from "a Modern Defense variation"
-  without a brand.
-- **Linter:** Can't catch domain-modelling errors.
-- **Functional validation locally:** Single-opening manual testing missed
-  it; you have to switch between openings to see the collision.
-- **CI / unit tests:** Tests used fixtures with unique IDs across openings
-  by coincidence; no cross-opening-with-shared-slug test.
-- **`/visual-validation`:** Caught it (run 1508 row #12).
+- **Typing:** every variation is a `Variation`. Nothing tells an Italian Game variation from a Modern Defense one, and the handler's signature accepted a variation alone.
+- **Unit tests:** the `bookEngine.utils.test.ts` fixtures held openings whose variation ids happened to differ, so no test met two openings sharing a slug.
+- **Local:** a manual check within one opening never meets the collision.
+- **Visual validation:** caught it.
 
 ## Countermeasure
 
-`handleSwitchToPlayWithVariation` was changed in commit `6833755` to take
-*both* the opening and the variation as parameters, and to write both IDs
-directly without a lookup:
+Commit `6833755` made `handleSwitchToPlayWithVariation` take both the opening
+and the variation, and write both ids without a lookup. `ModeLearnTree`
+already had the opening in scope. Commit `f97e162` added a fixture with two
+openings sharing a variation slug.
 
-```diff
-- function handleSwitchToPlayWithVariation(variation: Variation): void {
--   const openingId = openings.find((opening) =>
--     opening.variations.some((v) => v.id === variation.id),
--   )?.id;
--   setPlayScope({
--     openingIds: openingId ? [openingId] : [],
--     variationIds: [variation.id],
--     lineIds: [],
--   });
-+ function handleSwitchToPlayWithVariation(
-+   opening: Opening,
-+   variation: Variation,
-+ ): void {
-+   setPlayScope({
-+     openingIds: [opening.id],
-+     variationIds: [variation.id],
-+     lineIds: [],
-+   });
+The opening trainer pull request (#321, 2026-11-13) later removed the Learn and
+Play screens and `bookEngine.utils.ts` with them.
+
+## Eradication
+
+**Type:** knowledge (level 5) for the class. Line ids are unique by construction, but variation ids still collide, and only a triggered knowledge entry warns about them.
+
+**Reference:** commit `8946e708e` (2026-08-12), "derive a line id from the
+moves, not the name alone". `buildLineId` in `openingIds.utils.ts` suffixes the
+name slug with a fingerprint of the moves, and `build-openings.ts` builds every
+line id through it. A move sequence is unique in the dataset, so two lines
+cannot share an id. The test "separates two identically named lines by their
+moves" holds it.
+
+```ts
+export function buildLineId(name: string, movesUci: readonly string[]): string {
+  return `${toSlug(name)}-${fingerprint(movesUci.join(MOVE_SEPARATOR))}`;
+}
 ```
 
-`ModeLearnTree` resolves both via `findOpening(openings, selection.openingId)`
-+ `findVariation(opening, selection.variationId)` (which already has the
-parent in scope) and passes both forward.
+Variation ids are still name slugs. Counting them in
+`apps/borsouvertures/site/src/openings/openings.json` on 2026-11-27 (measured)
+gives 587 variations and 40 repeated ids, `main-line` 20 times. The 2313 line
+ids and 20 opening ids have no repeat. No code keys a scope by variation id
+today: `grep -rn "variation.id\|variationId" apps/borsouvertures/site/src`
+finds only the parser.
 
-## Eradication (mandatory — code-level)
+[`lichess-openings-dataset-identity-and-matching.md`](../knowledge/lichess-openings-dataset-identity-and-matching.md)
+is printed when `apps/borsouvertures/scripts/**` or `openingIds.utils.ts` is
+touched, and says a name is not an identifier.
 
-**Type:** Structural impossibility (level 1 — the function signature now
-requires both `Opening` and `Variation`, so the wrong-lookup pattern is
-no longer expressible at the call site).
+**Proposed:** delete the field. `Variation.id` has no reader beyond
+`parseOpenings.utils.ts:20`, which parses it, and `explorer.core.ts` uses only
+`variation.name`. Removing `id` from `Variation` in `types.ts`, from the parser
+and from `build-openings.ts` leaves no non-unique id for code to key by. A
+future screen that needs one would have to add an id, and could build it like
+a line id. An assertion that every id in `openings.json` is unique would then
+guard the ids that remain.
 
-**Reference:** [PR #8](https://github.com/hugoleborso/borso.fr/pull/8) ·
-commit [`6833755`](https://github.com/hugoleborso/borso.fr/commit/6833755).
+**Proof it can fail:** the identically named lines test fails when
+`buildLineId` returns the slug alone (inferred from the test, not rerun this
+session).
 
-**The actual fix:** see the diff above. The function now takes both
-identities; the bug is structurally impossible to reintroduce without
-changing the signature again.
-
-**Sibling defects swept:**
-- The same `openings.find((o) => o.variations.some((v) => v.id === …))`
-  pattern is not used anywhere else in the codebase (verified via grep
-  in PR #9, this kaizen PR's prep step).
-- A pre-emptive check added in `bookEngine.utils.test.ts` covers the
-  cross-opening-collision case using a fixture where two openings share
-  a variation slug, asserting `gatherCandidates` resolves correctly.
-  *(Shipped in this kaizen PR.)*
-
-## See also
-
-- [`docs/dantotsus/described-screenshot-without-checking-pixels.md`](./described-screenshot-without-checking-pixels.md) —
-  the sibling visual-validator finding from the same run (#12 was the
-  PASS_WITH_NOTE that surfaced this dantotsu).
-
-## Update, 2026-11-13
-
-The opening trainer pull request (hugoleborso/borso.fr#321) removed the
-Learn and Play screens, and `bookEngine.utils.ts` with them. No screen keys a
-scope by variation id any more. The open explorer matches lines by move
-prefix. The ids that remain are built in `openingIds.utils.ts`, which suffixes
-the name slug with a fingerprint of the moves, and its test holds that.
+**Similar instances:** the counts above. Line and opening ids are unique.
+Variation ids are not, and nothing reads them as a key today.

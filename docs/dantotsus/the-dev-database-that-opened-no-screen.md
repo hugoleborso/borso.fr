@@ -37,38 +37,52 @@ writers (`main`, `routine-launch`, `technical-validator` three times,
 
 - An agent cannot show a talos screen at 375 px.
   - `agent-browser` reaches only `/login`.
-    - Every route but `/login` needs a session, and a session is issued only after a passkey ceremony.
-      - `agent-browser` has no virtual authenticator, so the ceremony needs a hand-written Playwright script with CDP.
-        - That script registers a passkey in the shared local database, which closes registration for the next browser context.
-      - `test/dev-database.setup.ts` seeded the memory and no session.
+    - Every route but `/login` needs a session, and a session is issued only
+      after a passkey ceremony.
+      - `agent-browser` has no virtual authenticator, so the ceremony needs a
+        hand-written Playwright script with CDP.
+        - That script registers a passkey in the shared local database, which
+          closes registration for the next browser context.
+    - `test/dev-database.setup.ts` seeded the memory and wrote no session row.
+      - Commit `d78e559b2` (#210) wrote the seed when the memory moved to
+        tables, as a memory import only.
+        - Each app hand-writes its own `test/dev-database.setup.ts`, with no
+          shared contract for what a seed must give. pragma's already printed
+          "sign in as any of: …" at the parent of that commit, in another app
+          the writer had no reason to open (Machine).
   - The screen that does open is empty of what the feature shows.
-    - The seed's rows are dated October 2026, because the back e2e tests assert on those dates.
-    - A row added to the seed is not applied: the script posted the seed under the fixed idempotency key `dev-seed`, and a batch whose key is known is skipped.
+    - The seed's rows are dated October 2026, because the back e2e tests
+      assert on those dates.
+    - A row added to the seed is not applied.
+      - The script posted the seed under a fixed idempotency key, and a batch
+        whose key is known is skipped:
+
+        ```ts
+        const seed = changeRequestSchema.parse({
+          idempotencyKey: 'dev-seed', // ← known after the first run, so every later seed is skipped
+          actor: 'import',
+          operations: MEMORY_SEED,
+        });
+        ```
 
 ## Root cause of occurrence
 
 *Thought a seeded memory is a seeded app, actually an app is seeded when a
-screen can be opened on rows that are current.*
-
-`apps/talos/test/dev-database.setup.ts` before this change:
-
-```ts
-const seed = changeRequestSchema.parse({
-  idempotencyKey: 'dev-seed',
-  actor: 'import',
-  operations: MEMORY_SEED,
-});
-```
+screen can be opened on rows that are current.* (Machine)
 
 The idempotency key exists so the agent can resend a batch safely. The dev
 seed borrowed it to make `pnpm dev` restartable, which also made the seed
 unchangeable. Posting it under a new key is not the fix: measured, a replay
-left 4 relations for 2 seeded.
+left 4 relations for 2 seeded. Nothing in the repository says a seed must
+open a screen. `scripts/dev-server.sh` echoes the `[dev:db]` lines with
+`grep -aE '^\[dev:db\]' "$LOG_FILE" >&2 || true`, so an app that prints no
+sign-in starts as if it were fine.
 
 ## Detection failure causes
 
 - **Knowledge:** `screenshotting-talos-behind-its-passkey.md` documented the passkey route as the recipe, so each agent read the wall as known and worked round it instead of logging a defect. Its triggers fired only on `db:local:wipe` and on the authenticator call, after the agent had already chosen the route.
 - **CLAUDE.md:** *Checking a screen* says the `[dev:db]` line prints the seeded sign-in "where the app has one". talos had none, and the sentence made that read as intended.
+- **Dev server:** `scripts/dev-server.sh` prints whatever `[dev:db]` lines exist and ends the grep with `|| true`, so a seed with no sign-in starts green.
 - **Validation:** the validator typed the 375 px row UNVERIFIABLE, which does not fail a round, so two reports passed without the measure.
 
 ## Countermeasure
@@ -87,7 +101,7 @@ rendered « Jour » with the brief of the day, « En attente · 1 » and
 
 ## Eradication
 
-**Type:** structural impossibility (level 1). The app cannot be started locally without a usable sign-in being printed, and a seed cannot be edited without being replayed.
+**Type:** structural impossibility (level 1) for talos. It cannot start locally without printing a usable sign-in, and its seed cannot be edited without being replayed. Nothing holds the same for another app (see below).
 
 **Reference:** the commit that adds this file.
 
@@ -107,7 +121,17 @@ rendered « Jour » with the brief of the day, « En attente · 1 » and
 
 **What is given up:** rows an agent posted by hand to the local memory are emptied when the seed or the day changes. The local Postgres is shared between agents, so one agent's `pnpm dev` on a new day clears another's hand-made rows. The passkey route had the same reach through `db:local:wipe`.
 
-**Similar instances:** `grep -n "seeded\|sign in" apps/*/test/dev-database.setup.ts`. pragma prints its members and password. last-loop-lepin and banana-rush were not checked for a printed sign-in in this sweep.
+**Similar instances:** `ls -d apps/*/api/src/auth` lists borsouvertures,
+last-loop-lepin, pragma and talos. `grep -n "dev:db\]" apps/*/test/dev-database.setup.ts`
+shows each prints a sign-in today: a password for borsouvertures and pragma,
+an admin PIN for last-loop-lepin, a cookie for talos (measured). banana-rush
+and skull-king have no auth slice. This is the third dev seed defect, after
+`pnpm-dev-served-an-empty-database` and `the-dev-seed-that-lived-in-a-bash-string`.
+
+**Proposed:** make `scripts/dev-server.sh start` fail when an app with an
+`api/src/auth` folder prints no `[dev:db]` line naming a sign-in, in place of
+the `|| true`. A new app whose seed opens no screen then fails at start, for
+every app and not only talos.
 
 The knowledge entry is rewritten around the cookie:
 [`screenshotting-talos-behind-its-passkey.md`](../knowledge/screenshotting-talos-behind-its-passkey.md).

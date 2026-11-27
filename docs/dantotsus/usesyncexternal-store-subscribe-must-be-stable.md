@@ -5,8 +5,8 @@ detected-at: operator-deploy
 severity: high
 related-pr: '#23'
 fix-commits: [c5eb3e0b3d]
-eradication-level: 1
-eradication-paths: [eslint-rules/no-inline-subscribe-in-use-sync-external-store.js]
+eradication-level: 2
+eradication-paths: [eslint-rules/no-inline-subscribe-in-use-sync-external-store.js, .oxlintrc.json]
 time-to-detect: hours
 tags: [react, performance, observability]
 zone: apps/last-loop-lepin/site/src
@@ -15,119 +15,133 @@ prior-fix-commits: [4426fe4]
 
 # `useSyncExternalStore` re-subscribed on every render because the callback was a fresh arrow
 
-## Symptom
+## User impact
 
-Live retransmission on the preview deploy. Operator complaint
-verbatim: *« Le front envoie ENORMENENT de requetes au back,
-beaucoup trop. »* CloudWatch on the preview API Lambda showed
-~4 100 invocations per 5-min bin (≈ 14 req/s), holding steady across
-35 minutes of activity — instead of the intended ~150 per 5-min bin
-(≈ 0.5 req/s) implied by the 2 s `setInterval` polling `/api/standings`.
-The same metric on prod, after the kaizen-time fix landed, dropped 24×
-to the expected baseline.
+Live retransmission on the preview deploy. The operator wrote: *« Le front
+envoie ENORMENENT de requetes au back, beaucoup trop. »* ("The front end sends
+far too many requests to the back end.")
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Preview API Lambda invocations, CloudWatch | about 4,100 per 5-minute bin (about 14 req/s), steady over 35 minutes | about 150 per 5-minute bin (about 0.5 req/s), from the 2 s poll of `/api/standings` |
 
-1. **Why was the page firing many more requests than the 2 s timer
-   permits?** Because something *outside* the timer was also calling
-   `fetchOnce`.
-2. **Why was something outside the timer calling `fetchOnce`?** The
-   `subscribe` callback fed to `useSyncExternalStore` does *two
-   things*: it adds the listener AND, when the cache's `intervalId`
-   is `null`, it lazily kicks off the first fetch and starts the
-   interval. That lazy start fires once per subscription.
-3. **Why were there many subscriptions?** Each consumer render passed
-   a *fresh arrow function* as the `subscribe` argument. React's
-   semantics: when the subscribe identity changes, the previous
-   subscription is torn down (cleanup), then the new one is set up.
-4. **Why did the cleanup leave the cache in a state where the next
-   subscribe would re-fetch?** The cleanup removed the listener; the
-   listener set went to size 0; the lazy-start guard cleared
-   `intervalId` back to `null`. So the *very next* subscribe saw
-   `intervalId === null` and immediately fired a fresh `fetchOnce`
-   plus a fresh `setInterval`.
-5. **Why does the consumer re-render so often?** It re-renders on
-   *every* snapshot change (which is `notify`-triggered after each
-   `fetchOnce` resolves) — so we had a tight loop: fetch → snapshot
-   change → re-render → cleanup-then-resubscribe → fresh fetch →
-   snapshot change → re-render → … In practice the loop ran limited
-   by network latency, not by React's render speed, hence the
-   ~14 req/s ceiling.
+The session that wrote this entry read those CloudWatch numbers. The same
+metric on prod dropped 24 times to the expected baseline after the fix. Every
+spectator page polled this way. A multi-user spike would have multiplied it.
 
-**Root cause:** *thought `useSyncExternalStore`'s subscribe callback
-behaved like `useEffect` deps and was effectively memoised across
-renders; actually it is re-subscribed any time its function identity
-changes, so a fresh arrow on every render is a full cleanup-resubscribe
-cycle.*
+## Causal chain
 
-If the developer had known that, they would have wrapped the arrow in
-`useCallback` from the start — the very first version of the hook
-would have polled at the intended cadence.
+- The page fired about 28 times more requests than the 2 s timer allows.
+  - Something outside the timer also called `fetchOnce`.
+    - The `subscribe` callback of the hand-rolled cache did two things. It
+      added the listener, and when the cache's `intervalId` was `null`, it
+      started the first fetch and the interval.
+      - Each consumer render passed a fresh arrow as `subscribe`. React tears
+        down the old subscription and sets up the new one whenever the
+        function identity changes.
+        - The teardown removed the last listener and set `intervalId` back to
+          `null`. The next subscribe saw `null` and fired a fresh `fetchOnce`
+          and a fresh `setInterval`.
+          - Each fetch changed the snapshot, which re-rendered the consumer,
+            which re-subscribed. The loop ran as fast as the network allowed.
+      - The faulty line, in `useStandingsPoll.ts`:
+
+        ```ts
+        return useSyncExternalStore(
+          (listener) => subscribe(editionSlug, listener), // a new function on every render
+          () => ({ standings: entry.standings, error: entry.error }),
+          () => ({ standings: null, error: null }),
+        );
+        ```
+
+        - Commit `a387b4985` ("feat(last-loop-lepin): site routes + components
+          + observability", 2026-05-12, an agent) wrote it. The same commit
+          built `Countdown` on `useSyncExternalStore` "over a module-scoped
+          wall clock", a stable subscribe.
+          - The standings subscribe needed `editionSlug`, so it could not be a
+            module-scope constant like the clock's. The agent closed over the
+            argument with an inline arrow.
+        - PR #23 made the consumer re-render more often, with more data
+          derived from each snapshot. That turned a latent waste into a loop.
+
+## Root cause of occurrence
+
+*Thought an arrow that only forwards to a stable, slug-keyed `subscribe` is
+itself stable. Actually React compares the identity of the function it is
+handed, not what that function calls. A fresh arrow on every render is a full
+teardown and re-subscribe.* (Man.)
+
+The stable pattern was in the agent's context: it wrote one in `Countdown` in
+the same commit, and `apps/borsouvertures` passed module-scope subscribes at
+the parent commit. The prior won when the subscribe needed an argument, which
+none of those examples did. React's documentation says it plainly:
+
+> If you pass a different subscribe function between re-renders, React will
+> re-subscribe to the store using the newly passed subscribe function.
+> ([react.dev, `useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore))
+
+A Machine cause sat beside it. The home-made cache started fetching from inside
+`subscribe` and stopped on the last teardown. A plain subscribe would only have
+wasted a listener swap, not a request.
 
 ## Detection failure causes
 
-- **Typing:** TypeScript doesn't model React-hook stability — there
-  is no type-level way to say "this argument must keep the same
-  identity across renders". `useSyncExternalStore`'s signature
-  accepts any `(listener: () => void) => () => void`.
-- **Linter / static analysis:** Biome (recommended ruleset) doesn't
-  ship a rule for this. ESLint's `react-hooks/exhaustive-deps` would
-  flag a missing `useCallback` dep, but the codebase uses Biome, not
-  ESLint, and even ESLint doesn't flag the *raw subscribe argument*
-  shape.
-- **Functional validation locally:** `pnpm run test:core` (289 tests
-  passing) doesn't measure request counts. `pnpm test` (back-e2e)
-  doesn't either. There's no test that the polling honour the
-  configured cadence.
-- **CI:** Same — no test exercises render-time fetch frequency.
-- **Code review:** The original hook was written for PR #14 (months
-  ago) and reviewed without the perspective. The recent geometry
-  changes in PR #23 made the consumer re-render more often (more
-  derived data from each snapshot), surfacing the latent inefficiency.
-- **Staging / production monitoring:** Lambda invocation counts ARE
-  emitted to CloudWatch but no alarm threshold ever fired — the
-  ~14 req/s rate is well within the API's burst capacity, just
-  wasteful and would crater on a multi-user spike.
+- **Typing:** `useSyncExternalStore` accepts any
+  `(listener: () => void) => () => void`. TypeScript does not model identity
+  across renders.
+- **Linter:** the repository used Biome's recommended rules, which have no rule
+  for this. ESLint's `react-hooks/exhaustive-deps` checks `useCallback`
+  dependencies, not the raw subscribe argument.
+- **Tests and CI:** `pnpm run test:core` (289 tests) and the back-e2e suite
+  never count requests. No test measures the poll cadence.
+- **Monitoring:** Lambda invocation counts reach CloudWatch, but no alarm is
+  set on them. 14 req/s stays within the API's burst capacity.
 
 ## Countermeasure
 
-Wrapped the subscribe arrow in `useCallback` keyed on `editionSlug`
-(the only thing that should ever cause a real re-subscribe), plus
-`getSnapshot` for symmetry. The subscribe identity now stays stable
-across re-renders, the interval lives its whole life, and the
-cadence matches the 2 s `POLL_INTERVAL_MS`.
+Commit `4426fe4` in PR #23 wrapped the subscribe arrow in `useCallback` keyed on
+`editionSlug`, the only value that should cause a real re-subscribe, and
+`getSnapshot` for symmetry. The interval then lived its whole life and the
+cadence matched the 2 s `POLL_INTERVAL_MS`.
 
-- **Code:** commit `4426fe4` in PR #23 —
-  `apps/last-loop-lepin/site/src/data/useStandingsPoll.ts`.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** code diff (level 1 — structural impossibility) + DevX check (Biome Grit plugin) as defence-in-depth.
+**Reference:** commit `c5eb3e0b3` shipped a Biome Grit plugin that refused an
+inline subscribe. Commit `314f24821` ("build(meta): replace biome with eslint
+and prettier", 2026-08-08) replaced it with
+`eslint-rules/no-inline-subscribe-in-use-sync-external-store.js`, which oxlint
+runs as `borso/no-inline-subscribe-in-use-sync-external-store: error` in
+`.oxlintrc.json`. It reports any `ArrowFunctionExpression`,
+`FunctionExpression` or `FunctionDeclaration` passed as the first argument.
 
-**Reference:** this kaizen PR.
+The kaizen of PR #23 also removed the cause in this app. `useStandingsPoll.ts`
+and `useResource.ts` stopped calling `useSyncExternalStore` and wrapped
+`useQuery` from `@tanstack/react-query`, which owns the subscription. Commit
+`fcc8e1c30` later deleted `useStandingsPoll.ts` outright. That subtraction holds
+for server data, but `useSyncExternalStore` stays allowed for local stores.
 
-**The actual fix:** two layers.
+This entry first claimed level 1. A lint rule is level 2.
 
-*Layer 1 — the cause was removed.* `useStandingsPoll.ts` and
-`useResource.ts` no longer call `useSyncExternalStore` at all. The
-hand-rolled cache + listener set + lazy-start guard is gone ; both
-hooks now wrap `useQuery` from `@tanstack/react-query`, which owns
-the subscription lifecycle internally. The misconception that caused
-the original bug can't be expressed — there is no developer-written
-subscribe arrow to be unstable. See the companion knowledge entry
-[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
+**Proof it can fail:** `eslint-rules/no-inline-subscribe-in-use-sync-external-store.test.js`
+holds the refused inline shapes.
 
-*Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
-the future gets a lint error if they pass an inline arrow.* The
-rule fires on any literal arrow or function expression in that position.
-Shipped as the Biome Grit plugin
-`no-inline-subscribe-in-use-sync-external-store.grit`, registered in
-`apps/last-loop-lepin/biome.jsonc`, and now
-[`eslint-rules/no-inline-subscribe-in-use-sync-external-store.js`](../../eslint-rules/no-inline-subscribe-in-use-sync-external-store.js). The current three
-direct call sites (`Countdown.tsx`, `CorrectionBanner.tsx`,
-`App.tsx`) all pass module-scope identifiers and survive the rule.
+**Proposed:** the rule misses a subscribe declared in the component body and
+passed by name, such as `const subscribe = (listener) => ...;
+useSyncExternalStore(subscribe, ...)`. That is just as unstable. Extend the rule
+to resolve an identifier argument and report it when it is bound, inside the
+enclosing component or hook, to a function not wrapped in `useCallback` or
+`useMemo`. Every unstable subscribe shape would then fail lint, not just the
+inline one.
 
-## See also
-
-- [`docs/dantotsus/built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) — the broader pattern of rolling our own data-fetching primitives instead of reaching for a battle-tested library (TanStack Query); cross-linked from the knowledge entry on the same topic shipped in this kaizen PR.
-- [React docs — `useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) — *"If you pass a different subscribe function between re-renders, React will re-subscribe to the store using the newly passed subscribe function."*
+**Similar instances:** `git grep -n 'useSyncExternalStore(' -- apps` lists the
+call sites today. They pass module-scope functions or the members of a store
+built in `useMemo`, as the `hook-external-store` blueprint does
+(`element-width.hook.ts`, `tab-row-overflow.hook.ts`). One passes a call,
+`subscribeToMediaQuery(query)` in `media-query-matching.hook.ts`, which is
+stable only because it caches one function per query in a `Map`. The rule
+cannot judge that shape either way. None declares an unmemoised function in
+the component body. The broader habit of rolling our own
+data-fetching is
+[`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md).

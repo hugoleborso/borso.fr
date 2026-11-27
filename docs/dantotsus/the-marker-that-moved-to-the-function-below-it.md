@@ -15,111 +15,100 @@ blueprints: [repository-query]
 
 # The marker that moved to the function below it
 
-## Symptom
+## User impact
 
-Nothing failed. `blueprint-indexing --check` passed, every gate was green, and
-`runner.repository.ts` claimed a pattern it did not follow:
+Agents copy the code a `@FollowsBlueprint` marker points at when they write a
+new file of that layer, and reviewers trust the marker's claim. After one edit,
+`runner.repository.ts` claimed that a delete followed the read pattern, and
+every gate stayed green.
 
-```ts
-// @FollowsBlueprint repository-query
-export async function deleteAllEditionRunners(
-  executor: DatabaseExecutor,
-  editionSlug: string,
-): Promise<void> {
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `apps/last-loop-lepin/api/src/runner/runner.repository.ts` | `// @FollowsBlueprint repository-query` above `deleteAllEditionRunners`, a delete | The marker above `listRunnersForEdition`, the read it described |
+| `blueprint-indexing --check` | Passed, 941 followers before and after | A failure naming the moved claim |
 
-`repository-query` describes a read — *"Each function returns rows, an array of
-rows, or a count"*. The marker had belonged to `listRunnersForEdition` since
-`main`, and a standards reviewer found it three rounds later.
+`repository-query` says "Each function returns rows, an array of rows, or a
+count". A standards reviewer found the move three rounds later.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the marker describe a delete?** A new function was inserted
-   between the marker and the function it described.
-2. **Why did the insertion move it?** The edit's anchor was
-   `export async function listRunnersForEdition`, and the marker sits on the
-   line above that. Text inserted at the anchor lands between the two.
-3. **Why did no gate notice?** A `@FollowsBlueprint` marker is bound to its
-   subject by position and nothing else. Any exported declaration under it is a
-   syntactically valid subject, so after the insertion the file was still
-   well-formed: one marker, one blueprint that exists, one declaration beneath
-   it. The indexer counted 941 followers before and 941 after.
-4. **Why can the indexer not tell?** It resolves each marker to whatever
-   declaration follows and records the blueprint id. It never records *which*
-   declaration, so there is no earlier value for a later run to disagree with.
+- The marker `repository-query` claimed a delete function.
+  - A new function sat between the marker and the read it had described:
 
-**Root cause:** *thought "a `@FollowsBlueprint` marker is checked", actually
-"only the id is checked — the claim's subject is positional, and moving it
-produces a file that is still valid in every way a generator can see".*
+    ```ts
+    // @FollowsBlueprint repository-query   ← belonged to listRunnersForEdition
+    export async function deleteAllEditionRunners( // ← inserted here
+      executor: DatabaseExecutor,
+      editionSlug: string,
+    ): Promise<void> {
+    ```
+
+    - Commit `4da429e88` ("delete an edition's roster and punches with the
+      edition", PR #84, fifth review round) inserted the function at the
+      anchor `export async function listRunnersForEdition`. The marker sits
+      on the line above that anchor, so the new text landed between the two.
+      - A marker is bound to its subject by position alone: it claims
+        whatever declaration follows it. The edit that moved the declaration
+        did not touch the comment.
+
+## Root cause of occurrence
+
+*Thought inserting a function above another leaves the file's claims where
+they were. Actually a `@FollowsBlueprint` marker claims whatever declaration
+follows it, so anything inserted under it takes the claim.* (Machine)
+
+The tag is Machine. The marker's format carries the blueprint id and no
+subject, so the binding lives only in line order, which every insertion can
+change without leaving a trace.
 
 ## Detection failure causes
 
-- **Typing:** invisible. The marker is a comment.
-- **Linter:** `borso/no-comments` permits the annotation and says nothing about
-  what it sits on. No rule could: the delete is a legitimate subject for
-  *some* blueprint, just not this one.
-- **Generators:** `blueprint-indexing --check` validates that every marker
-  names a blueprint that exists and that the index is current. Both held. The
-  counts are stable under a move, which is what makes this class invisible to
-  it — a marker that changes subject is not a marker that disappears.
-- **Code review:** the diff showed a function added directly under an existing
-  comment. That reads as normal, because it is what adding a function usually
-  looks like.
-- **The reviewer:** caught it, and noted that no generator could. That is what
-  the seal exists to record.
+- **Typing:** the marker is a comment.
+- **Linter:** `borso/no-comments` permits the annotation and reads nothing of
+  what it sits on. A delete is a legitimate subject for some blueprint, so no
+  rule on the declaration alone could refuse it.
+- **Generators:** `blueprint-indexing --check` checked that every marker named
+  an existing blueprint and that the index was current. Both held. A marker
+  that changes subject keeps every count stable.
+- **Review:** the diff showed a function added under an existing comment,
+  which is what adding a function usually looks like.
 
 ## Countermeasure
 
-The marker moved back onto `listRunnersForEdition` in commit
-[`e41931e`](https://github.com/hugoleborso/borso.fr/commit/e41931e), on PR #84.
+Commit `e41931e` (PR #84) moved the marker back onto `listRunnersForEdition`.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — a baseline the check compares against)
+**Type:** DevX check (level 2), with a stated gap.
 
-**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`3583040`](https://github.com/hugoleborso/borso.fr/commit/3583040), [`ff9e8e9`](https://github.com/hugoleborso/borso.fr/commit/ff9e8e9)
+**Reference:** commits `3583040f97` and `ff9e8e97b3` (PR #85).
+`blueprint-indexing.ts` records the symbol each marker resolves to, per file,
+in `docs/standards/blueprint-subjects.json`. `listDetachedClaims` in
+`scripts/blueprints/subjects.core.ts` reports a recorded symbol that lost its
+marker while the file still declares it. A rename or a deletion takes the
+symbol with it and passes. The check still runs in `.husky/pre-commit` (line
+222) and `ci.yml` (line 191) today.
 
-**The actual fix:** `blueprint-indexing.ts` records the symbol each marker
-resolves to, per file, in `docs/standards/blueprint-subjects.json`, and
-`--check` reports a recorded symbol that lost its marker **while the file still
-declares it**. That last clause is the whole rule: a detached claim leaves the
-old symbol standing and unclaimed, whereas a rename or a deletion takes the
-symbol with it, and only the first is a defect. `listDetachedClaims` in
-[`scripts/blueprints/subjects.core.ts`](../../scripts/blueprints/subjects.core.ts)
-is the comparison, tested at the coverage the repository gates `*.core.ts` at.
+Only `--accept` writes the baseline, because SessionStart runs the generators
+and would otherwise rebaseline a displaced marker before pre-commit compared
+it. The first shape of the gate compared the whole baseline by value and
+failed an unrelated merge, and PR #85's own CI caught that.
 
-A move now shows up as a named failure — file, blueprint id, and the symbol the
-marker left behind. It does not stop a marker being moved; it stops a marker
-being moved *silently*, which is the whole of this defect.
+**The gap:** a marker written on the wrong function from the start, or added
+since the last `--accept`, is baselined as correct. Only a reader catches it.
 
-**The first shape of this gate was wrong, and PR #85's own CI caught it.** It
-compared the whole baseline by value, so *any* change failed — and the first
-thing it failed was an unrelated merge of `main` that added three new markers
-and moved none, with a message accusing its author of moving one. Two lessons,
-both now in the code above: a baseline gate has to compare the thing it claims
-to be about rather than the file it happens to store, and its failure message
-has to name the artefact, because "read the diff of a generated JSON file" is
-not something an operator can act on when Prettier reformats that file on every
-commit.
+**Proposed:** make the marker name its subject,
+`// @FollowsBlueprint repository-query listRunnersForEdition`, and have
+`blueprint-indexing --check` refuse a marker whose named symbol is not the
+declaration under it. A claim could then neither detach nor start on the
+wrong function, and `blueprint-subjects.json` with its `--accept` step could
+be deleted. The rewrite is mechanical: 2954 markers under `apps/`, none of
+which names a subject today (measured, `grep -rn "@FollowsBlueprint" apps`).
 
-Only `--accept` writes the baseline. A plain run must not, because SessionStart
-runs the generators: a marker displaced during a session would be rebaselined as
-correct before pre-commit ever compared it. The cost of that choice is that
-markers added since the last `--accept` are not yet protected — visible decay,
-which is the right side to fail on for a gate whose alternative failure is
-silent disarmament.
+**Proof it can fail:** not re-run this session. PR #85's CI run is the
+recorded refusal of the first shape.
 
-**What this does not fix:** a marker written on the wrong function from the
-start. The baseline records the first resolution it sees, so an initially wrong
-claim is baselined as correct. Only a reader catches that, which is why this
-sits at level 2 rather than level 1. The level-1 fix is to make the marker name
-its subject — `// @FollowsBlueprint repository-query listRunnersForEdition` —
-so the claim cannot detach at all. That is a mechanical rewrite of every marker
-in the tree and is worth doing on its own, not folded into a sweep.
-
-## See also
-
-- [`the-blueprint-that-mandated-the-refetch-that-undid-it.md`](./the-blueprint-that-mandated-the-refetch-that-undid-it.md)
-  — the same PR, the same shape one level up: there the blueprint's *text* was
-  wrong and no gate reads text; here its *subject* was wrong and no gate reads
-  subjects.
+**Similar instances:** `grep -rn "@Blueprint\b" apps` lists the canonical
+examples, marked in JSDoc blocks above a declaration. They are bound by
+position the same way (inferred from where they sit, not checked against the
+indexer), so the same insertion could move one.

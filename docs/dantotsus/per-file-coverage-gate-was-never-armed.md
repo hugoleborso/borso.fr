@@ -6,7 +6,7 @@ severity: high
 related-pr: '#40'
 fix-commits: [0bf0ad517b]
 eradication-level: 1
-eradication-paths: [.github/workflows/ci.yml, apps/borso-fr/vitest.config.ts]
+eradication-paths: [.github/workflows/ci.yml, apps/pragma/vitest.config.ts, apps/pragma/tsconfig.json]
 time-to-detect: months
 tags: [vitest, coverage, gates, ci, testing, purity]
 zone: .github/workflows/ci.yml
@@ -16,117 +16,119 @@ recurs: [biome-formatter-was-not-gated]
 
 # The 100% coverage gate on pure files was never armed
 
-## Symptom
+## User impact
 
-CLAUDE.md says every `*.core.ts` and `*.utils.ts` ships at 100% statement,
-branch, function and line coverage, and that the test runner asserts it.
-`docs/standards/02-purity-and-core-files.md` repeats it. Three ESLint rules push
-logic into those files on the strength of that promise.
+CLAUDE.md and `docs/standards/02-purity-and-core-files.md` promised that every
+`*.core.ts` and `*.utils.ts` file ships at 100% coverage, asserted by the test
+runner. Three lint rules push logic into those files on that promise.
 
-An agent adding a pure function noticed its file sitting at 66% and the suite
-still passing. Checking the claim rather than the file found the gate had never
-run for `apps/pragma` or `apps/last-loop-lepin`.
+| | Seen | Expected |
+| --- | --- | --- |
+| An agent adds a pure function in pragma | the file sits at 66% and the suite passes | the run exits non-zero |
+| Gate armed for the first time | ten pragma files fail, among them `api/src/auth/session-cookie.utils.ts` at 89% branches (session validation), and one in last-loop-lepin | already green, because already gated |
 
-With it armed, ten pragma files failed immediately, including
-`api/src/auth/session-cookie.utils.ts` at 89% branches — session validation.
+## Causal chain
 
-## Root-cause chain
+- A pure file at 66% passed in pragma and last-loop-lepin. Two faults combine.
+  - Branch one. Vitest ignored the coverage thresholds.
+    - The `coverage` block sat inside a project entry of `vitest.workspace.ts`.
+      Vitest reads `coverage` from the root config only, and accepted the block
+      without a warning.
+      - The faulty block, written by commit `5b2643aaa1`, last-loop-lepin's
+        scaffold, whose message says "Per-file coverage gate is wired via
+        vitest workspace":
 
-Two independent faults, either of which alone was enough.
+        ```ts
+        export default defineWorkspace([
+          { test: { name: 'core', /* ... */
+              coverage: { provider: 'v8', thresholds: { perFile: true, ...COVERAGE_THRESHOLDS } } } },
+        ```
 
-1. **The `coverage` block sat where Vitest never looks.** Both apps declared it
-   inside a project entry of `vitest.workspace.ts`. Vitest reads `coverage`
-   from the **root** config only; a block inside a project is accepted, ignored,
-   and reported nowhere. There is no warning, no deprecation notice, and the run
-   prints a coverage table, so the output looks exactly like a gate that passed.
-2. **`test:core` never passed `--coverage`, and `test:core` is what CI runs.**
-   The flag lived only on `test:coverage`, which needs a live Postgres and was
-   not the script `ci.yml` invoked for these two apps. So even with the first
-   fault fixed, nothing would have enforced anything.
+        - Every earlier config (`infra/cdk`, `borso-fr`, `borsouvertures`) was a
+          single config with the block at its root. Last-loop-lepin was the
+          first app split into two projects, so no example existed for where the
+          block goes in a workspace.
+          - Commit `0fafc57821` scaffolded pragma "modelled on last-loop-lepin"
+            and copied the block into the same place.
+  - Branch two. Nothing ran coverage for these apps in CI.
+    - `test:core`, the script CI called, did not pass `--coverage`. Only
+      `test:coverage` did, and it needs a live Postgres.
+    - `apps/pragma` appeared in no workflow at all. `grep -rn pragma .github/`
+      returned one line, in `path-filters.yml`.
+- A milder third fault. `borso-fr` and `borsouvertures` put the block at the
+  root but without `perFile: true`, so the thresholds applied to the aggregate.
 
-A third fault, milder, in the two front-end-only apps: their block is in the
-right place, but it omitted `perFile: true`, so four 100% thresholds applied to
-the aggregate across all pure files. One file at 90% would have been masked by
-its neighbours.
+## Root cause of occurrence
 
-And underneath all three: **`apps/pragma` appeared in no CI workflow at all.**
-`grep -rn pragma .github/` returned one line, in `path-filters.yml`. Its 609
-tests had never gated a pull request.
+*Thought a `coverage` block inside a workspace project entry applies to that
+project, actually Vitest has one coverage configuration per run, read from the
+root config, and a project's block is silently inert.* (Material)
+
+The agent that wrote `5b2643aaa1` had no example of a workspace in the
+repository, and Vitest 2 ran the misplaced block with no warning. The rule that coverage is root-only was not in its context (inferred).
+The commit message asserts the gate works, which shows the writer believed it.
 
 ## Detection failure causes
 
-- **The gate was verified by reading its configuration, not by breaking it.**
-  The config said `thresholds: { perFile: true, statements: 100, … }`, which is
-  what a working gate looks like. Nobody made a pure file drop below 100% and
-  checked that the run went red.
-- **A coverage table is not a coverage gate.** The run printed per-file
-  percentages the whole time, including the failing ones. Reading the table and
-  seeing numbers is not the same as the process exiting non-zero, and the two
-  look identical in a passing log.
-- **Three documents asserted the gate as fact.** Once CLAUDE.md and two
-  standards say a thing is enforced, the next reader inherits the claim rather
-  than testing it. The documentation made the defect harder to see, not easier.
+- **Typing:** under Vitest 2, the commit passed typecheck with the block in a
+  project entry, so the type either accepted it or never read the file
+  (inferred).
+- **Self-validation:** the gate was checked by reading its config, not by
+  breaking a file and watching the run fail.
+- **Run output:** the run printed a per-file coverage table, failing rows
+  included, and exited 0. A table and a gate look the same in a passing log.
+- **Documents:** three documents asserted the gate as fact, so later readers
+  inherited the claim rather than testing it.
 
 ## Countermeasure
 
-- The `coverage` block moved to the root `vitest.config.ts` in both full-stack
-  apps, and the dead blocks were **deleted** from `vitest.workspace.ts` rather
-  than left in place. An ignored block that looks load-bearing is what made this
-  invisible; leaving it would preserve the trap.
-- `--coverage` added to `test:core` in both apps, which is the script CI runs.
-- `perFile: true` added in `borso-fr` and `borsouvertures`. A no-op today, since
-  both are genuinely at 100% on every file, but it arms the gate the standard
-  describes rather than a weaker one.
-- `apps/pragma` added to the `app-tests` job, with its own Postgres service on
-  port 5433. A second instance rather than a second database on the first: each
-  app applies its own migrations and truncates its own table list, so sharing
-  one database would leave each teardown blind to the other's tables.
+Commit `0bf0ad517b` moves the `coverage` block to the root `vitest.config.ts` of
+both full-stack apps and deletes the inert blocks. It adds `--coverage` to
+`test:core`, adds `perFile: true` in `borso-fr` and `borsouvertures`, and adds
+pragma to the `app-tests` job with its own Postgres. The gate then failed ten
+pragma files. Three were real gaps, now tested. Seven were unreachable branches,
+deleted, the largest being a `try/catch` around Node's base64 decoder, which
+never throws.
 
 ## Eradication
 
-**Level 1 — structural.** The gate is now on the path CI takes, and it was
-proven to bite rather than assumed to. A deliberately unreachable branch was
-injected into one pure file per app and the exact CI command run:
+**Type:** structural impossibility (level 1), for the two faults that hid the
+gate. The `perFile` choice is still written by hand.
 
-```
-$ pnpm --filter @borso-app/pragma run test:core
-      Tests  609 passed (609)
-ERROR: Coverage for branches (94.44%) does not meet global threshold (100%)
-       for site/src/sw/manifest.utils.ts
-EXIT CODE = 1
-```
+**Reference:** commit [`0bf0ad517b`](https://github.com/hugoleborso/borso.fr/commit/0bf0ad517b)
+armed the gate. Two later states hold it today.
 
-Every test passing and the command still exiting 1 is the property that was
-missing. Both injections were reverted.
+- Vitest 4.1.12, installed today, types an inline project entry as
+  `ProjectConfig`, which omits `coverage`. Every app's `tsconfig.json` includes
+  its `vitest.config.ts`, and `pnpm -r typecheck` runs in CI. A planted block
+  fails to compile (proof below).
+- `ci.yml`'s *Pure suites and the per-file coverage gate* step passes
+  `--coverage` itself, for every app the matrix holds, whatever the app's
+  scripts say:
 
-## What the gate was hiding
+  ```yaml
+  if grep -q '"test:core"' "apps/$APP/package.json"; then
+    pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage
+  ```
 
-Ten pragma files and one in last-loop-lepin. Three were genuinely untested
-behaviours, now pinned: `transposeChord` leaving the enharmonic respellings
-`Cb`, `Fb`, `E#` and `B#` untouched rather than moving them a semitone;
-`resolveEmbed` falling back to a plain link for a YouTube playlist or channel;
-`pickPaletteHex` throwing on a fractional index.
+**Proof it can fail:** a scratch `defineConfig({ test: { projects: [{ test: {
+name: 'core', coverage: { ... } } }] } })` checked with `tsc`, measured this
+session: `error TS2769 ... 'coverage' does not exist in type 'ProjectConfig'`,
+exit 1. When the gate was armed, a planted unreachable branch in
+`site/src/sw/manifest.utils.ts` made `test:core` exit 1 with 609 tests passing.
 
-Seven were branches that could not be reached, and were deleted rather than
-covered. The largest: `fromBase64Url` wrapped `Buffer.from(value, 'base64url')`
-in a try/catch, but Node's base64 decoder silently drops invalid characters and
-never throws, so the catch and all three downstream `=== null` guards were dead.
+**Gap:** `thresholds: { perFile: true, statements: 100, ... }` is copied by hand
+into each root `vitest.config.ts` (`grep -rln perFile --include='vitest*.ts' .`
+lists them). A new app that omits `perFile` or the whole block passes every
+check.
 
-The remaining two were `mostRecentCorrectionAt` and `formatStandingsAsCsv` in
-`ranking.core.ts`, both exported and both with no test at all. The first feeds
-the spectator page's "results amended at".
+**Proposed:** export the pure-file coverage block once, from a shared module
+beside `infra/cdk`, and make each app's `vitest.config.ts` spread it.
+`scripts/check-app-registration.sh`, which already refuses an app missing its
+path filter, would refuse an app config that does not import it. The hand
+copies go away, and a missing or weakened gate fails the first commit of a new
+app.
 
-That ratio is the argument for the gate. Three real gaps and seven dead
-branches, none of which any reviewer had spotted, in files the standards
-describe as the most carefully tested in the repository.
-
-## What to check next time
-
-Before trusting a gate, break something and watch it fail. A configuration that
-reads correctly, a report that prints numbers, and a documented promise are
-three kinds of evidence that all look like enforcement and none of which is.
-
-The specific trap: `coverage` is root-config-only. Any `coverage`
-key inside a project entry of a workspace or a `projects` array is silently
-inert. There is exactly one coverage configuration per Vitest run, shared by
-every project in it.
+**Similar instances:** `ls apps/*/vitest.workspace.ts` finds none left. Every
+app now declares its suites as `projects` under one root `vitest.config.ts`,
+which pragma's blueprint describes.

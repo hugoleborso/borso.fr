@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#27'
-fix-commits: [e138811ba9]
-eradication-level: 2
-eradication-paths: [apps/borso-fr/package.json]
+fix-commits: [e138811ba9, 51558c14c6]
+eradication-level: 5
+eradication-paths: [CLAUDE.md, apps/last-loop-lepin/package.json]
 time-to-detect: minutes
 tags: [claude-md, harness, hooks, pre-commit, ci, self-improvement-loop]
 zone: CLAUDE.md
@@ -14,113 +14,108 @@ zone: CLAUDE.md
 
 # Wrote off a failing test as "preexisting" and moved on
 
-## Symptom
+## User impact
 
-During PR #27 the local `pnpm run test:core` failed on
-`cdk/test/stack.test.ts` with :
+During PR #27 the session met a red local test, called it "preexisting" and
+carried on. The operator had to stop it: « NO ISSUE IS PRE EXISTING. CD ensures
+it is not the case. Write ».
 
-```
-Failed to resolve entry for package "@borso/infra".
-The package may have incorrect main/module/exports specified in
-its package.json.
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `pnpm run test:core` in last-loop-lepin | `cdk/test/stack.test.ts` fails with `Failed to resolve entry for package "@borso/infra"` | the suite passes on a fresh checkout, as it does in CI |
+| The session's report | the failure set aside as "preexisting" | the failure fixed, whoever introduced it |
 
-Reflex was to qualify the failure as *preexisting* (i.e. "not
-introduced by my diff") and proceed. The user pushed back hard
-in all caps :
+## Causal chain
 
-> "NO ISSUE IS PRE EXISTING. CD ensures it is not the case. Write"
+- The session walked past a red test. Two branches meet here.
+  - Branch one. The test was red.
+    - `cdk/test/stack.test.ts` imports `@borso/infra` through its built entry,
+      and `infra/cdk/dist/` did not exist locally.
+      - last-loop-lepin's `test:core` ran Vitest with no build before it:
 
-CI ran the same gate in `.github/workflows/ci.yml` and *did*
-green-light it — but only because CI explicitly sequenced
-`pnpm --filter @borso/infra build` before `test:core`. Locally,
-nothing primed `infra/cdk/dist/`, so the import resolved to
-nothing and the test errored.
+        ```json
+        "test:core": "vitest run --project core",
+        ```
 
-## Root-cause chain
+        - Commit `6f3b84222f` (2026-05-15) wired the app's suite into CI and
+          put the build in the workflow instead of the script. Its message
+          names the need: "Also build `@borso/infra` before app-tests
+          (last-loop-lepin's cdk/test imports the construct package via its
+          built entry point)".
+          - CI and the laptop ran two different definitions of the same gate,
+            one in `ci.yml`, one in `package.json`.
+  - Branch two. The session called the failure "preexisting".
+    - It saw no link between the failure and its diff, and read "not caused by
+      me" as "not mine to fix".
+      - No rule in CLAUDE.md said otherwise at the time. The operator's
+        correction became the first one, in commit `e138811ba9`.
 
-1. **Why?** CDK test depends on the compiled output of
-   `@borso/infra` (cross-workspace consumer). The local
-   `test:core` script didn't list that build as a prerequisite.
-2. **Why?** When CI shipped the workspace, the build was added
-   to the workflow YAML rather than to the script in
-   `package.json`. The harness was correct on CI ; the local
-   gate was missing that one step.
-3. **Why?** The agent saw a red local test, didn't connect it
-   to the workspace-build step CI was doing, and labelled it
-   "preexisting" — moving past it. The behavioural failure mode
-   is broader than this one PR : *"a failure I didn't introduce
-   isn't mine to fix"*.
+## Root cause of occurrence
 
-**Root cause:** *thought local test failures with no obvious link
-to the diff are out of scope, actually any failing gate ON the
-branch IS in scope — CI runs the same gate and will block the
-PR, or worse a future regression slips in mislabelled as inert.*
+Two writers, two causes.
+
+*The writer of `6f3b84222f` thought a job's prerequisite belongs in the workflow
+that runs it, actually the workflow and the laptop each read their own copy, and
+only the script is read by both.* (Machine)
+
+The codebase let CI call a gate through its own steps rather than through the
+app's script, so a prerequisite could live on one side only.
+
+*The session at PR #27 thought a failure its diff did not cause was out of scope,
+actually CI runs the same gate and the branch cannot merge until it passes.*
+(Material)
+
+The rule that every failing gate is in scope was absent from its context. It did
+not exist yet.
 
 ## Detection failure causes
 
-- **CI:** Caught the failure mode in its own context (build +
-  test), masking the gap in the local harness.
-- **Pre-commit:** Didn't run the failing test (test:core is
-  pre-push, not pre-commit).
-- **Convention / culture:** No CLAUDE.md rule explicitly forbade
-  the "preexisting" carve-out. The user had to surface it
-  in-thread.
+- **CI:** it built `@borso/infra` in its own step, so it stayed green and hid
+  the gap in the local script.
+- **Pre-commit:** `test:core` runs at pre-push, not pre-commit.
+- **Harness:** nothing read a reply that set a failure aside.
 
 ## Countermeasure
 
-Two parallel eradications :
-
-1. Add a hard rule to CLAUDE.md under *Tone & rigor* :
-   > "Preexisting" is not an excuse. If a test fails, a build
-   > breaks, a linter shouts — fix it, regardless of who
-   > introduced it or when. … Investigate, then either fix the
-   > underlying issue or fix the harness so it can't fire
-   > spuriously (e.g. a missing `pnpm --filter <pkg> run build`
-   > prerequisite belongs in the workspace's test script). Never
-   > qualify a failure as "preexisting" and move on.
-2. Apply the rule immediately to the specific harness gap that
-   caused this failure — add `pnpm --filter @borso/infra run
-   build &&` to `test:core` (and `test:coverage`) in
-   `apps/last-loop-lepin/package.json` so the local gate is
-   self-contained.
-
-## Eradication shipped
-
-**Type:** knowledge addition + code diff (level 2 — pre-flight
-prerequisite landed in the workspace script, and CLAUDE.md rule
-now governs how future "preexisting" claims are treated)
-
-**Reference:** PR #27 · commits
-[`dc6684d`](https://github.com/hugoleborso/borso.fr/commit/dc6684d)
-(CLAUDE.md rule) +
-[`82f0e29`](https://github.com/hugoleborso/borso.fr/commit/82f0e29)
-(also bundled the same theme via `test:core` prerequisite)
-
-**The actual fix (CLAUDE.md):**
-
-```diff
-+- **"Preexisting" is not an excuse.** If a test fails, a build
-+  breaks, a linter shouts — fix it, regardless of who
-+  introduced it or when. CI gates every PR with the same
-+  suites, so a failure you walk past is a failure that will
-+  block the next push or, worse, a regression you
-+  mislabelled. …
-```
-
-**The actual fix (test:core script):**
+Commit `51558c14c6` adds the build to last-loop-lepin's script, so the local gate
+stands on its own:
 
 ```diff
 -"test:core": "vitest run --project core",
 +"test:core": "pnpm --filter @borso/infra run build && vitest run --project core",
 ```
 
-**Sibling defects swept:** none — but the rule applies the next
-time the agent feels the urge to label something "preexisting".
-The orphan `OUT_OF_ZONE_*` constants cleaned up at the same time
-(left dead by an earlier geofence removal) were the immediate
-test of the rule.
+Commit `e138811ba9` adds the rule to CLAUDE.md. It reads today, under
+*Principles*, "**Fix the failures you find**, whoever caused them.
+'Preexisting' is not a reason to walk past."
 
-## See also
+## Eradication
 
-- [`CLAUDE.md`](../../CLAUDE.md) — *Tone & rigor* section.
+**Type:** knowledge (level 5)
+
+**Reference:** commits [`e138811ba9`](https://github.com/hugoleborso/borso.fr/commit/e138811ba9)
+and [`51558c14c6`](https://github.com/hugoleborso/borso.fr/commit/51558c14c6).
+Every app that has a `test:core` now starts it with `pnpm --filter @borso/infra run build`
+(`grep -n '"test:core"' apps/*/package.json`, measured). That line is copied by
+hand, and the CLAUDE.md principle is a written instruction, so the level is 5.
+
+**Proof it can fail:** none. The Machine cause is still live. `ci.yml` builds
+`@borso/infra` in its own step, then calls
+`pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage`
+directly, not `test:core`. A prerequisite missing from the script still passes
+CI.
+
+**Proposed:** make CI run the script. In the *Pure suites and the per-file
+coverage gate* step of `ci.yml`, call
+`pnpm --filter "@borso-app/$APP" run test:core --coverage` and delete the
+separate infra build step for that job. pnpm appends the extra argument to the
+script's last command (inferred, not tried). The laptop and CI would then run
+one command, and a missing prerequisite would fail in CI as well as locally.
+
+**Proposed:** a Stop check in `scripts/hooks/checks/`, modelled on
+`screens-shown.core.ts`, that refuses a reply using "preexisting" or
+"pre-existing" to set a failure aside. The CLAUDE.md principle would then hold
+when the model's habit wins.
+
+**Similar instances:** `grep -n 'pnpm --filter @borso/infra build' .github/workflows/ci.yml`
+lists each CI step that builds the constructs outside an app's script.

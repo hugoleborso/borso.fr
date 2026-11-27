@@ -17,45 +17,40 @@ blueprints: [query-optimistic-mutation]
 
 # The blueprint that mandated the refetch that undid it
 
-## Symptom
+## User impact
 
-Deleting an instrument on `pragma` did not look optimistic. The row went, then
-came back. The operator reported it as a missing optimistic update: *"Il n'y a
-pas d'optimistic update à la suppression d'instrument sur pragma."*
+A pragma member who deleted an instrument saw the row disappear, then come back.
 
-`useDeleteInstrument` had an optimistic update the whole time. Its own
-`onSettled` was putting the row back.
+| | Seen | Expected |
+| --- | --- | --- |
+| Delete an instrument | The row goes, then reappears | The row goes and stays gone |
 
-## Root-cause chain
+The operator reported it as a missing optimistic update: *"Il n'y a pas d'optimistic update à la suppression d'instrument sur pragma."* ("There is no optimistic update on instrument delete in pragma.") `useDeleteInstrument` had an optimistic update the whole time. Its own `onSettled` put the row back. The same shape sat in 23 mutations across `pragma` and `last-loop-lepin`.
 
-1. **Why did the deleted row come back?** `onSettled` ran
-   `invalidateQueries({ queryKey: instrumentKeys.all })`, which refetched
-   `GET /instruments` while the instruments screen had that query mounted, and
-   the answer still carried the deleted row.
-2. **Why did the answer still carry it?** Same reason as in June: the `GET` is
-   a separate request on a separate Aurora DSQL connection, and DSQL read after
-   write visibility holds per connection, so a read starting microseconds after
-   another connection's commit can still see the snapshot from before it.
-3. **Why was that shape still in the code, three months after a dantotsu named
-   it?** Because
-   [`optimistic-reorder-reverted-by-stale-dsql-read`](./optimistic-reorder-reverted-by-stale-dsql-read.md)
-   shipped its eradication as a sentence in CLAUDE.md and changed one call site
-   out of twenty-three. Nothing mechanical read that sentence.
-4. **Why did the twenty-two siblings keep it?** Because the blueprint they name
-   told them to. `query-optimistic-mutation`'s own `@BlueprintDescription`
-   ended on *"`onSettled` invalidates only once `isLastPendingMutation` reports
-   the family has drained"*. A follower copying the canonical example copied the
-   refetch, and `docs/standards/06-data-fetching.md` carried both instructions
-   at once: a table row prescribing the `onSettled` invalidate, and a section
-   below it forbidding exactly that.
-5. **Why did nobody notice the fixed call site was different?** Because
-   `borso/no-comments` bans the comment the June fix used to explain itself, so
-   the fix reduced to an absence. A missing `onSettled` reads as an omission,
-   not as a decision, and nobody sweeps for an omission.
+## Causal chain
 
-**Root cause:** *a dantotsu whose countermeasure was prose left the canonical
-example still teaching the defect, so the pattern kept reproducing itself, and
-the one corrected instance was indistinguishable from a forgotten one.*
+- The deleted row came back.
+  - `onSettled` refetched `GET /instruments` while the instruments screen had that query mounted, and the answer still carried the deleted row:
+
+    ```ts
+    onSettled: () => {
+      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
+        return;
+      void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });  // ← the faulty line
+    },
+    ```
+
+    - The `GET` ran on a separate Aurora DSQL connection. DSQL read-after-write visibility holds per connection, so a read starting just after another connection's commit can see the snapshot from before it.
+  - The mutation copied its blueprint. `query-optimistic-mutation`'s `@BlueprintDescription`, written in `f2fa6f626`, ended on *"`onSettled` invalidates only once `isLastPendingMutation` reports the family has drained"*. 23 `@FollowsBlueprint` markers pointed at it (Machine).
+    - `docs/standards/06-data-fetching.md` carried both instructions at once: a table row prescribing the `onSettled` invalidate, and a section below forbidding it.
+    - June's [`optimistic-reorder-reverted-by-stale-dsql-read`](./optimistic-reorder-reverted-by-stale-dsql-read.md) named this defect. It shipped its eradication as a CLAUDE.md sentence and changed one call site of 23 (Method).
+      - `borso/no-comments` banned the comment that fix used to explain itself, so the one corrected site read as a forgotten `onSettled`, not a decision.
+
+## Root cause of occurrence
+
+*Thought the canonical blueprint was safe to copy. Actually it prescribed the `onSettled` refetch the June entry had named, because June's eradication was prose and never reached the blueprint.* (Machine, with Method behind it)
+
+The CLAUDE.md sentence was loaded in every session (`git show f2fa6f626^:CLAUDE.md`, line 71: "don't blind-refetch a write whose full result the client already holds"). The blueprint and the standard's table contradicted it, and a follower copies the example. Source: the blueprint description quoted above, and the 23 followers.
 
 ## Detection failure causes
 
@@ -88,32 +83,35 @@ the one corrected instance was indistinguishable from a forgotten one.*
 Three shapes now, split by what the client cannot know rather than by whether a
 refetch felt safe:
 
-- `query-optimistic-mutation` — `onMutate` plus `onError`, and nothing that
+- `query-optimistic-mutation`: `onMutate` plus `onError`, and nothing that
   refetches.
-- `query-optimistic-insert` — the same, plus an `onSuccess` that swaps the row
+- `query-optimistic-insert`: the same, plus an `onSuccess` that swaps the row
   written under a client generated identifier for the row the response carries.
-  This is what removes the last honest reason to refetch: every `POST` in both
+  This is what removes the last honest reason to refetch. Every `POST` in both
   applications returns the created row through the same repository projection
   the list select uses, so the response already holds everything the `GET`
   would have brought back.
-- `query-pessimistic-mutation` — unchanged, for the writes whose result the
+- `query-pessimistic-mutation`: unchanged, for the writes whose result the
   response alone cannot settle.
 
 Applied to all 23 sites across `pragma` and `last-loop-lepin`. The four
-`setlists` mutations that had no optimistic path at all — rename, delete, link,
-unlink, each fully determined by its request — became optimistic in the same
-pass.
+`setlists` mutations that had no optimistic path at all became optimistic in
+the same pass. Rename, delete, link and unlink are each fully determined by
+their request.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2) — a lint rule that rejects the shape at lint
-time. June's entry claimed level 2 for a CLAUDE.md sentence a reviewer was
-supposed to enforce, which is level 5 on this ladder; nothing mechanical ran,
+**Type:** DevX check (level 2)
+
+**Reference:** commits [`c933140`](https://github.com/hugoleborso/borso.fr/commit/c933140e0f) and [`a5f609d`](https://github.com/hugoleborso/borso.fr/commit/a5f609da82). The rule is enabled as an error today (`.oxlintrc.json:558`, read this session).
+
+A lint rule rejects the shape at lint time. June's entry claimed level 2 for a CLAUDE.md sentence a reviewer was
+supposed to enforce, which is level 5 on this ladder. Nothing mechanical ran,
 and that is why the shape survived in twenty-two places.
 
 `borso/no-refetch-of-optimistically-written-query` rejects an
 `invalidateQueries` or `refetchQueries` call whose key covers a key the same
-mutation wrote in `onMutate`. It resolves the transitive case too: it first
+mutation wrote in `onMutate`. It resolves the transitive case too. It first
 names every function in the file whose body refetches, then treats a call to
 one of those names as the refetch itself, because extracting the call into a
 well-named helper is exactly the move a reader makes when a linter complains,
@@ -122,35 +120,32 @@ and it is the move `last-loop-lepin` had already made unprompted.
 June concluded no rule was possible, because telling a full-state-known write
 from an identifier-needing one is not statically decidable. That is true and it
 is not the question. *"Does this refetch a key this mutation already wrote?"* is
-decidable, because the key factories are object literals: expanding `list()`
+decidable, because the key factories are object literals. Expanding `list()`
 through its spread of `all` gives `['editions','list']`, an argument gives a
 segment matching anything, and overlap is then the prefix test TanStack applies
-itself. So a refetch of a sibling key needs no exception at all — which matters,
+itself. So a refetch of a sibling key needs no exception at all. That matters,
 because the first version of this rule banned the pair outright, and the one
 place in either application with a legitimate reason to refetch had to carry a
 four-sentence comment excusing itself. A rule that makes correct code apologise
 is the wrong rule.
 
-The rule's own suite pins both directions: a refetch of `editionKeys.current()`
+The rule's own suite pins both directions. A refetch of `editionKeys.current()`
 beside an optimistic write of `editionKeys.list()` passes, and the same code
 refetching `editionKeys.all` does not.
 
 The rule is the floor, not the answer. Reviewing this branch turned up the
 `current` refetch it now permits, and the better fix was to stop refetching at
-all: that projection is a pure selection over the list the mutation had just
+all. That projection is a pure selection over the list the mutation had just
 rewritten, so it moved to `apps/last-loop-lepin/domain/` and both sides apply
 it. A refetch the rule permits is still worth asking whether the client could
 have derived.
 
 A regression test in `instruments.queries.test.tsx` pins the behaviour from the
-screen's side: the probe mounts `useInstrumentsList` beside the mutation, the
+screen's side. The probe mounts `useInstrumentsList` beside the mutation, the
 stub answers any `GET` with the pre-delete list, and the test asserts both that
 the row stays gone and that the delete issues no read. It fails on the old code
 with the reported symptom, the deleted row present again.
 
-## See also
+**Proof it can fail:** the rule's suite, `eslint-rules/no-refetch-of-optimistically-written-query.test.js`, refuses a refetch of `editionKeys.all` beside an optimistic write of `editionKeys.list()`, and the regression test fails on the old code with the deleted row present again.
 
-- [`optimistic-reorder-reverted-by-stale-dsql-read.md`](./optimistic-reorder-reverted-by-stale-dsql-read.md)
-  — the same root cause found in June, on one surface, eradicated in prose.
-- [`dsql-strong-consistency-is-per-connection.md`](../knowledge/dsql-strong-consistency-is-per-connection.md)
-  — the database property underneath both.
+**Similar instances:** all 23 `@FollowsBlueprint query-optimistic-mutation` sites were changed in the same pass. `grep -rn "@FollowsBlueprint query-optimistic" apps/` lists today's followers, and the rule runs on each of them.

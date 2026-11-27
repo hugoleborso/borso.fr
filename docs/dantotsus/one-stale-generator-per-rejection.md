@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#60'
-fix-commits: [59867d4e77]
-eradication-level: 2
-eradication-paths: [.husky/pre-commit]
+fix-commits: [59867d4e77, 9326a890a]
+eradication-level: 1
+eradication-paths: [.gitignore]
 time-to-detect: minutes
 tags: [pre-commit, gates, hooks, meta, developer-experience]
 zone: .husky/pre-commit
@@ -14,91 +14,101 @@ zone: .husky/pre-commit
 
 # One stale generator per rejection
 
-## Symptom
+## User impact
 
-Committing the setlist fix in PR #60 took four attempts. Each rejection
-named exactly one generated file:
+Committing the setlist fix in PR #60 took four attempts. It should have taken
+one, with the source change and nothing else.
 
-```
-1st  .claude/skills/blueprint/blueprint-index.md is out of date. Run …
-2nd  .claude/skills/blueprint/blueprint-coverage.html is out of date. Run …
-3rd  docs/architecture/pragma-architecture.json is out of date. Run …
-4th  (committed)
-```
+| Attempt | Seen | Expected |
+| --- | --- | --- |
+| 1st | `.claude/skills/blueprint/blueprint-index.md is out of date. Run …` | committed |
+| 2nd | `.claude/skills/blueprint/blueprint-coverage.html is out of date. Run …` | |
+| 3rd | `docs/architecture/pragma-architecture.json is out of date. Run …` | |
+| 4th | committed | |
 
-Every regeneration was a one-line command; the cost was the three
-round-trips to learn which three.
+Each regeneration was a one-line command. The cost was three round trips to
+learn which three (measured from the session by the first version of this
+entry).
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the commit fail three times?** Three separate `--check`
-   invocations guard three generated artefacts.
-2. **Why did they not report together?** They run as consecutive
-   commands under `set -e`, so the first non-zero exit ends the hook.
-3. **Why was that the natural way to write it?** Each check was added at
-   a different time, each as a single line following the one before, and
-   under `set -e` a single line is a complete gate.
-4. **Why does it matter?** A source change that moves the map usually
-   moves the blueprint index too, and a new blueprint moves the coverage
-   page as well, so the three are correlated by construction: the common
-   case is not one stale file, it is all of them.
-5. **Why is continuing cheap?** Each generator walks a tree that the
-   first pass has already pulled into the file cache. The measured
-   difference is a pass, not a build.
+- The commit was refused three times, one generated file per refusal.
+  - The hook ran three `--check` commands in sequence under `set -e`, so the
+    first non-zero exit ended it. At `59867d4e77^`:
 
-**Root cause:** thought *"a gate stops at the first failure"*, actually
-*"a gate whose failures are independent should report all of them, or
-it charges one commit cycle per fact it already knows"*.
+    ```bash
+    pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
+    pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts --check
+    # …
+    pnpm exec tsx scripts/architecture/architecture-graph.ts --check
+    ```
+
+    - Each `--check` regenerated its file and compared it with the copy in
+      git, because the generated file was committed beside its source. A
+      source change made all three stale at once.
+      - Generated outputs were committed as if they were inputs. Each
+        generator that was added brought its output and a byte comparison
+        with it (Method).
+
+## Root cause of occurrence
+
+*Thought a generated file belongs in git beside its source, so a gate must keep
+it fresh, actually an output any command recomputes is not an input, and
+committing it makes every source change regenerate it by hand.* (Method)
+
+Commit `9326a890a`, two days later, states it: "Fourteen files were written by
+a generator and committed next to the source they came from, each gated by a
+`--check` that regenerated the file and compared it to the copy in git." The
+first version of this entry stopped one level higher, at the hook's fail-fast
+shape.
 
 ## Detection failure causes
 
-- **Typing:** shell.
-- **Linter / static analysis:** nothing reads a hook for whether its
-  checks are independent.
-- **Functional validation locally:** each check was tested alone, where
-  fail-fast and report-all are indistinguishable.
-- **CI:** CI runs the same generators and also stops at the first, but
-  nobody is waiting on a CI run the way they wait on a commit.
-- **Code review:** three correct lines in sequence read as three correct
-  lines.
+- **Linter:** nothing reads a hook for whether its checks are independent.
+- **Local validation:** each check was tested alone, where fail-fast and
+  report-all look the same.
+- **CI:** it ran the same generators and also stopped at the first, but nobody
+  waits on CI the way they wait on a commit.
+- **Review:** three correct lines in sequence read as three correct lines.
 
 ## Countermeasure
 
-- **Code:** commit `59867d4` — the three checks run to completion, the
-  failures are collected, and one rejection prints every command to run.
-- **Operator action:** none.
+Commit [`59867d4`](https://github.com/hugoleborso/borso.fr/commit/59867d4e77)
+ran the three checks to completion, collected the failures, and printed every
+command in one refusal. Verified with two artefacts stale at once: both named.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the gate now reports every stale artefact at once)
+**Type:** structural impossibility (level 1).
 
-**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`59867d4`](https://github.com/hugoleborso/borso.fr/commit/59867d4)
+**Reference:** commit [`9326a890a`](https://github.com/hugoleborso/borso.fr/commit/9326a890a)
+(2026-08-20) gitignored the generated outputs and removed the byte comparison.
+Its message says "`--check` no longer detects staleness anywhere." `.gitignore`
+now holds:
 
-**The actual fix:**
-
-```diff
-+generator_failures=""
-+run_generator_check() {
-+  if ! pnpm exec tsx "$1" --check; then
-+    generator_failures="${generator_failures}  pnpm exec tsx $1
-+"
-+  fi
-+}
-@@
-+if [ -n "$generator_failures" ]; then
-+  echo "[pre-commit] ERROR: generated files are stale. Run all of these, then commit again:" >&2
-+  printf '%s' "$generator_failures" >&2
-+  exit 1
-+fi
+```text
+docs/architecture/*-architecture.json
+.claude/skills/blueprint/blueprint-index.md
+.claude/skills/blueprint/blueprint-coverage.html
 ```
 
-Verified with two artefacts made stale at once: both are named, and the
-summary lists the two commands to paste.
+`git ls-files` returns none of the three. `scripts/reports.sh` rebuilds them
+before anything reads them, as
+[ADR-2026-08-20T1031](../adr/2026-08-20T1031-generated-files-are-not-committed.md)
+and `docs/knowledge/generated-reports-are-rebuilt-not-committed.md` record. A
+file that is not committed cannot be stale in a commit, so the refusal this
+entry counts cannot happen. The `blueprint-indexing.ts --check` left in
+`.husky/pre-commit` refuses an annotation naming no blueprint, which a person
+can get wrong.
 
-**Sibling defects swept:** none — the other pre-commit checks are
-already independent single greps whose failures are self-describing.
+The gap: a new generator whose output someone commits would bring the class
+back. The knowledge entry above, triggered on `.gitignore` and the blueprint
+outputs, is what meets that author.
 
-## See also
+**Proof it can fail:** the refusal needs a committed output to compare. With
+the three outputs gitignored, `git ls-files` lists none, so there is nothing to
+plant.
 
-- [`a-generated-file-cannot-contain-its-own-commit`](./a-generated-file-cannot-contain-its-own-commit.md) — the other way these generated artefacts bite.
-- [`docs/knowledge/gate-timings-before-and-after.md`](../knowledge/gate-timings-before-and-after.md) — what each gate costs, and why cheap checks belong on the commit.
+**Similar instances:** `git ls-files | grep -E '\.(generated|gen)\.|-architecture\.json|blueprint-index'`
+finds nothing. The committed files the ADR keeps on purpose are inputs a
+person accepted, such as `docs/standards/convention-baseline.json`.

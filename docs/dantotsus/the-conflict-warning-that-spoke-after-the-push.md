@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#252'
-fix-commits: [self]
+fix-commits: [self, 9b8d380ed]
 eradication-level: 2
 eradication-paths: [.husky/pre-push]
 time-to-detect: minutes
@@ -34,21 +34,22 @@ Measured from the merged session's log and PR #252's commit list.
 
 - PR #252 had no checks after a push.
   - The branch conflicted with `origin/main` on `SetlistOrderList.tsx`.
-    - `.husky/pre-push` detected the conflict, but only printed it, and only at
-      the end, after the gates had run and with exit status 0.
+    - `.husky/pre-push` detected the conflict, but only printed it, at the end,
+      after the gates had run, inside the `claude/*` reminder block, with exit
+      status 0.
       - PR #71 shipped the check as a warning, the lowest rung that would
         surface `a-conflicted-pull-request-gets-no-checks.md` at push time.
+        `the-entry-existed-and-i-lost-the-hour-anyway.md` chose "DevX check
+        (level 2, pre-push warning)". (Method)
 
 ## Root cause of occurrence
 
 *Thought a warning at push time is enough to make the session merge main,
 actually a warning printed after a successful push reads as a footnote to a
-success.*
+success.* (Method)
 
-`docs/dantotsus/the-entry-existed-and-i-lost-the-hour-anyway.md` chose
-"DevX check (level 2, pre-push warning)". The hook placed it after
-`wait_for_gates`, inside the `claude/*` reminder block, so it ran last and could
-not change the exit status.
+The process that picked the mechanism counted a warning as a DevX check. A
+check that cannot change the exit status detects nothing a session acts on.
 
 ## Detection failure causes
 
@@ -58,45 +59,44 @@ not change the exit status.
 
 ## Countermeasure
 
-The conflict check moves to just after the hook fetches `origin/main`, before
+The conflict check moved to just after the hook fetches `origin/main`, before
 the range, the install and the gates, and exits 1. A push of a conflicted
 branch now costs one `git fetch` and one `git merge-tree` instead of the full
-gate run, and it does not land.
+gate run, and it does not land. Proof on a scratch worktree at `origin/main^`
+with a line main's last commit rewrote: the hook printed
+`[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it.`
+and exited 1 before any gate started.
 
 ## Eradication
 
 **Type:** DevX check (level 2)
 
-**Reference:** commit [self] in [PR #255](https://github.com/hugoleborso/borso.fr/pull/255)
+**Reference:** the commit adding this file, in PR #255, then
+[`9b8d380ed`](https://github.com/hugoleborso/borso.fr/commit/9b8d380ed) (#359).
+
+The refusal shipped here rested on an untested premise: that the local
+`git merge-tree` predicts the merge GitHub makes. It grepped the merge output
+for `^+<<<<<<<`. The premise was false.
+[the-union-merge-only-this-checkout-could-see](./the-union-merge-only-this-checkout-could-see.md)
+(2026-11-15) found that a local merge applies the checkout's merge drivers. A
+branch still declaring `merge=union` merged clean locally, the guard let
+`4c0193b` through, and GitHub ran no CI on PR #351 for 80 minutes.
+
+`9b8d380ed` replaced the grep with the merge GitHub makes. Today's hook reads
+attributes from the empty tree, so no driver applies, and reads
+`merge-tree --write-tree`'s exit status:
 
 ```diff
- git fetch --quiet origin main 2>/dev/null || true
-+if git rev-parse --verify --quiet origin/main >/dev/null; then
-+  merge_base=$(git merge-base HEAD origin/main 2>/dev/null || true)
-+  if [ -n "$merge_base" ] &&
-+    git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
-+    echo "[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it." >&2
-+    ...
-+    exit 1
-+  fi
-+fi
+-  git merge-tree "$merge_base" HEAD origin/main 2>/dev/null | grep -q '^+<<<<<<<'; then
++  empty_tree=$(git hash-object -t tree /dev/null)
++  GIT_ATTR_SOURCE="$empty_tree" git merge-tree --write-tree --name-only HEAD origin/main \
++    >/dev/null 2>&1 || conflict_status=$?
++  if [ "$conflict_status" -eq 1 ]; then
 ```
 
-The old warning block at the end of the hook is removed.
-
-**Proof it can fail:** a scratch worktree at `origin/main^` with
-`block() {` renamed in `pretool-no-swallowed-push.sh`, a line main's last
-commit rewrote. Fed to the new hook, it printed the following and exited 1
-before any gate started.
-
-```text
-[pre-push] this branch conflicts with origin/main, so GitHub would run no CI on it.
-  Merge main in, resolve, then push again:
-    git merge origin/main
-```
-
-The first attempt planted a line that main did not touch, and the hook passed
-it, which is the correct answer for a clean merge.
+The gap, stated: the check is best-effort. A missing `origin/main` or a git
+older than 2.40, which ignores `GIT_ATTR_SOURCE`, skips it or falls back to the
+worktree's attributes (`.husky/pre-push` comments, read this session).
 
 **Similar instances:** `grep -n 'printf .*WARN\|⚠️' .husky/pre-push` finds the
 review-thread reminder and the actionlint skip. Neither knows of a failure it

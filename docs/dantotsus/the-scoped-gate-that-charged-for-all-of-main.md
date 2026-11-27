@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#63'
-fix-commits: [cb69f25248]
+fix-commits: [cb69f25248, 79be245e0]
 eradication-level: 2
-eradication-paths: [.husky/pre-push]
+eradication-paths: [scripts/pre-push-range.sh, scripts/pre-push-range.test.ts, .husky/pre-push]
 time-to-detect: 40 minutes
 tags: [git, tooling, ci, husky, testing]
 zone: .husky/pre-push
@@ -15,145 +15,59 @@ recurs: [a-stale-ref-priced-a-one-line-push-at-fifty-minutes]
 
 # The scoped gate that charged me for all of main
 
-## Symptom
+## User impact
 
-Merging `main` into PR #63's branch, and then pushing, produced this:
+The operator pushed PR #63's branch after merging `main` into it. The push gate ran the tests of four applications and mutated 78 files, for a push whose own work was 23 files. It timed out twice before it was clear the hook was not broken. The branch had been open two days and `main` had moved 46 commits. Ordinary pushes, with no merge in them, were not affected.
 
-```
-[pre-push] gating 491 changed file(s) — range: this push
-[pre-push] borso-fr: mutating 78 changed gated file(s)
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| Push after merging `main` | `[pre-push] gating 491 changed file(s) — range: this push`, `borso-fr: mutating 78 changed gated file(s)` | 23 files gated, the branch's own work |
 
-Four applications of tests and seventy-eight mutated files, for a push whose
-own work was twenty-three files. It timed out twice before it was clear the
-hook was not broken — it was doing exactly what it had been told to do.
+## Causal chain
 
-The branch had been open two days and `main` had moved forty-six commits.
+- The push that merged `main` gated 491 files and timed out twice.
+  - `git diff --name-only <remote sha> HEAD` listed 491 files. The push carried a merge commit, so everything `main` did since the branch's last push sat in the same range as the branch's three commits.
+    - The hook diffed against the remote sha of the branch being pushed, and nothing else.
 
-## Root-cause chain
+      ```bash
+      # .husky/pre-push, as added in 9fc3b9a40
+      push_base="$remote_sha"
+      changed=$(git diff --name-only "$push_base" HEAD) # ❌ a merge brings all of main's new commits into this range
+      ```
 
-1. **Why did the hook gate 491 files?**
-   Because `git diff --name-only <remote sha> HEAD` says 491 files changed,
-   and that is true.
+      - Commit `9fc3b9a40` (2026-08-09, written by an agent) set that base to replace `merge-base HEAD origin/main`, which re-gated the whole branch on every push. Its message says "all four cases were exercised before this landed": a new branch, an empty stdin, an unresolvable remote sha and an ordinary push. A merge was not one of them.
+        - The base computation lived inline in a shell hook that reads git's stdin protocol, with no test harness. Each case was replayed by hand in a throwaway repository and kept nowhere. (Machine)
 
-2. **Why is it true?**
-   The push contained a merge commit. Everything `main` did since the branch
-   last pushed arrived in the same range as the branch's own three commits.
+## Root cause of occurrence
 
-3. **Why did the hook count main's commits as this push's work?**
-   Its base is the remote sha of *the branch being pushed*, and nothing else.
-   The range is "commits new to this ref", which is the right question for a
-   linear push and the wrong one for a merge.
+*Thought the commits new to this ref are the commits this push adds, actually a merge commit makes those two sets differ by the whole of the base branch, which `full-suite.yml` had already gated on `main`.*
 
-4. **Why was the merge case not considered?**
-   The hook was written to replace a `merge-base HEAD origin/main` base that
-   re-gated the whole branch every time — fifty minutes to prove a one-line
-   shell change moved nothing. The fix aimed squarely at that, and the merge
-   commit is the one shape where the new base is *larger* than the old one.
-
-5. **Why did nothing catch that?**
-   The hook has no tests. It cannot easily have them — it reads git's stdin
-   protocol and shells out to four package managers — and its behaviour was
-   only ever observed on ordinary pushes, where it is correct.
-
-**Root cause:** thought *the commits new to this ref are the commits this push
-adds*, actually *a merge commit makes those two sets differ by the whole of the
-base branch, which was already gated when it landed there*.
-
-The backstop the hook's own header names —
-[`full-suite.yml`](../../.github/workflows/full-suite.yml), unscoped, on `main`
-— is the proof that main's commits need no second gate. The header states the
-principle and the code did not apply it.
+Man, under the agentic rule. The same commit wrote the principle that disproves the code. Its message says pre-push proves "only the commits being pushed", and moves the full suite to `main` as the backstop. The principle was in the agent's context, and the four shapes it replayed by hand did not include a merge. The chain's last why is a Machine condition: a fix tried by hand and kept nowhere can be undone by the next fix unseen. `scripts/pre-push-range.sh` records exactly that later: "fixed four times, each time replayed by hand in a throwaway repository and never kept as a test".
 
 ## Detection failure causes
 
-- **Typing / linter:** it is a shell script; `sh -n` accepts it, and it was
-  syntactically perfect.
-- **Functional validation locally:** it ran correctly on every ordinary push
-  for weeks. The merge push is rare, and the failure looks like slowness rather
-  than wrongness.
-- **CI:** does not run the hook.
-- **Code review:** the base computation is four lines and reads as obviously
-  right. Knowing it is wrong requires holding a merge commit in mind while
-  reading it.
-- **The operator:** caught it, at the cost of two timed-out pushes, and logged
-  it through `scripts/kaizen.sh` — which is the only reason this entry exists.
+- **Typing / linter:** it is a shell script. `sh -n` accepted it.
+- **Tests:** the hook had none. Its range logic sat inline between a stdin read and four package-manager calls, so no test could reach it without running the whole hook.
+- **Local validation:** it ran correctly on every ordinary push for eleven days. A merge push is rarer, and its failure looks like slowness rather than a wrong answer.
+- **CI:** it does not run the push hook.
 
 ## Countermeasure
 
-None during the pull request. The push was waited out twice.
+Commit `cb69f2524` (PR #71) re-based a push that merges `main` onto main's tip. If `origin/main` is reachable from `HEAD` and not from the remote sha, the merge is inside this push, and diffing against main's tip leaves exactly the branch's own work. A file the branch took verbatim from `main` drops out, correctly, since `full-suite.yml` gated it there. A file either side changed still differs and is still gated. Measured on `9b2ff2b`: the merging push gated 23 files instead of 491. An ordinary push gated 1, unchanged.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — the gate now excludes what `main` already carries)
+**Type:** DevX check (level 2).
 
-**Reference:** [PR #71](https://github.com/hugoleborso/borso.fr/pull/71), the kaizen
-sweep of [PR #63](https://github.com/hugoleborso/borso.fr/pull/63)
+**Reference:** commit [`cb69f252`](https://github.com/hugoleborso/borso.fr/commit/cb69f25248) fixed the merge case. Commit [`79be245e0`](https://github.com/hugoleborso/borso.fr/commit/79be245e0) (PR #208) moved the whole base computation out of the hook into a tested script, which is what holds the class today.
 
-**The actual fix:**
-
-```diff
-+main_tip=$(git rev-parse --verify --quiet origin/main 2>/dev/null || true)
-+if [ -n "$main_tip" ] &&
-+  git merge-base --is-ancestor "$main_tip" HEAD 2>/dev/null &&
-+  ! git merge-base --is-ancestor "$main_tip" "$push_base" 2>/dev/null; then
-+  push_base="$main_tip"
-+  range_label="this push, minus the commits it merged from origin/main"
-+fi
+```bash
+# .husky/pre-push
+range=$(scripts/pre-push-range.sh "$push_base")
 ```
 
-`origin/main` being reachable from `HEAD` means it has been merged in; it not
-being reachable from the remote sha means the merge is inside *this* push.
-Both together are the only shape that needs re-basing, and diffing against
-main's tip then leaves exactly the branch's own work.
+`scripts/pre-push-range.test.ts` builds real git repositories and plants each shape the earlier fixes named: a new branch, a rewritten branch, a push that merges `main` in, a later push after that merge, and a merge that resolved a conflict. The root `vitest.config.ts` includes `scripts/**/*.test.ts`, and `.github/workflows/ci.yml` runs it (`pnpm exec vitest run --coverage`). A change to the range that undoes an earlier case now fails a test.
 
-**It cannot under-gate.** A file `main` changed that the branch took verbatim
-is byte-identical to main's tip, so it drops out of the range — correctly, as
-`full-suite.yml` gated it there. A file both sides touched, or the branch alone
-touched, still differs from main's tip and is still gated. The only thing the
-change can add is a file the branch changed in an *earlier* push and `main` did
-not touch, which is over-gating, and cheap.
+**Proof it can fail:** the case "gates neither main nor the work already pushed when the push merges main in" asserts the label `this push, minus the commits it merged from origin/main` (read this session). Reverting `scripts/pre-push-range.sh` to the base of `9fc3b9a40` would fail it (inferred, not replayed).
 
-**Measured on the commit that provoked it**, `9b2ff2b`, rather than reasoned
-about — the four push shapes, with the base each one selects:
-
-| Push shape | base chosen | files gated |
-| --- | --- | --- |
-| ordinary push, no merge | remote sha | 1 |
-| **the push that merges main** | **main's tip** | **23** (was 491) |
-| later push, main merged earlier | remote sha | 6 |
-| `origin/main` unavailable | remote sha | 491 (unchanged) |
-
-The last row is the deliberate degradation: a shallow clone or a fresh worktree
-keeps today's behaviour rather than failing.
-
-**Sibling defects swept — two of them, and this pull request tripped both.**
-`scripts/blueprints/blueprint-defects.ts` and `scripts/standards/rule-provenance.ts`
-each read the dantotsu corpus as well as the source tree; both sat inside a
-`.husky/pre-commit` block gated on *"a `.ts`/`.tsx` file is staged"*. A commit
-that adds only a dantotsu therefore could not run either check, and both pages
-carry a `Read from N dantotsu(s)` line that such a commit moves. CI caught them
-one per push, which is the shape of a gate that cannot fire on its own subject.
-
-Each now has a condition equal to the union of that generator's real inputs —
-`apps/`, `infra/`, `docs/dantotsus/` for the defect page; `eslint-rules/`,
-`docs/dantotsus/`, `docs/standards/` for the provenance page. Proven by staging
-a dantotsu-only change against a stale page: the old condition selects nothing,
-each new one matches, and each generator exits 1. Before pushing the fix, every
-generator `--check` that CI runs was executed locally, which is what turned a
-second one-at-a-time round into a single sweep.
-
-**The generalisable rule:** a gate's trigger has to be the union of what it
-reads, not a proxy for it. *"A source file changed"* was a proxy, and it was
-wrong for exactly the two generators whose inputs reach outside the source tree.
-
-## See also
-
-- [`../knowledge/gate-timings-before-and-after.md`](../knowledge/gate-timings-before-and-after.md)
-  — what each gate costs, which is the arithmetic that makes 491 files
-  unaffordable and 23 fine.
-- [`../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md`](../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md)
-  — the other way this hook's parallel wave reads as a bug when it is a cost.
-- [`the-entry-existed-and-i-lost-the-hour-anyway.md`](./the-entry-existed-and-i-lost-the-hour-anyway.md)
-  — the merge that triggered this was the fix for that entry. One repair paid
-  for by another.
+**Similar instances:** [`the-merge-that-re-gated-the-whole-branch.md`](./the-merge-that-re-gated-the-whole-branch.md) is the fourth fix of the same range, and the one that extracted the script. [`a-stale-ref-priced-a-one-line-push-at-fifty-minutes.md`](./a-stale-ref-priced-a-one-line-push-at-fifty-minutes.md) is the earlier cost of the same base. The same sweep found two generators gated on "a `.ts` file is staged" while they also read `docs/dantotsus/`. Each now triggers on the union of its real inputs.

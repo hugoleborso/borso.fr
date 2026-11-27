@@ -28,36 +28,47 @@ bump merged unexercised.
 
 ## Causal chain
 
-- A major bump merged with no run of the code it changes
-  - `setup()` takes `DATABASE_URL` when set and starts a container only otherwise
-    - `test:e2e` sets it through `scripts/local-postgres.sh`, and CI's `services: postgres` sets it too
-      - so the fallback, and the library behind it, were dead in every gate
+- A major bump merged with no run of the code it changes.
+  - `setup()` in `test/setup-postgres.ts` used `DATABASE_URL` when set and started a container only otherwise.
+
+    ```ts
+    import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+      container = await new PostgreSqlContainer('postgres:16-alpine') // ❌ reached by no gate
+    ```
+
+    - `test:e2e` sets `DATABASE_URL` through `scripts/local-postgres.sh`, and CI's `services: postgres` sets it too. So the fallback, and the library behind it, were dead in every gate.
+      - Commit `6f3b84222` (2026-05-15, an agent) gave CI a `services: postgres` that sets `DATABASE_URL`. Its message calls CI and `scripts/local-postgres.sh` the "same contract, different boot". It left the container branch and the knowledge line below in place.
+        - Commit `8985eeecd` (2026-05-12, an agent) wrote in `docs/knowledge/local-postgres-without-docker.md`: "keep the testcontainers branch as the CI path". PR #274 read the branch as live CI code and bumped its library. (Material)
 
 ## Root cause of occurrence
 
 *Thought the testcontainers branch was the CI path, actually CI injects
-`DATABASE_URL`.* `docs/knowledge/local-postgres-without-docker.md` said
-"keep the testcontainers branch as the CI path", while `.github/workflows/ci.yml`
-says "test/setup-postgres.ts trusts DATABASE_URL verbatim".
+`DATABASE_URL` and never reaches it.*
+
+Material. The input PR #274's audit sweep had about this code was a knowledge
+entry that restated `ci.yml` in prose: "keep the testcontainers branch as the
+CI path". `.github/workflows/ci.yml` says the opposite: "test/setup-postgres.ts
+trusts DATABASE_URL verbatim". The prose copy drifted three days after it was
+written, when `6f3b84222` changed CI and did not touch it.
 
 ## Detection failure causes
 
 - **knip:** the import is live, so the dependency reads as used.
-- **Coverage:** `test/` sits outside the coverage globs.
-- **Audit triage:** PR #274 bumped the package without asking who runs it.
+- **Coverage:** `test/` sits outside every app's coverage `include`, and `setup-postgres.ts` runs as a back-e2e `globalSetup`, outside the core project that measures coverage.
+- **Audit triage:** the sweep bumped four catalog entries, five direct dependencies and nine transitive ones in one commit, by the message of `6250f706a`. Each row was judged by its advisory, and no step asked which gate runs the code a bump changes.
 
 ## Countermeasure
 
-`setup()` requires `DATABASE_URL` and throws without it, as pragma's
-already did. The container branch, the teardown and the dependency are
-removed, and the knowledge entry and the README no longer describe a
-fallback.
+`setup()` requires `DATABASE_URL` and throws without it, as pragma's already
+did. The container branch, the teardown and the dependency are removed. The
+knowledge entry and the README no longer describe a fallback.
 
 ## Eradication
 
-**Type:** structural impossibility (level 1)
+**Type:** structural impossibility (level 1). The branch and its dependency no
+longer exist, so no bump can reach them.
 
-**Reference:** commit `[self]` on the kaizen branch for PR #274
+**Reference:** the commit adding this file (`fix-commits: [self]`).
 
 ```diff
 -import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
@@ -68,9 +79,9 @@ fallback.
 ```
 
 **Proof it can fail:** `DATABASE_URL= pnpm exec vitest run --project back-e2e`
-stops with `Error: last-loop-lepin back-e2e: DATABASE_URL must be set.`;
-`pnpm run test:e2e` passes 136 tests. `pnpm audit` moved from 24 to 22
-moderate findings.
+stops with `Error: last-loop-lepin back-e2e: DATABASE_URL must be set.`, and
+`pnpm run test:e2e` passes 136 tests (measured on the PR #274 branch).
+`pnpm audit` moved from 24 to 22 moderate findings.
 
 **Similar instances:** `grep -rln testcontainers apps --include=package.json`
 finds none left. pragma, banana-rush and talos already required `DATABASE_URL`.

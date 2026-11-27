@@ -35,12 +35,14 @@ read as `0ms` (`impl-5` in the friction log).
       `:root`. The `var()` resolved there, where the property does not exist,
       so the fallback `0ms` was baked in and inherited by every key.
 
-```css
-@theme static {
-  --animate-downbeat-key-rise: downbeat-key-rise 500ms cubic-bezier(0.16, 1, 0.3, 1)
-    calc(var(--downbeat-key-offset, 0ms) / 2) both;
-}
-```
+      ```css
+      @theme static {
+        --animate-downbeat-key-rise: downbeat-key-rise 500ms cubic-bezier(0.16, 1, 0.3, 1)
+          calc(var(--downbeat-key-offset, 0ms) / 2) both; /* ❌ resolved on :root */
+      }
+      ```
+
+      - The implementer of PR #278's opening screen, an agent, wrote the per-element token in the same `@theme static` block as the app's global tokens. The knowledge entry on this trap triggers on a write to `apps/*/site/src/styles/tokens.css`, and it said "this is not mechanically checkable and stays knowledge", so it was the only guard. (Man)
 
 ## Root cause of occurrence
 
@@ -48,10 +50,17 @@ read as `0ms` (`impl-5` in the friction log).
 actually a custom property's value is substituted where it is declared, and
 a static `@theme` declares on `:root`.*
 
-`docs/knowledge/tailwind-v4-theme-and-preflight-traps.md`, section 1, read
-this session: "A custom property's value is substituted where the property
-is declared, not where it is used." The same entry ended with "this is not
-mechanically checkable and stays knowledge".
+Man. The document that held the answer existed and its trigger matches the
+file that was written, so it was likely printed in the agent's context
+(inferred: the hook output is not archived). The model's prior, that a
+`var()` resolves where the utility is used, won anyway. One more document
+cannot fix that, so the eradication is a gate.
+
+`docs/knowledge/tailwind-v4-theme-and-preflight-traps.md`, line 94, read on
+2026-11-27: "A custom property's value is substituted where the property is
+declared, not where it is used." On 2026-11-05 the entry ended with "this is
+not mechanically checkable and stays knowledge". Line 148 now reads "This one
+**is** mechanically checkable, and now is".
 
 ## Detection failure causes
 

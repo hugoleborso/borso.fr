@@ -47,7 +47,8 @@ built and proved before he heard of it. Removing them took two commits
 
 *Thought a reversible meta change is the sweep's to build and present,
 actually a change to how the operator works is his decision, like a product
-call.*
+call.* **Method:** the skill and the CLAUDE.md principle the sweep followed
+sorted such a change on the reversible side.
 
 `CLAUDE.md`, *Principles*, read this session: « Never block on the human. Do
 reversible work, then present it. » and « Only product and architecture

@@ -5,7 +5,7 @@ detected-at: production
 severity: medium
 related-pr: '#12'
 fix-commits: [cd3aab2b31]
-eradication-level: 1
+eradication-level: 5
 eradication-paths: [.github/workflows/deploy.yml]
 time-to-detect: minutes
 tags: [github-actions, ci, deploy]
@@ -14,81 +14,90 @@ zone: .github/workflows/deploy.yml
 
 # Deploy matrix cancelled `last-loop-lepin` because `borsouvertures` failed first
 
-## Symptom
+## User impact
 
-PR #12 merged, triggered `deploy.yml` on `main`. The matrix had two
-apps to deploy: `borsouvertures` (first) and `last-loop-lepin`
-(second), serialised by `max-parallel: 1`. `borsouvertures` failed.
-GitHub then cancelled `last-loop-lepin` before it ever started.
+PR #12 merged and `deploy.yml` ran on `main` with two apps to ship to
+production. `borsouvertures` failed. `last-loop-lepin` was cancelled
+before it started, so its merged change never reached production.
 
-Hugo: *"Le job de deploy ne lance pas les deploy en simultané : du
-coup comme le deploy de borsouvertures a fail, celui de last loop
-lepin n'a pas commencé"*.
+| | Seen | Expected |
+| --- | --- | --- |
+| `last-loop-lepin` deploy job | cancelled while queued | runs and deploys, whatever `borsouvertures` did |
 
-## Root-cause chain
+The operator reported it: *"comme le deploy de borsouvertures a fail,
+celui de last loop lepin n'a pas commencé"* (since the borsouvertures
+deploy failed, the last-loop-lepin one never started).
 
-1. **Why didn't `last-loop-lepin` run?** GitHub cancelled the matrix
-   entry while it was still queued.
-2. **Why was it cancelled?** Matrix `strategy.fail-fast` defaults
-   to `true`. When one entry fails, GitHub cancels every remaining
-   entry — including the ones serialised behind `max-parallel: 1`
-   that haven't started yet.
-3. **Why was the default left in place?** When the workflow was
-   written, the only matrix concern documented was the shared-zone
-   CFN race (hence `max-parallel: 1`). Independence between apps
-   under failure wasn't considered — implicit assumption that one
-   app's deploy can fail without taking out unrelated apps.
+## Causal chain
 
-**Root cause:** thought "`max-parallel: 1` means serial, so each
-app gets its turn", actually "`max-parallel: 1` + default
-`fail-fast: true` means strictly *up to* the first failure; siblings
-are cancelled".
+- The `last-loop-lepin` matrix entry was cancelled while queued.
+  - The `borsouvertures` entry failed, and GitHub cancelled every entry of the same matrix that had not finished.
+    - The deploy matrix left `fail-fast` unset, and GitHub's default is `true`. `max-parallel: 1` had queued `last-loop-lepin` behind `borsouvertures`.
+
+      ```yaml
+      # deploy.yml at 56258c2b0
+      strategy:
+        matrix:
+          app: ${{ fromJson(needs.detect.outputs.apps) }}
+        max-parallel: 1   # ← serialises; fail-fast stays true
+      ```
+
+      - Commit 56258c2b0 (2026-05-02) wrote it. Its header comment explains `max-parallel: 1` as a way to "avoid simultaneous CFN updates touching shared zone records".
+        - The same commit set `fail-fast: false` on the matrix of `preview.yml` (measured, `git show 56258c2b0 | grep -n fail-fast`). The writer knew the setting and applied it to one of the two matrices.
+
+## Root cause of occurrence
+
+*Thought `max-parallel: 1` gives each app its own turn, so one app's
+failure stays its own, actually it only orders the entries, and the
+default `fail-fast: true` still cancels every entry queued behind a
+failure.*
+
+Tag: **Man** (agentic rule). The setting was in the writer's hands: the
+same commit uses it in `preview.yml`. The serialisation framing won over
+it in `deploy.yml`. Below it sits a Machine condition: GitHub defaults
+`fail-fast` to `true`, so every matrix must opt out by hand.
 
 ## Detection failure causes
 
-- **Typing / linter:** N/A — workflow YAML, no schema-aware lint
-  for matrix semantics.
-- **Functional validation locally:** preview deploys run per-PR via
-  a different workflow, never exercise the prod matrix.
-- **CI:** the deploy workflow is the CI; it can't catch its own
-  semantic gap.
-- **Code review:** the comment `max-parallel: 1 — avoid CFN updates
-  touching shared zone records` framed the matrix as "safety
-  serialisation"; nothing flagged that fail-fast was still on.
-- **Staging monitoring:** there is no staging for the prod deploy
-  workflow itself; first detection is observing a prod release.
+- **Linter:** `actionlint` runs in `.husky/pre-push`, but it checks syntax and expressions, not whether a matrix keeps the default `fail-fast`.
+- **Local run:** previews run in `preview.yml`, whose matrix already had `fail-fast: false`. The production matrix only runs on a merge to `main`.
+- **Review:** the comment on `max-parallel: 1` framed the strategy as safety serialisation, so the missing line read as intended.
 
 ## Countermeasure
 
-- **Code:** `.github/workflows/deploy.yml` — set
-  `strategy.fail-fast: false` so each matrix entry runs
-  independently. `max-parallel: 1` stays (the shared-zone reason
-  is unchanged).
+Commit cd3aab2b31 set `strategy.fail-fast: false` on the deploy matrix.
+Each app's deploy now runs to its own end. `max-parallel: 1` was later
+removed in c54e32da7, and the `fail-fast` line stayed.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** knowledge (level 5).
 
-**Reference:** [PR #16](https://github.com/hugoleborso/borso.fr/pull/16)
-
-**The actual fix:**
+**Reference:** commit [`cd3aab2b31`](https://github.com/hugoleborso/borso.fr/commit/cd3aab2b31).
 
 ```diff
      strategy:
 +      fail-fast: false
        matrix:
          app: ${{ fromJson(needs.detect.outputs.apps) }}
-       max-parallel: 1
 ```
 
-Once `fail-fast: false` is set, a failing app cannot cancel a
-sibling — the misconception (serialisation alone protects
-independence) is no longer expressible in the workflow's behaviour.
+What holds today is four lines set by hand and a comment at
+`.github/workflows/deploy.yml:18`. Every matrix opts out:
+`ci.yml:280`, `deploy.yml:113`, `full-suite.yml:57` and `preview.yml:148`
+(measured, `grep -n fail-fast .github/workflows/*.yml`). Nothing refuses a
+new matrix that forgets. The setting fixes this instance, and the class
+rests on the writer remembering, so the level is the floor.
 
-**Sibling defects swept:** none — `deploy.yml` is the only place
-the prod-deploy matrix is declared. Per-PR preview workflows use a
-single-job model, not a matrix.
+**Proof it can fail:** none, since no check exists.
 
-## See also
+**Proposed:** a check in `.husky/pre-push`, beside `actionlint`, that
+parses each file under `.github/workflows/` and refuses any
+`strategy.matrix` with no explicit `fail-fast` key. A workflow could then
+never inherit GitHub's default by omission, and a matrix that wants
+fail-fast would say so on its own line.
 
-- [GitHub Actions docs — `jobs.<job_id>.strategy.fail-fast`](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs#handling-failures).
+**Similar instances:** `grep -n "matrix:" .github/workflows/*.yml` finds
+the four matrices above. The original entry said previews use no matrix.
+That was wrong: `preview.yml` has had one since 56258c2b0, with
+`fail-fast: false`.

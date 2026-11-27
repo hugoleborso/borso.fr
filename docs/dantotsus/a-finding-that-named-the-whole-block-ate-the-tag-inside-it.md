@@ -14,74 +14,57 @@ zone: eslint-rules/no-comments.js
 
 # A finding that named the whole block ate the tag inside it
 
-## Symptom
+## User impact
 
-`borso/no-comments` reported one finding per comment, located at the
-comment's whole range. Two of the eight agents stripping comments across the
-repository built a sweep keyed on that reported location — the obvious thing
-to do — and the sweep deleted machine-read annotations that happened to share
-a block with prose.
+Eight agents stripped comments across the repository on PR #81. Two of them deleted machine-read annotations that shared a block with prose. The people affected are every later agent that looks up a blueprint or an external dependency by its tag.
 
-`strip-front-apps` lost **15 `@Blueprint` definition blocks**.
-`strip-lll-site` lost a **`@DependsOnExternal aws-s3`** tag from
-`object-upload.adapter.ts`. Neither lint nor any test objected: the rule was
-satisfied, because the offending comment was gone.
+| | Seen | Expected |
+| --- | --- | --- |
+| `strip-front-apps` | 15 `@Blueprint` definition blocks gone | The prose lines gone, the 15 blocks kept |
+| `strip-lll-site` | `@DependsOnExternal aws-s3` gone from `object-upload.adapter.ts` | The tag kept |
 
-Both were caught only by diffing the full annotation inventory against the
-base ref by hand.
+The main session found both by diffing the full annotation inventory against the base ref by hand (measured on PR #81).
 
-## Root-cause chain
+## Causal chain
 
-1. **Why did the sweep delete the tags?**
-   It deleted the range the finding named, and the finding named the whole
-   comment.
-2. **Why did the finding name the whole comment?**
-   `context.report({ loc: comment.loc })` — the natural way to write it, and
-   the shape every other rule in the repository uses.
-3. **Why is that shape wrong here?**
-   Every other rule reports a node that is wholly at fault. This rule reports
-   a comment that is only *partly* at fault: a block pairing `@Feature catalog`
-   with a sentence of prose is rejected because of the sentence, and the tag
-   beside it is the thing that must survive.
-4. **Why did nothing catch the loss?**
-   A missing `@FollowsBlueprint` or `@DependsOnExternal` is silent by design —
-   both are optional. The blueprint indexer fails on a follower naming *no*
-   blueprint, not on a follower that vanished.
+- 15 `@Blueprint` blocks and one `@DependsOnExternal` tag disappeared from the tree.
+  - The sweep deleted the range each `borso/no-comments` finding named.
+    - The finding named the whole comment, tag lines included. The rule reported each rejected block once, at its full range:
 
-**Root cause:** we thought a lint finding names the thing to delete; actually
-it named a range containing both the thing to delete and the thing that must
-never be deleted, and the rule was the only party that knew which lines were
-which.
+      ```js
+      if (comment.type === 'Shebang' || isMachineReadComment(comment)) {
+        continue;
+      }
+      context.report({ loc: comment.loc, messageId: 'noComment' });   // ← the whole block, tags and prose
+      ```
+
+      - An agent wrote this line in 8621866aa, the commit that removed 3489 comments across 782 files and added the rule. In the same file, the blueprint of `isMachineReadComment` says "a block mixing one tag with a sentence of prose does not [survive]" (measured with `git show 8621866aa:eslint-rules/no-comments.js`).
+  - Each agent wrote its own deletion keyed on the reported ranges. The rule offered no fix, so `oxlint --fix` could not do the removal, and the brief left the method to each agent (Method).
+
+## Root cause of occurrence
+
+*Thought a block that mixes a tag with prose is wrong as a whole, so the whole block is the finding. Actually only the prose lines are wrong, and the finding's range is what an automated sweep deletes.* (Man)
+
+The writing agent had the fact in front of it. The predicate it wrote answers per block (`lines.every(...)`), and its own blueprint text names the mixed block. The prior that a finding locates "the offending node", the shape every other rule in `eslint-rules/` uses, won over it. The commit was one session touching 782 files, so a saturated context is a plausible worker state (inferred, the transcript was not read).
 
 ## Detection failure causes
 
-- **Typing:** annotations are comments; no type sees them.
-- **Linter / static analysis:** the rule was *satisfied* by the deletion. It
-  had no way to say "these two lines, not those two".
-- **Functional validation locally:** the code still compiled and ran; a
-  blueprint tag has no runtime.
-- **CI:** `blueprint-indexing --check` fails on a follower naming a blueprint
-  that does not exist, and on a stale index. A tag that disappears along with
-  its follower leaves a consistent tree.
-- **Code review:** 822 files. A reviewer reading the diff sees a comment
-  removed, which is what the pull request is about.
+- **Linter:** the rule was satisfied by the deletion, because the offending comment was gone.
+- **CI:** `blueprint-indexing --check` fails on a follower naming a blueprint that does not exist, and on a stale index. A definition that disappears along with its followers leaves a consistent tree.
+- **Typing and runtime:** an annotation is a comment, so no type and no test sees it. A missing `@FollowsBlueprint` or `@DependsOnExternal` is silent by design, because both are optional.
+- **Code review:** the diff held 822 files, and each removed comment is what the pull request was about.
 
 ## Countermeasure
 
-The eight-agent brief was given an explicit instruction to diff the annotation
-inventory against `HEAD` before finishing, and the main session ran that diff
-over the whole repository before pushing. It found the losses. That is
-detection, not eradication — it depends on someone remembering to run it.
+The eight-agent brief was told to diff the annotation inventory against `HEAD` before finishing. The main session ran that diff over the whole repository before pushing, and it found the losses. That is detection, and it depends on someone running it.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Level 1 — structural impossibility.** The rule no longer reports a range it
-does not want deleted.
+**Type:** structural impossibility (level 1)
 
-`proseLineOffsets` returns the offset of each prose line inside the comment,
-and `create` reports once per offset rather than once per comment. A sweep
-keyed on the reported locations now touches exactly the prose lines and cannot
-reach a tag, because no finding ever names one.
+**Reference:** commit `03e16d4d6`, "fix(meta): the no-comments rule stops naming what it does not want deleted".
+
+`proseLineOffsets` returns the offset of each prose line inside the comment, and `create` reports once per offset. A sweep keyed on the reported locations touches only prose lines, because no finding names a tag line.
 
 ```js
 for (const offset of proseLineOffsets(comment)) {
@@ -92,20 +75,8 @@ for (const offset of proseLineOffsets(comment)) {
 }
 ```
 
-Verified: for a block whose second line is `@Feature catalog` and whose third
-is prose, `proseLineOffsets` returns `[2]` alone.
+**Proof it can fail:** for a block whose second line is `@Feature catalog` and whose third is prose, `proseLineOffsets` returns `[2]` alone. Before the change the rule reported the whole block.
 
-The same change closes a second inventory row from `strip-pragma-api` — *"the
-eslint stylish reporter names the comment but not its text, so stripping 292
-of them needed a second pass to rebuild each block from its machine-read lines
-alone"*. With one finding per prose line, the reported location **is** the
-line to remove, and the second pass is gone.
+**Proposed:** give `borso/no-comments` a `fix` that removes exactly the prose lines it reports. oxlint 1.91.0 accepts a fixer from a JS plugin rule (`fix?: FixFn` in `node_modules/oxlint/dist/plugins-dev.d.ts`). A comment sweep then becomes `oxlint --fix`, so no agent writes its own range-based deletion, and no tag can fall inside a deleted range. That oxlint applies a JS plugin's fix under `--fix` is inferred from its types, not tried.
 
-## Related
-
-- [`docs/standards/00-principles.md`](../standards/00-principles.md) — the rule
-  this enforces, and the list of annotations that are not comments.
-- [`subagents-that-were-never-told-their-label.md`](../knowledge/subagents-that-were-never-told-their-label.md)
-  — the sweep found this because every agent logged under its own label, so two
-  independent reports of the same shape read as systemic rather than as one
-  agent being careless.
+**Similar instances:** `strip-pragma-api` logged that stripping 292 blocks needed a second pass to rebuild each block from its machine-read lines. One finding per prose line removes that pass. No other rule in `eslint-rules/` reports a node that is only partly at fault (inferred from `grep -n "context.report" eslint-rules/*.js`).

@@ -4,8 +4,8 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#27'
-fix-commits: [e138811ba9]
-eradication-level: 1
+fix-commits: [e138811ba9, 9dcf74547]
+eradication-level: 5
 eradication-paths: [.oxfmtrc.json]
 time-to-detect: 30m
 tags: [biome, formatter, drizzle, dsql, knip, deps, last-loop-lepin]
@@ -14,117 +14,83 @@ zone: apps/last-loop-lepin/api/src/database/migrations
 
 # Biome reformatted drizzle's JSON snapshots and broke knip
 
-## Symptom
+## User impact
 
-Right after running `pnpm exec biome check --write` over the repo
-during PR #27, knip flipped from clean to 33 "unused export"
-diagnostics across files that hadn't changed (and 3 "unused
-files" : `api/src/main.ts`, `cdk/bin/cdk.ts`,
-`commitlint.config.js`). The TS code was untouched.
+The operator's CI went red on PR #27 with no source change to explain it.
+Right after `pnpm exec biome check --write` ran over the repository, knip
+reported 33 unused exports and 3 unused files (`api/src/main.ts`,
+`cdk/bin/cdk.ts`, `commitlint.config.js`), measured then.
 
-Bisecting with `git stash` showed the regression was caused by
-biome's reformat of `apps/last-loop-lepin/api/src/database/migrations/meta/*.json` —
-the drizzle-kit-owned snapshot files that record the cumulative
-migration state. Reverting those JSON reformats restored knip to
-green.
+| | Seen | Expected |
+| --- | --- | --- |
+| knip after a repository-wide format | 33 unused exports, 3 unused files, in files the change did not touch | knip clean, as before the format |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** Knip saw the reformatted JSONs and couldn't follow
-   the same edges it had followed before — its "entry points
-   reachable from drizzle config" graph went sideways. Symptom :
-   files reachable indirectly became orphans.
-2. **Why?** drizzle-kit's `_journal.json` and `meta/*.json` are
-   generated artefacts and use a specific JSON layout that drizzle's
-   regeneration round-trip expects ; reformatting them is a layout
-   change drizzle-kit didn't ask for, and any downstream tool that
-   parses them with a more rigid grammar will get a different
-   answer.
-3. **Why?** Biome's `files.includes` in the root + per-workspace
-   `biome.jsonc` didn't exclude `**/migrations/meta` — biome treats
-   `*.json` like any other source file by default.
+- knip flipped from clean to 36 findings with no TypeScript change.
+  - The format rewrote drizzle-kit's snapshots, `apps/last-loop-lepin/api/src/database/migrations/meta/*.json`, collapsing their arrays (commit `e138811`'s message). Bisecting showed that reverting only those files restored knip (measured then). Which part of knip read the new layout differently was not traced (unknown).
+    - Biome's scope included the generated directory.
 
-**Root cause:** *thought biome would only touch hand-written files,
-actually drizzle-kit-generated JSONs were in scope and biome
-happily reformatted them, breaking the downstream tool that relied
-on the exact layout drizzle produces.*
+      ```jsonc
+      "files": { "includes": ["**", "!docs"] } // ❌ drizzle-kit's meta/ is in scope
+      ```
+
+      - The formatter learned which files were generated from a hand-kept exclusion list. drizzle-kit wrote its snapshots into `migrations/meta`, and nothing told the list when a generator added a directory. (Machine)
+
+## Root cause of occurrence
+
+*Thought the formatter touched only hand-written files, actually it formats every file its include list matches, and a generator's output is in scope until someone excludes it by hand.*
+
+Machine. The tool has no notion of a generated file. The only link between
+drizzle-kit and the formatter was a list a person had to remember to update,
+and `--write` over the whole repository was the first run to reach that
+directory.
 
 ## Detection failure causes
 
-- **Typing / static analysis:** N/A — JSON reformat is byte-level.
-- **Linter:** `biome lint` doesn't surface format-only changes, so
-  pre-PR-#27 the drift was invisible. Once `biome check` ran
-  (per the formatter-was-not-gated dantotsu), the reformat
-  proposal appeared.
-- **CI:** Pre-PR knip was green only because the JSONs hadn't
-  been touched yet. Knip's "unused export" cascade was caused by
-  the reformat, not by source-code change.
-- **Code review:** Reformat diffs in JSON are large and
-  illegible ; reviewers tend to skim past them.
-- **Tooling contract:** drizzle-kit, biome, and knip have no
-  shared notion of "these files are generated, don't touch."
+- **Linter:** `biome lint` ignores layout, so the directory's presence in scope stayed invisible until `biome check --write` ran.
+- **CI:** knip was green only because nothing had touched the snapshots yet.
+- **Review:** a reformat of large JSON files is illegible, and reviewers skim past it.
+- **Tooling:** drizzle-kit, Biome and knip share no marker for "generated, do not touch".
 
 ## Countermeasure
 
-Exclude `**/migrations/meta` from biome's `files.includes` at the
-root + at the per-workspace level :
+Commit `e138811` reverted the snapshot reformats and excluded
+`**/migrations/meta` from Biome, in the root `biome.jsonc` and in
+`apps/last-loop-lepin/biome.jsonc`. knip returned to clean.
 
-```jsonc
-// biome.jsonc (root)
-"files": {
-  "includes": ["**", "!docs", "!**/migrations/meta"]
-}
+## Eradication
 
-// apps/last-loop-lepin/biome.jsonc
-"files": {
-  "includes": [
-    "api/**",
-    "site/**",
-    "cdk/**",
-    "test/**",
-    "bin/**",
-    "!api/src/database/migrations/meta"
-  ]
-}
+**Type:** knowledge (level 5). A glob in a hand-kept ignore list keeps the
+formatter off drizzle snapshots in every app. A list kept by hand is not an
+eradication of the class, so the level is the floor.
+
+**Reference:** commit `314f24821` (2026-08-08) removed Biome. Commit
+`9dcf74547` (2026-10-27) moved formatting to oxfmt. The exclusion lives today
+in `ignorePatterns` of `.oxfmtrc.json`, as `apps/*/api/src/database/migrations/meta`,
+so it covers every app's snapshots. The original entry's status note named a
+`.prettierignore`. No such file exists today.
+
+**Proof it can fail:** asking oxfmt to check a snapshot (measured on
+2026-11-27):
+
+```
+$ node_modules/.bin/oxfmt --check apps/banana-rush/api/src/database/migrations/meta/0000_snapshot.json
+Expected at least one target file. All matched files may have been excluded by ignore rules.
 ```
 
-After the exclude, drizzle-kit owns the layout of its own
-snapshots ; biome stays out ; knip continues to follow the same
-graph it always followed.
+The class is still held by hand. `.oxfmtrc.json` lists other generated paths
+next to the snapshots, such as `openings.json` and the architecture pages, and
+a new generator's output is formatted until someone adds it.
 
-## Eradication shipped
+**Proposed:** remove the hand-kept list. Either each generator formats what it
+writes, for example `"db:generate": "drizzle-kit generate && oxfmt <meta dir>"`,
+so the formatter has nothing to change in generated files. Or a
+`.gitattributes` file marks generated paths `linguist-generated`, and the
+formatter's ignore list is derived from it in one place. Neither exists yet,
+and whether drizzle-kit accepts reformatted snapshots on its next run is
+untested. Either would make a new generated directory safe by default.
 
-**Status, 2026-10-10:** Biome was removed in 314f2482. The exclusion now
-lives in `.prettierignore`, which keeps `migrations/meta` out of the
-formatter.
-
-**Type:** code diff (level 1 — biome can no longer touch the
-drizzle-generated files)
-
-**Reference:** PR #27 · commit
-[`82f0e29`](https://github.com/hugoleborso/borso.fr/commit/82f0e29)
-(`biome.jsonc` + `apps/last-loop-lepin/biome.jsonc` excludes)
-
-**The actual fix:**
-
-```diff
- "files": {
--  "includes": ["**", "!docs"]
-+  // drizzle-kit owns the JSON snapshots under `migrations/meta`.
-+  // Reformatting them desyncs the regeneration round-trip and
-+  // breaks knip's resolution graph.
-+  "includes": ["**", "!docs", "!**/migrations/meta"]
- }
-```
-
-**Sibling defects swept:** none yet. Future apps that introduce
-other generated-file directories (`.next/`, `dist/`, drizzle
-journal files for new apps) should mirror the exclude.
-
-## See also
-
-- [`docs/dantotsus/biome-formatter-was-not-gated.md`](./biome-formatter-was-not-gated.md)
-  — the prior dantotsu that surfaced this side-effect by adding
-  `biome check` to the gates.
-- [`docs/knowledge/dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md)
-  — context on drizzle-kit's migration runner & snapshot layout.
+**Similar instances:** `grep -h 'drizzle-kit generate' apps/*/package.json`
+finds the generator in each full-stack app, all covered by the `apps/*` glob.
+`ls .gitattributes` finds no file.

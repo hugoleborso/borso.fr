@@ -38,15 +38,21 @@ cites only the exit status would have recorded a pass for tests that never ran.
 ## Causal chain
 
 - A review cited a green run of tests that never ran.
-  - `pnpm --filter <name> <script>` with a name no package has prints a notice
-    and exits 0.
-    - pnpm's default for `fail-if-no-match` is false, and `.npmrc` did not set
-      it.
+  - The validator ran `pnpm --filter @borso/shared test`, a name no package
+    has. It derived the name from the folder `infra/shared` (inferred: the name
+    appears nowhere in the repository, measured with `git grep`).
+    - `pnpm --filter <name> <script>` with a name no package has prints a
+      notice and exits 0.
+      - pnpm's default for `fail-if-no-match` is false, and `.npmrc` did not
+        set it.
 
 ## Root cause of occurrence
 
 *Thought a filter that matches nothing is an error, actually pnpm treats it as
-an empty selection.*
+an empty selection.* (Machine)
+
+The tool's default turned any wrong name into a green run. A guessed name is
+an ordinary input to a filter, so the cause is the default, not the guess.
 
 `pnpm help run` in pnpm 10.0.0 documents the flag: "--fail-if-no-match. If no
 projects are matched by the command, exit with exit code 1 (fail)". Without

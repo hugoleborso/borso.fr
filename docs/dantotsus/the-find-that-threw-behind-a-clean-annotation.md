@@ -4,66 +4,90 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#193'
-fix-commits: [self]
+fix-commits: [a83f0a600]
 eradication-level: 2
-eradication-paths: [eslint-rules/verb-promises-match-return-type.js]
+eradication-paths: [eslint-rules/verb-promises-match-return-type.js, eslint-rules/verb-promises-match-return-type.test.js]
 time-to-detect: hours
 tags: [eslint, naming, standards, review]
-zone: eslint-rules/verb-promises-match-return-type.js
+zone: apps/pragma/api/src/takes/takes.repository.ts
 weak-point: gate-measures-nothing
 recurs: none (no earlier entry covers the verb table; this is the first gap found in the rule)
 ---
 
 # The find that threw behind a clean annotation
 
-## Symptom
+## User impact
 
-On PR #193 `findWrittenTakeWithin(executor, id): Promise<TakeView>` threw when
-the take was absent. Standard 01's verb table says a `find…` returns the thing
-or `null`, and a `get…` throws. The function passed lint and two fix rounds,
-and the sixth standards review caught it by reading the body. It is now
+On PR #193, `findWrittenTakeWithin(executor, id): Promise<TakeView>` threw
+when the take was absent. Standard 01's verb table says a `find…` returns the
+thing or `null`, and a `get…` throws. A caller reading the name would handle
+`null` and never see the exception. The function passed lint and two fix
+rounds. The sixth standards review caught it by reading the body. It is now
 `getWrittenTakeWithin`.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| A `find…` reader whose row is absent | Throws `the written take is not visible to its own transaction` | Answers `null`, or is named `get…` |
 
-1. **Why did lint pass?** `borso/verb-promises-match-return-type` holds a
-   `find…` to its declared return type, and only checks that the type is not
-   an array. `Promise<TakeView>` is not an array.
-2. **Why only the annotation?** The rule was written to need no type
-   information, so it reads the annotation's shape. A missing `| null` cannot be
-   required from the shape alone, because some `find…` functions return
-   `undefined` or a sentinel, and the standard listed "a `find…` returns `null`
-   rather than throwing" as a reviewer check.
-3. **Why was that enough to miss it?** Throwing is visible in the syntax of the
-   function itself: a `throw` statement that leaves it. The rule never looked
-   at the body, so the half of the promise it could have read for free was left
-   to a reviewer, who reads hundreds of functions per round.
+## Causal chain
 
-**Root cause:** thought the verb's promise was a property of the return type,
-actually "throws when absent" is a property of the body, and the body was
-there to read.
+- A function named `find…` threw on an absent row.
+  - Commit `d6fad8103`, written by an agent, added it to
+    `apps/pragma/api/src/takes/takes.repository.ts`:
+
+    ```ts
+    export async function findWrittenTakeWithin(
+      executor: DatabaseExecutor,
+      id: string,
+    ): Promise<TakeView> {
+      const take = await findTakeOn(executor, id);
+      if (take === null) throw new Error('the written take is not visible to its own transaction'); // ← ❌ a find… that throws
+      return take;
+    }
+    ```
+
+    - It sits directly above `findClaimedTakeWithin`, which returns
+      `Promise<ClaimedTake | null>`. Every transaction reader in the app was
+      named `find…Within` at the parent commit, except
+      `getEntriesOfSongWithin` in another slice (measured with
+      `git grep` on `d6fad8103^`). The writer joined the neighbour's naming
+      family and changed its contract from null to throw.
+      - The verb table lived in `docs/standards/01-naming.md`. The name
+        family next to the line won over it. **Man** (inferred: the writing
+        session's transcript is not in the repository).
+
+## Root cause of occurrence
+
+*Thought `find…Within` named a family, "reads inside a transaction", actually
+the verb is a contract: `find` answers `null` and `get` throws, whatever
+follows it.* Man (inferred): the standard existed, and the neighbouring name
+was the stronger signal at the moment of writing.
 
 ## Detection failure causes
 
 - **Typing:** a throw does not change a function's type.
-- **Linter:** the rule read the annotation only.
-- **Code review:** two fix rounds edited the file and did not read the
-  function against the verb table; the sixth round did.
+- **Linter:** `borso/verb-promises-match-return-type` held a `find…` only to
+  its declared return type, and checked only that it was not an array. It
+  read the annotation and never the body, though a `throw` that leaves the
+  function is plain syntax.
+- **Code review:** two fix rounds edited the file without reading the
+  function against the verb table. The sixth round did.
 
 ## Countermeasure
 
-- **Code:** `getWrittenTakeWithin` (in PR #193, commit `b39ea501` on the branch,
-  squashed into `d117a320`).
+`getWrittenTakeWithin`, in PR #193 (commit `b39ea501` on the branch, squashed
+into `d117a320`).
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2).
+**Type:** DevX check (level 2)
 
-**Reference:** the commit that adds this file.
+**Reference:** commit [`a83f0a600`](https://github.com/hugoleborso/borso.fr/commit/a83f0a600)
+(PR #200).
 
-**The actual fix:** the rule now also listens for `ThrowStatement`, finds the
-function the throw would leave, stops at a `try` block whose `catch` handles
-it, and reports when that function is named `find…`:
+The rule also listens for `ThrowStatement`. It finds the function the throw
+would leave, stops at a `try` whose `catch` handles it, and reports when that
+function is named `find…`:
 
 ```diff
 +    function checkThrow(node) {
@@ -75,21 +99,19 @@ it, and reports when that function is named `find…`:
 +    }
 ```
 
-RuleTester cases: the original `findWrittenTakeWithin` body, an arrow, an
-object method, a throw in a `finally` and a rethrow in a `catch` are reported;
-a throw caught by its own `try`, a throw inside a nested callback or a nested
-`get…` helper, a `get…` that throws, and `finder` are not.
+This gate is the response a Man cause calls for: it holds when the prior
+wins, whatever document was or was not read.
 
-**Sibling defects swept:** linting the whole repository with the extended rule
-found two more, both renamed: `findVisibleTodo` in
-`apps/talos/api/src/todos/todos-memory.service.ts` and the test helper
-`findInstrumentToggle` in `apps/pragma/site/src/components/molecules/LineupEditor.test.tsx`
-are now `getVisibleTodo` and `getInstrumentToggle`. Its first catch of all was
-this pull request's own `findPage` in `scripts/browser/touch-tap.ts`, written
-after the rule, now `getPage`. Standard 01's enforcement
-bullet now says the rule reads the body, and the reviewer bullet no longer
-asks a reviewer to check what the rule checks.
+**Proof it can fail:** the RuleTester cases in
+`eslint-rules/verb-promises-match-return-type.test.js` report the original
+`findWrittenTakeWithin` body, an arrow, an object method, a throw in a
+`finally` and a rethrow in a `catch`. They pass a throw caught by its own
+`try`, a throw inside a nested callback or a nested `get…` helper, a `get…`
+that throws, and `finder`.
 
-## See also
-
-- [`../standards/01-naming.md`](../standards/01-naming.md) — the verb table.
+**Similar instances:** linting the repository with the extended rule found
+`findVisibleTodo` in `apps/talos/api/src/todos/todos-memory.service.ts`, the
+test helper `findInstrumentToggle` in
+`apps/pragma/site/src/components/molecules/LineupEditor.test.tsx`, and the same
+pull request's `findPage` in `scripts/browser/touch-tap.ts`. All three were
+renamed to `get…`.

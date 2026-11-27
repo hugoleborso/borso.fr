@@ -6,7 +6,7 @@ severity: high
 related-pr: '#64'
 fix-commits: [3b7b123e55]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [docs/standards/05-frontend-architecture.md]
 time-to-detect: hours
 tags: [react, pragma, ux, harness]
 zone: apps/pragma/site/src/components/atoms/EnergyBar.tsx
@@ -14,121 +14,77 @@ zone: apps/pragma/site/src/components/atoms/EnergyBar.tsx
 
 # Scrolling past a song re-scored it
 
-## Symptom
+## User impact
 
-On a phone, dragging a finger up the setlist to read further down the set
-changed the energy of whichever song the finger happened to land on. The page
-scrolled, as asked. The song's energy also moved, silently, with no undo and no
-visible confirmation, and the write reached the API — a reload showed the new
-value.
+Every band member editing a setlist on a phone was affected. Dragging a finger up the setlist to read further down changed the energy of whichever song the finger landed on. The write reached the API, with no undo and no visible confirmation. A reload showed the new value. Desktop users were not affected.
 
-A front-end review reproduced it with real touch events at 375×812: touchStart
-on row 1's energy bar, four upward touchMoves, touchEnd. `main.scrollTop` went
-0 → 86 **and** `aria-valuenow` went 10 → 3.
+A front-end review of PR #64 reproduced it with real touch events at 375 by 812: touchStart on row 1's energy bar, four upward touchMoves, touchEnd (measured by the reviewer).
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| Vertical swipe starting on row 1's energy bar | `main.scrollTop` 0 to 86, and `aria-valuenow` 10 to 3 | `main.scrollTop` 0 to 86, and `aria-valuenow` stays 10 |
 
-1. **Why did the energy change during a scroll?**
-   The bar committed the level under the pointer on `pointerdown`, and again on
-   every `pointermove` while a button was held.
+## Causal chain
 
-2. **Why did a scroll gesture reach those handlers at all?**
-   Because `touch-action: pan-y` does not stop events reaching the element. It
-   tells the browser who may *act* on the gesture, and the browser cannot decide
-   until it has seen movement. The instrumented sequence for one swipe:
+- A vertical swipe over the energy bar scrolled the page and rewrote the song's energy.
+  - One `pointerdown` and two `pointermove`s reached the bar before the browser ruled the swipe a scroll and sent `pointercancel`.
 
-   ```
-   pointerdown:touch → touchstart → pointermove:touch → pointermove:touch
-   → touchmove → pointercancel:touch → lostpointercapture → touchend
-   ```
+    ```
+    pointerdown:touch → touchstart → pointermove:touch → pointermove:touch
+    → touchmove → pointercancel:touch → lostpointercapture → touchend
+    ```
 
-   One `pointerdown` and two `pointermove`s land *before* Blink rules it a
-   scroll. All three wrote.
+    - The bar committed the level under the pointer on `pointerdown`, and again on every `pointermove` while any button was held. `pointercancel` was not handled.
 
-3. **Why was `pointercancel` not enough to undo them?**
-   It was unhandled. The control had no notion of a gesture in progress, so
-   there was nothing to cancel — only three writes that had already happened.
+      ```tsx
+      // EnergyBar.tsx in db3cf2870
+      if (event.buttons === 0) return;   // ❌ "a button is held", not "this bar owns the gesture"
+      ...
+      onPointerDown={startDrag}          // ❌ writes before the browser has decided the gesture
+      onPointerMove={continueDrag}
+      ```
 
-4. **Why did `event.buttons !== 0` not restrict the moves to this control?**
-   It answers "is a button held", not "is this bar being dragged". Any pressed
-   pointer travelling across the bar satisfied it, so selecting a song title
-   across the card moved that song's energy too.
+      - Commit `db3cf2870` (2026-08-19, written by an agent) replaced the native `<input type="range">` with a `role="slider"` div of ten segments and hand-written pointer handlers. Its message: "The energy control is no longer a range input." The native input left the scroll-or-drag decision to the browser. The div had to make it itself.
+        - The codebase offered no gesture primitive that waits for the browser's decision. Leaving the native input meant writing that decision by hand, in the component. (Machine)
 
-**Root cause:** thought `touch-action: pan-y` means the page's gestures never
-reach the control, actually it only decides who may act on a gesture the
-control has already been sent — so a control that commits on `pointerdown`
-commits on gestures that were never its own.
+## Root cause of occurrence
+
+*Thought `touch-action: pan-y` keeps the page's vertical swipes away from the control, actually it only decides who may act on a gesture the control has already been sent, so a control that commits on `pointerdown` commits on swipes that were never its own.*
+
+Machine. The commit's own header comment shows the belief: "`touch-pan-y` leaves the vertical swipe to the page, so dragging the…". The agent verified the two gestures the control is for, a tap and a horizontal drag, through argent. Nothing in the codebase carried the third gesture, the one the control must ignore. The native input had carried it for free, and every hand-written pointer control in the repository writes its own arbitration (measured below).
 
 ## Detection failure causes
 
-- **Typing:** no type distinguishes "a pointer event this element owns" from
-  "a pointer event passing through it". Both are `PointerEvent`.
-- **Linter / static analysis:** no rule relates a handler's name to whether it
-  writes; `onPointerDown` calling a mutation is ordinary React.
-- **Functional validation locally:** the implementer drove taps and horizontal
-  drags — the two gestures the control is *for* — and both behaved. The
-  gesture that broke it is the one the control is supposed to ignore, so it was
-  never on the list.
-- **CI (tests / build):** the pure mapping was at 100% coverage and 100%
-  mutation score. None of the defect lived in the pure part; it lived in which
-  events called it. There was no component test at all.
-- **Code review:** caught it, at review time, with real touch input. That is the
-  layer that worked, and it is the last one before merge.
-- **PO / QA validation:** the implementer's own visual-validation report listed
-  this exact gesture under *Not verified from here*, because `argent` declines
-  `gesture-swipe` on Chromium. A named gap in a report is not a gate.
+- **Typing:** a pointer event the element owns and one passing through it are both `PointerEvent`.
+- **Linter:** `onPointerDown` calling a mutation is ordinary React. No rule relates a handler to whether it writes.
+- **Local validation:** argent declines `gesture-swipe` on Chromium. The implementer's visual-validation report listed the swipe under *Not verified from here*, and a named gap in a report blocks nothing.
+- **CI:** the pure mapping had 100% coverage and a 100% mutation score. The defect lived in which events called it, and there was no component test.
+- **Review:** caught it, with real touch input, as the last layer before merge.
 
 ## Countermeasure
 
-- **Code:** commit `3b7b123` — the bar tracks the gesture it captured. Nothing
-  is written on `pointerdown`; a slide writes once it has travelled further
-  sideways than down (`isDragIntent`), a tap writes on `pointerup`, and
-  `pointercancel` drops the gesture without writing. `levelFromPointerRatio`
-  returns `null` rather than the minimum when the bar cannot measure itself.
-- **Code:** commit `3b7b123` — `EnergyBar.test.tsx` replays each sequence,
-  including the scroll-then-cancel one, against a real React tree.
+Commit `3b7b123` made the bar track the gesture it captured. Nothing is written on `pointerdown`. A slide writes once it has travelled further sideways than down (`isDragIntent`), a tap writes on `pointerup`, and `pointercancel` drops the gesture without writing. `levelFromPointerRatio` returns `null` instead of the minimum when the bar cannot measure itself. `EnergyBar.test.tsx` replays each sequence, the scroll-then-cancel one included, against a real React tree.
 
-## Eradication (mandatory — code-level)
+Commit `de91fdfe8` (PR #216) later deleted `EnergyBar.tsx`. Its successor, `EnergyMeter.tsx`, takes `touch-none`, so the page never scrolls over it, and writes only on a `pointermove` that has travelled (read this session).
 
-**Type:** detection (level 4 — a reviewer bullet in the standard that every
-future standards review reads)
+## Eradication
 
-**Reference:** [PR #64](https://github.com/hugoleborso/borso.fr/pull/64) ·
-commits [`3b7b123`](https://github.com/hugoleborso/borso.fr/commit/3b7b123)
+**Type:** knowledge (level 5). A `reviewer` bullet in a standard.
 
-Level 1 was considered and rejected: the misconception is expressible in any
-pointer handler, and no type or lint rule can tell a handler that writes from
-one that does not without knowing what "writes" means in the app. Level 4 here
-is the repository's own review mechanism — a `reviewer` bullet is collected
-into `docs/standards/enforcement-ledger.md` by the generator, which is the
-literal checklist the `standards-reviewer` agent reads on every branch, and the
-seal records that it was read.
+**Reference:** commit [`3b7b123`](https://github.com/hugoleborso/borso.fr/commit/3b7b123) (PR #64). The bullet is in `docs/standards/05-frontend-architecture.md` today:
 
-**The actual fix:**
-
-```diff
-+- `reviewer` checks that a control taking a drag or a slide writes nothing on
-+  `pointerdown`. A vertical swipe the page is entitled to still arrives at the
-+  control as a `pointerdown` and a `pointermove` or two before the browser rules
-+  it a scroll and sends `pointercancel`, so a control that commits on the way
-+  down rewrites whatever the thumb was resting on while the user was only
-+  scrolling past it. `touch-action` decides who gets the gesture; it does not
-+  stop those events reaching the handler.
+```md
+- `reviewer` checks that a control taking a drag or a slide writes nothing on
+  `pointerdown`. … `touch-action` decides who gets the gesture; it does not
+  stop those events reaching the handler.
 ```
 
-**Sibling defects swept:** the same commit fixed two variants of the same cause
-— a text selection dragged across the card wrote (the `buttons !== 0` guard),
-and a zero-width bar wrote the minimum instead of nothing.
+The first version of this entry called it level 4. A written bullet a reviewer reads is level 5 under the ladder, whatever reads it.
 
-## See also
+The same standard also explains why React Aria's `Slider` is not the fix: it "maps the pointer to an absolute spot on the track and writes on `pointerdown`, the defect of" this entry. React Aria 3.53.1 is in `apps/pragma/package.json`, so its primitives were checked and rejected for this reason.
 
-- [`../knowledge/dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](../knowledge/dnd-kit-pointersensor-loses-touch-to-page-scroll.md)
-  — the mirror image, in the same screen: there, a control that *should* claim
-  the gesture lost it to the page. Both are the same question asked from
-  opposite sides, and both were only visible with real touch input.
-- [`../knowledge/real-touch-gestures-over-cdp.md`](../knowledge/real-touch-gestures-over-cdp.md)
-  — how the reproduction and the fix were both driven, given that argent
-  declines the gesture on Chromium.
-- [`described-screenshot-without-checking-pixels.md`](./described-screenshot-without-checking-pixels.md)
-  — the same shape of error: reasoning about what the interface does instead of
-  driving it.
+**Proposed:** one gesture primitive per site, such as a `useSlideGesture` hook holding `isDragIntent`, capture and `pointercancel`, and a rule under `eslint-rules/` that refuses `onPointerDown` and `onPointerMove` in JSX outside it. Every drag or slide would then wait for the browser's decision by construction, and a control that commits on press could not be written outside the primitive. `VoteDeck.tsx` and `EnergyMeter.tsx` would move onto it. `BidPad.tsx` holds a press-to-talk button, which acts on press by design, so the rule would need one named exception for it.
+
+**Proof it can fail:** `EnergyBar.test.tsx` replayed the scroll-then-cancel sequence and failed before `3b7b123`. That file went with `EnergyBar.tsx`. No check refuses the defect today.
+
+**Similar instances:** `grep -rln "onPointerDown\|onPointerMove" apps/*/site/src --include=*.tsx | grep -v test` finds four files. `EnergyMeter.tsx` writes only after travel and takes `touch-none`. `VoteDeck.tsx` writes on release. `BidPad.tsx` starts listening on press, which is its purpose. `Galaxy.tsx` (borso-fr) reads `pointermove` for a visual effect and writes nothing. None repeats the defect today, each by its own hand-written logic. [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](../knowledge/dnd-kit-pointersensor-loses-touch-to-page-scroll.md) is the mirror image: a control that should claim the gesture lost it to the page.

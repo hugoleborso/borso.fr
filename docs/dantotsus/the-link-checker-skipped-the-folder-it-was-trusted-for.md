@@ -14,28 +14,18 @@ zone: scripts/docs/check-doc-links.ts
 
 # The link checker skipped the folder it was most trusted for
 
-## Symptom
+## User impact
 
-`scripts/docs/check-doc-links.ts` opens every markdown file in the tree and
-fails on a link naming a file that is not there. It reports *"every document
-link names a file that exists"* on every commit and every CI run.
+Agents implementing a feature open its `spec/` and `plan/` first. Six links in
+those documents named files that were not there, while the link gate reported
+*"every document link names a file that exists"* on every commit.
 
-It was not reading `docs/features/`:
+| | Seen | Expected |
+| --- | --- | --- |
+| An agent follows a link in a spec or a plan | A 404 on a document it had been told to read. Five of the six targets existed one `../` further up | The linked document opens |
+| The link gate on every commit and CI run | Passes | Fails on a dead link in a living document |
 
-```ts
-const HISTORICAL_PREFIX = 'docs/features/';
-…
-.filter((path) => !path.startsWith(HISTORICAL_PREFIX))
-```
-
-That prefix holds three different kinds of document. `validation/` and
-`runs/` are dated records — what a validator saw on a given day, what an
-agent reported in a round. `spec/` and `plan/` are neither dated nor
-historical: they are the two documents an implementer opens first, and
-`/technical-conception` and `/implementation` both read them as current.
-
-Narrowing the filter to the dated records alone surfaced six dead links, all
-of them in a `spec/` or a `plan/`:
+The six links, measured by narrowing the filter on 2026-09-16:
 
 ```
 docs/features/borso-fr/mondrian-atelier/spec/spec.md:10 → apps/borso-fr/site/art/mondrian/painting.js
@@ -46,128 +36,113 @@ docs/features/last-loop-lepin/self-punch-runners/spec/spec.md:7 → (same)
 docs/features/pragma/first-features/plan/plan.md:10 → ../../../adr/2026-05-19T1955-pragma-shared-password-auth.md
 ```
 
-Five of the six are off by one `../`. All five targets exist; an agent
-following any of them got a 404 on a document it had been told to read, and
-the document it wanted was one directory further up.
+## Causal chain
 
-## Root-cause chain
+- An agent following a link in a spec or a plan got a 404.
+  - The link gate never opened any file under `docs/features/`, so it
+    reported success over a corpus that excluded every spec and plan:
 
-1. **Why was `docs/features/` excluded?**
-   Because it holds dated records whose links describe a tree that has since
-   moved. Excluding them is right: those files record what was true when they
-   were written, and `check-dated-records-are-append-only.sh` forbids editing
-   them, so a dead link inside one is a finding nobody may act on.
+    ```ts
+    const HISTORICAL_PREFIX = 'docs/features/';
+    // …
+    .filter((path) => !path.startsWith(HISTORICAL_PREFIX)) // drops spec/ and plan/ too
+    ```
 
-2. **Why did the exclusion reach `spec/` and `plan/` too?**
-   The constant is named `HISTORICAL_PREFIX` and the folder was treated as one
-   thing. `docs/features/<app>/<slug>/` is a conversation — the spec and plan
-   are its living half and the validation records are its frozen half — and
-   the filter was written against the folder rather than against the property.
+    - Commit `d28c25c75` ("a link is a claim about the tree, and nothing was
+      checking it") wrote that filter. Its message says `docs/features/` is
+      skipped "entirely, because a report from May naming a file since renamed
+      is telling the truth about May".
+      - The folder holds two kinds of document. `validation/` and `runs/` are
+        dated records. `spec/` and `plan/` are the living documents
+        `/technical-conception` and `/implementation` read as current. At
+        `d28c25c75^` nothing in the tree named which documents are dated
+        records: `check-dated-records-are-append-only.sh` was added five days
+        later, in `d6dd5ba5a` (measured, `git log --diff-filter=A`). The
+        folder name stood in for the property.
 
-3. **Why did the wrong scope survive?**
-   The check passes. A gate that skips its subject reports success, and a
-   success message names what it checked, never what it declined to. *"Every
-   document link names a file that exists"* is true of the files it read.
+## Root cause of occurrence
 
-4. **Why did nobody following a dead link report it?**
-   The same reason four agents absorbed a dead lint command: an agent that
-   cannot open a linked file works around it. It greps for the filename, finds
-   the real path, and carries on. The cost is real and paid every time, and it
-   lands nowhere a human reads.
+*Thought `docs/features/` is history. Actually it is half history and half
+live instruction, and the live half is the half an implementer reads first.*
+(Machine)
 
-**Root cause:** the author thought *`docs/features/` is history*, actually
-*`docs/features/` is half history and half live instruction*, and the half
-that is live is the half an implementer reads first.
+The commit message quoted above states the belief. The tree gave the author no
+property to filter on, only a folder, so the folder became the filter.
 
 ## Detection failure causes
 
-- **Typing:** the filter is a correct predicate over strings. There is nothing
-  to type-check about which strings it should match.
-- **Linter:** none applies.
-- **CI:** the check ran and passed, over a corpus that had been filtered
-  before it got there.
-- **Code review:** `HISTORICAL_PREFIX` reads as a deliberate, explained
-  choice. A reviewer agrees that history should be skipped and moves on; the
-  question *which of these files is history* is not one the name invites.
-- **A test:** `doc-links.core.ts` is gated at 100% coverage and mutation, and
-  every one of its tests is about a link inside a document. Which documents to
-  open is decided by the caller, and a pure core cannot have an opinion about
-  a corpus it never sees.
+- **CI:** the check ran and passed. A gate that skips its subject reports
+  success, and its message names what it checked, never what it declined to.
+- **Review:** `HISTORICAL_PREFIX` reads as a deliberate, explained choice. The
+  name invites no question about which of these files is history.
+- **Tests:** `doc-links.core.ts` is gated at 100% coverage and mutation, and
+  every test is about a link inside a document. Which documents to open is the
+  caller's choice, outside the pure core.
+- **Agents as users:** an agent that cannot open a linked file greps for the
+  name, finds the real path and carries on. The cost is paid every time and
+  lands nowhere a human reads.
 
 ## Countermeasure
 
-- **Code:** the filter narrowed from a folder to a property, with the property
-  named:
+Commit `96a3ed4ad` narrowed the filter from the folder to a named property, and
+fixed the six links in the same commit so the gate did not land red:
 
-  ```ts
-  const DATED_RECORD_SEGMENT = /\/(validation|runs)\//;
+```ts
+const DATED_RECORD_SEGMENT = /\/(validation|runs)\//;
 
-  function isDatedRecord(path: string): boolean {
-    return DATED_RECORD_SEGMENT.test(path);
-  }
-  ```
+function isDatedRecord(path: string): boolean {
+  return DATED_RECORD_SEGMENT.test(path);
+}
+```
 
-  `validation/` and `runs/` are exactly the paths
-  `check-dated-records-are-append-only.sh` protects, so the two gates now
-  agree on which files are frozen rather than each holding its own idea.
-- **The six links fixed**, in the same commit, because the gate would
-  otherwise have been added in a red state.
+Measured on the tree it landed against: 192 markdown files under
+`docs/features/`, of which 127 dated records stay excluded and 65, 43 of them a
+`spec.md` or a `plan.md`, are now checked.
 
-## Eradication (mandatory — code-level)
+The same commit claimed this list matched what
+`check-dated-records-are-append-only.sh` protects. It did not. At `96a3ed4ad`
+that gate protected `docs/**/validation/**` and `docs/standards/reviews/**`,
+not `runs/`. Today it protects only `docs/**/validation/**` (measured, line 23
+of the script). So the countermeasure rebuilt the defect one level up: two
+gates each keep their own copy of "which files are frozen", and the copies
+differed on the day they were written.
 
-**Type:** code diff (level 2 — devx check, by widening an existing one)
+## Eradication
 
-**Reference:** PR #106 · commit `96a3ed4a` · `scripts/docs/check-doc-links.ts` and `scripts/check-named-paths-exist.sh`
+**Type:** DevX check (level 2), with a measured gap.
+
+**Reference:** commit `96a3ed4ad`, in `scripts/docs/check-doc-links.ts` and
+`scripts/check-named-paths-exist.sh`. Both hold today.
 
 ```diff
 -const HISTORICAL_PREFIX = 'docs/features/';
 +const DATED_RECORD_SEGMENT = /\/(validation|runs)\//;
-+
-+function isDatedRecord(path: string): boolean {
-+  return DATED_RECORD_SEGMENT.test(path);
-+}
 …
 -    .filter((path) => !path.startsWith(HISTORICAL_PREFIX))
 +    .filter((path) => !isDatedRecord(path))
 ```
 
-Every `spec/` and `plan/` in the repository is now link-checked on every
-commit and in CI. Measured on the tree this landed against: 192 markdown files
-under `docs/features/`, of which 127 are dated records and stay excluded, and
-65 — 43 of them a `spec.md` or a `plan.md` — had never been read by this gate
-and now are.
-`docs/standards/00-principles.md` carries the reason for what remains
-excluded, and dates the narrowing, so the next reader gets the property rather
-than the folder.
+Every `spec/` and `plan/` is link-checked on every commit and in CI. The same
+commit added `scripts/check-named-paths-exist.sh`, which refuses a path named
+in a shell header or in backticks that does not exist. That surface had rotted
+too: two gate headers cited dantotsus that were never written.
 
-**Why not check the dated records too:** a dead link inside one is a real
-finding and an unactionable one. The file may not be edited — that is a
-separate gate with its own dantotsu — so the only available response would be
-to suppress the finding, which is the state this change just left.
+**The gap:** the 9 `runs/` folders (102 files) are skipped by the link check as
+if frozen, yet no gate freezes them. Running the checker with `runs/` included
+finds 4 dead links, all under
+`docs/features/pragma/first-features/runs/2026-05-19-1937-pragma/agents/`
+(measured, 2026-11-27). The reason given for skipping them, "a finding nobody
+may act on", is false for `runs/`.
 
-**The same hole, one surface over.** `check-doc-links.ts` reads markdown, and
-a shell script is not markdown, so the line at the top of a gate naming the
-dantotsu it eradicates — the only thread from a mechanism back to its
-reasoning — was read by nothing at all. Two had rotted:
-`check-dated-records-are-append-only.sh` cited
-`a-rename-rewrote-the-record-of-a-past-review.md` and
-`preflight-preview-recovery.sh` cited
-`preview-deploy-orphans-block-recreate.md`. Neither was ever written. Both
-headers now state their reason and cite nothing, which is honest, and
-`scripts/check-named-paths-exist.sh` refuses the next one — skipping test
-files, where a made-up path is the point and where four of the six matches on
-this tree were.
+**Proposed:** keep one list of dated-record paths and have both gates read it.
+For example, `check-doc-links.ts` reads `DATED_RECORD_PATHS` from the
+append-only script, or both read one file. Then the link gate can skip only
+what the append-only gate freezes, and the two cannot disagree. Until then,
+`runs/` should be link-checked.
 
-This one was found by the first gate's own failure message during the commit
-that added it: the See-also line of this very entry pointed at
-`a-rename-rewrote-the-record-of-a-past-review.md`, copied from the shell header
-that had been claiming it for months.
+**Proof it can fail:** replacing `/\/(validation|runs)\//` with
+`/\/validation\//` in a scratch copy of the checker printed the 4 dead links
+above and exited non-zero.
 
-**Sibling defects swept:** the six dead links above. Five were an `../`
-short; the sixth named a file this very spec's own work deleted, and now names
-the module that replaced it. Plus the two dangling script citations.
-
-## See also
-
-- [`the-skill-that-named-the-linter-the-repository-deleted.md`](./the-skill-that-named-the-linter-the-repository-deleted.md) — the same absorption: an agent works around a broken instruction and the cost lands nowhere.
-- `scripts/check-dated-records-are-append-only.sh` — the gate this one now agrees with on which files are frozen.
+**Similar instances:** `grep -rn "DATED_RECORD\|HISTORICAL" scripts` finds the
+two copies named above and no third.

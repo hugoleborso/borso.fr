@@ -5,119 +5,73 @@ detected-at: review
 severity: high
 related-pr: '#104'
 fix-commits: [60fcd964e8]
-eradication-level: 1
+eradication-level: 5
 eradication-paths: [scripts/architecture/architecture-manifest.ts]
 time-to-detect: hours
 tags: [adr, architecture-map, third-party, conception, pragma]
 zone: .claude/skills/technical-conception
 ---
 
-# Built the slice before asking what it cost to call
+# A finished bar search the owner refused to pay the entry ticket for
 
-## Symptom
+## User impact
 
-A complete Google Places search slice shipped to the branch: an adapter, a
-payload parser, a route, a CDK wiring for the key, a front-end card, tests at
-full coverage, and an ADR recording the choice. The operator read it and
-answered:
+Pragma members wanted to add a bar from a search instead of retyping it. Commit `7bf4a7029` shipped a complete Google Places search slice to PR #104: an adapter, a payload parser, a route, the CDK wiring for the key, a front-end card, tests at full coverage, and an ADR.
 
-> Je suis obligé de créer un compte de facturation google pour ça et je ne
-> veux pas.
+| | Seen | Expected |
+| --- | --- | --- |
+| The operator reads the slice | A feature that cannot run until he opens a Google Cloud billing account. "Je suis obligé de créer un compte de facturation google pour ça et je ne veux pas." (I have to create a Google billing account for this, and I do not want to.) | A search built on a service the project can call as it is. |
 
-Every one of those files was then deleted or rewritten for a different
-vendor.
+Every file of the slice was then deleted or rewritten for another vendor.
 
-## Root-cause chain
+## Causal chain
 
-1. **Why was the work thrown away?**
-   The vendor cannot be called at all without a Cloud billing account, and
-   this project will not open one.
-2. **Why was that not known before the code was written?**
-   The question asked at conception was *"is there a free tier?"*, and the
-   answer was yes — 10 000 calls a month for the Essentials SKUs. That answer
-   is true and irrelevant: a free tier is a price, not an eligibility.
-3. **Why did the ADR not catch it?**
-   Its rubric scored data quality, key exposure and rotation effort. Nothing
-   in it asked what a caller must already have before the first request
-   succeeds, so the criterion that decided the outcome was not among the
-   criteria.
-4. **Why did the architecture manifest not catch it?**
-   An external system is declared there with an id, a name, a technology and
-   a boundary — all descriptions of what it *is*, none of what it *takes*.
-   A vendor needing a credit card and a browser API needing nothing were
-   indistinguishable entries.
-5. **Why is this the expensive kind of mistake?**
-   Because the prerequisite is discovered by the person who cannot satisfy
-   it, after the work that assumed it is finished.
+- The operator refused the slice, and the work was thrown away.
+  - The slice called Google Places, which answers no request until the project holds a Cloud billing account with a payment method.
+    - Commit `7bf4a7029` (2026-09-15, an agent) chose Places and built the slice on it.
+      - At conception the agent asked "is there a free tier?", and the answer was yes: 10 000 Essentials calls a month.
+      - The ADR's rubric scored data quality, key exposure and rotation effort.
+        - The input of conception, the operator's request, did not say that the project refuses a billing account. That constraint was written nowhere conception reads. `grep -rli "billing account"` over `docs`, `.claude` and `CLAUDE.md` finds only this entry and the ADR written after the refusal.
 
-**Root cause:** thought a vendor's free tier answered whether it could be
-used, actually the prior question is what a caller must already hold — an
-account, a card, a credential — and nothing in the ADR or the manifest asked
-it, so it was answered last instead of first.
+## Root cause of occurrence
+
+*Thought a free tier answered whether the vendor could be used, actually Places refuses every call until a billing account exists, and the owner will not open one.* (Material)
+
+The operator's refusal of billing accounts was in no document the agent loaded. The ADR that replaced the choice, [`2026-09-15T0015-nominatim-answers-the-bar-search.md`](../adr/2026-09-15T0015-nominatim-answers-the-bar-search.md), states it:
+
+> None of that matters if the account cannot exist: this repository's owner does not want a billing account attached to the project, and a service that refuses to start without one is not a free tier, it is a trial.
 
 ## Detection failure causes
 
-- **Typing:** the manifest's external type had no field for it, so the
-  omission was well-formed.
-- **Linter / static analysis:** not expressible.
-- **Functional validation locally:** the adapter's tests injected a key and a
-  fetcher, so they passed against a vendor nobody could actually call.
-- **CI:** the same; the key was absent and the feature degraded politely.
-- **Code review:** the ADR read as thorough. Its rubric was complete about
-  everything except the question that mattered.
-- **PO validation:** this is where it was caught, which is the latest
-  possible moment and the one this eradication moves earlier.
+- **Typing:** the manifest's external type had no field for what a caller must hold, so the entry for Places was well-formed.
+- **Linter:** no rule reads a vendor's prerequisites.
+- **Local validation:** the adapter's tests injected a key and a fetcher, so they passed against a vendor nobody could call.
+- **CI:** without a key the feature degraded to a named not-configured outcome by design, so nothing failed.
+- **Review:** the ADR read as thorough. Its criteria were all about the vendor once called, none about what it takes to call it.
+- **PO validation:** the operator caught it, after the work was done.
 
 ## Countermeasure
 
-The slice was rewritten against OpenStreetMap's Nominatim, which needs no
-account, and [ADR-2026-09-15T0015](../adr/2026-09-15T0015-nominatim-answers-the-bar-search.md)
-records the choice with the billing-account prerequisite as the criterion
-that decided it.
+Commit `12605f09b` rewrote the slice against OpenStreetMap's Nominatim, which needs no account. The ADR above records the billing-account prerequisite as the criterion that decided it.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** knowledge (level 5). A required field that records an answer, without refusing any.
 
-**Reference:** PR #105
-
-**The actual fix:** declaring an external system now requires stating what it
-takes to call it. The field is required, so the typechecker refuses a
-manifest entry that leaves the question unanswered:
+**Reference:** commit [`60fcd96`](https://github.com/hugoleborso/borso.fr/commit/60fcd964e8952704801fd953212bd66fa0af5b91) made every external declare what it takes to call it:
 
 ```diff
-+export type ExternalAccess =
-+  | 'open'
-+  | 'usage-policy'
-+  | 'credential'
-+  | 'account'
-+  | 'billing-account';
++export type ExternalAccess = 'open' | 'usage-policy' | 'credential' | 'account' | 'billing-account';
 +
  export interface ManifestExternal {
    readonly boundary: 'third-party' | 'aws' | 'browser-platform';
 +  readonly access: ExternalAccess;
 ```
 
-Verified by removing one entry's field: `tsc` fails with *"Property 'access'
-is missing … but required in type 'ManifestExternal'"*. All twenty existing
-externals across the four applications were classified in the same commit,
-which is itself the audit this repository never had: fourteen are `open`,
-five need a `credential`, one binds the caller to a `usage-policy`.
+`tsc` refuses an external without `access`. But nothing reads the field: `grep -rn "ExternalAccess\|billing-account" scripts .claude --include=*.ts` finds only its declaration in `scripts/architecture/architecture-manifest.ts`. So `billing-account` type-checks as easily as `open`. And the field is filled in when the slice is declared, after the code exists. It records the answer late. It prevents nothing, so this is not level 1.
 
-`billing-account` exists in the union precisely so the answer that would have
-stopped this work has somewhere to be written. What each value means, since
-the repository allows no comment beside the type to say it: `open` needs
-nothing, and covers the browser's own APIs and a service that answers an
-anonymous request; `usage-policy` needs no credential but binds the caller to
-terms it must honour in code, such as a rate limit, a cache or an attribution
-line; `credential` needs a key or a token the deployment holds; `account`
-needs somebody to sign up; `billing-account` needs them to enter a payment
-method before the first call succeeds.
+**Proposed:** subtract `'billing-account'` from the `ExternalAccess` union in `scripts/architecture/architecture-manifest.ts`. CI already runs `architecture-graph.ts --check-externals`, which requires every `@DependsOnExternal` tag to name a system its manifest declares. A slice that depends on a vendor needing a billing account could then not be declared, so it could not pass CI. To move the question before any code, make "what must the caller hold before the first request succeeds" a fixed criterion in Round 2 of `.claude/skills/adr/SKILL.md`, scored for every option.
 
-**Sibling defects swept:** the classification pass found no other external
-whose prerequisite had been assumed rather than checked.
+**Proof it can fail:** removing one entry's `access` made `tsc` fail with "Property 'access' is missing … but required in type 'ManifestExternal'". No check refuses `billing-account`.
 
-## See also
-
-- [`built-my-own-before-checking-the-library.md`](./built-my-own-before-checking-the-library.md) — the same shape one layer down: work done before the cheap question was asked.
-- [`an-adr-that-never-listed-doing-nothing.md`](./an-adr-that-never-listed-doing-nothing.md) — another rubric that omitted the option that mattered.
+**Similar instances:** commit `60fcd96` classified every external across the manifests in `scripts/architecture/manifests/`. Run `grep -rn "access: '" scripts/architecture/manifests` to list them. None uses `billing-account`.

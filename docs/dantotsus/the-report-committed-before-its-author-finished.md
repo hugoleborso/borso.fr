@@ -38,25 +38,30 @@ The record of PR #298's second review holds a draft. Read on `main`, under
       - The validator had written a first version at `report_path` and was
         waiting for midnight to run one test again. It handed back at
         00:05 UTC.
+        - It used `report_path` as its working copy, as its step 9 allowed:
+
+          ```
+          9. **Write the report.** Markdown at `report_path`, format below.
+          ```
+
       - The main session was free to read and commit during the review. It
         made four commits between 23:51 and 00:03 UTC.
         - The validator ran in the background, as the operator wants it to.
-        - The validator's procedure said where to write, and not when:
-
-```
-9. **Write the report.** Markdown at `report_path`, format below.
-```
+        - The skill's step 8, "Read the report's verdict", set no moment for
+          the read, and the session read the path as soon as a verdict line
+          appeared (Method).
 
 ## Root cause of occurrence
 
 *Thought the report file is the validator's answer, so it can be read as soon
 as it holds a verdict. Actually the answer is the handback, and the validator
-used the file as its working copy until then.*
+used the file as its working copy until then.* (Method)
 
 The Agent tool's description, as this session holds it: "Subagents run in the
 background by default; you'll be notified when one completes." The handback is
-that notification. The skill's step 8 said "Read the report's verdict", with no
-word on when.
+that notification. The procedure the session followed, the skill's step 8,
+said "Read the report's verdict", with no word on when, and the validator's
+step 9 made the file exist before the verdict was final.
 
 ## Detection failure causes
 
@@ -83,10 +88,12 @@ main session must stay free while a review runs.
 ## Eradication
 
 **Type:** knowledge (level 5). Two instructions, each at the step where the
-mistake was made. No check can tell a draft from a report, and the stronger
-mechanism, a blocked main session, is refused.
+mistake was made. A blocked main session, the mechanism first tried, is
+refused.
 
-**Reference:** the commit that adds this file's final text to pull request #310.
+**Reference:** the commit adding this file, in pull request #310. The
+validator's write step is now step 4 of `.claude/agents/technical-validator.md`
+(line 131), with the same text.
 
 ```diff
 -9. **Write the report.** Markdown at `report_path`, format below.
@@ -109,3 +116,11 @@ PR #278. On PR #107 the main session was asked to commit screenshots the
 visual validator was still writing. `visual-validator.md` is not changed: its
 evidence folder fills as it goes by design, and no draft of its report has
 been committed.
+
+**Proposed:** subtract the write. The validator returns the report as its
+final message, as `.claude/agents/dantotsu-reviewer.md` already allows, and the
+main session writes `report_path` from that handback. No file would exist at
+that path before the handback, so a draft could not be read or committed, and
+the main session stays free as the operator asked. The level-5 claim that "no
+check can tell a draft from a report" only holds while the validator writes
+the file itself.

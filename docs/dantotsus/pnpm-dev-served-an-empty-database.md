@@ -14,85 +14,97 @@ zone: apps/pragma/package.json
 
 # `pnpm dev` served an empty database, and the next app copied it
 
-## Symptom
+## User impact
 
-The visual validation of PR #107 started pragma with `pnpm dev`, the
-command the `/visual-validation` skill spawns. Every API call answered 500:
+The visual validation of PR #107 started pragma with `pnpm dev`, the command
+`/visual-validation` spawns. Every API call answered 500, so the validator could
+not sign in, seed, or reach a screen behind the login. It spent six tool calls
+finding out why, then applied the migrations by hand.
 
-```
-PostgresError: relation "member_credential" does not exist
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| Any API route on a fresh checkout | `PostgresError: relation "member_credential" does not exist` | the route answers, and the seeded sign-in works |
+| A developer who had once run back-e2e | tables present, everything works | the same |
 
-The validator could not sign in, seed, or reach a single screen behind the
-login. The session spent six tool calls finding out that the dev database
-had never had a schema, then applied the migrations by hand through
-`test/setup-postgres.ts`.
+## Causal chain
 
-## Root-cause chain
+- Every route answered 500.
+  - The dev database had no tables.
+    - pragma's `dev:db` booted the cluster and created the database, and applied
+      nothing:
 
-1. **Why did every route answer 500?** The dev database had no tables.
-2. **Why no tables?** pragma's `dev:db` script was
-   `../../scripts/local-postgres.sh start pragma dev`. It boots the cluster
-   and creates the database. It applies nothing.
-3. **Why did nobody notice?** A developer who had once run the back-e2e
-   suite against the same cluster, or applied migrations by hand, had
-   tables, and kept them, because nothing ever wiped that database. The
-   defect only shows on a cluster nobody has prepared, which is exactly
-   what a validator or a fresh checkout gets.
-4. **Why did a second app have it?** banana-rush was scaffolded from
-   pragma, scripts included, and inherited the same `dev:db`.
-   last-loop-lepin, the oldest app, has a `dev-db.sh` that does migrate;
-   the copy was taken from the app that did not.
+      ```json
+      "dev:db": "../../scripts/local-postgres.sh start pragma",
+      ```
 
-**Root cause:** thought booting the dev cluster was the dev database's
-whole setup, actually the schema only ever existed on machines where
-something else had already written it.
+      - Commit `0fafc57821` scaffolded pragma on 2026-05-19 with this line. Pragma
+        had no migrations then, so the line was complete.
+        - Commit `8be0e6216c`, the same day, added
+          `api/src/database/migrations/0000_initial.sql` and left `dev:db` as it
+          was. Its message says the client "mirrors last-loop-lepin's pattern",
+          so the agent read last-loop-lepin's database client, not its
+          `dev-db.sh`, which was where that app replayed its migrations.
+          - Applying migrations to a dev database was a step each app wired by
+            hand in its own script. Nothing shared ran it for an app that owned
+            a migrations folder.
+- banana-rush had the same defect, because it was scaffolded from pragma's
+  scripts.
+
+## Root cause of occurrence
+
+*Thought adding a migrations folder gave every database the app uses its
+schema, actually only the test harness replayed it, and the dev database got a
+schema only from a per-app script pragma did not have.* (Machine)
+
+The codebase split one job, "give this database the app's schema", across a
+copy per app and per purpose: last-loop-lepin's `dev-db.sh`, each app's
+`test/setup-postgres.ts`. An agent adding migrations had no single place that
+would carry them to the dev database.
 
 ## Detection failure causes
 
-- **CI:** CI never runs `pnpm dev`. The back-e2e suite migrates through its
-  own global setup, so the suite is green whatever `dev:db` does.
-- **Code review:** the script is one line and reads correctly; the missing
-  half is invisible without knowing what last-loop-lepin's does.
-- **Functional validation locally:** the author's own database had tables
-  from earlier runs, so `pnpm dev` worked for the only person who tried it.
+- **CI:** CI never runs `pnpm dev`. The back-e2e suite migrates through its own
+  global setup, so it stays green whatever `dev:db` does.
+- **Local validation:** a database that had once seen back-e2e or a manual
+  migration kept its tables, because nothing wiped it. Only a cluster nobody had
+  prepared, which is what a validator or a fresh checkout gets, showed the bug.
+- **Code review:** the script is one line and reads correctly.
 
 ## Countermeasure
 
-- **Code:** commit `a28ffcf` points pragma's `dev:db` at
-  `test/dev-database.setup.ts`, which replays every migration through
-  `test/setup-postgres.ts` and seeds the preview fixture, so a fresh
-  checkout signs in as `hugo` / `pragma-preview`. Commit `75d966d` does the
-  same for banana-rush, which has no fixture and only migrates. Both were
-  verified from an emptied `public` schema: tables come back, the command
-  exits 0, and pragma's sign-in answers 200.
+Commit `a28ffcfdb9` points pragma's `dev:db` at `test/dev-database.setup.ts`,
+which calls `test/setup-postgres.ts` to replay every migration, then seeds the
+preview fixture. Commit `75d966d8c8` does the same for banana-rush. Both were
+verified from an emptied `public` schema.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — DevX check)
+**Type:** DevX check (level 2)
 
-**Reference:** commits `a28ffcf`, `75d966d`, `40af66d`
-
-**The actual fix:** `scripts/check-app-registration.sh`, which already
-fails an app missing its path filter or commitlint scope, now fails an app
-that owns `api/src/database/migrations/` while its `dev:db` neither runs
+**Reference:** commit [`40af66de99`](https://github.com/hugoleborso/borso.fr/commit/40af66de99).
+`scripts/check-app-registration.sh` fails an app that owns
+`api/src/database/migrations/` while its `dev:db` names neither
 `test/dev-database.setup.ts` nor `dev-db.sh`:
 
-```diff
-+  if [ -d "${app_directory}api/src/database/migrations" ]; then
-+    dev_database_script=$(node -e "…scripts?.['dev:db'] ?? ''")
-+    if ! printf '%s' "$dev_database_script" | grep -qE 'test/dev-database\.setup\.ts|dev-db\.sh'; then
-+      echo "[check-app-registration] $slug owns migrations but its dev:db does not apply them." >&2
+```bash
+if ! grep -qE '^[[:space:]]*"dev:db":[[:space:]]*"[^"]*(test/dev-database\.setup\.ts|dev-db\.sh)' \
+  echo "[check-app-registration] $slug owns migrations but its dev:db does not apply them." >&2
 ```
 
-Verified both ways: green on the tree, and red with that message when
-pragma's `dev:db` is put back to the bare cluster start. A fourth
-full-stack app scaffolded the old way now fails its first commit.
+**Proof it can fail:** green on the tree, and red with that message when
+pragma's `dev:db` was put back to the bare cluster start (measured when the
+check shipped).
 
-**Sibling defects swept:** banana-rush (`75d966d`). last-loop-lepin's
-`dev-db.sh` already migrates and is accepted by the check as it is.
+**Gap:** the check reads a file name. A `dev-database.setup.ts` that never calls
+`applyMigrations` passes. Every full-stack app keeps its own
+`test/setup-postgres.ts` replaying the same folder
+(`ls apps/*/test/setup-postgres.ts` lists them).
 
-## See also
+**Proposed:** make `scripts/local-postgres.sh start <app> dev` replay
+`apps/<app>/api/src/database/migrations` itself whenever that folder exists,
+through one shared replayer the test setups also call. A full-stack app could
+then not get a dev database without its schema, and the file-name grep and the
+per-app replay copies could be deleted (feasibility inferred, not tried).
 
-- [`driving-pragma-auth-from-a-validator.md`](../knowledge/driving-pragma-auth-from-a-validator.md)
-- [`local-postgres-without-docker.md`](../knowledge/local-postgres-without-docker.md)
+**Similar instances:** `grep -n '"dev:db"' apps/*/package.json` shows every
+full-stack app now runs `tsx test/dev-database.setup.ts` (measured).

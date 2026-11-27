@@ -6,7 +6,7 @@ severity: low
 related-pr: '#406'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [.claude/hooks/stop-screens-shown-not-described.py, .claude/skills/visual-validation/SKILL.md, .claude/agents/visual-validator.md]
+eradication-paths: [scripts/hooks/checks/screens-shown.core.ts, .gitignore, .claude/skills/visual-validation/SKILL.md, .claude/agents/visual-validator.md]
 time-to-detect: minutes
 tags: [harness, hooks, agents, visual-validation, screenshots]
 zone: .claude/skills/visual-validation/SKILL.md
@@ -36,47 +36,90 @@ the session uploaded the folder `2026-11-26T0910`.
       `.pending-upload/` that `/visual-validation` step 8 asked for by hand did
       not happen.
       - `/visual-validation` step 4 created the evidence folder outside the
-        gitignored path, and `visual-validator.md` said "The folder is
-        committed alongside the report", against
-        ADR-2026-09-21T0819.
+        gitignored path, and the validator's definition told it to keep it
+        there: "The folder is committed alongside the report"
+        (`visual-validator.md`, the `evidence_dir` input).
+        - 05de4df4e (2026-05-03) wrote that sentence, when every screenshot
+          was committed.
+          - 154e4cd9a (2026-09-21) moved passing screenshots out of git with
+            ADR-2026-09-21T0819. It changed the agent's `description:` to
+            "screenshot evidence the skill then publishes or commits depending
+            on the verdict", and left the `evidence_dir` sentence two screens
+            below unchanged.
 
 ## Root cause of occurrence
 
 *Thought a manual split after validation keeps passing screenshots out of git,
 actually the default path was the committed one, so a skipped step committed
-them and left nothing to publish.*
+them and left nothing to publish.* (Material)
+
+The validator was an agent. Its definition, the document in its context, said
+to commit the folder, and it did. One why further is Method. The ADR changed a
+rule, and the commit that enacted it edited the files it thought of, while the
+sentence that applied the old rule went on applying it for two months. Nothing
+ties an ADR to the lines that enact the rule it replaces.
 
 ## Detection failure causes
 
-- **Hooks:** `stop-screens-shown-not-described.py` checks a push for an upload,
-  but treats any mention of `visual-validation` in the turn as one, and the
-  open-pr turn named the report.
-- **Gates:** nothing reads `.pending-upload/` before a pull request opens.
+- **Hooks:** the Stop hook checked a push for an upload, but treated any mention
+  of `visual-validation` in the turn as one, and the open-pr turn named the
+  report.
+- **Gates:** nothing read `.pending-upload/` before a pull request opened.
+- **Review of the ADR's commit:** its diff showed the edited `description:` and
+  not the unedited `evidence_dir` line.
 
 ## Countermeasure
 
 The evidence folder is now `<validation_dir>/.pending-upload/<timestamp>/`,
 gitignored. Step 8 moves out only the files a FAIL row cites, and step 9,
-which staged evidence for commit, is gone. A skipped step now leaves the
-screenshots waiting to be published instead of committed.
+which staged evidence for commit, is gone. The stale sentence in
+`visual-validator.md` is replaced: `evidence_dir` is now "the folder for your
+screenshots, `<validation_dir>/.pending-upload/<timestamp>/`". A skipped step
+now leaves the screenshots waiting to be published instead of committed.
 
 ## Eradication
 
 **Type:** DevX check (level 2)
 
-The Stop hook blocks, once, a turn that ran `git push` or
-`create_pull_request` while a file waits under
+**Reference:** the commit adding this file (PR #407). The Stop hook it added in
+Python was ported to TypeScript by 458e886c4 (PR #411), which deleted every
+`.claude/hooks/` script. The check lives today in
+`scripts/hooks/checks/screens-shown.core.ts`.
+
+It blocks, once, a turn that opened a pull request, or pushed on a session that
+has one, while a file waits under
 `docs/features/*/*/validation/.pending-upload/*/`. `/open-pr` deletes the
 folder once the upload reads back, so a file left there is one not published.
 
-```python
-def left_screenshots_unpublished(turn, root):
-    inputs = json.dumps([row.get("message", {}).get("content") for row in turn if row.get("type") == "assistant"])
-    return bool(re.search(r"\bgit\s+push\b|create_pull_request", inputs)) and bool(glob.glob(PENDING_SCREENSHOTS, root_dir=root))
+```ts
+function hasLeftScreenshotsUnpublished(inputs: string, sessionInputs: string, root: string, world: HookWorld): boolean {
+  const isPullRequestNumbered = PULL_REQUEST_OPENED.test(sessionInputs);
+  if (!PULL_REQUEST_OPENED.test(inputs) && !(PUSH.test(inputs) && isPullRequestNumbered))
+    return false;
+  const features = `${root}/${FEATURES}`;
+  const found = world.run('find', ['-L', features, '-mindepth', '6', '-maxdepth', '6']).stdout;
+  return found.split('\n').some((path) => PENDING_SCREENSHOT.test(path.slice(features.length + 1)));
+}
 ```
 
-Proved on a scratch tree: a turn calling `create_pull_request` passed with an
-empty pending folder and was blocked once a PNG was in it.
+The default path is gitignored, so a skipped step can no longer commit passing
+screenshots, and the hook refuses the leftover. Nothing better exists for this
+instance.
 
-The 12 PNGs PR #406 committed stay in git: deleting them is a separate
-decision for the operator.
+The deeper cause stays open as a class: an ADR that changes a rule does not
+reach the files that enact the old one.
+
+**Proposed:** have the ADR template carry the sentence it retires, and a
+pre-commit check fail while that sentence still appears under `.claude/` or
+`docs/standards/`. 154e4cd9a would then have been refused while
+`visual-validator.md` still said "committed alongside the report". It does not
+exist yet.
+
+**Proof it can fail:** proved on a scratch tree when the Python hook shipped: a
+turn calling `create_pull_request` passed with an empty pending folder and was
+blocked once a PNG was in it. The TypeScript port is gated at 100% coverage by
+`screens-shown.core.test.ts`.
+
+**Similar instances:** `grep -rn "committed alongside" .claude/` finds no other
+stale copy today. The 12 PNGs PR #406 committed stay in git: deleting them is a
+separate decision for the operator.

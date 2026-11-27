@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#89'
 fix-commits: [79562bd0a3]
 eradication-level: 2
-eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
+eradication-paths: [scripts/check-instructions-name-installed-tools.sh, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: days
 tags: [agents, skills, eslint, biome, tooling, gates, meta, documentation]
 zone: .claude/skills
@@ -15,121 +15,89 @@ weak-point: prose-stands-in-for-a-check
 
 # The skill that named the linter the repository had deleted
 
-## Symptom
+## User impact
 
-`.claude/agents/technical-validator.md` is the brief the code-review agent
-runs from. Its verdict table held this row:
+Every agent that ran the code-review brief between 2026-08-08 and
+2026-09-16. Four of them, in separate tasks, logged the same wall in
+`KAIZEN.md`, each losing part of a turn.
 
-```
-| B02 | Biome lint clean | `pnpm exec biome lint` | <exit 0 / N errors> | PASS / FAIL |
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| The review agent fills row B02 of its verdict | `pnpm exec biome lint` answers `command not found`, and the agent decides alone whether that is a FAIL or an UNVERIFIABLE | The command lints the change and the row gets a verdict |
+| The same brief, on the cleanliness category | "read the repo's lint config at `biome.jsonc` (and per-app overrides under `apps/*/biome.jsonc`)", none of which exists | A config file the agent can open |
 
-There is no Biome in this repository.
-[ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md)
-replaced it with ESLint on 2026-08-08. The dependency went, `biome.jsonc`
-went, the hooks were rewritten. Eleven tracked files under `.claude/` went on
-naming it.
+## Causal chain
 
-The agent that runs that brief is asked to fill in a verdict. It runs the
-command it was given, gets `command not found`, and has to decide — alone,
-mid-verdict — whether a lint gate that cannot be run is a FAIL or an
-UNVERIFIABLE. Four agents hit this across a month, in separate tasks, each
-losing part of a turn to it.
+- The review agent ran a lint command that did not exist.
+  - `.claude/agents/technical-validator.md` gave it this row. ← the faulty line
 
-The same brief also told the agent to read *"the repo's lint config at
-`biome.jsonc` (and per-app overrides under `apps/*/biome.jsonc`)"*. None of
-those paths exist either, so the one input the cleanliness category is built
-on was a file the agent could not open.
+    ```markdown
+    <!-- biome left the repository on 2026-08-08; this row still runs it -->
+    | B02 | Biome lint clean | `pnpm exec biome lint` | <exit 0 / N errors> | PASS / FAIL |
+    ```
 
-Beside it, a subtler one: the orchestrator's dispatch-hygiene rule read
-*"briefs name `biome check`, not `biome lint`"*. The lesson underneath it is
-real and still applies — a brief naming one half of a two-part gate lets the
-other half drift a round at a time — but it was written in the vocabulary of
-a tool where the two halves were sub-commands of one command. Under ESLint
-and Prettier they are two separate commands, which makes the trap *easier* to
-fall into, and the rule as written pointed at neither of them.
+    - `314f24821` ("replace biome with eslint and prettier", 2026-08-08, an
+      agent) removed the dependency, `biome.jsonc`, the grit plugins, the
+      hooks and the workflows. It changed no file under `.claude/`, and
+      eleven tracked files there went on naming Biome.
+      - The instructions named the tool itself, `pnpm exec biome lint`,
+        rather than a command the repository owns. A tool swap therefore had
+        to rewrite every instruction that ran the linter, and the swap was
+        written as a code change.
+        - **Method:** the instruction surface spells tools by name. The fix
+          for this entry did the same, and the class came back.
+          `79562bd0a` wrote `eslint.config.js` into
+          `.claude/skills/technical-conception/standard.md:55`. `9dcf74547`
+          (#197) then replaced ESLint with oxlint, and that line still names
+          a file that does not exist (measured, `ls eslint.config.js`).
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. **Why did the skills still name Biome?**
-   ADR-2026-08-08T1538's change swept the code: the manifest, the config, the hooks, the
-   workflows. It did not sweep `.claude/`.
+*Thought removing a tool is a code change, actually a skill is executable
+text, and removing a tool is a change to everything that instructs.*
+**Method:** the instructions spell the tool, not a repository command, so
+every swap of a tool owes a sweep of prose that nothing builds.
 
-2. **Why not?**
-   Nothing in `.claude/` is imported, built, typechecked or linted. Removing a
-   dependency breaks every file that imports it, loudly and immediately.
-   Removing a dependency breaks no file that merely *mentions* it, and prose
-   has no build step.
-
-3. **Why did a month of agent runs not surface it?**
-   Because each one absorbed it. An agent that cannot run a command works
-   around it — it greps instead, or marks the row UNVERIFIABLE and moves on.
-   The cost is real and paid every time, and it never accumulates anywhere a
-   human reads.
-
-4. **Why did the enforcement ledger not catch it?**
-   The ledger resolves the mechanisms that `docs/standards/` claims. It does
-   not read `.claude/`, and a skill is not a standard: nothing there claims
-   enforcement, it just tells an agent what to do.
-
-5. **Why did the four agents not report it?**
-   None of them was told to. A friction line from a subagent only reaches a
-   sweep if the prompt that spawned it asked for one — the case CLAUDE.md
-   makes under *Subagents log here too*. Four agents hitting one wall is the
-   evidence that promotes a local fix into a gate, and it was only visible
-   because this sweep read `KAIZEN.md` by writer rather than by line.
-
-**Root cause:** the author thought *removing a tool is a code change*,
-actually *a skill is executable text and removing a tool is a change to
-everything that instructs*, and the difference is invisible precisely because
-the instruction surface is the one surface with no compiler.
+ADR-2026-08-08T1538 lists what the swap touched, and `.claude/` is not in it
+([ADR](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md)).
+`package.json` already defines `pnpm lint` and `pnpm format:check`, which
+survive any swap.
 
 ## Detection failure causes
 
-- **Typing / linter:** markdown under `.claude/`; ESLint does not lint it and
-  there is nothing to type.
-- **Functional validation locally:** running a skill is not something the
-  repository does. A skill is exercised by an agent, in a session, one at a
-  time.
-- **CI:** no job reads `.claude/` for anything but the hook-decision contract,
-  which checks hooks, not skills.
-- **The enforcement ledger:** scoped to `docs/standards/`, by design.
-- **Code review:** ADR-2026-08-08T1538's diff was large and touched the things that
-  break. A reviewer checking that the build is green is checking exactly the
-  set of files this defect is not in.
-- **The agents themselves:** four hit it and each absorbed it, because an
-  agent's job is to finish the task, and working around a broken instruction
-  is finishing the task.
+- **Typing and linter:** the faulty line is markdown under `.claude/`.
+  Nothing lints or types it.
+- **Local validation:** a skill runs only when an agent reads it in a session.
+  Removing a dependency breaks every file that imports it, and no file that
+  merely mentions it.
+- **CI:** no job read `.claude/` except for the hook-decision contract, which
+  checks hooks.
+- **The enforcement ledger:** it resolves the mechanisms that
+  `docs/standards/` claims, and a skill claims none.
+- **Review:** `314f24821`'s diff was large and touched what breaks. A
+  reviewer checking a green build checks exactly the files this defect is not
+  in.
+- **The agents:** four hit it and each worked around it, by grepping or by
+  marking the row UNVERIFIABLE. None was told to log friction, so the cost
+  reached no human until a sweep read `KAIZEN.md` by writer.
 
 ## Countermeasure
 
-Every invocation swept, and every instruction rewritten to name what actually
-runs rather than deleted and left vague:
+`79562bd0a` (#106) swept every invocation and rewrote each to name what runs.
+Row B02 became ESLint with `--max-warnings 0`. The dispatch-hygiene rule was
+rewritten as the lesson, "a brief names every half of the gate", in the
+orchestrator standard, `feature-pipeline.md` and
+[`orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md).
+The four `docs/knowledge/biome-*.md` entries gained a banner saying Biome is
+not installed here.
 
-- **`.claude/agents/technical-validator.md`** — `biome.jsonc` becomes
-  `eslint.config.js` and `eslint-rules/`; row B02 becomes ESLint with
-  `--no-warn-ignored --max-warnings 0`, because ESLint exits 0 on a warning
-  and a warning nobody has to clear is a rule that is off.
-- **`technical-conception`, `technical-validation`, `implementation`, `adr`,
-  `dantotsu`, `after-task-kaizen`** — same substitution, with the
-  type-assertion rule named as `borso/no-type-assertion-except-unknown`
-  rather than "the Biome plugin".
-- **The dispatch-hygiene rule** rewritten to the lesson rather than the tool:
-  *a brief names every half of the gate*, with ESLint and Prettier named as
-  the two halves, and a note that two separate commands make the trap easier
-  than two sub-commands did. Updated in the orchestrator standard,
-  `feature-pipeline.md` and
-  [`orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md).
-- **The four `docs/knowledge/biome-*.md` entries** keep their content, which
-  is a set of true facts about Biome, and gain a banner saying Biome is not
-  installed here and pointing at ADR-2026-08-08T1538. A reader searching for
-  `biome-ignore` was landing on a page that read as current guidance.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** DevX check (level 2 — devx check)
-
-**Reference:** PR #106 · commit `79562bd0` · `scripts/check-instructions-name-installed-tools.sh`
+**Reference:** commit `79562bd0a` (#106),
+`scripts/check-instructions-name-installed-tools.sh`, run by
+`.husky/pre-commit` and by `.github/workflows/ci.yml`.
 
 Every `pnpm exec X`, `npx X` and `node_modules/.bin/X` named in `.claude/` or
 `docs/standards/` has to resolve in `node_modules/.bin`:
@@ -143,29 +111,27 @@ Every `pnpm exec X`, `npx X` and `node_modules/.bin/X` named in `.claude/` or
 +    echo "[check-instructions-name-installed-tools] ${location}: names \`${tool}\`, which is not installed" >&2
 ```
 
-It reads the actionable half — the command an agent will type — and says
-nothing about prose, which is where a retired tool is legitimately named: in
-the ADR that retired it, in the dantotsus written while it ran, in a standard
-explaining what replaced it. Measured on the tree it was written against: four
-distinct tools named across the surfaces (`tsx`, `eslint`, `knip`,
-`prettier`), all resolving. Verified to fire by restoring `pnpm exec biome
-lint` in the validator brief, which exits 1 naming the file and line.
+It survived the swap to oxlint. Today row B02 reads
+`pnpm exec oxlint --type-aware <changed-files>`, and the gate holds it.
 
-It skips itself, saying so, when `node_modules/.bin` is absent, because a gate
-that fails on a fresh checkout is a gate someone deletes.
+**Proof it can fail:** restoring `pnpm exec biome lint` in the validator
+brief made the gate exit 1, naming the file and the line (measured when
+`79562bd0a` shipped).
 
-**What it does not reach:** a stale instruction that names no command —
-*"read the repo's lint config at `biome.jsonc`"* is prose by this gate's
-definition and would have survived it. That half was swept by hand here. A
-gate on every backticked path in every skill is a different and much noisier
-proposition, and the case for it is weaker: an agent told to read a file that
-does not exist gets a clean signal and no verdict to fill in.
+The gate reads commands only. A stale file name in prose passes. That gap
+let `eslint.config.js` survive in `technical-conception/standard.md:55`, and
+`scripts/check-named-paths-exist.sh`, which checks paths named in prose,
+passes on it because a bare root file name is not one of its surfaces.
 
-**Sibling defects swept:** the eleven files above, plus the four knowledge
-entries' banners.
+**Proposed:** subtract the tool names. Instructions call the root scripts,
+`pnpm lint` and `pnpm format:check`, which `package.json` defines, so a tool
+swap touches only `package.json`. Then extend
+`scripts/check-named-paths-exist.sh` to backticked root-level file names
+such as `eslint.config.js`. A swap could no longer leave an instruction that
+runs a missing tool, and a stale config name would be refused at commit.
 
-## See also
-
-- [ADR-2026-08-08T1538](../adr/2026-08-08T1538-eslint-with-type-aware-rules-replaces-biome.md) — the decision whose sweep stopped at the code.
-- [`the-formatter-was-a-detector-with-no-writer.md`](./the-formatter-was-a-detector-with-no-writer.md) — the other half of the formatter story.
-- [`orchestrator-dispatch-hygiene.md`](../knowledge/orchestrator-dispatch-hygiene.md) — the dispatch rule, now written as the lesson rather than the tool.
+**Similar instances:** `grep -rln "eslint.config.js" .claude docs/standards`
+prints `.claude/skills/technical-conception/standard.md`. The eleven files
+`79562bd0a` swept are listed in its diff. The other half of the formatter
+story is
+[`the-formatter-was-a-detector-with-no-writer.md`](./the-formatter-was-a-detector-with-no-writer.md).

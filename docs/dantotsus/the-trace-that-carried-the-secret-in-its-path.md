@@ -15,42 +15,56 @@ recurs: none (the first defect where two branches, each correct alone, leaked a 
 
 # The trace that carried the secret in its path
 
-## Symptom
+## User impact
 
 PR #118 stores each member's secret iCal address and reads it on every visit
-to the Sessions page. While main was being merged into the branch, #163 arrived
-with Sentry for the pragma API, tracing every request. Reading the merged
-adapter showed that every free-slot read would have sent each member's address
-to Sentry, in an outgoing span and in a breadcrumb:
+to the Sessions page. While main was being merged into the branch, #163
+arrived with Sentry for the pragma API, tracing every request. Reading the
+merged adapter showed that every free-slot read would have sent each
+member's address to Sentry, in an outgoing span and in a breadcrumb:
 
 ```
 GET https://calendar.google.com/calendar/ical/member%40example.com/private-0123abcd/basic.ics
 ```
 
-Nothing failed. Every test on both branches was green, and the merge itself
-raised one conflict, an import line in `app.ts`.
+| | Seen | Expected |
+| --- | --- | --- |
+| Outgoing span for a free-slot read | the full calendar URL, token in the path | no span, or the host only |
 
-## Root-cause chain
+Anyone with access to the Sentry project could have read every member's
+calendar. Nothing failed. Every test on both branches was green, and the
+merge raised one conflict, an import line in `app.ts`. It was caught in
+review before deploy, so no address reached Sentry.
 
-1. **Why would the address reach Sentry?** `@sentry/aws-serverless` 11.6
-   instruments `fetch` and records each outgoing request's URL as a span name
-   and a breadcrumb. `dataCollection.urlQueryParams: false` strips the query,
-   and the rest of the URL is kept.
-2. **Why is the path a secret?** A provider's secret iCal address carries its
-   token in the path, not in the query. Google's is
-   `/calendar/ical/<id>/private-<token>/basic.ics`.
-3. **Why did #163 not account for it?** When #163 was written, the API's
-   only outgoing calls went to Deezer and Spotify, whose paths hold nothing
-   private. Its ADR switches off every personal-data category Sentry names,
-   and none of them covers a URL path.
-4. **Why did #118 not account for it?** #118 was written before Sentry existed
-   in pragma. Its ADR states that the address never leaves the API, which was
-   true until the merge.
+## Causal chain
 
-**Root cause:** both branches treated "personal data collection off" as
-covering every secret, but Sentry's categories describe where personal data
-usually lives, and an address that carries its credential in the path falls
-outside all of them.
+- Every free-slot read would send a member's secret address to Sentry.
+  - `@sentry/aws-serverless` 11.6 instruments `fetch` and records each
+    outgoing request's URL as a span name and a breadcrumb.
+    `dataCollection.urlQueryParams: false` strips the query and keeps the
+    rest of the URL.
+    - A provider's secret iCal address carries its token in the path, not in
+      the query. Google's is `/calendar/ical/<id>/private-<token>/basic.ics`.
+  - The merged adapter passed `dataCollection: PRIVATE_DATA_COLLECTION` and
+    no filter on outgoing requests.
+    - #163 switched off every personal-data category Sentry names, and none
+      covers a URL path. When it was written, the API's only outgoing calls
+      went to Deezer and Spotify, whose paths hold nothing private.
+      - Its writer built from Sentry's published data categories, which
+        describe where personal data usually lives (Material).
+    - #118 was written before Sentry existed in pragma. Its ADR states that
+      the address never leaves the API, which was true until the merge.
+
+## Root cause of occurrence
+
+*Thought "personal data collection off" covered every secret, actually
+Sentry's categories describe where personal data usually lives, and an
+address that carries its credential in the path falls outside all of them.*
+(Material)
+
+Both branches built from the same input, Sentry's category list, and each
+was correct alone. ADR-2026-10-10T0457 records the choice: Sentry in pragma,
+personal data collection off.
 
 ## Detection failure causes
 
@@ -65,17 +79,14 @@ outside all of them.
 
 ## Countermeasure
 
-- **Code:** in PR #118, squashed as `52684a2`: Sentry records an outgoing call
-  only when its host is one the API names itself.
+In PR #118, squashed as `52684a2`, Sentry records an outgoing call only when
+its host is one the API names itself.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** structural impossibility (level 1)
 
-**Reference:** [PR #118](https://github.com/hugoleborso/borso.fr/pull/118) ·
-commit [`52684a2`](https://github.com/hugoleborso/borso.fr/commit/52684a2bb1dd1a4fcfc541581c42c8288c5aeee5)
-
-**The actual fix:**
+**Reference:** commit [`52684a2`](https://github.com/hugoleborso/borso.fr/commit/52684a2bb1dd1a4fcfc541581c42c8288c5aeee5) (PR #118).
 
 ```diff
 +const RECORDED_OUTGOING_HOSTS: ReadonlySet<string> = new Set([
@@ -97,18 +108,42 @@ commit [`52684a2`](https://github.com/hugoleborso/borso.fr/commit/52684a2bb1dd1a
 +    ],
 ```
 
-The list allows hosts rather than refusing them, so a host nobody listed is
-never recorded. A new outgoing call to a member-supplied address, a webhook or
-another calendar provider stays out of Sentry until someone adds its host on
-purpose. The adapter test asserts the integration is passed, and the core is
-mutation-tested at 100%.
+The list allows hosts rather than refusing them, so in pragma a host nobody
+listed is never recorded. A new outgoing call to a member-supplied address,
+a webhook or another calendar provider stays out of Sentry until someone
+adds its host on purpose. The adapter test asserts the integration is
+passed, and the core is mutation-tested at 100%. talos's adapter passes the
+same `ignoreOutgoingRequests` filter.
 
-**Sibling defects swept:** the AWS SDK goes through Node's `http` module, not
+The level holds for pragma and talos, not for the class. `banana-rush`,
+`borsouvertures`, `last-loop-lepin` and `skull-king` each have an
+`api/src/helpers/observability/error-reporting.adapter.ts` with
+`integrations: [Sentry.postgresJsIntegration()]` and no
+`ignoreOutgoingRequests` (`grep -n "integrations\|ignoreOutgoing" apps/*/api/src/helpers/observability/error-reporting.adapter.ts`,
+measured 2026-11-27). None of their APIs calls `fetch` today
+(`grep -rln "fetch(" apps/<app>/api/src` finds nothing outside tests), so
+nothing leaks now. Their first `fetch` to a URL with a secret in its path
+would be recorded, since a listed integration adds to Sentry's defaults
+rather than replacing them (inferred from Sentry's integration model, not
+measured here).
+
+**Proof it can fail:** the core's tests refuse an unlisted host and an
+unparsable URL, and mutation testing kills every mutant of
+`isUnrecordedOutgoingRequest`.
+
+**Proposed:** make outgoing calls default-deny in every app. Each of the four
+adapters would pass `nativeNodeFetchIntegration({ ignoreOutgoingRequests })`
+with a host allowlist that starts empty, as pragma's does with three hosts.
+The error-reporting adapter shape would carry the filter, so a new app
+copying it starts closed. A future `fetch` to a secret URL could then not
+reach Sentry in any app without a host added on purpose.
+
+**Similar instances:** the AWS SDK goes through Node's `http` module, not
 `fetch`, so its calls are not recorded by this integration. Its URLs carry no
 secret in any case: SSM parameter names travel in the request body, and DSQL
-signs its token locally.
+signs its token locally. The four apps above are the open instances.
 
-## See also
+**Related.**
 
 - [ADR-2026-10-10T0457](../adr/2026-10-10T0457-pragma-reports-errors-and-traces-to-sentry-eu.md):
   Sentry in pragma, personal data collection off.

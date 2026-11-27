@@ -4,133 +4,132 @@ introduced-at: self-validation
 detected-at: local
 severity: medium
 related-pr: '#55'
-fix-commits: [50545c5bc1]
+fix-commits: [d6dd5ba5a, 458e886c4]
 eradication-level: 2
-eradication-paths: [.claude/hooks/pretool-no-discarding-reset.sh]
+eradication-paths: [scripts/hooks/checks/no-discarding-reset.core.ts, scripts/hooks/checks/no-discarding-reset.core.test.ts]
 time-to-detect: minutes
 tags: [git, hooks, meta, self-improvement-loop]
-zone: .claude/hooks
+zone: .claude/skills/dantotsu
 weak-point: prose-stands-in-for-a-check
 ---
 
 # The knowledge entry warning about this was open in the same session that did it again
 
-## Symptom
+## User impact
 
-Verifying a new gate means breaking something on purpose and watching the gate
-fail. Undoing the break is one command:
+An agent verifies a new gate by breaking something on purpose, then undoes
+the break. In the sweep that wrote this entry, the undo also deleted the gate's
+own pre-commit and CI wiring.
 
-```bash
-git reset --hard HEAD~1        # drop the probe commit
-git checkout -- <file>         # or undo the probe edit
-```
+| | Seen | Expected |
+| --- | --- | --- |
+| `git reset --hard HEAD~1` after a two-line probe commit | The probe gone, and two uncommitted wiring edits gone with it, with no message | The probe gone, the wiring kept |
 
-Both take everything else that was uncommitted with them. In the sweep that
-wrote this entry, `git reset --hard HEAD~1` — run to discard a two-line probe
-commit — also deleted the pre-commit and CI wiring for the gate being probed.
-The command printed nothing. `git log` looked right. The two edits were simply
-gone, and the only reason it was noticed at all was a `grep -c` run for an
-unrelated reason a minute later.
+The command printed nothing and `git log` looked right. A `grep -c` run for an
+unrelated reason a minute later showed the loss (measured in that session).
+[`destructive-git-with-uncommitted-verification-work`](../knowledge/destructive-git-with-uncommitted-verification-work.md)
+records three earlier losses of the same kind in one session on 2026-08-15.
+This was the fifth.
 
-`docs/knowledge/destructive-git-with-uncommitted-verification-work.md` describes
-exactly this. It has been in the repository since **three losses in one
-session**. It did not prevent the fourth, or the fifth.
+## Causal chain
 
-## Root-cause chain
+- Two uncommitted edits, the gate's wiring, disappeared.
+  - The agent ran `git reset --hard HEAD~1` to drop its probe commit:
 
-1. The moment the command is reached for is, by construction, the middle of a
-   verification: something is deliberately broken and something else is
-   deliberately correct, in the same working tree.
-2. The two are indistinguishable to `git`. `reset --hard` restores the whole
-   tree; there is no "except the part I meant to keep".
-3. Neither command warns. `reset --hard` prints the new HEAD;
-   `checkout --` prints nothing at all.
-4. There is no recovery. The reflog covers commits, not the working tree, so an
-   uncommitted edit destroyed this way has no copy anywhere.
-5. The knowledge entry, being knowledge, only helps a reader who thinks to read
-   it. Nobody consults a warning about a command they have typed a thousand
-   times.
+    ```bash
+    git reset --hard HEAD~1   # ❌ resets the whole tree, not only the probe
+    ```
 
-**The general form, and it is the one this repository already knows in another
-costume:** *a written warning that keeps failing to prevent the same loss is a
-gate waiting to be written.* PR #55 found the same shape one layer up — a
-reviewer bullet that kept producing the same finding became the
-`verb-promises-match-return-type` lint rule. This is that loop applied to
-`docs/knowledge/`.
+    - The reset restored every tracked file to `HEAD~1`, including the files
+      that held the uncommitted wiring.
+      - The probe commit and the real work sat in the same working tree. The
+        sweep planted the defect where the eradication was still being written.
+        - The process the sweep followed asked for an eradication proven on a
+          planted defect, and said nothing of where to plant it. The knowledge
+          entry's advice, a throwaway branch or a copy in `/tmp`, sat in a file
+          the agent had read that session (Method).
+    - The knowledge entry that names this exact command was loaded in the
+      session. The agent typed the command anyway (Man).
+
+## Root cause of occurrence
+
+*The agent thought `git reset --hard HEAD~1` drops the probe commit, actually
+it resets every tracked file in the working tree, and the reflog keeps commits,
+not uncommitted edits.* (Man)
+
+The right answer was in the agent's context. The knowledge entry says *"`git
+reset --hard` after a throwaway probe commit does the same thing to every
+uncommitted file in the tree"*, and the session had read it. The prior of a
+command typed a thousand times won over a file read earlier. Under the agentic
+4M rule, the fix is therefore not another document. It is a gate that holds
+when the prior wins, and a probe procedure that never puts the probe and the
+work in one tree.
 
 ## Detection failure causes
 
-- **The loss is silent and immediate.** No error, no prompt, no artefact left
-  behind to notice later.
-- **The command is correct almost every time it is run**, so no amount of care
-  makes the dangerous case stand out. Only the state of the tree distinguishes
-  them, and that state is not in the command.
-- **Knowledge is read before a task, not during one.** By the time the command
-  is typed, the entry describing it is one of eighty files nobody is looking at.
-- **The count was never visible.** Three losses became four became five with
-  nothing accumulating a signal; each one read as a private mistake.
+- **Git:** `reset --hard` prints the new HEAD, and `checkout --` prints
+  nothing. Neither tells a probe from the work, because only the state of the
+  tree does.
+- **Recovery:** the reflog covers commits, so an uncommitted edit destroyed
+  this way has no copy.
+- **Knowledge:** the entry had no command trigger at the time. It was read
+  before the task, not at the moment the command was typed.
+- **Counting:** three losses became five with no signal accumulating. Each
+  read as a private mistake, so none raised the entry to a gate.
 
 ## Countermeasure
 
-`.claude/hooks/pretool-no-discarding-reset.sh`, a `PreToolUse` hook on `Bash`
-that refuses `git reset --hard|--merge|--keep`, `git checkout -- <path>` and
-`git restore <path>` **while tracked modifications exist**, lists the files at
-stake, and names the two ways through:
+A PreToolUse check on Bash refuses `git reset --hard|--merge|--keep`,
+`git checkout -- <path>` and `git restore <path>` while tracked modifications
+exist. It lists the files at stake and names the two ways through:
 
 ```
-git add -A && git commit -m 'wip'   …   git reset --soft HEAD~1
+git add <those paths> && git commit -m 'wip'   …   git reset --soft HEAD~1
 git stash push -u -m 'before the probe'
 ```
 
-The condition is the whole design. On a clean tree the command destroys nothing
-and runs untouched, so the hook costs nothing in the ordinary case and fires
-only in the state where the loss is possible.
+On a clean tree the command destroys nothing and runs untouched, so the check
+costs nothing in the ordinary case.
 
 ## Eradication
 
-**DevX check, level 2.** The command cannot run in the state that loses work,
-and the message arrives at the moment it is needed rather than in a file
-somebody has to remember exists.
+**Type:** DevX check (level 2)
 
-Level 1 is not reachable: `git` offers no flag that means "discard only what I
-named", and removing the commands from the vocabulary would break the many uses
-that are correct.
+**Reference:** commit `d6dd5ba5a` added the shell hook. Commit `458e886c4`
+(#411) deleted `.claude/hooks/pretool-no-discarding-reset.sh` and ported it to
+`scripts/hooks/checks/no-discarding-reset.core.ts`, which holds the rule today:
 
-Verified in both tree states, the clean case in a scratch repository so the
-state was unambiguous:
+```ts
+const RULE = 'no-discarding-reset';
+// …
+  String.raw`${GIT_INVOCATION}(reset\s+(--hard|--merge|--keep)|checkout\s+--\s|restore\s)`,
+```
 
-| Tree | Command | Expected | Result |
-| --- | --- | --- | --- |
-| clean | `git reset --hard HEAD~1` | allowed | exit 0 |
-| tracked modification present | `git reset --hard HEAD~1` | blocked | exit 2, naming the three files |
-| tracked modification present | `git checkout -- docs/standards/01-naming.md` | blocked | exit 2 |
-| tracked modification present | `git restore scripts/foo.ts` | blocked | exit 2 |
-| tracked modification present | `git reset --soft HEAD~1` | allowed | exit 0 |
-| tracked modification present | `git status --short` | allowed | exit 0 |
-| tracked modification present | `echo "never run git reset --hard here"` | allowed | exit 0 |
+Level 1 is not reachable inside git: no flag means "discard only what I
+named", and removing the commands would break their many correct uses.
 
-The last row is the mention-versus-invocation case, handled by the same two
-strippers as the sibling hook: heredoc bodies first, quoted arguments second.
+**Proof it can fail:** `scripts/hooks/checks/no-discarding-reset.core.test.ts`
+holds the case *"refuses a hard reset over tracked changes, because it deletes
+them with no reflog entry"*, plus the later defects found on PR #193: a chain
+judged only on its first command, and a checkout named through `git -C` or
+`cd` that the hook could not read. Each is a test case today.
 
-**What this deliberately does not cover:** a staged-only change, which
-`git diff --quiet` does not report. That one is recoverable — the blob is in the
-index and `git fsck --lost-found` finds it — so blocking on it would refuse a
-safe command for a loss that can be undone.
+**What it does not cover:** a staged-only change. `git diff --quiet` does not
+report it, and the blob stays in the index, where `git fsck --lost-found` finds
+it.
 
-**Two later defects, found on PR #193 and its kaizen branch.** The hook read its
-own directory, so it refused `git restore --staged` aimed at another worktree by
-naming the main checkout's unrelated work. Teaching it to follow `git -C` and
-`cd` introduced the second: when the named checkout could not be read (a
-variable, a quoted path, a directory that does not exist), `git -C` failed under
-`set -e` and the hook exited 128, which the harness treats as "let it run". It
-also judged only the first `git restore` in a chain, so
-`git restore --staged g && git restore f` passed. The hook now judges every
-command in the chain against the directory it would run in, and refuses with
-exit 2 when it cannot read that directory. Every one of these commands is a row
-in `plugins/borso-harness/scripts/check-hook-decisions.sh`.
+**Proposed:** subtract the dangerous state. The proof step of
+`.claude/skills/dantotsu/SKILL.md` says today *"plant the defect on a scratch
+copy"*, in prose. It would instead name one command that runs the probe in a
+throwaway `git worktree add` on a temporary branch and removes it after. The
+working tree that holds the real work is then never the one the probe resets,
+so a discarding command during a probe has nothing to destroy. The hook stays
+as the guard for every other moment.
 
-## See also
-
-- [`destructive-git-with-uncommitted-verification-work`](../knowledge/destructive-git-with-uncommitted-verification-work.md) — the knowledge entry this is the eradication of, kept because its examples are the evidence.
-- [`a-push-that-failed-and-reported-success`](./a-push-that-failed-and-reported-success.md) — the sibling hook, same shape, same session.
-- [`broad-pkill-killed-another-agents-measurement`](./broad-pkill-killed-another-agents-measurement.md) — the first hook in this family.
+**Similar instances:** the same sweep produced two siblings, each a command
+whose reach was wider than its intent:
+[`a-push-that-failed-and-reported-success`](./a-push-that-failed-and-reported-success.md)
+and [`broad-pkill-killed-another-agents-measurement`](./broad-pkill-killed-another-agents-measurement.md).
+`grep -n stash scripts/hooks/checks/no-discarding-reset.core.ts` finds only
+the advice line, so `git stash drop` after a partial restore, recorded in the
+knowledge entry above, is not gated.

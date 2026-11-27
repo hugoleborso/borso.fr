@@ -16,110 +16,99 @@ recurs: none (the budget entries are about a check that was too slow; this one i
 
 # The check that cost more than the defect
 
-## Symptom
+## User impact
 
-Aurora DSQL refused a connection parameter in production
+The users are everyone who commits. Aurora DSQL had refused a connection
+parameter in production
 ([the connection parameter no mock could refuse](./the-connection-parameter-no-mock-could-refuse.md)).
-The eradication shipped with the fix was a pre-commit script that read every
+The eradication proposed with the fix was a pre-commit script that read every
 `connection: { … }` under `apps/` and `infra/` and refused a key outside an
-allow-list. It worked, it was proven both ways, it cost 39 ms of CPU — well
-inside the 300 ms per-check budget — and it passed review because nothing asked
-the question the operator then asked:
+allow-list. It cost 39 ms of CPU, inside the 300 ms per-check budget. The
+operator asked the question nothing else had asked:
 
 > Est-ce qu'on va un jour avoir besoin de ce check ?
 
-Measured rather than guessed:
+| | Seen | Expected |
+| --- | --- | --- |
+| Commits the check runs on | 100 of the last 100 touch a `.ts` under `apps/` or `infra/` | the commits that touch what it guards |
+| What it guards | 5 lines, all identical, all `search_path` | |
+| Commits that ever touched those files | 15 across the repository's history | |
 
-| | |
-| --- | --- |
-| Commits it would run on | 100 of the last 100 touch a `.ts` under `apps/` or `infra/` |
-| Lines it guards | 5, all identical, all `search_path` |
-| Commits that ever touched those files | 15, across the repository's history |
-| Commits that touched the guarded line | effectively none |
+Measured by the PR #219 session with `git log`. The check was removed before
+merge, so no commit paid the toll.
 
-A permanent toll on every commit, with a hand-rolled parser that would have
-misread a multi-line `connection` block, against an accident that had happened
-once. It was removed before merge and replaced by a smoke invocation after the
-production deploy, which answers the whole class rather than one key.
+## Causal chain
 
-## Root-cause chain
+- A check that would run on every commit was proposed to guard five lines.
+  - Its scope was every `.ts` under `apps/` and `infra/`, because it parsed
+    each file for a `connection: { … }` block.
+    - It was written as the eradication of the DSQL parameter defect, as a
+      level 2 DevX check rather than a level 5 knowledge entry.
+      - The eradication ladder in `docs/dantotsus/README.md` read "top is
+        best", put knowledge "only as floor when 1–4 are genuinely
+        impossible", and said an entry whose only eradication is knowledge "is
+        almost always misclassified". It named no cost. (Method)
 
-1. **Why was the check written?**
-   The dantotsu ladder ranks a DevX check above a knowledge entry, and the
-   instinct is to climb it.
-2. **Why did that produce the wrong artefact?**
-   The ladder ranks *strength*, not *worth*. It says a check beats a document;
-   it does not ask what the check costs or how often its subject moves.
-3. **Why was the cost not weighed?**
-   The runtime budget is the only thing in this repository that prices a check,
-   and it prices one run. 39 ms passes. Nothing multiplies it by how often the
-   check runs, or divides it by how often the thing it guards changes.
-4. **Why did no gate object?**
-   Every gate the check faced asks whether it works. None asks whether it earns
-   its place.
-5. **Why did it take the operator to see it?**
-   Writing the check and judging it were the same act, minutes apart. The
-   measurements above took two commands and were not run until someone outside
-   the work asked.
+## Root cause of occurrence
 
-**Root cause:** thought the eradication ladder ranked what to build, actually
-it ranks how strongly a thing is prevented, and strength bought at a recurring
-cost against a surface that never moves is a bad trade the ladder cannot see.
+*Thought the eradication ladder ranked what to build, actually it ranks how
+strongly a mistake is prevented, and a strong check bought at a cost on every
+commit against a surface that never moves is a bad trade the ladder cannot
+see.* (Method)
+
+The ladder was the process the writer followed, and it gave one axis, strength.
+The scope followed from it: to refuse a parameter in any future `connection`
+block, the check had to read every file one could appear in. Had the ladder
+asked how often the check runs against how often its subject changes, the
+answer would have pointed to the moment the subject is exercised, which is
+where the eradication ended up.
 
 ## Detection failure causes
 
-- **The runtime budget:** 39 ms passes, correctly. It prices one run.
-- **`gate-canaries`:** would have asked for a canary, which the check could
-  have passed. Proving it works is not the question.
-- **Code review:** the check was correct, tested and documented. Everything
-  visible about it was good.
-- **The dantotsu standard:** demands an eradication and ranks the levels. It
-  has nothing to say about a level-2 that is not worth having.
+- **The runtime budget:** 39 ms passes, correctly. The budget prices one run
+  and multiplies it by nothing.
+- **`gate-canaries`:** asks whether a check can fail on a planted defect. This
+  one could. Whether a check works is not whether it earns its runs.
+- **Review:** the check was correct, tested and documented. Everything a
+  reviewer is asked to read about it was good.
 
 ## Countermeasure
 
-- **Code:** the standard that prices checks now asks the second question, and
-  the commit hook's own documentation points at it.
-- **Operator action:** none.
+The check was removed before merge. The eradication of the DSQL defect became
+a smoke invocation of the reader after the production deploy, which reaches a
+real cluster and answers the whole class rather than one key.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** instruction change (level 5 — the floor, and it cannot honestly be higher)
+**Type:** knowledge in a standard (level 5)
 
-There is no mechanical form of *"is this check worth its runs"*. The numerator
-is computable and the denominator is a judgement about what a surface is for.
-Grading this a 2 because it ships a rule in a standard would be exactly the
-`prose-stands-in-for-a-check` weak point this entry is tagged with, so the
-standard carries a `reviewer` bullet and the ledger counts it as residue.
+**Reference:** the commit adding this file, in PR #220.
 
-**Reference:** PR #220 · commit `self`
-
-**The actual fix:** `docs/standards/14-tool-runtime-budgets.md` gains the
-*Earning the run* rule, which a new pre-commit check has to answer in writing
-before it lands, with the two commands that produce the numbers:
+`docs/standards/14-tool-runtime-budgets.md` gained *Earning the run*. A new
+check on the commit answers two questions in writing before it lands, with the
+commands that produce the numbers:
 
 ```sh
-# how often it would run
-git log --oneline -100 --name-only --pretty=format:%h -- '<its scope>' | grep -c '^[0-9a-f]\{7,\}$'
-# how often its subject actually changed
-git log --oneline -- '<the files it guards>' | wc -l
+# how many of the last hundred commits it would run on
+git log --pretty=format:%h HEAD~100..HEAD -- '<its scope>' | grep -c .
+# how many commits ever touched what it guards
 ```
 
-A check whose scope is broader than its subject by two orders of magnitude goes
-to pre-push, to CI, or to the moment the subject is actually exercised — which
-is where this one ended up.
+The reviewer agent checks that the answer is there.
 
-That rule is what the ladder was missing, and it is the only artefact that
-would have stopped the original check: everything else about it was sound.
+What holds mechanically today, and was there before: every helper in
+`.husky/pre-commit` (`run_check`, `run_with_files`, `queue_node_check`) takes a
+scope, and runs the check only when the commit touches it. A check cannot land
+without a scope. It can land with a scope as wide as this one's.
 
-**Sibling defects swept:** the pre-commit hook's existing checks were read
-against the new rule. The narrow ones (`dsql` migrations, `adr` numbers, PWA
-assets) all scope to paths that change on a small fraction of commits. None is
-in the shape this entry describes.
+**Proposed:** compute the numerator mechanically. A pre-commit check scoped to
+`.husky/pre-commit` would read each added helper call's scope regex, count how
+many of the last hundred commits it matches, and refuse a new check above a
+threshold unless the line carries the files it guards. The threshold is a
+decision for the operator, not a number this entry can set. That would turn
+the cost half of *Earning the run* from a written question into a refusal at
+commit, and leave only the judgement of what a surface is for to review.
 
-## See also
-
-- [`the-connection-parameter-no-mock-could-refuse.md`](./the-connection-parameter-no-mock-could-refuse.md) — the defect this was the wrong answer to.
-- [`the-gate-whose-own-gate-only-ran-in-ci.md`](./the-gate-whose-own-gate-only-ran-in-ci.md) — the same rule applied to a ten-second check, which is why its scope is four paths.
-- [`a-written-runtime-budget-nobody-enforced.md`](./a-written-runtime-budget-nobody-enforced.md) — the budget this extends.
-- [`docs/quality/weak-points.md`](../quality/weak-points.md) — `prose-stands-in-for-a-check`.
+**Similar instances:** the pre-commit checks were read against the rule on
+2026-10-29. The narrow ones, DSQL migrations, ADR names and PWA assets, scope
+to paths that change on a small fraction of commits. None has this shape.

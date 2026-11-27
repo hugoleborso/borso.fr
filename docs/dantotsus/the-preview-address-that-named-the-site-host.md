@@ -15,72 +15,82 @@ recurs: [api-anchor-must-use-api-url-on-preview]
 
 # The preview address that named the site host
 
-## Symptom
+## User impact
 
 PR #206 wrote the address of pragma's MCP endpoint on a preview twice, and
 both times on the wrong host.
 
-1. The Account page built its install commands from the page origin. On a
-   preview that is `https://pragma-pr-206.preview.borso.fr`, the previews CDN,
-   which answers `/mcp` with the site's `index.html`. The technical validation
-   caught it (`TV-PREVIEW-INSTALL-URL`, report
-   `technical-validation-2026-10-27-1234.md`) and commit `d992239a` moved the
-   address onto `VITE_API_BASE`.
-2. Two hours later the open-pr stage wrote the same mistake into the pull
-   request body: the *Before merge* smoke test told the operator to run
-   `claude mcp add … https://pragma-pr-206.preview.borso.fr/mcp`. The body
-   passed `check-pr-body.ts`, and the operator found it. The body on `main`'s
-   merge carries the right host, `pragma-pr-206-api.preview.borso.fr`.
+| | Seen | Expected |
+| --- | --- | --- |
+| The Account page's install command, on the preview | `https://pragma-pr-206.preview.borso.fr/mcp`, which answers with the site's `index.html` | `https://pragma-pr-206-api.preview.borso.fr/mcp` |
+| The *Before merge* smoke test in the PR body | `claude mcp add … https://pragma-pr-206.preview.borso.fr/mcp`, a command that fails | The same command on the `-api` host |
 
-## Root-cause chain
+The technical validation caught the first (`TV-PREVIEW-INSTALL-URL`, report
+`technical-validation-2026-10-27-1234.md`). The operator caught the second,
+at the cost of a failed smoke test. Production was not affected, because it
+serves the site and the API on one origin.
 
-1. **Why does the site host not answer `/mcp`?** A preview serves the site
-   and the API on two hosts. The previews CloudFront distribution routes
-   `<app>-pr-<n>` to the site bucket and `<app>-pr-<n>-api` to the API; only
-   production puts both behind one domain with path behaviours
-   (`apiPublicOrigin()` in `infra/cdk/src/internal/naming.utils.ts` encodes
-   exactly this).
-2. **Why did the same mistake happen twice in one pull request?** The
-   production shape, one origin for everything, is the one every spec
-   sentence and every example uses: `https://pragma.borso.fr/mcp`. A preview
-   address is derived by replacing the host, and the natural replacement is
-   the host the reader is looking at, the site's.
-3. **Why did the first fix not prevent the second?** `d992239a` fixed the
-   site code and added a unit test for it. The pull request body is prose,
-   written by another agent from the spec, and nothing reads a body for
-   addresses.
-4. **Why did the repository's earlier eradication not reach it?** PR #27 hit
-   the same split with a CSV link and shipped `borso/no-api-anchor-in-site`,
-   which refuses a literal `/api/` in a JSX attribute. `/mcp` is not under
-   `/api/`, the page built the address from `location.origin` rather than a
-   literal, and the body is not JSX.
+## Causal chain
 
-**Root cause:** thought a preview's API answers on the preview's address,
-actually a preview splits the site and the API onto two hosts and only
-production shares one, so an API path on the site host reaches `index.html`.
+- The install address on the preview reached the site's `index.html`
+  - The Account page built the address from the page origin ← the faulty
+    line, in `assistant-install.utils.ts`, a branch commit of PR #206
+    squashed into `508e63555`
+    - A preview serves the site on `<app>-pr-<n>` and the API on
+      `<app>-pr-<n>-api`. Only production puts both behind one domain
+      (`apiPublicOrigin()` in `infra/cdk/src/internal/naming.utils.ts:169`)
+    - The spec gives every address in the production shape,
+      `https://pragma.borso.fr/mcp`, where the page origin is the API origin.
+      Material
+- Two hours after `d992239a` moved that address onto `VITE_API_BASE`, the
+  PR body's smoke test named the site host again
+  - The open-pr stage derived the preview address from the spec's
+    production address by swapping the host for the one it was looking at,
+    the site's
+    - The spec and its examples hold only the single-origin production
+      address. Material
+
+## Root cause of occurrence
+
+*Thought a preview's API answers on the preview's address, actually a preview
+splits the site and the API onto two hosts and only production shares one,
+so an API path on the site host reaches `index.html`.* **Material.**
+
+Both writers were agents working from the same spec. Every sentence and
+example in it uses the production address, `https://pragma.borso.fr/mcp`,
+where site and API share an origin. Nothing in what they read said a
+preview splits them. That fact lived in
+[`docs/knowledge/preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md)
+and in `apiPublicOrigin()`, neither of which a spec about MCP leads to.
 
 ## Detection failure causes
 
-- **Linter:** `no-api-anchor-in-site` matches a literal `/api/` only.
+- **Linter:** PR #27 hit the same split with a CSV link and shipped
+  `borso/no-api-anchor-in-site`, which refuses a literal `/api/` in a JSX
+  attribute. `/mcp` is not under `/api/`, the page built the address from
+  `location.origin` rather than a literal, and a PR body is not JSX.
+- **Unit test:** `d992239a` fixed the site code and pinned it with a test.
+  A PR body is prose, written by another agent, and no test reads it.
 - **PR body checker:** `check-pr-body.ts` checked sizes and placeholders, not
   addresses.
-- **Code review:** the technical validator caught the first one; nothing
-  reviews the body after `/open-pr` writes it.
-- **Operator:** caught the second, at the cost of a failed smoke test.
+- **Code review:** the technical validator caught the first. Nothing
+  reviewed the body after `/open-pr` wrote it.
 
 ## Countermeasure
 
 `d992239a` (site), and the body was rewritten with the `-api` host before the
 merge.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
 **Type:** detection (level 4)
 
 **Reference:** the commit that adds this file.
 
-**The actual fix:** the body checker refuses an API path on a preview's site
-host, which is the shape of the second defect, and says where the API is:
+The body checker refuses an API path on a preview's site host, and says
+where the API is. `scripts/hooks/checks/gh-pr-create.core.ts` runs it on
+`gh pr create`, `.husky/pre-commit:245` and `ci.yml:168` run it on the
+template.
 
 ```diff
 +const PREVIEW_SITE_HOST_API_ADDRESS =
@@ -94,25 +104,33 @@ host, which is the shape of the second defect, and says where the API is:
 +  }
 ```
 
-`/mcp`, `/api/`, `/oauth/` and `/.well-known/` are the paths pragma sends to
-the API. The `-api` host and the screenshots host pass, and so does a page of
-the site. `check-pr-body.ts --pr <n>` now reads a posted body through
-`gh api`, so the check also runs on a body after GitHub kept it.
+`check-pr-body.ts --pr <n>` also reads a posted body through `gh api`. The
+site half is held by the unit test `d992239a` added to
+`assistant-install.utils.test.ts`.
 
-The site half is held by the unit test `d992239a` added to
-`assistant-install.utils.test.ts`; a lint rule for `location.origin` joined to
-an API path was considered and not written, because the page origin is
-correct in production and the test already pins the preview case.
+**Proof it can fail:** `pr-body.core.test.ts:241` feeds
+`claude mcp add pragma https://pragma-pr-206.preview.borso.fr/mcp` and
+expects the address back. The `-api` host returns nothing (`:258`).
 
-**Sibling defects swept:** `grep -rn 'location.origin' apps/*/site/src` finds
-pragma's vote page link (`VotingRoundPanel.tsx`) and banana-rush's invitation
-link (`ShareInviteButton.tsx`), both pages of the site and so correct on the
-site host; banana-rush's service worker, which compares origins and builds no
-address; and pragma's `readPageOrigin()`, which `AssistantConnections.tsx` now
-passes beside the API base so the install address falls back to it only when
-no API base is set.
+**Gap in what holds:** the regex hard-codes four API paths, `mcp`, `api/`,
+`oauth/` and `.well-known/`. That is a hand-kept copy of the routes mounted
+in `apps/pragma/api/src/app.ts:109-113`, and it drifts the next time a route
+is added. It also covers pragma's paths only.
 
-## See also
+**Proposed:** make the site-host address impossible to type instead of
+detecting it. The body names a preview API address only through a
+placeholder, such as `{api}/mcp`, that `check-pr-body.ts` expands with
+`apiPublicOrigin()` (exported from `infra/cdk/src/index.ts:36`) and refuses
+when written out by hand. The route list then has no copy to drift, and
+every app's split is covered. Routing API paths on the shared previews
+distribution, which would remove the split itself, is ruled out in
+`docs/knowledge/preview-api-cross-origin.md`.
 
-- [api-anchor-must-use-api-url-on-preview](./api-anchor-must-use-api-url-on-preview.md), the first time, on PR #27.
-- [`docs/knowledge/preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md).
+**Similar instances:** `grep -rn 'location.origin' apps/*/site/src` finds
+pragma's vote page link (`VotingRoundPanel.tsx`) and banana-rush's
+invitation link (`ShareInviteButton.tsx`), both pages of the site and so
+correct on the site host. It also finds banana-rush's service worker, which
+compares origins and builds no address, and pragma's `readPageOrigin()`,
+which the install address falls back to only when no API base is set. See
+[api-anchor-must-use-api-url-on-preview](./api-anchor-must-use-api-url-on-preview.md),
+the first time, on PR #27.

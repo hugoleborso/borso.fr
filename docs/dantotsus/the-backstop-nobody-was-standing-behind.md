@@ -15,108 +15,72 @@ weak-point: gate-measures-nothing
 
 # The backstop nobody was standing behind
 
-## Symptom
+## User impact
 
-`full-suite`, the only unscoped run of every suite in the repository,
-failed on `main` on 2026-08-16 and failed on every push afterwards.
-Twenty consecutive red runs, four days, across nine merged pull
-requests. Nobody noticed, and nothing said anything.
+The operator relied on `full-suite`, the only unscoped run of every suite, to catch what the scoped gates skip. It went red and nobody knew.
 
-It was found because somebody opened the Actions list for an unrelated
-reason while merging a Dependabot queue.
+| | Seen | Expected |
+| --- | --- | --- |
+| `full-suite` on `main`, from 2026-08-16 | 20 consecutive red runs over four days, across nine merged pull requests (measured in the Actions list) | The first red run reaching whoever merged, before the next merge |
+| How it was found | Someone opened the Actions list for another reason while merging a Dependabot queue | An alert |
 
-## Root-cause chain
+The regression it was reporting the whole time shipped to `main` unblocked. It is [`the-mutants-were-judged-by-the-wrong-jury.md`](./the-mutants-were-judged-by-the-wrong-jury.md).
 
-1. **Why did nobody notice a red gate?**
-   Nothing reports it. It is not a required check, it never appears on
-   a pull request, and a failed run on `main` sends no notification
-   anyone was reading.
-2. **Why does it not appear on a pull request?**
-   By design: it runs `on: push: branches: [main]`, after the merge.
-   Its own header comment says it runs "on main, where nobody is
-   waiting on it" — offered as a reason it can afford to be slow.
-3. **Why is being unwatched acceptable in that design?**
-   Because the assumption was that a red run is loud. On a
-   pull request it would be: it sits in the check list above the merge
-   button. On `main` there is no such surface.
-4. **Why did nine subsequent merges not surface it either?**
-   Each new push starts a fresh run. The run *before* it, red, scrolls
-   into history. There is no accumulating signal, only a list nobody
-   reads.
-5. **Why did the scoped gates not catch what it was catching?**
-   They are scoped on purpose. Pre-push mutates only the pure files a
-   push touches and `ci` tests only the apps a pull request changes.
-   Both are deliberately cheap so they get run rather than skipped,
-   and this workflow is named in its own comment as the hole's
-   backstop.
+## Causal chain
 
-**Root cause:** thought *"a gate that fails is a gate that is heard"*,
-actually *a gate whose only audience is a workflow list nobody opens
-is a log file, and the whole justification for scoping the cheap gates
-rested on it.*
+- Twenty red runs went unseen.
+  - Each push to `main` started a fresh run, and the red one before it scrolled into history.
+  - A red run posted nowhere a person looked. The workflow ran only after the merge, never as a pull request check, and sent no notification.
+    - `9fc3b9a40` moved the suite there to keep pre-push fast, with this header:
+
+      ```yaml
+      # This workflow is that hole's backstop. It runs after the
+      # merge, on main, where nobody is waiting on it.   ← the faulty design
+      ```
+
+      - The same commit scoped pre-push and `ci` to the files and apps a change touches, and named this run as the backstop that made scoping safe (Method).
+
+## Root cause of occurrence
+
+*Thought a gate that fails is a gate that is heard. Actually a gate whose only audience is a workflow list nobody opens is a log file, and the justification for scoping the cheap gates rested on it.* (Method)
+
+The agent that wrote `9fc3b9a40` gave "nobody is waiting on it" as the reason the run could afford to be slow. On a pull request a red run is loud because it sits above the merge button. On `main` no such surface exists. Source: the header of `.github/workflows/full-suite.yml`, unchanged today, lines 1 to 8.
 
 ## Detection failure causes
 
-- **Typing / linter:** not applicable.
-- **Functional validation locally:** the pre-push hook deliberately
-  runs no unscoped suite, and prints that the unscoped run "exists
-  somewhere". It did exist. It was red.
-- **CI:** the run itself was the detector and it worked perfectly. The
-  missing layer is entirely downstream of it.
-- **Code review:** the workflow was reviewed when written; its
-  reporting gap is not visible in a diff of the file.
-- **Production monitoring / alerting:** none configured for Actions.
-  This is the layer that was absent.
+- **Local validation:** pre-push runs no unscoped suite by design, and says the unscoped run exists elsewhere. It did exist, and was red.
+- **CI:** the run itself detected the defect correctly. Nothing carried its verdict to a person.
+- **Review:** the reporting gap is an absence, not a line, so no diff of the workflow shows it.
+- **Monitoring:** no alert was configured for Actions failures on `main`.
 
 ## Countermeasure
 
-- **Code:** commit `a9e0d1b` — a `report-failure` job, guarded by
-  `if: failure()`, posting a commit comment on the failing commit.
-- **Operator action:** none. What it was reporting the whole time is
-  fixed separately, see the sibling entry below.
+`a9e0d1b` added a `report-failure` job, guarded by `if: failure()`, that posts a commit comment on the failing commit. The comment lands on the commit page and in the merge author's GitHub notifications. Green runs stay silent.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** detection (level 4 — the failure now arrives where a person
-already looks)
+**Type:** detection (level 4)
 
-**Reference:** commit `a9e0d1b`
-
-**The actual fix:**
+**Reference:** commit [`a9e0d1b`](https://github.com/hugoleborso/borso.fr/commit/a9e0d1be4e).
 
 ```diff
-+ report-failure:
-+   needs: [app, infra]
-+   if: failure()
-+   runs-on: ubuntu-latest
-+   steps:
-+     - uses: actions/github-script@v9
-+       with:
-+         script: |
-+           await github.rest.repos.createCommitComment({ … })
++  report-failure:
++    needs: [app, infra]
++    if: failure()
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/github-script@v9
++        with:
++          script: |
++            await github.rest.repos.createCommitComment({ … })
 ```
 
-A commit comment lands on the commit page and in the merge author's
-GitHub notifications, which is the one surface a person who just
-merged already opens. Green runs stay silent.
+This still holds (read today, `full-suite.yml:193-202`). It makes a red backstop audible. It does not stop the next merge, so a second and third merge can still land on a red `main` if the notification is missed.
 
-**Why level 4 and not higher.** Level 1 would be making `full-suite` a
-required check, so a red backstop blocks the next merge outright. That
-lives in branch protection, which CLAUDE.md's last *Don't* is
-explicitly about: this repository cannot observe its own branch
-protection, so a claim that the gate is required would age without
-resistance and could not be tested from here. Making the failure
-audible is what the repository itself can hold.
+The first version said level 1 needed branch protection, which this repository cannot observe. A required check is not the only way to block.
 
-**Sibling defects swept:** none — the regression it had been reporting
-since 2026-08-16 is
-[`the-mutants-were-judged-by-the-wrong-jury.md`](./the-mutants-were-judged-by-the-wrong-jury.md),
-fixed in PR #79.
+**Proposed:** add a step to `ci.yml` that reads the conclusion of the latest completed `full-suite` run on `main` through the GitHub API and fails the pull request while it is red. `ci.yml` would need `actions: read` beside its `contents: read`. One tradeoff needs a decision. The pull request that fixes `main` is also blocked. The step can let it through by running the unscoped suite on that pull request instead of failing it. A red backstop then stops the next merge, without branch protection.
 
-## See also
+**Proof it can fail:** not replanted this session. The job fires on `failure()` of `app` or `infra`, which the twenty red runs above would each have triggered.
 
-- [`a-dependency-bump-that-no-app-filter-could-see.md`](./a-dependency-bump-that-no-app-filter-could-see.md)
-  — the same pass's other gate that abstained rather than failed.
-- [`an-approval-gate-that-only-existed-in-a-comment.md`](./an-approval-gate-that-only-existed-in-a-comment.md)
-  — the previous time this repository believed in a protection that
-  was not there.
+**Similar instances:** `grep -ln "branches: \[main\]" .github/workflows/*.yml` finds `deploy.yml` and `wiki.yml` running on `main` besides this one (and `ci.yml`, whose match is its pull request trigger). `grep -c "if: failure()"` finds no failure report in either. [`an-approval-gate-that-only-existed-in-a-comment.md`](./an-approval-gate-that-only-existed-in-a-comment.md) is the previous time this repository believed in a protection that was not there.

@@ -4,19 +4,19 @@ introduced-at: code-review
 detected-at: operator-deploy
 severity: medium
 related-pr: '#206'
-fix-commits: [self]
+fix-commits: [self, 458e886c4]
 eradication-level: 4
-eradication-paths: [.claude/hooks/posttool-empty-checks-means-conflict.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
+eradication-paths: [scripts/hooks/checks/empty-checks-means-conflict.core.ts, scripts/hooks/checks/empty-checks-means-conflict.core.test.ts]
 time-to-detect: minutes
 tags: [ci, github-actions, orchestrator, agents, hooks]
-zone: .claude/hooks/posttool-empty-checks-means-conflict.sh
+zone: scripts/hooks/checks/empty-checks-means-conflict.core.ts
 weak-point: prose-stands-in-for-a-check
 recurs: [one-sample-could-not-tell-the-hook-from-the-runner]
 ---
 
 # Green, said of a run that was still going
 
-## Symptom
+## User impact
 
 During PR #206 the orchestrating session told the operator twice that CI said
 something CI had not said.
@@ -31,7 +31,7 @@ something CI had not said.
 Both reached the operator as facts, and the operator had to find out from
 GitHub that they were not.
 
-## Root-cause chain
+## Causal chain
 
 1. **Why was a running job reported as green?** The answer was built from a
    `get_check_runs` read, and the reader summarised the conclusions it saw.
@@ -54,7 +54,7 @@ GitHub that they were not.
 
 **Root cause:** thought a list of check runs with no failure in it was a green
 CI, actually a run in progress has no conclusion and a paged list omits runs,
-so "no failure seen" and "every run passed" are different statements.
+so "no failure seen" and "every run passed" are different statements. The MCP answer carries no field that says the list is not a verdict yet (Machine).
 
 ## Detection failure causes
 
@@ -72,11 +72,11 @@ so "no failure seen" and "every run passed" are different statements.
 
 The operator checked GitHub, and the orchestrator corrected both statements.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
 **Type:** detection (level 4)
 
-**Reference:** the commit that adds this file.
+**Reference:** the commit that adds this file. The bash hook it changed, `.claude/hooks/posttool-empty-checks-means-conflict.sh`, and its test script were ported to TypeScript by commit `458e886c4` (PR #411). The behaviour holds today in `scripts/hooks/checks/empty-checks-means-conflict.core.ts`, tested by its sibling `.core.test.ts` ("names the runs still going", "names a page that leaves runs out, alongside the runs still going").
 
 **The actual fix:** the hook that reads every `get_check_runs` answer now also
 speaks when the answer is not a verdict yet. It names each run whose `status`
@@ -95,7 +95,7 @@ moment the summary is formed:
 +  NOTE="[unfinished-checks] get_check_runs for pull request $PR is not a verdict yet."
 ```
 
-`check-hook-decisions.sh` holds the new behaviour with four cases: a run in
+The original `check-hook-decisions.sh` held the new behaviour with four cases: a run in
 progress is named, a page of 1 of 29 is named, a finished whole list stays
 silent, and `get_status` stays silent.
 
@@ -107,7 +107,4 @@ it counts a second occurrence rather than a first.
 situation and was already left to the empty-list branch; it stays silent here
 because its `pending` state already says the thing this hook adds.
 
-## See also
-
-- [one-sample-could-not-tell-the-hook-from-the-runner](./one-sample-could-not-tell-the-hook-from-the-runner.md), "nothing is failing" before CI ran.
-- [`docs/knowledge/a-conflicted-pull-request-gets-no-checks.md`](../knowledge/a-conflicted-pull-request-gets-no-checks.md), the empty-list half of the same hook.
+Related: [`a-conflicted-pull-request-gets-no-checks.md`](../knowledge/a-conflicted-pull-request-gets-no-checks.md), the empty-list half of the same hook.

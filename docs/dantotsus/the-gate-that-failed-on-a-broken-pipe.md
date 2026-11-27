@@ -4,20 +4,21 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#59'
-fix-commits: [0770ef3fe4]
-eradication-level: 1
-eradication-paths: [scripts/check-no-racy-pipelines.sh]
+fix-commits: [0770ef3fe4, ef6b988c9]
+eradication-level: 2
+eradication-paths: [scripts/check-no-racy-pipelines.sh, .husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: hours
 tags: [ci, gates, shell, meta, self-improvement-loop]
 zone: scripts/check-mutation-covers-gated-files.sh
+recurs: none (the first entry on a walk piped into an early-exiting reader under pipefail)
 ---
 
 # The gate that failed on a broken pipe
 
-## Symptom
+## User impact
 
 The `build` job of PR #62 failed, twelve minutes after PR #59 merged the check
-it failed in. The whole error:
+it failed in. PR #62 changed no application code. The whole error:
 
 ```
 find: ‘standard output’: Broken pipe
@@ -25,92 +26,97 @@ find: write error
 ##[error]Process completed with exit code 1.
 ```
 
-Nothing about mutation configuration, which is what
-`scripts/check-mutation-covers-gated-files.sh` is there to verify. The pull
-request it fired on changed no application code at all.
+| | Seen | Expected |
+| --- | --- | --- |
+| PR #62, `build` | red on a broken pipe, with nothing about mutation configuration | green, since the change touched no gated file |
 
-## Root-cause chain
+Measured locally on 2026-08-18: the script failed once in five runs before the
+fix, and zero in thirty after it.
 
-1. **Why did the script exit non-zero?** `find … | head -1` returned 141 —
-   128 plus SIGPIPE.
-2. **Why did `find` take SIGPIPE?** `head -1` prints the first line and exits,
-   closing the pipe. Anything the producer writes afterwards fails.
-3. **Why did that fail the script?** `set -o pipefail` makes the pipeline carry
-   the producer's status, and `set -e` ends the script on it. Both are set,
-   correctly, at the top.
-4. **Why did it pass on the pull request that added it?** It is a race. If
-   `find` finishes writing before `head` closes, nothing is signalled. The
-   `-not -path '*/node_modules/*'` filter is a predicate, not a prune, so
-   `find` walks every dependency file in the workspace to the end — tens of
-   thousands of paths against a reader that stops at one.
-5. **Why is a race worse here than a plain failure?** The gate's own subject is
-   a check that measured nothing. A gate that fails at random gets re-run, then
-   ignored, and its next red is read as noise.
+## Causal chain
 
-**Root cause:** thought *"`| head -1` is how you ask whether anything matched"*,
-actually *"under `pipefail` it is how you ask the producer to die mid-sentence,
-and whether that ends the script depends on how much it still had to say"*.
+- The `build` job of PR #62 failed with `find: write error`.
+  - `scripts/check-mutation-covers-gated-files.sh` exited 141, which is 128 plus SIGPIPE.
+    - `set -o pipefail` gave the pipeline `find`'s status, and `set -e` ended the script on it.
+      - `find` wrote a path after `head -1` had printed its line and closed the pipe, so `find` took SIGPIPE.
+        - `find` was still walking. `-not -path '*/node_modules/*'` filters each path but does not prune, so it walked tens of thousands of dependency paths against a reader that stops at one.
+        - The faulty line, written twice in the script by commit `01e8a281d`:
+
+```bash
+  gated=$(find "$workspace" -type f \
+    \( -name '*.core.ts' -o -name '*.utils.ts' -o -name '*.adapter.ts' \
+    -o -name '*.core.tsx' -o -name '*.utils.tsx' -o -name '*.adapter.tsx' \) \
+    -not -path '*/node_modules/*' -not -path '*/.stryker-tmp/*' \
+    -not -name '*.test.*' | head -1)   # head exits after one line, find keeps writing
+```
+
+          - An agent wrote `01e8a281d` to add the mutation coverage gate. It asked "is there at least one gated file" with `| head -1`, in a script that opens with `set -euo pipefail`.
+
+## Root cause of occurrence
+
+*Thought `| head -1` asks whether anything matched, actually under `pipefail`
+it kills the producer mid-write, and whether that ends the script depends on
+how much the producer still had to write.* (Material)
+
+The right answer was absent from the agent's context when it wrote the line.
+At the parent commit, `git grep -il 'sigpipe\|broken pipe' 01e8a281d^` finds
+nothing, `git grep -- '-print -quit' 01e8a281d^` finds no example to copy, and
+no shell linter ran. Had the agent known, it would have written `-print -quit`,
+which asks the same question with no pipe.
 
 ## Detection failure causes
 
-- **Typing:** shell.
-- **Linter / static analysis:** `actionlint` reads workflow YAML, not the
-  scripts a workflow calls. No shellcheck runs in this repository.
-- **Functional validation locally:** it passes most runs. Measured here, the
-  original script failed once in five; after the fix, zero in thirty.
-- **CI:** it was green on the pull request that introduced it, which is the
-  strongest possible false assurance for a race.
-- **Code review:** `find … | head -1` reads as idiomatic, and it is — outside
-  `pipefail`.
+- **Typing:** shell has none.
+- **Linter:** `actionlint` reads workflow YAML, not the scripts a workflow calls. No shellcheck ran in this repository.
+- **Local validation:** the race passes most runs on a small tree (one failure in five, measured).
+- **CI:** green on the pull request that added it, because on that run `find` finished before `head` closed the pipe.
+- **Review:** `find … | head -1` reads as idiomatic, and it is outside `pipefail`.
 
 ## Countermeasure
 
-- **Code:** commit `0770ef3` — both existence tests use `find … -print -quit`.
-- **Operator action:** none.
-
-## Eradication (mandatory — code-level)
-
-**Type:** code diff (level 1 — there is no pipe left to break)
-
-**Reference:** [PR #62](https://github.com/hugoleborso/borso.fr/pull/62) · commit [`0770ef3`](https://github.com/hugoleborso/borso.fr/commit/0770ef3)
-
-**The actual fix:**
+Commit `0770ef3` replaces both existence tests with `find … -print -quit`.
+`-quit` stops the walk at the first match. No pipe is left, so no signal can
+be raised, and the walk is shorter.
 
 ```diff
 -    -not -name '*.test.*' | head -1)
 +    -not -name '*.test.*' -print -quit)
 ```
 
-`-quit` is what the code meant: stop at the first match. It removes the pipe,
-so no signal can be raised, and it stops the walk instead of filtering every
-remaining path — the check is also faster for it.
+The script itself was later deleted, in `c54e32da7` (#224).
 
-**Sibling defects swept:** `.claude/hooks/pretool-gh-pr-create.sh` had the same
-shape, `find docs/features -type d -name validation | head -n1` under
-`pipefail`, and now uses `-print -quit`. In a hook the consequence is worse than
-a red build: 141 is not 2, so the gate would have skipped silently rather than
-refused. The repository's six other `| head` pipelines read from `sed`, `grep`,
-`ls`, `dig`, `sort` and `actionlint -version` over inputs of a few lines, which
-fit the pipe buffer and cannot signal; they are left alone.
+## Eradication
 
-**What stops the next one:** `scripts/check-no-racy-pipelines.sh` fails any
-tracked shell script that sets `pipefail` and pipes a walking producer — `find`,
-`git ls-files` — into a consumer that stops reading early — `head`, `grep -q`.
-Removing the pipe from these two sites is level 1 for these two sites and
-nothing at all for the next script somebody writes, and the shape is easy to
-write because it reads correctly: `| head -1` is the obvious way to ask "is
-there at least one". The check joins backslash continuations before matching,
-because the `find` that produced this failure spread over five lines and put
-`| head -1` on the last, so a line-by-line search sees neither half of it. It is
-wired into pre-commit and CI's `build` job and cited in
-[`12. Linting and gates`](../standards/12-linting-and-gates.md).
+**Type:** DevX check (level 2)
 
-It cannot see a walk assembled through a variable (`producer="find …"; $producer
-| head -1`). No script here does that, and a pattern that tried to catch it
-would misfire on the many pipelines that are fine.
+**Reference:** commit `ef6b988c9` added `scripts/check-no-racy-pipelines.sh`.
+`.husky/pre-commit:361` runs it on staged shell scripts and hooks.
+`.github/workflows/ci.yml:163` runs it on every tracked one. It fails a script
+that pipes a walking producer (`find`, `git ls-files`) into a consumer that
+stops early (`head`, `grep -q`). It joins backslash continuations first,
+because this `find` spread over five lines.
 
-## See also
+```bash
+RACY_PIPELINE='(find|git ls-files)[^|]*\|[[:space:]]*(head|grep -q)'
+```
 
-- [`the-gate-that-was-never-pointed-at-the-code`](./the-gate-that-was-never-pointed-at-the-code.md) — the dantotsu this check is the eradication of.
-- [`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md) — the sibling hook, and the reason a wrong exit code in a hook is invisible.
-- [`a-timeout-under-parallel-gates-is-not-a-regression`](../knowledge/a-timeout-under-parallel-gates-is-not-a-regression.md) — the other kind of red that is about the harness rather than the code.
+**Proof it can fail:** on 2026-11-27, a scratch `scripts/zz-planted-writer17.sh`
+with `set -euo pipefail` and a `find` split over two lines into `| head -1`,
+checked and then deleted:
+
+```
+[check-no-racy-pipelines] scripts/zz-planted-writer17.sh pipes a directory walk into a consumer that stops early:
+    3:x=$(find . -type f   -name "*.ts" | head -1)
+[check-no-racy-pipelines] under `set -o pipefail` the producer's write error fails the script, and whether it happens is timing. Use `find … -print -quit`.
+```
+
+It exited 1.
+
+**What stays possible:** a walk assembled through a variable
+(`producer="find …"; $producer | head -1`) passes the check.
+
+**Similar instances:** in 2026-08 the hook `.claude/hooks/pretool-gh-pr-create.sh`
+had `find docs/features -type d -name validation | head -n1` under `pipefail`
+and moved to `-print -quit`. That hook no longer exists. Today
+`scripts/check-no-racy-pipelines.sh` with no argument prints "no script pipes a
+directory walk into an early-stopping consumer" (measured 2026-11-27).

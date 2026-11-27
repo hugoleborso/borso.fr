@@ -6,7 +6,7 @@ severity: high
 related-pr: '#8'
 fix-commits: [3a6a89c64c]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [scripts/browser/broken-images.sh, .claude/agents/visual-validator.md, .claude/skills/implementation/SKILL.md]
 time-to-detect: hours
 tags: [visual-validation, agent-browser, screenshots, react]
 zone: .claude/skills/visual-validation
@@ -14,142 +14,86 @@ zone: .claude/skills/visual-validation
 
 # Described the screenshot, never looked at the pixels
 
-## Symptom
+## User impact
 
-After `/visual-validation` returned PASS_EXCEPT_UNVERIFIABLE on PR #8, I wrote
-the PR description claiming *"pieces render correctly"* and that the only gaps
-were tool-budget UNVERIFIABLE rows. The user opened one of the committed
-screenshots and immediately fired back:
+The PR #8 description said *"pieces render correctly"*. The operator
+opened one of the committed screenshots and saw no chess piece at all.
 
-> *"It is quite clear from the screenshot that the pieces are not displayed?
-> How did you not check???"*
+| | Seen | Expected |
+| --- | --- | --- |
+| Board squares in the screenshots | the `<img>` alt text, `bR`, `wP`, `bN`, stacked in each square | piece images |
+| Inline banner | below the board | above the board, as the spec says |
+| Start button | `Start session` | `Drill this variation`, as the spec says |
 
-Every square in the committed screenshots showed the `<img>` alt text (`bR`,
-`wP`, `bN`, …) stacked together — the third-party CDN sprites were 404-ing.
-Visible at a glance. I had described the *layout* (three columns, status
-panel, banner content, button labels) without ever asking *"do the pieces
-actually render?"*.
+The operator: *"It is quite clear from the screenshot that the pieces are
+not displayed? How did you not check???"*. Every theme except Lichess was
+affected (measured in commit e8adcc5).
 
-Two related defects in the same PR slipped through the same way:
-- **Inline banner DOM order** — rendered AFTER `<BoardView>`, so visually
-  below the board even though the spec said "above the board". DOM said
-  `inline-banner` exists; pixels said `banner.top > board.top`.
-- **Start button label** — hard-coded `"Start session"` when the spec said
-  `"Drill this variation"`. The DOM had a button; I never re-read its text.
+## Causal chain
 
-## Root-cause chain
+- The PR description claimed the pieces rendered, next to screenshots that showed alt text.
+  - The main session wrote the claim from the validator's verdict `PASS_EXCEPT_UNVERIFIABLE` and its own reading of the screenshots' layout: three columns, a status panel, banner content, button labels.
+    - The visual validator passed rows whose screenshots showed alt text. It asserted DOM presence, such as a square holding a `<div>` of the right size.
+      - Its brief at the time (`.claude/agents/visual-validator.md` at ab7c10173) told it to save each screenshot to `evidence_dir` as evidence. No step read the image or checked that an `<img>` loaded.
+  - The pieces showed alt text because every sprite URL returned 404.
 
-1. **Why did the PR description claim pieces rendered?**
-   Because the visual-validator's report said PASS_EXCEPT_UNVERIFIABLE, and I
-   took the verdict at face value without inspecting the evidence the
-   validator committed.
-2. **Why didn't I inspect the evidence?**
-   Because *describing the layout from the screenshot* feels indistinguishable
-   from *verifying the pixels look right*. The output to the user is prose
-   either way.
-3. **Why did the validator pass on broken pieces?**
-   Because its assertion model is DOM-presence-based: *"is there a
-   `.selector-card` with a `<div>` of correct dimensions?"* The agent never
-   asked *"did the `<img>` inside actually load?"*.
-4. **Why isn't there a load-success check?**
-   Because the agent's brief never asked for one. The standard
-   `/visual-validation` flow takes a screenshot, narrates the DOM, and writes
-   a verdict — there is no step that says *"verify no broken images"*.
+    ```ts
+    // chesscomPieces.tsx, before e8adcc5
+    const PIECE_BASE_URL = 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150';
+    ```
 
-**Root cause:** *thought* the validator's PASS verdict + a screenshot in
-the conversation was enough to claim correctness; *actually* the validator
-only checked DOM-presence, the screenshot bytes were just decorative, and a
-visible defect like *"every piece is alt text"* falls through every layer
-unless someone explicitly looks at the pixels.
+## Root cause of occurrence
+
+*Thought a validator PASS and a screenshot read for its layout meant the
+pixels were right, actually the validator had only checked the DOM, and a
+layout can be complete while every image in it is alt text.*
+
+Tag: **Man** (agentic rule). The screenshots were in the main session's
+context, and it described them. The prior that a PASS verdict covers
+what the image shows won over what the image showed. One more written
+rule cannot fix that, since the evidence was already in front of it.
 
 ## Detection failure causes
 
-- **Typing:** N/A — runtime rendering issue.
-- **Linter / static analysis:** Biome can't reason about whether an `<img
-  src>` resolves.
-- **Functional validation locally:** Should have caught it — implementer
-  spinning up the dev server and looking. Didn't, because the validator was
-  expected to do it.
-- **CI (tests / build):** Pure-function unit tests don't render the
-  chessboard; build only checks bundle output.
-- **`/visual-validation`:** PASS verdict; the gap is structural — see Root
-  cause step 4.
-- **PR description / self-review:** I described the screenshots in text
-  using my visual reading, but didn't enumerate concrete elements ("16
-  black pieces visible", "no alt text visible"). The description sounded
-  rigorous; it was sleepwalking.
+- **Linter:** nothing static can tell whether an `<img src>` resolves.
+- **Local run:** the implementer did not open the dev server and look, expecting the validator to.
+- **CI:** unit tests do not render the board, and the build does not fetch images.
+- **Visual validation:** its brief had no load check on images, so a DOM-present `<img>` that fell back to alt text passed.
+- **Self-review of the PR body:** the description named layout facts, not countable visible ones such as "16 black pieces visible", so it read as rigorous without being checked.
 
 ## Countermeasure
 
-The user pointed at the broken pieces, I went screenshot-by-screenshot and
-found three regressions the validator missed. Fixes shipped in commits
-[`e8adcc5`](https://github.com/hugoleborso/borso.fr/commit/e8adcc5) (pieces +
-TopBar + Line label) and [`6533eeb`](https://github.com/hugoleborso/borso.fr/commit/6533eeb)
-(react-chessboard v5 — eliminates the broken-CDN class of bug entirely by
-using the library's bundled SVGs).
+Commit e8adcc5 fixed the pieces, the banner order and the label. Commit
+6533eeb moved to react-chessboard v5, whose bundled SVG pieces cannot be
+404'd by a CDN.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** DevX check (level 2 — visual-validator brief mandates a broken-image
-scan per screenshot) + procedural rule in `/implementation`.
+**Type:** knowledge (level 5).
 
-**Reference:** [PR #9](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-8) ·
-this kaizen PR's commits.
+**Reference:** commit [`3a6a89c64c`](https://github.com/hugoleborso/borso.fr/commit/3a6a89c64c)
+added the self-screenshot rule to `/implementation`. The inline
+`agent-browser eval` snippet the original entry quoted is gone. Commit
+c122c579d replaced it with `scripts/browser/broken-images.sh`, which exits
+1 and lists each `<img>` that fell back to its alt text and each SVG
+`<image>` that fails to decode.
 
-**The actual fix:**
+What holds today is that script and two written lines that tell an agent
+to run it: `.claude/agents/visual-validator.md:68` and
+`.claude/skills/implementation/SKILL.md:107`. The script only runs when an
+agent remembers the line. That is an instruction, so the level is 5, not
+the level 2 the original text claimed.
 
-1. **Visual-validator now scans for broken images** as a structural
-   assertion before declaring any row PASS. Concretely the brief now ships
-   an `agent-browser eval` snippet that returns every `<img>` whose
-   `complete && naturalWidth === 0` — those are the broken-but-rendered
-   alt-text fallbacks. If the list is non-empty for a screenshot, the row
-   is FAIL until the source is fixed or the image is explicitly excluded
-   (e.g. a placeholder).
+**Proof it can fail:** not rerun for this rewrite. The script compares the
+scan's result to `"[]"` and exits 1 otherwise (read from its source).
 
-   ```diff
-    # .claude/skills/visual-validation/standard.md
-   + ### Pixel-content checks (every screenshot)
-   +
-   + Before declaring a row PASS the validator runs the broken-image scan:
-   +
-   + ```js
-   + Array.from(document.querySelectorAll('img'))
-   +   .filter((img) => img.complete && img.naturalWidth === 0)
-   +   .map((img) => ({ src: img.src, alt: img.alt, parent: img.parentElement?.tagName }))
-   + ```
-   +
-   + Returns the set of `<img>` tags that loaded their alt text instead of
-   + the actual image — the canonical "third-party CDN is broken" failure.
-   + Non-empty → FAIL the row that covered the screenshot, name the broken
-   + src in the report.
-   ```
+**Proposed:** a `PostToolUse` check under `scripts/hooks/checks/`, on
+`Bash` calls matching `agent-browser … screenshot`. It would run
+`scripts/browser/broken-images.sh` with the same `--session` and fail the
+call on a non-zero exit. A screenshot of a page with a broken image could
+then never pass silently, whoever took it and whatever brief they had.
+The two written lines could then be deleted.
 
-2. **Implementation skill requires per-PR self-screenshot of UI work**
-   before declaring the validator-gate clean. The rule lands as a new bullet
-   in `.claude/skills/implementation/SKILL.md` "Load-bearing rules":
-
-   ```diff
-   + - **Self-screenshot UI work before declaring green.** When the touched
-   +   code renders pixels (a component, a CSS change, an asset swap), the
-   +   implementer takes a screenshot themselves via `agent-browser` and
-   +   inspects it for visible defects (broken images, clipped text,
-   +   misplaced banners, hard-coded labels) before claiming the
-   +   visual-validator verdict applies. Describing the screenshot in prose
-   +   ≠ checking the screenshot; enumerate concrete visible elements ("16
-   +   black pieces visible", "Start button reads 'X'") not the layout.
-   ```
-
-**Sibling defects swept:**
-- `apps/borsouvertures/site/modes/ModeLearnTree.tsx` (banner DOM order — fixed
-  commit `99e91a4` in PR #8).
-- `apps/borsouvertures/site/App.tsx` (Start button label — same commit).
-- The class of "third-party CDN sprites" is structurally eradicated by the
-  react-chessboard v5 upgrade (`6533eeb`) — pieces now ship with the JS
-  bundle and can't be 404'd by a CDN.
-
-## See also
-
-- [`docs/knowledge/pwa-third-party-cdn-breaks-offline.md`](../knowledge/pwa-third-party-cdn-breaks-offline.md) —
-  why third-party image CDNs are a poor fit for PWAs even when they work.
-- [`docs/knowledge/visual-validator-image-size-limit.md`](../knowledge/visual-validator-image-size-limit.md) —
-  the unrelated validator gap shipped earlier in the same PR.
+**Similar instances:** `grep -rn broken-images .claude scripts` finds the
+two callers above and no others. The third-party sprite class is gone from
+`apps/borsouvertures` since 6533eeb.

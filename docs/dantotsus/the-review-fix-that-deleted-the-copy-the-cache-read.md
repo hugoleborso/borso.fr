@@ -30,31 +30,47 @@ row A01).
 
 - A pill read "Guitare · " after a save.
   - The optimistic song cache stored the save payload's `label: ''`.
-    - The site stopped turning a blank label into `null`.
+    `songs.queries.ts` writes the payload into the caches as a stored chart,
+    so it is read as the API's output.
+    - The site stopped turning a blank label into `null`. The round-1 fix
+      replaced the site's line with `label: card.label`:
+
+      ```diff
+      -    label: trimmedLabel.length === 0 ? null : trimmedLabel,
+      +    label: card.label,
+      ```
+
       - Round 1 finding B14 said the site restated the API's label rule, and
         the fix agent deleted the site's copy.
-        - Round 2 then dismissed B14 and put the copy back, so the site
-          and the API still held the rule twice.
+        - B14 cited the `reviewer` bullet of standard 02, which named only
+          the smell: "a limit or a rule written in a site does not restate one
+          the API enforces" (Material).
+        - B14 carried "Fix size: one line", and one line is the deletion. The
+          validator's finding format demands
+          `Fix size: <one line | one file | N call sites>`
+          (`.claude/agents/technical-validator.md:78`), which frames each
+          finding by the size of its diff, not by its remedy (Method).
 
 ## Root cause of occurrence
 
 *Thought the remedy for a restated rule is to delete the site's copy, actually
-the remedy is to move the rule to `domain/`.*
+the remedy is to move the rule to `domain/`.* (Material)
 
 `docs/standards/02-purity-and-core-files.md` already said the second half:
 "The rule both sides apply moves to `apps/<app>/domain/`, and both import it
-from `@domain/*`." Its `reviewer` bullet, which B14 cited, named only the
-smell: "a limit or a rule written in a site does not restate one the API
-enforces". The validator wrote "Fix size: one line", and one line is the
-deletion. The site's copy was not dead. `songs.queries.ts` writes the payload
-into the caches as a stored chart, so it is read as the API's output.
+from `@domain/*`." The fix agent worked from the finding, which quoted the
+`reviewer` bullet and a fix size, not that paragraph (inferred from the
+finding's text). The site's copy was not dead, so the deletion changed what
+the cache stored.
 
 ## Detection failure causes
 
 - **Typing:** `label: string | null` accepts `''` as well as `null`.
 - **Lint:** `borso/no-api-declaration-repeated-in-site` compares names, and
   the site's copy was an inline expression with no name.
-- **Review:** worked. Round 2 found it in minutes.
+- **Review:** round 2 found it in minutes, dismissed B14 and put the copy
+  back, so the site and the API still held the rule twice until the
+  countermeasure.
 
 ## Countermeasure
 
@@ -91,4 +107,13 @@ AssertionError: expected [ 'Guitare ·   ' ] to deeply equal [ 'Guitare' ]
 
 **Similar instances:** `grep -rn "trim()" apps/pragma/site/src --include=*.core.ts`
 lists the site's other trims. Each sits on a form field the API does not
-normalise under the same rule, so none moved here.
+normalise under the same rule, so none moved here. The `reviewer` bullet of
+standard 02 now says "The finding's fix moves the rule to `domain/`, never
+deletes" (line 293), but the validator's `Fix size` field still frames every
+finding by the size of its diff.
+
+**Proposed:** replace `Fix size` in the finding format of
+`.claude/agents/technical-validator.md` (lines 78 and 176) with
+`Remedy: <the fix the bullet names>`. A fix agent would then receive the
+remedy, not a size that points at the deletion, for every restated-rule
+finding and every other bullet that names its fix.

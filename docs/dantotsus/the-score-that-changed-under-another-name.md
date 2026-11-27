@@ -36,8 +36,11 @@ member's old data for up to the 5-minute freshness the same pull request set.
       `['studies', 'overrides', songId]`, and `GET /api/studies/overview`
       aggregates mastery and setlist entries on the server.
       - The scope table in commit `1b6ba33` mapped each write's path root to
-        one query key root by hand, and nothing compared it with the site's
-        query modules or the API's cross-slice reads.
+        the query key root of the same name. ❌ `mastery` went to `['mastery']`
+        and nowhere else.
+        - Commit `1b6ba33` (written by an agent) implemented the spec of
+          commit `eb8276f`, which states the mapping as a rule: "it derives
+          the scope from the path root of the write". (Material)
 
 ## Root cause of occurrence
 
@@ -45,16 +48,19 @@ member's old data for up to the 5-minute freshness the same pull request set.
 the site keys a query by the screen that reads it, and the API serves some
 roots by aggregating others.*
 
-The spec of commit `eb8276f` wrote it as a rule: "`scope` is a query key root
+Material. The spec of commit `eb8276f` wrote it as a rule: "`scope` is a query key root
 the site uses" and "it derives the scope from the path root of the write". Two
 facts break that. `studies.queries.ts` reads `/api/mastery/...` under the
 `studies` key factory, and `studies.service.ts` imports from the `mastery` and
-`setlists` slices. The feature had no `plan.md` (validation finding A01), so
-no step mapped the spec's data shape onto the existing query keys before code
-was written.
+`setlists` slices. The agent that wrote the table followed its spec, and the
+spec was its input.
 
 ## Detection failure causes
 
+- **Conception:** the feature had no `plan.md` (validation finding A01), so
+  no step checked the spec's rule against the existing query keys. The table
+  was written by hand, and nothing compared it with the site's query modules
+  or the API's cross-slice reads.
 - **Typing:** the scope was a string union of roots. Every wrong mapping was
   still a valid root.
 - **Unit tests:** `query-key-roots.test.ts` checked only that each scope
@@ -77,7 +83,7 @@ technical validation passed.
 
 **Type:** DevX check (level 2)
 
-**Reference:** [PR #261](https://github.com/hugoleborso/borso.fr/pull/261), squashed as `06abedfd9`.
+**Reference:** commit [`06abedfd9`](https://github.com/hugoleborso/borso.fr/commit/06abedfd9) (PR #261).
 
 Two tests read the source and fail when the tables drift from it. They run in
 the core project, which the commit and push hooks run on changed files.
@@ -96,9 +102,21 @@ imports from another slice. A cascade that writes into another slice, such as
 a song delete, is held in a separate `WRITES_INTO` table, because imports
 point both ways (logged by the `live-invalidation-fix` agent).
 
-Level 1 was considered. Deriving the tables from the source at build time
-would need a code generator that reads TypeScript imports, which costs more
-than the two tests and would be a new dependency for one table.
+Level 1 was considered as a code generator that derives the tables from
+TypeScript imports at build time. It costs more than the two tests and would
+be a new dependency for one table.
+
+**Proposed:** make the first segment of every site query key the API root
+the query reads. `['studies', 'overrides', songId]`, which reads
+`/api/mastery/...`, would become `['mastery', 'overrides', songId]`.
+`QUERY_READ_ROOTS` in
+`apps/pragma/site/src/lib/queries/query-read-roots.core.ts` is already the
+identity for 21 of its 28 rows (measured), and would become the identity for
+all of them, so it could be deleted with no generator. Only
+`DERIVED_READ_ROOTS` would remain. A key root that names a screen instead of
+its data could then not drift from the API. This changes the key-factory
+convention in `docs/standards/06-data-fetching.md`, so it is the operator's
+call.
 
 **Proof it can fail:** planting both original failing cases on 2026-11-05
 (dropping `mastery` from the `studies` row of `QUERY_READ_ROOTS`, and

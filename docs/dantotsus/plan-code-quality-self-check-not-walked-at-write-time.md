@@ -4,88 +4,96 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#11'
-fix-commits: [17782f10ec]
-eradication-level: 5
-eradication-paths: []
+fix-commits: [17782f10ec, ff6446f6ac]
+eradication-level: 2
+eradication-paths: [eslint-rules/no-abbreviated-identifier.js, eslint-rules/conditions-live-in-pure-functions.js, .oxlintrc.json]
 time-to-detect: hours
 tags: [skill, implementation, plan, code-quality, technical-validation]
 zone: .claude/skills/implementation
 ---
 
-# Plan's §3 Code-quality self-check was authored but never re-walked at write time
+# The plan named the one-letter local, and the code shipped it anyway
 
-## Symptom
+## User impact
 
-`/technical-validation` on PR #11 returned **FAIL (5)**. One of the failing rows:
+`/technical-validation` on PR #11 returned FAIL with five rows. The operator got
+a branch that needed a second round for defects its own plan had predicted.
 
-> **B01 (FAIL).** `App.tsx:83-104` declares `ALL_YEARS.map((y) => …)` and uses the 1-letter local `y` six times across a 22-line closure. `App.tsx:34` uses `.find((m) => m.m === selected)`. CLAUDE.md *Clean code* bans 1-letter locals "outside trivial scopes like `for (let i = 0; ...)`". The plan (§Code-quality self-check, last bullet) *named this risk by name* — "Variable `y` in App.tsx's year-switch button has been renamed in v0 review — confirmed in current file; if not, rename in impl." — and the implementation didn't follow through.
+| | Seen | Expected |
+| --- | --- | --- |
+| `App.tsx:83-104` | `ALL_YEARS.map((y) => …)` uses `y` six times in a 22-line closure, and `.find((m) => m.m === selected)` at line 34 | named locals, as the plan's last self-check bullet asked: "Variable `y` in App.tsx's year-switch button ... rename in impl" |
+| Rows D11 to D14 | `pickDefaultMonth` and its siblings left inside `App.tsx`, untestable | extracted to `data.utils.ts` with `today: Date` injected, as the plan asked |
 
-Four sibling rows in the same report (D11–D14) were variants of the same shape: the plan said "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable"; implementation shipped it inside `App.tsx`, untestable from `data.utils.test.ts`.
+## Causal chain
 
-In short: the plan called out the exact risks. The implementation, written from the plan's *table* of code-map rows, never looped back to the plan's *Code-quality self-check* section before pre-flight gates fired.
+- The validator failed `App.tsx` on one-letter locals and on logic left in the
+  component.
+  - The implementing agent wrote `ALL_YEARS.map((y) => …)` and kept the
+    clock-dependent pickers inside `App.tsx`.
+    - It walked the plan's *How each spec decision becomes code* table top-down,
+      as `/implementation` step 3 said, ran the named gates, and pushed. The
+      plan's §3 *Code-quality self-check*, loaded with the rest of `plan.md`,
+      was not walked again.
+      - The rule against one-letter locals lived in `CLAUDE.md` as prose, and
+        the §3 bullet was a hand copy of it.
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. **Why did the implementation ship a one-letter local the plan had named?**
-   The implementer walked the plan's "How each spec decision becomes code" table top-down (per the `/implementation` skill's Procedure step 3), wrote the code, ran the pre-flight gates (typecheck / biome / knip / build), and pushed. The plan's §3 Code-quality self-check section was *authored* during `/technical-conception` but never *consulted* during `/implementation`.
+*Thought writing the code from the plan's table and passing the gates was the
+whole loop, actually the plan's §3 listed risks no gate checked, and nothing in
+the loop came back to it.* (Man)
 
-2. **Why didn't the pre-flight gates catch it?**
-   `biome.jsonc` doesn't ship a one-letter-identifier rule. There's a repo-custom GritQL plugin for the type-assertion ban, but no equivalent for short identifiers — the rule lives in `CLAUDE.md` as prose only.
-
-3. **Why didn't `/technical-validation` catch the *spec*-routed test coverage gap before the FAIL verdict?**
-   The clock-sensitive flows (`pickDefaultMonth`, `pickDefaultYear`) and error-throw paths were inside the React component. To unit-test them, they had to be extracted to `data.utils.ts` with `today: Date` injected as a parameter. The plan said "extract", the implementer didn't. The validator did its job — caught it at gate 6 (FAIL), not at gate 5 (write-time).
-
-4. **Why does the plan have a §3 Code-quality self-check if nobody re-reads it?**
-   The `/technical-conception` standard ([`.claude/skills/technical-conception/standard.md` §3](../../.claude/skills/technical-conception/standard.md)) requires plan authors to write a checkbox list of standing rules the implementation must satisfy. The `/implementation` skill's standard mentions the rules abstractly ("live with the clean-code rules") but does not require the implementer to *re-walk the plan's specific checklist* before push. The two skills compile their own copies of the rules without a hand-off.
-
-**Root cause:** thought "write the code per the plan + run the gates" was the whole loop; actually the plan's §3 checklist is a third gate the implementation skill never instructed the implementer to re-walk before pushing. The checklist existed, named the right risks, and was never read again.
+The plan was in the agent's context, since step 1 of the skill reads `plan.md`
+end to end (inferred, no transcript survives), and it named `y` explicitly. The model's
+habit of short callback parameters won over a document it had read. Under the
+standard's rule for an agent, the fix is a gate that holds when the habit wins,
+not one more step to read.
 
 ## Detection failure causes
 
-- **Typing:** no type captures "this identifier name is too short".
-- **Linter / static analysis:** Biome doesn't have a one-letter-identifier rule and the repo doesn't ship a custom plugin for it (yet).
-- **Functional validation locally:** the code works — single-letter variables are functionally correct, just unreadable.
-- **CI (tests / build):** all gates green; the defect is a clean-code violation, not a behavioural one.
-- **Code review:** the human reviewer (Hugo) sees the diff, but in an AI-driven loop the validator is supposed to fire *before* the reviewer reads the PR. By design, the validator is the last gate before push, not the human.
-- **Self-validation:** the `/implementation` skill's pre-flight gates don't reference the plan's §3 section by name; the implementer ran the gates that were named (`biome`, `tsc`, `vitest`, `knip`, `build`) and nothing else.
+- **Linter:** Biome had no rule for one-letter identifiers, and no repository
+  plugin held it. The rule was prose in `CLAUDE.md`.
+- **Pre-flight gates:** the implementation skill named typecheck, lint, knip and
+  build. None reads a plan.
+- **Behaviour tests:** a one-letter local works. Only reading catches it.
 
 ## Countermeasure
 
-- **Code:** commit [`17782f1`](https://github.com/hugoleborso/borso.fr/commit/17782f1c4d8b04ac8c8b6c46e83a0e6fb538b08e) — renamed `y` → `candidateYear` / `m` → `candidateMonth` / `n` → `matches`; extracted `pickDefaultMonth`, `pickDefaultYear`, `selectYearData`, `selectFeaturedMonth` to `data.utils.ts` with `today: Date` as an explicit parameter; 4 new unit tests cover the branches that the spec routed to `/technical-validation`.
+Commit `17782f10ec` renames `y` to `candidateYear`, `m` to `candidateMonth` and
+`n` to `matches`. It extracts `pickDefaultMonth`, `pickDefaultYear`,
+`selectYearData` and `selectFeaturedMonth` to `data.utils.ts` with `today: Date`
+as a parameter, and adds four unit tests. The validator's re-run passed.
 
-This restored the FAIL → PASS on re-run, but it doesn't stop the next implementation from doing the same thing. The structural change is upstream.
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** DevX check (level 2)
 
-**Type:** DevX check (level 2 — implementation skill enforces re-walking the plan's §3 before pre-flight gates)
+**Reference:** commit [`ff6446f6ac`](https://github.com/hugoleborso/borso.fr/commit/ff6446f6ac)
+wrote the repository's lint rules. Two of them refuse both defects at lint time,
+under `apps/**/*.{ts,tsx}` in `.oxlintrc.json`.
 
-**Reference:** [PR #11 kaizen](https://github.com/hugoleborso/borso.fr/pull/11) — see kaizen commits on this branch for the skill change.
+- `borso/no-abbreviated-identifier`: "`{{name}}` is too short to say what it
+  holds. ... keep a single letter for a `for` header counter."
+- `borso/conditions-live-in-pure-functions`: "Move this decision into a pure
+  function in a `.core.ts` or `.utils.ts` file". A picker that branches on the
+  date inside a component trips it (inferred from the rule's message, not
+  replayed on `App.tsx`).
 
-**The actual fix:**
+The entry first shipped step 3a in `.claude/skills/implementation/SKILL.md`,
+"Re-walk the plan's §3 Code-quality self-check section bullet by bullet". That
+step is still there. It is a written instruction to an agent that had the plan
+in context, so the lint rules are what hold.
 
-Adds a procedure step to `.claude/skills/implementation/SKILL.md` between gate-running and validation: *"Re-walk the plan's §3 Code-quality self-check section bullet by bullet, verifying each is satisfied by the diff. Unchecked bullets are blockers — fix the diff, do not run validators."* The standard at [`.claude/skills/implementation/standard.md`](../../.claude/skills/implementation/standard.md) gains a matching paragraph in the "Required behaviours" section.
+**Proof it can fail:** `eslint-rules/no-abbreviated-identifier.test.js` asserts
+`tooShort` on `const x = 1;` and on the parameter of `function at(p) { return p; }`.
 
-```diff
-   3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:
-      a. Open the file the row points at (or create it).
-      b. Apply the change.
-      c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
-      d. Update local commits as you go — do not save the diff for one giant commit.
-+  3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet
-+      names a repo-rule risk the plan author flagged for this feature ("rename `y` → `candidateYear`",
-+      "extract clock-dependent code to `data.utils.ts`", "no `useEffect` to derive `selected`", …).
-+      The plan-author wrote them because they predicted this implementation would slip on them. Verify
-+      each against the diff. An unchecked bullet is a blocker — fix it now; `/technical-validation`
-+      will FAIL on it otherwise.
-   4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
-```
+**Proposed:** subtract from the plan template. `.claude/skills/technical-conception/template.md`
+§ *Code-quality self-check* restates rules oxlint already refuses ("No
+abbreviations / one-letter locals", "No prose comments", "No `any`"). Deleting
+those bullets leaves §3 and step 3a with only the feature-specific checks no
+linter can hold, so the list stops training the reader to skim a copy of the
+linter.
 
-The DevX nature is: the skill text is the lint. The agent loading `/implementation` reads the procedure and runs it; a step that isn't in the procedure isn't run.
-
-**Sibling defects swept:** the same skill change covers D11–D14 in the same validation report (test-coverage rows for clock-dependent flows) — those were also predicted by the plan's §3 and missed at write time. Spec test-routing decisions that show up in the plan as "extract X to utils so it's testable" now get caught at the same gate.
-
-## See also
-
-- [`docs/dantotsus/plan-open-question-leaked-to-validator-fail.md`](./plan-open-question-leaked-to-validator-fail.md) — the *step 1a* equivalent (open questions in the plan must be answered before write time); this entry adds the *step 3a* (§3 self-check must be re-walked before pre-flight).
-- [`docs/dantotsus/spec-skill-let-perspectives-be-skipped.md`](./spec-skill-let-perspectives-be-skipped.md) — same loop family: a section of the upstream skill output was authored and silently skipped downstream.
-- [`docs/features/borso-fr/12-travaux/validation/technical-validation-2026-05-12-0028.md`](../features/borso-fr/12-travaux/validation/technical-validation-2026-05-12-0028.md) — the FAIL report that surfaced this.
+**Similar instances:** `grep -n '^- \[ \]' .claude/skills/technical-conception/template.md`
+lists the starter bullets. Each one that a rule in `.oxlintrc.json` enforces is
+the same hand copy.

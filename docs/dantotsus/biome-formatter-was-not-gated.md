@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#27'
-fix-commits: [e138811ba9, cfb24e26a9]
+fix-commits: [e138811ba9, cfb24e26a9, 9b8d380ed]
 eradication-level: 1
-eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml]
+eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml, package.json]
 time-to-detect: hours
 tags: [biome, formatter, hooks, pre-commit, ci, self-improvement-loop]
 zone: .husky/pre-commit
@@ -16,99 +16,86 @@ recurs: [biome-lint-was-not-gated-anywhere]
 
 # A whole PR of formatter drift accumulated invisibly because only `biome lint` was gated
 
-## Symptom
+## User impact
 
-Halfway through PR #27, ran `biome check` manually for the first
-time and discovered ~100 files would-be-reformatted. None of them
-had broken `biome lint` — the lint pass at pre-commit + CI was
-green. The formatter rules (line width, JSX attribute reflow,
-import ordering) had been silently drifting commit after commit.
+The operator reviews code whose layout changes from file to file. Halfway
+through PR #27, the first manual `biome check` reported about 100 files to
+reformat, while every lint gate was green. When the agent reverted the
+formatter pass as "noise", the operator answered, quoted:
 
-When the agent reverted the formatter pass calling it "noise", the
-user pushed back hard :
+> "Comment ça formatter noise, c'est super important de faire du biome format.
+> Fais le dans un commit à part si tu veux mais fais le. ça devrait être dans
+> les hooks + dans le commitlint."
 
-> "Comment ça formatter noise, c'est super important de faire du
-> biome format. Fais le dans un commit à part si tu veux mais fais
-> le. ça devrait être dans les hooks + dans le commitlint."
+| | Seen | Expected |
+| --- | --- | --- |
+| A commit with misformatted code | Pre-commit and CI pass | The commit is formatted, or refused |
 
-## Root-cause chain
+## Causal chain
 
-1. **Why?** `.husky/pre-commit` ran `pnpm exec biome lint` only.
-   `biome lint` runs lint rules but skips formatter checks ; format
-   drift therefore lands without complaint.
-2. **Why?** CI mirrored the same `biome lint` invocation
-   (`.github/workflows/ci.yml` + `pnpm -r lint` from each
-   workspace's `lint` script defined as `biome lint`).
-3. **Why?** Each app workspace's `package.json` set
-   `"lint": "biome lint"`, propagating the same lint-only gate
-   into `pnpm -r lint`.
+- About 100 files drifted from the formatter's layout across PR #27's commits, with every gate green.
+  - Pre-commit and CI ran Biome's lint rules only.
 
-**Root cause:** *thought `biome lint` covered everything biome
-checks, actually biome splits lint and format — only `biome check`
-runs both, and we'd only wired the half that skipped the formatter
-rules.*
+    ```sh
+    pnpm exec biome lint   # ❌ lint rules only, the formatter is a separate command
+    ```
+
+    - Commit `309d3b6ff` (2026-05-01, written by an agent) turned the formatter on in `biome.jsonc`, "for consistency across AI-agent edits", and left the root `lint` script on `biome lint`. Until then `biome lint` was a complete gate, because the scaffolding commit `11d98b276` had set `"formatter": { "enabled": false }`.
+      - Whether the formatter was on lived in `biome.jsonc`. What the gates ran lived in a command, later copied into every workspace script, the pre-commit hook and CI. Changing the first source of truth left the second as it was. (Machine)
+
+## Root cause of occurrence
+
+*Thought enabling the formatter in `biome.jsonc` enforced it, actually only a gate that runs `biome check` or `biome format` does, and every gate ran `biome lint`.*
+
+Machine. The config and the gate command were two separate sources of truth,
+and nothing tied one to the other. The copies of `biome lint` into N+2 places
+explain why the gap spread, not why it opened.
 
 ## Detection failure causes
 
-- **Typing / static analysis:** N/A — this is about formatting
-  style, not behaviour.
-- **Linter:** `biome lint` itself was running, fine, just not
-  asked to check formatting.
-- **CI:** Same as the hook — running lint, not check.
-- **Code review:** Formatter drift is invisible in line-by-line
-  review when each commit was locally clean against its own author's
-  editor settings.
-- **Quality bar:** docs/dantotsus/biome-lint-was-not-gated-anywhere.md
-  closed the *lint*-gating gap in 2026-04 ; the *format*-gating
-  gap survived.
+- **Linter:** `biome lint` ran and passed. It was never asked about formatting.
+- **CI:** it ran the same command as the hook.
+- **Review:** drift is invisible line by line when each commit looks clean in its author's editor.
+- **Earlier dantotsu:** `biome-lint-was-not-gated-anywhere`, eleven days before, fixed where the lint ran, and copied the same `biome lint` into the new gates.
 
 ## Countermeasure
 
-Move every reference of `biome lint` to `biome check` :
+Commit `e138811` replaced `biome lint` with `biome check` in the hook, CI and
+every workspace's `lint` script. Commit `cfb24e2` reformatted the 120 files of
+accumulated drift with no semantic change.
 
-- `.husky/pre-commit` → `pnpm exec biome check`
-- `.github/workflows/ci.yml` → `pnpm exec biome check` at the
-  root scope + `pnpm -r lint` keeps the workspace cascade.
-- Each `apps/<x>/package.json` and `infra/<x>/package.json`
-  → `"lint": "biome check"`.
+## Eradication
 
-`biome check` runs lint AND format checks in one pass ; pre-commit
-+ CI now reject any commit that introduces format drift.
+**Type:** structural impossibility (level 1), for files a commit carries in
+full.
 
-Bonus : the repo-wide formatter pass that closed the accumulated
-debt landed in `cfb24e2 chore(meta): repo-wide biome formatter
-pass` (120 files, pure mise en forme, no semantic change).
+**Reference:** commit `314f24821` (2026-08-08) removed Biome, and commit
+`9dcf74547` (2026-10-27) replaced Prettier with oxfmt. Commit `9b8d380ed`
+(2026-11-15) made `.husky/pre-commit` format what the commit carries instead
+of checking it. A fully staged file is formatted and staged again, so it
+cannot reach a commit unformatted. CI runs `pnpm run format:check`, which is
+`oxfmt --check` over the repository, for commits that skipped the hook and for
+partly staged files.
 
-## Eradication shipped
-
-**Status, 2026-10-10:** Biome was removed in 314f2482. The formatter gate
-now runs Prettier from the same two places, `.husky/pre-commit` and
-`.github/workflows/ci.yml`.
-
-**Type:** code diff (level 1 — formatter drift is now structurally
-unable to land without failing pre-commit / CI)
-
-**Reference:** PR #27 · commits
-[`82f0e29`](https://github.com/hugoleborso/borso.fr/commit/82f0e29) +
-[`cfb24e2`](https://github.com/hugoleborso/borso.fr/commit/cfb24e2)
-
-**The actual fix:**
-
-```diff
--echo "[pre-commit] running biome lint"
--pnpm exec biome lint
-+echo "[pre-commit] running biome check (lint + format)"
-+pnpm exec biome check
+```sh
+if [ "$#" -gt 0 ] && [ -x node_modules/.bin/oxfmt ]; then
+  node_modules/.bin/oxfmt --no-error-on-unmatched-pattern "$@" >/dev/null
+  git add -- "$@"
+fi
 ```
 
-(equivalent change in CI + each workspace's `lint` script)
+The gate command now lives in one place per stage. The workspace `lint`
+scripts all call `scripts/lint-workspace.sh`, so no copy can drift from
+another.
 
-**Sibling defects swept:** every workspace's `lint` script flipped
-in the same commit ; the repo-wide formatter pass swept 120 files
-of accumulated drift.
+**Proof it can fail:** a planted `export const   x = {a:1,\n b:2}` in
+`scripts/` (measured on 2026-11-27):
 
-## See also
+```
+$ node_modules/.bin/oxfmt --check scripts/zz-probe.ts
+Format issues found in above 1 files. Run without `--check` to fix.
+exit 1
+```
 
-- [`docs/dantotsus/biome-lint-was-not-gated-anywhere.md`](./biome-lint-was-not-gated-anywhere.md)
-  — sibling gap closed earlier ; this dantotsu closes the
-  format-only half that was missed.
+**Similar instances:** `grep -h '"lint"' apps/*/package.json infra/*/package.json | sort | uniq -c`
+prints one shared script for all nine workspaces.

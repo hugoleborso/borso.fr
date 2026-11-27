@@ -4,98 +4,77 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: '#157, #163, #164, #166'
-fix-commits: [self]
-eradication-level: 1
-eradication-paths: [.claude/hooks/rtk-rewrite.sh]
+fix-commits: [e51cfdd5a, b507ea56df]
+eradication-level: 2
+eradication-paths: [scripts/hooks/check-settings.ts, scripts/hooks/settings-hooks.core.ts]
 time-to-detect: minutes
 tags: [hooks, agents, git, harness, claude-code]
-zone: .claude/hooks/rtk-rewrite.sh
+zone: .claude/settings.json
 recurs: none (the earlier rtk entries are about its installer and its biome rewrite; this is how its rewrite meets the worktree guard)
 ---
 
 # The rewrite that hid git from the guard
 
-## Symptom
+## User impact
 
-A subagent dispatched with worktree isolation typed `git status` and was
-refused:
+Subagents dispatched with worktree isolation could not run `git status`, a loop, a pipe or a glob. Only `/usr/bin/git` worked, and nothing said so. Most of the twelve agents of one weekend logged it, and two feature runs before them (counted from their friction logs by the first version of this entry). Sessions in the main checkout were not affected.
 
-> this command runs rtk with the text git status in a plain command, so what
-> it runs cannot be shown not to be git. Refusing to run it
+| | Seen | Expected |
+| --- | --- | --- |
+| A worktree-isolated subagent types `git status` | Refused: "this command runs rtk with the text git status in a plain command, so what it runs cannot be shown not to be git" | `git status` runs in the agent's worktree |
 
-Loops, pipes and globs failed the same way even when git was not in them.
-Only `/usr/bin/git` worked, and nothing said so. It was logged by most of the
-twelve agents of one weekend, and by two feature runs before them.
+## Causal chain
 
-## Root-cause chain
+- Claude Code refused `git status` in a worktree-isolated subagent.
+  - Its worktree guard lets git through only when it can see that git targets the agent's worktree. The command it was asked to approve was `rtk git status`, and it refuses a launcher in front of git.
+    - The repository's PreToolUse hook had rewritten `git status` into `rtk git status`. It rewrote `grep`, `ls` and others inside loops and pipes too, so those were refused as possibly git.
 
-1. **Why was `git status` refused?** Claude Code's worktree guard lets a git
-   command through only when it can see that git targets the agent's worktree.
-2. **Why could it not see that?** The command it was asked to approve was
-   `rtk git status`: the repository's PreToolUse hook had rewritten it.
-3. **Why were loops refused too?** rtk also rewrites `grep`, `ls` and others
-   inside compound commands, and the guard cannot read past a launcher inside
-   a construct, so any rewritten loop was refused as possibly git.
-4. **Why only `/usr/bin/git`?** rtk does not rewrite an absolute path.
+      ```json
+      // .claude/settings.json, from 8e1f847e7 to b507ea56d
+      "PreToolUse": [
+        { "matcher": "Bash",
+          "hooks": [{ "type": "command", "command": ".claude/hooks/rtk-rewrite.sh" }] } // ❌ every command rtk knows, rewritten, in every checkout
+      ```
 
-**Root cause:** the rewrite hook was written for a session working in one
-checkout, but in a worktree-isolated agent a second hook judges the rewritten
-command, and a launcher in front of git is exactly what that hook refuses.
+      - Commit `8e1f847e7` (2026-05-01, written by an agent) vendored rtk's hook verbatim and registered it on every Bash command. Exceptions were added only after a command broke, such as `biome` in `6e7775319` the next day.
+        - The rewrite was on by default for every command and every consumer of the command text. Worktree isolation and its guard reached this repository's sessions after May (inferred from the dates of the first refusals), so its first meeting with the rewrite was a refusal. (Machine)
+
+## Root cause of occurrence
+
+*Thought a command rewrite changes only the size of what the command prints, actually the rewritten text is what every later judge of the command reads, and Claude Code's worktree guard refuses a launcher in front of git.*
+
+Machine. The hook rewrote by default and carved out by exception. Each new consumer of command text met it by breaking. `b507ea56d` counts four carve-outs: biome, git diff and show, git in a worktree, and lint. This entry is the third, and [`the-reviewer-read-a-hundred-lines-of-each-hunk.md`](./the-reviewer-read-a-hundred-lines-of-each-hunk.md) the next.
 
 ## Detection failure causes
 
-- **Typing / linter:** not applicable; the two hooks belong to different
-  owners and only meet at run time.
-- **Functional validation locally:** the main session works in the main
-  checkout, where the guard does not run, so the person editing the hook never
-  sees it.
+- **Typing / linter:** the two hooks belong to different owners and meet only at run time.
+- **Local validation:** the main session works in the main checkout, where the guard does not run, so whoever edited the hook never met the refusal.
+- **The refusal text:** it names rtk but not the hook that added it, so agents worked around it with `/usr/bin/git` instead of reporting it.
 
 ## Countermeasure
 
-In a linked worktree (the hook's `cwd` has a git dir different from its
-common dir), the hook leaves untouched any command that names git as a word
-or is more than one plain command. Simple commands keep their rtk rewrite, and
-the main checkout keeps every rewrite.
+Commit `e51cfdd5a` (PR #173) made the hook leave untouched, in a linked worktree, any command that names git or is more than one plain command. Fed its JSON input in a worktree, `git status`, a loop, a pipe and a command substitution came back unchanged while `ls -la` became `rtk ls -la`. A live `git status` in the worktree then ran (recorded by the first version of this entry).
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** code diff (level 1 — structural impossibility)
+**Type:** DevX check (level 2), on top of the deletion of the rewrite.
 
-**Reference:** [PR #173](https://github.com/hugoleborso/borso.fr/pull/173) · commit `self` (this entry ships with it)
-
-**The actual fix:**
+**Reference:** commit [`b507ea56d`](https://github.com/hugoleborso/borso.fr/commit/b507ea56df86236aeb5d0652e3bca5630c0dfc54) (PR #245) deleted the rtk rewrite instead of adding a fifth carve-out.
 
 ```diff
-+GIT_COMMAND_WORD='(^|[^[:alnum:]_./-])git($|[^[:alnum:]_.-])'
-+COMPOUND_COMMAND=$'[;|&<>`\n]|\\$\\('
-+if [[ "$CMD" =~ $GIT_COMMAND_WORD ]] || [[ "$CMD" =~ $COMPOUND_COMMAND ]]; then
-+  HOOK_CWD=$(jq -r '.cwd // empty' <<<"$INPUT")
-+  OWN_GIT_DIR=$(git -C "$HOOK_CWD" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)
-+  SHARED_GIT_DIR=$(git -C "$HOOK_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)
-+  if [ -n "$OWN_GIT_DIR" ] && [ "$OWN_GIT_DIR" != "$SHARED_GIT_DIR" ]; then
-+    exit 0
-+  fi
-+fi
+     "PreToolUse": [
+-      {
+-        "matcher": "Bash",
+-        "hooks": [{ "type": "command", "command": ".claude/hooks/rtk-rewrite.sh" }]
+-      },
 ```
 
-Checked by feeding the hook its JSON input: in the worktree, `git status`, a
-loop, a pipe and a command substitution came back unchanged while `ls -la`
-became `rtk ls -la`; in the main checkout `git status` still became
-`rtk git status`. A live `git status` in the worktree then ran.
+`scripts/hooks/check-settings.ts`, run in `.husky/pre-commit` and CI, refuses any hook command in `.claude/settings.json` other than the one TypeScript entry (`selectForeignHookCommands` in `scripts/hooks/settings-hooks.core.ts`). A vendored rewrite script cannot be registered again.
 
-The change removes an automatic approval rather than adding one: an
-unrewritten command goes through the normal permission flow, and the guards
-in `.claude/hooks/` see the same text as before, so
-`scripts/check-hook-decisions.sh` is unaffected.
+The level is 2, not 1. A TypeScript check can still return `kind: 'rewrite'` (declared in `scripts/hooks/check.core.ts`) and change the text the guard judges.
 
-What remains is the guard's own reading of shell text: a heredoc or a loop
-whose text mentions git is still refused. That is Claude Code's, not this
-repository's; [`../knowledge/the-worktree-guard-reads-shell-text.md`](../knowledge/the-worktree-guard-reads-shell-text.md)
-says how to work with it and is printed when the refusal appears.
+**Proposed:** delete `kind: 'rewrite'` from `scripts/hooks/check.core.ts`. Its one user, `noSwallowedPush` in `scripts/hooks/checks/no-swallowed-push.core.ts`, prefixes `set -o pipefail;` to a piped `git push`. It would refuse instead and tell the agent to add `set -o pipefail` itself, as its other branches already do. No hook could then change a command between what the agent typed and what the guard reads.
 
-**Sibling defects swept:** the biome skip in the same hook is the other case
-of rtk rewriting a command into one that fails.
+**Proof it can fail:** inferred, not replayed this session. Adding back the `rtk-rewrite.sh` group makes `node scripts/hooks/check-settings.ts` print `PreToolUse: .claude/hooks/rtk-rewrite.sh is not the one TypeScript entry` and exit 1.
 
-## See also
-
-- [`../knowledge/the-worktree-guard-reads-shell-text.md`](../knowledge/the-worktree-guard-reads-shell-text.md)
+**Similar instances:** `grep -rn "kind: 'rewrite'" scripts/hooks` finds `noSwallowedPush` as the only rewrite left (measured). The guard's own reading of shell text remains: a heredoc or a loop whose text mentions git is still refused. That is Claude Code's, and [`../knowledge/the-worktree-guard-reads-shell-text.md`](../knowledge/the-worktree-guard-reads-shell-text.md) is printed when the refusal appears.

@@ -44,11 +44,21 @@ concurrency:
   cancel-in-progress: true
 ```
 
+        - Commit `2e393f99c` (#211) added the `workflow_dispatch` trigger and
+          shared the group on purpose, so the two runs never write the sticky
+          comment at once. It kept `cancel-in-progress: true` for both
+          triggers.
+
 ## Root cause of occurrence
 
 *Thought a dispatch run only replaces a stale copy of itself, actually it
 cancels any run in its group, including the pull request's own check, which
-the dispatch does not replace on the pull request.*
+the dispatch does not replace on the pull request.* (Man)
+
+The agent that wrote #211 applied its prior about `cancel-in-progress`. The
+same commit shares the group on purpose, so it knew both triggers met there.
+The gap was what the flag cancels. Whether the concurrency page was in its
+context is unknown, so Man rests on the prior winning (inferred).
 
 [GitHub's documentation on concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency),
 read this session: "To also cancel any currently running job or workflow in

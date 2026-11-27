@@ -6,150 +6,67 @@ severity: medium
 related-pr: '#8'
 fix-commits: [3a6a89c64c]
 eradication-level: 5
-eradication-paths: []
+eradication-paths: [.claude/skills/implementation/SKILL.md]
 time-to-detect: hours
 tags: [implementation, skills, deps, react-chessboard]
 zone: .claude/skills/implementation
 ---
 
-# Started writing my own L-arrow util before checking the library
+# Three options to hand-draw knight arrows the board library already drew
 
-## Symptom
+## User impact
 
-User asked for L-shaped knight arrows. I jumped to designing my own SVG
-overlay component (~120 lines + tests + math for square-to-pixel coordinates)
-and quoted three options:
+The operator asked for L-shaped knight arrows on the borsouvertures chessboard. The agent answered with three options, all built around its own code.
 
-> *"A — Custom SVG overlay above the board (recommended). … B — Replace
-> `customArrows` entirely with my own SVG overlay. … C — Drop the L-arrow
-> attempt and use a square highlight instead."*
+| | Seen | Expected |
+| --- | --- | --- |
+| The agent's proposal | "A — Custom SVG overlay above the board (recommended). … B — Replace `customArrows` entirely with my own SVG overlay. … C — Drop the L-arrow attempt and use a square highlight instead." About 120 lines of overlay, tests and square-to-pixel math. | "Bump `react-chessboard` to v5, which draws L-shaped knight arrows." |
 
-User pulled me back:
+The operator stopped it: "I am surprised that you need to create your own arrows. First, quickly research for the lib used here, if correct arrows are available." The library's docs showed that `react-chessboard@5.4.0` draws them natively (its PR #208, merged August 2025).
 
-> *"A if you manage to get uniformity, but I am surprised that you need
-> to create your own arrows. First, quickly research for the lib used here,
-> if correct arrows are available."*
+## Causal chain
 
-Five minutes later the library docs revealed `react-chessboard@5.4.0`
-shipped this exact feature natively (PR #208, merged August 2025). The
-custom-overlay plan was wasted design work; the right move was a `pnpm`
-version bump.
+- The operator received three custom-build options and no library bump.
+  - The agent designed its own SVG overlay.
+    - The installed API could not draw an L. In v4, `Arrow = [Square, Square, color?]` is a straight line between two squares.
+      - The agent built its options from the installed v4 typings only, and read them as the library's API.
+        - `apps/borsouvertures/package.json` pinned `"react-chessboard": "^4.3.1"` while v5.4.0 had shipped nine months earlier.
+          - Commit `436a5ab3f` (2026-05-04, one day before) ported the chess-openings PWA into the monorepo with that pin. The pin was the input of the port, carried from the original repository.
 
-## Root-cause chain
+## Root cause of occurrence
 
-1. **Why did I propose a custom build first?**
-   Because the v4 API I had in hand (`Arrow = [Square, Square, color?]`)
-   couldn't express a knight L-shape. I extrapolated *"the lib can't do
-   this"* from *"the version we pin can't do this"*.
-2. **Why didn't I check the latest version?**
-   Because the install was already working — the upgrade decision felt
-   "out of scope" and the library wasn't on my mental shortlist of
-   load-bearing surfaces to revisit.
-3. **Why isn't checking-upstream a habit?**
-   No procedural prompt for it. The `/implementation` skill walks the plan
-   top-to-bottom; the plan never says *"before writing new code, check the
-   relevant library's latest release for this feature."*
-4. **Why does it matter beyond this one row?**
-   Same pattern bit the visual-validator session 1 (where I would have
-   built a custom screenshot-byte-management helper before realising the
-   API hard-limit was a vendor fact, not something to design around) and
-   shows up across the PR — every reach for "I'll write this from scratch"
-   on a vendor surface is suspect.
+*Thought the pinned version's API is the library's API, actually `react-chessboard` had shipped native L-shaped arrows in v5.4.0, nine months before.* (Material)
 
-**Root cause:** *thought* the pinned-version's API is the library's API;
-*actually* libraries ship features, and the gap between *what we have* and
-*what's available* is one `npm view <pkg> versions` call away. No
-procedural step in the implementation flow forces that call.
+The only API in the agent's context was the v4 typings under `node_modules`. The current release notes were not loaded. When the operator asked for them, they answered the question at once. Below that sits a Machine condition. The port carried a major version nine months behind, and nothing in the repository reports a direct dependency a major behind its latest release. Renovate's config (`.github/renovate.json`, added in `56258c2b0`) runs "before 6am on monday", and its first run after the port fell on 2026-05-11, after PR #8.
+
+`docs/knowledge/react-chessboard-l-arrows-v5.md` records the v5 API that the agent was missing.
 
 ## Detection failure causes
 
-- **Typing:** N/A — the typed API of v4.7.3 genuinely lacks the feature.
-- **Linter:** Can't reason about "is there a better library version?".
-- **Functional validation locally:** Validates the wrong-shape arrow; can't
-  surface the *missed-feature-upstream* defect.
-- **CI:** Same.
-- **`/visual-validation`:** Would have FAILed the L-arrow row, but doesn't
-  point at the library upgrade.
-- **`/technical-validation`:** Reviews the diff vs the plan, not vs the
-  upstream library's release notes.
-- **Self-review:** *"It's a clan-only app, just write the SVG overlay"* —
-  the absence of a procedural prompt to check upstream made the
-  reinvent-it path look like the natural choice.
+- **Typing:** the v4 types genuinely lack the feature, so they confirm the wrong belief.
+- **Linter:** no rule compares an installed version with the latest one.
+- **Local validation:** it would validate the hand-drawn arrow, not reveal the native one.
+- **CI:** no job reports a direct dependency a major behind. Renovate and Dependabot open pull requests for majors, but nothing fails while one stays unmerged.
+- **Review:** the operator caught it, from surprise, before any code was written.
 
 ## Countermeasure
 
-User's intervention re-routed the work to `pnpm install
-react-chessboard@^5.4.0`, which forced a React 19 workspace bump alongside,
-and absorbed the L-arrow + a year of other upstream fixes for free.
+The operator re-routed the work to a version bump. Commit `6533eeb30` (2026-05-11) bumped React to 19 and `react-chessboard` to v5, and the arrows came for free. `apps/borsouvertures/package.json` pins `^5.12.1` today.
 
-## Eradication (mandatory — code-level)
+## Eradication
 
-**Type:** Procedural / detection rule in `/implementation` (level 4 —
-detection at the right step of the workflow). The matching "Pattern
-Coherence pass" already exists in `/technical-conception` for the
-*planning* stage; what was missing is the same discipline applied at
-*implementation* time when a new pattern is being written from scratch.
+**Type:** knowledge (level 5). A written instruction to the agent.
 
-**Reference:** [PR #9](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-8) ·
-this kaizen PR.
+**Reference:** commit [`3a6a89c`](https://github.com/hugoleborso/borso.fr/commit/3a6a89c64c490983d89d7fd88d1f7dfc03c1563a) added a failure mode to `.claude/skills/implementation/SKILL.md`. Today it reads, at line 149:
 
-**The actual fix:**
+> **Reinventing what the library already does.** Before writing a "quick custom X" on top of an imported library, read the library's current docs / changelog / `defaultOptions` for the capability you're about to recreate.
 
-```diff
- # .claude/skills/implementation/SKILL.md
-   "Failure modes to avoid" section
-+ - **Reinventing what the library already does.** Before writing a new
-+   utility / component that overlaps a vendor's domain (board renderer,
-+   chess engine, animation primitive, drag-and-drop, etc.), run a
-+   one-minute upstream check:
-+   ```
-+   npm view <pkg> versions --json | tail -20
-+   ```
-+   Then skim the changelog / recent merged PRs of the latest major. If the
-+   feature you're about to build already ships, the right move is a
-+   version bump — not a custom util. Document the trade-off in the kaizen
-+   commit if a bump isn't viable (peer-dep conflict, etc.).
-```
+`CLAUDE.md` also says "Reuse first. Look in this repo, then installed packages, then a maintained library." The kaizen-layer rule this entry cited once, *Step 2c, Library-search pass*, is gone from `.claude/skills/after-task-kaizen/SKILL.md` (`grep -i librar` finds nothing there).
 
-Cross-link to the existing `/technical-conception` *Pattern Coherence*
-pass — same anti-pattern at a different layer:
+A written rule is the weakest rung. It reaches the agent only if the skill is loaded, and it still competes with the installed typings in front of it.
 
-```diff
- # docs/knowledge/audit-imported-deps-and-patterns-when-planning.md
-+ ## Related: at implementation time
-+
-+ Pattern Coherence at planning catches *carrying forward existing deps
-+ without justification*. The matching trap at implementation is *writing
-+ new code that the library already ships*. See
-+ [`docs/dantotsus/built-my-own-before-checking-the-library.md`](../dantotsus/built-my-own-before-checking-the-library.md).
-```
+**Proposed:** remove the gap the agent read from. Add a CI step that runs `pnpm outdated --format json` and fails when a direct dependency of a workspace is a major version behind its latest release, with the same 14-day wait as the `semver-major-days` cooldown in `.github/dependabot.yml`. The installed API would then be the current API, or the pull request that closes the gap would be open and failing. An agent could no longer read a nine-month-old major as the library.
 
-**Sibling defects swept:** none in this PR — but the new `/implementation`
-rule will fire next time the agent reaches for "I'll just write a small
-helper that does what react-chessboard / chess.js / vite-plugin-pwa /
-react-dnd already does."
+**Proof it can fail:** none. No check exists to plant against.
 
-> **Update 2026-05-18 — extended to the kaizen layer.**
-> The same misconception fired again at *kaizen time* during the
-> PR #23 sweep: the agent classified two friction rows as *"ship a
-> Biome plugin (level 2)"* without first asking *"is there a library
-> that would delete the code hosting the bug (level 1)?"*. The
-> `/after-task-kaizen` skill now carries a parallel rule —
-> Step 2c, *Library-search pass — before writing custom anything*.
-> The operator's quote that triggered the update:
->
-> > *« Mais même si tanstack n'était pas installé, la bonne méthode
-> > ici serait de checker des libs, trouver tanstack, et décider ou
-> > non de l'installer suivant notre contexte. C'est génial de build
-> > nos plugins custom mais il faut aussi savoir réutiliser ce qui
-> > existe déjà. »*
->
-> Same anti-pattern, three layers (planning, implementation, kaizen).
-> All three now have a procedural prompt.
-
-## See also
-
-- [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../knowledge/audit-imported-deps-and-patterns-when-planning.md) —
-  the planning-stage analogue (Pattern Coherence pass).
-- [`docs/knowledge/react-chessboard-l-arrows-v5.md`](../knowledge/react-chessboard-l-arrows-v5.md) —
-  the specific upstream feature this dantotsu rediscovered.
+**Similar instances:** at the time, every package of a ported app came with the original repository's pins. Run `pnpm outdated -r` to list the direct dependencies a major behind today.
