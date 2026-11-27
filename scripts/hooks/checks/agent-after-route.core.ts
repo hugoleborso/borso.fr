@@ -89,7 +89,7 @@ export const agentAfterRoute: Check = {
   tools: /^(Agent|Task|Write|Edit|MultiEdit|NotebookEdit)$/u,
   run: (input, world) => {
     if (input.agent_id !== undefined && input.agent_id !== '') return PASS;
-    return AGENT_TOOL.test(input.tool_name ?? '')
+    return AGENT_TOOL.test(String(input.tool_name))
       ? checkAgent(input, world)
       : checkEdit(input, world);
   },

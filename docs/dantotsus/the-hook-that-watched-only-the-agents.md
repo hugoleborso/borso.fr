@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#417'
-fix-commits: none (analysis mode, waiting on the operator's choice)
-eradication-level: 5
-eradication-paths: [docs/dantotsus/the-hook-that-watched-only-the-agents.md]
+fix-commits: [self]
+eradication-level: 2
+eradication-paths: [scripts/hooks/checks/agent-after-route.core.ts]
 time-to-detect: hours
 tags: [pragma, process, hooks, frontend, skill]
 zone: scripts/hooks/checks/agent-after-route.core.ts
@@ -62,26 +62,43 @@ agent at all.
 
 ## Countermeasure
 
-None shipped yet. The choice changes when the operator is asked for
-something, so it is his.
+The options, as the operator would live with them:
 
 | Option | What the operator sees day to day | Cost |
 | --- | --- | --- |
-| A. `agent-after-route` also refuses the main session's first Edit or Write under `apps/` until `/route` ran or the branch adds a `spec.md` | every session that changes an app sizes it first. A one-file fix runs `/route`, which answers Tier 0 and lets the edit through. A feature shows him mockups or a spec before any code | one more matcher and branch in an existing check |
+| A. `agent-after-route` also refuses the main session's first Edit or Write under `apps/` until `/route` ran or the branch adds a `spec.md` | every session that changes an app sizes it first. A one-file fix runs `/route`, which answers Tier 0. A feature shows him mockups or a spec before any code | one more branch in an existing check |
 | B. As A, only for files under `apps/*/site/` | the same for screens. An API-only fix starts at once | as A, and an API feature can still skip its spec |
-| C. No change | a session that codes a feature itself can skip `/route` again | none now |
+| C. No change | a session that codes a feature itself can skip `/route` again | none |
 
-Recommended: A. It closes the gap for every app change, and `/route` already
-sorts a one-file fix out.
+The operator chose A on 2026-11-27. He also asked whether `/route` could
+live in CLAUDE.md instead, and chose to keep it a skill, which the hook can
+see being called.
 
 ## Eradication
 
-**Type:** knowledge (level 5), until the operator picks an option.
+**Type:** DevX check (level 2)
 
-**Reference:** none yet.
+**Reference:** the commit adding this file.
 
-**Proof it can fail:** none yet. The option he picks ships with planted
-inputs, as the PR #410 entry's table does.
+```diff
+-  tools: /^(Agent|Task)$/u,
++  tools: /^(Agent|Task|Write|Edit|MultiEdit|NotebookEdit)$/u,
+```
+
+An edit passes when a subagent makes it, when its path is outside `apps/`,
+when the transcript shows `/route` or another framing skill, or when the
+branch adds a `spec.md`.
+
+**Proof it can fail:** `node scripts/hooks/hook.ts` in a checkout of main,
+with `KAIZEN_LOG_REFUSALS=0` and a transcript holding no skill call.
+
+| Input | Before | After |
+| --- | --- | --- |
+| Write `apps/pragma/api/src/x.core.ts`, absolute path | 0 | 2, "This session has not run /route, and its branch adds no spec.md." |
+| Edit `apps/pragma/site/a.tsx`, relative path | 0 | 2 |
+| Edit `scripts/a.ts` | 0 | 0 |
+| the same app Write, transcript with a `route` Skill call | 0 | 0 |
+| the same app Write by a subagent (`agent_id` set) | 0 | 0 |
 
 **Similar instances:** `grep -l "route" docs/features/meta/lessons-from-pr-*/inventory.md`.
 PR #410 and PR #417 are the two sessions known to skip it (measured from
