@@ -1159,6 +1159,7 @@
     "followUpSearchUnavailable": "La recherche de morceaux est indisponible. Réessaie dans un instant ou passe.",
     "validate": "Valider",
     "signUpSheetTitle": "{{venue}} · {{date}}",
+    "addToCalendar": "Ajouter à mon calendrier",
     "signUpFriend": "Un·e ami·e",
     "signUpFriendLabel": "Inscrire un·e ami·e"
   }
