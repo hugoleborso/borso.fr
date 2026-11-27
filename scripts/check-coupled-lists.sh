@@ -5,10 +5,9 @@
 # paths lived in `.husky/pre-commit` and in `.github/workflows/architecture.yml`
 # and disagreed by one entry for as long as both existed, so a commit touching
 # only the blueprint layer table reached CI with a map nothing had regenerated
-# (that pair is gone; see section 1). The gated file suffixes lived in `eslint-rules/impurity.js` and in every
-# application's `vitest.config.ts` and disagreed by one entry on the day both
-# were written, so a `.schema.ts` with no test would have been caught by a
-# coverage number and by nothing that names it.
+# (that pair is gone; see section 1). The gated file suffixes lived in
+# `eslint-rules/impurity.js` and in every application's `vitest.config.ts`
+# (that pair is gone too; see section 2).
 #
 # Neither is a bug a reviewer can see: both halves read correctly on their own,
 # and only the pair is wrong. See
@@ -30,34 +29,9 @@ fail() {
 # docs/standards/14-tool-runtime-budgets.md, and it now runs only on demand,
 # from the `architecture` workflow. There is no pair left to compare.
 
-# 2. The suffixes the coverage gate and the sibling-test rule both name.
-#
-# `isGatedFile` decides which files must ship a sibling test; `coverage.include`
-# decides which files must reach full coverage. A suffix in one and not the
-# other is a file whose missing test only a number notices.
-rule_suffixes=$(
-  grep -o 'TESTED_FILE_PATTERN = /\\\.([a-z|]*)' eslint-rules/impurity.js |
-    sed 's/.*(//; s/).*//' | tr '|' '\n' | sort -u
-)
-
-if [ -z "$rule_suffixes" ]; then
-  fail "read no suffixes out of eslint-rules/impurity.js TESTED_FILE_PATTERN — the rule changed shape and this check went blind"
-fi
-
-for config in apps/*/vitest.config.ts; do
-  workspace=$(dirname "$config")
-  # Only the coverage include block, which is the list under discussion.
-  include=$(sed -n '/coverage: {/,/thresholds/p' "$config")
-  [ -n "$include" ] || continue
-  for suffix in $rule_suffixes; do
-    # A front end has no `api/src`, so a back-end-only suffix is absent there by
-    # construction rather than by omission.
-    if [[ "$include" != *"$suffix"* ]]; then
-      if [ "$suffix" = 'schema' ] && [ ! -d "$workspace/api" ]; then continue; fi
-      fail "$config covers no '*.$suffix.ts' while borso/test-file-has-sibling-source demands a test for one. Add it to coverage.include, or drop it from TESTED_FILE_PATTERN."
-    fi
-  done
-done
+# 2. The gated file suffixes used to be checked here, against every
+# `vitest.config.ts`. Both now read GATED_FILE_SUFFIXES from
+# scripts/vitest-coverage-gate.ts, so there is no pair left to compare.
 
 # The formatter the repository tells you to run used to be checked here: the
 # agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier

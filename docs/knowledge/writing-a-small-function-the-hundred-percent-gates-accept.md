@@ -120,8 +120,8 @@ about the design before treating it as a missing assertion.
 
 ## One root test run with `--coverage` fails on files it never imports
 
-The root `vitest.config.ts` sets `coverage.include` to every
-`scripts/**/*.{core,utils}.ts` with per-file thresholds. That is how CI catches
+The root `vitest.config.ts` sets `coverage.include` to every gated file under
+`scripts/` with a pure suffix (`PURE_FILE_SUFFIXES`) with per-file thresholds. That is how CI catches
 a gated file no test imports. It also means one test run alone fails on every
 other gated file at 0%:
 

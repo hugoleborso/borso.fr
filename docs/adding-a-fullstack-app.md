@@ -45,7 +45,9 @@ and each cost a debugging session to learn:
   time behind Postgres. `last-loop-lepin` was missing two of them and ran 15
   files twice.
 - Coverage sits above the projects, not inside one, because a run has a single
-  coverage configuration shared by all of them.
+  coverage configuration shared by all of them. It is `coverageGate()` from
+  `scripts/vitest-coverage-gate.ts`, and `scripts/check-app-registration.sh`
+  refuses a config that writes its own block.
 
 ## The local database
 

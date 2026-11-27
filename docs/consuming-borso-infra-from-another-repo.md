@@ -6,7 +6,7 @@
 
 | Piece | Where | Note |
 | --- | --- | --- |
-| The constructs | `infra/cdk/` as the pnpm package `@borso/infra` | Built with `tsc` from the package's own `tsconfig.build.json`. Nothing at the borso.fr root is read at build time. |
+| The constructs | `infra/cdk/` as the pnpm package `@borso/infra` | Consumed from its TypeScript source, so the consumer runs its CDK app with `tsx` and needs no build step. Nothing at the borso.fr root is read. |
 | A deploy role | to add in `infra/shared/lib/deploy-roles.ts`, with its ARN published at an SSM parameter under `/borso/shared/` | Trusts only the `prod` environment of the consumer, in the subject format its tokens carry. talos had `TalosDeployRole`, trusting `repo:hugoleborso@44852104/talos@1401805496:environment:prod`. See [the subject format](#the-subject-format-of-the-consumers-tokens). |
 | Certificate, zone, SSM values | the `borso-shared` and `borso-shared-certs` stacks | `cert-borso-fr-arn` covers `borso.fr` and `*.borso.fr`, so `talos.borso.fr` needs no new certificate. |
 | The alias preflight | `scripts/preflight-cloudfront-aliases.sh` | A plain bash script; it needs `aws` and `jq` and nothing from the borso.fr workspace. |
@@ -84,8 +84,8 @@ Run every pnpm command from the consumer's root, with `--filter`. `vendor/borso.
   "private": true,
   "type": "module",
   "scripts": {
-    "synth": "pnpm --filter @borso/infra run build && cdk synth --all",
-    "deploy": "pnpm --filter @borso/infra run build && cdk synth --all && ../vendor/borso.fr/scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never"
+    "synth": "cdk synth --all",
+    "deploy": "cdk synth --all && ../vendor/borso.fr/scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never"
   },
   "dependencies": { "@borso/infra": "workspace:*" },
   "devDependencies": {

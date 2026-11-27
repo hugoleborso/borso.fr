@@ -282,8 +282,6 @@ jobs:
           cache: pnpm
       - if: steps.plan.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
-      - if: steps.plan.outputs.skip != 'true'
-        run: pnpm --filter @borso/infra build
       # Open a GitHub Deployment so the PR sidebar shows the native
       # "Deployments" panel (Vercel/Netlify-style). Marked transient +
       # non-production so closing the PR auto-deactivates it. The payload is
@@ -473,7 +471,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}

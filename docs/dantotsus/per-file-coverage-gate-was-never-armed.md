@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: local
 severity: high
 related-pr: '#40'
-fix-commits: [0bf0ad517b]
+fix-commits: [0bf0ad517b, self]
 eradication-level: 1
-eradication-paths: [.github/workflows/ci.yml, apps/borso-fr/vitest.config.ts]
+eradication-paths: [scripts/vitest-coverage-gate.ts, scripts/check-app-registration.sh]
 time-to-detect: months
 tags: [vitest, coverage, gates, ci, testing, purity]
 zone: .github/workflows/ci.yml
@@ -83,6 +83,10 @@ tests had never gated a pull request.
   one database would leave each teardown blind to the other's tables.
 
 ## Eradication
+
+**Now, level 1.** Every `vitest.config.ts` sets `coverage: coverageGate(...)` from `scripts/vitest-coverage-gate.ts`, which owns the provider, the reporter, the per-run `reportsDirectory`, the per-file thresholds and the include glob built from `GATED_FILE_SUFFIXES`. `eslint-rules/impurity.js` builds `TESTED_FILE_PATTERN` from the same `GATED_FILE_SUFFIXES`, so the sibling-test rule and the coverage gate cannot name different suffixes. Section 2 of `scripts/check-coupled-lists.sh` is deleted. `scripts/check-app-registration.sh` refuses an app whose `vitest.config.ts` writes its own coverage block.
+
+The rung recorded below is what held before; it is gone.
 
 **Level 1 — structural.** The gate is now on the path CI takes, and it was
 proven to bite rather than assumed to. A deliberately unreachable branch was

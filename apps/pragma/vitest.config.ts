@@ -1,7 +1,6 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { coverageGate } from '../../scripts/vitest-coverage-gate';
 
 const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
 
@@ -43,30 +42,13 @@ const workspaceAliases = {
  * @Blueprint workspace-test-config
  * @BlueprintName Workspace Test Configuration
  * @BlueprintUsage Use for the vitest configuration of a full stack workspace, where fast pure tests and serial database tests have to share one run.
- * @BlueprintDescription Declares the two suites as projects rather than as separate configurations, so one command covers both, and gives each an explicit `sequence.groupOrder` because vitest refuses to schedule projects that disagree on `maxWorkers` inside a single group and aborts the whole run before a test executes. Coverage sits above the projects, since a run has one coverage configuration shared by all of them, and its per-file thresholds name the pure files rather than the whole tree.
+ * @BlueprintDescription Declares the two suites as projects rather than as separate configurations, so one command covers both, and gives each an explicit `sequence.groupOrder` because vitest refuses to schedule projects that disagree on `maxWorkers` inside a single group and aborts the whole run before a test executes. Coverage sits above the projects, since a run has one coverage configuration shared by all of them, and it is `coverageGate()` from `scripts/vitest-coverage-gate.ts`, whose per-file thresholds name the gated files rather than the whole tree.
  */
 export default defineConfig({
   resolve: { alias: workspaceAliases },
   test: {
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
-    coverage: {
-      provider: 'v8',
-      reporter: [['text', { skipFull: false }]],
-      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
-      include: [
-        'domain/**/*.core.ts',
-        'api/src/**/*.core.ts',
-        'api/src/**/*.utils.ts',
-        'api/src/**/*.adapter.ts',
-        'api/src/**/*.schema.ts',
-        'site/src/**/*.core.ts',
-        'site/src/**/*.utils.ts',
-        'site/src/**/*.adapter.ts',
-        'scripts/**/*.core.ts',
-        'scripts/**/*.adapter.ts',
-      ],
-      thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
-    },
+    coverage: coverageGate(),
     projects: [
       {
         resolve: { alias: workspaceAliases },

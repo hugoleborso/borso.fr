@@ -42,9 +42,27 @@ describe('eradication: every app `destroy` script chains the same builds as `dep
   it.each(appNames)('%s/package.json: destroy chains the build', (appName) => {
     const pkg = JSON.parse(fs.readFileSync(path.join(APPS_DIR, appName, 'package.json'), 'utf-8'));
     const destroy: string = pkg.scripts?.destroy ?? '';
-    expect(destroy).toContain('pnpm --filter @borso/infra run build');
     expect(destroy).toContain('pnpm build');
     expect(destroy).toContain('cdk destroy');
+  });
+});
+
+// @FollowsBlueprint test-artifact-audit
+describe('eradication: @borso/infra is consumed from its source, so no build output can go stale', () => {
+  const manifest: unknown = JSON.parse(
+    fs.readFileSync(path.resolve(HERE, '../../package.json'), 'utf-8'),
+  );
+
+  it('exports src/index.ts and nothing else', () => {
+    expect(isObject(manifest) && manifest.exports).toStrictEqual({ '.': './src/index.ts' });
+  });
+
+  it('declares no main, types or build script that a consumer could reach instead', () => {
+    expect(isObject(manifest) && manifest.main).toBeUndefined();
+    expect(isObject(manifest) && manifest.types).toBeUndefined();
+    expect(
+      isObject(manifest) && isObject(manifest.scripts) && manifest.scripts.build,
+    ).toBeUndefined();
   });
 });
 

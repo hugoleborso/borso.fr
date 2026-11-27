@@ -42,15 +42,6 @@ if [ "${#typescript_files[@]}" -eq 0 ]; then
   exec node_modules/.bin/oxlint --report-unused-disable-directives-severity=off "$@"
 fi
 
-for path in "${typescript_files[@]}"; do
-  case "$path" in
-    apps/*/cdk/* | infra/shared/*)
-      scripts/ensure-infra-built.sh
-      break
-      ;;
-  esac
-done
-
 overlay="$(mktemp -d)"
 cleanup() { rm -rf "$overlay"; }
 trap cleanup EXIT

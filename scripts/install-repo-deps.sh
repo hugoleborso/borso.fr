@@ -57,21 +57,7 @@ fi
 log "running pnpm install"
 pnpm install --frozen-lockfile
 
-# 3b. Build @borso/infra. Its consumers import it by package entry, so every
-# app's `cdk/` typecheck — and every `cdk/test/stack.test.ts` — fails with
-# "Cannot find module '@borso/infra'" until `dist/` exists. CI builds it before
-# `pnpm -r typecheck` and again in each test job; a fresh session starts from a
-# clean checkout and had no equivalent, so the first typecheck of a session was
-# red for a reason unrelated to whatever was being changed.
-#
-# Built unconditionally rather than guarded on `dist/` existing, because a
-# *stale* dist is its own hazard — see
-# docs/dantotsus/shared-deploy-stale-dist.md.
-log "building @borso/infra (its dist is what app cdk typechecks resolve)"
-pnpm --filter @borso/infra run build ||
-  note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
-
-# 3c. Full history. A hosted session can start from a shallow clone, and then
+# 3b. Full history. A hosted session can start from a shallow clone, and then
 # every commit older than the cut-off is absent: a dantotsu audit read 53 fix
 # commits as dangling until someone ran the fetch by hand. The dantotsu check
 # refuses a shallow clone; this makes sure a session never starts in one.

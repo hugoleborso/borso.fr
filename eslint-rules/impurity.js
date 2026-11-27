@@ -1,5 +1,7 @@
-const PURE_FILE_PATTERN = /\.(core|utils)\.tsx?$/;
-const TESTED_FILE_PATTERN = /\.(core|utils|adapter|schema)\.tsx?$/;
+import { GATED_FILE_SUFFIXES, PURE_FILE_SUFFIXES } from '../scripts/vitest-coverage-gate.ts';
+
+const PURE_FILE_PATTERN = new RegExp(`\\.(${PURE_FILE_SUFFIXES.join('|')})\\.tsx?$`);
+const TESTED_FILE_PATTERN = new RegExp(`\\.(${GATED_FILE_SUFFIXES.join('|')})\\.tsx?$`);
 const TEST_FILE_PATTERN = /\.(test|spec|test-utils)\.[jt]sx?$/;
 const TEST_HARNESS_FOLDER_PATTERN = /(^|\/)test\//;
 const CONTROLLER_FILE_PATTERN = /\.controller\.ts$/;

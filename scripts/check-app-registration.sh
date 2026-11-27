@@ -40,6 +40,17 @@ for app_directory in apps/*/; do
     missing=$((missing + 1))
   fi
 
+  # The coverage gate, its per-run folder and its suffix list live in one
+  # preset. An app that writes its own block drifts from the sibling-test rule
+  # and shares one scratch folder between runs. See
+  # docs/dantotsus/two-coverage-runs-shared-one-scratch-folder.md.
+  if [ -f "${app_directory}vitest.config.ts" ] &&
+    ! grep -q 'coverage: coverageGate(' "${app_directory}vitest.config.ts"; then
+    echo "[check-app-registration] $slug/vitest.config.ts does not take its coverage from coverageGate." >&2
+    echo "    Import it from scripts/vitest-coverage-gate.ts and set coverage: coverageGate()." >&2
+    missing=$((missing + 1))
+  fi
+
   # An app that owns migrations must apply them when `pnpm dev` starts. Booting
   # the cluster alone serves an API against an empty schema, where every route
   # answers 500 "relation does not exist"; pragma shipped that way, and
