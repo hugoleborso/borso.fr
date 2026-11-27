@@ -18,8 +18,9 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   display (`readInstallContext`), it redirects to `/app`, the ERP home.
 - Beside "Je serai là !", before and after the sign-up, "Ajouter à mon
   calendrier" opens the concert's calendar file in place
-  (`GET /api/concert-registrations/concerts/:sessionId/calendar`). On a
-  phone it shows its calendar icon only. The file's rules are in
+  (`GET /api/concert-registrations/concerts/:sessionId/calendar`). Below
+  1024 px it shows its calendar icon only. From 768 px the ticket's buttons
+  wrap to a second row rather than leave the ticket. The file's rules are in
   `api/src/concert-registrations/INVARIANTS.md`.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.

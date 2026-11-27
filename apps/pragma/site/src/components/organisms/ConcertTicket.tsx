@@ -45,7 +45,7 @@ const VENUE_LINK_CLASS =
   'flex items-center gap-2 font-display italic underline decoration-1 underline-offset-4';
 const ACTIONS_CLASS =
   'fixed inset-x-0 bottom-0 z-10 flex gap-2.5 bg-linear-to-t from-paper from-80% to-transparent px-5 pt-4 ' +
-  'pb-[max(28px,env(safe-area-inset-bottom))] md:static md:mt-auto md:bg-none md:px-12 md:pt-9 md:pb-9';
+  'pb-[max(28px,env(safe-area-inset-bottom))] md:static md:mt-auto md:flex-wrap md:bg-none md:px-12 md:pt-9 md:pb-9';
 const COUPON_CLASS =
   'block p-2 bg-highlight text-on-highlight md:rounded-bl-none md:rounded-br-sheet-inset';
 const POSTER_IMAGE_CLASS = 'block h-auto w-full object-contain';

@@ -40,7 +40,9 @@ const WIDE_BUTTON_CLASS = 'min-h-14 w-full md:w-auto md:px-8.5';
 const REGISTERED_CLASS =
   'm-0 flex min-h-14 flex-[1.3] items-center justify-center gap-2 rounded-pill bg-good-soft ' +
   'font-semibold text-good md:flex-none md:px-8';
-const CALENDAR_CLASS = 'min-h-14 shrink-0 border border-rule-strong bg-paper max-sm:w-14 md:px-6';
+const CALENDAR_CLASS =
+  'min-h-14 shrink-0 border border-rule-strong bg-paper max-lg:w-14 max-lg:px-0 lg:px-6';
+const CALENDAR_LABEL_CLASS = 'max-lg:sr-only';
 const FRIEND_CLASS =
   'min-h-14 flex-1 border border-rule-strong bg-paper font-medium md:flex-none md:px-6';
 
@@ -109,11 +111,10 @@ export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Elem
       opensInPlace
       variant="quiet"
       size="lg"
-      labelDisplay="wide-only"
       className={CALENDAR_CLASS}
       mark={<Icon name="calendar" size="md" />}
     >
-      {t('concerts.addToCalendar')}
+      <span className={CALENDAR_LABEL_CLASS}>{t('concerts.addToCalendar')}</span>
     </ButtonAnchor>
   );
 

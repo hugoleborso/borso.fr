@@ -1,10 +1,5 @@
 import type { JSX, ReactNode } from 'react';
-import {
-  type ButtonVariantProps,
-  buttonVariants,
-  DEFAULT_BUTTON_VARIANT,
-  PHONE_HIDDEN_LABEL_CLASS,
-} from './button.variants';
+import { type ButtonVariantProps, buttonVariants, DEFAULT_BUTTON_VARIANT } from './button.variants';
 import { composeClassName } from './class-name.utils';
 
 export interface ButtonAnchorProps extends ButtonVariantProps {
@@ -24,24 +19,18 @@ export function ButtonAnchor({
   children,
   variant,
   size,
-  labelDisplay,
   opensInPlace = false,
   className,
 }: ButtonAnchorProps): JSX.Element {
-  const isLabelHiddenOnPhone = labelDisplay === 'wide-only';
   return (
     <a
       href={href}
       {...(opensInPlace ? {} : NEW_TAB_ATTRIBUTES)}
       data-variant={variant ?? DEFAULT_BUTTON_VARIANT}
-      className={composeClassName(buttonVariants({ variant, size, labelDisplay }), className)}
+      className={composeClassName(buttonVariants({ variant, size }), className)}
     >
       {mark}
-      {isLabelHiddenOnPhone ? (
-        <span className={PHONE_HIDDEN_LABEL_CLASS}>{children}</span>
-      ) : (
-        children
-      )}
+      {children}
     </a>
   );
 }

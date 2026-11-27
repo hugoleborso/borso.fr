@@ -10,8 +10,11 @@ one fans see. The members' home at `/app` is out of scope.
    (English: "Add to my calendar"), through i18n.
 2. It shows before the sign-up and after it, beside "Inscrit·e" and
    "Un·e ami·e".
-3. On a phone (below 640 px) it shows its calendar icon only, keeps the
-   label as its accessible name, and the bar still fits at 375 px.
+3. Below 1024 px it shows its calendar icon only, because the ticket's
+   right panel is too narrow there for the French label. It keeps the label
+   as its accessible name. The buttons stay inside the ticket at every
+   width, before and after the sign-up, and wrap to a second row when they
+   do not fit on one.
 4. A tap opens the concert's calendar file in the same tab, so the phone
    offers to add it to the calendar app.
 
