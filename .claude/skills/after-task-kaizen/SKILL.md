@@ -66,6 +66,15 @@ Catalogue **every** moment of friction, one row each, from these sources:
   When no tool can read the transcript, say so in a row and ask the operator
   to paste their messages.
 
+  **Start from the place, not the sentence.** A line is what its writer saw,
+  then `(where: ...)`, the command, URL, screen or file and line where they saw
+  it. `scripts/kaizen.sh` refuses a line without a place, and asks for what was
+  seen rather than why. The writer logs at the moment they already hold a guess
+  about the cause, and a guess written into the line steers the sweep toward
+  the eradication it implies. So go to the place, look again, and ask why from
+  what you find there. Treat any cause a line still states, older lines
+  included, as a hypothesis to test, never as the row's cause.
+
   **Read the writer, not only the line.** One agent hitting a wall is local.
   Several agents hitting the same wall is systemic and calls for a change to
   whatever they all read. Group the lines by writer and put the count in the

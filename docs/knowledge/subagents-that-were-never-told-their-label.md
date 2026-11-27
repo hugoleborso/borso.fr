@@ -17,7 +17,7 @@ and returned fifteen findings. It hit friction doing that: reading a rule out of
 mismatch. None of it was logged, because its prompt never carried the line
 CLAUDE.md asks for:
 
-> log any friction as you hit it: `scripts/kaizen.sh --from <your-label> "<one sentence>"`
+> log any friction as you hit it: `scripts/kaizen.sh --from <your-label> --where "<command, URL or file:line>" "<what you saw>"`
 
 **What that costs is not the entries — it is the arithmetic.** One agent hitting
 a wall is a local problem. Four agents hitting the same wall is a systemic one,

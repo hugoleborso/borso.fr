@@ -54,7 +54,13 @@ function logRefusals(outcome: HookOutcome): void {
   const isLoggingRefusals = process.env['KAIZEN_LOG_REFUSALS'] !== '0';
   if (!isLoggingRefusals || !existsSync(join(PROJECT_DIRECTORY, 'KAIZEN.md'))) return;
   for (const { rule, summary } of outcome.refusals) {
-    runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), ['--from', `hook:${rule}`, summary]);
+    runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), [
+      '--from',
+      `hook:${rule}`,
+      '--where',
+      `the ${rule} hook refusal`,
+      summary,
+    ]);
   }
 }
 

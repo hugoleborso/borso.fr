@@ -79,7 +79,7 @@ They cover replies, documents, commits and PR bodies.
 
 - Two or more agents that write code at the same time each run with `isolation: "worktree"`, so none sees another's half-written files. Subagents never commit. While an agent writes in the shared checkout, stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
 - Run `scripts/reports.sh` once, after every agent has finished.
-- Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> "<the problem, one sentence>"`. Put that line in every brief.
+- Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> --where "<command, URL or file:line>" "<what it saw>"`. Put that line in every brief.
 
 ## Commits, pull requests, merges
 
@@ -93,7 +93,7 @@ They cover replies, documents, commits and PR bodies.
 
 ## Self-improvement loop
 
-Log friction as it happens, the problem only, with `scripts/kaizen.sh "<one sentence>"`. Before the PR opens, run `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy, because the container is reclaimed when the session ends.
+Log friction as it happens with `scripts/kaizen.sh --where "<command, URL or file:line>" "<what you saw>"`. Write what you saw and where, never the cause or the fix: the sweep starts from the bare observation, and a cause written in the moment steers it toward the guess you already had. Before the PR opens, run `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy, because the container is reclaimed when the session ends.
 
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
