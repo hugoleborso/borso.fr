@@ -22,3 +22,5 @@ Session: 9c2962d1-4876-40d6-aed0-4c98e04db32b
 - [2026-11-27 10:40] `skill-calls` list_events with kinds assistant mixes subagent events with the main thread and 11 of 13 pages overflowed to files, so auditing one session's skill calls needs a custom jq summarizer and ~14 calls.
 - [2026-11-27 10:45] `main` The container's node_modules lacked mailchecker, so pragma's type check failed until pnpm install ran
 - [2026-11-27 10:45] `main` test-seed.service.ts sat at exactly 300 lines, so adding one seeded field forced moving a seeder to its own file
+- [2026-11-27 10:50] `hook:api-validation` opened a pull request changing an API without a technical-validation report
+- [2026-11-27 10:59] `technical-validator` Root vitest --changed finds no test for a change to an entry script under scripts/ (operator-messages.ts, check-dantotsu-front-matter.ts), so category C cannot show such a fix ran except by a hand-built probe.
