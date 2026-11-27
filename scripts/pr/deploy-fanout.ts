@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 
 import { isProductionInertChange, manifestPathOf } from '../dependencies/check-only-change.core';
+import { isCommentOnlyEdit } from '../dependencies/comment-only-change.core';
 import { decideDeployFanout, describeDeployFanout } from './deploy-fanout.core';
 
 const DEFAULT_BASE = 'origin/main';
@@ -42,11 +43,21 @@ function readManifestAt(revision: string, directory: string): unknown {
 
 const mergeBase = git(['merge-base', base, head]);
 
+function readFileAt(revision: string, path: string): string | null {
+  try {
+    return execFileSync('git', ['show', `${revision}:${path}`], { encoding: 'utf8' });
+  } catch {
+    return null;
+  }
+}
+
 function isProductionInert(directory: string, changedFiles: readonly string[]): boolean {
-  return isProductionInertChange(directory, changedFiles, {
-    before: readManifestAt(mergeBase, directory),
-    after: readManifestAt(head, directory),
-  });
+  return isProductionInertChange(
+    directory,
+    changedFiles,
+    { before: readManifestAt(mergeBase, directory), after: readManifestAt(head, directory) },
+    (path) => isCommentOnlyEdit(path, readFileAt(mergeBase, path), readFileAt(head, path)),
+  );
 }
 
 process.stdout.write(

@@ -85,7 +85,7 @@ They cover replies, documents, commits and PR bodies.
 
 - Conventional commits. Scopes are `banana-rush`, `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `skull-king`, `talos`, `infra`, `ci`, `docs`, `deps` and `meta` (skills, hooks, ADRs, `docs/features/meta/`).
 - Write ADRs with `/adr`. They are named `docs/adr/<YYYY-MM-DDTHHMM>-<slug>.md`, in UTC.
-- Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, upper-case documents such as `README.md` or test configs. A merge skips the same changes, and a change to an app's test seed under `api/src/__test/` too.
+- Open pull requests with `/open-pr`. Previews deploy per PR, except for `talos` and a change that touches only an app's tests, comments, upper-case documents such as `README.md` or test configs. A merge skips the same changes, and a change to an app's test seed under `api/src/__test/` too.
 - On a watched pull request, act on CI results, the merge state and what `hugoleborso`, the operator's login, writes.
 - Once a change is done, front-end above all, open its pull request without asking. The preview it deploys is how the operator validates.
 - Generated reports are not committed. Run `scripts/reports.sh [blueprints|standards|maps|all]` before reading one. The architecture maps build only when the operator dispatches `.github/workflows/architecture.yml`.

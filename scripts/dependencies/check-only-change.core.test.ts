@@ -234,4 +234,20 @@ describe('isProductionInertChange', () => {
   it('keeps a seed change a tooling-only change, so a preview still deploys for it', () => {
     expect(isToolingOnlyChange(directory, [seed], unchanged)).toBe(false);
   });
+
+  it('drops a file whose edit the caller reads as comment only, in production and preview alike', () => {
+    const card = 'apps/pragma/site/src/components/organisms/SongCard.tsx';
+    const isCommentOnly = (path: string): boolean => path === card;
+
+    expect(isProductionInertChange(directory, [card], unchanged, isCommentOnly)).toBe(true);
+    expect(isToolingOnlyChange(directory, [card], unchanged, isCommentOnly)).toBe(true);
+    expect(
+      isToolingOnlyChange(
+        directory,
+        [card, 'apps/pragma/site/src/App.tsx'],
+        unchanged,
+        isCommentOnly,
+      ),
+    ).toBe(false);
+  });
 });
