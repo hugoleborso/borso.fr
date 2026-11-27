@@ -2,6 +2,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { isCommentOnlyEdit } from './comment-only-change.core';
 import {
   isCheckOnlyChange,
   isProductionInertChange,
@@ -16,7 +17,8 @@ const USAGE = `usage:
   drop-check-only-changes.ts <base-revision> <changes-json> [--tooling|--production]
       prints <changes-json> without the app and infra keys whose only change since
       <base-revision> is a check-only script in their package.json; with --tooling,
-      also without those whose every change is a test, an upper-case document or a test config;
+      also without those whose every change is a test, an upper-case document, a test config
+      or a comment in a script;
       with --production, also without those whose every change is one of those or the
       preview-only test seed under apps/<app>/api/src/__test/`;
 const RULE_BY_FLAG = new Map([
@@ -49,14 +51,28 @@ function readManifestInWorkingTree(directory: string): unknown {
   return parsed;
 }
 
+function readFileAt(base: string, path: string): string | null {
+  try {
+    return execFileSync('git', ['show', `${base}:${path}`], { encoding: 'utf8' });
+  } catch {
+    return null;
+  }
+}
+
+function readFileInWorkingTree(path: string): string | null {
+  return existsSync(path) ? readFileSync(path, 'utf8') : null;
+}
+
 function isDroppable(base: string, key: string, flag: string | undefined): boolean {
   const directory = directoryOf(key);
   if (directory === null) return false;
   const rule = (flag === undefined ? undefined : RULE_BY_FLAG.get(flag)) ?? isCheckOnlyChange;
-  return rule(directory, listChangedFiles(base, directory), {
-    before: readManifestAt(base, directory),
-    after: readManifestInWorkingTree(directory),
-  });
+  return rule(
+    directory,
+    listChangedFiles(base, directory),
+    { before: readManifestAt(base, directory), after: readManifestInWorkingTree(directory) },
+    (path) => isCommentOnlyEdit(path, readFileAt(base, path), readFileInWorkingTree(path)),
+  );
 }
 
 const [base, changesJson, flag] = process.argv.slice(2);

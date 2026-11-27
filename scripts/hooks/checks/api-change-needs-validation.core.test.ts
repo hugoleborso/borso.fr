@@ -14,6 +14,7 @@ const VISUAL_REPORT = 'docs/features/pragma/sign-up/validation/visual-validation
 function buildWorld(
   changed: readonly string[],
   isHeadOnOrigin = true,
+  shownFiles: Readonly<Record<string, string>> = {},
 ): HookWorld & { readonly calls: string[][] } {
   const calls: string[][] = [];
   return {
@@ -25,6 +26,11 @@ function buildWorld(
       calls.push([command, ...args]);
       if (args[0] === 'rev-parse')
         return { status: isHeadOnOrigin ? 0 : 1, stdout: '', stderr: '' };
+      if (args[0] === 'merge-base') return { status: 0, stdout: 'base\n', stderr: '' };
+      if (command === 'git' && args[0] === 'show') {
+        const shown = shownFiles[args[1] ?? ''];
+        return { status: shown === undefined ? 128 : 0, stdout: shown ?? '', stderr: '' };
+      }
       return { status: 0, stdout: `${changed.join('\n')}\n`, stderr: '' };
     },
   };
@@ -76,6 +82,7 @@ describe('apiChangeNeedsValidation', () => {
       ['git', 'fetch', '-q', 'origin', 'main', 'topic'],
       ['git', 'rev-parse', '-q', '--verify', 'origin/topic'],
       ['git', 'diff', '--name-only', 'origin/main...origin/topic'],
+      ['git', 'merge-base', 'origin/main', 'origin/topic'],
     ]);
   });
 
@@ -84,7 +91,7 @@ describe('apiChangeNeedsValidation', () => {
 
     apiChangeNeedsValidation.run(buildPullRequestInput('topic'), world);
 
-    expect(world.calls.at(-1)).toEqual(['git', 'diff', '--name-only', 'origin/main...HEAD']);
+    expect(world.calls.at(-1)).toEqual(['git', 'merge-base', 'origin/main', 'HEAD']);
   });
 
   it('refuses a front-end change with no visual-validation report', () => {
@@ -127,7 +134,10 @@ describe('apiChangeNeedsValidation', () => {
     const world = buildWorld([]);
 
     expect(apiChangeNeedsValidation.run(buildBashInput('gh pr create --fill\n'), world)).toBe(PASS);
-    expect(world.calls).toEqual([['git', 'diff', '--name-only', 'origin/main...HEAD']]);
+    expect(world.calls).toEqual([
+      ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+      ['git', 'merge-base', 'origin/main', 'HEAD'],
+    ]);
   });
 
   it.each([
@@ -147,5 +157,31 @@ describe('apiChangeNeedsValidation', () => {
 
     expect(apiChangeNeedsValidation.run(input, world)).toBe(PASS);
     expect(world.calls).toEqual([]);
+  });
+
+  it('lets a change to comments alone through, as the PR #421 sweep needed for a blueprint line', () => {
+    const page = 'apps/pragma/site/src/Page.tsx';
+    const route = 'apps/pragma/api/src/a.ts';
+    const world = buildWorld([page, route], true, {
+      [`base:${page}`]: '// owns no state\nexport const Page = 1;\n',
+      [`origin/topic:${page}`]: '// holds at most local view state\nexport const Page = 1;\n',
+      [`base:${route}`]: 'export const a = 1; // one\n',
+      [`origin/topic:${route}`]: 'export const a = 1; // two\n',
+    });
+
+    expect(apiChangeNeedsValidation.run(buildPullRequestInput('topic'), world)).toBe(PASS);
+  });
+
+  it('still refuses a front-end file whose code changed beside its comment', () => {
+    const page = 'apps/pragma/site/src/Page.tsx';
+    const world = buildWorld([page], true, {
+      [`base:${page}`]: '// one\nexport const Page = 1;\n',
+      [`origin/topic:${page}`]: '// two\nexport const Page = 2;\n',
+    });
+
+    expect(apiChangeNeedsValidation.run(buildPullRequestInput('topic'), world)).toMatchObject({
+      kind: 'refuse',
+      rule: 'visual-validation',
+    });
   });
 });

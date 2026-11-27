@@ -1,5 +1,6 @@
 // @FollowsBlueprint utils-pure-module
 import { type Check, type HookInput, type HookWorld, PASS, refuse } from '../check.core.ts';
+import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
 import { readHeadBranch, isRunningPullRequestCreate, stripHeredocs } from './gh-pr-create.core.ts';
 
 const API_FILE = /^apps\/[^/]+\/api\//u;
@@ -29,6 +30,16 @@ function resolveComparedHead(head: string, world: HookWorld): string {
   return verified.status === 0 ? `origin/${head}` : 'HEAD';
 }
 
+function readFileAt(revision: string, path: string, world: HookWorld): string | null {
+  const shown = world.run('git', ['show', `${revision}:${path}`]);
+  return shown.status === 0 ? shown.stdout : null;
+}
+
+function changesCode(base: string, head: string, world: HookWorld): (path: string) => boolean {
+  return (path) =>
+    !isCommentOnlyEdit(path, readFileAt(base, path, world), readFileAt(head, path, world));
+}
+
 function composeFirstFiles(files: readonly string[]): string {
   return files
     .slice(0, LISTED_FILES)
@@ -45,9 +56,11 @@ export const apiChangeNeedsValidation: Check = {
     const comparedHead = resolveComparedHead(head, world);
     const { stdout } = world.run('git', ['diff', '--name-only', `origin/main...${comparedHead}`]);
     const changed = stdout.split('\n');
-    const apiFiles = changed.filter((path) => API_FILE.test(path));
+    const base = world.run('git', ['merge-base', 'origin/main', comparedHead]).stdout.trim();
+    const isCodeChange = changesCode(base, comparedHead, world);
+    const apiFiles = changed.filter((path) => API_FILE.test(path) && isCodeChange(path));
     const siteFiles = changed.filter(
-      (path) => SITE_FILE.test(path) && !SITE_FILE_EXEMPTION.test(path),
+      (path) => SITE_FILE.test(path) && !SITE_FILE_EXEMPTION.test(path) && isCodeChange(path),
     );
     if (apiFiles.length > 0 && !changed.some((path) => TECHNICAL_REPORT.test(path))) {
       return refuse(

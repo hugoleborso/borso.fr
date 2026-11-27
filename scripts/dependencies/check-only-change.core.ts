@@ -73,15 +73,22 @@ function isProductionInertFile(path: string): boolean {
   return isToolingFile(path) || isPreviewOnlyFile(path);
 }
 
+export type IsInertEdit = (path: string) => boolean;
+
+const isNeverInertEdit: IsInertEdit = () => false;
+
 function isEveryChangeOf(
   isInertFile: (path: string) => boolean,
   directory: string,
   changedFiles: readonly string[],
   manifests: { readonly before: unknown; readonly after: unknown },
+  isInertEdit: IsInertEdit,
 ): boolean {
   const manifestPath = manifestPathOf(directory);
   if (changedFiles.length === 0) return false;
-  if (!changedFiles.every((file) => file === manifestPath || isInertFile(file))) return false;
+  const isInert = (file: string): boolean =>
+    file === manifestPath || isInertFile(file) || isInertEdit(file);
+  if (!changedFiles.every(isInert)) return false;
   return hasOnlyCheckScriptChanges(manifests.before, manifests.after);
 }
 
@@ -89,14 +96,16 @@ export function isToolingOnlyChange(
   directory: string,
   changedFiles: readonly string[],
   manifests: { readonly before: unknown; readonly after: unknown },
+  isInertEdit: IsInertEdit = isNeverInertEdit,
 ): boolean {
-  return isEveryChangeOf(isToolingFile, directory, changedFiles, manifests);
+  return isEveryChangeOf(isToolingFile, directory, changedFiles, manifests, isInertEdit);
 }
 
 export function isProductionInertChange(
   directory: string,
   changedFiles: readonly string[],
   manifests: { readonly before: unknown; readonly after: unknown },
+  isInertEdit: IsInertEdit = isNeverInertEdit,
 ): boolean {
-  return isEveryChangeOf(isProductionInertFile, directory, changedFiles, manifests);
+  return isEveryChangeOf(isProductionInertFile, directory, changedFiles, manifests, isInertEdit);
 }
