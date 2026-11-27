@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { isTestFile } from '../../.claude/skills/blueprint/blueprint-utils.js';
+import { isTestFile } from '../test-file.core.js';
 
 export const REPOSITORY_ROOT = process.cwd();
 export const SOURCE_PATH_PATTERN = /^(apps|infra)\/.*\.(ts|tsx)$/;

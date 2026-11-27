@@ -1,6 +1,6 @@
 // @FollowsBlueprint utils-pure-module
 import { type Check, PASS, refuse } from '../check.core.ts';
-import { isTestFile } from '../../../.claude/skills/blueprint/blueprint-utils.ts';
+import { isTestFile } from '../../test-file.core.ts';
 
 const RULE = 'no-hand-drawn-art';
 const SITE_SOURCE = /\/apps\/[^/]+\/site\/src\/.*\.(tsx|ts|svg)$/u;
