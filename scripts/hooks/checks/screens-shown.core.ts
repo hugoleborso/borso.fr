@@ -1,4 +1,5 @@
 // @FollowsBlueprint utils-pure-module
+import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
 import { type Check, type HookInput, type HookWorld, PASS, type Verdict } from '../check.core.ts';
 
 type Row = Readonly<Record<string, unknown>>;
@@ -133,7 +134,20 @@ function hasPushedAScreenUnshown(inputs: string, world: HookWorld): boolean {
     .stdout.split(/\s/u)
     .filter((move) => move !== '');
   if (moves.length !== 2) return false;
-  return SITE_SOURCE.test(world.run('git', ['diff', '--name-only', ...moves.toReversed()]).stdout);
+  const readAt =
+    (path: string) =>
+    (move: string): string | null => {
+      const shown = world.run('git', ['show', `${move}:${path}`]);
+      return shown.status === 0 ? shown.stdout : null;
+    };
+  return world
+    .run('git', ['diff', '--name-only', ...moves.toReversed()])
+    .stdout.split('\n')
+    .some((path) => {
+      if (!SITE_SOURCE.test(path)) return false;
+      const [after, before] = moves.map(readAt(path));
+      return !isCommentOnlyEdit(path, before, after);
+    });
 }
 
 function hasLeftScreenshotsUnpublished(

@@ -39,6 +39,7 @@ interface WorldOptions {
   readonly reflog?: string;
   readonly diff?: string;
   readonly found?: string;
+  readonly shown?: Readonly<Record<string, string>>;
 }
 
 function createWorld(options: WorldOptions): { world: HookWorld; runs: string[][] } {
@@ -51,6 +52,10 @@ function createWorld(options: WorldOptions): { world: HookWorld; runs: string[][
       runs.push([command, ...args]);
       if (command === 'find') return { ...OK, stdout: options.found ?? '' };
       if (args[0] === 'reflog') return { ...OK, stdout: options.reflog ?? '' };
+      if (command === 'git' && args[0] === 'show') {
+        const shown = options.shown?.[args[1] ?? ''];
+        return { status: shown === undefined ? 128 : 0, stdout: shown ?? '', stderr: '' };
+      }
       return { ...OK, stdout: options.diff ?? '' };
     },
   };
@@ -261,6 +266,8 @@ describe('screensShown', () => {
     expect(fake.runs).toEqual([
       ['git', 'reflog', '--format=%H', '-n', '2', '@{upstream}'],
       ['git', 'diff', '--name-only', 'old', 'new'],
+      ['git', 'show', 'new:apps/pragma/site/src/a.tsx'],
+      ['git', 'show', 'old:apps/pragma/site/src/a.tsx'],
     ]);
   });
 
@@ -271,6 +278,23 @@ describe('screensShown', () => {
     expect(judge(lines(PUSHED), { reflog: '', diff: site })).toBe(PASS);
     expect(judge(lines(PUSHED), { reflog: 'one', diff: site })).toBe(PASS);
     expect(judge(lines(PUSHED), { reflog: 'a b c', diff: site })).toBe(PASS);
+  });
+
+  it('lets a push end whose site change rewords a comment and nothing else', () => {
+    const site = 'apps/pragma/site/src/a.tsx';
+    const shown = {
+      [`old:${site}`]: '// one\nexport const a = 1;\n',
+      [`new:${site}`]: '// two\nexport const a = 1;\n',
+    };
+
+    expect(judge(lines(PUSHED), { reflog: 'new old', diff: site, shown })).toBe(PASS);
+    expect(
+      judge(lines(PUSHED), {
+        reflog: 'new old',
+        diff: site,
+        shown: { ...shown, [`new:${site}`]: 'export const a = 2;\n' },
+      }),
+    ).toEqual({ kind: 'block', reason: PUSH_REASON });
   });
 
   it('lets a push end that posted screenshots, and a turn that pushed nothing', () => {
