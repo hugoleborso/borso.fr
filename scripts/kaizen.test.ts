@@ -29,8 +29,9 @@ function kaizenAfter(
 ): { status: number | null; stdout: string; directory: string } {
   const directory = mkdtempSync(join(tmpdir(), 'kaizen-'));
   repositories.push(directory);
+  const { KAIZEN_AGENT: _inheritedWriter, ...inherited } = process.env;
   const environment = {
-    ...process.env,
+    ...inherited,
     GIT_CONFIG_GLOBAL: '/dev/null',
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_AUTHOR_NAME: 'sweep',
@@ -141,5 +142,14 @@ describe('kaizen.sh logging a friction line', () => {
     const refused = kaizenAfter(ONE_COMMIT, 'the list carries a count');
     expect(refused.status).toBe(1);
     expect(existsSync(join(refused.directory, 'KAIZEN.md'))).toBe(false);
+  });
+});
+
+describe('the git hooks that log their own refusals', () => {
+  it.each(['.husky/commit-msg', '.husky/pre-push'])('%s says where with --where', (hook) => {
+    const source = readFileSync(resolve(import.meta.dirname, '..', hook), 'utf8');
+    const calls = source.split('\n').filter((line) => line.includes('scripts/kaizen.sh --from'));
+    expect(calls.length).toBeGreaterThan(0);
+    for (const call of calls) expect(call).toContain('--where');
   });
 });
