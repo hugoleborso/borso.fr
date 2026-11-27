@@ -2,7 +2,7 @@
 import { type Check, type HookInput, type HookWorld, PASS, refuse } from '../check.core.ts';
 import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
 import { readHeadBranch, isRunningPullRequestCreate, stripHeredocs } from './gh-pr-create.core.ts';
-import { isTestFile } from '../../../.claude/skills/blueprint/blueprint-utils.ts';
+import { isTestFile } from '../../test-file.core.ts';
 
 const API_FILE = /^apps\/[^/]+\/api\//u;
 const SITE_FILE = /^apps\/[^/]+\/site\//u;
