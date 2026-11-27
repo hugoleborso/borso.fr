@@ -50,7 +50,7 @@ visible result.
 5. **Read the report.** Give the verdict in one line. On **FAIL**, list the
    failing rows verbatim and stop: the next move is a fix, not a ship. On
    **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim for the
-   PR description.
+   PR description. Add no summary of your own: the operator reads the report.
 6. **Stop the dev server** with `scripts/dev-server.sh stop <app>`, with the
    same `--as` label.
 7. **Keep only FAIL evidence in git.** Move each file a FAIL row cites to
@@ -81,7 +81,9 @@ item goes is `/open-pr`'s *Validation* step and `scripts/pr/check-pr-body.ts`.
 
 - **Every UNVERIFIABLE row, on a `PASS_EXCEPT_UNVERIFIABLE` verdict**: the row
   number, the assertion verbatim, the one-line reason from the report's Notes,
-  and the report path. A PASS needs only the report path.
+  and the report path. A tool gap's reason points at its `docs/knowledge/`
+  entry, and a deferred row's at the other validator's report, so a tool-side
+  limit never reaches main silently. A PASS needs only the report path.
 - **The screenshots, on any verdict.** A published screenshot reaches the
   reviewer through the *Screenshots* comment that
   `.github/workflows/screenshots.yml` posts once `/open-pr` has uploaded it. A

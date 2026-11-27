@@ -55,11 +55,11 @@ If `agent-browser` itself fails, write a single FAIL row titled "Tooling unavail
 
 1. **Read the spec** in full, and `design_path` when given.
 2. **Build the assertion list** before driving the browser, one row per item, in this order:
-   0. **Design-bundle fidelity**, when `docs/features/<app>/<slug>/spec/design-bundle/` exists. For each `.jsx` under `design-bundle/project/src/screens/`, open the prototype (`design-bundle/project/Pragma.html`) and the matching route, save both screenshots as `<screen>-design.png` and `<screen>-impl.png`, and give the screen one row. It PASSes only when the typography stack (computed `font-family`), the layout regions and their order, the affordances, every named CSS variable of `design-bundle/project/src/styles.css`, and the microcopy all match. Token-level matches alone are not fidelity. A FAIL names each divergence concretely. When the prototype and the spec disagree on a visible detail, note the conflict and judge by the prototype.
+   0. **Design-bundle fidelity**, when `docs/features/<app>/<slug>/spec/design-bundle/` exists. For each `.jsx` under `design-bundle/project/src/screens/`, open the prototype (`design-bundle/project/Pragma.html`) and the matching route, save both screenshots as `<screen>-design.png` and `<screen>-impl.png`, and give the screen one row. It PASSes only when all of these match: the typography stack (computed `font-family` on the matching node); the layout regions, their order and comparable spacing; the affordances, such as filter pills with counts, status chips and drag handles, because what the prototype shows the implementation has; every named CSS variable of `design-bundle/project/src/styles.css`, declared in the app's token stylesheet and referenced where the prototype references it; and the microcopy, verbatim through its i18n keys. Token-level matches alone are not fidelity. A FAIL names each divergence concretely, such as "filter pills absent on `/catalog`". When the prototype and the spec disagree on a visible detail, note the conflict and judge by the prototype.
    1. **Result.** Read each paragraph as a list, write the list out, and give every item a row. One row per artefact the screen carries, never one per interaction: a row asking whether a control responds covers that control only. An item you cannot reach is UNVERIFIABLE, never absent.
    2. **Use cases, happy path**: each numbered step, with a concrete browser action.
    3. **Edge cases** and **error cases**: each bullet.
-   4. **Q.O.D.** rows whose decision the user can see. Skip engineering decisions, which are `/technical-validation`'s.
+   4. **Q.O.D.** rows whose decision the user can see, such as a default mode, URL behaviour, a mobile affordance or an accessibility decision. Skip engineering decisions, which are `/technical-validation`'s.
    5. **Reachability of every write the surface implies.** For each screen that lists a kind of record, check the screen itself offers a path to create one, and follow it, even when the spec does not name it. A spec written from its author's mental model rarely names the door the author already knows. A FAIL names the surface and the record it cannot create.
 
    Skip the Production strategy section, an observability concern. A spec in the short form has only a goal, a data shape, behaviour sections under any heading, and *Out of scope*. Take one row per behaviour bullet that only a running browser can show (motion, timing, counts of what is seen, layout at a width), which `technical-validator` routes to you. An empty list from a short-form spec is a misreading, not a result.
@@ -72,8 +72,10 @@ If `agent-browser` itself fails, write a single FAIL row titled "Tooling unavail
    - Dark mode: `agent-browser set media dark`. Reduced motion: `agent-browser set media light reduced-motion`.
    - Touch: never `set device` or `click`, which give no touch events and no coarse pointer. Run `scripts/phone.sh start <url>`, then `scripts/phone.sh touch '<css selector>'`, which taps at 375 × 812 and exits 1 unless a touch reached the element. `agent-browser --session phone screenshot …` shows the result. An assertion needing touch you could not run is UNVERIFIABLE.
    - URL state: open with its params, screenshot, `agent-browser back`, re-check.
+   - Inputs: empty, very large, invalid URL params, and keyboard accidents such as Escape or Enter mid-flow.
+   - Third-party failures: `agent-browser network route <url> --abort`, or `agent-browser set offline on`.
 6. **Write the report** at `report_path`, format below.
-7. **Log friction** that is not a finding about the app, one line each as you hit it: what you saw and where, never why. A validator's friction is the most easily lost, because the report is about the app.
+7. **Log friction** that is not a finding about the app, one line each as you hit it: what you saw and where, never why. It counts a tool that failed in a way that named the wrong problem, a spec assertion you could not turn into a browser action, and a harness limit you hit. A validator's friction is the most easily lost, because the report is about the app.
 
    ```bash
    scripts/kaizen.sh --from visual-validator --where "<URL, screen or command>" "<what you saw>"
@@ -110,7 +112,7 @@ Write exactly this layout to `report_path`:
 ## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
 ```
 
-Cite a screenshot of a PASS or UNVERIFIABLE row by its published URL, `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>`, with `<n>` left literal. Cite one a FAIL row references as `./visual-validation-<timestamp>/<file>`, where the skill moves it to be committed. Every PASS references an evidence file or a deterministic check. "Looks right" is not evidence.
+Cite a screenshot of a PASS or UNVERIFIABLE row by its published URL, `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>`, with `<n>` left literal. Cite one a FAIL row references as `./visual-validation-<timestamp>/<file>`, where the skill moves it to be committed. Every PASS references an evidence file or a deterministic check. "Looks right" is not evidence, so a row you believe but cannot back is UNVERIFIABLE.
 
 ## Verdict semantics
 
