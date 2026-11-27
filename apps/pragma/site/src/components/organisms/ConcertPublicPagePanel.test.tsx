@@ -97,6 +97,14 @@ describe('the public page tab of a concert', () => {
     for (const stub of activeStubs.splice(0)) stub.restore();
   });
 
+  it('opens the visitor QR code from the top of the tab', () => {
+    renderPanel();
+    const [firstButton] = screen.getAllByRole('button');
+    expect(firstButton?.textContent).toBe('Visitor QR code');
+    fireEvent.click(screen.getByRole('button', { name: 'Visitor QR code' }));
+    expect(screen.getByRole('dialog', { name: 'Visitor QR code' })).toBeTruthy();
+  });
+
   it('removes a registration once confirmed, so it leaves the list and the draw', async () => {
     const fetchStub = renderPanel([LEA, MAX]);
     fireEvent.click(await screen.findByRole('button', { name: 'Remove Léa' }));

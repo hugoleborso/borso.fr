@@ -1163,5 +1163,9 @@
     "addToCalendar": "Add to my calendar",
     "signUpFriend": "A friend",
     "signUpFriendLabel": "Sign up a friend"
+  },
+  "visitorQr": {
+    "title": "Visitor QR code",
+    "codeLabel": "QR code to the concert sign-up page"
   }
 }
