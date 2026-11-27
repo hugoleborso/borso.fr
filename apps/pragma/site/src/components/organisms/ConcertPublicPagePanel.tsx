@@ -29,6 +29,7 @@ import { FIELD_LABEL_CLASS } from '../atoms/LabelledField';
 import { PreviewImage } from '../atoms/PreviewImage';
 import { PrizeIconChoice } from '../molecules/PrizeIconChoice';
 import { ConcertRegistrationsCard } from './ConcertRegistrationsCard';
+import { VisitorQrCodeAction } from './VisitorQrCodeAction';
 
 const MESSAGE_ROWS = 3;
 const POSTER_TRIGGER_CLASS =
@@ -163,6 +164,7 @@ export function ConcertPublicPagePanel({ sessionId }: ConcertPublicPagePanelProp
 
   return (
     <div className="flex flex-col gap-4">
+      <VisitorQrCodeAction className="self-start" />
       <Card className={PANEL_CARD_CLASS}>
         <span className={FIELD_LABEL_CLASS}>{t('sessions.poster')}</span>
         <div className="flex items-start gap-3.5">

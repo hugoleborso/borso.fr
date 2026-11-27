@@ -273,5 +273,20 @@ describe('the home page', () => {
     expect(await screen.findByRole('region', { name: 'Next session' })).toBeTruthy();
     await screen.findByRole('link', { name: 'Open the setlist' });
     expect(screen.queryByRole('button', { name: /flame/ })).toBe(null);
+    expect(
+      within(screen.getByRole('banner')).getByRole('button', { name: 'Visitor QR code' }),
+    ).toBeTruthy();
+  });
+
+  it('offers the visitor QR code in the header even with no session ahead', async () => {
+    const answer = answerHomeApi([]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    await screen.findByRole('button', { name: 'New session' });
+    fireEvent.click(
+      within(screen.getByRole('banner')).getByRole('button', { name: 'Visitor QR code' }),
+    );
+    const sheet = screen.getByRole('dialog', { name: 'Visitor QR code' });
+    expect(within(sheet).getByText(globalThis.location.host)).toBeTruthy();
   });
 });

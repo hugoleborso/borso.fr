@@ -1163,5 +1163,9 @@
     "addToCalendar": "Ajouter à mon calendrier",
     "signUpFriend": "Un·e ami·e",
     "signUpFriendLabel": "Inscrire un·e ami·e"
+  },
+  "visitorQr": {
+    "title": "QR code visiteur",
+    "codeLabel": "QR code vers la page d’inscription au concert"
   }
 }
