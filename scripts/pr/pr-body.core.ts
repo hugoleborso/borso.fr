@@ -87,6 +87,10 @@ const SEPARATOR_CELL = /^:?-{2,}:?$/;
 const SUMMARY_TAG = /<summary>.*<\/summary>/;
 const SUMMARY_TAGS = /<\/?summary>/g;
 const LONG_LINK_TARGET_LENGTH = 150;
+const GAP_TITLE = /^Gap:/;
+const KNOWLEDGE_LINK = /docs\/knowledge\/[^)\s]+\.md/;
+const GAP_WITHOUT_TOOL_GAP =
+  'a gap links no docs/knowledge entry naming the missing tool; run the check instead, as PR #421 could have with jsqr';
 const MARKDOWN_LINK_TARGET = /(?<=\]\()[^) ]+(?=\))/g;
 const PREVIEW_SITE_HOST_API_ADDRESS =
   /https:\/\/[a-z0-9-]+-pr-\d+\.preview\.borso\.fr\/(?:mcp\b|api\/|oauth\/|\.well-known\/)[^\s)`'"]*/g;
@@ -381,6 +385,9 @@ function checkValidation(lines: readonly string[], violations: Violation[]): voi
     const label = `Validation item ${String(index + 1)}`;
     overLimit(`${label} title`, block.summary, LIMITS.evidenceTitle, violations);
     overLimit(label, block.body, LIMITS.evidenceBody, violations);
+    if (GAP_TITLE.test(block.summary) && !KNOWLEDGE_LINK.test(block.body)) {
+      violations.push({ where: label, problem: GAP_WITHOUT_TOOL_GAP });
+    }
   });
 }
 

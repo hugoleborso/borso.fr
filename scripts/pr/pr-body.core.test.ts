@@ -752,6 +752,36 @@ describe('the boundary, where one more would fail', () => {
   });
 });
 
+describe('a validation gap, which hands the operator a check', () => {
+  it('refuses a gap that links no knowledge entry naming the missing tool', () => {
+    const section = draft(
+      MINIMAL,
+      '## Validation',
+      '### Gap: camera scan',
+      'No camera scanned it.',
+    );
+    expect(validateBody(section)).toEqual([
+      {
+        where: 'Validation item 1',
+        problem:
+          'a gap links no docs/knowledge entry naming the missing tool; run the check instead, as PR #421 could have with jsqr',
+      },
+    ]);
+  });
+
+  it('accepts a gap that links the knowledge entry naming the missing tool, and any other item without one', () => {
+    const section = draft(
+      MINIMAL,
+      '## Validation',
+      '### What was checked',
+      'Suites green.',
+      '### Gap: touch',
+      'See [no touch](docs/knowledge/no-touch-here.md).',
+    );
+    expect(validateBody(section)).toEqual([]);
+  });
+});
+
 describe('indentation, which a writer adds without thinking', () => {
   it('reads an indented table row', () => {
     expect(readTableRows(['  | a | b |'])).toEqual([['a', 'b']]);
