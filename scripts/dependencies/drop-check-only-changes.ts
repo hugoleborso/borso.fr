@@ -39,18 +39,6 @@ function listChangedFiles(base: string, directory: string): string[] {
   return output.split('\n').filter((line) => line !== '');
 }
 
-function readManifestAt(base: string, directory: string): unknown {
-  const parsed: unknown = JSON.parse(
-    execFileSync('git', ['show', `${base}:${manifestPathOf(directory)}`], { encoding: 'utf8' }),
-  );
-  return parsed;
-}
-
-function readManifestInWorkingTree(directory: string): unknown {
-  const parsed: unknown = JSON.parse(readFileSync(manifestPathOf(directory), 'utf8'));
-  return parsed;
-}
-
 function readFileAt(base: string, path: string): string | null {
   try {
     return execFileSync('git', ['show', `${base}:${path}`], { encoding: 'utf8' });
@@ -70,7 +58,10 @@ function isDroppable(base: string, key: string, flag: string | undefined): boole
   return rule(
     directory,
     listChangedFiles(base, directory),
-    { before: readManifestAt(base, directory), after: readManifestInWorkingTree(directory) },
+    {
+      before: JSON.parse(readFileAt(base, manifestPathOf(directory)) ?? 'null'),
+      after: JSON.parse(readFileInWorkingTree(manifestPathOf(directory)) ?? 'null'),
+    },
     (path) => isCommentOnlyEdit(path, readFileAt(base, path), readFileInWorkingTree(path)),
   );
 }

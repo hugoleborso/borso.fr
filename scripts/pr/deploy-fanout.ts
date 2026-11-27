@@ -32,23 +32,18 @@ const applicationSlugs = readdirSync('apps', { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
-function readManifestAt(revision: string, directory: string): unknown {
+const mergeBase = git(['merge-base', base, head]);
+
+function readFileAt(revision: string, path: string): string | null {
   try {
-    const parsed: unknown = JSON.parse(git(['show', `${revision}:${manifestPathOf(directory)}`]));
-    return parsed;
+    return git(['show', `${revision}:${path}`]);
   } catch {
     return null;
   }
 }
 
-const mergeBase = git(['merge-base', base, head]);
-
-function readFileAt(revision: string, path: string): string | null {
-  try {
-    return execFileSync('git', ['show', `${revision}:${path}`], { encoding: 'utf8' });
-  } catch {
-    return null;
-  }
+function readManifestAt(revision: string, directory: string): unknown {
+  return JSON.parse(readFileAt(revision, manifestPathOf(directory)) ?? 'null');
 }
 
 function isProductionInert(directory: string, changedFiles: readonly string[]): boolean {
