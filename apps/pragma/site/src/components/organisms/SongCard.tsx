@@ -22,8 +22,8 @@ export interface SongCardProps {
 /**
  * @Blueprint organism-presentational
  * @BlueprintName Presentational Organism
- * @BlueprintUsage Use for a screen region that composes molecules and atoms but owns no state and fetches nothing.
- * @BlueprintDescription Takes every value it draws as a prop, composes molecules and atoms only, and leaves every derived string, here the line under the title, to the route's covered core instead of computing it inline. Holding no state and no query is what lets the route above it decide when the card re-renders.
+ * @BlueprintUsage Use for a screen region that composes molecules and atoms, fetches nothing, and holds at most local view state, such as whether its sheet is open.
+ * @BlueprintDescription Takes every value it draws as a prop, composes molecules and atoms only, and leaves every derived string, here the line under the title, to the route's covered core instead of computing it inline. Holding no server state and no query is what lets the route above it decide when the card re-renders.
  */
 export function SongCard({
   id,
