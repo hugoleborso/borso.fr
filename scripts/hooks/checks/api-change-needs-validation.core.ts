@@ -2,10 +2,11 @@
 import { type Check, type HookInput, type HookWorld, PASS, refuse } from '../check.core.ts';
 import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
 import { readHeadBranch, isRunningPullRequestCreate, stripHeredocs } from './gh-pr-create.core.ts';
+import { isTestFile } from '../../../.claude/skills/blueprint/blueprint-utils.ts';
 
 const API_FILE = /^apps\/[^/]+\/api\//u;
 const SITE_FILE = /^apps\/[^/]+\/site\//u;
-const SITE_FILE_EXEMPTION = /\.(test\.tsx?|md)$/u;
+const MARKDOWN_FILE = /\.md$/u;
 const TECHNICAL_REPORT =
   /^docs\/features\/[^/]+\/[^/]+\/validation\/technical-validation-[^/]+\.md$/u;
 const VISUAL_REPORT = /^docs\/features\/[^/]+\/[^/]+\/validation\/visual-validation-[^/]+\.md$/u;
@@ -60,7 +61,11 @@ export const apiChangeNeedsValidation: Check = {
     const isCodeChange = changesCode(base, comparedHead, world);
     const apiFiles = changed.filter((path) => API_FILE.test(path) && isCodeChange(path));
     const siteFiles = changed.filter(
-      (path) => SITE_FILE.test(path) && !SITE_FILE_EXEMPTION.test(path) && isCodeChange(path),
+      (path) =>
+        SITE_FILE.test(path) &&
+        !isTestFile(path) &&
+        !MARKDOWN_FILE.test(path) &&
+        isCodeChange(path),
     );
     if (apiFiles.length > 0 && !changed.some((path) => TECHNICAL_REPORT.test(path))) {
       return refuse(

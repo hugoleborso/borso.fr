@@ -112,8 +112,12 @@ describe('apiChangeNeedsValidation', () => {
   it.each([
     ['both reports', [...API_FILES, TECHNICAL_REPORT, 'apps/pragma/site/src/P.tsx', VISUAL_REPORT]],
     [
-      'site tests and markdown only',
-      ['apps/pragma/site/src/P.test.tsx', 'apps/pragma/site/README.md'],
+      'site tests, test helpers and markdown only',
+      [
+        'apps/pragma/site/src/P.test.tsx',
+        'apps/pragma/site/src/page.test-utils.tsx',
+        'apps/pragma/site/README.md',
+      ],
     ],
     ['nothing changed', []],
   ])('passes a branch with %s', (_shape, changed) => {

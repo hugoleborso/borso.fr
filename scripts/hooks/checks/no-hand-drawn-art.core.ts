@@ -1,9 +1,9 @@
 // @FollowsBlueprint utils-pure-module
 import { type Check, PASS, refuse } from '../check.core.ts';
+import { isTestFile } from '../../../.claude/skills/blueprint/blueprint-utils.ts';
 
 const RULE = 'no-hand-drawn-art';
 const SITE_SOURCE = /\/apps\/[^/]+\/site\/src\/.*\.(tsx|ts|svg)$/u;
-const TEST_FILE = /\.test\.tsx?$/u;
 const PATH_DATA = /\bd(=\{?|: ?)["'`][Mm][^"'`\n]{24,}/u;
 const ASSET_SOURCE = '@AssetSource';
 
@@ -35,7 +35,7 @@ export const noHandDrawnArt: Check = {
   run(input, world) {
     const toolInput = input.tool_input ?? {};
     const file = toolInput['file_path'];
-    if (typeof file !== 'string' || !SITE_SOURCE.test(file) || TEST_FILE.test(file)) return PASS;
+    if (typeof file !== 'string' || !SITE_SOURCE.test(file) || isTestFile(file)) return PASS;
     const written = readWrittenText(toolInput);
     if (!PATH_DATA.test(written) || written.includes(ASSET_SOURCE)) return PASS;
     if (world.readText(file)?.includes(ASSET_SOURCE) === true) return PASS;
