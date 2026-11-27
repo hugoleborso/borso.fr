@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   type AnimationMode,
   ANIMATION_MODE_LIST,
-  isAnimationMode,
   isCascadeMode,
   isTransformAnimated,
   selectCanvasTransform,
@@ -11,16 +10,6 @@ import {
 } from './animation.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('isAnimationMode', () => {
-  it.each(ANIMATION_MODE_LIST)('accepts "%s"', (mode) => {
-    expect(isAnimationMode(mode)).toBe(true);
-  });
-
-  it.each(['', 'STILL', 'shimmer'])('rejects "%s"', (candidate) => {
-    expect(isAnimationMode(candidate)).toBe(false);
-  });
-});
-
 describe('selectCanvasTransform', () => {
   it('moves the rectangles in drift', () => {
     expect(selectCanvasTransform('drift', false)).toBe('drift');

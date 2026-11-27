@@ -69,13 +69,6 @@ export function groupTasksByMember(
   ];
 }
 
-export function selectTasksOfSong(
-  tasks: readonly TaskShape[],
-  songId: string,
-): readonly TaskShape[] {
-  return tasks.filter((task) => task.songId === songId);
-}
-
 export function selectTasksOfSession(
   tasks: readonly TaskShape[],
   sessionId: string,

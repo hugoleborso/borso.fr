@@ -28,7 +28,7 @@ export interface Indicator {
   readonly id: string;
   readonly pillar: Pillar;
   readonly label: string;
-  readonly unit: 'count' | 'ms';
+  readonly unit: 'count' | 'ms' | 's';
   readonly app: string;
   readonly current: number | null;
   readonly points: readonly SeriesPoint[];
@@ -84,6 +84,29 @@ export interface SentryCount {
   readonly app: string;
   readonly environment: string;
   readonly count: number;
+}
+
+export interface CiStep {
+  readonly name: string;
+  readonly conclusion: string | null;
+  readonly startedAt: string;
+  readonly completedAt: string;
+}
+
+export interface CiJob extends CiStep {
+  readonly steps: readonly CiStep[];
+}
+
+export interface CiRun {
+  readonly id: number;
+  readonly createdAt: string;
+  readonly event: string;
+  readonly jobs: readonly CiJob[];
+}
+
+export interface TimedSample {
+  readonly at: string;
+  readonly seconds: number;
 }
 
 export interface Target {
@@ -163,6 +186,10 @@ const NO_PRODUCTION_API_REASON = 'no production API deployed';
 const NO_SENTRY_REASON = 'no Sentry';
 const NO_BUG_REPORTS_REASON = 'pragma only';
 const NO_ISSUE_ROW_REASON = 'no issue count collected for this app';
+const PULL_REQUEST_EVENT = 'pull_request';
+const SKIPPED_CONCLUSION = 'skipped';
+const APP_UNIT_SUITE_STEP = 'Pure suites and the per-file coverage gate';
+const ROOT_UNIT_SUITE = { job: 'build', step: 'Run pnpm exec vitest run --coverage' } as const;
 
 export const METRIC_KINDS = ['latencyP50', 'latencyP95', 'serverErrors', 'throttles'] as const;
 type MetricKind = (typeof METRIC_KINDS)[number];
@@ -549,6 +576,117 @@ export function buildBugReportIndicators(
   });
 }
 
+function secondsTaken(timed: CiStep): number | null {
+  if (timed.conclusion === SKIPPED_CONCLUSION) return null;
+  return Math.round(
+    (Date.parse(timed.completedAt) - Date.parse(timed.startedAt)) / MILLISECONDS_PER_SECOND,
+  );
+}
+
+function locateUnitSuite(app: string): { readonly job: string; readonly step: string } {
+  if (app === REPOSITORY_ROW) return ROOT_UNIT_SUITE;
+  return { job: `app-tests (${app})`, step: APP_UNIT_SUITE_STEP };
+}
+
+function listPullRequestRuns(runs: readonly CiRun[]): readonly CiRun[] {
+  return runs.filter((run) => run.event === PULL_REQUEST_EVENT);
+}
+
+export function listUnitSuiteSamples(runs: readonly CiRun[], app: string): readonly TimedSample[] {
+  const suite = locateUnitSuite(app);
+  return listPullRequestRuns(runs).flatMap((run) =>
+    run.jobs
+      .filter((job) => job.name === suite.job)
+      .flatMap((job) => job.steps.filter((step) => step.name === suite.step))
+      .flatMap((step) => {
+        const seconds = secondsTaken(step);
+        return seconds === null ? [] : [{ at: run.createdAt, seconds }];
+      }),
+  );
+}
+
+export function listSlowestJobSamples(runs: readonly CiRun[]): readonly TimedSample[] {
+  return listPullRequestRuns(runs).flatMap((run) => {
+    const durations = run.jobs.flatMap((job) => {
+      const seconds = secondsTaken(job);
+      return seconds === null ? [] : [seconds];
+    });
+    return durations.length === 0 ? [] : [{ at: run.createdAt, seconds: Math.max(...durations) }];
+  });
+}
+
+export function oldestBucketStart(range: RangeSpec, now: Date): number {
+  const newest =
+    range.id === 'week'
+      ? Date.parse(`${startOfWeek(now.toISOString().slice(0, ISO_DATE_LENGTH))}T00:00:00Z`)
+      : floorToBucket(now.getTime(), range.bucketSeconds);
+  return newest - (range.buckets - 1) * range.bucketSeconds * MILLISECONDS_PER_SECOND;
+}
+
+function slowest(samples: readonly TimedSample[]): number | null {
+  return samples.length === 0 ? null : Math.max(...samples.map((sample) => sample.seconds));
+}
+
+function buildTimedIndicator(
+  definition: { readonly id: string; readonly label: string },
+  app: string,
+  samples: SourceResult<readonly TimedSample[]>,
+  range: RangeSpec,
+  buckets: readonly string[],
+  now: Date,
+): Indicator {
+  const base = { ...definition, pillar: 'speed' as const, unit: 's' as const, app };
+  if (samples.kind === 'unavailable') {
+    return {
+      ...base,
+      current: null,
+      points: buckets.map((label) => ({ label, value: null })),
+      status: samples,
+    };
+  }
+  const windowStart = now.getTime() - range.windowSeconds * MILLISECONDS_PER_SECOND;
+  const historyStart = oldestBucketStart(range, now);
+  const history = samples.value.filter((sample) => Date.parse(sample.at) >= historyStart);
+  return {
+    ...base,
+    current: slowest(samples.value.filter((sample) => Date.parse(sample.at) >= windowStart)),
+    points: buckets.map((label) => ({
+      label,
+      value: slowest(history.filter((sample) => bucketOf(range, sample.at) === label)),
+    })),
+    status: { kind: 'ok' },
+  };
+}
+
+export function buildCiIndicators(
+  reading: SourceResult<readonly CiRun[]>,
+  apps: readonly string[],
+  range: RangeSpec,
+  buckets: readonly string[],
+  now: Date,
+): readonly Indicator[] {
+  return [
+    ...[...apps, REPOSITORY_ROW].map((app) =>
+      buildTimedIndicator(
+        { id: 'test-time', label: 'Unit suite time' },
+        app,
+        mapResult(reading, (runs) => listUnitSuiteSamples(runs, app)),
+        range,
+        buckets,
+        now,
+      ),
+    ),
+    buildTimedIndicator(
+      { id: 'ci-time', label: 'CI time, slowest job' },
+      REPOSITORY_ROW,
+      mapResult(reading, listSlowestJobSamples),
+      range,
+      buckets,
+      now,
+    ),
+  ];
+}
+
 export function placeBugReports(reports: readonly BugReport[]): readonly DefectDot[] {
   return reports.map((report) => ({
     slug: `improvement-${report.id}`,
@@ -688,6 +826,7 @@ export interface Snapshot {
   readonly bugReports: SourceResult<readonly BugReport[]>;
   readonly dependabot: SourceResult<SecurityCounts>;
   readonly secretScanning: SourceResult<number>;
+  readonly ci: SourceResult<readonly CiRun[]>;
 }
 
 const NOT_COLLECTED: SourceResult<never> = { kind: 'unavailable', reason: 'not collected' };
@@ -698,6 +837,7 @@ export const EMPTY_SNAPSHOT: Snapshot = {
   bugReports: NOT_COLLECTED,
   dependabot: NOT_COLLECTED,
   secretScanning: NOT_COLLECTED,
+  ci: NOT_COLLECTED,
 };
 
 const unavailableSchema = z.object({ unavailable: z.string().min(1) }).strict();
@@ -716,6 +856,18 @@ const improvementSchema = z.object({
   status: z.string().min(1),
   kind: z.string().min(1),
   createdAt: z.string().regex(/^\d{4}-\d{2}-\d{2}/),
+});
+const ciStepFields = {
+  name: z.string().min(1),
+  conclusion: z.string().min(1).nullable(),
+  startedAt: z.iso.datetime(),
+  completedAt: z.iso.datetime(),
+};
+const ciRunSchema = z.object({
+  id: z.number().int().positive(),
+  createdAt: z.iso.datetime(),
+  event: z.string().min(1),
+  jobs: z.array(z.object({ ...ciStepFields, steps: z.array(z.object(ciStepFields)) })),
 });
 function sourceSchema<Schema extends z.ZodType>(schema: Schema) {
   return z.union([
@@ -742,6 +894,7 @@ const snapshotSchema = z.object({
   improvements: sourceSchema(z.array(improvementSchema)),
   dependabot: sourceSchema(securityCountsSchema),
   secretScanning: sourceSchema(z.number().int().nonnegative()),
+  ci: sourceSchema(z.object({ runs: z.array(ciRunSchema) })),
 });
 
 export function readSnapshot(raw: unknown): Snapshot {
@@ -760,5 +913,6 @@ export function readSnapshot(raw: unknown): Snapshot {
     ),
     dependabot: snapshot.dependabot,
     secretScanning: snapshot.secretScanning,
+    ci: mapResult(snapshot.ci, (ci) => ci.runs),
   };
 }

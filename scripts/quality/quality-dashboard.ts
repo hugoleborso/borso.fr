@@ -10,6 +10,7 @@ import {
   FULL_STACK_APPS,
   RANGES,
   buildBugReportIndicators,
+  buildCiIndicators,
   buildGatewayIndicators,
   buildSecurityIndicators,
   buildSentryIndicators,
@@ -85,7 +86,7 @@ function main(): void {
   const apis = readHttpApis();
   const readings = RANGES.map((range) => ({ range, gateway: readGateway(apis, clock, range) }));
   const audit = readAudit();
-  const { sentry, sentryIssues, bugReports, dependabot, secretScanning } = snapshot.value;
+  const { sentry, sentryIssues, bugReports, dependabot, secretScanning, ci } = snapshot.value;
   const sources = new Map<string, SourceResult<unknown>>([
     ['CloudWatch', readings[0]?.gateway ?? apis],
     ['pnpm audit', audit],
@@ -94,6 +95,7 @@ function main(): void {
     ['pragma bug reports', bugReports],
     ['Dependabot', dependabot],
     ['Secret scanning', secretScanning],
+    ['GitHub Actions', ci],
   ]);
   const unavailableSources = listUnavailableSources(sources);
   for (const source of unavailableSources) process.stderr.write(`  unavailable: ${source}\n`);
@@ -124,6 +126,7 @@ function main(): void {
       ...buildSentryIndicators(selectSentry(sentry, range), APPS, buckets),
       ...buildSentryIssueIndicators(sentryIssues, APPS),
       ...buildBugReportIndicators(bugReports, APPS, range, buckets),
+      ...buildCiIndicators(ci, APPS, range, buckets, clock),
     ];
     return { range, indicators };
   });

@@ -143,6 +143,7 @@ describe('selectStation', () => {
     ['eslint-rules/no-comments.js', 'gates'],
     ['stryker.shared.js', 'gates'],
     ['.claude/hooks/pretool-no-broad-kill.sh', 'hooks'],
+    ['scripts/hooks/checks/no-broad-kill.core.ts', 'hooks'],
     ['.claude/skills/open-pr', 'skills'],
     ['CLAUDE.md', 'harness'],
   ])('puts %s on the %s station', (zone, station) => {

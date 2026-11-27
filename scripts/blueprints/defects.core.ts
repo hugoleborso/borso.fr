@@ -1,37 +1,11 @@
 export interface DantotsuReference {
   readonly slug: string;
-  readonly title: string;
   readonly blueprintIds: readonly string[];
 }
 
 export interface BlueprintDefectCount {
   readonly blueprintId: string;
   readonly dantotsuSlugs: readonly string[];
-}
-
-const FRONT_MATTER_PATTERN = /^---\n([\s\S]*?)\n---/;
-const BLUEPRINTS_FIELD_PATTERN = /^blueprints:\s*\[([^\]]*)\]\s*$/m;
-const TITLE_PATTERN = /^#\s+(.+)$/m;
-
-export function readBlueprintIds(markdown: string): readonly string[] {
-  const frontMatter = FRONT_MATTER_PATTERN.exec(markdown)?.[1];
-  // Stryker disable next-line ConditionalExpression: equivalent mutant, the next guard returns the same empty list
-  if (frontMatter === undefined) return [];
-  const namedIds = BLUEPRINTS_FIELD_PATTERN.exec(frontMatter)?.[1];
-  if (namedIds === undefined) return [];
-  return namedIds
-    .split(',')
-    .map((entry) => entry.trim().replace(/^['"]|['"]$/g, ''))
-    .filter((entry) => entry.length > 0);
-}
-
-export function readDantotsuReference(slug: string, markdown: string): DantotsuReference {
-  const title = TITLE_PATTERN.exec(markdown)?.[1];
-  return {
-    slug,
-    title: title === undefined ? slug : title.trim(),
-    blueprintIds: readBlueprintIds(markdown),
-  };
 }
 
 export function selectUnknownBlueprintReferences(

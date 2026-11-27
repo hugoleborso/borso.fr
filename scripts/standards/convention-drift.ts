@@ -1,9 +1,8 @@
 #!/usr/bin/env tsx
 
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { inferLayer, isTestFile } from '../../.claude/skills/blueprint/blueprint-utils.js';
+import { inferLayer } from '../../.claude/skills/blueprint/blueprint-utils.js';
 import {
   buildBaseline,
   countDivergentFiles,
@@ -14,26 +13,15 @@ import {
   type BaselineCounts,
   type FileFact,
 } from './conventions.core';
+import { REPOSITORY_ROOT, listTrackedSourceFiles } from './git-history.adapter';
 
-const REPOSITORY_ROOT = process.cwd();
 const REPORT_PATH = join(REPOSITORY_ROOT, 'docs', 'standards', 'convention-drift.md');
 const BASELINE_PATH = join(REPOSITORY_ROOT, 'docs', 'standards', 'convention-baseline.json');
-const SOURCE_PATH_PATTERN = /^(apps|infra)\/.*\.(ts|tsx)$/;
 const EXPORTED_HOOK_PATTERN = /export\s+(?:async\s+)?function\s+use[A-Z]/;
 const EXPORTED_HOOK_CONST_PATTERN = /export\s+const\s+use[A-Z][A-Za-z0-9]*\s*[:=]/;
 
-function listSourceFiles(): readonly string[] {
-  return execFileSync('git', ['ls-files'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter((path) => SOURCE_PATH_PATTERN.test(path))
-    .filter((path) => existsSync(join(REPOSITORY_ROOT, path)))
-    .filter((path) => !isTestFile(path))
-    .filter((path) => !path.endsWith('.d.ts'))
-    .filter((path) => existsSync(join(REPOSITORY_ROOT, path)));
-}
-
 function readFileFacts(): readonly FileFact[] {
-  return listSourceFiles().map((path) => {
+  return listTrackedSourceFiles().map((path) => {
     const contents = readFileSync(join(REPOSITORY_ROOT, path), 'utf8');
     return {
       path,

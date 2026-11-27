@@ -177,8 +177,3 @@ const LIST_CHOICE_LABEL_KEY: Readonly<Record<TodoListChoice, ParseKeys>> = {
 export function selectTodoListChoiceLabelKey(choice: TodoListChoice): ParseKeys {
   return LIST_CHOICE_LABEL_KEY[choice];
 }
-
-export function hasTodoTextChanged(original: string, draft: string): boolean {
-  const trimmed = draft.trim();
-  return trimmed.length > 0 && trimmed !== original;
-}

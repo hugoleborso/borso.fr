@@ -45,6 +45,7 @@
     "playwright": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
+    "unbash": "6.0.4",
     "vitest": "catalog:",
     "zod": "catalog:zod4"
   },

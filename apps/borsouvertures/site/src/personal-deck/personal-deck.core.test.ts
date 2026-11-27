@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPersonalDecks,
   checkLineAdd,
-  findPersonalLine,
   isPersonalDeck,
   PERSONAL_DECK_NAME_KEY,
   type PersonalLine,
@@ -134,12 +133,6 @@ describe('replayPersonalLines', () => {
   it('keeps the longer line once a line extends another', () => {
     const lines = linesOf([buildEvent(1), buildEvent(2, { movesUci: CLOSED_SICILIAN_LONGER })]);
     expect(lines.map((line) => line.key)).toEqual(['white:e2e4 c7c5 b1c3 b8c6 g2g3']);
-  });
-
-  it('finds a held line by its side and moves', () => {
-    const lines = linesOf([buildEvent(1)]);
-    expect(findPersonalLine(lines, 'white', CLOSED_SICILIAN)).toBe(lines[0]);
-    expect(findPersonalLine(lines, 'black', CLOSED_SICILIAN)).toBeNull();
   });
 });
 

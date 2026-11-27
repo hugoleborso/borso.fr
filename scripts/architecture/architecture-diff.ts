@@ -6,6 +6,7 @@ import {
   type FileEntry,
   type RouteEntry,
 } from './architecture-model-json';
+import { escapeHtml } from '../quality/quality-page.core';
 import { wrapInDocumentShell } from './document-shell.core';
 
 function readModel(path: string): ArchitectureModel {
@@ -58,14 +59,6 @@ function describeRoute(route: RouteEntry): string {
 interface ReportSection {
   readonly title: string;
   readonly lines: readonly string[];
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 function renderInline(text: string): string {

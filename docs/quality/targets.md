@@ -54,6 +54,14 @@ row is neither, and does not count in its section's score.
 | `latency-p95` | last-loop-lepin | 2000 |
 | `latency-p95` | banana-rush | 2000 |
 | `latency-p95` | talos | 2000 |
+| `test-time` | pragma | 30 |
+| `test-time` | last-loop-lepin | 30 |
+| `test-time` | banana-rush | 30 |
+| `test-time` | skull-king | 30 |
+| `test-time` | talos | 30 |
+| `test-time` | borso-fr | 30 |
+| `test-time` | borsouvertures | 30 |
+| `ci-time` | repository | 600 |
 
 ## Rules for this file
 
@@ -61,10 +69,17 @@ row is neither, and does not count in its section's score.
   `dependabot-other`, `audit-critical-high`, `audit-other`, `secret-scanning-open`,
   `errors-preview`, `errors-prod`, `throttles-prod`, `sentry-errors-preview`,
   `sentry-errors-prod`, `sentry-issues-open`, `user-bug-reports-open`,
-  `latency-p50`, `latency-p95`. Write it in backticks.
+  `latency-p50`, `latency-p95`, `test-time`, `ci-time`. Write it in backticks.
 - The app is an application slug, or `repository` for the security rows.
-- The ceiling is a number: a count, or milliseconds for latency. Lower is
-  always better.
+- The ceiling is a number: a count, milliseconds for latency, or seconds for
+  `test-time` and `ci-time`. Lower is always better.
+- `test-time` is the slowest pull-request run of an application's unit suite
+  step in `ci.yml`, and `ci-time` the slowest job of a `ci.yml` run on a pull
+  request. Their ceilings, 30 s and 10 min, are the budgets "One application's
+  unit suite" and "CI on a pull request" in
+  [standard 14](../standards/14-tool-runtime-budgets.md). The `repository` row
+  of `test-time`, the root `scripts/` suite, has no ceiling because that
+  standard budgets an application's suite only.
 - `sentry-issues-open` counts the distinct unresolved Sentry issues seen in the
   last 7 days. Its ceiling is 0 since 2026-11-14, on the operator's call, so
   every open issue is a problem to fix or resolve.

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  hasTodoTextChanged,
   readTodoListChoice,
   selectChosenTodoLists,
   selectQuickAddList,
@@ -171,20 +170,6 @@ describe('the filter labels', () => {
     expect(selectTodoEmptyLabelKey('open')).toBe('todo.empty.open');
     expect(selectTodoEmptyLabelKey('done')).toBe('todo.empty.done');
     expect(selectTodoEmptyLabelKey('all')).toBe('todo.empty.all');
-  });
-});
-
-describe('hasTodoTextChanged', () => {
-  it('accepts a new non-empty text', () => {
-    expect(hasTodoTextChanged('Envoyer', ' Envoyer le CV ')).toBe(true);
-  });
-
-  it('refuses an unchanged text once trimmed', () => {
-    expect(hasTodoTextChanged('Envoyer', 'Envoyer ')).toBe(false);
-  });
-
-  it('refuses an empty text', () => {
-    expect(hasTodoTextChanged('Envoyer', '   ')).toBe(false);
   });
 });
 

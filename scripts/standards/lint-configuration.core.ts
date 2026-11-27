@@ -25,11 +25,6 @@ const WILDCARD = '*';
 
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 'allow', 0]);
 const CORE_RULE_PREFIX = 'eslint';
-const OPENING_PARENTHESIS = '(';
-const CLOSING_PARENTHESIS = ')';
-const CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN: ReadonlyMap<string, string> = new Map([
-  ['react-hooks', 'react'],
-]);
 
 function isRuleOn(setting: RuleSetting): boolean {
   const severity: unknown = Array.isArray(setting) ? setting[0] : setting;
@@ -60,16 +55,6 @@ export function listActiveRules(
     .filter(([ruleName, setting]) => isRuleOn(setting) && plugins.has(readRulePlugin(ruleName)))
     .map(([ruleName]) => ruleName)
     .sort();
-}
-
-export function readConfiguredRuleName(diagnosticCode: string): string | null {
-  const opening = diagnosticCode.indexOf(OPENING_PARENTHESIS);
-  if (opening < 1 || !diagnosticCode.endsWith(CLOSING_PARENTHESIS)) return null;
-  const reportedPlugin = diagnosticCode.slice(0, opening);
-  const rule = diagnosticCode.slice(opening + 1, -1);
-  if (reportedPlugin === CORE_RULE_PREFIX) return rule;
-  const plugin = CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN.get(reportedPlugin) ?? reportedPlugin;
-  return `${plugin}/${rule}`;
 }
 
 export function readLiteralSuffix(pattern: string): string {

@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { pickNextPaletteHex } from './member-palette.utils';
+import { pickPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMemberWithLinks,
@@ -31,7 +31,7 @@ export async function createMember(input: MemberCreateInput): Promise<MemberRow>
   let color = input.color;
   if (color === undefined) {
     const existing = await listMembers();
-    color = pickNextPaletteHex(existing.length);
+    color = pickPaletteHex(existing.length);
   }
   return await insertMember({
     firstName: input.firstName,

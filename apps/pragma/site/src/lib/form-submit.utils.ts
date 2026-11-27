@@ -5,11 +5,3 @@ export function isSubmitDisabled(
 ): boolean {
   return canSubmit !== true || isSubmitting === true;
 }
-
-export function isSubmitDisabledWhilePending(
-  canSubmit: boolean | undefined,
-  isSubmitting: boolean | undefined,
-  isMutationPending: boolean,
-): boolean {
-  return isSubmitDisabled(canSubmit, isSubmitting) || isMutationPending;
-}

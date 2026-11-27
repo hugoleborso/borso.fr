@@ -10,7 +10,3 @@ export function pickPaletteHex(memberIndex: number): string {
   }
   return slot.hex;
 }
-
-export function pickNextPaletteHex(existingMemberCount: number): string {
-  return pickPaletteHex(existingMemberCount);
-}

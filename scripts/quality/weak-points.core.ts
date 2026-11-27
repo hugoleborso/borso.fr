@@ -102,6 +102,7 @@ const STATION_BY_PATH_PREFIX: readonly (readonly [string, string])[] = [
   ['knip.json', 'gates'],
   ['tsconfig.json', 'gates'],
   ['.claude/hooks', 'hooks'],
+  ['scripts/hooks/', 'hooks'],
   ['.claude/settings.json', 'hooks'],
   ['.claude/skills', 'skills'],
   ['.claude/commands', 'skills'],

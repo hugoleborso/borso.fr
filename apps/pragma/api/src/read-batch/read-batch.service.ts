@@ -3,7 +3,7 @@ import {
   recordReadBatchSize,
   reportTaggedFailure,
 } from '../helpers/observability/error-reporting.adapter';
-import { buildItemRequest, toBatchedAnswer } from './read-batch.core';
+import { buildItemRequest } from './read-batch.core';
 
 export { parseJsonOrNull } from '../helpers/json/json.core';
 
@@ -28,11 +28,11 @@ export async function answerReadBatch(params: AnswerReadBatchParams): Promise<Re
       const response = await params.runRead(
         buildItemRequest(read, params.outerUrl, params.outerHeaders),
       );
-      return toBatchedAnswer(
-        response.status,
-        response.headers.get(CONTENT_TYPE_HEADER),
-        await response.text(),
-      );
+      return {
+        status: response.status,
+        contentType: response.headers.get(CONTENT_TYPE_HEADER),
+        body: await response.text(),
+      };
     }),
   );
   return { answers };

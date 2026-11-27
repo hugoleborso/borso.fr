@@ -174,7 +174,7 @@ detection failure causes.
   repository that training is a knowledge entry only when it carries
   `triggers:` a hook can match, so it reaches the next person at the
   moment they repeat the mistake rather than waiting to be searched
-  (see the ladder in [`SKILL.md`](./SKILL.md#6-eradication--non-optional-code-level))
+  (see the ladder in [`SKILL.md`](./SKILL.md#eradication))
 - Update the alerting so the issue is visible earlier (e.g. in
   staging)
 - Clean up excessive alerts to avoid developer fatigue
@@ -195,8 +195,8 @@ In this repository, an entry joins that map through its front matter:
 point from `docs/quality/weak-points.md`, and `recurs:` names the entry it
 repeats. `scripts/quality/weak-points.ts` draws the map and the weekly
 count from those fields, and `scripts/quality/check-dantotsu-front-matter.ts`
-refuses an entry that leaves them unusable. The *Output* section of
-[`SKILL.md`](./SKILL.md) gives the rules for each field.
+refuses an entry that leaves them unusable. The *Front matter* section of
+[`SKILL.md`](./SKILL.md#front-matter) gives the rules for each field.
 
 ## Reframes
 

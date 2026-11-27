@@ -21,7 +21,7 @@ pnpm install
 
 ## SessionStart hook
 
-Whenever a Claude Code session opens this repo, `.claude/hooks/session-start.sh` fires. It runs `scripts/install-repo-deps.sh`, which:
+Whenever a Claude Code session opens this repo, `scripts/hooks/checks/session-start.core.ts` fires. It runs `scripts/install-repo-deps.sh`, which:
 
 1. Verifies `jq` is on PATH (fails fast if not).
 2. Runs `pnpm install --frozen-lockfile`.

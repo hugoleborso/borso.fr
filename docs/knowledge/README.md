@@ -50,7 +50,7 @@ triggers:
 - `output` are regular expressions searched in what a Bash or MCP call printed
   or failed with.
 
-[`knowledge-triggers.sh`](../../.claude/hooks/knowledge-triggers.sh)
+[`knowledge-triggers.core.ts`](../../scripts/hooks/checks/knowledge-triggers.core.ts)
 does the matching and prints the summary and the path, once per entry per
 session. [`check-knowledge-triggers.sh`](../../scripts/check-knowledge-triggers.sh)
 fails an entry with no summary or no trigger, in pre-commit and in CI. If you

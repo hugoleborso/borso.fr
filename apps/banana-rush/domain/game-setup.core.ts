@@ -27,30 +27,3 @@ export const ROUND_TIMER_CHOICES_SECONDS = [
 
 export type WinningScore = (typeof WINNING_SCORE_CHOICES)[number];
 export type RoundTimerSeconds = (typeof ROUND_TIMER_CHOICES_SECONDS)[number];
-
-export type GameSetupRefusal = 'seats-out-of-range' | 'unknown-winning-score' | 'unknown-timer';
-
-export interface GameSetup {
-  readonly maxPlayers: number;
-  readonly winningScore: number;
-  readonly roundTimerSeconds: number | null;
-}
-
-function isKnownWinningScore(score: number): boolean {
-  return WINNING_SCORE_CHOICES.some((choice) => choice === score);
-}
-
-function isKnownRoundTimer(seconds: number | null): boolean {
-  if (seconds === null) return true;
-  return ROUND_TIMER_CHOICES_SECONDS.some((choice) => choice === seconds);
-}
-
-// @FollowsBlueprint domain-shared-selection
-export function refuseGameSetup(setup: GameSetup): GameSetupRefusal | null {
-  const isSeatsAreWhole = Number.isInteger(setup.maxPlayers);
-  const isSeatsInRange = setup.maxPlayers >= MINIMUM_SEATS && setup.maxPlayers <= MAXIMUM_SEATS;
-  if (!isSeatsAreWhole || !isSeatsInRange) return 'seats-out-of-range';
-  if (!isKnownWinningScore(setup.winningScore)) return 'unknown-winning-score';
-  if (!isKnownRoundTimer(setup.roundTimerSeconds)) return 'unknown-timer';
-  return null;
-}

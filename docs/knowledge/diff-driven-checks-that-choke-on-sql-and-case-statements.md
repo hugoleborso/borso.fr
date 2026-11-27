@@ -14,7 +14,7 @@ code; both are worth knowing before reaching for the obvious command.
 
 The formatter is oxfmt, since
 [ADR-2026-10-27T2320](../adr/2026-10-27T2320-oxlint-and-oxfmt-replace-eslint-and-prettier.md), and
-`pretool-no-prettier.sh` refuses a prettier run
+`scripts/hooks/checks/no-prettier.core.ts` refuses a prettier run
 ([prettier ran in an oxfmt repository](../dantotsus/prettier-ran-in-an-oxfmt-repository.md)).
 Feed a changed-file list to `pnpm format:check` or `node_modules/.bin/oxfmt
 --check`. oxfmt skips a `.sql` file in its arguments without an error

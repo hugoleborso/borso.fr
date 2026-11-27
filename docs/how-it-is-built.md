@@ -33,7 +33,7 @@ A lesson written as a sentence gets forgotten. A lesson written as a gate does n
 | --- | --- | --- |
 | Lint rules | 50 project rules, each with its own tests, such as no `useEffect`, no type assertion, no SQL outside a repository, no French identifiers | `eslint-rules/`, run by oxlint |
 | Shell gates | 24 repository checks, such as "every ADR number resolves" and "a dated record is append-only" | `scripts/check-*.sh`, run by the git hooks and CI |
-| Agent hooks | 25 Claude Code hooks that stop a known mistake before it happens, such as a merge that would deploy prod or a push that swallows its error | `.claude/hooks/` |
+| Agent hooks | Claude Code hooks, TypeScript checks run by one node entry, that stop a known mistake before it happens, such as a merge that would deploy prod or a push that swallows its error | `scripts/hooks/` |
 | Knowledge triggers | A hook prints the knowledge entry that applies when a command matches it, before the agent repeats an old mistake | `docs/knowledge/`, `scripts/knowledge-triggers.py` |
 | Blueprints | Canonical code examples, marked in the code, indexed, and cited by new files with `@FollowsBlueprint` | `.claude/skills/blueprint/` |
 | Standards | Fifteen documents, each naming what enforces it | `docs/standards/` |

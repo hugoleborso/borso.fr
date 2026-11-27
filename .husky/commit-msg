@@ -1,3 +1,5 @@
 pnpm exec commitlint --edit "$1" && exit 0
-.claude/hooks/kaizen-refusal.sh commitlint "commitlint refused a commit message: $(head -n1 "$1")"
+echo "[hook] Nothing in this call ran. In a chained command, rerun the other steps on their own." >&2
+[ -f KAIZEN.md ] && [ "${KAIZEN_LOG_REFUSALS:-1}" != 0 ] &&
+  scripts/kaizen.sh --from hook:commitlint "commitlint refused a commit message: $(head -n1 "$1")" >/dev/null 2>&1
 exit 1

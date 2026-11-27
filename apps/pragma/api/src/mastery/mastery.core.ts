@@ -25,17 +25,6 @@ export function effective(
   return fallback ?? null;
 }
 
-export function isRedundantOverride(
-  defaults: DefaultMap,
-  overrides: OverrideMap,
-  query: MasteryQuery,
-): boolean {
-  const override = overrides[query.songId]?.[query.memberId]?.[query.instrumentId];
-  if (override === undefined) return false;
-  const fallback = defaults[query.memberId]?.[query.instrumentId];
-  return fallback === override;
-}
-
 export interface DefaultScoreRow {
   readonly memberId: MemberId;
   readonly instrumentId: InstrumentId;

@@ -59,7 +59,7 @@ Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › fences t
 
 Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › falls back to the song energy when the entry stores none
 Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › falls back to the midpoint when neither is set
-Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › mutes the filled segments while nothing is stored
+Held by: `site/src/components/molecules/setlist-entry-energy.core.test.ts` › mutes the bars while nothing is stored
 
 ## Deezer track
 

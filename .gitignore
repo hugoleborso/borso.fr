@@ -93,6 +93,6 @@ docs/features/*/*/validation/.pending-upload/
 **/.impeccable/review/
 **/.impeccable/mocks/
 
-# Derived by .claude/hooks/posttool-lint-write.sh
+# Derived by scripts/hooks/checks/lint-write.core.ts
 /.oxlintrc.write.json
 /.oxlintrc.write.*

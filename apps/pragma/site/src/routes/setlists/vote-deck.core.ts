@@ -192,10 +192,6 @@ export function isDeckMode(mode: VoteMode): boolean {
   return mode === 'deck';
 }
 
-export function selectOtherVoteMode(mode: VoteMode): VoteMode {
-  return mode === 'list' ? 'deck' : 'list';
-}
-
 export function selectRemainingAfterScore(
   remainingPoints: number,
   previousPoints: number,
@@ -267,14 +263,4 @@ export function isSongNewSinceLastScore(
   if (lastScoredAt === null) return false;
   if (givenPoints > 0) return false;
   return Date.parse(song.createdAt) > Date.parse(lastScoredAt);
-}
-
-export function countSongsNewSinceLastScore(
-  songs: readonly DeckEntry[],
-  lastScoredAt: string | null,
-  pointsBySongId: Readonly<Record<string, number>>,
-): number {
-  return songs.filter((song) =>
-    isSongNewSinceLastScore(song, lastScoredAt, readGivenPoints(pointsBySongId, song.id)),
-  ).length;
 }

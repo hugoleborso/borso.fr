@@ -40,7 +40,7 @@ metadata pulled from each entry's frontmatter, run the helper
 shipped with the dantotsu skill:
 
 ```bash
-.claude/skills/dantotsu/scripts/list.sh
+pnpm exec tsx .claude/skills/dantotsu/scripts/list.ts
 ```
 
 Outputs a markdown table with file, date, severity, level, tags,

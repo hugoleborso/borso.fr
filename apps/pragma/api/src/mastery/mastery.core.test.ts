@@ -4,7 +4,6 @@ import {
   effective,
   indexDefaultScores,
   indexOverrideScores,
-  isRedundantOverride,
   type OverrideMap,
 } from './mastery.core';
 
@@ -73,62 +72,6 @@ describe('mastery.core', () => {
           songId: 'songZ',
         }),
       ).toBeNull();
-    });
-  });
-
-  describe('isRedundantOverride', () => {
-    it('returns false when no override exists for the triple', () => {
-      expect(
-        isRedundantOverride(DEFAULTS, OVERRIDES, {
-          memberId: 'hugo',
-          instrumentId: 'guitar',
-          songId: 'songZ',
-        }),
-      ).toBe(false);
-    });
-
-    it('returns false when the song carries overrides for other members and no default exists', () => {
-      expect(
-        isRedundantOverride(DEFAULTS, OVERRIDES, {
-          memberId: 'gui',
-          instrumentId: 'guitar',
-          songId: 'songA',
-        }),
-      ).toBe(false);
-    });
-
-    it('returns false when override and default differ', () => {
-      expect(
-        isRedundantOverride(DEFAULTS, OVERRIDES, {
-          memberId: 'hugo',
-          instrumentId: 'guitar',
-          songId: 'songA',
-        }),
-      ).toBe(false);
-    });
-
-    it('returns false when there is an override but no matching default', () => {
-      const localDefaults: DefaultMap = {};
-      const localOverrides: OverrideMap = { songA: { hugo: { guitar: 4 } } };
-      expect(
-        isRedundantOverride(localDefaults, localOverrides, {
-          memberId: 'hugo',
-          instrumentId: 'guitar',
-          songId: 'songA',
-        }),
-      ).toBe(false);
-    });
-
-    it('returns true when override and default carry the same score', () => {
-      const localDefaults: DefaultMap = { hugo: { guitar: 5 } };
-      const localOverrides: OverrideMap = { songA: { hugo: { guitar: 5 } } };
-      expect(
-        isRedundantOverride(localDefaults, localOverrides, {
-          memberId: 'hugo',
-          instrumentId: 'guitar',
-          songId: 'songA',
-        }),
-      ).toBe(true);
     });
   });
 

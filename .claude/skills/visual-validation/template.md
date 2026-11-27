@@ -1,6 +1,6 @@
 # Visual-validation templates
 
-Two templates live here. The skill uses both.
+The dispatch brief lives here, and a pointer to the report layout.
 
 1. **Dispatch-brief template** — the self-contained prompt the skill passes to the `visual-validator` agent via the `Agent` tool. Substitute placeholders.
 2. **Report template** — the markdown layout the agent writes to `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md`.
@@ -34,33 +34,4 @@ The brief is intentionally short. The agent's standard, tooling rules, report fo
 
 ## 2. Report template
 
-The agent writes this at `docs/features/<app>/<slug>/validation/visual-validation-<YYYY-MM-DD-HHmm>.md`:
-
-```markdown
-# Visual validation — <feature title>
-
-- Spec: [`../spec/spec.md`](../spec/spec.md)
-- Dev URL: <e.g. http://localhost:5173/art/mondrian/>
-- Run at: <ISO 8601 timestamp>
-- Tooling: agent-browser <version>
-
-## Assertions
-
-| # | From | Assertion | Action | Evidence | Verdict |
-|---|---|---|---|---|---|
-| 01 | Result | "<verbatim claim>" | <one-line action> | `./visual-validation-<timestamp>/01-default.png` or `URL = http://…?seed=DEADBEEF` | PASS / FAIL / UNVERIFIABLE |
-
-## Notes
-
-> *One bullet per FAIL or UNVERIFIABLE row, with what was observed and what was missing. PASS rows do not need a note.*
-
--
-
-## Verdict: <PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL>
-```
-
-### Path conventions
-
-- The report links to its sibling spec via `../spec/spec.md`.
-- Screenshots referenced from the report use paths *relative to the report file*: `./visual-validation-<timestamp>/<row-id>-<short-slug>.png`.
-- The agent never writes outside `evidence_dir` or `report_path`. Files there are committed alongside the report.
+The report layout is the *Report format* section of [`../../agents/visual-validator.md`](../../agents/visual-validator.md), which the agent reads.

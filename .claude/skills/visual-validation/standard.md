@@ -1,83 +1,58 @@
 # Visual validation — standard
 
-> Source standard for the `visual-validation` skill. The skill enforces this; this file is the canonical text it points back to. Edit this file when the standard itself evolves; edit `SKILL.md` when the *enforcement* evolves.
->
-> Companion docs in this folder:
-> - [`template.md`](./template.md) — the dispatch-brief template the skill passes to the validator agent, and the report template the agent writes.
-> - The dedicated agent definition lives at [`../../agents/visual-validator.md`](../../agents/visual-validator.md).
+Why the gate exists and where its edges are. The rows the validator builds, its
+tooling and its report format live once in
+[`../../agents/visual-validator.md`](../../agents/visual-validator.md). The
+dispatch brief is in [`template.md`](./template.md).
 
 ## What a visual validation is
 
-A visual validation **opens the implemented feature in a browser and checks, point by point, that every assertion the spec makes about visible behaviour actually holds.** It is not a type-check, not a lint, not a unit test. It is the gate that catches:
-
-- Code that compiles and ships, but doesn't render anything.
-- Buttons that exist but don't do what the spec says they should.
-- Edge cases (narrow viewports, reduced motion, URL state) that the implementer never tried.
-- "Looks right at the developer's resolution; broken everywhere else."
-
-A visual validation that passes is high confidence the feature ships. A visual validation that fails is grounds to halt push, not negotiate. There is no half-credit.
+A visual validation **opens the implemented feature in a browser and checks,
+point by point, that every assertion the spec makes about visible behaviour
+holds.** It catches code that compiles but renders nothing, buttons that do not
+do what the spec says, edge cases the implementer never tried, and a layout
+right only at the developer's resolution. A failing one halts the push. There
+is no half-credit.
 
 ## Why standalone
 
-LLM-driven implementation has a confirmation-bias failure mode: the same agent that implemented the feature is asked to validate it, and finds it fine. The validator **must** run in a fresh Agent invocation with no chat history, no implementation summary, no narrative pressure. It reads the spec and the running app, and nothing else.
+The agent that implemented a feature, asked to validate it, finds it fine. The
+validator runs in a fresh Agent invocation with no chat history, no
+implementation summary and no narrative pressure. The dedicated agent's
+definition carries the rules, which is why `general-purpose` is never
+dispatched.
 
-This is a structural mitigation, not a culture rule. The skill is required to use the dedicated `visual-validator` agent (defined in `.claude/agents/visual-validator.md`) — not `general-purpose`. The agent's frontmatter and brief are the carriers of the rule; a generic agent would dilute them.
+## Why the row rules exist
 
-## Tooling: `agent-browser`
-
-The validator drives [`agent-browser`](https://github.com/vercel-labs/agent-browser) and taps with `scripts/phone.sh`. Its commands and traps are in `.claude/agents/visual-validator.md`.
-
-## What gets validated
-
-Pulled from the spec, in this order:
-
-0. **Design-bundle fidelity (when `docs/features/<app>/<slug>/spec/design-bundle/` exists).** Before any spec assertion is checked, the validator walks every `.jsx` file under `design-bundle/project/src/screens/` and confirms the implementation re-creates it pixel-perfectly. The design bundle's README is explicit on the contract: *"recreate them pixel-perfectly in whatever technology makes sense for the target codebase."* Token-level checks (accent colour, body bg) are necessary but NOT sufficient — design fidelity is a separate axis. For each screen file, the validator:
-  - Opens the prototype in agent-browser (the bundle ships HTML + a babel-standalone-rendered React tree — load `Pragma.html` from `design-bundle/project/`).
-  - Opens the matching implementation route in the running dev server.
-  - Captures both screenshots into `validation/screenshots-<ts>/comparisons/<screen>-{design,impl}.png`.
-  - Produces one row per screen with these PASS criteria, ALL of which must hold:
-    - **Typography stack matches.** If the prototype uses `var(--t-display)` (Instrument Serif) for h1, the implementation does too. If it uses `var(--t-mono)` for tag pills, the implementation does too. Eyeball-test the page; computed `font-family` on the matching node confirms.
-    - **Layout structure matches.** Sidebar / topbar / breadcrumb / page header / actions row / filter pills / search bar / content grid — every structural region in the prototype is present in the implementation, in the same order, with comparable spacing.
-    - **Affordances match.** Filter pills with counts. Status chips. Chart-kind icons. Member chip lineup. Drag handles. Sparklines. If the prototype shows it, the implementation has it.
-    - **Palette tokens match.** Not just the accent and bg — every named CSS variable in `design-bundle/project/src/styles.css` (`--bg-elev`, `--bg-sunk`, `--ink-900`, `--ink-700`, ..., member palette `--m-<name>`, `--accent-soft`, `--warn`, ...) is declared in the implementation's `design-tokens.css` and referenced where the prototype references it.
-    - **Microcopy matches.** Subtitles, breadcrumbs, button labels, empty states, hint banners — verbatim from the prototype (allowing for i18n key indirection).
-  - A FAIL row names every divergence concretely ("filter pills absent on `/catalog`", "Instrument Serif not loaded — computed font-family on h1 is `system-ui`", "member chips replaced by plain text on song cards").
-  - The prototype itself is the source of truth — when the prototype and the spec disagree on a visible detail, the validator flags the conflict in *Validation gaps* but defers to the prototype for the row's verdict.
-1. **Result** — every visible artefact named in the Result section. Typography, layout, copy, colours, spacing.
-
-   **One row per artefact, not per interaction.** A screen the spec describes by what it *carries* gets one row per thing it carries. A row asking whether the screen can be opened, or whether a control on it responds, covers the control and nothing else. This is the shape of a real miss: the band's panel in `pragma`'s audience-voting spec is described as carrying a QR code, a button, **the live standing while the round runs**, and the round history. The checklist asked whether a round could be opened from it. It could. The panel rendered four of those five and shipped with a PASS on top of the one it did not — the one the whole feature exists to put on stage. See [`the-panel-that-paid-for-a-poll-it-never-rendered.md`](../../../docs/dantotsus/the-panel-that-paid-for-a-poll-it-never-rendered.md).
-
-   Read each Result paragraph as a list, write the list out, and give every item a row before driving the browser. An item you cannot reach is UNVERIFIABLE with a reason, never absent.
-2. **Use cases / edge cases — happy path** — each numbered step, in order, with a concrete browser action.
-3. **Use cases / edge cases — edge cases** — narrow viewport, reduced motion, dark-mode preference, slow network, large input, empty input.
-4. **Use cases / edge cases — error cases** — invalid URL params, third-party failures, keyboard accidents.
-5. **Q.O.D. user-visible decisions** — anything in the decisions table that the user can see (palette options, default mode, URL behaviour, mobile affordances, accessibility decisions). Skip Q.O.D. rows that are purely engineering — those go to `/technical-validation`.
-
-6. **Reachability of every write the surface implies.** For each screen that lists a kind of record, the validator checks that the screen itself offers a path to create one, and follows it. A list is the page a person opens to work on that record; when creation lives only somewhere else, the feature is unreachable to everyone who does not already know where. This row is checked even when the spec does not name it, because a spec written from the author's mental model rarely names the door they already know about — PR #60 shipped a setlists index that listed only the concerts that already had a setlist, and a band whose every concert had one could not create another anywhere in the application. FAIL names the surface and the record it cannot create.
-
-The Production strategy section is **not** validated here — analytics + alerting are observability concerns, not visible-behaviour concerns.
+- **One row per artefact.** The band's panel in `pragma`'s audience-voting spec
+  carried five things, and the checklist asked only whether a round could be
+  opened from it. The panel shipped on a PASS without the live standing the
+  feature existed to show. See
+  [`the-panel-that-paid-for-a-poll-it-never-rendered.md`](../../../docs/dantotsus/the-panel-that-paid-for-a-poll-it-never-rendered.md).
+- **Write reachability.** A setlists index listed only concerts that already
+  had a setlist, so a band whose every concert had one could create no other
+  anywhere.
+- **Pixel-content checks.** DOM assertions pass on an image that never
+  rendered.
 
 ## What does not get validated
 
 - Performance metrics that need a baseline (LCP, INP, bundle size).
-- Cross-browser parity. The validator runs Chromium via agent-browser. Other browsers are out of scope.
-- Pixel-perfect diff against a golden image. The validator compares against the spec's *claims*, not against a reference snapshot. If pixel-perfection is required, the spec must say so explicitly and golden images must be checked into the repo.
+- Cross-browser parity. The validator runs Chromium only.
+- Pixel-perfect diff against a golden image, unless the spec asks for it and
+  the golden images are checked in. Design-bundle fidelity is the exception
+  the agent describes.
 
 ## Verdict semantics
 
-The agent assigns one tag per assertion:
+One tag per assertion:
 
-- **PASS** — the agent observed the assertion to hold. Evidence: a deterministic check (selector found, attribute matches, URL matches, screenshot saved) is referenced in the row.
-- **FAIL** — the agent observed the assertion to *not* hold. Evidence: the captured screenshot or the value that contradicted the assertion is referenced.
-- **UNVERIFIABLE** — the assertion is not concrete enough to test, *or* a tooling limit prevents observing the relevant state. Evidence: a one-line note saying what's missing.
-
-Final verdict:
-
-- All rows PASS → **PASS**.
-- ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL rows + ≥ 1 UNVERIFIABLE row → **PASS_EXCEPT_UNVERIFIABLE**.
-
-There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict, not a flavour of PASS — it is mergeable only if the operator copies the UNVERIFIABLE rows into the PR description per the disclosure rule in `SKILL.md`. **FAIL is never mergeable** — the operator fixes the implementation (or the spec) and re-runs.
+- **PASS**: observed to hold, with a screenshot or a deterministic check in
+  the row.
+- **FAIL**: observed not to hold, with the screenshot or the contradicting
+  value.
+- **UNVERIFIABLE**: not concrete enough to test, or a tooling limit prevents
+  observing the state, with a one-line note.
 
 ## Where evidence lives
 
@@ -94,25 +69,3 @@ The report is always committed. Its screenshots split by verdict, per
 prefix, which [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) grants by hand. Move the
 staged files beside the report, commit them, rewrite the report's URLs as relative paths, and
 say so in one line. Dropping a PASS run's evidence would turn the report into "trust me".
-
-## Pixel-content checks (every screenshot)
-
-DOM assertions pass on an image that never rendered. So after every
-screenshot the validator runs `scripts/browser/broken-images.sh` with the
-screenshot's `--session` flag. It covers `<img>` and SVG `<image>`, and a
-non-zero exit FAILs the row. Per row, it also compares asserted text verbatim
-with `textContent`, and asserted placement with `getBoundingClientRect()`.
-
-## Common mistakes
-
-| Typical error | Consequences |
-|---|---|
-| Skill summarises the implementation for the agent | Validation inherits the bias the standalone rule exists to prevent. |
-| Skill dispatches `general-purpose` instead of `visual-validator` | The dedicated agent's frontmatter rules don't apply; the validator can drift. |
-| Falling back to Playwright when agent-browser is missing | The structural fit-for-LLM advantage disappears; surface the install instead. |
-| Agent screenshots without waiting for animation settle | Flaky FAILs on rAF-driven animations; ignored after the third false alarm; real defects then slip. |
-| Agent infers intent from the implementation when the spec is vague | Implementer's bug is laundered through validation. The agent must tag UNVERIFIABLE and force the spec to be tightened. |
-| Verdict reports don't reference evidence | Reviewers can't tell PASS from "agent said so". Treat unsourced PASS as UNVERIFIABLE. |
-| Skipping edge-case rows because they require setup (resize, set device, set media) | The defects users hit live there. Pre-flight gate is meaningless without them. |
-| Gitignoring the validation folder | Evidence vanishes; reports become hearsay. |
-| **Verdict on DOM-presence without checking rendered pixels** | Broken `<img>` tags + alt-text fallback + content-mismatched text all pass DOM checks while users see a broken UI. Run the *Pixel-content checks* section above per screenshot. |

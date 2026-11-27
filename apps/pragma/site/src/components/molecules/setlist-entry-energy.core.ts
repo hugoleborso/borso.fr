@@ -7,18 +7,6 @@ export interface EnergyAppearance {
   readonly emptyClassName: string;
 }
 
-const EMPTY_SEGMENT_CLASS = 'bg-sunk border-rule-strong text-ink-soft';
-
-const STORED_APPEARANCE: EnergyAppearance = {
-  filledClassName: 'bg-accent border-accent text-on-accent',
-  emptyClassName: EMPTY_SEGMENT_CLASS,
-};
-
-const UNSET_APPEARANCE: EnergyAppearance = {
-  filledClassName: 'bg-ink-soft border-ink-soft text-leaf',
-  emptyClassName: EMPTY_SEGMENT_CLASS,
-};
-
 const STORED_METER_APPEARANCE: EnergyAppearance = {
   filledClassName: 'bg-accent',
   emptyClassName: 'bg-rule-strong',
@@ -42,11 +30,6 @@ export function isEnergyStored(state: EnergyState): boolean {
 // @FollowsBlueprint core-projection
 export function resolveEnergyLevel(state: EnergyState): number {
   return state.entryEnergy ?? state.songEnergy ?? ENERGY_DEFAULT;
-}
-
-// @FollowsBlueprint core-appearance
-export function selectEnergyAppearance(isStored: boolean): EnergyAppearance {
-  return isStored ? STORED_APPEARANCE : UNSET_APPEARANCE;
 }
 
 // @FollowsBlueprint core-appearance

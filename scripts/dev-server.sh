@@ -6,7 +6,7 @@
 #
 # Agents share this machine. A server started with `pnpm dev &` shares the
 # caller's process group, so the only way left to stop it was a name pattern,
-# and `pretool-no-broad-kill.sh` refused that 86 times across the archived
+# and `scripts/hooks/checks/no-broad-kill.core.ts` refused that 86 times across the archived
 # friction logs by 2026-11-16. This script starts the server as the leader of
 # its own session and keeps that id, so `stop` kills exactly its group.
 # The label tells two agents running the same app apart. It defaults to main.

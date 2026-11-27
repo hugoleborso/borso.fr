@@ -1,7 +1,7 @@
 # tech-lead-orchestrator standard
 
-The contract this skill is held to. `/technical-validation` reads this when
-reviewing a tech-lead-orchestrator change.
+The reference [`SKILL.md`](./SKILL.md) walks through. `/technical-validation`
+reads it when reviewing a tech-lead-orchestrator change.
 
 ## Substrate boundary — Skill (chat) vs Workflow (script)
 
@@ -9,18 +9,13 @@ Per [ADR-2026-06-05T2337](../../../docs/adr/2026-06-05T2337-dynamic-workflows-fo
 the pipeline runs on two substrates depending on whether the stage needs
 human input:
 
-- **Skill in chat (this file's body)** owns `spec` + `adrs` — both are
-  human-bound (perspective sweeps, AskUserQuestion, ratification,
-  decision-support walk). Workflows cannot pause for mid-run human input,
-  so these stages stay in the chat session.
+- **Skill in chat** owns `spec` + `adrs`. Both need the human mid-run, and
+  a Workflow cannot pause for that.
 - **Dynamic Workflow**, generated per run from `.claude/commands/feature-pipeline.md` (no script is committed under `.claude/workflows/`), owns
   `plan → implement → validate → ship`, dispatched via
   `/feature-pipeline <spec-path>` once the human has ratified the spec
-  and all candidate ADRs. The workflow invokes the existing
-  `/technical-conception`, `/implementation`, `/technical-validation`,
-  `/visual-validation`, `/open-pr` skills as subagents — it does not
-  reimplement them. The skill standards (`.claude/skills/<skill>/standard.md`)
-  remain the durable contract; the workflow is the runtime substrate.
+  and all candidate ADRs. It invokes the existing skills as subagents, whose
+  standards stay the durable contract.
   A Workflow runs only when the operator opted into one. Without that
   opt-in, the chat session runs the same stages as sequential Agent calls,
   one fresh subagent per stage, and loads the two validation skills itself.
@@ -30,18 +25,13 @@ human input:
   `/adr` in chat, then re-launches `/feature-pipeline` — the script
   reads `state.json` and resumes from the stage where it stopped.
 
-The stage diagram below is the union of both substrates; the *transition*
-column names where each row lives. See
-[`.claude/commands/feature-pipeline.md`](../../commands/feature-pipeline.md)
-for the workflow's stage-by-stage contract and
-[`docs/knowledge/dynamic-workflow-feature-pipeline.md`](../../../docs/knowledge/dynamic-workflow-feature-pipeline.md)
-for the operator runbook.
+The stage diagram below is the union of both substrates. The operator
+runbook is
+[`docs/knowledge/dynamic-workflow-feature-pipeline.md`](../../../docs/knowledge/dynamic-workflow-feature-pipeline.md).
 
 ## Stage diagram
 
-The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
-`arbitrate`, `ship`, `escalated`. **ADRs come before the plan** — they
-constrain it. Transitions:
+**ADRs come before the plan**, because they constrain it. Transitions:
 
 | From | To | When |
 |---|---|---|
@@ -54,14 +44,7 @@ constrain it. Transitions:
 | arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
 | arbitrate | escalated | `verdictKind` maps to action `escalate`, or blocking findings remain after round 2. Terminal. |
 | arbitrate | ship | All verdicts PASS. |
-| ship | (end) | Push successful, deploy reminder issued, **PR description updated to reflect what the run actually shipped** (see *PR description maintenance* below). |
-
-The spec is the source of truth for ADR-qualifying choices. If the
-spec is thin on tech surface — no Q.O.D., no Types section, no
-architectural decisions visible — the orchestrator escalates back to
-`/specification` (reason: `spec-thin-on-tech-surface`) rather than
-guessing the choices itself. ADRs derived from invented decisions
-poison the audit trail.
+| ship | (end) | Push successful, **PR description updated to reflect what the run actually shipped** (see *PR description maintenance* below). |
 
 ## `state.json` schema
 
@@ -85,12 +68,11 @@ on every retry-counter increment. The file is committed at `ship`.
 
 ## Verdict YAML contract
 
-See [`sub-agent-contract.md`](./sub-agent-contract.md) for the full
-contract. The orchestrator's promise:
+The full contract is [`sub-agent-contract.md`](./sub-agent-contract.md).
 
-- Read **only** the YAML front-matter (the block between the leading
-  `---` delimiters), via `Read` with a `limit:` of ~15 lines.
-- Never absorb the markdown body except when the verdict is
+- Read **only** the YAML front matter, via `Read` with a `limit:` of about
+  15 lines. Absorbing bodies destroys the context budget.
+- Never read the markdown body except when the verdict is
   `fail-plan` or `escalate` and the body is needed to inform the
   next stage's prompt.
 - Treat unparseable front-matter (missing block, malformed YAML,
@@ -113,8 +95,7 @@ Compose the `verdictKind` from the verdict's `status` + `next`:
 ## ADR triggers (4, OR)
 
 A choice qualifies for an ADR when **at least one** of these flags is
-`true`. Detection is fuzzy — the orchestrator (the LLM) reads the
-spec's Q.O.D. + Changes / Types sections and judges each candidate:
+`true`. Judge each candidate from the spec's Q.O.D. + Changes / Types:
 
 1. **multiple-alternatives** — ≥ 2 serious paths were considered.
 2. **cross-cutting** — touches ≥ 2 apps or ≥ 2 modules.
@@ -123,28 +104,22 @@ spec's Q.O.D. + Changes / Types sections and judges each candidate:
 4. **looks-standard** — industry-standard pattern or already solved in
    another repo. The ADR records reuse vs. reinvent.
 
-If none of the four fires for a candidate, no ADR — that's the gate
-against ADR spam.
+If none fires, no ADR.
 
 ### Tech-lead validation (human in the loop)
 
 The orchestrator's judgment on which candidates qualify is a **draft**.
-Before invoking `/adr` (piloted mode), surface the candidate list to Hugo via
-`AskUserQuestion`, one question per candidate, with options:
+Writing ADRs unratified pollutes `docs/adr/`. Before invoking `/adr`, ask the
+operator with `AskUserQuestion`, one question per candidate, with options:
 
 - *Write ADR (Recommended)* — confirm, proceed to `/adr` (piloted mode).
 - *Skip — not really architectural* — drop the candidate, no ADR.
 - *Merge with ADR &lt;id&gt;* — fold into an existing ADR (the
   orchestrator records the link, no new ADR written).
 
-The human's answers are `guidance` / `answer` messages, not
-`corrections` — confirming a draft list is productive engagement, not
-a defect signal. Append one `human_message_received` event per
-answer with the appropriate category.
-
-If Hugo declines every candidate, the orchestrator transitions
-`adrs → plan` with `state.adrIndex = []`. That's a valid outcome — not
-every feature has an ADR-qualifying choice.
+The answers are `guidance` / `answer` messages, not `correction`s. Append
+one `human_message_received` event per answer. Declining every candidate is
+valid, and the run moves to `plan` with `state.adrIndex = []`.
 
 ## Retry policy
 
@@ -206,23 +181,16 @@ see [`docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md`]
 - **The implementer names its shape before code:** the goal restated, the
   smallest change that meets it, and the data shape with its organising
   structure (state machine, table, typed model).
-
 - **Implementation dispatches pass `model: 'opus'` explicitly** — never
   rely on an implicit "inherits from parent" default for the
   highest-capability stage.
 - **Rounds ≥ ~4 commits or ~20 files default to `isolation: "worktree"`**
   (verify with `git worktree list` right after dispatch; if the flag was
   dropped, fall back to one round at a time).
-- **Dispatch briefs name both halves of the gate** — oxlint *and*
-  `oxfmt --check`. A brief
-  naming one half lets the other drift a round at a time, because every
-  round passes the check its brief named.
+- **Dispatch briefs name both halves of the gate**, oxlint *and*
+  `oxfmt --check`. Every round passes the check its brief named.
 
 Full rationale: [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../../docs/knowledge/orchestrator-dispatch-hygiene.md).
-
-A question verdict (`status: question`) does **not** consume a retry —
-the orchestrator surfaces the question to the human via
-`AskUserQuestion`, then re-invokes the sub-agent with the answer.
 
 ## Spec immutability
 
@@ -237,15 +205,17 @@ the orchestrator surfaces the question to the human via
 
 ## Context discipline (no hard cap)
 
-- The orchestrator tracks `state.bytesRead` cumulatively (estimated
-  from line counts × ~120 bytes when reading files; exact when
-  `wc -c` is run).
-- At each log-scale palier crossed (1 / 2 / 4 / 8 / 16 / … KiB), it
-  appends a `context_growth` event with the milestone value.
-- The cap is **deliberately absent** (decision Q-CONTEXT). The signal
-  is post-hoc, fed to the metrics recipe in
-  [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md)
-  and surfaced by `/after-task-kaizen`.
+The orchestrator's own context is the failure mode of failure modes, because
+it sees every artefact and retry. It reads no code, diffs or report bodies,
+and reads a plan in full only to arbitrate `fail-plan`.
+
+- Track `state.bytesRead` cumulatively (lines read × about 120 bytes, or
+  `wc -c`).
+- At each log-scale milestone crossed (1 / 2 / 4 / 8 / 16 / … KiB), append a
+  `context_growth` event with the milestone value.
+- The cap is **deliberately absent** (decision Q-CONTEXT). The signal is
+  post-hoc, for the metrics recipe in
+  [`docs/knowledge/tech-lead-orchestrator.md`](../../../docs/knowledge/tech-lead-orchestrator.md).
 
 ## Human-message classification
 
@@ -259,14 +229,6 @@ When the human re-engages mid-run, classify before continuing:
 
 The orchestrator appends a `human_message_received` event with the
 chosen `category` to `journal.md.jsonl`. No hook (decision Q-HUMAN-MSG).
-
-## Visual-validation skip
-
-A feature with no UI surface skips `/visual-validation` silently
-(decision Q-VIS-VAL). The orchestrator appends a
-`visual_validation_skipped` event with a `reason` (e.g.
-`"no-ui-surface: skill-only feature"`) and proceeds with only
-`/technical-validation`'s verdict.
 
 ## Journal event schema
 
@@ -304,18 +266,12 @@ runs/<run-id>/agents/<skill>-<step>.md
 runs/<run-id>/errors.log                  (only when something throws)
 ```
 
-Aborted runs stay in the tree (decision Q-RUN-COMMIT). `git add -A`
-on the `runs/` folder at `ship` is part of the commit, not a follow-up.
+Aborted runs stay in the tree (decision Q-RUN-COMMIT), staged at `ship`.
 
 ## PR description maintenance (stage `ship`)
 
-If the run is happening on a branch with an **open PR**, the orchestrator
-updates the PR title + body as part of the `ship` stage — before issuing
-the deploy reminder. PR descriptions are the reader's window into a
-merged PR; they go stale instantly when the work scope evolves
-mid-branch (a `feat(meta): seed X` PR that quietly grew a full feature
-redesign + two ADRs + a dantotsu reads like the wrong PR if its body
-still says "seed X").
+If the branch has an **open PR**, the orchestrator updates its title and
+body at `ship`. A body goes stale as soon as the scope grows mid-branch.
 
 Check `mcp__github__list_pull_requests state=open` for a PR whose
 `head.ref` matches the current branch. If one exists:
@@ -330,11 +286,8 @@ Check `mcp__github__list_pull_requests state=open` for a PR whose
    carry every `PASS_EXCEPT_UNVERIFIABLE` row verbatim (a reader who
    cannot see them cannot tell a clean pass from a caveated one), name
    the committed screenshots for UI work, and state what the operator
-   checks on the preview before merging. This list used to prescribe
-   `## Summary`, `## Validation gaps`, `## Visual evidence` and
-   `## Test plan`, which the checker refuses.
+   checks on the preview before merging.
 
-If no PR is open, skip — the orchestrator never opens PRs on its own
-unless the user explicitly asks. The deploy reminder still fires.
+If no PR is open, skip. The orchestrator opens a PR only when the user asks.
 
 Rung-2 eradication of `docs/dantotsus/orchestrator-shipped-with-stale-pr-description.md`.

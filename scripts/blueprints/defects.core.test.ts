@@ -3,86 +3,22 @@ import {
   countDefectsByBlueprint,
   readBlueprintAnnotations,
   rankBlueprintRisk,
-  readBlueprintIds,
-  readDantotsuReference,
   renderDefectReport,
   selectUnknownBlueprintReferences,
   type BlueprintAdoption,
   type DantotsuReference,
 } from './defects.core';
 
-function buildFrontMatter(body: string): string {
-  return `---\ndate: 2026-08-15\nseverity: high\n${body}\n---\n\n# A title\n\nprose\n`;
-}
-
-describe('readBlueprintIds', () => {
-  it('reads the identifiers a dantotsu names', () => {
-    const markdown = buildFrontMatter('blueprints: [optimistic-mutation, query-module]');
-    expect(readBlueprintIds(markdown)).toEqual(['optimistic-mutation', 'query-module']);
-  });
-
-  it('reads an identifier written in quotes', () => {
-    expect(readBlueprintIds(buildFrontMatter("blueprints: ['query-module']"))).toEqual([
-      'query-module',
-    ]);
-  });
-
-  it('strips a quote only at the ends of an identifier', () => {
-    expect(readBlueprintIds(buildFrontMatter("blueprints: [ab'cd]"))).toEqual(["ab'cd"]);
-  });
-
-  it('reads an empty list as naming nothing', () => {
-    expect(readBlueprintIds(buildFrontMatter('blueprints: []'))).toEqual([]);
-  });
-
-  it('reads a dantotsu with no blueprints field as naming nothing', () => {
-    expect(readBlueprintIds(buildFrontMatter('tags: [react]'))).toEqual([]);
-  });
-
-  it('reads a document with no front matter as naming nothing', () => {
-    expect(readBlueprintIds('# Just a title\n\nprose\n')).toEqual([]);
-  });
-
-  it('ignores a blueprints line that is not in the front matter', () => {
-    const markdown = `${buildFrontMatter('tags: [react]')}\nblueprints: [sneaky]\n`;
-    expect(readBlueprintIds(markdown)).toEqual([]);
-  });
-});
-
-describe('readDantotsuReference', () => {
-  it('reads the title and the identifiers', () => {
-    const reference = readDantotsuReference(
-      'a-slug',
-      buildFrontMatter('blueprints: [query-module]'),
-    );
-    expect(reference).toEqual({
-      slug: 'a-slug',
-      title: 'A title',
-      blueprintIds: ['query-module'],
-    });
-  });
-
-  it('trims a title padded at the end of its line', () => {
-    expect(readDantotsuReference('a-slug', '# A title   \n').title).toBe('A title');
-  });
-
-  it('falls back to the slug when the document has no title', () => {
-    expect(readDantotsuReference('a-slug', 'no title here').title).toBe('a-slug');
-  });
-});
-
 describe('selectUnknownBlueprintReferences', () => {
   const known = new Set(['query-module']);
 
   it('accepts a reference to a blueprint that exists', () => {
-    const references: DantotsuReference[] = [
-      { slug: 'a', title: 'A', blueprintIds: ['query-module'] },
-    ];
+    const references: DantotsuReference[] = [{ slug: 'a', blueprintIds: ['query-module'] }];
     expect(selectUnknownBlueprintReferences(references, known)).toEqual([]);
   });
 
   it('reports a reference to a blueprint that has been renamed away', () => {
-    const references: DantotsuReference[] = [{ slug: 'a', title: 'A', blueprintIds: ['gone'] }];
+    const references: DantotsuReference[] = [{ slug: 'a', blueprintIds: ['gone'] }];
     expect(selectUnknownBlueprintReferences(references, known)).toEqual([
       'a names blueprint `gone`, which does not exist',
     ]);
@@ -92,9 +28,9 @@ describe('selectUnknownBlueprintReferences', () => {
 describe('countDefectsByBlueprint', () => {
   it('counts each blueprint once per dantotsu', () => {
     const references: DantotsuReference[] = [
-      { slug: 'a', title: 'A', blueprintIds: ['query-module', 'query-module'] },
-      { slug: 'b', title: 'B', blueprintIds: ['query-module'] },
-      { slug: 'c', title: 'C', blueprintIds: ['atom-plain'] },
+      { slug: 'a', blueprintIds: ['query-module', 'query-module'] },
+      { slug: 'b', blueprintIds: ['query-module'] },
+      { slug: 'c', blueprintIds: ['atom-plain'] },
     ];
     expect(countDefectsByBlueprint(references)).toEqual([
       { blueprintId: 'query-module', dantotsuSlugs: ['a', 'b'] },
@@ -103,9 +39,7 @@ describe('countDefectsByBlueprint', () => {
   });
 
   it('orders equal counts by identifier, so the page is stable', () => {
-    const references: DantotsuReference[] = [
-      { slug: 'a', title: 'A', blueprintIds: ['zebra', 'alpha'] },
-    ];
+    const references: DantotsuReference[] = [{ slug: 'a', blueprintIds: ['zebra', 'alpha'] }];
     expect(countDefectsByBlueprint(references).map((entry) => entry.blueprintId)).toEqual([
       'alpha',
       'zebra',
@@ -113,7 +47,7 @@ describe('countDefectsByBlueprint', () => {
   });
 
   it('counts nothing when no dantotsu names a blueprint', () => {
-    expect(countDefectsByBlueprint([{ slug: 'a', title: 'A', blueprintIds: [] }])).toEqual([]);
+    expect(countDefectsByBlueprint([{ slug: 'a', blueprintIds: [] }])).toEqual([]);
   });
 });
 

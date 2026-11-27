@@ -80,10 +80,6 @@ export function zoneOffsetMinutes(instant: Date, timeZone: string): number {
   return (wallMilliseconds - instantToTheMinute) / MILLISECONDS_PER_MINUTE;
 }
 
-export function parisOffsetMinutes(instant: Date): number {
-  return zoneOffsetMinutes(instant, BAND_TIME_ZONE);
-}
-
 export function zonedWallTimeToInstant(wallTime: WallTime, timeZone: string): Date {
   const wallMilliseconds = wallTimeAsUtcMilliseconds(wallTime);
   const shiftedBy = (instantMilliseconds: number): number =>
