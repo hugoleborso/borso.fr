@@ -19,22 +19,6 @@ Implementation feels like "just write the code", but in an AI-driven repo it has
 
 The implementation skill exists to make these failures structural rather than cultural — checked at write-time, traceable in the plan, and inherited by every future feature.
 
-## Why this matters (Jidoka)
-
-Same lineage as the prior skills: catch defects at the earliest point they can appear. For *clean-code* defects, write-time is earlier than review-time. For *coverage* defects, write-time is earlier than the validator's run. For *plan-drift* defects, walking the plan row-by-row is earlier than reconstructing intent from a diff.
-
-A defect that maps to a plan row has a known origin and a clear fix path. A defect that surfaces at review with no plan row to anchor it costs much more to investigate.
-
-## Audience
-
-The implementer (Claude, in nearly every case in this repo). The skill exists to make sure the implementer:
-
-- Reads the plan before opening any file.
-- Walks the plan top-down rather than picking the most interesting bits first.
-- Splits pure code into `*.utils.ts` and writes the test alongside.
-- Invokes domain sub-skills when the plan named them.
-- Runs the pre-flight gates and reads their reports.
-
 ## Required behaviours
 
 ### Open the blueprint for the layer before writing the file
