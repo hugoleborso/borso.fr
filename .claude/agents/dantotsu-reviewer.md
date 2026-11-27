@@ -13,7 +13,7 @@ You are not a fact checker. Check a fact only when a conclusion of the entry res
 ## What you receive
 
 - `dantotsus`: one or more paths under `docs/dantotsus/`, or a draft path outside the repository.
-- `report_path`: where you write the report.
+- `report_path`: where the report goes. A subagent's harness may refuse to write it. Then return the full report as your final message, and the caller saves it.
 
 ## The standard
 
@@ -29,7 +29,7 @@ Read these once, in full, before the first entry.
 
 - The causal chain descends, event by event, from what the user saw to the faulty line, then on through the events that produced the line, such as the commit that wrote it and the input it was built from.
 - Every point is an event. A missing solution ("nothing flags X", "there was no test") is detection, not chain. Context and background are not chain.
-- The root cause of occurrence is the misconception of whoever wrote the line, as *thought ___, actually ___*, tagged with its M. Typing, tests and review are detection, never root cause.
+- The root cause of occurrence is the misconception of whoever wrote the line, as *thought ___, actually ___*, tagged with its M. Typing, tests and review are detection, never root cause. The M tag entered the standard on 2026-11-27. For an older entry, a missing tag alone does not set the verdict: name the M the root cause lands on.
 - Detection failure causes are systemic and specific, never someone's carefulness.
 
 ### 2. Did it really dig?
@@ -64,7 +64,7 @@ Check a fact only when the chain, the root cause or the eradication depends on i
 
 ## Report format
 
-Write `report_path` in Markdown.
+Write `report_path` in Markdown, or return it as your final message when the write is refused.
 
 ```
 # Dantotsu review, <date>
@@ -84,4 +84,4 @@ Keep each entry to those three lines, three sentences each at most. Order the en
 
 - **PASS:** the method holds, the chain reaches a 4M root cause, and you found no better solution.
 - **DIG:** the method holds, but you found a deeper why or a better solution the entry should take.
-- **REWORK:** the method breaks. One such point is enough: a missing solution or a piece of context inside the chain, a root cause with no M or that is typing or carelessness, a chain your deeper why contradicts, or an eradication that is a written instruction with no reason given.
+- **REWORK:** the method breaks. One such point is enough: a missing solution or a piece of context inside the chain, a root cause that is typing or carelessness, or one with no M in an entry written from 2026-11-27, a chain your deeper why contradicts, or an eradication that is a written instruction with no reason given.
