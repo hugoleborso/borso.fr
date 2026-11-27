@@ -82,12 +82,16 @@ see being called.
 
 ```diff
 -  tools: /^(Agent|Task)$/u,
-+  tools: /^(Agent|Task|Write|Edit|MultiEdit|NotebookEdit)$/u,
++  tools: /^(Write|Edit|MultiEdit|NotebookEdit)$/u,
 ```
 
-An edit passes when a subagent makes it, when its path is outside `apps/`,
-when the transcript shows `/route` or another framing skill, or when the
-branch adds a `spec.md`.
+One rule replaces the spawn check. A subagent's hook input carries the main
+session's `transcript_path` (measured on 2026-11-27 with a probe in
+`hook-runner.adapter.ts`), so a build agent's first app edit meets the same
+refusal as the session's own. An edit passes when its path is outside
+`apps/`, when the transcript shows `/route` or another framing skill, or when
+the branch adds a `spec.md`. A write through Bash, such as a heredoc, is not
+seen.
 
 **Proof it can fail:** `node scripts/hooks/hook.ts` in a checkout of main,
 with `KAIZEN_LOG_REFUSALS=0` and a transcript holding no skill call.
@@ -95,10 +99,10 @@ with `KAIZEN_LOG_REFUSALS=0` and a transcript holding no skill call.
 | Input | Before | After |
 | --- | --- | --- |
 | Write `apps/pragma/api/src/x.core.ts`, absolute path | 0 | 2, "This session has not run /route, and its branch adds no spec.md." |
-| Edit `apps/pragma/site/a.tsx`, relative path | 0 | 2 |
+| Edit `apps/pragma/site/a.tsx` by a subagent | 0 | 2 |
 | Edit `scripts/a.ts` | 0 | 0 |
 | the same app Write, transcript with a `route` Skill call | 0 | 0 |
-| the same app Write by a subagent (`agent_id` set) | 0 | 0 |
+| a `general-purpose` Agent spawn | 2 | 0, its first app edit is refused instead |
 
 **Similar instances:** `grep -l "route" docs/features/meta/lessons-from-pr-*/inventory.md`.
 PR #410 and PR #417 are the two sessions known to skip it (measured from
