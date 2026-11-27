@@ -18,7 +18,7 @@ real problem, so they read as broken tooling.
 | Blueprint generators | repo root | `ERR_MODULE_NOT_FOUND: Cannot find module '/home/user/borso.fr/apps/pragma/.claude/skills/blueprint/blueprint-indexing.ts'` — the path is resolved relative to `cwd`, so the error names a file that was never supposed to exist |
 | `vitest` | the app workspace (`apps/<slug>`) | `No test files found, exiting with code 1`, then a list of `include` globs that clearly cover the file you just named. The root has its own vitest config for `eslint-rules/**`, and the app's projects (`core`, `back-e2e`) only exist under the app |
 | `pnpm exec <anything>` | any workspace, or the root | `ERR_PNPM_RECURSIVE_EXEC_NO_PACKAGE  No package found in this workspace` when `cwd` is outside the monorepo entirely — a scratch directory, for instance |
-| `scripts/*.sh` | anywhere | each check `cd`s to the repo root itself with `cd "$(dirname "${BASH_SOURCE[0]}")/.."`. Copy that line into a new script. _2026-11-14_: five checks lacked it and passed on an empty tree from `apps/pragma`, see [`the-check-that-passed-on-an-empty-directory`](../dantotsus/the-check-that-passed-on-an-empty-directory.md) |
+| `scripts/*.sh` | repo root, unless the script `cd`s there itself | a script without the `cd` reads paths relative to wherever you stand. `grep -l '^cd ' scripts/*.sh` lists the scripts that `cd` to the root. Copy `cd "$(dirname "${BASH_SOURCE[0]}")/.."` into a new script. _2026-11-14_: five checks lacked it and passed on an empty tree from `apps/pragma`, see [`the-check-that-passed-on-an-empty-directory`](../dantotsus/the-check-that-passed-on-an-empty-directory.md) |
 
 Concretely:
 
@@ -37,7 +37,7 @@ wherever you happen to be, which is usually the app you were editing.
 
 ## Why not fix the tools
 
-The scripts under `scripts/` already resolve their own root, and that is the
+Most scripts under `scripts/` already resolve their own root, and that is the
 right pattern for anything this repository owns. The two that do not are
 `tsx <path>` and `vitest`, where the directory dependence belongs to the tool
 rather than to us: `tsx` resolves the path argument against `cwd` by definition,

@@ -129,31 +129,36 @@ custom-resource retries.
 within one deploy, plus `INSERT ... ON CONFLICT (name) DO NOTHING` on
 the `_migrations` table for belt-and-suspenders.
 
-## 8. Only the `admin` user exists; only `dsql:DbConnectAdmin` works at runtime
+## 8. A cluster starts with only `admin`, so the runtime needs a role you create
 
-There is no path today to provision a non-admin Postgres user from the
-migration runner. The `DsqlSigner` exposes
-`getDbConnectAdminAuthToken()` (admin) and `getDbConnectAuthToken()`
-(regular), but the regular one needs a non-admin user that simply
-doesn't exist out of the box.
+Out of the box only the `admin` user exists, so only
+`dsql:DbConnectAdmin` with `getDbConnectAdminAuthToken()` works.
+`getDbConnectAuthToken()` needs a non-admin Postgres role mapped to the
+caller's IAM principal.
 
-**Adaptation:** `DsqlSchema.grantConnect()` attaches
-`dsql:DbConnectAdmin`. The Lambda authenticates as `admin` and isolates
-per-stage data via `search_path = pr_<n>`. See
+**Adaptation (since PR #118):** the migration runner still connects as
+`admin`. It creates one role per stage (`api_<schema>`, plus
+`ai_reader_<schema>` when a reader is asked for) with `CREATE ROLE ...
+WITH LOGIN`, grants it the stage's schema and tables, and maps each
+Lambda role with `AWS IAM GRANT`. See
+`infra/cdk/src/internal/migration-runner/database-role.utils.ts`.
+`DsqlSchema.grantConnect()` attaches `dsql:DbConnect`, and each app's
+`api/src/database/client.ts` signs with `getDbConnectAuthToken()` as
+`DSQL_ROLE`. The history is in
 [`docs/dantotsus/dsql-grant-mismatched-runtime-auth.md`](../dantotsus/dsql-grant-mismatched-runtime-auth.md).
 
 ## 9. IAM is per-cluster, not per-schema
 
-`dsql:DbConnectAdmin` grants access to the entire cluster; we can't
-narrow IAM to a single Postgres schema. Logical isolation between
-stages depends entirely on the connection's `search_path` matching the
-right schema name.
+`dsql:DbConnect` and `dsql:DbConnectAdmin` grant access to the entire
+cluster. IAM cannot be narrowed to a single Postgres schema. Isolation
+between stages comes from the per-stage role's grants (§8) and the
+connection's `search_path`.
 
 **Adaptation:** the per-stage schema (`pr_<n>` / `prod`) is set on the
 connection via `connection: { search_path: schemaName }` in
 `client.ts`. Application code never qualifies tables with a schema
-prefix, so the search_path is the only thing that decides which data
-the Lambda sees.
+prefix, so the search_path decides which schema an unqualified table
+name resolves to.
 
 ## 10. `ALTER TABLE` only accepts a narrow subset of actions — no constraints, no DEFAULT, no SET/DROP NOT NULL
 
@@ -274,7 +279,7 @@ If you see this error… | …it's this divergence
 - `USING not supported for CREATE INDEX` → §5
 - `WHERE not supported for CREATE INDEX` → §6
 - `function pg_advisory_lock not supported` → §7
-- `not authorized to perform: dsql:DbConnectAdmin` → §8
+- `not authorized to perform: dsql:DbConnect` or `dsql:DbConnectAdmin` → §8
 - `ALTER TABLE ADD COLUMN with constraint not supported` → §10
 - `unsupported ALTER TABLE ALTER COLUMN ... SET NOT NULL statement` → §10
 - `unsupported mode. please use CREATE INDEX ASYNC` → §11
