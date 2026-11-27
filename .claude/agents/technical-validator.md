@@ -92,7 +92,7 @@ Run only what the branch affects, never `test:core`, `test:full-suite`, `test:mu
 
 - A full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base> --coverage --reporter=verbose`, then `pnpm --filter <pkg> run test:e2e --changed <base> --reporter=verbose`, which boots the local Postgres.
 - A front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base> --reporter=verbose`.
-- `--reporter=verbose` names each test file run, so the report can name the feature's own. A run that names no test file is not a pass.
+- `--reporter=verbose` names each test file run, so the report can name the feature's own. A run that names no test file is not a pass, except `test:e2e` on a diff that touches nothing under `api/`, `domain/` or `test/`, which the row says with that count.
 - Pass `<base>` and `<reviewed-sha>` as `$(git rev-parse <ref>)`. An all-digit short SHA made `vitest --changed` find nothing and exit 0.
 - A changed gated file (a `.core`, `.utils` or `.adapter` module, or its test) also runs `scripts/mutate-changed.sh <base> <app-or-path>`. A surviving mutant is blocking, because CI finds it otherwise and costs one more push.
 - When `git rev-list --merges <base>..HEAD` prints a commit, `main` was merged in above the base. Take the feature's files from `git log --first-parent --no-merges --name-only --format= <base>..HEAD | sort -u`, keep the `--changed` runs, and give `mutate-changed.sh` each gated file of that list.

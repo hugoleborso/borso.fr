@@ -28,6 +28,7 @@ const text = (value: unknown): object => ({ type: 'text', text: value });
 const tool = (name: string, input: object = {}): object => ({ type: 'tool_use', name, input });
 const toolResult = user([{ type: 'tool_result', content: 'ok' }]);
 const PUSHED = said(tool('Bash', { command: 'git push origin HEAD' }));
+const OPENED = said(tool('mcp__github__create_pull_request'));
 
 function lines(...rows: readonly object[]): string {
   return rows.map((row) => JSON.stringify(row)).join('\n');
@@ -210,20 +211,26 @@ describe('screensShown', () => {
     });
   });
 
-  it('blocks a push while screenshots wait in a pending upload folder', () => {
+  it('blocks a push to an open pull request while screenshots wait in a pending upload folder', () => {
     const found = [
       '/repo/docs/features/app/feat/validation/.pending-upload/.hidden/shot.png',
       '/repo/docs/features/app/feat/validation/.pending-upload/run/shot.png',
     ].join('\n');
 
-    expect(judge(lines(user('x'), PUSHED), { found })).toEqual({
+    expect(judge(lines(OPENED, user('x'), PUSHED), { found })).toEqual({
       kind: 'block',
       reason: PENDING_REASON,
     });
   });
 
+  it('lets a push end before any pull request exists, since the upload needs its number', () => {
+    const found = '/repo/docs/features/a/b/validation/.pending-upload/r/s.png';
+
+    expect(judge(lines(user('x'), PUSHED), { found })).toBe(PASS);
+  });
+
   it('looks for pending screenshots under the current folder when no cwd is given', () => {
-    const fake = createWorld({ transcript: lines(PUSHED) });
+    const fake = createWorld({ transcript: lines(OPENED, user('x'), PUSHED) });
     screensShown.run({ hook_event_name: 'Stop', transcript_path: TRANSCRIPT }, fake.world);
 
     expect(fake.runs[0]).toEqual([
@@ -237,8 +244,8 @@ describe('screensShown', () => {
     ]);
   });
 
-  it('reads a pull request opened through MCP as a push', () => {
-    const opened = said(tool('mcp__github__create_pull_request'));
+  it('blocks the turn that opens the pull request while screenshots wait', () => {
+    const opened = OPENED;
     const found = '/repo/docs/features/a/b/validation/.pending-upload/r/s.png';
 
     expect(judge(lines(opened), { found })).toEqual({ kind: 'block', reason: PENDING_REASON });
@@ -251,7 +258,7 @@ describe('screensShown', () => {
     expect(
       screensShown.run({ hook_event_name: 'Stop', transcript_path: TRANSCRIPT }, fake.world),
     ).toEqual({ kind: 'block', reason: PUSH_REASON });
-    expect(fake.runs.slice(1)).toEqual([
+    expect(fake.runs).toEqual([
       ['git', 'reflog', '--format=%H', '-n', '2', '@{upstream}'],
       ['git', 'diff', '--name-only', 'old', 'new'],
     ]);

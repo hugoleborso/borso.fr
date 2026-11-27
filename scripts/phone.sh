@@ -39,7 +39,10 @@ fail() {
 }
 
 cdp_port() {
-  agent-browser --session "$SESSION" get cdp-url 2>/dev/null | sed -n 's#^ws://[^:]*:\([0-9]*\)/.*#\1#p'
+  # No session makes agent-browser exit non-zero, and pipefail would end the
+  # script here, before the caller's fail names the missing session.
+  { agent-browser --session "$SESSION" get cdp-url 2>/dev/null || true; } |
+    sed -n 's#^ws://[^:]*:\([0-9]*\)/.*#\1#p'
 }
 
 restore_viewport() {

@@ -14,7 +14,7 @@ const QUOTED_SPAN = /"[^"\n]*"|“[^”\n]*”|`[^`\n]*`|(?<=^|\n)[ \t]*>[^\n]*/
 const SHOWING_TOOLS = new Set(['Artifact', 'SendUserFile']);
 const SHOWN_IN_TEXT = /!\[[^\]]*\]\(|claude\.ai\/(code\/)?artifact\//u;
 const PUSH = /\bgit\s+push\b/u;
-const PUSH_OR_PULL_REQUEST = /\bgit\s+push\b|create_pull_request/u;
+const PULL_REQUEST_OPENED = /create_pull_request/u;
 const SCREENSHOTS_TAKEN = /screenshots\/pr-|screenshots\.yml|visual-validation/u;
 const SITE_SOURCE = /(?<=^|\n)apps\/[^/]+\/site\/src\//u;
 const PENDING_SCREENSHOT =
@@ -79,13 +79,18 @@ function isTurnStart(row: Row): boolean {
   return Array.isArray(content) && !content.some(isToolResult);
 }
 
-export function readTurn(transcript: string): Row[] {
+function readRows(transcript: string): Row[] {
   const rows = transcript
     .split(LINE_BREAK)
     .map((line) => line.trim())
     .filter((line) => line !== '')
     .map((line): unknown => JSON.parse(line));
   if (!rows.every(isRecord)) throw new NotATranscript();
+  return rows;
+}
+
+export function readTurn(transcript: string): Row[] {
+  const rows = readRows(transcript);
   return rows.slice(rows.findLastIndex(isTurnStart) + 1);
 }
 
@@ -131,8 +136,15 @@ function hasPushedAScreenUnshown(inputs: string, world: HookWorld): boolean {
   return SITE_SOURCE.test(world.run('git', ['diff', '--name-only', ...moves.toReversed()]).stdout);
 }
 
-function hasLeftScreenshotsUnpublished(inputs: string, root: string, world: HookWorld): boolean {
-  if (!PUSH_OR_PULL_REQUEST.test(inputs)) return false;
+function hasLeftScreenshotsUnpublished(
+  inputs: string,
+  sessionInputs: string,
+  root: string,
+  world: HookWorld,
+): boolean {
+  const isPullRequestNumbered = PULL_REQUEST_OPENED.test(sessionInputs);
+  if (!PULL_REQUEST_OPENED.test(inputs) && !(PUSH.test(inputs) && isPullRequestNumbered))
+    return false;
   const features = `${root}/${FEATURES}`;
   const found = world.run('find', ['-L', features, '-mindepth', '6', '-maxdepth', '6']).stdout;
   return found.split('\n').some((path) => PENDING_SCREENSHOT.test(path.slice(features.length + 1)));
@@ -146,7 +158,8 @@ function judgeTurn(input: HookInput, world: HookWorld): Verdict {
   const turn = readTurn(transcript);
   if (shouldShowScreens(turn)) return { kind: 'block', reason: REASON };
   const inputs = dumpAssistantInputs(turn);
-  if (hasLeftScreenshotsUnpublished(inputs, input.cwd ?? '.', world)) {
+  const sessionInputs = dumpAssistantInputs(readRows(transcript));
+  if (hasLeftScreenshotsUnpublished(inputs, sessionInputs, input.cwd ?? '.', world)) {
     return { kind: 'block', reason: PENDING_REASON };
   }
   if (hasPushedAScreenUnshown(inputs, world)) return { kind: 'block', reason: PUSH_REASON };
