@@ -6,15 +6,11 @@ import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import type { WriteActor } from '../notifications/notifications.service';
-import { createSession } from '../sessions/sessions.service';
-import { appendEntry } from '../setlists/setlist-entry.service';
-import { createSetlist } from '../setlists/setlists.service';
 import { insertSongWithoutNotice } from '../songs/songs.service';
 import { hashToken, selectTokenExpiries } from '../oauth/token.core';
 import { createTask } from '../tasks/tasks.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
 import {
-  BLANK_ENTRY_DETAIL,
   SEED_INSTRUMENTS,
   SEED_MEMBERS,
   SEED_SONGS,
@@ -29,6 +25,7 @@ export { isPracticeTodayRequested } from './test-seed.core';
 import { seedPresences } from './test-seed-presences.service';
 import { seedFormerMemberInspiration } from './test-seed-edge-cases.service';
 import { SEED_TASKS } from './test-seed-task-board.core';
+import { seedConcertSetlist } from './test-seed-concert.service';
 import { seedConcertGear } from './test-seed-gear.service';
 import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
@@ -44,17 +41,13 @@ import {
   tryReadingProductionMembers,
 } from './test-seed.repository';
 
-const CONCERT_DAYS_FROM_NOW = 7;
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1_000;
 const MILLISECONDS_PER_DAY =
   HOURS_PER_DAY * MINUTES_PER_HOUR * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
-const CONCERT_CAPACITY = 120;
-const CONCERT_VENUE = 'Le Petit Bain';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
-const SEED_SETLIST_NAME = 'Set principal';
 const SEED_TOKEN_BYTES = 32;
 const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
@@ -196,40 +189,6 @@ function selectSeedActor(memberIdByName: ReadonlyMap<string, string>, now: Date)
   const [memberId] = memberIdByName.values();
   if (memberId === undefined) throw new Error('the seed wrote no member to act as');
   return { memberId, now };
-}
-
-async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor): Promise<string> {
-  const now = actor.now;
-  const concertDate = new Date(now.getTime() + CONCERT_DAYS_FROM_NOW * MILLISECONDS_PER_DAY);
-  const concert = await createSession(
-    {
-      kind: 'concert',
-      date: concertDate.toISOString(),
-      venue: CONCERT_VENUE,
-      capacity: CONCERT_CAPACITY,
-      friendsCountPerMember: {},
-    },
-    actor,
-  );
-  const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id }, actor);
-  if (created.kind === 'session-not-found')
-    throw new Error('seeded concert vanished before its setlist was written');
-  for (const [index, songId] of songIds.entries()) {
-    const detail = SEED_SONGS[index]?.entry ?? BLANK_ENTRY_DETAIL;
-    await appendEntry(
-      created.setlist.id,
-      {
-        songId,
-        energy: null,
-        lineupOverride: null,
-        keyOverride: detail.keyOverride,
-        capo: detail.capo,
-        notes: detail.notes,
-      },
-      actor,
-    );
-  }
-  return concert.id;
 }
 
 async function seedTransitionComment(songIds: readonly string[], actor: WriteActor): Promise<void> {

@@ -30,11 +30,15 @@ const listed = pages.map((page) =>
 );
 const operatorLines = listed
   .flatMap(selectOperatorMessages)
+  .toSorted((first, second) => first.at.localeCompare(second.at))
   .map(
     (message) =>
       `- [${message.at}]${message.isAnswer ? ' (answer)' : ''} ${message.text.replaceAll('\n', ' ')}`,
   );
-const kaizenLines = listed.flatMap(listLoggedLines).map((line) => `- ${line}`);
+const kaizenLines = listed
+  .flatMap(listLoggedLines)
+  .toSorted()
+  .map((line) => `- ${line}`);
 const inline = pages.filter((page) => 'saved' in page).length;
 process.stdout.write(
   [

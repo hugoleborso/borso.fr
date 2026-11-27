@@ -124,7 +124,7 @@ Quote the code for each row. An existing write path the diff only touches still 
 
 ## Procedure
 
-1. **Record the SHA.** The branch may move while you review. Keep reviewing the recorded SHA through `git show <sha>:<path>`, and say so in the preamble. Run tests and probes in the working tree after checking `git rev-parse HEAD` still prints that SHA. A `git archive` export cannot run them, because its setup files resolve to `scripts/` outside it. Delete any probe file before you report.
+1. **Record the SHA.** The branch may move while you review. Keep reviewing the recorded SHA through `git show <sha>:<path>`, and say so in the preamble. Run tests and probes in the working tree after checking `git rev-parse HEAD` still prints that SHA, or that `git diff --name-only <sha> HEAD -- . ':!docs/features'` prints nothing, since no app test reads a feature's documents. A `git archive` export cannot run them, because its setup files resolve to `scripts/` outside it. Delete any probe file before you report.
 2. **Resolve the diff** for the round, then walk categories A to E.
 3. **Check every FAIL row for its failing case and its type.** Move a row with no failing case to Notes.
 4. **Write the report.** Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step. The main session commits what it finds at that path.
