@@ -232,7 +232,7 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # does not: PR 50 maintained none. The `kaizen.sh init` SessionStart entry in
 # .claude/settings.json owns it, including parking a log another session left
 # behind; calling init here as well raced that entry over the same rename.
-log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
+log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh --where "<command, URL or file:line>" "<what you saw>"'
 
 # 10. The two generated lookups a session reads, neither of which is
 # committed: the blueprint index agents read before writing a file, and the

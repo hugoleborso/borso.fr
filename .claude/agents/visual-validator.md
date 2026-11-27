@@ -73,10 +73,10 @@ If `agent-browser` itself fails, write a single FAIL row titled "Tooling unavail
    - Touch: never `set device` or `click`, which give no touch events and no coarse pointer. Run `scripts/phone.sh start <url>`, then `scripts/phone.sh touch '<css selector>'`, which taps at 375 × 812 and exits 1 unless a touch reached the element. `agent-browser --session phone screenshot …` shows the result. An assertion needing touch you could not run is UNVERIFIABLE.
    - URL state: open with its params, screenshot, `agent-browser back`, re-check.
 6. **Write the report** at `report_path`, format below.
-7. **Log friction** that is not a finding about the app, one line each as you hit it, the problem only. A validator's friction is the most easily lost, because the report is about the app.
+7. **Log friction** that is not a finding about the app, one line each as you hit it: what you saw and where, never why. A validator's friction is the most easily lost, because the report is about the app.
 
    ```bash
-   scripts/kaizen.sh --from visual-validator "<what went wrong, one sentence>"
+   scripts/kaizen.sh --from visual-validator --where "<URL, screen or command>" "<what you saw>"
    ```
 
 8. **Return only the report path.**

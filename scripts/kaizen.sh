@@ -2,8 +2,8 @@
 # Log one piece of friction to KAIZEN.md, the scratch file `/after-task-kaizen`
 # sweeps when the work merges.
 #
-#   scripts/kaizen.sh "blueprint generators fail from an app dir, error names a path that never existed"
-#   scripts/kaizen.sh --from audit-stage-r2 "tapping +1 twice moves the counter and not the chart"
+#   scripts/kaizen.sh --where "pnpm blueprints, run from apps/pragma" "the error names a path that never existed"
+#   scripts/kaizen.sh --from audit-stage-r2 --where "/sessions/<id>, the +1 button" "tapping +1 twice moves the counter and not the chart"
 #   scripts/kaizen.sh show
 #   scripts/kaizen.sh archive <docs-slug>/<feature>
 #   scripts/kaizen.sh balance [<base-ref>]
@@ -29,9 +29,17 @@
 #
 # What belongs here: a defect, a vendor surprise, a correction you were given
 # twice, a tool that failed in a way that named the wrong problem, an
-# instruction you misread. **The problem only.** Do not write the fix — the
-# sweep designs the eradication, and a solution written in the moment is the
-# one you already thought of, which is usually the smallest one.
+# instruction you misread. **What you saw, and where you saw it.** Never the
+# cause, never the fix. The sweep starts from the bare observation and asks why
+# until it reaches the cause. A cause written in the moment is the guess you
+# already had, and it steers the sweep toward the eradication that guess
+# implies: on 2026-11-27 a line blamed the validators for a public API field,
+# before anyone had looked at why the field existed.
+#
+# So a line has two parts, and the script refuses one without both. The
+# sentence says what you saw. `--where` says where: the command you ran, the
+# URL, the screen, or the file and line. The place is what lets the sweep go
+# and look for itself instead of trusting the sentence.
 #
 # The file is gitignored, so it never lands in a commit. `archive` copies it
 # into the branch before the pull request opens, and the sweep reads that copy
@@ -75,10 +83,10 @@ HEADER="# KAIZEN — friction log for this task
 
 Append one line per friction event, as it happens, with:
 
-    $KAIZEN_COMMAND \"what went wrong, in one sentence\"
-    $KAIZEN_COMMAND --from <your-agent-label> \"...\"   # from a subagent
+    $KAIZEN_COMMAND --where \"<command, URL, screen or file:line>\" \"<what you saw>\"
+    $KAIZEN_COMMAND --from <your-agent-label> --where \"...\" \"...\"   # from a subagent
 
-The problem only, never the fix. \`/after-task-kaizen\` sweeps the archived
+What you saw and where, never the cause or the fix. \`/after-task-kaizen\` sweeps the archived
 copy in a new conversation after the merge, classifies each line, and designs
 the eradication. Subagents
 should append here too, naming themselves, so the sweep can tell one agent
@@ -118,16 +126,18 @@ park_another_sessions_log() {
     "$entries" "${owner:-unknown}" "$(basename "$parked")"
 }
 
+USAGE='usage: scripts/kaizen.sh [--from <label>] --where "<command, URL, screen or file:line>" "<what you saw>"'
 WRITER="${KAIZEN_AGENT:-main}"
-if [ "${1:-}" = '--from' ]; then
-  [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh --from <label> "<what went wrong>"\n' >&2; exit 1; }
-  WRITER="$2"
+WHERE=''
+while [ "${1:-}" = '--from' ] || [ "${1:-}" = '--where' ]; do
+  [ -n "${2:-}" ] || { printf '%s\n' "$USAGE" >&2; exit 1; }
+  if [ "$1" = '--from' ]; then WRITER="$2"; else WHERE="$2"; fi
   shift 2
-fi
+done
 
 case "${1:-}" in
   '')
-    printf 'usage: scripts/kaizen.sh [--from <label>] "<what went wrong, one sentence>" | show | archive <docs-slug>/<feature>\n' >&2
+    printf '%s | show | archive <docs-slug>/<feature>\n' "$USAGE" >&2
     exit 1
     ;;
   show)
@@ -254,10 +264,16 @@ case "${1:-}" in
       printf 'scripts/kaizen.sh: "%s" is not a subcommand (show, archive, balance, init), and one word is not a friction sentence. Nothing logged.\n' "$*" >&2
       exit 1
     fi
+    # The place is what the sweep goes back to. A line without one leaves it
+    # the sentence alone, and the sentence is where a guessed cause hides.
+    if [ -z "$WHERE" ]; then
+      printf 'scripts/kaizen.sh: say where you saw it with --where "<command, URL, screen or file:line>". Write what you saw, not why it happened: the sweep finds the cause. Nothing logged.\n%s\n' "$USAGE" >&2
+      exit 1
+    fi
     ensure_file
     # One line, one write. Newlines in the argument would break that guarantee,
     # so they collapse to spaces.
-    entry="$(printf '%s' "$*" | tr '\n' ' ')"
+    entry="$(printf '%s (where: %s)' "$*" "$WHERE" | tr '\n' ' ')"
     writer="$(printf '%s' "$WRITER" | tr '\n ' '--')"
     # The date is part of the stamp because one session's log outlives one task:
     # the PR #206 sweep had to cut a log holding four pull requests' lines by
