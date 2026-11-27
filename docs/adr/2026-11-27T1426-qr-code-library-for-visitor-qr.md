@@ -1,6 +1,6 @@
 # ADR-2026-11-27T1426: Draw the visitor QR code with qrcode.react
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-27
 - **Deciders:** hugoleborso
 - **Tags:** visitor-qr-code, pragma, front-end

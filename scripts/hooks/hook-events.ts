@@ -32,6 +32,7 @@ import { onePullRequestPerSession } from './checks/one-pull-request-per-session.
 import { screensShown } from './checks/screens-shown.core.ts';
 import { sessionEnv } from './checks/session-env.core.ts';
 import { sessionStart } from './checks/session-start.core.ts';
+import { specBriefRunsASkill } from './checks/spec-brief-runs-a-skill.core.ts';
 import { subagentNoStaging } from './checks/subagent-no-staging.core.ts';
 import { validationRunsAsItsAgent } from './checks/validation-runs-as-its-agent.core.ts';
 
@@ -55,6 +56,7 @@ export const CHECKS_BY_EVENT: Readonly<Record<HookEvent, readonly Check[]>> = {
     onePullRequestPerSession,
     agentWorkFolder,
     agentAfterRoute,
+    specBriefRunsASkill,
     noRelayedMergeClearance,
     mockupReadsVisualRules,
     mockupCopy,

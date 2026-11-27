@@ -94,12 +94,36 @@ describe('kaizen.sh sweep-input', () => {
 });
 
 describe('kaizen.sh balance', () => {
-  it('refuses a sweep that adds more than it removes, a knowledge entry moved into a counted folder included', () => {
-    const before = { [ENTRY]: lines(2), 'docs/knowledge/moved.md': lines(5) };
-    const sweep = { 'docs/standards/moved.md': lines(5), 'docs/knowledge/moved.md': null };
+  it('refuses a sweep that adds more code than it removes, whatever markdown it cuts', () => {
+    const before = { [ENTRY]: lines(2), 'docs/standards/a.md': lines(9) };
+    const sweep = { 'scripts/new.ts': lines(5), 'docs/standards/a.md': lines(1) };
     const { status, stdout } = kaizenAfter([before, { ...sweep, [ENTRY]: '' }], 'balance', 'HEAD^');
 
     expect(stdout).toContain('Balance: added 5, removed 2 outside');
+    expect(status).toBe(1);
+  });
+
+  it("lets a sweep through that commits the operator's waiver", () => {
+    const sweep = {
+      'scripts/new.ts': lines(5),
+      'docs/features/meta/lessons-from-pr-9/balance-waiver.md': lines(1),
+    };
+    const { status, stdout } = kaizenAfter([{ [ENTRY]: lines(1) }, sweep], 'balance', 'HEAD^');
+
+    expect(stdout).toContain('Waived by the operator');
+    expect(status).toBe(0);
+  });
+
+  it('counts no line removed from a skill or an agent definition, so cutting one cannot pay for an addition', () => {
+    const before = { '.claude/skills/a/SKILL.md': lines(9), '.claude/agents/a.md': lines(9) };
+    const sweep = {
+      '.claude/skills/a/SKILL.md': lines(1),
+      '.claude/agents/a.md': lines(2),
+      'a.sh': lines(2),
+    };
+    const { status, stdout } = kaizenAfter([before, sweep], 'balance', 'HEAD^');
+
+    expect(stdout).toContain('Balance: added 2, removed 0 outside');
     expect(status).toBe(1);
   });
 

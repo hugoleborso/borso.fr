@@ -25,7 +25,7 @@ A self-contained brief with these fields, and nothing else. The implementer is n
 A branch gets two rounds at most. Before reading anything, record `git rev-parse HEAD` as `Reviewed: <sha>`, which the next round diffs from.
 
 - **Round 1** reviews the whole diff `<base_ref>...HEAD` against the spec and the plan.
-- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, `<reviewed-sha>` being the `Reviewed:` line of `previous_report`. It re-checks each blocking finding of that report, one row each, PASS when fixed, FAIL (blocking) when not. A round-1 finding, blocking or not, that a commit message after `<reviewed-sha>` dismisses (`git log <reviewed-sha>..HEAD --format=%B`) also gets a row. Run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not, because the false reason is what ships in the history. Walk no file the fix did not touch, and raise no non-blocking finding on code round 1 already read. When the fix commits carry new scope, such as the same change rolled out to more apps, walk categories A and D for each file round 1 never read, and say so in the preamble.
+- **Round 2** reviews only `git diff <reviewed-sha>..HEAD`, `<reviewed-sha>` being the `Reviewed:` line of `previous_report`. It re-checks each blocking finding of that report, one row each, PASS when fixed, FAIL (blocking) when not. A round-1 finding, blocking or not, that a commit message after `<reviewed-sha>`, or a file that message names, dismisses (`git log <reviewed-sha>..HEAD --format=%B`) also gets a row. Read only the commits: the pull request opens after validation, so it holds no dismissal. Run the check its reason claims, PASS when the claim holds, FAIL (blocking) when it does not, because the false reason is what ships in the history. Walk no file the fix did not touch, and raise no non-blocking finding on code round 1 already read. When the fix commits carry new scope, such as the same change rolled out to more apps, walk categories A and D for each file round 1 never read, and say so in the preamble.
 
 ## Inputs you read yourself
 
@@ -59,7 +59,7 @@ Every row goes under exactly one of the five categories.
 
 ### A spec in the short form
 
-A spec holding only *Goal*, *Behaviour*, *Data shape* and *Out of scope* is valid input, not a gap. Build category A from its *Behaviour* and *Data shape* bullets and take the files from the plan or the diff. Build category D from the same bullets, walked in order and split as category D step 2 says. A claim only a running browser can show (motion, timing, a spin count, layout at a width) gets a D row whose verdict reads `routed to /visual-validation`, never a citation of keyframes standing in for a test. Give the routed count in the preamble. Ask for no missing section in a row, note or friction line.
+A spec holding only *Goal*, *Behaviour*, *Data shape* and *Out of scope* is valid input, not a gap. Build category A from its *Behaviour* and *Data shape* bullets and take the files from the plan or the diff. Build category D from the same bullets, walked in order and split as category D step 2 says. A claim only a running browser can show (motion, timing, a spin count, layout at a width) gets a D row whose verdict reads `routed to /visual-validation`, never a citation of keyframes standing in for a test. Give the routed count in the preamble. Ask for no missing section in a row, note or friction line: three reports in a row asked, and no spec added them.
 
 ### An ADR as the contract
 
@@ -95,7 +95,7 @@ Run only what the branch affects, never `test:core`, `test:full-suite`, `test:mu
 - `--reporter=verbose` names each test file run, so the report can name the feature's own. A run that names no test file is not a pass.
 - Pass `<base>` and `<reviewed-sha>` as `$(git rev-parse <ref>)`. An all-digit short SHA made `vitest --changed` find nothing and exit 0.
 - A changed gated file (a `.core`, `.utils` or `.adapter` module, or its test) also runs `scripts/mutate-changed.sh <base> <app-or-path>`. A surviving mutant is blocking, because CI finds it otherwise and costs one more push.
-- When `git rev-list --merges <base>..HEAD` prints a commit, `main` was merged in above the base. Take the feature's files from `git log --first-parent --no-merges --name-only --format= <base>..HEAD | sort -u`, keep the `--changed` runs, and give `mutate-changed.sh` each gated file of that list.
+- When `git rev-list --merges <base>..HEAD` prints a commit, `main` was merged in above the base, and the diff, `--changed <base>` and `mutate-changed.sh <base>` all carry what the merge brought. Take the feature's files from `git log --first-parent --no-merges --name-only --format= <base>..HEAD | sort -u`, which leaves out a file only a conflict resolution touched. Keep the `--changed` runs, which run more tests than the feature needs and miss none, and give `mutate-changed.sh` each gated file of that list.
 - When the diff changes `pnpm-lock.yaml` or a version in `pnpm-workspace.yaml`'s catalog, also run `pnpm --filter <pkg> exec vitest run --project core` without `--changed` for each full-stack app whose resolved dependencies moved. `--changed` reads no lockfile change. The e2e suite stays CI's.
 - Every `*.utils.ts` in the touched workspaces has a sibling `*.utils.test.ts` the runner picks up, or the row FAILs. A workspace with a `*.utils.ts` and no test script FAILs, because a missing runner is a missing gate. A workspace with neither is UNVERIFIABLE.
 
@@ -107,7 +107,7 @@ Run only what the branch affects, never `test:core`, `test:full-suite`, `test:mu
 2. Build the rows from the spec's *Use cases / edge cases* minus what is routed to `/visual-validation`. **Walk that section bullet by bullet, in its order, and split a bullet that makes two claims into two rows.** Never take the rows from *Test strategy*, which is the author's plan of tests and can leave out a case.
 3. Write in the preamble: `N use cases routed to /visual-validation; out of scope for this report.` Emit no UNVERIFIABLE row for a routed assertion.
 4. For each row, quote the covering test's `describe`/`it` text, its `file:line`, **and the assertion line that would fail if the claim were false**. No test means FAIL.
-   - A test that reaches the right function without setting up the row's condition does not cover it. *"A new password equal to the old one is allowed"* is not covered by a test that always sends a different password.
+   - A test that reaches the right function without setting up the row's condition does not cover it, however close its lines are. *"A new password equal to the old one is allowed"* is not covered by a test that always sends a different password.
    - A claim no test can assert without flakiness, or that holds by construction (equal work on two paths, a fresh random salt), is a PASS whose *Covering test* cell opens with **structural:** and cites the line that guarantees it.
 
 A spec with a manual-sweep test strategy gets **one** FAIL row at the top of category D, "Spec waives autonomous coverage — non-conformant", citing the line and recommending `/specification`, not an UNVERIFIABLE per use case. A static feature with no behaviour skips the category with a note.
@@ -118,7 +118,7 @@ Every test runs one request at a time, so code correct for one request and wrong
 
 1. **List every write path.** `git diff <base_ref>...HEAD -- '*.service.ts' '*.repository.ts' '*.controller.ts'`, looking for `insert(`, `update(`, `delete(`, `onConflict`, `transaction(`. One row each.
 2. **Check-then-write.** Find any decision a write depends on that was computed from rows read earlier in the request: a count against a limit, an existence check, a maximum plus one. Two requests can both read and both pass. The row PASSes only when the rule is held at write time, by a primary key the write claims (`onConflictDoNothing` on exactly the unique thing, losing the claim being the refusal) or by one conditional `UPDATE … WHERE` whose `RETURNING` decides. A check in code or a read inside the same transaction does not hold it under Postgres read committed or Aurora DSQL snapshot isolation. A unique index does not hold it on Aurora DSQL either, which builds non-primary indexes asynchronously.
-3. **Per-process state.** `grep -nE '^(let|const) [a-zA-Z]+ = new (Map|Set)|^let ' <changed api files>`. A module-level cache, counter or rate limit is per Lambda instance. It FAILs when the spec states the rule for the application, and the failing case is the same request sent to two instances.
+3. **Per-process state.** `grep -nE '^(let|const) [a-zA-Z]+ = new (Map|Set)|^let ' <changed api files>`, and read every module-level variable the diff adds or starts relying on. A module-level cache, counter or rate limit is per Lambda instance. It FAILs when the spec states the rule for the application, and the failing case is the same request sent to two instances.
 4. **Concurrent proof.** Every rule held by a key has a back-e2e test that fires the competing requests at once (`Promise.all` or `Promise.allSettled`, with enough pool connections that they overlap) and asserts the refusal and the row count. Without one the row FAILs, because a key nobody has seen refuse anything is a key nobody knows works.
 
 Quote the code for each row. An existing write path the diff only touches still gets its row.
@@ -129,13 +129,13 @@ Quote the code for each row. An existing write path the diff only touches still 
 2. **Resolve the diff** for the round, then walk categories A to E.
 3. **Check every FAIL row for its failing case and its type.** Move a row with no failing case to Notes.
 4. **Write the report.** Draft it in your scratchpad and copy it to `report_path` once, complete, as your last step. The main session commits what it finds at that path.
-5. **Log friction** that is not a finding about the code, one line each as you hit it: what you saw and where, never why:
+5. **Log friction** that is not a finding about the code, such as a gate that failed for an unrelated reason, a command whose working directory you had to discover, or two documents that disagree on a convention. One line each as you hit it: what you saw and where, never why:
 
    ```bash
    scripts/kaizen.sh --from technical-validator --where "<command, URL or file:line>" "<what you saw>"
    ```
 
-6. **Return only the report path.**
+6. **Return only the report path.** Do not summarise the findings.
 
 Ask the user nothing: an ambiguous row is UNVERIFIABLE with its reason. Run lint and tests rather than assume them. Modify no file outside `report_path`.
 

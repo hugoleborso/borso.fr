@@ -14,10 +14,12 @@ function readCode(path: string, source: string): string | null {
 
 export function isCommentOnlyEdit(
   path: string,
-  before: string | null,
-  after: string | null,
+  before: string | null | undefined,
+  after: string | null | undefined,
 ): boolean {
-  if (!SCRIPT_FILE.test(path) || before === null || after === null) return false;
+  if (!SCRIPT_FILE.test(path) || typeof before !== 'string' || typeof after !== 'string') {
+    return false;
+  }
   const codeBefore = readCode(path, before);
   return codeBefore !== null && codeBefore === readCode(path, after);
 }
