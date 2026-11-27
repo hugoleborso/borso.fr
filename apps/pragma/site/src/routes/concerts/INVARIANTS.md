@@ -14,6 +14,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   venue, except on a phone when the concert has a poster, where it moves
   after the prize coupon. The prize coupon shows only when the concert has
   a prize. No link leads to the members' area.
+- The installed app never shows this page. Opened on `/` in standalone
+  display (`readInstallContext`), it redirects to `/app`, the ERP home.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.
 - While the sign-up is on its way the opening screen shows, and the sheet
@@ -51,6 +53,7 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   confirmed. It leaves the list, the draw and the winners already drawn at
   once, and comes back if the server refuses.
 
+Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › sends the installed app to the members area, where it opened before the ERP moved to /app
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › sends a trimmed first name and a trimmed lower-case email
 Held by: `site/src/routes/concerts/concert-sign-up.core.test.ts` › offers a retry only when the server could not be reached or failed
 Held by: `site/src/routes/concerts/ConcertsLandingPage.test.tsx` › shows the tuning screen while the sign-up is on its way

@@ -73,3 +73,4 @@ Session: 78a9cee8-6ad7-5552-b015-d73d4b1ef7ca
 - [2026-11-26 20:55] `friends-target` scripts/dev-server.sh start --as <label> gives the site its own port but not the API or socket port, so a second pragma server's API dies on EADDRINUSE 3004 and its site silently talks to the other server's API.
 - [2026-11-26 21:14] `visual-validator` The brief placed the ERP under /app, but /app/login renders a blank page and sign-in lives at /login, so the first drive found no form.
 - [2026-11-26 21:14] `visual-validator` A member deleted through the API stayed in the concert card after a reload, because the persisted pragma.query-cache in localStorage served the stale member list until it was cleared by hand.
+- [2026-11-26 21:46] `visual-validator` CDP Emulation.setEmulatedMedia accepts display-mode standalone and returns ok but Chromium 158 ignores it, so an installed-app check needs a matchMedia stub instead

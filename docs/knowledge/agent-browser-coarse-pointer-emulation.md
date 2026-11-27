@@ -1,9 +1,11 @@
 ---
-summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/phone.sh touch <selector>`, which emulates touch and sends `Input.dispatchTouchEvent`.'
+summary: '`agent-browser set device` does not make `(pointer: coarse)` match, and CDP `setEmulatedMedia` accepts `display-mode: standalone` but Chromium ignores it; touch needs `scripts/phone.sh touch <selector>`, an installed-app check a `matchMedia` stub in an init script.'
 triggers:
   commands:
     - 'agent-browser\s+(\S+\s+)*set\s+device\b'
     - 'pointer:\s*coarse'
+    - 'display-mode'
+    - 'setEmulatedMedia'
 ---
 
 # `agent-browser` device emulation does not propagate `(pointer: coarse)` to `matchMedia`
@@ -60,3 +62,17 @@ Real-device sweeps are not an option — they're manual, which the spec rule for
 - Don't downgrade UNVERIFIABLE to PASS by reading the source code. The rule exists because the implementation can drift from the source we read; the whole point of a visual run is to observe the live DOM.
 - Don't fall back to Playwright for the touch-emulation case. Playwright *does* propagate `pointer: coarse` via `page.emulate(devices['iPhone 14'])`, but the repo's tooling pick is agent-browser; switching for one row breaks the consistency rule and moves the validator off its standard.
 - Don't gate the next push on closing the gap if the source code is correct *and* the surface area is genuinely cosmetic (caption swap, no behavioural change). Surface the row, document, move on.
+
+## `display-mode: standalone` cannot be emulated either
+
+PR #415 redirected the installed app from `/` to `/app`, keyed on
+`matchMedia('(display-mode: standalone)')`. Its visual validator sent CDP
+`Emulation.setEmulatedMedia` with `features: [{ name: 'display-mode', value: 'standalone' }]`.
+Chromium 158 answered ok and `matchMedia` still read `false` (measured, concert
+sign-up friction log, 2026-11-26). Stub `window.matchMedia` for that one query
+in a CDP init script (`Page.addScriptToEvaluateOnNewDocument`), then navigate.
+The iOS path reads `navigator.standalone`, which the same script defines with
+`Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true, configurable: true })`.
+The stub proves the page's behaviour once the browser reports standalone. It
+proves neither a real home-screen launch nor CSS `@media (display-mode: standalone)`
+rules (`docs/features/pragma/concert-sign-up/validation/visual-validation-2026-11-26-2143.md`).
