@@ -9,7 +9,7 @@ eradication-level: 2
 eradication-paths: [scripts/hooks/checks/no-prettier.core.ts, .claude/settings.json]
 time-to-detect: minutes
 tags: [tooling, hooks, harness, agents]
-zone: .claude/hooks
+zone: scripts/hooks/checks/no-prettier.core.ts
 weak-point: none
 recurs: none (no earlier entry covers a second formatter; the-formatter-reached-outside-the-repository is about where oxfmt runs, not which formatter)
 ---
