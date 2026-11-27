@@ -71,6 +71,7 @@ One row per Q.O.D. with a behavioural decision and per *Changes → Files to cha
 
 - Verify the diff contains the implied change and that it matches the decision. Quote 2 to 4 lines as evidence.
 - A spec section with no *Files to change* entry and no plan section is an amendment the plan never absorbed. Build its rows from the amendment's own claims, take the files from the diff, and add one row `spec amended after the plan; files taken from the diff`.
+- Walk the other way for every route the diff adds or changes that answers without a signed-in session. One row per field its response carries. A field no spec line names and no screen in the diff reads is `FAIL (blocking)`, because anyone can read it. The failing case is the `curl` of that route and the field in its body. PR #410 shipped a public sign-up count this way, through two technical rounds that walked only from the spec.
 
 ### B. Code cleanliness (repo rules and the standards checklist)
 

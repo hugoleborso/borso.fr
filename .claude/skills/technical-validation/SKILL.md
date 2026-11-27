@@ -47,7 +47,9 @@ branch has no diff, or when the change is documentation only.
    to that report's `Reviewed:` SHA, and gets its own round 2.
 7. **Dispatch the `technical-validator` agent** with `spec_path`,
    `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and
-   `previous_report` on round 2.
+   `previous_report` on round 2. Keep working while it runs, in another
+   worktree. It reviews the SHA it recorded at its start, so a later commit
+   never changes what it reads.
 8. **Read the report's verdict and its two finding lists** once the agent has
    handed back, not before: a file at `report_path` earlier is a draft. On
    **FAIL**, triage the blocking findings below and do not ship.
