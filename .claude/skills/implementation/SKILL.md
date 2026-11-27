@@ -121,7 +121,12 @@ After the screenshot, run `scripts/browser/broken-images.sh`. A non-zero exit me
    e. **Test only what the row touched.** Run `pnpm --filter <app> exec vitest run --project core --changed <base>` and, for an `api/` or `domain/` change, `pnpm --filter <app> run test:e2e --changed <base>`. A back-e2e file you did not touch can import what you changed: on PR #339, a tools test hard-coding the status enum's error text failed first at validation. No package script collects coverage. Never run an app's whole `test`, `test:core` or `test:full-suite` script between rows, and never `scripts/lint-staged-files.sh` over the branch: the commit and push hooks already lint and test what changed. On PR #216 one fix round spent 751 s in 18 test runs and 178 s linting the whole branch (measured).
 3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
 4. **Run the plan's pre-flight gates** in order, once, here. Pre-flight runs the plan's build and feature checks. The push hook gates the coverage of the changed files. The full suites run in CI (`app-tests`), so do not run `test:core`, `test:full-suite` or `test:e2e` unscoped locally. Fix issues, do not bypass.
-5. **Hand back.** The main session runs `/technical-validation`, and `/visual-validation` for UI work, because a subagent has no Agent tool to dispatch them. The main session commits by explicit paths and pushes, because the hook refuses `git add` and `git commit` from a subagent.
+5. **Run `/technical-validation`** always. Read the verdict; it must be PASS before push. Fix rounds follow *Fix rounds* below.
+6. **Run `/visual-validation`** for UI work, once, after the last slice and after technical validation passes. Not per slice.
+7. **Hand back.** The main session commits by explicit paths and pushes, because the hook refuses `git add` and `git commit` from a subagent.
+8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable once every UNVERIFIABLE row is disclosed in the description, and **PASS** ships without per-row disclosure; either way the screenshots are named. What has to be disclosed is in `/visual-validation`'s *What the pull request has to carry*; where it goes is `/open-pr`'s *Validation* step, which is the only place the body's shape is written down. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
+
+> **The skill ends here.** Once the PR is open, the implementation skill is done. Preview deploys run automatically on PR push; prod app deploys run automatically in CI on merge to `main` — no approval, since only Hugo can merge (see CLAUDE.md "Deployments"). Claude never runs `pnpm ... run deploy` locally — the workflow does. After the PR merges, the agent asks Hugo to dispatch `shared-deploy` when the merge moved the committed `borso-shared` template snapshot, because that workflow is `workflow_dispatch` only and nothing queues it.
 
 ## Fix rounds
 
@@ -145,6 +150,13 @@ There are two rounds at most. Blocking findings left after round 2 go to the ope
 - **Answering a question with a feature.** When the operator asks why something looks the way it does, answer, or ask what they want. Build only what the spec or the operator's message names. On PR #216 the question "why only one or two member pills" became an unrequested **Played by** feature, which review 3 reverted.
 - **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user *before* writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.
 
+## Repo-specific notes
+
+- pnpm always; no npm/yarn.
+- Conventional-commit scopes: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `infra`, `ci`, `docs`, `deps`, `meta`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated in CI. Pre-push runs their changed tests, without coverage, when the push changes them.
+- Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
+
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
 
 When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, **do not auto-chain to `/visual-validation` or `/technical-validation`**. Instead, write a verdict file at `docs/features/<app>/<slug>/runs/<run-id>/agents/implementation-<step>.md` per [`.claude/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md):
@@ -156,3 +168,7 @@ When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"piloted
 - `artifacts:` relative paths of files you produced or modified.
 
 The body is free-form (full report, diff summary, debugging notes) — the orchestrator reads only the front-matter.
+
+## After this skill
+
+Step 8 ends `/implementation`.
