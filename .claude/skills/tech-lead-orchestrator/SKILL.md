@@ -63,7 +63,8 @@ across workspaces. While the user is still discussing direction, keep the
    holds, so that link resolves. Append each id to `state.adrIndex`. ADRs
    land before the plan because they constrain it.
 3. **plan.** Invoke `/technical-conception` with the spec path and the ids in
-   `state.adrIndex`. The plan references each ADR. Its auto-chain stands down.
+   `state.adrIndex`. The plan references each ADR and shapes its Files, Test
+   strategy and Risk register around them. Its auto-chain stands down.
 4. **implement.** Spawn a fresh `/implementation` sub-agent per plan slice,
    briefed as *Sub-agent dispatch hygiene* says. It writes its verdict to
    `runs/<run-id>/agents/implementation-<step>.md`. One implementer at a
