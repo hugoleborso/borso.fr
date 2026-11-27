@@ -50,7 +50,7 @@ function readStagedSlugs(): ReadonlySet<string> {
 }
 
 function readPathsTheCheckAccepts(isStaged: boolean): ReadonlySet<string> {
-  const everTracked = readPathsEverTracked();
+  const everTracked = readPathsEverTracked(MAIN_REFERENCE);
   return isStaged ? everTracked : new Set([...everTracked, ...readUntrackedPaths()]);
 }
 

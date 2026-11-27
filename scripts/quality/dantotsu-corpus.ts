@@ -46,11 +46,15 @@ export function readUntrackedPaths(): ReadonlySet<string> {
   return readListedPaths(['--others', '--exclude-standard']);
 }
 
-export function readPathsEverTracked(): ReadonlySet<string> {
+export function readPathsEverTracked(historyReference = 'HEAD'): ReadonlySet<string> {
   const paths = new Set(readTrackedPaths());
-  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=AR', 'HEAD']).split(
-    '\n',
-  )) {
+  for (const path of runGit([
+    'log',
+    '--format=',
+    '--name-only',
+    '--diff-filter=AR',
+    historyReference,
+  ]).split('\n')) {
     if (path.length > 0) paths.add(path);
   }
   return paths;
