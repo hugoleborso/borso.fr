@@ -34,8 +34,8 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   all evening. Anything else answers 422 `not-an-upcoming-concert`.
 - The public sees each member's id, first name and colour only, never an
   email, a phone or an avatar key.
-- The public list of upcoming concerts carries no registration count, and
-  no field beyond the ones the ticket draws.
+- The public list of upcoming concerts carries no registration count. Each
+  concert holds its session id and what the ticket draws, nothing else.
 - `concert_registration` is kept off every preview clone and off the
   schema reader, because it holds emails (`cdk/lib/stack.ts`).
 

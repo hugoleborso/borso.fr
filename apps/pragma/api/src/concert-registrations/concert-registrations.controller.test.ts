@@ -42,7 +42,7 @@ const amendedEnvelope = z.object({
     wishedSong: wishedSongSchema.nullable(),
   }),
 });
-const upcomingEnvelope = z.object({
+const upcomingEnvelope = z.strictObject({
   concerts: z.array(
     z.strictObject({
       sessionId: z.guid(),
@@ -50,7 +50,7 @@ const upcomingEnvelope = z.object({
       venue: z.string().nullable(),
       message: z.string().nullable(),
       posterUrl: z.string().nullable(),
-      prize: z.object({ label: z.string(), icon: z.string() }).nullable(),
+      prize: z.strictObject({ label: z.string(), icon: z.string() }).nullable(),
     }),
   ),
 });
