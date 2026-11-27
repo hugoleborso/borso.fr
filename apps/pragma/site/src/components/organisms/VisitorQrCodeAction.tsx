@@ -34,7 +34,7 @@ export function VisitorQrCodeAction({ className }: VisitorQrCodeActionProps): JS
       {isOpen ? (
         <Sheet title={title} label={title} onClose={() => setIsOpen(false)}>
           <figure className="m-0 flex flex-col items-center gap-3 pb-2">
-            <div className="w-full max-w-80 overflow-hidden rounded-lg">
+            <div className="w-full overflow-hidden rounded-lg sm:max-w-80">
               <QRCodeSVG
                 value={address.encoded}
                 level="M"
