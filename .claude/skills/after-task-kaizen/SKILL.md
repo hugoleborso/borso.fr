@@ -189,12 +189,12 @@ Link each new entry to the existing ones its chain touches.
 Branch `claude/lessons-from-pr-<N>`, title `docs: lessons from PR #<N>`,
 `docs:` commits plus whatever code the eradications need.
 
-**The sweep removes at least as much as it adds.** After the last commit, run
-`scripts/kaizen.sh balance` and paste its line under the body's description.
-When it refuses, remove what each addition replaces: fold an entry into one
-that exists, delete the check or text the new mechanism makes redundant. CI
-(`kaizen-balance`) and `pre-push` run the same command. A removal is the only
-answer to its refusal.
+**The sweep earns its code by deleting or simplifying code.** After the last
+commit, run `scripts/kaizen.sh balance` and paste its line under the body's
+description. It counts code only, so a skill, a doc or an entry is never cut to
+pass it. When it refuses, delete the code each addition replaces, or simplify
+code elsewhere. CI (`kaizen-balance`) and `pre-push` run the same command. Only
+the operator waives it, and his words go in the sweep's `balance-waiver.md`.
 
 Once the friction log is archived, `pnpm exec tsx
 scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines
