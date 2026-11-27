@@ -39,6 +39,9 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 ```
 
 A test that drives git in a scratch repository has the opposite problem: run
-from a hook, it inherits `GIT_DIR` and acts on the checkout. Unset `GIT_DIR`,
-`GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` in the child's environment,
-as `scripts/pre-push-range.test.ts` and `scripts/check-hook-decisions.sh` do.
+from a hook, it inherits `GIT_DIR` and acts on the checkout. On PR #418 the
+`pre-push` run of `scripts/kaizen.test.ts` committed fifteen test commits onto
+the branch being pushed and wrote into the real `KAIZEN.md`. The root
+`vitest.config.ts` now loads `scripts/git-hook-variables-cleared.setup.ts`,
+which clears the four variables before every `scripts/` test, so no test
+clears them itself.

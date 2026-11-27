@@ -5,10 +5,8 @@ description: Dispatch the dedicated `technical-validator` agent to read the spec
 
 # Technical-validation skill
 
-The validator reads the diff and asks five questions: correctness against the
-spec, cleanliness against the repo's rules, tests passing, tests covering the
-spec, and scale under concurrent requests. Its categories, finding rules and
-report format live in its definition,
+The validator's categories, finding rules and report format live in its
+definition,
 [`.claude/agents/technical-validator.md`](../../agents/technical-validator.md).
 Why it exists and what it leaves out are in [`standard.md`](./standard.md).
 
@@ -47,7 +45,8 @@ branch has no diff, or when the change is documentation only.
    to that report's `Reviewed:` SHA, and gets its own round 2.
 7. **Dispatch the `technical-validator` agent** with `spec_path`,
    `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and
-   `previous_report` on round 2.
+   `previous_report` on round 2. It reviews the SHA it pins at its start, so
+   keep working meanwhile in another worktree.
 8. **Read the report's verdict and its two finding lists** once the agent has
    handed back, not before: a file at `report_path` earlier is a draft. On
    **FAIL**, triage the blocking findings below and do not ship.
