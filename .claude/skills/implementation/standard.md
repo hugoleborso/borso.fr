@@ -37,18 +37,6 @@ The implementer (Claude, in nearly every case in this repo). The skill exists to
 
 ## Required behaviours
 
-### Read the plan
-
-Before any edit. Mental model first; without it, the diff drifts. Plan rows that don't exist (e.g. a missing `/technical-conception` run) are blockers — implementation does not proceed.
-
-### Walk the plan's code map
-
-The "How each spec decision becomes code" table is the work order. Implement rows top-down; stop and re-read the plan when a row turns out to need a structural change the plan didn't anticipate.
-
-### Re-walk the plan's §3 Code-quality self-check before pre-flight
-
-The plan ships a *Code-quality self-check* section listing repo-rule risks the plan author flagged for *this* feature ("rename `y` → `candidateYear`", "extract `pickDefaultMonth` to `data.utils.ts`", "no `useEffect` to derive state"). The author wrote them because they predicted the implementation would slip on them — the list is feature-specific, not a generic CLAUDE.md restatement. Re-walk it bullet by bullet against the diff before invoking the pre-flight gates. An unchecked bullet is a blocker: fix the diff. The skill enforces this via procedure step 3a; PR #11's `/technical-validation` FAIL ([`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md)) is the precedent.
-
 ### Open the blueprint for the layer before writing the file
 
 Every layer this repository writes has a canonical example marked in place with a `@Blueprint` JSDoc block, and [`blueprint-index.md`](../../../.claude/skills/blueprint/blueprint-index.md) maps identifier to file and line. Read the index, open the blueprint for the layer you are about to write, and copy its shape. New code that follows one carries `// @FollowsBlueprint <id>` on the line above the declaration, which is what makes adoption countable rather than assumed.
@@ -83,35 +71,16 @@ Conventional-commit, small focused units. Push only after build, `/visual-valida
 
 When the verdict asserts a **routing or auth property that differs by stage** (e.g. "same-origin `/api`"), name the stage(s) where it holds — *"same-origin in prod, cross-origin via `VITE_API_BASE` in preview by design"* — never a bare yes/no. A stageless claim gets inherited verbatim by the next validator and flagged as a FAIL that is actually by-design. Cf. [`docs/knowledge/preview-api-cross-origin.md`](../../../docs/knowledge/preview-api-cross-origin.md).
 
-## Procedure
+## Two rules the procedure in SKILL.md leaves out
 
-| # | Step | Output |
-|---|---|---|
-| 1 | Read `spec.md` and `plan.md` end-to-end | mental model |
-| 2 | Inventory technical surfaces; invoke each present sub-skill | conventions loaded |
-| 2a | Run `scripts/reports.sh blueprints`, then read `blueprint-index.md` and open the blueprint for every layer the plan's code map touches. The index is generated and not committed, so a fresh clone and a subagent worktree both start without it | the shapes to copy |
-| 3 | Walk the plan's code-map table top-down, applying each change and committing in small units, marking each new file `// @FollowsBlueprint <id>` | the diff |
-| 3a | **Before creating any file under `apps/<app>/api/src/`**, answer: *"which bounded context owns this?"* The answer names the folder; the layered triad names the filename. Every backend domain folder must contain at minimum `<domain>.controller.ts` + `<domain>.service.ts` + `<domain>.repository.ts` + `<domain>.schema.ts` (plus optional `<domain>.core.ts` and `<domain>.types.ts`). Never create horizontal aggregator folders (`domain/`, `controllers/`, `services/`, `repositories/`, `routes/`) — pure-domain `.core.ts` files live INSIDE the bounded context's folder. The plan's *Where it lands* column names paths; treat path strings as advisory hints, not as licence to bypass the triad. Reference: `apps/last-loop-lepin/api/src/{auth,edition,punch,runner,ranking,media}/`. See CLAUDE.md "Clean code" — *Back-end domains are vertical slices*. | per-domain layered triad |
-| 3b | **When `docs/features/<app>/<slug>/spec/design-bundle/` exists, the bundle IS the visual spec — pixel-perfectly, ported to Tailwind + atomic design.** See CLAUDE.md "Clean code" — *Styling is Tailwind classes inline* and *React components follow atomic design*. Concretely, before writing feature UI: (a) read the bundle README + every chat transcript under `design-bundle/chats/` (the chats reveal what the user iterated toward); (b) port `design-bundle/project/src/styles.css` palette + typography into Tailwind v4 `@theme` declarations in `apps/<app>/site/src/styles/tokens.css` — every named CSS variable from the prototype (`--bg-elev`, `--bg-sunk`, every `--ink-*` tone, every `--m-*` member tone, `--accent-soft`, `--warn`, `--t-display` / `--t-ui` / `--t-mono`) becomes a Tailwind utility (`bg-bg-elev`, `text-ink-700`, `font-display`, etc.); (c) wire fonts via `@fontsource-variable/<name>` or `@fontsource/<name>` npm packages imported once in the entry; (d) **decompose every prototype screen into atoms / molecules / organisms**, then place them under `apps/<app>/site/src/components/{atoms,molecules,organisms}/` — atoms are UI primitives (Button, Chip, Badge, Icon, Input), molecules are small compositions (SearchBar, FilterPill, SongCardHeader, MemberChip), organisms are screen-region compositions (CatalogGrid, SetlistEditor, MasteryMatrix); (e) routes under `apps/<app>/site/src/routes/<screen>/` compose organisms — they own routing + data-fetching, NOT layout primitives; (f) every component uses Tailwind utility classes inline, NO raw `.css` files per component, no CSS modules, no styled-components. The visual-validator's design-bundle fidelity rubric (see `.claude/agents/visual-validator.md`) compares each screen's implementation against the prototype side-by-side — typography stack, layout structure, affordances, palette tokens, microcopy must all match. Token-level conformance (accent / bg matches) is NOT design fidelity. | pixel-faithful Tailwind UI on atomic-design hierarchy |
-| 4 | For every pure helper introduced, file ends in `.utils.ts` and a sibling `.utils.test.ts` ships with it | tested utilities |
-| 5 | Run the plan's pre-flight gates (build and feature checks; the hooks run lint, typecheck and knip) | green gates |
-| 6 | Run `/technical-validation` always; read the verdict | code verdict |
-| 7 | Run `/visual-validation` for UI work, once, after the last slice | UI verdict |
-| 8 | Push only after both verdicts are PASS | shippable branch |
+- per-domain layered triad |
+- pixel-faithful Tailwind UI on atomic-design hierarchy |
 
 ## Common mistakes
 
 | Typical error | Consequences |
 | --- | --- |
-| Skipping `/technical-conception` and implementing straight from the spec | Plan-drift; risk register absent; defects rediscovered late. |
-| Naming a pure helper `<name>.ts` instead of `<name>.utils.ts` | Coverage gate misses it; technical-validator FAILs the row; rewrite filename in a follow-up commit. |
-| "I'll add tests later" | Later never comes; coverage debt compounds; a future feature inherits the gap. |
-| Stuffing pure helpers into a file with DOM / network code | The file can't be coverage-gated cleanly. Split it. |
 | Creating a horizontal `domain/` (or `controllers/`, `services/`, `repositories/`, `routes/`) folder in `api/src/` | Forbidden by CLAUDE.md. Pure-domain `.core.ts` files live in the bounded context's folder (`song/tonality.core.ts`, not `domain/tonality.core.ts`). The technical-validator FAILs the row; rewrite the folder structure in a follow-up commit. |
 | Shipping a controller without its sibling `service` / `repository` / `schema` files | Layered triad missing. The controller ends up with DB queries + business rules + HTTP shape co-mingled. Split into the four files; the controller carries only Hono routing + response shape. Pattern reference: `apps/last-loop-lepin/api/src/punch/`. |
-| Writing a file for a layer without opening that layer's blueprint | The file invents a shape the repository already settled, and the reviewer spends the review re-deriving a decision instead of reading the change. |
-| Leaving a new file without a `// @FollowsBlueprint` marker | The coverage grid reports the layer as unmarked, so the next author reads a real pattern as an absent one. |
-| Skipping an existing sub-skill | The sub-skill's conventions go unenforced; defects predicted by it ship anyway. |
-| Deferring the test-runner setup | The implementation lands without coverage and the next session inherits a broken gate. |
 | One giant commit at the end | Reviewers (and the technical-validator) cannot bisect; risk regression goes up. |
 | Implementing rows out of order to chase the interesting parts first | Plan rows that depend on earlier ones get implemented against an incomplete foundation; refactor cost balloons. |
