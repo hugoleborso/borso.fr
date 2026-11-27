@@ -18,7 +18,7 @@ import {
   type TableAccess,
 } from './database-role.utils.js';
 import { runRetryingConcurrencyConflicts } from './concurrency-retry.js';
-import { computeIndexBuildDeadline } from './index-build-jobs.utils.js';
+import { computeIndexBuildDeadline, type StatementRow } from './index-build-jobs.utils.js';
 import { settleIndexBuild } from './index-build-wait.js';
 import { selectAppliedMigrations, selectPendingMigrations } from './pending-migrations.utils.js';
 import { hasSchema, listColumns, listTablesInSchema } from './schema-catalogue.js';
@@ -160,15 +160,25 @@ async function applyMigrations(
   indexBuildDeadline: number,
 ): Promise<void> {
   const appliedNames = await readAppliedMigrationNames(sql, schemaName);
+  const submittedMigrations: {
+    name: string;
+    statements: { statement: string; rows: readonly StatementRow[] }[];
+  }[] = [];
   for (const migration of selectPendingMigrations(migrations, appliedNames)) {
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
+    const statements = [];
     for (const statement of splitStatements(migration.sql)) {
-      const statementRows = await sql.unsafe(statement);
-      await settleIndexBuild(sql, schemaName, statement, statementRows, indexBuildDeadline);
+      statements.push({ statement, rows: await sql.unsafe(statement) });
+    }
+    submittedMigrations.push({ name: migration.name, statements });
+  }
+  for (const { name, statements } of submittedMigrations) {
+    for (const { statement, rows } of statements) {
+      await settleIndexBuild(sql, schemaName, statement, rows, indexBuildDeadline);
     }
     await sql.unsafe(
       `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
-      [migration.name],
+      [name],
     );
   }
 }

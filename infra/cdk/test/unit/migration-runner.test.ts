@@ -503,6 +503,25 @@ describe('migration-runner handler', () => {
     expect(state.ended).toBe(1);
   });
 
+  it('Create: submits every index build of the batch before waiting on the first', async () => {
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        migrations: [
+          { name: '0005_first.sql', sql: 'CREATE INDEX "first_idx" ON "song" ("a");' },
+          { name: '0006_second.sql', sql: 'CREATE INDEX "second_idx" ON "song" ("b");' },
+        ],
+      },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    const secondBuild = queries.findIndex((query) => query.includes('"second_idx"'));
+    const firstPoll = queries.findIndex((query) => query.includes('FROM sys.jobs'));
+    expect(secondBuild).toBeGreaterThan(-1);
+    expect(secondBuild).toBeLessThan(firstPoll);
+    expect(state.appliedMigrations.has('0006_second.sql')).toBe(true);
+  });
+
   it('Create: keeps waiting on a sys.jobs status it does not recognise, and names it at the limit', async () => {
     state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
       { status: 'cancelling', details: null },

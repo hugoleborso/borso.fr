@@ -22,6 +22,9 @@ rows from the source (typically `prod`), in three steps:
    shipping order, the branch migrations that production has applied and the
    preview has not. On a fresh preview that is every migration production ran,
    on empty tables.
+   The runner submits every index build of the batch, then waits on them
+   together: one by one, pragma's builds took 15 to 20 s each and passed the
+   240 s limit (PR #429, 2026-11-27).
 2. **Copy rows.** For every source table the preview also has,
    `INSERT INTO pr_N.<t> (cols) SELECT … FROM prod.<t> ON CONFLICT DO
    NOTHING`, on the columns both tables share. Cross-schema DML is
