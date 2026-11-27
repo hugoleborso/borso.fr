@@ -8,6 +8,7 @@ export interface ButtonAnchorProps extends ButtonVariantProps {
   readonly children: ReactNode;
   readonly opensInPlace?: boolean;
   readonly className?: string;
+  readonly title?: string;
 }
 
 const NEW_TAB_ATTRIBUTES = { target: '_blank', rel: 'noreferrer noopener' } as const;
@@ -21,10 +22,12 @@ export function ButtonAnchor({
   size,
   opensInPlace = false,
   className,
+  title,
 }: ButtonAnchorProps): JSX.Element {
   return (
     <a
       href={href}
+      title={title}
       {...(opensInPlace ? {} : NEW_TAB_ATTRIBUTES)}
       data-variant={variant ?? DEFAULT_BUTTON_VARIANT}
       className={composeClassName(buttonVariants({ variant, size }), className)}

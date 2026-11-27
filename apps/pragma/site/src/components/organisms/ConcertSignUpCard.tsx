@@ -112,9 +112,10 @@ export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Elem
       variant="quiet"
       size="lg"
       className={CALENDAR_CLASS}
+      title={t('concerts.addToCalendar')}
       mark={<Icon name="calendar" size="md" />}
     >
-      <span className={CALENDAR_LABEL_CLASS}>{t('concerts.addToCalendar')}</span>
+      <span className={CALENDAR_LABEL_CLASS}>{t('concerts.calendarShort')}</span>
     </ButtonAnchor>
   );
 

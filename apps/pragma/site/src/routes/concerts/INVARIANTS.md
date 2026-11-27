@@ -16,11 +16,12 @@ and the tests that hold them. A `Held by` path is relative to `apps/pragma/`.
   a prize. No link leads to the members' area.
 - The installed app never shows this page. Opened on `/` in standalone
   display (`readInstallContext`), it redirects to `/app`, the ERP home.
-- Beside "Je serai là !", before and after the sign-up, "Ajouter à mon
-  calendrier" opens the concert's calendar file in place
-  (`GET /api/concert-registrations/concerts/:sessionId/calendar`). Below
-  1024 px it shows its calendar icon only. From 768 px the ticket's buttons
-  wrap to a second row rather than leave the ticket. The file's rules are in
+- Beside "Je serai là !", before and after the sign-up, a calendar button
+  opens the concert's calendar file in place
+  (`GET /api/concert-registrations/concerts/:sessionId/calendar`). From
+  1024 px it reads "Agenda" beside its icon; below, the icon alone. Its
+  tooltip is "Ajouter à mon calendrier". From 768 px the ticket's buttons
+  wrap to another row rather than leave it. The file's rules are in
   `api/src/concert-registrations/INVARIANTS.md`.
 - "Je serai là !" opens a sheet with a first name and an email. The email
   is sent trimmed and lower case.

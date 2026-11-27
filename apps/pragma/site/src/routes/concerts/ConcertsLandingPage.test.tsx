@@ -122,7 +122,8 @@ describe('the public concert sign-up page', () => {
 
   it('offers the concert as a calendar file, opened in place', async () => {
     renderPage(() => Promise.resolve(jsonResponse({}, 500)));
-    const calendar = await screen.findByRole('link', { name: 'Add to my calendar' });
+    const calendar = await screen.findByRole('link', { name: 'Calendar' });
+    expect(calendar.getAttribute('title')).toBe('Add to my calendar');
     expect(calendar.getAttribute('href')).toBe(
       `/api/concert-registrations/concerts/${NEXT_CONCERT.sessionId}/calendar`,
     );
@@ -250,7 +251,7 @@ describe('the public concert sign-up page', () => {
     expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(screen.queryByRole('button', { name: "I'll be there!" })).toBeNull();
     expect(screen.queryByLabelText('Email')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Add to my calendar' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Calendar' })).toBeTruthy();
   });
 
   it('offers the sign-up again when the band removed the registration this browser remembers', async () => {
