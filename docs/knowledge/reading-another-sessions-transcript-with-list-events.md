@@ -43,6 +43,9 @@ sweep (inferred, 2026-10-29).
   page of `session_01Leu3Yhimw9wioFyRfsVdKa`, although unfiltered pages of the
   same session held assistant and user events. Do not conclude "no messages"
   from a filtered read. Check one unfiltered page.
+- A session's subagents write into the same stream. An event whose
+  `parent_tool_use_id` is set belongs to a subagent, so filter on it before
+  counting the session's own Skill or Agent calls (PR #417's sweep).
 - Transcripts carry no system reminder and no `CLAUDE.md` text, so the
   harness's share of a call's context cannot be read from them.
 

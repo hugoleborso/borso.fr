@@ -27,7 +27,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 ## Feature flow
 
-- Run `/route` on anything that is not obviously one file.
+- Run `/route` before the first change to an app, and on anything else that is not obviously one file.
 - One session per feature. It ends at merge.
 - The main session orchestrates. It hands each phase (spec, plan, implementation, validation) and each fix round to a fresh subagent with one consolidated brief.
 - Name the data shape (types, tables, payloads) before writing code.

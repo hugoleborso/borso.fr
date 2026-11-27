@@ -30,6 +30,7 @@ const listed = pages.map((page) =>
 );
 const operatorLines = listed
   .flatMap(selectOperatorMessages)
+  .toSorted((first, second) => first.at.localeCompare(second.at))
   .map(
     (message) =>
       `- [${message.at}]${message.isAnswer ? ' (answer)' : ''} ${message.text.replaceAll('\n', ' ')}`,

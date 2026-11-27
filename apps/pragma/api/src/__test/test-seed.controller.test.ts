@@ -6,6 +6,7 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { improvementTable } from '../improvements/improvements.schema';
 import { listInspirationViewsNewestFirst } from '../inspirations/inspirations.service';
+import { listUpcomingConcerts } from '../concert-registrations/concert-registrations.service';
 import { listInstruments } from '../instruments/instruments.repository';
 import { listMembers } from '../members/members.repository';
 import { listGrantsOfMember } from '../oauth/oauth.repository';
@@ -143,6 +144,12 @@ describe('__test/test-seed.controller (back-e2e)', () => {
   it('seeds no practice by default, so a session today does not light every flame', async () => {
     await postSeed();
     expect((await listSessions()).map((session) => session.kind)).toEqual(['concert']);
+  });
+
+  it('gives the concert a public message, so the ticket and its calendar file carry a note', async () => {
+    await postSeed();
+    const [concert] = await listUpcomingConcerts(new Date());
+    expect(concert?.message).toBe('Portes à 20 h, premier morceau à 20 h 30.');
   });
 
   it('keeps an inspiration whose author was deleted, so its card reads former member', async () => {
