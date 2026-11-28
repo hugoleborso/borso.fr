@@ -49,13 +49,11 @@ describe('parseTouchTapArguments', () => {
     expect(parseTouchTapArguments(['--selector', ''])).toBeNull();
   });
 
-  it('defaults to a 375 by 812 phone on CDP 9222, on whichever page comes first', () => {
+  it('defaults to CDP 9222, on whichever page comes first', () => {
     expect(parseTouchTapArguments(['--selector', 'button'])).toStrictEqual({
       selector: 'button',
       port: 9222,
       pageUrlPart: '',
-      width: 375,
-      height: 812,
     });
   });
 
@@ -68,22 +66,16 @@ describe('parseTouchTapArguments', () => {
         '9333',
         '--page',
         'localhost:5174',
-        '--width',
-        '390',
-        '--height',
-        '844',
       ]),
     ).toStrictEqual({
       selector: '[aria-label="Stop"]',
       port: 9333,
       pageUrlPart: 'localhost:5174',
-      width: 390,
-      height: 844,
     });
   });
 
-  it.each([['0'], ['-1'], ['1.5'], ['wide']])('falls back on a width of %s', (width) => {
-    expect(parseTouchTapArguments(['--selector', 'a', '--width', width])?.width).toBe(375);
+  it.each([['0'], ['-1'], ['1.5'], ['wide']])('falls back on a port of %s', (port) => {
+    expect(parseTouchTapArguments(['--selector', 'a', '--port', port])?.port).toBe(9222);
   });
 });
 

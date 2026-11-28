@@ -1,7 +1,7 @@
 import {
   closeSession,
   createSender,
-  emulatePhone,
+  emulateTouch,
   openSession,
   pause,
   FIRST_VISIBLE_SCRIPT,
@@ -21,13 +21,13 @@ import {
 
 const USAGE = [
   'usage: pnpm exec tsx scripts/browser/touch-tap.ts --selector <css | text=name> [--page <url part>]',
-  '         [--port 9222] [--width 375] [--height 812]',
+  '         [--port 9222]',
   '',
   'Taps the first visible element matching the CSS selector, or, given text=<name>,',
   'the innermost one whose aria-label or text is exactly <name>, with a real touch',
   'through CDP Input.dispatchTouchEvent, on the Chromium listening on --port',
-  '(scripts/phone.sh passes its agent-browser session), at a phone viewport with',
-  'touch emulation on, and prints which events reached it.',
+  '(scripts/phone.sh passes its agent-browser session), with touch emulation on,',
+  'at the viewport the session already has, and prints which events reached it.',
   'Exits 1 when the tap did not arrive as touch on the element.',
   '',
 ].join('\n');
@@ -69,7 +69,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
   try {
     await send('Runtime.enable');
     await send('Runtime.addBinding', { name: TOUCH_TAP_BINDING });
-    await emulatePhone(send, options);
+    await emulateTouch(send);
     const point = parseTapPoint(
       await send('Runtime.evaluate', {
         expression: buildPreparationScript(options.selector),

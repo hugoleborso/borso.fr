@@ -31,6 +31,9 @@ sweep (inferred, 2026-10-29).
 - A page reads at most 100 events, whatever the `kinds` filter. The filter runs
   after the page is read, so a filtered page can hold fewer events or none,
   with `has_more` still true.
+- The last page carries no `has_more` key at all, rather than `has_more: false`.
+  Stop paging when the key is missing (measured on PR #431's sweep,
+  `session_01K69KnDEzePECbzfSX8dY9w`).
 - A page under about 50k characters comes back inline, into the calling
   agent's context. A larger one spills to a file. A `kinds` filter does not
   keep a page small. A tool result is a `user` event, so on the sweep of

@@ -26,25 +26,29 @@ function hasBranchAddedSpec(world: HookWorld): boolean {
   return stdout.trim() !== '';
 }
 
-const APP_FILE = /^apps\//u;
+const CHANGED_PATH = /^.. (.+)$/mu;
 
-function readEditedAppFile(input: HookInput, world: HookWorld): string | null {
-  const path = input.tool_input?.['file_path'] ?? input.tool_input?.['notebook_path'];
-  if (typeof path !== 'string') return null;
-  const projectPrefix = `${world.projectDirectory}/`;
-  const relative = path.startsWith(projectPrefix) ? path.slice(projectPrefix.length) : path;
-  return APP_FILE.test(relative) ? relative : null;
+function readChangedAppFile(world: HookWorld): string | null {
+  const { stdout } = world.run('git', [
+    '-C',
+    world.projectDirectory,
+    'status',
+    '--porcelain',
+    '--',
+    'apps/',
+  ]);
+  return CHANGED_PATH.exec(stdout)?.[1] ?? null;
 }
 
 export const agentAfterRoute: Check = {
   name: 'agent-after-route',
-  tools: /^(Write|Edit|MultiEdit|NotebookEdit)$/u,
+  tools: /^(Bash|Write|Edit|MultiEdit)$/u,
   run: (input, world) => {
-    const appFile = readEditedAppFile(input, world);
+    const appFile = readChangedAppFile(world);
     if (appFile === null || hasRunFramingSkill(input, world) || hasBranchAddedSpec(world)) {
       return PASS;
     }
-    return refuse('agent-after-route', `${appFile} was edited before /route ran`, [
+    return refuse('agent-after-route', `${appFile} changed before /route ran`, [
       'This session has not run /route, and its branch adds no spec.md.',
       'Size the work before the first change to an app: run /route. A one-file fix comes back Tier 0.',
       'A Tier 2 feature shows the operator mockups and a spec before any code.',

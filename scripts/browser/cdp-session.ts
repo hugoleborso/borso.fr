@@ -1,16 +1,10 @@
 import { type CdpReply, findPageTarget, type PageTarget, parseCdpReply } from './touch-tap.core';
 
-const PHONE_SCALE_FACTOR = 3;
 const PHONE_TOUCH_POINTS = 5;
 
 export interface CdpTarget {
   readonly port: number;
   readonly pageUrlPart: string;
-}
-
-export interface PhoneViewport {
-  readonly width: number;
-  readonly height: number;
 }
 
 export type CdpSend = (method: string, params?: object) => Promise<unknown>;
@@ -70,13 +64,7 @@ export function createSender(socket: WebSocket): CdpSend {
   };
 }
 
-export async function emulatePhone(send: CdpSend, viewport: PhoneViewport): Promise<void> {
-  await send('Emulation.setDeviceMetricsOverride', {
-    width: viewport.width,
-    height: viewport.height,
-    deviceScaleFactor: PHONE_SCALE_FACTOR,
-    mobile: true,
-  });
+export async function emulateTouch(send: CdpSend): Promise<void> {
   await send('Emulation.setTouchEmulationEnabled', {
     enabled: true,
     maxTouchPoints: PHONE_TOUCH_POINTS,
