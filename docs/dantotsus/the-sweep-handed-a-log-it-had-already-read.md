@@ -88,6 +88,8 @@ apart.
 
 **Type:** structural impossibility (level 1)
 
+> **Superseded mechanism.** No two pull requests share a log file, so the merge's own diff of `docs/kaizen/` is the sweep's input, and `/after-task-kaizen` reads it with one `git diff`. `sweep-input` and the stamp matching it needed are deleted. What that drops: a later pull request that rewrites an older log's lines would show them as added. Nothing rewrites one, since each file belongs to one branch. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
+
 **Reference:** this commit, on the kaizen branch for PR #281.
 
 `scripts/kaizen.sh sweep-input <merge-ref>` computes the input from the merge

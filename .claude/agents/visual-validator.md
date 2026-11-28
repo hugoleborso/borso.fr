@@ -78,7 +78,7 @@ If `agent-browser` itself fails, write a single FAIL row titled "Tooling unavail
 7. **Log friction** that is not a finding about the app, one line each as you hit it: what you saw and where, never why. It counts a tool that failed in a way that named the wrong problem, a spec assertion you could not turn into a browser action, and a harness limit you hit. A validator's friction is the most easily lost, because the report is about the app.
 
    ```bash
-   scripts/kaizen.sh --from visual-validator --where "<URL, screen or command>" "<what you saw>"
+   scripts/kaizen.sh log --from visual-validator --where "<URL, screen or command>" "<what you saw>"
    ```
 
 8. **Return only the report path.**

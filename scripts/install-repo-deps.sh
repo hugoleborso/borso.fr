@@ -212,15 +212,7 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge. It is
-# created at session start rather than on first use, because a file that
-# already exists gets appended to and one somebody has to remember to create
-# does not: PR 50 maintained none. The `kaizen.sh init` SessionStart entry in
-# .claude/settings.json owns it, including parking a log another session left
-# behind; calling init here as well raced that entry over the same rename.
-log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh --where "<command, URL or file:line>" "<what you saw>"'
-
-# 10. The two generated lookups a session reads, neither of which is
+# 9. The two generated lookups a session reads, neither of which is
 # committed: the blueprint index agents read before writing a file, and the
 # knowledge-trigger lookup the knowledge hook reads on every call. Every other
 # report is on demand, through `scripts/reports.sh <group>`. A subagent given

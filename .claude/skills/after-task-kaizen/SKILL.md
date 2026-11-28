@@ -11,7 +11,7 @@ The procedure behind CLAUDE.md's **Self-improvement loop**. During a PR, use
 ## When to invoke
 
 **First, decide whether a sweep is worth running.** It is when the task left
-something to learn: a line in the archived friction log, an operator message
+something to learn: a line in the branch's friction log, an operator message
 that corrected or redirected the session, a CI run that went red, or a FAIL or
 UNVERIFIABLE row in a validation report. When none of these happened, run no
 sweep and open no pull request. The merge reply says "No kaizen" with that
@@ -23,8 +23,7 @@ that session reads its own `get_session` `context_usage.used_tokens`.
 
 - **Under 150,000 tokens**, it runs this sweep itself, in the same reply that
   reports the merge. The operator chose this threshold.
-- **At 150,000 or more**, it archives its friction log, proposes the kaizen,
-  and once the operator approves starts it in a new session, as `/open-pr`'s
+- **At 150,000 or more**, it proposes the kaizen, and once the operator approves starts it in a new session, as `/open-pr`'s
   *After the merge* says.
 
 Write the reading in the inventory's header line, so the sweep shows which
@@ -33,7 +32,7 @@ threshold. Run it there without asking him to confirm.
 
 **First call: `mcp__github__pull_request_read method: get`.** If `merged` is
 not `true`, say so and stop. A prompt once said "merged" while the pull
-request was still open and its archive was not on `main`.
+request was still open and its friction log was not on `main`.
 
 ## The procedure
 
@@ -48,14 +47,12 @@ restart.
 
 Catalogue **every** moment of friction, one row each, from these sources:
 
-- **The archived friction log (primary input).** `git fetch origin main`,
-  then `scripts/kaizen.sh sweep-input <merge-sha>`. It prints, per archive
-  the merge touched, the entry lines *this* merge added. Read that, not the
-  path the prompt names. A path the prompt names that the command does not is
-  a row to check, not a file to read. This session's own `KAIZEN.md` is not
-  the input. Map every line to a row. Many lines resolve to
+- **The friction log (primary input).** `git fetch origin main`, then
+  `git diff <merge-sha>^ <merge-sha> -- docs/kaizen`. Each branch logs to its
+  own `docs/kaizen/<branch>.md`, so the lines that diff adds are this pull
+  request's and no other's, worktree agents' files included. Map every line to a row. Many lines resolve to
   `no-op: already eradicated by <existing entry>` once cross-checked against
-  the corpus, and that cross-check is the point. A missing or empty archive is
+  the corpus, and that cross-check is the point. A missing or empty log is
   itself a row. Then rebuild the inventory from the commits, the review threads
   and any run journal under `docs/features/<app>/<slug>/runs/`.
 - **Every operator message of the shipping session.** The log holds only what
@@ -91,7 +88,7 @@ Catalogue **every** moment of friction, one row each, from these sources:
   the sweep to what they hit. Note it.
 - **The shipping session's own turns**, when the sweep runs there. Walk them
   one by one, hook refusals and harness notices included, before reading the
-  archive. A sweep that started from its three archive lines listed 12 rows
+  log. A sweep that started from its three logged lines listed 12 rows
   and missed 17.
 - **Open kaizen pull requests.** Read each open `kaizen`-labelled PR's
   `inventory.md`. A row another open sweep already eradicates is
@@ -183,7 +180,7 @@ overlaps with `merge into <slug>`. Three sharp entries beat ten thin ones.
 code in this PR. Take a tag from `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
 when one fits. Write the level's name beside its number in the entry's
 *Eradication* block, as in the PR's *Shipped* table. Feed a guard hook its
-proof with `KAIZEN_LOG_REFUSALS=0`, or the proof lands in `KAIZEN.md` as
+proof with `KAIZEN_LOG_REFUSALS=0`, or the proof lands in the friction log as
 friction. Never add a check that only guards the harness.
 
 - **Look for a library before writing a check.** When a draft eradication is
@@ -227,8 +224,7 @@ pass it. When it refuses, delete the code each addition replaces, or simplify
 code elsewhere. CI (`kaizen-balance`) and `pre-push` run the same command. Only
 the operator waives it, and his words go in the sweep's `balance-waiver.md`.
 
-Once the friction log is archived, `pnpm exec tsx
-scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines
+`pnpm exec tsx scripts/quality/working-conditions.ts --check` must pass. Three unfiled lines
 about one wall are a wall to add to `docs/quality/working-conditions.md`.
 
 Draft the body from [`template.md`](./template.md) and check it with

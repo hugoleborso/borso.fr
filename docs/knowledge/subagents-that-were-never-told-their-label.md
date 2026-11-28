@@ -2,12 +2,12 @@
 summary: 'A subagent not told its kaizen label writes as `main`, and the sweep cannot tell one agent''s wall from four agents'' wall.'
 triggers:
   commands:
-    - 'scripts/kaizen\.sh\s+archive'
+    - '\s--\s+docs/kaizen'
 ---
 
 # A subagent that was not told its kaizen label writes as `main`, and the sweep goes blind
 
-Observed on PR #49. `KAIZEN.md` ended the task with nine entries. Every one was
+Observed on PR #49. The friction log ended the task with nine entries. Every one was
 written by the main session; the label on all of them is `main`.
 
 The PR spawned a subagent — an independent auditor that walked every "enforced
@@ -17,7 +17,7 @@ and returned fifteen findings. It hit friction doing that: reading a rule out of
 mismatch. None of it was logged, because its prompt never carried the line
 CLAUDE.md asks for:
 
-> log any friction as you hit it: `scripts/kaizen.sh --from <your-label> --where "<command, URL or file:line>" "<what you saw>"`
+> log any friction as you hit it: `scripts/kaizen.sh log --from <your-label> --where "<command, URL or file:line>" "<what you saw>"`
 
 **What that costs is not the entries — it is the arithmetic.** One agent hitting
 a wall is a local problem. Four agents hitting the same wall is a systemic one,
@@ -29,7 +29,7 @@ happened to notice.
 The tell, checkable in ten seconds before the sweep starts:
 
 ```bash
-grep -c '`main`' KAIZEN.md   # vs the number of agents the task spawned
+grep -c '`main`' docs/kaizen/<branch>.md   # vs the number of agents the task spawned
 ```
 
 If a task spawned agents and every entry says `main`, the inventory is missing

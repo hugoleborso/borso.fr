@@ -6,7 +6,7 @@ severity: low
 related-pr: '#230'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh, scripts/kaizen.test.ts]
 time-to-detect: one turn
 tags: [harness, tooling, process]
 zone: scripts/kaizen.sh
@@ -43,6 +43,8 @@ The session removed the line from `KAIZEN.md` before `scripts/kaizen.sh archive`
 ## Eradication (mandatory — code-level)
 
 **Type:** code diff (level 1, structural impossibility)
+
+> **Superseded mechanism.** Logging is now its own subcommand, `scripts/kaizen.sh log`, and any other first word is refused. The one-word heuristic this entry shipped is deleted: `scripts/kaizen.sh list` and the old flag-first form both exit 1 and log nothing (tested in `scripts/kaizen.test.ts`). The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** the commit that adds this file
 

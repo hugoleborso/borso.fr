@@ -23,7 +23,7 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 - `apps/<slug>/` holds one app, openable on its own with `pnpm dev`. No cross-app imports. A static app has only `site/`. A full-stack app adds `api/` (Hono on Lambda), `cdk/`, and `domain/` for rules both sides read (`@domain/*`). `ls -d apps/*/api` lists the full-stack ones.
 - `infra/cdk/` holds the shared CDK constructs, gated at 100% coverage. `infra/shared/` holds account-level singletons.
 - `.claude/` holds the skills, agents, commands and hooks, as plain files.
-- `docs/features/<app|meta>/<slug>/` holds a feature's spec, plan, validation and archived friction log.
+- `docs/features/<app|meta>/<slug>/` holds a feature's spec, plan and validation. `docs/kaizen/<branch>.md` holds a branch's friction log.
 
 ## Feature flow
 
@@ -78,7 +78,7 @@ They cover replies, documents, commits and PR bodies.
 
 - Two or more agents that write code at the same time each run with `isolation: "worktree"`, so none sees another's half-written files. Subagents never commit. While an agent writes in the shared checkout, stage explicit paths, never `git add -A`. A dependency added in one app rewrites the root `pnpm-lock.yaml` every agent shares, so commit the lockfile once, after the last agent that adds a dependency has finished.
 - Run `scripts/reports.sh` once, after every agent has finished.
-- Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh --from <its-label> --where "<command, URL or file:line>" "<what it saw>"`. Put that line in every brief.
+- Each agent works in `<scratchpad>/<its-label>/` and logs friction with `scripts/kaizen.sh log --from <its-label> --where "<command, URL or file:line>" "<what it saw>"`. Put that line in every brief.
 
 ## Commits, pull requests, merges
 
@@ -92,12 +92,12 @@ They cover replies, documents, commits and PR bodies.
 
 ## Self-improvement loop
 
-Log friction as it happens with `scripts/kaizen.sh --where "<command, URL or file:line>" "<what you saw>"`. Write what you saw and where, never the cause or the fix: the sweep starts from the bare observation, and a cause written in the moment steers it toward the guess you already had. Before the PR opens, run `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy, because the container is reclaimed when the session ends.
+Log friction as it happens with `scripts/kaizen.sh log --where "<command, URL or file:line>" "<what you saw>"`. Write what you saw and where, never the cause or the fix: the sweep starts from the bare observation, and a cause written in the moment steers it toward the guess you already had. The log is a tracked file of the branch, committed with the rest of the work.
 
 After a merge, the same reply carries two follow-ups, and says so when either is not needed.
 
 1. If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch `shared-deploy`.
-2. Decide whether a kaizen is worth running, and run it where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, the archived `kaizen.md`, `/after-task-kaizen`, and nothing the skill already says.
+2. Decide whether a kaizen is worth running, and run it where `/open-pr`'s *After the merge* says. Its hand-off prompt names the merged PR, `/after-task-kaizen`, and nothing the skill already says.
 
 ## Checking a screen
 

@@ -98,9 +98,8 @@ Lives in: `docs/adr/`
 
 ## Feature
 
-One unit of work, one session and one pull request. Its spec, plan,
-validation reports and archived friction log sit under
-`docs/features/<app|meta>/<slug>/`.
+One unit of work, one session and one pull request. Its spec, plan and
+validation reports sit under `docs/features/<app|meta>/<slug>/`.
 
 Lives in: `docs/features/`
 
@@ -113,11 +112,11 @@ Lives in: `.claude/skills/route/`
 
 ## Friction log
 
-`KAIZEN.md`, the scratch file `scripts/kaizen.sh` appends one line to each
-time something goes wrong during a task, archived into the feature's folder
-before its pull request opens.
+`docs/kaizen/<branch>.md`, the tracked file `scripts/kaizen.sh log` appends
+one line to each time something goes wrong on a branch. The branch commits it
+with its pull request.
 
-Lives in: `scripts/kaizen.sh`
+Lives in: `docs/kaizen/`, written by `scripts/kaizen.sh`
 
 Not to be confused with: a kaizen, which is what the log feeds.
 

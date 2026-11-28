@@ -1,31 +1,42 @@
 #!/usr/bin/env bash
-# Log one piece of friction to KAIZEN.md, the scratch file `/after-task-kaizen`
-# sweeps when the work merges.
+# Log one piece of friction to the branch's friction log, the file
+# `/after-task-kaizen` reads after the merge.
 #
-#   scripts/kaizen.sh --where "pnpm blueprints, run from apps/pragma" "the error names a path that never existed"
-#   scripts/kaizen.sh --from audit-stage-r2 --where "/sessions/<id>, the +1 button" "tapping +1 twice moves the counter and not the chart"
+#   scripts/kaizen.sh log --where "pnpm blueprints, run from apps/pragma" "the error names a path that never existed"
+#   scripts/kaizen.sh log --from audit-stage-r2 --where "/sessions/<id>, the +1 button" "tapping +1 twice moves the counter and not the chart"
 #   scripts/kaizen.sh show
-#   scripts/kaizen.sh archive <docs-slug>/<feature>
 #   scripts/kaizen.sh balance [<base-ref>]
+#
+# The log is `docs/kaizen/<branch>.md`, a tracked file the branch commits like
+# any other. It used to be a gitignored `KAIZEN.md` per checkout, copied into
+# the branch by an `archive` step, and every defect of that copy came from the
+# log and the branch living in two places: a container reclaimed before the
+# copy (the-friction-log-that-never-left-the-container), a second copy that
+# overwrote the first (the-sweep-that-overwrote-the-log-it-exists-to-read), one
+# session's two pull requests sharing a log (the-friction-log-that-arrived-twice),
+# a local checkout handing one session's lines to the next
+# (the-friction-log-that-adopted-another-sessions-lines), and a sweep handed a
+# file instead of the lines its merge added
+# (the-sweep-handed-a-log-it-had-already-read). A file named after its branch
+# holds that branch's lines and no other, and goes wherever the branch goes.
+#
+# One checkout, one file. An agent in its own worktree is on its own branch and
+# writes its own file, so the main session merging that worktree adds a file and
+# never meets a conflict. No merge driver is needed, and none is used: GitHub's
+# merge applies none (the-union-merge-only-this-checkout-could-see).
+#
+# A new log is registered with `git add -N`, so `git status`, `git commit -a`
+# and the merge hook's uncommitted-work check see it from its first line.
 #
 # `--from` names the writer, because the sweep reads differently depending on
 # who hit the friction: the same line from four different agents is a systemic
 # problem, and from one is a local one. Nothing in the environment identifies a
-# subagent, so an agent has to name itself — the prompt that spawns it should
-# say which label to use. Defaults to $KAIZEN_AGENT, then to `main`.
+# subagent, so the prompt that spawns it says which label to use. Defaults to
+# $KAIZEN_AGENT, then to `main`.
 #
-# Why a script rather than "append to the file":
-#
-#   * Subagents can call it. A workflow round runs a dozen agents that each hit
-#     friction and report it in a return value nobody keeps; one command per
-#     agent turns that into the sweep's raw material. PR 50 ran 22 agents and
-#     kept none of what they learned the hard way.
-#   * Concurrent writers do not corrupt it. Every entry is a single short line
-#     opened O_APPEND, which the kernel writes atomically under PIPE_BUF, so a
-#     dozen agents appending at once interleave lines rather than characters.
-#     Editing the file with a text tool from several agents does not survive
-#     that.
-#   * It fixes the format, so the sweep reads rows instead of prose.
+# Every entry is a single short line opened O_APPEND, which the kernel writes
+# atomically under PIPE_BUF, so a dozen agents appending at once interleave
+# lines rather than characters.
 #
 # What belongs here: a defect, a vendor surprise, a correction you were given
 # twice, a tool that failed in a way that named the wrong problem, an
@@ -34,200 +45,73 @@
 # until it reaches the cause. A cause written in the moment is the guess you
 # already had, and it steers the sweep toward the eradication that guess
 # implies: on 2026-11-27 a line blamed the validators for a public API field,
-# before anyone had looked at why the field existed.
+# before anyone had looked at why the field existed. So `log` refuses a line
+# without `--where`: the place is what lets the sweep go and look for itself.
 #
-# So a line has two parts, and the script refuses one without both. The
-# sentence says what you saw. `--where` says where: the command you ran, the
-# URL, the screen, or the file and line. The place is what lets the sweep go
-# and look for itself instead of trusting the sentence.
-#
-# The file is gitignored, so it never lands in a commit. `archive` copies it
-# into the branch before the pull request opens, and the sweep reads that copy
-# in a new conversation after the merge.
-#
-# `archive` exists because that arrangement assumes the sweep runs on the same
-# machine that logged the friction. On a hosted session it does not: the
-# container is reclaimed when the session ends, the sweep happens later in a
-# fresh one, and a gitignored file cannot travel between them. So the log's
-# primary input reaches the sweep only if somebody copies it into the branch
-# first. `archive` is that copy, into the feature folder where the sweep will
-# look for it.
-#
-# It merges rather than overwrites. It used to `cp`, and a task where three
-# agents each archived in turn ended with only the last one's entries — eight
-# lines from two earlier agents had to be merged back by hand. A command whose
-# entire purpose is to stop the sweep losing its input must not be the thing
-# that loses it. Entries are one line each carrying a writer and a timestamp,
-# so an exact-line match identifies a duplicate reliably.
+# Logging is its own subcommand, and any other first word is refused. When the
+# sentence was the fallback branch, a mistyped `list` was logged as friction
+# (the-friction-log-that-recorded-a-typo).
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
+LOG_DIRECTORY="docs/kaizen"
+DEFAULT_BRANCH="main"
 
-# An agent given its own worktree runs from a second checkout, and a log kept
-# there is one `archive` never reads: PR 263 lost two agents' lines that way.
-# The main checkout is the parent of the common git directory every worktree
-# shares, so every writer appends to the one file the session archives.
-main_checkout() {
-  local common
-  common="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
-    { printf '%s' "$REPO_ROOT"; return; }
-  printf '%s' "$(dirname "$common")"
-}
-KAIZEN_FILE="$(main_checkout)/KAIZEN.md"
-FEATURES_DIRECTORY="docs/features"
+USAGE='usage: scripts/kaizen.sh log [--from <label>] --where "<command, URL, screen or file:line>" "<what you saw>" | show | balance [<base-ref>]'
 
-KAIZEN_COMMAND="scripts/kaizen.sh"
-
-HEADER="# KAIZEN — friction log for this task
-
-Append one line per friction event, as it happens, with:
-
-    $KAIZEN_COMMAND --where \"<command, URL, screen or file:line>\" \"<what you saw>\"
-    $KAIZEN_COMMAND --from <your-agent-label> --where \"...\" \"...\"   # from a subagent
-
-What you saw and where, never the cause or the fix. \`/after-task-kaizen\` sweeps the archived
-copy in a new conversation after the merge, classifies each line, and designs
-the eradication. Subagents
-should append here too, naming themselves, so the sweep can tell one agent
-struggling from four agents hitting the same wall.
-
-This file is gitignored. Before the pull request opens, run
-\`$KAIZEN_COMMAND archive <docs-slug>/<feature>\` and commit the copy.
-"
-
-SESSION="${CLAUDE_CODE_SESSION_ID:-}"
-
-ensure_file() {
-  [ -f "$KAIZEN_FILE" ] && return
-  printf '%s\n' "$HEADER" > "$KAIZEN_FILE"
-  [ -z "$SESSION" ] || printf 'Session: %s\n\n' "$SESSION" >> "$KAIZEN_FILE"
-}
-
-# A local checkout outlives its sessions, so a log a finished session never
-# archived used to greet the next one as "entries logged earlier in this task",
-# and its archive carried them into an unrelated pull request: PR #236's held
-# seven hook refusals from another task. The log now names the session that
-# opened it, and a different session parks the leftovers instead of adopting
-# them. A resumed session keeps its id and its log.
-park_another_sessions_log() {
-  [ -f "$KAIZEN_FILE" ] && [ -n "$SESSION" ] || return 0
-  local owner entries parked
-  owner="$(sed -n 's/^Session: //p' "$KAIZEN_FILE" | head -1)"
-  [ "$owner" != "$SESSION" ] || return 0
-  entries="$(grep -c '^- \[' "$KAIZEN_FILE" || true)"
-  if [ "${entries:-0}" -eq 0 ]; then
-    rm -f "$KAIZEN_FILE"
-    return 0
+# The branch's log, relative to the checkout. A checkout on main or on no
+# branch has no pull request to carry a log, so it gets none.
+log_path() {
+  local branch
+  branch="$(git -C "$REPO_ROOT" symbolic-ref --short -q HEAD || true)"
+  if [ -z "$branch" ] || [ "$branch" = "$DEFAULT_BRANCH" ]; then
+    printf 'scripts/kaizen.sh: the log is committed with its branch, and this checkout is on %s. Branch first. Nothing logged.\n' \
+      "${branch:-no branch}" >&2
+    return 1
   fi
-  parked="${KAIZEN_FILE%.md}.$(date -u '+%Y%m%d%H%M%S').md"
-  mv "$KAIZEN_FILE" "$parked" 2>/dev/null || return 0
-  printf '[kaizen] %s entries from session %s were never archived; moved to %s. Archive them into their own task folder, or delete the file.\n' \
-    "$entries" "${owner:-unknown}" "$(basename "$parked")"
+  printf '%s/%s.md' "$LOG_DIRECTORY" "$branch"
 }
 
-USAGE='usage: scripts/kaizen.sh [--from <label>] --where "<command, URL, screen or file:line>" "<what you saw>"'
-WRITER="${KAIZEN_AGENT:-main}"
-WHERE=''
-while [ "${1:-}" = '--from' ] || [ "${1:-}" = '--where' ]; do
-  [ -n "${2:-}" ] || { printf '%s\n' "$USAGE" >&2; exit 1; }
-  if [ "$1" = '--from' ]; then WRITER="$2"; else WHERE="$2"; fi
-  shift 2
-done
+log_line() {
+  local writer="${KAIZEN_AGENT:-main}" where='' path file branch entry
+  while [ "${1:-}" = '--from' ] || [ "${1:-}" = '--where' ]; do
+    [ -n "${2:-}" ] || { printf '%s\n' "$USAGE" >&2; exit 1; }
+    if [ "$1" = '--from' ]; then writer="$2"; else where="$2"; fi
+    shift 2
+  done
+  [ -n "$*" ] || { printf '%s\n' "$USAGE" >&2; exit 1; }
+  if [ -z "$where" ]; then
+    printf 'scripts/kaizen.sh: say where you saw it with --where "<command, URL, screen or file:line>". Write what you saw, not why it happened: the sweep finds the cause. Nothing logged.\n%s\n' "$USAGE" >&2
+    exit 1
+  fi
+  path="$(log_path)" || exit 1
+  file="$REPO_ROOT/$path"
+  branch="${path#"$LOG_DIRECTORY"/}"
+  mkdir -p "$(dirname "$file")"
+  # noclobber creates the file only when it is absent, so two agents starting
+  # the log at once cannot truncate each other's first line.
+  if (set -C; printf '# Friction log of %s\n\nAppended by `scripts/kaizen.sh log`, read by `/after-task-kaizen` after the merge.\n\n' \
+    "${branch%.md}" > "$file") 2>/dev/null; then
+    git -C "$REPO_ROOT" add -N -- "$path" 2>/dev/null || true
+  fi
+  # One line, one write. Newlines in the argument would break that guarantee,
+  # so they collapse to spaces.
+  entry="$(printf '%s (where: %s)' "$*" "$where" | tr '\n' ' ')"
+  writer="$(printf '%s' "$writer" | tr '\n ' '--')"
+  printf -- '- [%s] `%s` %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$writer" "$entry" >> "$file"
+  printf '\033[36m[kaizen]\033[0m logged as %s: %s\n' "$writer" "$entry"
+}
 
 case "${1:-}" in
-  '')
-    printf '%s | show | archive <docs-slug>/<feature>\n' "$USAGE" >&2
-    exit 1
+  log)
+    shift
+    log_line "$@"
     ;;
   show)
-    [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md yet\n'; exit 0; }
-    cat "$KAIZEN_FILE"
-    ;;
-  archive)
-    [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh archive <docs-slug>/<feature>\n' >&2; exit 1; }
-    [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md to archive\n' >&2; exit 1; }
-    destination="$REPO_ROOT/$FEATURES_DIRECTORY/$2/kaizen.md"
-    mkdir -p "$(dirname "$destination")"
-    if [ -f "$destination" ]; then
-      # An archive that overwrote destroyed the previous agents' entries, which
-      # is the one thing this command exists to prevent. Merge: keep the file
-      # that is there, append only the entry lines it does not already hold.
-      # Entries are one line each and carry their writer and timestamp, so an
-      # exact-line match is a reliable identity.
-      added=0
-      while IFS= read -r entry; do
-        grep -Fxq -- "$entry" "$destination" || { printf '%s\n' "$entry" >> "$destination"; added=$((added + 1)); }
-      done < <(grep '^- \[' "$KAIZEN_FILE" || true)
-      printf '\033[36m[kaizen]\033[0m merged %s new entry/entries into %s/%s/kaizen.md (%s total) — commit it, or the sweep will never see it\n' \
-        "$added" "$FEATURES_DIRECTORY" "$2" "$(grep -c '^- \[' "$destination" || true)"
-    else
-      cp "$KAIZEN_FILE" "$destination"
-      printf '\033[36m[kaizen]\033[0m archived %s entry/entries to %s/%s/kaizen.md — commit it, or the sweep will never see it\n' \
-        "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$FEATURES_DIRECTORY" "$2"
-    fi
-    # The log is drained once its entries are somewhere a commit can carry
-    # them. A session that ships two pull requests archives twice, and a copy
-    # that left the entries behind gave the second archive every line of the
-    # first: PR #218's and PR #219's archives differed by exactly one line, so
-    # that sweep re-triaged work two earlier pull requests had already
-    # eradicated. Draining is safe in this order, because the destination
-    # exists before anything is removed.
-    kept="$(sed '/^- \[/d' "$KAIZEN_FILE")"
-    printf '%s\n' "$kept" > "$KAIZEN_FILE"
-    ;;
-  sweep-input)
-    # What `/after-task-kaizen` reads. The sweep's input is not "the archive the
-    # task prompt named": it is every entry line the merge added to any archive.
-    # Two ways the prompt gets it wrong, both seen on PR #281. A task that
-    # archives into a slug an earlier pull request already used merges its lines
-    # into that committed file, so the sweep is handed every line the earlier
-    # sweep eradicated: 16 of the 19 in meta/quality-dashboard belonged to
-    # PR #263. And a session that archives into two slugs hands the prompt's
-    # author two files to remember, who named one.
-    [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh sweep-input <merge-ref>\n' >&2; exit 1; }
-    merge="$2"
-    git -C "$REPO_ROOT" rev-parse --verify --quiet "$merge^{commit}" > /dev/null ||
-      { printf 'scripts/kaizen.sh: %s is not a commit here; fetch origin first\n' "$merge" >&2; exit 1; }
-    archives="$(git -C "$REPO_ROOT" diff --name-only "$merge^" "$merge" -- "$FEATURES_DIRECTORY" |
-      grep '/kaizen\.md$' || true)"
-    if [ -z "$archives" ]; then
-      printf '[kaizen] %s added no friction archive. The task logged nothing, or never archived: that is a finding, not an absence.\n' "$merge"
-      exit 0
-    fi
-    total=0
-    swept=0
-    while IFS= read -r archive; do
-      [ -n "$archive" ] || continue
-      # A line the merge rewrote shows as one removed and one added. Its stamp,
-      # the time and the writer, did not move, so an added line whose stamp a
-      # removed line carries is an edit of a line an earlier sweep read. PR
-      # #290 renamed every ADR id, and the rewrite put 9 such lines in front of
-      # its sweep as new friction.
-      added="$(git -C "$REPO_ROOT" diff "$merge^" "$merge" -- "$archive" | awk '
-        /^-- \[/ { match($0, /^-- \[[^]]*\] `[^`]*`/); removed[substr($0, 2, RLENGTH - 1)]++; next }
-        /^\+- \[/ { lines[++count] = substr($0, 2) }
-        END {
-          for (each = 1; each <= count; each++) {
-            match(lines[each], /^- \[[^]]*\] `[^`]*`/)
-            stamp = substr(lines[each], 1, RLENGTH)
-            if (removed[stamp] > 0) { removed[stamp]--; continue }
-            print lines[each]
-          }
-        }')"
-      count="$(printf '%s' "$added" | grep -c '^- \[' || true)"
-      carried="$(git -C "$REPO_ROOT" show "$merge:$archive" | grep -c '^- \[' || true)"
-      total=$((total + count))
-      [ "$count" -eq 0 ] && continue
-      swept=$((swept + 1))
-      printf '\n\033[36m%s\033[0m — %s line(s) this merge added, of %s in the file\n' \
-        "$archive" "$count" "$carried"
-      printf '%s\n' "$added"
-      [ "$count" -eq "$carried" ] ||
-        printf '  the other %s line(s) came with an earlier pull request that reused this slug, or this merge only edited them; they were swept with it\n' \
-          "$((carried - count))"
-    done <<< "$archives"
-    printf '\n[kaizen] %s line(s) to sweep, across %s archive(s)\n' "$total" "$swept"
+    path="$(log_path)" || exit 1
+    [ -f "$REPO_ROOT/$path" ] || { printf 'no %s yet\n' "$path"; exit 0; }
+    cat "$REPO_ROOT/$path"
     ;;
   balance)
     # A sweep earns its additions by deleting or simplifying code, so only code
@@ -256,32 +140,8 @@ case "${1:-}" in
       exit 1
     }
     ;;
-  init)
-    park_another_sessions_log
-    ensure_file
-    ;;
   *)
-    # A friction line is a sentence. One word is a mistyped subcommand, and
-    # logging it put `list` in PR #230's archive as if it were friction.
-    if [[ "$*" != *[[:space:]]* ]]; then
-      printf 'scripts/kaizen.sh: "%s" is not a subcommand (show, archive, balance, init), and one word is not a friction sentence. Nothing logged.\n' "$*" >&2
-      exit 1
-    fi
-    # The place is what the sweep goes back to. A line without one leaves it
-    # the sentence alone, and the sentence is where a guessed cause hides.
-    if [ -z "$WHERE" ]; then
-      printf 'scripts/kaizen.sh: say where you saw it with --where "<command, URL, screen or file:line>". Write what you saw, not why it happened: the sweep finds the cause. Nothing logged.\n%s\n' "$USAGE" >&2
-      exit 1
-    fi
-    ensure_file
-    # One line, one write. Newlines in the argument would break that guarantee,
-    # so they collapse to spaces.
-    entry="$(printf '%s (where: %s)' "$*" "$WHERE" | tr '\n' ' ')"
-    writer="$(printf '%s' "$WRITER" | tr '\n ' '--')"
-    # The date is part of the stamp because one session's log outlives one task:
-    # the PR #206 sweep had to cut a log holding four pull requests' lines by
-    # clock time alone, across three days.
-    printf -- '- [%s] `%s` %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$writer" "$entry" >> "$KAIZEN_FILE"
-    printf '\033[36m[kaizen]\033[0m logged as %s: %s\n' "$writer" "$entry"
+    printf 'scripts/kaizen.sh: "%s" is not a subcommand. Nothing logged.\n%s\n' "${1:-}" "$USAGE" >&2
+    exit 1
     ;;
 esac

@@ -13,9 +13,6 @@ const BODY_FILE_VALUE = /^.*--body-file[ =]([^ ]+).*$/su;
 const BODY_FLAG = /--body\b/u;
 const DOUBLE_QUOTED_BODY = /^.*--body[ =]"([^"]*)".*$/su;
 const SINGLE_QUOTED_BODY = /^.*--body[ =]'([^']*)'.*$/su;
-const KAIZEN_FILE = 'KAIZEN.md';
-const LOGGED_ENTRY = /^- \[/u;
-const ARCHIVED_KAIZEN = /^docs\/features\/.*\/kaizen\.md$/u;
 const CHECKER_TITLE = '# title placeholder for the checker';
 const CHECKER_SUBJECT = 'the body';
 
@@ -90,29 +87,6 @@ function readBody(commandToRun: string, directory: string, world: HookWorld): Bo
   };
 }
 
-function countArchivedKaizen(commandToRun: string, world: HookWorld): number {
-  const head = readHeadBranch(commandToRun);
-  const comparedHead = head === '' ? 'HEAD' : `origin/${head}`;
-  const { stdout } = world.run('git', ['diff', '--name-only', `origin/main...${comparedHead}`]);
-  return stdout.split('\n').filter((path) => ARCHIVED_KAIZEN.test(path)).length;
-}
-
-function checkFrictionLogArchived(commandToRun: string, world: HookWorld): Verdict {
-  const frictionLog = world.readText(KAIZEN_FILE);
-  if (frictionLog === null) return PASS;
-  const logged = frictionLog.split('\n').filter((line) => LOGGED_ENTRY.test(line)).length;
-  if (logged === 0 || countArchivedKaizen(commandToRun, world) > 0) return PASS;
-  return refuse(
-    RULE,
-    'opened a pull request leaving the friction log where the sweep cannot read it',
-    [
-      `the friction log holds ${String(logged)} entr(y/ies) and this branch commits no archive of it.`,
-      'A gitignored file does not reach the sweep, which may run on another machine.',
-      '  scripts/kaizen.sh archive <docs-slug>/<feature>   then commit it',
-    ],
-  );
-}
-
 function checkBodyBudget(body: string): Verdict {
   const violations = validateBody(`${CHECKER_TITLE}\n\n${body}\n`);
   if (violations.length === 0) return PASS;
@@ -135,8 +109,6 @@ export const ghPrCreate: Check = {
     const reading = readBody(commandToRun, input.cwd ?? world.projectDirectory, world);
     if (reading === null) return PASS;
     if ('verdict' in reading) return reading.verdict;
-    const frictionVerdict = checkFrictionLogArchived(commandToRun, world);
-    if (frictionVerdict.kind !== 'pass') return frictionVerdict;
     return checkBodyBudget(reading.body);
   },
 };

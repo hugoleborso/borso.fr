@@ -42,7 +42,7 @@ process.stdout.write(
     `[operator-messages] ${pages.length} list_events page(s) read, ${inline} of them inline`,
     'Typed by the operator:',
     ...new Set(operatorLines),
-    'Friction the listed sessions logged, archived or not:',
+    'Friction the listed sessions logged, committed or not:',
     ...new Set(kaizenLines),
     '',
   ].join('\n'),

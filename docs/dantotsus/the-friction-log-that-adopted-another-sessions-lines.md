@@ -6,7 +6,7 @@ severity: low
 related-pr: '#236'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/kaizen.sh, scripts/install-repo-deps.sh]
+eradication-paths: [scripts/kaizen.sh, scripts/kaizen.test.ts]
 time-to-detect: minutes (seen when the archive was read before committing)
 tags: [meta, harness, kaizen, session-start]
 zone: scripts
@@ -55,6 +55,8 @@ local checkout keeps whatever the last unarchived session left.
 ## Eradication (mandatory — code-level)
 
 **Type:** code diff (level 1 — structural impossibility)
+
+> **Superseded mechanism.** A log named after its branch holds no other branch's lines, so there is nothing for a new session to adopt and nothing to park. The test `appends what was seen and where to the branch's own log` in `scripts/kaizen.test.ts` holds it. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** this commit, on the kaizen branch for PR #236.
 

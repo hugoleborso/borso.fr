@@ -3,7 +3,7 @@
  */
 // @FollowsBlueprint adapter-external-service
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   type Check,
@@ -52,10 +52,10 @@ function runSafely(check: Check, input: HookInput): Verdict {
 }
 
 function logRefusals(outcome: HookOutcome, input: HookInput): void {
-  const isLoggingRefusals = process.env['KAIZEN_LOG_REFUSALS'] !== '0';
-  if (!isLoggingRefusals || !existsSync(join(PROJECT_DIRECTORY, 'KAIZEN.md'))) return;
+  if (process.env['KAIZEN_LOG_REFUSALS'] === '0') return;
   for (const { rule, summary } of outcome.refusals) {
     runCommand(join(PROJECT_DIRECTORY, 'scripts/kaizen.sh'), [
+      'log',
       '--from',
       `hook:${rule}`,
       '--where',

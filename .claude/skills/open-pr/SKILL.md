@@ -19,8 +19,6 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
    - **Before merge** — what the operator does before merging, and what stays broken until they do.
    - **Notable** — what a reviewer would otherwise find only by reading the diff.
 3. **Pick the block shape.** *Before merge* and *Validation* are each written as blocks. A `<details>` toggle is the better read and the GitHub MCP body sanitizer deletes it, keeping the contents and flattening them — measured on PR #60 and visible in that PR's own stored body, which says so in place of the toggles it lost. So a body posted through `mcp__github__*` uses `### ` headings, and only a body posted through an authenticated `gh` uses toggles. The checker accepts either and `scripts/hooks/checks/github-pr-body.core.ts` refuses the toggle on the call that would eat it.
-3b. **Archive the friction log.** `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy on this branch. The container is reclaimed when the session ends, and the kaizen runs later in a new conversation that reads only what the branch carries. `scripts/hooks/checks/gh-pr-create.core.ts` refuses a `gh pr create` whose branch archives nothing while the log holds entries.
-
 4. **Check it.** `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>` — fix every violation it names rather than arguing with the count.
 5. **Post it.** Title from the `# ` line; body from `--render`, which strips that line and the attribution footer:
 
@@ -100,7 +98,6 @@ The session that shipped the feature first decides whether a kaizen sweep is wor
 1. **`shared-deploy`.** If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch it.
 2. **The kaizen task**, when it goes to a new conversation. Propose it in the merge reply, and start it only after the operator approves. Started before, it timed out after 60 s on PR #228. Use whatever tool this session holds for opening a new session or queueing a task: the set changes between sessions, so read your own tools rather than reaching for a name you remember. Whichever it is, it starts a new conversation. Its prompt stands alone and names:
    - the merged pull request, as `owner/repo#N` with its URL;
-   - the archived friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`, which step 3b committed;
    - the instruction to run `/after-task-kaizen` on that pull request.
 
    Nothing else. The skill holds its own steps and reads every operator message from the transcript, so a step or a lesson restated here is a second copy the operator has to read twice.

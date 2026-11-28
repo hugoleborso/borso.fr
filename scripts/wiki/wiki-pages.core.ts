@@ -39,6 +39,7 @@ const RAW_EXTENSION = /\.(png|jpe?g|gif|svg|webp|webm|mp4)$/i;
 const TITLE_LINE = /^# .+$/m;
 const TITLE_MARKER_LENGTH = '# '.length;
 const FEATURES_DIRECTORY = 'docs/features/';
+const UNPUBLISHED_DIRECTORIES: readonly string[] = [FEATURES_DIRECTORY, 'docs/kaizen/'];
 const PARENT_SEGMENT = '..';
 
 const FEATURES_PAGE = 'Features';
@@ -342,7 +343,9 @@ function renderFooter(source: WikiSource): string {
 }
 
 export function buildWiki(documents: readonly SourceDocument[], source: WikiSource): WikiPage[] {
-  const published = documents.filter((document) => !document.path.startsWith(FEATURES_DIRECTORY));
+  const published = documents.filter(
+    (document) => !UNPUBLISHED_DIRECTORIES.some((directory) => document.path.startsWith(directory)),
+  );
   const pageNames = mapPageNames(published);
   const pages = published.map((document) => ({
     name: pageNameFor(document.path),

@@ -8,7 +8,6 @@ import { eslintCacheReplaysAFixedError } from './checks/eslint-cache-replays-a-f
 import { formatWrite } from './checks/format-write.core.ts';
 import { ghPrCreate } from './checks/gh-pr-create.core.ts';
 import { githubPrBody } from './checks/github-pr-body.core.ts';
-import { kaizenInit } from './checks/kaizen-init.core.ts';
 import {
   knowledgeTriggersAfterTool,
   knowledgeTriggersBeforeTool,
@@ -71,5 +70,5 @@ export const CHECKS_BY_EVENT: Readonly<Record<HookEvent, readonly Check[]>> = {
   ],
   PostToolUseFailure: [eslintCacheReplaysAFixedError, knowledgeTriggersOnFailure],
   Stop: [screensShown],
-  SessionStart: [sessionStart, sessionEnv, kaizenInit],
+  SessionStart: [sessionStart, sessionEnv],
 };
