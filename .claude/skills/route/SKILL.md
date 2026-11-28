@@ -26,6 +26,7 @@ Answer all five. Answer them by **looking**, not by guessing: run the greps, ope
 **Tier 0 — do it.** One or two files, no open decision, a blueprint exists, and a test can prove it.
 No spec, no plan, no task list. Write it, test it, commit it. Reaching for a skill here is the waste this repo's north star names.
 A change under `apps/<app>/api/` is Tier 1 at least, whatever its size. The `api-validation` hook refuses its pull request without a `/technical-validation` report, and that report reads a spec.
+A change under `apps/<app>/site/` is Tier 1 at least for the same reason. The `visual-validation` hook refuses its pull request without a `/visual-validation` report, and that report reads a spec too.
 
 **Tier 1 — chained.** Several files inside one application, no open product decision, precedent exists.
 Task list:
@@ -34,6 +35,7 @@ Task list:
 3. implement, marking new files `// @FollowsBlueprint <id>`
 4. the affected tests (`pnpm --filter <app> exec vitest run --project core --changed <base>`, or `exec vitest run --changed <base>` on a front-end-only app); coverage, mutation and the whole suites run in CI
 5. `/technical-validation`, which also checks what lint cannot, two rounds at most
+6. `/visual-validation` when the change touches `apps/<app>/site/`, once, at the end
 
 **Tier 2 — specified.** New user-visible behaviour, or a change crossing back end and front end, or any open decision.
 Task list:
