@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import i18next from 'i18next';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import './i18n/i18n.setup';
 import { App } from './App';
 import {
@@ -37,5 +38,41 @@ describe('the application shell', () => {
     });
     expect(screen.queryByLabelText(/password/i)).toBe(null);
     expect(fetchStub.calls.every((call) => !call.url.includes('/api/instruments'))).toBe(true);
+  });
+
+  it('names the screen-reader close button of a sheet in the language the visitor picked', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: false, media: query }));
+    const original = i18next.language;
+    await i18next.changeLanguage('fr');
+    globalThis.history.replaceState({}, '', '/');
+    fetchStub = stubFetch(() =>
+      Promise.resolve(
+        jsonResponse({
+          concerts: [
+            {
+              sessionId: 'aaaaaaaa-1111-4111-8111-111111111111',
+              date: '2026-11-28T20:30:00.000Z',
+              venue: 'Le Pop-Up du Label',
+              message: null,
+              posterUrl: null,
+              prize: null,
+            },
+          ],
+        }),
+      ),
+    );
+    render(
+      <QueryClientProvider client={createIsolatedQueryClient()}>
+        <App />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Je serai là !' }));
+    const dismissNames = (await screen.findAllByRole('button'))
+      .map((button) => button.getAttribute('aria-label'))
+      .filter((label) => label !== null);
+    await i18next.changeLanguage(original);
+    vi.unstubAllGlobals();
+    expect(dismissNames).not.toContain('Dismiss');
+    expect(dismissNames.length).toBeGreaterThan(0);
   });
 });

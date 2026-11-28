@@ -1,6 +1,5 @@
 import { dehydrate, hydrate, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -35,7 +34,6 @@ const UPCOMING = {
 };
 const MEMBERS = { members: [{ id: A_MEMBER, firstName: 'Hugo', color: '#3a9b9b' }] };
 const A_TRACK = { deezerTrackId: 'dz-7923756', title: 'Valerie', artist: 'Mark Ronson' };
-const SETTLED_SEARCH = { timeout: 3000 } as const;
 
 const activeStubs: FetchStub[] = [];
 
@@ -180,10 +178,10 @@ describe('the public concert sign-up page', () => {
       expect(screen.getByRole('status').textContent).toContain('Tuning up…');
     });
     answer.resolve(jsonResponse({ registrationId: A_REGISTRATION, editToken: 'token-1' }, 201));
-    expect(await screen.findByRole('dialog')).toBeTruthy();
+    expect(await screen.findByText('Signed up')).toBeTruthy();
   });
 
-  it('signs up, remembers it in the browser, then asks who they come for', async () => {
+  it('signs up, remembers it in the browser, and asks no follow-up question', async () => {
     const fetchStub = renderPage((request) => {
       expect(request.url).toContain(
         `/api/concert-registrations/concerts/${A_CONCERT}/registrations`,
@@ -193,35 +191,14 @@ describe('the public concert sign-up page', () => {
       );
     });
     await signUp(' Lea@Example.com ');
-    expect(await screen.findByText('Who in the band are you coming to support?')).toBeTruthy();
-    expect(screen.getByText("You're signed up, Léa!")).toBeTruthy();
+    expect(await screen.findByText('Signed up')).toBeTruthy();
     expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toContain('token-1');
     const sent: unknown = await fetchStub.calls.find(isRegistrationPost)?.clone().json();
     expect(sent).toStrictEqual({ firstName: 'Léa', email: 'lea@example.com' });
-
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Hugo' }));
-    await user.type(screen.getByRole('searchbox'), 'valerie');
-    await user.click(await screen.findByRole('option', { name: /Valerie/ }, SETTLED_SEARCH));
-    await user.click(screen.getByRole('button', { name: 'Send' }));
-    expect(await screen.findByText('Signed up')).toBeTruthy();
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
-    const patch = fetchStub.calls.find((call) => call.method === 'PATCH');
-    expect(patch?.headers.get('x-registration-token')).toBe('token-1');
-    const answers: unknown = await patch?.clone().json();
-    expect(answers).toStrictEqual({ comingForMemberId: A_MEMBER, wishedTrackId: 'dz-7923756' });
-  });
-
-  it('skips both questions without sending anything, then shows the fan as signed up', async () => {
-    const fetchStub = renderPage(() =>
-      Promise.resolve(jsonResponse({ registrationId: A_REGISTRATION, editToken: 'token-1' }, 201)),
-    );
-    await signUp();
-    fireEvent.click(await screen.findByRole('button', { name: 'Hugo' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
-    expect(await screen.findByText('Signed up')).toBeTruthy();
+    expect(screen.queryByText('Who in the band are you coming to support?')).toBeNull();
     expect(fetchStub.calls.filter((call) => call.method === 'PATCH')).toEqual([]);
   });
 
@@ -333,15 +310,20 @@ describe('the public concert sign-up page', () => {
     expect(screen.queryByText('Signed up')).toBeNull();
   });
 
-  it('signs up a friend from the same browser, asks them the questions, and keeps the first sign-up remembered', async () => {
+  it('signs up a friend from the same browser and keeps the first sign-up remembered', async () => {
     const stored = JSON.stringify({ registrationId: A_REGISTRATION, editToken: 'token-1' });
     localStorage.setItem(`pragma.registration.${A_CONCERT}`, stored);
-    renderPage(() =>
+    const fetchStub = renderPage(() =>
       Promise.resolve(jsonResponse({ registrationId: A_MEMBER, editToken: 'token-2' }, 201)),
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Sign up a friend' }));
     await fillAndConfirm('Max', 'max@example.com');
-    expect(await screen.findByText("You're signed up, Max!")).toBeTruthy();
+    await waitFor(() => {
+      expect(fetchStub.calls.some(isRegistrationPost)).toBe(true);
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
     expect(localStorage.getItem(`pragma.registration.${A_CONCERT}`)).toBe(stored);
   });
 
