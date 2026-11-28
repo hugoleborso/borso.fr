@@ -45,6 +45,7 @@ const CALENDAR_CLASS =
 const CALENDAR_LABEL_CLASS = 'max-lg:sr-only';
 const FRIEND_CLASS =
   'min-h-14 flex-1 border border-rule-strong bg-paper font-medium md:flex-none md:px-6';
+const IS_FOLLOW_UP_ASKED = false;
 
 // @FollowsBlueprint organism-query-owning
 export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Element {
@@ -79,7 +80,7 @@ export function ConcertSignUpCard({ concert }: ConcertSignUpCardProps): JSX.Elem
     signUp.mutate(variables, {
       onSuccess: () => {
         setHasSignedUpHere(true);
-        setIsFollowUpOpen(true);
+        setIsFollowUpOpen(IS_FOLLOW_UP_ASKED);
       },
     });
   };
