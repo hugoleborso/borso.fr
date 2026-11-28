@@ -107,12 +107,6 @@ an old child page come back, which read as a back-link defect. Open a fresh
 session and sign in again before such a check, so every entry in the history
 is one the check made.
 
-`scripts/phone.sh touch` lays the page out at 1280 px for a moment while it
-re-applies the phone viewport. A minimal `sm:overflow-visible` strip kept its
-`scrollLeft` through that (measured 2026-11-15), but on PR #354 a pragma pill
-strip came back at 0, so a component that re-renders on width can lose its
-scroll. Read the state you assert on after the tap, not before it.
-
 ## WebGL is slow
 
 SwiftShader renders the `borso-fr` galaxy at 1 to 2 frames per second. When a

@@ -101,15 +101,11 @@ export interface TouchTapOptions {
   readonly selector: string;
   readonly port: number;
   readonly pageUrlPart: string;
-  readonly width: number;
-  readonly height: number;
 }
 
 const DEFAULT_OPTIONS: Omit<TouchTapOptions, 'selector'> = {
   port: 9222,
   pageUrlPart: '',
-  width: 375,
-  height: 812,
 };
 
 export function readFlag(argumentsGiven: readonly string[], name: string): string | undefined {
@@ -133,7 +129,5 @@ export function parseTouchTapArguments(argumentsGiven: readonly string[]): Touch
     selector,
     port: readNumberFlag(argumentsGiven, 'port', DEFAULT_OPTIONS.port),
     pageUrlPart: readFlag(argumentsGiven, 'page') ?? DEFAULT_OPTIONS.pageUrlPart,
-    width: readNumberFlag(argumentsGiven, 'width', DEFAULT_OPTIONS.width),
-    height: readNumberFlag(argumentsGiven, 'height', DEFAULT_OPTIONS.height),
   };
 }

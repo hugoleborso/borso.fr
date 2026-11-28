@@ -175,12 +175,10 @@ describe('parseTouchDragArguments', () => {
       steps: 8,
       port: 9222,
       pageUrlPart: '',
-      width: 375,
-      height: 812,
     });
   });
 
-  it('defaults to eight steps on a 375 by 812 phone on CDP 9222, on whichever page comes first', () => {
+  it('defaults to eight steps on CDP 9222, on whichever page comes first', () => {
     expect(parseTouchDragArguments(['--from', '#a', '--to', '#b'])).toStrictEqual({
       fromSelector: '#a',
       toSelector: '#b',
@@ -188,8 +186,6 @@ describe('parseTouchDragArguments', () => {
       steps: 8,
       port: 9222,
       pageUrlPart: '',
-      width: 375,
-      height: 812,
     });
   });
 
@@ -206,10 +202,6 @@ describe('parseTouchDragArguments', () => {
         '9333',
         '--page',
         'localhost:5173',
-        '--width',
-        '390',
-        '--height',
-        '844',
       ]),
     ).toStrictEqual({
       fromSelector: '[data-square="e2"] [data-piece]',
@@ -218,8 +210,6 @@ describe('parseTouchDragArguments', () => {
       steps: 12,
       port: 9333,
       pageUrlPart: 'localhost:5173',
-      width: 390,
-      height: 844,
     });
   });
 });

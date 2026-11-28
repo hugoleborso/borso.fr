@@ -1,7 +1,7 @@
 import {
   closeSession,
   createSender,
-  emulatePhone,
+  emulateTouch,
   openSession,
   FIRST_VISIBLE_SCRIPT,
   pause,
@@ -24,11 +24,11 @@ import { readReportedEvent, type RecordedInputEvent, type TapPoint } from './tou
 const USAGE = [
   'usage: pnpm exec tsx scripts/browser/touch-drag.ts --from <target> (--to <target> | --by <dx>,<dy>)',
   '         [--steps 8]',
-  '         [--page <url part>] [--port 9222] [--width 375] [--height 812]',
+  '         [--page <url part>] [--port 9222]',
   '',
   'Drags with a real touch through CDP Input.dispatchTouchEvent, on the Chromium',
-  'listening on --port (scripts/phone.sh passes its agent-browser session), at a',
-  'phone viewport with touch emulation on: touchStart at the centre of the first',
+  'listening on --port (scripts/phone.sh passes its agent-browser session), with',
+  'touch emulation on at the session viewport: touchStart at the centre of the first',
   'visible --from match, --steps touchMove events, touchEnd at the centre of the',
   'first visible --to match, or --by CSS pixels away from where it started (a',
   'swipe, such as --by -120,0). A target is a CSS selector, or text=<name> for',
@@ -122,7 +122,7 @@ async function didDragArriveAsTouch(options: TouchDragOptions): Promise<boolean>
   try {
     await send('Runtime.enable');
     await send('Runtime.addBinding', { name: TOUCH_DRAG_BINDING });
-    await emulatePhone(send, options);
+    await emulateTouch(send);
     const measured = parseDragEnds(
       await send('Runtime.evaluate', {
         expression: buildPreparationScript(options),

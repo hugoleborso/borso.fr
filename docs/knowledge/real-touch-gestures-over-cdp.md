@@ -66,9 +66,12 @@ async function touch(type, x, y) {
   rejected.
 - **Pace the events**, around 60 ms apart. A burst in one tick gives the
   compositor no chance to decide the gesture, which is the behaviour under test.
-- **Turn on touch emulation first**: `Emulation.setDeviceMetricsOverride` with
-  `mobile: true`, then `Emulation.setTouchEmulationEnabled`. That gives
-  `pointer: coarse`, `hover: none` and `maxTouchPoints: 5`. Do not use
+- **Turn on touch emulation first** with `Emulation.setTouchEmulationEnabled`.
+  That gives `pointer: coarse` and `maxTouchPoints: 5` at the viewport the
+  session already has. Set no `Emulation.setDeviceMetricsOverride` from a
+  second client. It ends with that client and takes the session's 375 px
+  viewport with it, so the page lays out at the 1280 px window until something
+  sets it again (measured 2026-11-28, PR #431's sweep). Do not use
   `Emulation.setEmitTouchEventsForMouse`, which wedges the input pipeline until
   the page navigates away and back.
 

@@ -84,16 +84,12 @@ export interface TouchDragOptions {
   readonly steps: number;
   readonly port: number;
   readonly pageUrlPart: string;
-  readonly width: number;
-  readonly height: number;
 }
 
 const DEFAULT_OPTIONS: Omit<TouchDragOptions, 'fromSelector' | 'toSelector' | 'offset'> = {
   steps: 8,
   port: 9222,
   pageUrlPart: '',
-  width: 375,
-  height: 812,
 };
 
 export function parseTouchDragArguments(
@@ -111,7 +107,5 @@ export function parseTouchDragArguments(
     steps: readNumberFlag(argumentsGiven, 'steps', DEFAULT_OPTIONS.steps),
     port: readNumberFlag(argumentsGiven, 'port', DEFAULT_OPTIONS.port),
     pageUrlPart: readFlag(argumentsGiven, 'page') ?? DEFAULT_OPTIONS.pageUrlPart,
-    width: readNumberFlag(argumentsGiven, 'width', DEFAULT_OPTIONS.width),
-    height: readNumberFlag(argumentsGiven, 'height', DEFAULT_OPTIONS.height),
   };
 }
