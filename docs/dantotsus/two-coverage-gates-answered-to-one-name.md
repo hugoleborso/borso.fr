@@ -6,7 +6,7 @@ severity: low
 related-pr: '#161'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [apps/pragma/package.json, apps/talos/package.json, apps/last-loop-lepin/package.json, apps/banana-rush/package.json]
+eradication-paths: [.husky/pre-push, .github/workflows/ci.yml, .github/workflows/full-suite.yml, apps/borso-fr/package.json]
 time-to-detect: one push
 tags: [vitest, coverage, gates, ci, testing, drizzle]
 zone: apps/pragma/package.json
@@ -51,6 +51,10 @@ In the four full-stack apps, `test:coverage` now runs exactly what CI runs:
 the `core` project with coverage, then the back-e2e suite without it.
 
 ## Eradication (mandatory — code-level)
+
+**Now, level 1.** Every app has a `test:core` script, and pre-push, `ci.yml` and `full-suite.yml` all run `pnpm --filter <app> run test:core --coverage`. The `if grep -q '"test:core"'` branch that chose between two commands in those three places is deleted, so there is one coverage command per app and every caller reaches it by one name. Its thresholds come from `coverageGate()` in `scripts/vitest-coverage-gate.ts`.
+
+The rung recorded below is what held before; it is gone.
 
 **Type:** code diff (level 1 — structural impossibility)
 

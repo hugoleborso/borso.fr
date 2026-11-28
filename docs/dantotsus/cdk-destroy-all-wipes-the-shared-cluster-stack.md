@@ -4,12 +4,12 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#26'
-fix-commits: [b35a066dc8, 3a5c9f6e01]
-eradication-level: 2
-eradication-paths: [apps/last-loop-lepin/package.json, apps/pragma/package.json]
+fix-commits: [b35a066dc8, 3a5c9f6e01, self]
+eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/dsql-cluster-stack.ts]
 time-to-detect: days
 tags: [cdk, cloudformation, dsql, deploy, github-actions, last-loop-lepin]
-zone: apps/last-loop-lepin/package.json
+zone: infra/cdk/src/constructs/dsql-cluster-stack.ts
 ---
 
 # `cdk destroy --all` aimed at a per-PR stack also fired at the shared DSQL cluster
@@ -89,37 +89,35 @@ includes the shared, stateful, cross-stage DSQL cluster.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — scoped command + fail-fast guard)
+**Type:** structural (level 1). CloudFormation refuses the delete.
 
-**Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commits on the kaizen branch (`fix(pragma)`, `fix(last-loop-lepin)`)
+`DsqlClusterStack` passes `terminationProtection: true` to `Stack`, and its
+props type omits the field, so no application can turn it off in code. Every
+`<app>-cluster` stack carries it from its next prod deploy. A
+`cdk destroy --all`, a hand-typed `delete-stack` or a future script that
+wildcards the stacks now fails at CloudFormation before any resource is
+touched, whatever app or script issues it.
+`infra/cdk/test/unit/dsql-cluster-stack.test.ts` asserts the flag on the
+synthesized artifact.
 
-**The actual fix:**
+The CDK bootstrap deploy role that every deploy assumes already allows
+`cloudformation:UpdateTerminationProtection` (measured on the `CDKToolkit`
+template in eu-west-3), so no IAM change is needed.
 
-```diff
-- "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy --all --force"
-+ "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force"
-```
+What it let go:
 
-The `${PR_NUMBER:?message}` form makes the per-PR scope mandatory: a
-destroy with no `PR_NUMBER` aborts before CDK runs, with the message
-explaining why. The preview teardown already exports `PR_NUMBER`; a
-local operator must pass it deliberately. The cluster stack name
-(`pragma-cluster`) is never expressible by this script, so the teardown
-can never target it again.
+- The `${PR_NUMBER:?…}` guard and its message in every app's `destroy` script.
+  The script still names `<app>-pr-<n>`, because `--all` would now fail on the
+  protected cluster and turn every teardown red. An empty `PR_NUMBER` names no
+  stack, and the preview stage already refuses to synthesize without one.
+Retiring an application is the one time a cluster stack goes. The operator
+turns the protection off by hand first, as
+[`adding-a-fullstack-app.md`](../adding-a-fullstack-app.md) says.
 
-Why level 2 and not level 1: a true structural impossibility would
-move the cluster stack into a separate CDK app (so a per-PR `destroy`
-literally cannot see it) **or** set CloudFormation
-`terminationProtection: true` on the cluster stack. Both are larger
-`@borso/infra` changes under a 100%-coverage gate; the scoped-destroy
-guard removes the live hazard now, and the structural split is the
-documented next step.
-
-**Sibling defects swept:** `apps/last-loop-lepin/package.json` carried
-the identical `cdk destroy --all --force` and had mis-fired three times
-(2026-05-25 20:55Z, 23:34Z; 2026-06-05 17:20Z), saved each time only by
-deletion protection + a following prod deploy. Same scoped-destroy fix
-applied in the same kaizen PR.
+**Sibling defects swept:** every full-stack app builds its cluster through
+`DsqlClusterStack`, so one change covers all of them. `infra/shared` keeps
+`cdk destroy --all`, because removing the account singletons is that script's
+whole purpose.
 
 ## See also
 

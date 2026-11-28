@@ -4,11 +4,11 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#155'
-fix-commits: [0e0d2acf]
+fix-commits: [0e0d2acf, self]
 eradication-level: 1
 time-to-detect: minutes
 tags: [ci, github-actions, deploy, pnpm]
-eradication-paths: [scripts/dependencies/check-only-change.core.ts, scripts/dependencies/drop-check-only-changes.ts]
+eradication-paths: [scripts/deploy/synthesized-output.core.ts, scripts/deploy/synthesized-output.ts, scripts/deploy/apps-whose-output-changed.ts, .github/workflows/deploy.yml, .github/workflows/preview.yml]
 zone: .github/path-filters.yml
 recurs: [a-dev-dependency-that-redeployed-every-app]
 ---
@@ -63,35 +63,43 @@ None for #155 itself: its deploys were harmless and already done.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #168](https://github.com/hugoleborso/borso.fr/pull/168) · commit [`20475f41`](https://github.com/hugoleborso/borso.fr/commit/20475f41)
+**Reference:** PR #168 · commit `20475f41` dropped check-only keys by a list of
+script names. The commit adding this paragraph replaced the list with the
+deploy's own output.
 
-`scripts/dependencies/drop-check-only-changes.ts` runs in the `detect` job of
-`deploy.yml` and `preview.yml`, right after the path filter and before the
-`infra` fan-out. For each app key and the `infra` key, it drops the key when
-the only file that changed under that folder is its `package.json`, and the
-two versions of that manifest are identical once the check-only scripts are
-removed: `lint`, `typecheck`, `test`, `dev`, and any `test:`, `dev:` or
-`db:local:` script. Any other change keeps the key, including a `build` or
-`deploy` script. Any error keeps every key, so the filter can only remove
-work, never skip a deploy that was needed.
+`deploy.yml` and `preview.yml` no longer classify changed files. `detect`
+takes the `dorny/paths-filter` keys as candidates only (every app when
+`infra` or `deps` matched), then runs
+`scripts/deploy/apps-whose-output-changed.ts`, which synthesizes each
+candidate with its own `synth` script at the base commit and at the head, and
+keeps the apps whose `*.template.json` or `*.assets.json` differ. The
+templates name every Lambda and site asset by its content hash, so a byte that
+reaches a bucket or a function changes the digest, and a byte that does not
+leaves it alone. The synthesis drops `GITHUB_SHA` and `SENTRY_AUTH_TOKEN`, so
+the release label every prod Lambda carries cannot make two commits differ.
+An app that fails to synthesize on either side counts as changed, and a
+failure of the script deploys every candidate, so the comparison can only
+remove work. `scripts/pr/deploy-fanout.ts` runs the same comparison, so the
+prediction and the merge agree.
 
-The decision lives in `scripts/dependencies/check-only-change.core.ts`, at
-100% coverage. Replayed on the real history of #155's merge, against its
-parent `38c30667`, it reduced the keys from all six apps plus `infra` and
-`deps` to `deps` alone, which the lockfile check then resolves to no app.
+This deleted `check-only-change.core.ts`, `drop-check-only-changes.ts`,
+`dependency-closure.core.ts` and `apps-with-changed-dependencies.ts`, with
+their tests: 1,026 lines and three hand-kept lists (check-only script names,
+`TOOLING_FILE_PATTERN`, `PREVIEW_ONLY_FILE_PATTERN`). No new kind of harmless
+change needs a new exception.
 
-```bash
-if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
-  if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-    "$BASE" "$CHANGES"); then
-    CHANGES="$kept"
-  fi
-fi
-```
+**Proof it can fail:** with a `lint` script rewrite, a README line, a test
+edit and a new dev dependency in `apps/pragma`, the script printed `[]` (base
+and head digest `33ae714f…`, measured 2026-11-27). Adding one changed
+translation string to `apps/pragma/site/src/i18n/en.json` on top made it print
+`["pragma"]` (head `3c2aeb6c…`). The pure half,
+`synthesized-output.core.ts`, is at 100% coverage and mutation score.
 
-It runs only when `deps` matched, because every `package.json` under `apps/`
-and `infra/` is in the `deps` key, and that is also when the workspace is
-already installed in the preview `detect` job.
+**Cost, measured locally on 2026-11-27:** `pnpm build` plus `cdk synth --all`
+took 10 s (borso-fr) to 21 s (pragma) per app and per commit, 110 s for all
+seven apps at one commit, on a 4-core sandbox. With other agents loading the
+same machine to about 20, one app at two commits took 142 s to 186 s and all
+seven 625 s. GitHub runner timings are unknown until the first run.
 
 CI is left unchanged on purpose: a changed `test` or `lint` script still runs
 the app's suites, which is exactly when they should run.

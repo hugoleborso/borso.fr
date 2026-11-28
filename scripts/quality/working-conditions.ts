@@ -17,14 +17,22 @@ const QUALITY_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'quality');
 const WALLS_PATH = join(QUALITY_DIRECTORY, 'working-conditions.md');
 const OUTPUT_PATH = join(QUALITY_DIRECTORY, 'working-conditions.html');
 const FEATURES_PREFIX = 'docs/features';
-const KAIZEN_FILE_PATTERN = /^docs\/features\/.+\/kaizen[^/]*\.md$/;
+const FRICTION_LOG_DIRECTORY = 'docs/kaizen';
+const MARKDOWN_EXTENSION = '.md';
+const KAIZEN_FILE_PATTERN = /^docs\/(kaizen\/.+|features\/.+\/kaizen[^/]*)\.md$/;
 const INVENTORY_FILE_PATTERN = /^docs\/features\/.+\/inventory[^/]*\.md$/;
 const ISO_DATE_LENGTH = 10;
 
 function readFrictionLines(files: readonly string[]): readonly FrictionLine[] {
   return files.flatMap((file) => {
-    const task = relative(FEATURES_PREFIX, dirname(file));
     const markdown = readFileSync(join(REPOSITORY_ROOT, file), 'utf8');
+    if (file.startsWith(`${FRICTION_LOG_DIRECTORY}/`)) {
+      return readKaizenLines(
+        relative(FRICTION_LOG_DIRECTORY, file).slice(0, -MARKDOWN_EXTENSION.length),
+        markdown,
+      );
+    }
+    const task = relative(FEATURES_PREFIX, dirname(file));
     return basename(file).startsWith('kaizen')
       ? readKaizenLines(task, markdown)
       : readInventoryLines(task, markdown);
@@ -33,7 +41,7 @@ function readFrictionLines(files: readonly string[]): readonly FrictionLine[] {
 
 function main(): void {
   const now = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-  const files = runGit(['ls-files', FEATURES_PREFIX])
+  const files = runGit(['ls-files', FEATURES_PREFIX, FRICTION_LOG_DIRECTORY])
     .split('\n')
     .filter((file) => KAIZEN_FILE_PATTERN.test(file) || INVENTORY_FILE_PATTERN.test(file));
   const walls = readWalls(readFileSync(WALLS_PATH, 'utf8'));

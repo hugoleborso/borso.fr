@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "synth": "pnpm --filter @borso/infra run build && cdk synth --all",
-    "diff": "pnpm --filter @borso/infra run build && cdk diff --all",
-    "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
+    "synth": "cdk synth --all",
+    "diff": "cdk diff --all",
+    "deploy": "cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force",
-    "typecheck": "../../scripts/ensure-infra-built.sh && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "../../scripts/lint-workspace.sh",
-    "test": "pnpm --filter @borso/infra run build && vitest run",
-    "test:full-suite": "pnpm --filter @borso/infra run build && vitest run"
+    "test": "vitest run",
+    "test:full-suite": "vitest run"
   },
   "dependencies": {
     "@borso/infra": "workspace:*"

@@ -1,6 +1,5 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
+import { coverageGate } from '../../scripts/vitest-coverage-gate';
 
 // @FollowsBlueprint workspace-test-config
 export default defineConfig({
@@ -10,19 +9,9 @@ export default defineConfig({
     environment: 'node',
     globals: false,
     testTimeout: 60_000,
-    coverage: {
-      provider: 'v8',
-      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
-      reporter: ['text', 'lcov', 'html'],
+    coverage: coverageGate({
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/index.ts'],
-      thresholds: {
-        perFile: true,
-        lines: 100,
-        functions: 100,
-        branches: 100,
-        statements: 100,
-      },
-    },
+    }),
   },
 });

@@ -10,7 +10,7 @@ import {
   openApplication,
   playMove,
   readCount,
-  selectTabAwaitingSuspense,
+  selectExploreTab,
   stubBoardGeometry,
   stubDecksFetch,
 } from './trainer-page.test-utils';
@@ -113,7 +113,7 @@ describe('the opening trainer, one visit from the first load', () => {
   });
 
   it('leaves the due and new counts unchanged after time spent in Explore', async () => {
-    await selectTabAwaitingSuspense('Explore');
+    await selectExploreTab();
     expect(screen.getByRole('region', { name: 'Explore' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Explore' }).getAttribute('aria-current')).toBe(
       'page',

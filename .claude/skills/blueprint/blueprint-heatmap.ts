@@ -9,9 +9,9 @@ import {
   inferApplication,
   inferLayer,
   inferProject,
-  isTestFile,
   type BlueprintProject,
 } from './blueprint-utils.js';
+import { isTestFile } from '../../../scripts/test-file.core.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');

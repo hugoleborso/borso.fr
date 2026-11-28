@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: '#49'
-fix-commits: [450e82316d]
+fix-commits: [450e82316d, self]
 eradication-level: 1
-eradication-paths: [infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts]
+eradication-paths: [infra/cdk/src/internal/migration-runner/index.ts, infra/cdk/src/internal/migration-runner/pending-migrations.utils.ts]
 time-to-detect: one preview deploy
 tags: [dsql, cdk, preview, migrations, clone]
 zone: infra/cdk/src/internal/migration-runner
@@ -72,33 +72,38 @@ present.
 
 ## Countermeasure
 
-The structural step reconciles instead of only creating. After the
-`CREATE TABLE IF NOT EXISTS … LIKE`, the runner reads both column lists and
-issues `ALTER TABLE … ADD COLUMN IF NOT EXISTS <name> <type>` for every column
-the source has and the target lacks.
-
-`ADD COLUMN` in its bare form is the one alter Aurora DSQL accepts
-([compat gaps §10](../knowledge/dsql-postgres-compat-gaps.md)), so a column that
-is NOT NULL in production arrives nullable in the preview. That is the same
-compromise every migration in this repository already makes for the same reason.
+The first fix reconciled the structure: after the
+`CREATE TABLE IF NOT EXISTS … LIKE`, the runner added every column the source
+had and the target lacked. It closed this symptom and left the premise in
+place, which was that a preview's structure comes from production while its
+`_migrations` record is copied from production too. The record then claimed
+migrations the preview never ran. A preview created before production gained
+an index or a backfill was told it had them, and its own rows never got them.
+A real Postgres run of the old runner, done for the replacement, showed both:
+a branch that did not ship `0002` and `0003` had them in its record, and a
+rebased preview kept `position = NULL` on its existing rows although `0003`
+was recorded as applied (measured).
 
 ## Eradication
 
-Structural, at the level below detection: the clone can no longer name a column
-in an INSERT that the target does not have, because the step before it puts the
-column there.
+Structural, level 1. The preview's structure comes only from the branch's
+migrations, and its record lists only what it ran, so the record and the
+structure cannot disagree.
 
-- `selectMissingColumns` and `buildAddColumnSql` in
-  `infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts`, pure and
-  covered at 100% like every `*.utils.ts` file.
-- `listColumnDefinitions` in `migration-runner/index.ts` reads the type back out
-  of `information_schema`, folding in the length or precision that `data_type`
-  alone drops.
-- The type string is validated against a pattern that admits a type name with a
-  length or a precision and nothing else, so a catalogue read can never become
-  an injected fragment.
-- `infra/cdk/test/unit/migration-runner-clone.test.ts` now carries a case where
-  the target is genuinely behind the source, which is the state no fixture could
-  express before, and asserts the ALTER lands *before* the INSERT.
-- The mock returns a type alongside each column name, so a fixture cannot again
-  describe a schema the runner could not actually query.
+- `migrateFromSource` in `infra/cdk/src/internal/migration-runner/index.ts`
+  applies the branch migrations production has already applied
+  (`selectAppliedMigrations` in `pending-migrations.utils.ts`), copies rows on
+  the columns both schemas share (`selectCommonColumns`), and only then lets
+  `applyMigrations` run the branch's own migrations on those rows.
+- `_migrations` is never copied. `CREATE TABLE … LIKE`, `selectMissingColumns`,
+  `buildAddColumnSql`, `formatColumnType`, the catalogue type pattern and
+  `listColumnDefinitions` are deleted. The clone can no longer name a column
+  the target lacks, because it copies only columns the target has.
+- Running every migration before copying, the simpler order, was tried and
+  refused. It runs a branch's backfill on empty tables, then copies production
+  rows in with the new column empty. A real Postgres run left `family = NULL`
+  on every copied instrument (measured).
+- `infra/cdk/test/unit/migration-runner-clone.test.ts` asserts the order: the
+  migration production applied runs before the first copied row, and the
+  branch migration after the last one. It fails if `_migrations` is copied or
+  if every migration runs before the copy.

@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#2'
-fix-commits: [daf6ebbde6]
+fix-commits: [daf6ebbde6, self]
 eradication-level: 1
-eradication-paths: [infra/shared/package.json]
+eradication-paths: [infra/cdk/package.json, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: 30+ minutes of debugging (the symptom looked like AWS, not local)
 tags: [pnpm, cdk, monorepo, build-graph]
 zone: infra/shared/package.json
@@ -86,6 +86,10 @@ stale bytes silently.
   doesn't need fresh source).
 
 ## Eradication
+
+**Now, level 1.** `@borso/infra` exports `./src/index.ts` and has no `build` script, no `dist/` and no `tsconfig.build.json`. Every consumer already ran under `tsx`, Vite or `tsc` with `NodeNext`/`Bundler` resolution, so each one reads the source it is about to typecheck, test, synthesize or bundle. There is no build output left to be missing or stale. `scripts/ensure-infra-built.sh`, the build prefix of every `typecheck`, `synth`, `diff`, `deploy`, `destroy` and `test` script, the SessionStart build, the `cp` list of `.code.js` files and the build step of every workflow job are deleted. `infra/cdk/test/unit/eradication-checks.test.ts` fails if `exports` points anywhere but `./src/index.ts` or a `main`, `types` or `build` comes back. Verified from a worktree that never built `dist/`: `pnpm -r typecheck`, the infra and app suites, and `cdk synth --all` of pragma with its Lambda handlers bundled all pass.
+
+The rung recorded below is what held before; it is gone.
 
 **Type:** code diff (level 1 — structural by convention)
 

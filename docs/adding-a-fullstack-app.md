@@ -45,7 +45,9 @@ and each cost a debugging session to learn:
   time behind Postgres. `last-loop-lepin` was missing two of them and ran 15
   files twice.
 - Coverage sits above the projects, not inside one, because a run has a single
-  coverage configuration shared by all of them.
+  coverage configuration shared by all of them. It is `coverageGate()` from
+  `scripts/vitest-coverage-gate.ts`, and `scripts/check-app-registration.sh`
+  refuses a config that writes its own block.
 
 ## The local database
 
@@ -68,13 +70,18 @@ long-lived and owning the DSQL cluster across every stage, and `<slug>-pr-<n>`
 or `<slug>-prod`, disposable and owning everything else. CDK walks them in
 dependency order, so a first preview deploy needs no manual ordering.
 
-`cdk destroy --all` deletes both, which on PR close would wipe the shared
-database. Scope the `destroy` script to the per-stage stack with a fail-fast
-guard, exactly as pragma does:
+`DsqlClusterStack` turns on CloudFormation termination protection, so no
+command can delete the cluster stack. Scope the `destroy` script to the
+per-stage stack anyway, because `cdk destroy --all` would fail on the cluster
+and turn every pull request teardown red:
 
 ```
-cdk destroy "<slug>-pr-${PR_NUMBER:?PR_NUMBER env var required}" --force
+cdk destroy "<slug>-pr-${PR_NUMBER}" --force
 ```
+
+Retiring an application is the one time the cluster stack goes. Turn the
+protection off by hand first, with
+`aws cloudformation update-termination-protection --no-enable-termination-protection --stack-name <slug>-cluster`.
 
 See [`docs/dantotsus/cdk-destroy-all-wipes-the-shared-cluster-stack.md`](./dantotsus/cdk-destroy-all-wipes-the-shared-cluster-stack.md).
 

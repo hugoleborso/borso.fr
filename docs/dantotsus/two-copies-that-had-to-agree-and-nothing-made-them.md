@@ -4,9 +4,9 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#49'
-fix-commits: [01e8a281d5, e065cd169c, b5c02e572e]
-eradication-level: 2
-eradication-paths: [scripts/check-coupled-lists.sh]
+fix-commits: [01e8a281d5, e065cd169c, b5c02e572e, self]
+eradication-level: 1
+eradication-paths: [scripts/vitest-coverage-gate.ts, eslint-rules/impurity.js]
 time-to-detect: days
 tags: [ci, gates, pre-commit, github-actions, vitest, eslint, drift]
 zone: .husky/pre-commit
@@ -88,6 +88,10 @@ Both extractions fail loudly when they read nothing, because a check that has
 silently stopped finding its subject is the same defect one level up.
 
 ## Eradication
+
+**Now, level 1.** Every `vitest.config.ts` sets `coverage: coverageGate(...)` from `scripts/vitest-coverage-gate.ts`, which owns the provider, the reporter, the per-run `reportsDirectory`, the per-file thresholds and the include glob built from `GATED_FILE_SUFFIXES`. `eslint-rules/impurity.js` builds `TESTED_FILE_PATTERN` from the same `GATED_FILE_SUFFIXES`, so the sibling-test rule and the coverage gate cannot name different suffixes. Section 2 of `scripts/check-coupled-lists.sh` is deleted. `scripts/check-app-registration.sh` refuses an app whose `vitest.config.ts` writes its own coverage block.
+
+The rung recorded below is what held before; it is gone.
 
 **DevX check, level 2.** Verified against both original defects by
 reintroducing each:

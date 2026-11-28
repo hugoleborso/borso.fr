@@ -6,7 +6,7 @@ severity: medium
 related-pr: '#263'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/kaizen.sh]
+eradication-paths: [scripts/kaizen.sh, scripts/kaizen.test.ts]
 time-to-detect: hours
 tags: [self-improvement-loop, harness, agents, git]
 zone: scripts/kaizen.sh
@@ -48,6 +48,8 @@ The two worktrees' lines were copied into the archive by hand on PR #263.
 ## Eradication
 
 **Type:** structural impossibility (level 1)
+
+> **Superseded mechanism.** A worktree agent now writes to its own worktree's `docs/kaizen/<its-branch>.md`, and the main session merging that worktree brings the file with the code. One file per checkout means plain appends never conflict, with no merge driver: the test `keeps a worktree agent's lines in its own file` merges both and checks each line. The `main_checkout` redirection this entry shipped is deleted, because it wrote into another checkout's files. The log is now `docs/kaizen/<branch>.md`, a tracked file the branch commits from its first line, written by `scripts/kaizen.sh log`. `archive`, the drain, the session id and parking, `sweep-input`, the `gh pr create` count and the gitignore lines are deleted.
 
 **Reference:** the lessons-from-pr-263 kaizen pull request · commit `[self]`
 

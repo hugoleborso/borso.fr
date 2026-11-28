@@ -19,7 +19,6 @@ workspace="${PWD#"$root"/}"
 # refusal along with the cache; see
 # docs/dantotsus/the-merge-that-linted-against-dependencies-it-never-installed.md.
 "$root/scripts/ensure-installed.sh" lint
-"$root/scripts/ensure-infra-built.sh"
 
 cd "$root"
 # oxlint prints nothing on a clean run, which reads the same as a run that

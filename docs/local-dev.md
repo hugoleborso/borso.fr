@@ -46,7 +46,6 @@ pnpm -r build                # build every workspace that has a build script
 
 # infra/cdk (the CDK constructs library)
 pnpm --filter @borso/infra test:full-suite # every test; CI adds --coverage
-pnpm --filter @borso/infra build           # tsc -p tsconfig.build.json + cp .code.js
 
 # infra/shared (the CDK app for account-level singletons)
 pnpm --filter @borso/shared-infra synth

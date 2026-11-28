@@ -5,9 +5,13 @@
 # person or Claude performs when the operator asks for that pull request,
 # so an approval click here would be redundant.
 #
-# Triggers on every push to main. paths-filter detects which apps
-# changed in the latest commit; if infra/cdk changed, every app
-# redeploys (constructs are the contract).
+# Triggers on every push to main. paths-filter names the apps whose input
+# surface moved since the previous main commit (every app when infra/cdk or a
+# dependency manifest moved). Each of those is then synthesized at both commits,
+# and only the apps whose CloudFormation templates or asset hashes differ deploy.
+# A lint script, a README, a test, a dev dependency or the release label leaves
+# the synthesized output identical, so it deploys nothing, with no list of
+# exceptions to keep. See docs/dantotsus/a-lint-script-redeployed-every-app.md.
 #
 # The apps deploy in parallel. Every prod stack shares the one borso.fr
 # hosted zone, but each writes only its own A and AAAA alias records under
@@ -40,6 +44,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
+    # The synthesis below reads what the deploy job reads, minus the secrets,
+    # the release label and the Sentry settings, which are the same at both
+    # commits and so cannot tell them apart.
+    env:
+      STAGE: prod
+      VITE_STAGE: prod
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -53,55 +65,42 @@ jobs:
           # Specifying `base: HEAD~1` triggers a `git merge-base HEAD~1 main`
           # lookup that fails with `git exit 128` because `main` isn't set
           # up as a local tracking branch with fetch-depth=2.
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
+      - if: steps.filter.outputs.changes != '[]'
+        uses: pnpm/action-setup@v6
+      - if: steps.filter.outputs.changes != '[]'
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - if: steps.filter.outputs.changes != '[]'
+        env:
+          BASE: ${{ github.event.before }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE"
+          pnpm install --frozen-lockfile
       - id: compute
         env:
           CHANGES: ${{ steps.filter.outputs.changes }}
           BASE: ${{ github.event.before }}
         run: |
-          all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
-            | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
-          # A key whose every change is a check-only script in package.json,
-          # a test, a comment, an upper-case document such as README.md, or a test config
-          # changes nothing a deploy runs. PR #155 redeployed all six apps for
-          # a lint script, and PR #352 five apps for their READMEs. Such keys
-          # are dropped here, by the rule preview.yml uses, and
-          # scripts/pr/deploy-fanout.ts predicts with it. Any error keeps the
-          # changes as they were.
-          # See docs/dantotsus/a-lint-script-redeployed-every-app.md and
-          # docs/dantotsus/the-deck-text-the-preview-called-documentation.md.
-          # `--production` also drops the test seed under api/src/__test/,
-          # which production mounts only when ALLOW_TEST_SEED is "1", and it
-          # never is there. A preview still deploys for it. The operator asked
-          # on 2026-11-16 for a seed change not to redeploy production.
-          if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-            "$BASE" "$CHANGES" --production); then
-            CHANGES="$kept"
+          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | jq -R . | jq -sc .)
+          # `infra` and `deps` name no app and can move what every app builds.
+          if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then
+            candidates="$all_apps"
+          else
+            candidates=$(jq -c --argjson all "$all_apps" \
+              'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
           fi
-          # `infra` fans out: constructs are the contract every app builds on.
-          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
-            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+          if [ "$candidates" = "[]" ]; then
+            echo "apps=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          apps=$(jq -c --argjson all "$all_apps" \
-            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
-          # `deps` names no app, so the lockfile is asked which apps resolve
-          # something different from the previous main commit. An app-only
-          # dev dependency then deploys that app, not all six. Anything the
-          # script cannot read, a base commit outside the fetch depth
-          # included, falls back to every app.
-          # See docs/dantotsus/a-dev-dependency-that-redeployed-every-app.md.
-          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
-            mapfile -t candidates < <(jq -r '.[]' <<<"$all_apps")
-            moved=$(pnpm exec tsx scripts/dependencies/apps-with-changed-dependencies.ts \
-              changed "$BASE" "${candidates[@]}") || moved="$all_apps"
-            apps=$(jq -cn --argjson named "$apps" --argjson moved "$moved" '$named + $moved | unique')
-          fi
+          # Keep only the candidates whose synthesized output differs from the
+          # previous main commit. If the script itself fails, every candidate
+          # deploys: the comparison can only remove work.
+          mapfile -t names < <(jq -r '.[]' <<<"$candidates")
+          apps=$(pnpm exec tsx scripts/deploy/apps-whose-output-changed.ts "$BASE" "${names[@]}") \
+            || apps="$candidates"
           echo "apps=$apps" >> "$GITHUB_OUTPUT"
 
   deploy:
@@ -153,7 +152,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}

@@ -161,7 +161,6 @@
     },
     "infra/cdk": {
       "entry": [
-        "src/index.ts",
         "src/internal/migration-runner/index.ts",
         "src/internal/origin-verify-generator/index.ts",
         "src/internal/cf-host-routing-function.code.js",

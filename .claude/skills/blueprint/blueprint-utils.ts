@@ -1,3 +1,4 @@
+import { TEST_FILE_PATTERN } from '../../../scripts/test-file.core.js';
 export type BlueprintProject = 'api' | 'site' | 'domain' | 'cdk' | 'infra' | 'tooling';
 
 const API_PATH_SEGMENT = '/api/src/';
@@ -86,14 +87,6 @@ export const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
   ['/database/', 'database'],
   ['/constructs/', 'construct'],
 ];
-
-const TEST_FILE_PATTERN = /\.test\.(ts|tsx|js)$/;
-const TEST_HELPER_PATTERN =
-  /(\.test-utils\.tsx?|\/test-setup\.tsx?$|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
-
-export function isTestFile(filePath: string): boolean {
-  return TEST_FILE_PATTERN.test(filePath) || TEST_HELPER_PATTERN.test(filePath);
-}
 
 export function inferLayer(filePath: string): string {
   const pathWithoutTestSuffix = filePath.replace(TEST_FILE_PATTERN, '.$1');

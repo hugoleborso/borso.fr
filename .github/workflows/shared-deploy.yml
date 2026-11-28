@@ -61,7 +61,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.SHARED_DEPLOY_ROLE_ARN }}

@@ -5,7 +5,7 @@ import { DsqlClusterBackup } from './dsql-cluster-backup.js';
 
 const PRODUCTION_GRADE_LIFECYCLE_STAGE = 'prod';
 
-export interface DsqlClusterStackProps extends StackProps {
+export interface DsqlClusterStackProps extends Omit<StackProps, 'terminationProtection'> {
   readonly app: string;
   readonly deletionProtection?: boolean;
   readonly backup?: { readonly retentionDays?: number };
@@ -16,7 +16,7 @@ export class DsqlClusterStack extends Stack {
   public readonly backup: DsqlClusterBackup | undefined;
 
   constructor(scope: Construct, id: string, props: DsqlClusterStackProps) {
-    super(scope, id, props);
+    super(scope, id, { ...props, terminationProtection: true });
     this.cluster = new DsqlCluster(this, 'Cluster', {
       app: props.app,
       stage: PRODUCTION_GRADE_LIFECYCLE_STAGE,

@@ -47,7 +47,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - run: pnpm -r typecheck
       # The repository's own tooling, which `-r` cannot reach: `scripts/`,
       # `.claude/skills/` and `eslint-rules/` belong to no workspace, so they
@@ -308,20 +307,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # `cdk/test/stack.test.ts` in the full-stack apps imports `@borso/infra`
-      # via its package entry — the CDK constructs must be built first.
-      - run: pnpm --filter @borso/infra build
-      # The `core` project where it exists, the full-stack apps whose other
-      # projects want a Postgres, and the whole suite otherwise. Only CI passes
-      # `--coverage`, which applies the 100% per-file threshold on `*.core.ts`
-      # and `*.utils.ts`.
+      # Every app's `test:core` is the suite that needs no Postgres, the same
+      # script pre-push runs. `--coverage` applies the per-file thresholds of
+      # scripts/vitest-coverage-gate.ts.
       - name: Pure suites and the per-file coverage gate
-        run: |
-          if grep -q '"test:core"' "apps/$APP/package.json"; then
-            pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage
-          else
-            pnpm --filter "@borso-app/$APP" exec vitest run --coverage
-          fi
+        run: pnpm --filter "@borso-app/$APP" run test:core --coverage
       - name: Back-end end-to-end suite
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != '' && matrix.app != 'pragma'
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
@@ -359,7 +349,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - name: Back-end end-to-end suite
         run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e
 
@@ -400,7 +389,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       - name: Assistant end-to-end suite
         run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e-assistants
 
@@ -420,7 +408,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
       # Stryker's incremental files, one per pull request, so a push re-tests
       # only the mutants whose source or tests moved since the last complete
       # run. mutate-changed.sh names each file after the inputs Stryker cannot

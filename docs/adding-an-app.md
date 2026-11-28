@@ -23,7 +23,7 @@ S3 bucket names are global across every AWS account, so `<slug>-prod` may alread
 
 Inside `apps/<slug>/`:
 
-- **`package.json`** — name `@borso-app/<slug>`, `private: true`, `type: "module"`, `dependencies: { "@borso/infra": "workspace:*" }`, scripts for `dev` / `build` / `lint` / `test` / `synth` / `deploy` / `destroy`.
+- **`package.json`** — name `@borso-app/<slug>`, `private: true`, `type: "module"`, `dependencies: { "@borso/infra": "workspace:*" }`, scripts for `dev` / `build` / `lint` / `test` / `test:core` / `synth` / `deploy` / `destroy`. `test:core` is the suite that needs no database, and pre-push and CI run it with `--coverage`.
 - **`tsconfig.json`** — copy from an existing app; self-contained, no `extends`.
 - **`biome.jsonc`** — `extends: ["../../biome.jsonc"]`, `"root": false`, `files.includes` scoped to the app's source dirs.
 - **`commitlint.config.js`** — `extends: ['../../commitlint.config.js']`. Lets agents working inside the app read the convention without leaving the folder.

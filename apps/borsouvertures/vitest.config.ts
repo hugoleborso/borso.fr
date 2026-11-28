@@ -1,7 +1,6 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import { coverageGate } from '../../scripts/vitest-coverage-gate';
 
 const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
 
@@ -25,25 +24,7 @@ export default defineConfig({
   resolve: { alias: workspaceAliases },
   test: {
     forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
-    coverage: {
-      provider: 'v8',
-      reporter: [['text', { skipFull: false }]],
-      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
-      include: [
-        'site/**/*.{core,utils,adapter,schema}.ts',
-        'domain/**/*.core.ts',
-        'api/src/**/*.{core,utils,adapter,schema}.ts',
-        'scripts/**/*.core.ts',
-        'scripts/**/*.adapter.ts',
-      ],
-      thresholds: {
-        perFile: true,
-        statements: 100,
-        branches: 100,
-        functions: 100,
-        lines: 100,
-      },
-    },
+    coverage: coverageGate(),
     projects: [
       {
         resolve: { alias: workspaceAliases },

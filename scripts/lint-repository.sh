@@ -16,11 +16,6 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# The type-aware rules resolve @borso/infra through its dist/, which a fresh
-# worktree does not have; without it every cdk file reports unresolved types
-# and nothing names the missing build.
-scripts/ensure-infra-built.sh
-
 # oxlint prints nothing on a clean run, which reads the same as a run that
 # never started, so a clean run says so.
 node_modules/.bin/oxlint --type-aware "$@" .

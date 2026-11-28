@@ -10,7 +10,7 @@ import { readReviewLog } from '@/review/review-log.store';
 import { setSide } from '@/state/appState';
 import {
   openApplication,
-  selectTabAwaitingSuspense,
+  selectExploreTab,
   stubBoardGeometry,
   stubDecksFetch,
 } from './trainer-page.test-utils';
@@ -19,7 +19,7 @@ const factory = new IDBFactory();
 const CLASSICAL_LINE = [/^1\. e4/, /^1\.\.\. e5/, /^2\. Nf3/, /^2\.\.\. Nc6/, /^3\. Bc4/];
 
 async function openExplore(): Promise<void> {
-  await selectTabAwaitingSuspense('Explore');
+  await selectExploreTab();
   screen.getByRole('region', { name: 'Explore' });
 }
 

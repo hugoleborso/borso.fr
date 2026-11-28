@@ -145,6 +145,14 @@ describe('selectSchemaProblems', () => {
       'tbd: `time-to-detect: TBD` is a placeholder',
     ]);
     expect(check([buildEntry('pending', { 'time-to-detect': 'pending review' })])).toHaveLength(1);
+    expect(
+      check([
+        buildEntry('pending-path', {
+          'eradication-paths':
+            '[infra/cdk/src/internal/migration-runner/pending-migrations.utils.ts]',
+        }),
+      ]).filter((problem) => problem.includes('placeholder')),
+    ).toEqual([]);
     expect(check([buildEntry('body', {}, '# Title\n\ncommit `<kaizen-commit>`\n')])).toEqual([
       'body: the text still carries the placeholder <kaizen-commit>',
     ]);

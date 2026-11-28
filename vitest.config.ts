@@ -1,6 +1,5 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
+import { coverageGate, PURE_FILES } from './scripts/vitest-coverage-gate';
 
 const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
 
@@ -10,11 +9,6 @@ export default defineConfig({
     include: ['eslint-rules/**/*.test.js', 'scripts/**/*.test.ts'],
     environment: 'node',
     setupFiles: ['scripts/git-hook-variables-cleared.setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
-      include: ['scripts/**/*.{core,utils}.ts'],
-      thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
-    },
+    coverage: coverageGate({ include: [`scripts/${PURE_FILES}`] }),
   },
 });

@@ -80,15 +80,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
 
       - name: Pure suites and the per-file coverage gate
-        run: |
-          if grep -q '"test:core"' "apps/$APP/package.json"; then
-            pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage
-          else
-            pnpm --filter "@borso-app/$APP" exec vitest run --coverage
-          fi
+        run: pnpm --filter "@borso-app/$APP" run test:core --coverage
 
       # `back-e2e-*` picks up a database suite an app split out of `back-e2e`,
       # such as pragma's `back-e2e-assistants`, which `ci.yml` runs as a job of

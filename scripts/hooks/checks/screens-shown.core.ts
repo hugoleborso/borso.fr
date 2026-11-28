@@ -1,5 +1,5 @@
 // @FollowsBlueprint utils-pure-module
-import { isCommentOnlyEdit } from '../../dependencies/comment-only-change.core.ts';
+import { isCommentOnlyEdit } from './comment-only-change.core.ts';
 import { type Check, type HookInput, type HookWorld, PASS, type Verdict } from '../check.core.ts';
 
 type Row = Readonly<Record<string, unknown>>;

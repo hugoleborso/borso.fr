@@ -4,9 +4,9 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#36'
-fix-commits: [ebabfe7650]
-eradication-level: 2
-eradication-paths: [scripts/install-repo-deps.sh]
+fix-commits: [ebabfe7650, self]
+eradication-level: 1
+eradication-paths: [infra/cdk/package.json, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: minutes
 tags: [pnpm, ci, hooks, session-start, tooling, monorepo]
 zone: scripts/install-repo-deps.sh
@@ -70,6 +70,10 @@ build it first.*
   `@borso/infra` right after `pnpm install`.
 
 ## Eradication (mandatory — code-level)
+
+**Now, level 1.** `@borso/infra` exports `./src/index.ts` and has no `build` script, no `dist/` and no `tsconfig.build.json`. Every consumer already ran under `tsx`, Vite or `tsc` with `NodeNext`/`Bundler` resolution, so each one reads the source it is about to typecheck, test, synthesize or bundle. There is no build output left to be missing or stale. `scripts/ensure-infra-built.sh`, the build prefix of every `typecheck`, `synth`, `diff`, `deploy`, `destroy` and `test` script, the SessionStart build, the `cp` list of `.code.js` files and the build step of every workflow job are deleted. `infra/cdk/test/unit/eradication-checks.test.ts` fails if `exports` points anywhere but `./src/index.ts` or a `main`, `types` or `build` comes back. Verified from a worktree that never built `dist/`: `pnpm -r typecheck`, the infra and app suites, and `cdk synth --all` of pragma with its Lambda handlers bundled all pass.
+
+The rung recorded below is what held before; it is gone.
 
 **Type:** DevX check (level 2 — the session environment is brought into
 line with CI, so an app typecheck resolves `@borso/infra` from a clean

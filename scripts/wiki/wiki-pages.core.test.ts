@@ -254,6 +254,7 @@ describe('buildWiki', () => {
     { path: 'docs/standards/naming.md', content: '# Naming' },
     { path: 'docs/standards/hotspots.md', content: '# Hotspots' },
     { path: 'docs/features/pragma/x/spec/spec.md', content: '# X spec' },
+    { path: 'docs/kaizen/claude/x.md', content: '# Friction log of claude/x' },
   ];
 
   it('writes every page, the indexes, the sidebar and the footer', () => {
@@ -286,6 +287,7 @@ describe('buildWiki', () => {
       ].join('\n'),
     );
     expect(byName.has('features-pragma-x-spec-spec')).toBe(false);
+    expect(byName.has('kaizen-claude-x')).toBe(false);
     expect(byName.get('Standards')).toContain('- [Naming](standards-naming)');
     expect(byName.get('Standards')).not.toContain('Hotspots');
     expect(byName.get('standards-hotspots')).toBe('# Hotspots');

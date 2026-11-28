@@ -14,8 +14,8 @@ import {
   inferApplication,
   inferLayer,
   inferProject,
-  isTestFile,
 } from '../../.claude/skills/blueprint/blueprint-utils';
+import { isTestFile } from '../test-file.core';
 
 export interface ExportedSymbol {
   readonly name: string;

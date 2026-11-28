@@ -57,21 +57,7 @@ fi
 log "running pnpm install"
 pnpm install --frozen-lockfile
 
-# 3b. Build @borso/infra. Its consumers import it by package entry, so every
-# app's `cdk/` typecheck — and every `cdk/test/stack.test.ts` — fails with
-# "Cannot find module '@borso/infra'" until `dist/` exists. CI builds it before
-# `pnpm -r typecheck` and again in each test job; a fresh session starts from a
-# clean checkout and had no equivalent, so the first typecheck of a session was
-# red for a reason unrelated to whatever was being changed.
-#
-# Built unconditionally rather than guarded on `dist/` existing, because a
-# *stale* dist is its own hazard — see
-# docs/dantotsus/shared-deploy-stale-dist.md.
-log "building @borso/infra (its dist is what app cdk typechecks resolve)"
-pnpm --filter @borso/infra run build ||
-  note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
-
-# 3c. Full history. A hosted session can start from a shallow clone, and then
+# 3b. Full history. A hosted session can start from a shallow clone, and then
 # every commit older than the cut-off is absent: a dantotsu audit read 53 fix
 # commits as dangling until someone ran the fetch by hand. The dantotsu check
 # refuses a shallow clone; this makes sure a session never starts in one.
@@ -226,15 +212,7 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge. It is
-# created at session start rather than on first use, because a file that
-# already exists gets appended to and one somebody has to remember to create
-# does not: PR 50 maintained none. The `kaizen.sh init` SessionStart entry in
-# .claude/settings.json owns it, including parking a log another session left
-# behind; calling init here as well raced that entry over the same rename.
-log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh --where "<command, URL or file:line>" "<what you saw>"'
-
-# 10. The two generated lookups a session reads, neither of which is
+# 9. The two generated lookups a session reads, neither of which is
 # committed: the blueprint index agents read before writing a file, and the
 # knowledge-trigger lookup the knowledge hook reads on every call. Every other
 # report is on demand, through `scripts/reports.sh <group>`. A subagent given
