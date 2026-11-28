@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isCommentOnlyEdit } from './comment-only-change.core';
+import { isCommentOnlyEdit } from './comment-only-change.core.ts';
 
 const COMPONENT = `/**
  * @BlueprintUsage Use for a region that owns no state.

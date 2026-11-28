@@ -1,124 +1,88 @@
 import { describe, expect, it } from 'vitest';
 
-import { decideDeployFanout, describeDeployFanout } from './deploy-fanout.core';
+import {
+  decideDeployCandidates,
+  describeDeployFanout,
+  keepChangedOutput,
+} from './deploy-fanout.core';
 
 const SLUGS = ['pragma', 'banana-rush', 'talos', 'borso-fr'];
+const EVERY_APPLICATION = ['banana-rush', 'borso-fr', 'pragma', 'talos'];
 
-describe('decideDeployFanout', () => {
-  it('fans out to every application, sorted, when a construct changed', () => {
-    const fanout = decideDeployFanout(['infra/cdk/src/constructs/dsql-schema.ts'], SLUGS);
+describe('decideDeployCandidates', () => {
+  it.each([
+    'infra/cdk/src/constructs/dsql-schema.ts',
+    'pnpm-workspace.yaml',
+    'pnpm-lock.yaml',
+    'package.json',
+    'apps/pragma/package.json',
+    'infra/cdk/package.json',
+  ])('makes every application, sorted, a candidate when %s changed', (changedPath) => {
+    const fanout = decideDeployCandidates([changedPath], SLUGS);
 
-    expect(fanout.everyApplication).toBe(true);
-    expect(fanout.applications).toEqual(['banana-rush', 'borso-fr', 'pragma', 'talos']);
-    expect(fanout.reason).toContain('the constructs are the contract');
+    expect(fanout.applications).toEqual(EVERY_APPLICATION);
+    expect(fanout.reason).toContain('every application is a candidate');
   });
 
-  it('reports the dependency manifest alongside a construct change', () => {
-    const fanout = decideDeployFanout(['infra/cdk/src/index.ts', 'package.json'], SLUGS);
-
-    expect(fanout.everyApplication).toBe(true);
-    expect(fanout.dependencyManifestMoved).toBe(true);
+  it('makes every application a candidate when a shared input moved beside documentation', () => {
+    expect(decideDeployCandidates(['docs/x.md', 'pnpm-lock.yaml'], SLUGS).applications).toEqual(
+      EVERY_APPLICATION,
+    );
   });
 
   it('names only the applications whose own paths changed', () => {
-    const fanout = decideDeployFanout(
+    const fanout = decideDeployCandidates(
       ['apps/pragma/api/src/song/song.service.ts', 'apps/talos/site/src/main.tsx'],
       SLUGS,
     );
 
-    expect(fanout.everyApplication).toBe(false);
     expect(fanout.applications).toEqual(['pragma', 'talos']);
-    expect(fanout.dependencyManifestMoved).toBe(false);
-    expect(fanout.reason).toBe('only these applications have changed paths.');
+    expect(fanout.reason).toContain('only these applications have changed paths.');
+    expect(fanout.reason).toContain('synthesizes each candidate');
   });
 
-  it('does not take a prefix of a slug for the slug itself', () => {
-    const fanout = decideDeployFanout(['apps/pragma-extra/site/src/main.tsx'], SLUGS);
-
-    expect(fanout.applications).toEqual([]);
-    expect(fanout.reason).toBe('no application path changed.');
-  });
-
-  it('adds the dependency narrowing note when a workspace manifest moved', () => {
-    const fanout = decideDeployFanout(['pnpm-lock.yaml'], SLUGS);
-
-    expect(fanout.applications).toEqual([]);
-    expect(fanout.dependencyManifestMoved).toBe(true);
-    expect(fanout.reason).toContain('no application path changed.');
-    expect(fanout.reason).toContain('apps-with-changed-dependencies.ts');
-  });
-
-  it.each([
-    'pnpm-workspace.yaml',
-    'package.json',
-    'apps/pragma/package.json',
-    'infra/cdk/package.json',
-  ])('treats %s as a dependency manifest', (changedPath) => {
-    expect(decideDeployFanout([changedPath], SLUGS).dependencyManifestMoved).toBe(true);
-  });
-
-  it('does not treat a nested package.json as a workspace manifest', () => {
-    expect(
-      decideDeployFanout(['apps/pragma/api/package.json'], SLUGS).dependencyManifestMoved,
-    ).toBe(false);
-  });
-
-  it('deploys nothing when the diff touches neither applications nor shared inputs', () => {
-    const fanout = decideDeployFanout(
-      ['docs/adr/2026-10-25T0054-read-only-production-database-access.md'],
-      SLUGS,
-    );
-
-    expect(fanout.applications).toEqual([]);
-    expect(fanout.everyApplication).toBe(false);
-    expect(fanout.dependencyManifestMoved).toBe(false);
-    expect(fanout.reason).toBe('no application path changed.');
-  });
-
-  it('drops an application whose every change deploy.yml calls tooling', () => {
-    const asked: string[] = [];
-    const fanout = decideDeployFanout(
-      ['apps/pragma/README.md', 'apps/talos/site/src/main.tsx', 'docs/x.md'],
-      SLUGS,
-      (directory, changedFiles) => {
-        asked.push(`${directory}:${changedFiles.join(',')}`);
-        return directory === 'apps/pragma';
-      },
-    );
-
-    expect(fanout.applications).toEqual(['talos']);
-    expect(asked).toEqual([
-      'infra/cdk:',
-      'apps/banana-rush:',
-      'apps/borso-fr:',
-      'apps/pragma:apps/pragma/README.md',
-      'apps/talos:apps/talos/site/src/main.tsx',
+  it('does not treat a nested package.json as a shared input', () => {
+    expect(decideDeployCandidates(['apps/pragma/api/package.json'], SLUGS).applications).toEqual([
+      'pragma',
     ]);
   });
 
-  it('does not fan out for a construct change deploy.yml calls tooling', () => {
-    const fanout = decideDeployFanout(
-      ['infra/cdk/README.md'],
-      SLUGS,
-      (directory) => directory === 'infra/cdk',
-    );
+  it('does not take a prefix of a slug for the slug itself', () => {
+    const fanout = decideDeployCandidates(['apps/pragma-extra/site/src/main.tsx'], SLUGS);
 
-    expect(fanout.everyApplication).toBe(false);
     expect(fanout.applications).toEqual([]);
+    expect(fanout.reason).toBe('no application path changed.');
   });
 
-  it('still reports a dependency manifest whose application it dropped', () => {
-    const fanout = decideDeployFanout(['apps/pragma/package.json'], SLUGS, () => true);
-
-    expect(fanout.applications).toEqual([]);
-    expect(fanout.dependencyManifestMoved).toBe(true);
+  it('names nothing when the diff touches neither applications nor shared inputs', () => {
+    expect(
+      decideDeployCandidates(['docs/adr/2026-10-25T0054-read-only.md'], SLUGS).applications,
+    ).toEqual([]);
   });
 
   it('leaves the caller list untouched', () => {
     const slugs = ['pragma', 'banana-rush'];
-    decideDeployFanout(['infra/cdk/src/index.ts'], slugs);
+    decideDeployCandidates(['infra/cdk/src/index.ts'], slugs);
 
     expect(slugs).toEqual(['pragma', 'banana-rush']);
+  });
+});
+
+describe('keepChangedOutput', () => {
+  const candidates = decideDeployCandidates(['pnpm-lock.yaml'], SLUGS);
+
+  it('keeps the candidates whose synthesized output differs', () => {
+    const fanout = keepChangedOutput(candidates, ['talos', 'pragma', 'skull-king']);
+
+    expect(fanout.applications).toEqual(['pragma', 'talos']);
+    expect(fanout.reason).toBe('their synthesized templates or assets differ from the base.');
+  });
+
+  it('keeps none when every candidate synthesizes what the base synthesizes', () => {
+    const fanout = keepChangedOutput(candidates, []);
+
+    expect(fanout.applications).toEqual([]);
+    expect(fanout.reason).toBe('every candidate synthesizes exactly what the base synthesizes.');
   });
 });
 
@@ -126,13 +90,13 @@ describe('describeDeployFanout', () => {
   it('joins the applications before the reason', () => {
     expect(
       describeDeployFanout(
-        decideDeployFanout(['apps/pragma/site/src/x.ts', 'apps/talos/site/src/y.ts'], SLUGS),
+        keepChangedOutput(decideDeployCandidates(['package.json'], SLUGS), ['talos', 'pragma']),
       ),
-    ).toBe('pragma, talos — only these applications have changed paths.');
+    ).toBe('pragma, talos — their synthesized templates or assets differ from the base.');
   });
 
   it('says none when no application deploys', () => {
-    expect(describeDeployFanout(decideDeployFanout(['README.md'], SLUGS))).toBe(
+    expect(describeDeployFanout(decideDeployCandidates(['README.md'], SLUGS))).toBe(
       'none — no application path changed.',
     );
   });

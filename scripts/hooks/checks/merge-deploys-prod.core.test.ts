@@ -19,7 +19,7 @@ const HAPPY: Record<string, CommandResult> = {
   'sh -c command -v gh': ok('/usr/bin/gh\n'),
   'gh api repos/hugoleborso/borso.fr/pulls/412 --jq .head.sha': ok(`${SHA}\n`),
   [`git cat-file -e ${SHA}^{commit}`]: ok(),
-  [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA}`]:
+  [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA} --candidates-only`]:
     ok('pragma\n'),
   [`git diff --name-only origin/main...${SHA}`]: ok(`apps/pragma/a.ts\n${SNAPSHOT}\n`),
   [`${CHECK_RUNS} ${CHECK_RUNS_JQ}`]: ok('build\tcompleted\tsuccess\nlint\tcompleted\tskipped\n'),
@@ -136,7 +136,7 @@ describe('mergeDeploysProd', () => {
     const { world, calls } = createWorld({
       ...HAPPY,
       'git diff --name-only origin/main...HEAD': ok('apps/talos/a.ts\n'),
-      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD':
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD --candidates-only':
         ok('talos\n'),
     });
     expect(noticeOf(mergeDeploysProd.run(bash('gh pr merge --squash'), world))).toBe(
@@ -150,7 +150,7 @@ describe('mergeDeploysProd', () => {
     expect(calls).toEqual([
       'sh -c command -v gh',
       'git fetch -q origin main',
-      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD',
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD --candidates-only',
       'git diff --name-only origin/main...HEAD',
     ]);
   });
@@ -224,7 +224,7 @@ describe('mergeDeploysProd', () => {
   it('compares HEAD when gh is not installed, as the old hook did', () => {
     const { world, calls } = createWorld({
       'git diff --name-only origin/main...HEAD': ok(`${SNAPSHOT}\n`),
-      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD':
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD --candidates-only':
         ok(''),
     });
     expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toBe(
@@ -233,7 +233,7 @@ describe('mergeDeploysProd', () => {
     expect(calls).toEqual([
       'sh -c command -v gh',
       'git fetch -q origin main',
-      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD',
+      '/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main HEAD --candidates-only',
       'git diff --name-only origin/main...HEAD',
     ]);
   });
@@ -262,7 +262,7 @@ describe('mergeDeploysProd', () => {
   it('says the fan-out failed when it exits non-zero', () => {
     const { world } = createWorld({
       ...HAPPY,
-      [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA}`]:
+      [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA} --candidates-only`]:
         FAILED,
     });
     expect(noticeOf(mergeDeploysProd.run(mergeCall(), world))).toContain(
@@ -408,7 +408,7 @@ own CI run, which is the first test of the combination.`,
   it('drops every trailing newline that git, gh and the fan-out print', () => {
     const { world } = createWorld({
       ...MOVED,
-      [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA}`]:
+      [`/repository/node_modules/.bin/tsx /repository/scripts/pr/deploy-fanout.ts origin/main ${SHA} --candidates-only`]:
         ok('pragma\ntalos\n\n'),
       [`git diff --name-only origin/main...${SHA}`]: ok('apps/pragma/a.ts\n\n'),
       [`${CHECK_RUNS} ${CHECK_RUNS_JQ}`]: ok('build\tcompleted\tsuccess\n\n'),

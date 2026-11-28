@@ -2,7 +2,10 @@
 # via PreviewDeployRole (provisioned by infra/shared).
 #
 # Flow:
-#   detect → which apps changed in this PR (or all, if infra/cdk changed)
+#   detect → which apps this PR builds differently from the base branch:
+#            paths-filter names the candidates (all, if infra/cdk or a
+#            dependency manifest moved), and each candidate is synthesized
+#            at both commits; only differing templates or assets are kept
 #   deploy → matrix per affected app, skip the ones whose inputs are
 #            already deployed, otherwise cdk deploy <app>-pr-<n> and
 #            sticky comment the preview URL on the PR
@@ -10,13 +13,12 @@
 #              every app, cdk destroy the stacks that exist, mark their
 #              deployments inactive and delete their GitHub environments.
 #
-# `detect` answers "what does this pull request touch", not "what changed
-# since this preview was last built": dorny/paths-filter on a pull_request
-# event diffs against the base branch, so a pull request that renamed a file
-# in all four apps re-entered the matrix for all four on every later push,
-# including pushes that only moved a markdown file. That is the right answer
-# to the question the job asks, and the wrong one to ask, so the matrix asks
-# the second question itself — see the fingerprint step in `deploy`.
+# `detect` answers "what does this pull request build differently from the
+# base branch", not "what changed since this preview was last built": it
+# compares against the base, so a pull request that changed all four apps
+# re-entered the matrix for all four on every later push, including pushes
+# that only moved a markdown file. The matrix asks the second question
+# itself — see the fingerprint step in `deploy`.
 #
 # concurrency: never cancel in-flight deploys mid-CFN-transaction or
 # you orphan stack state. Each PR has its own concurrency group.
@@ -53,6 +55,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
+    # The synthesis in `compute` reads what the deploy job reads, minus the
+    # values that are the same at both commits and so cannot tell them apart.
+    env:
+      STAGE: preview
+      VITE_STAGE: preview
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      CDK_DEFAULT_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -60,9 +70,8 @@ jobs:
         with:
           filters: .github/path-filters.yml
       # A pull request that matches any filter needs the workspace installed
-      # here, because the scripts below read the diff and the lockfile. That
-      # costs about 25 s; one that matches none, docs and tooling outside
-      # apps/ and infra/, skips it.
+      # here, because `compute` synthesizes each candidate app. One that
+      # matches none, docs and tooling outside apps/ and infra/, skips it.
       - if: steps.filter.outputs.changes != '[]'
         uses: pnpm/action-setup@v6
       - if: steps.filter.outputs.changes != '[]'
@@ -96,46 +105,28 @@ jobs:
                 jq -e '.borso.previews == false' "apps/$app/package.json" >/dev/null || echo "$app"
               done | jq -R . | jq -sc .)
 
-          # A package.json edit that only rewrites a check script (lint,
-          # typecheck, test, dev) changes nothing a deploy runs, yet matches
-          # its app's own key, and `infra/cdk/package.json` matches `infra`,
-          # which fans out to every app. PR #155 redeployed all six apps to
-          # production for a lint script. Such keys are dropped here; any
-          # error keeps the changes as they were.
-          # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
-          # `--tooling` also drops a key whose every change is a test, an
-          # upper-case document such as README.md, a test config or a comment: a preview
-          # of those would serve the same build. Lower-case markdown is kept,
-          # because borsouvertures builds its decks from ideas.en.md. The
-          # operator asked on 2026-11-14 for no preview on a kaizen that
-          # touches only tooling. deploy.yml applies the same rule, and also
-          # drops the test seed, which a preview mounts and production never does.
-          if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
-            "$BASE" "$CHANGES" --tooling); then
-            CHANGES="$kept"
+          # `infra` and `deps` name no app and can move what every app builds.
+          if jq -e 'index("infra") or index("deps")' <<<"$CHANGES" >/dev/null; then
+            candidates="$all_apps"
+          else
+            candidates=$(jq -c --argjson all "$all_apps" \
+              'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
           fi
-
-          # If infra/cdk changed, redeploy every app's preview — constructs
-          # are the contract.
-          if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
-            echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
+          if [ "$candidates" = "[]" ]; then
+            echo "apps=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Otherwise intersect changes with known apps.
-          apps=$(jq -c --argjson all "$all_apps" \
-            'map(select(. as $c | $all | index($c)))' <<<"$CHANGES")
-
-          # `deps` names no app, so the lockfile is asked which apps resolve
-          # something different from the base branch; anything it cannot
-          # read falls back to every app.
-          # See docs/dantotsus/a-dev-dependency-that-redeployed-every-app.md.
-          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
-            mapfile -t candidates < <(jq -r '.[]' <<<"$all_apps")
-            moved=$(pnpm exec tsx scripts/dependencies/apps-with-changed-dependencies.ts \
-              changed "$BASE" "${candidates[@]}") || moved="$all_apps"
-            apps=$(jq -cn --argjson named "$apps" --argjson moved "$moved" '$named + $moved | unique')
-          fi
+          # Keep only the candidates whose synthesized output differs from the
+          # base branch: a lint script, a README, a test, a test config or a
+          # dev dependency builds the same templates and assets, so it gets no
+          # preview. The operator asked on 2026-11-14 for no preview on a kaizen
+          # that touches only tooling. If the script itself fails, every
+          # candidate deploys: the comparison can only remove work.
+          # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
+          mapfile -t names < <(jq -r '.[]' <<<"$candidates")
+          apps=$(pnpm exec tsx scripts/deploy/apps-whose-output-changed.ts "$BASE" "${names[@]}") \
+            || apps="$candidates"
           echo "apps=$apps" >> "$GITHUB_OUTPUT"
 
   deploy:

@@ -6,6 +6,7 @@ const BASE_BRANCH = 'main';
 const SHARED_SNAPSHOT = 'infra/shared/test/unit/__snapshots__/borso-shared.template.json';
 const FANOUT = 'scripts/pr/deploy-fanout.ts';
 const TSX = 'node_modules/.bin/tsx';
+const CANDIDATES_ONLY = '--candidates-only';
 const CURRENT_BRANCH = 'the current branch';
 const GREEN_CONCLUSIONS = new Set(['success', 'skipped', 'neutral']);
 const LEADING_NUMBER = /^[0-9]+/u;
@@ -81,6 +82,7 @@ function describeApplications(merge: Merge, comparedHead: string): string {
     `${world.projectDirectory}/${FANOUT}`,
     `origin/${BASE_BRANCH}`,
     comparedHead,
+    CANDIDATES_ONLY,
   ]);
   return fanout.status === 0
     ? fanout.stdout.replace(/\n+$/u, '')
