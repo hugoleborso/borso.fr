@@ -1,9 +1,4 @@
 import type postgres from 'postgres';
-import {
-  type CatalogueColumnRow,
-  type ColumnDefinition,
-  formatColumnType,
-} from './clone-from-schema.utils.js';
 
 export async function hasSchema(sql: postgres.Sql, schemaName: string): Promise<boolean> {
   const rows = await sql.unsafe<{ count: number }[]>(
@@ -31,15 +26,4 @@ export async function listColumns(
     `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
   );
   return rows.map((row) => row.column_name);
-}
-
-export async function listColumnDefinitions(
-  sql: postgres.Sql,
-  schemaName: string,
-  tableName: string,
-): Promise<readonly ColumnDefinition[]> {
-  const rows = await sql.unsafe<CatalogueColumnRow[]>(
-    `SELECT column_name, data_type, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
-  );
-  return rows.map(formatColumnType);
 }

@@ -15,19 +15,27 @@ via `PreviewableApp.database.cloneFromSchema` from `@borso/infra`.
 
 ## What gets cloned
 
-For every table in the source schema (typically `prod`):
+The runner builds the preview from the branch's own migrations and borrows only
+rows from the source (typically `prod`), in three steps:
 
-1. **Structure** — `CREATE TABLE IF NOT EXISTS pr_N.<t> (LIKE prod.<t>
-   INCLUDING ALL)`. Copies columns, defaults, constraints, indexes, and
-   identity sequences. Cross-schema `LIKE` is in DSQL's documented
-   `CREATE TABLE` grammar.
-2. **Data** — `INSERT INTO pr_N.<t> (cols) SELECT … FROM prod.<t> ON
-   CONFLICT DO NOTHING`. Cross-schema DML is unrestricted in DSQL.
+1. **Catch up to the source.** It reads `prod._migrations` and applies, in
+   shipping order, the branch migrations that production has applied and the
+   preview has not. On a fresh preview that is every migration production ran,
+   on empty tables.
+   The runner submits every index build of the batch, then waits on them
+   together: one by one, pragma's builds took 15 to 20 s each and passed the
+   240 s limit (PR #429, 2026-11-27).
+2. **Copy rows.** For every source table the preview also has,
+   `INSERT INTO pr_N.<t> (cols) SELECT … FROM prod.<t> ON CONFLICT DO
+   NOTHING`, on the columns both tables share. Cross-schema DML is
+   unrestricted in DSQL.
+3. **Run the branch's own migrations** on those rows, so a backfill or a data
+   move in the pull request is exercised on production data.
 
-Then the runner reads `pr_N._migrations` (just populated from the
-clone), short-circuits every migration that prod has already applied
-on the cloned data, and runs only the PR's net-new migrations on top.
-Same flow as Neon branches.
+`_migrations` is never copied. The preview records only the migrations it ran,
+so its record can never claim an index, a table or a backfill it does not have.
+A table or column production has and the branch does not ship stays out of the
+preview. The preview reflects its branch.
 
 ## What gets skipped
 
@@ -35,7 +43,7 @@ Configurable via `DsqlSchemaCloneFromConfig`:
 
 - **`tableBlocklist`** — table names whose ROWS aren't cloned. Default
   for `last-loop-lepin`: `['admin_sessions', 'auth_attempts']`. Their
-  structure is still created so the application can write rows post-
+  structure still comes from the migrations, so the application can write rows post-
   deploy. Use this for any table holding session, rate-limit, or other
   per-stage runtime state.
 - **`columnsToNullify`** — map of `tableName → columns` whose values are
@@ -57,14 +65,17 @@ Configurable via `DsqlSchemaCloneFromConfig`:
 - **A singleton row that exists to mirror the source** (a credential or
   config row with a fixed primary key): `ON CONFLICT DO NOTHING` is
   wrong for it, because the conflict clause keeps the stale copy
-  forever. Name the table in `DsqlSchema`'s `truncateBeforeClone`, which
+  forever. Name the table in `cloneFromSchema.tablesToReplace`, which
   empties it in the target immediately before the rows are copied, so
   the source wins outright. The default is right for domain data and
   only ever wrong for this shape.
-- **Schema drift** (PR adds a column not yet in prod): `LIKE INCLUDING
-  ALL` copies prod's columns, the PR migration's `ALTER TABLE ADD
-  COLUMN` adds the new one (nullable per the DSQL §10 constraint, see
-  `dsql-postgres-compat-gaps.md`), existing rows get `NULL`.
+- **A preview created before production gained a migration**: the next
+  deploy of a branch that ships it applies it in step 1, before the rows are
+  copied. A branch that does not ship it copies only the shared columns. See
+  [`preview-clone-created-but-never-reconciled`](../dantotsus/preview-clone-created-but-never-reconciled.md).
+- **A migration production applied that sorts after a branch-only one** runs
+  first, in step 1. Rebase and renumber the branch migration to keep the order
+  production saw.
 
 ## Constraints inherited from DSQL
 
@@ -75,8 +86,8 @@ Configurable via `DsqlSchemaCloneFromConfig`:
   under (≤ 270 rows per edition × N editions). Future apps with
   larger tables need a chunked variant — keyset-paginated INSERT in
   a loop using the table's PK. Not shipped in v1.
-- **DDL and DML in separate transactions, 1 DDL per tx**. Each `CREATE
-  TABLE LIKE` and each `INSERT` ship in their own `sql.unsafe()` call.
+- **DDL and DML in separate transactions, 1 DDL per tx**. Each migration
+  statement and each `INSERT` ship in their own `sql.unsafe()` call.
 - **Optimistic concurrency**. Reads on `prod` don't block prod writes
   during the clone; the snapshot is per-table consistent but not
   cluster-globally consistent. Acceptable for preview.

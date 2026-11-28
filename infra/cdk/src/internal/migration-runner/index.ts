@@ -1,13 +1,11 @@
 import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import postgres from 'postgres';
 import {
-  buildAddColumnSql,
   buildCloneInsertSql,
   buildReplaceBeforeCloneSql,
   isReplacedBeforeClone,
-  buildCreateTableLikeSql,
   selectCloneableDataTables,
-  selectMissingColumns,
+  selectCommonColumns,
 } from './clone-from-schema.utils.js';
 import {
   buildMappingRetirementStatements,
@@ -20,15 +18,10 @@ import {
   type TableAccess,
 } from './database-role.utils.js';
 import { runRetryingConcurrencyConflicts } from './concurrency-retry.js';
-import { computeIndexBuildDeadline } from './index-build-jobs.utils.js';
+import { computeIndexBuildDeadline, type StatementRow } from './index-build-jobs.utils.js';
 import { settleIndexBuild } from './index-build-wait.js';
-import { selectPendingMigrations } from './pending-migrations.utils.js';
-import {
-  hasSchema,
-  listColumnDefinitions,
-  listColumns,
-  listTablesInSchema,
-} from './schema-catalogue.js';
+import { selectAppliedMigrations, selectPendingMigrations } from './pending-migrations.utils.js';
+import { hasSchema, listColumns, listTablesInSchema } from './schema-catalogue.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
 interface Migration {
@@ -72,7 +65,6 @@ const PG_USER = 'admin';
 const PG_DATABASE = 'postgres';
 const PG_PORT = 5432;
 const CONNECTION_CLOSE_TIMEOUT_SECONDS = 5;
-const APPLIED_MIGRATIONS_TABLE = '_migrations';
 
 async function connect(props: ResourceProps): Promise<postgres.Sql> {
   const signer = new DsqlSigner({
@@ -102,63 +94,63 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
   `);
 }
 
-async function cloneFromSchema(
+async function readAppliedMigrationNames(
+  sql: postgres.Sql,
+  schemaName: string,
+): Promise<ReadonlySet<string>> {
+  const applied = await sql.unsafe<{ name: string }[]>(
+    `SELECT name FROM "${schemaName}"._migrations`,
+  );
+  return new Set(applied.map((row) => row.name));
+}
+
+async function copySourceRows(
   sql: postgres.Sql,
   targetSchemaName: string,
   config: CloneFromSchemaProps,
 ): Promise<void> {
-  if (config.sourceSchemaName === targetSchemaName) return;
-  if (!(await hasSchema(sql, config.sourceSchemaName))) return;
-
   const blocklist = config.tableBlocklist ?? [];
   const nullifyMap = config.columnsToNullify ?? {};
-  const sourceTables = await listTablesInSchema(sql, config.sourceSchemaName);
-
-  for (const table of sourceTables) {
-    await sql.unsafe(buildCreateTableLikeSql(config.sourceSchemaName, targetSchemaName, table));
-    const sourceColumns = await listColumnDefinitions(sql, config.sourceSchemaName, table);
-    const targetColumns = await listColumns(sql, targetSchemaName, table);
-    for (const column of selectMissingColumns(sourceColumns, targetColumns)) {
-      await sql.unsafe(buildAddColumnSql(targetSchemaName, table, column));
-    }
-  }
-
   const tablesToReplace = config.tablesToReplace ?? [];
+  const sourceTables = await listTablesInSchema(sql, config.sourceSchemaName);
   for (const table of selectCloneableDataTables(sourceTables, blocklist)) {
-    const columns = await listColumns(sql, config.sourceSchemaName, table);
+    const columns = selectCommonColumns(
+      await listColumns(sql, config.sourceSchemaName, table),
+      await listColumns(sql, targetSchemaName, table),
+    );
     if (columns.length === 0) continue;
     const isReplaced = isReplacedBeforeClone(table, tablesToReplace);
     if (isReplaced) {
       await sql.unsafe(buildReplaceBeforeCloneSql(targetSchemaName, table));
     }
-    const nullifyColumns = nullifyMap[table] ?? [];
     await sql.unsafe(
       buildCloneInsertSql(
         config.sourceSchemaName,
         targetSchemaName,
         table,
         columns,
-        nullifyColumns,
+        nullifyMap[table] ?? [],
       ),
     );
   }
+}
 
-  const migrationsColumns = await listColumns(
+async function migrateFromSource(
+  sql: postgres.Sql,
+  props: ResourceProps,
+  config: CloneFromSchemaProps,
+  indexBuildDeadline: number,
+): Promise<void> {
+  if (config.sourceSchemaName === props.schemaName) return;
+  if (!(await hasSchema(sql, config.sourceSchemaName))) return;
+  const sourceAppliedNames = await readAppliedMigrationNames(sql, config.sourceSchemaName);
+  await applyMigrations(
     sql,
-    config.sourceSchemaName,
-    APPLIED_MIGRATIONS_TABLE,
+    props.schemaName,
+    selectAppliedMigrations(props.migrations, sourceAppliedNames),
+    indexBuildDeadline,
   );
-  if (migrationsColumns.length > 0) {
-    await sql.unsafe(
-      buildCloneInsertSql(
-        config.sourceSchemaName,
-        targetSchemaName,
-        APPLIED_MIGRATIONS_TABLE,
-        migrationsColumns,
-        [],
-      ),
-    );
-  }
+  await copySourceRows(sql, props.schemaName, config);
 }
 
 async function applyMigrations(
@@ -167,19 +159,26 @@ async function applyMigrations(
   migrations: readonly Migration[],
   indexBuildDeadline: number,
 ): Promise<void> {
-  const applied = await sql.unsafe<{ name: string }[]>(
-    `SELECT name FROM "${schemaName}"._migrations`,
-  );
-  const appliedNames = new Set(applied.map((row) => row.name));
+  const appliedNames = await readAppliedMigrationNames(sql, schemaName);
+  const submittedMigrations: {
+    name: string;
+    statements: { statement: string; rows: readonly StatementRow[] }[];
+  }[] = [];
   for (const migration of selectPendingMigrations(migrations, appliedNames)) {
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
+    const statements = [];
     for (const statement of splitStatements(migration.sql)) {
-      const statementRows = await sql.unsafe(statement);
-      await settleIndexBuild(sql, schemaName, statement, statementRows, indexBuildDeadline);
+      statements.push({ statement, rows: await sql.unsafe(statement) });
+    }
+    submittedMigrations.push({ name: migration.name, statements });
+  }
+  for (const { name, statements } of submittedMigrations) {
+    for (const { statement, rows } of statements) {
+      await settleIndexBuild(sql, schemaName, statement, rows, indexBuildDeadline);
     }
     await sql.unsafe(
       `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
-      [migration.name],
+      [name],
     );
   }
 }
@@ -265,7 +264,7 @@ async function provisionSchema(
 ): Promise<void> {
   await ensureSchema(sql, props.schemaName);
   if (props.cloneFromSchema !== undefined) {
-    await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
+    await migrateFromSource(sql, props, props.cloneFromSchema, indexBuildDeadline);
   }
   await applyMigrations(sql, props.schemaName, props.migrations, indexBuildDeadline);
   await provisionRole(sql, props.schemaName, {

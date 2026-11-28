@@ -23,7 +23,7 @@
     "synth": "pnpm build && cdk synth --all",
     "diff": "pnpm build && cdk diff --all",
     "deploy": "pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm build && cdk destroy \"skull-king-pr-${PR_NUMBER:?PR_NUMBER env var required — skull-king destroy targets the per-PR app stack only, never the shared skull-king-cluster stack}\" --force",
+    "destroy": "pnpm build && cdk destroy \"skull-king-pr-${PR_NUMBER}\" --force",
     "test:mutation": "stryker run"
   },
   "dependencies": {

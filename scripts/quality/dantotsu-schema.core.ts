@@ -38,7 +38,8 @@ const SECTION_HEADING_PATTERN = /^#{2,6}\s+\S/;
 const CODE_FENCE_PATTERN = /^\s*```/;
 const PULL_REQUEST_PATTERN = /^#\d+(, #\d+)*$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/;
-const FRONT_MATTER_PLACEHOLDER_PATTERN = /<[^>]*>|\bTBD\b|\bpending\b|to-be-filled/i;
+const FRONT_MATTER_PLACEHOLDER_PATTERN =
+  /<[^>]*>|\bTBD\b|(?<![\w./-])pending(?![\w./-])|to-be-filled/i;
 const BODY_PLACEHOLDER_PATTERN =
   /<(this-commit|kaizen-commit|this-pr-sha|TBD|to-be-filled[^>]*|pending[^>]*)>/;
 const REQUIRED_FIELDS: readonly string[] = [

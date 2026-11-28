@@ -8,6 +8,7 @@ export const state: {
   taggedCalls: string[];
   ended: number;
   appliedMigrations: Set<string>;
+  sourceAppliedMigrations: Map<string, readonly string[]>;
   rejectNextUnsafe: Error | null;
   existingSchemas: Set<string>;
   tablesPerSchema: Map<string, readonly string[]>;
@@ -22,6 +23,7 @@ export const state: {
   taggedCalls: [],
   ended: 0,
   appliedMigrations: new Set(),
+  sourceAppliedMigrations: new Map(),
   rejectNextUnsafe: null,
   existingSchemas: new Set(),
   tablesPerSchema: new Map(),
@@ -38,6 +40,7 @@ export function resetMigrationRunnerMockState(): void {
   state.taggedCalls = [];
   state.ended = 0;
   state.appliedMigrations = new Set();
+  state.sourceAppliedMigrations = new Map();
   state.rejectNextUnsafe = null;
   state.existingSchemas = new Set();
   state.tablesPerSchema = new Map();
@@ -131,18 +134,13 @@ export function makeSql(): SqlMock {
         const queriedSchema = listColumnsMatch[1] ?? '';
         const queriedTable = listColumnsMatch[2] ?? '';
         const columns = state.columnsPerTable.get(`${queriedSchema}.${queriedTable}`) ?? [];
-        return Promise.resolve(
-          columns.map((column_name) => ({
-            column_name,
-            data_type: 'text',
-            character_maximum_length: null,
-            numeric_precision: null,
-            numeric_scale: null,
-          })),
-        );
+        return Promise.resolve(columns.map((column_name) => ({ column_name })));
       }
-      if (/SELECT name FROM/i.test(query)) {
-        return Promise.resolve([...state.appliedMigrations].map((name) => ({ name })));
+      const appliedMigrationsMatch = /SELECT name FROM "([^"]+)"\._migrations/i.exec(query);
+      if (appliedMigrationsMatch !== null) {
+        const sourceNames = state.sourceAppliedMigrations.get(appliedMigrationsMatch[1] ?? '');
+        const names = sourceNames ?? [...state.appliedMigrations];
+        return Promise.resolve(names.map((name) => ({ name })));
       }
       const insertedMigrationName = params?.[0];
       if (query.includes('INSERT INTO') && typeof insertedMigrationName === 'string') {
